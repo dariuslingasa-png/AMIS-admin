@@ -348,3 +348,12 @@
     border: 0;
     object-fit: contain;
 }
+
+.preview-body .preview-photo {
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    max-height: 72vh;
+    object-fit: contain;
+    transform-origin: center center;
+}

@@ -84,6 +84,7 @@
              src: '',
              label: '',
              pdf: false,
+             photo: false,
              zoom: 1,
              panning: false,
              panEl: null,
@@ -103,15 +104,17 @@
                  approved: 'Enrollment application approved.',
                  rejected: 'Enrollment application declined.'
              },
-             openPreview(url, title, isPdf) {
+             openPreview(url, title, isPdf, kind = 'document') {
                  this.preview = true;
                  this.src = url;
                  this.label = title;
                  this.pdf = isPdf;
+                 this.photo = kind === 'photo';
                  this.zoom = 1;
              },
              closePreview() {
                  this.preview = false;
+                 this.photo = false;
                  this.zoom = 1;
                  this.stopPan();
              },
@@ -199,6 +202,16 @@
                      console.error(e);
                      window.open(url, '_blank');
                  }
+             },
+             downloadImage() {
+                 if (!this.src) return;
+                 const filename = (this.label || 'photo').replace(/[^a-zA-Z0-9]/g, '_');
+                 const link = document.createElement('a');
+                 link.href = this.src;
+                 link.download = filename;
+                 document.body.appendChild(link);
+                 link.click();
+                 document.body.removeChild(link);
              }
          }"
          x-effect="document.body.classList.toggle('overflow-hidden', preview)"
@@ -217,9 +230,9 @@
             <main class="space-y-6">
                 <section class="applicant-profile-card relative {{ $accentClass }}">
                     <span class="application-number-pill">Application #{{ str_pad($applicant->id, 4, '0', STR_PAD_LEFT) }}</span>
-                    <button type="button" class="applicant-photo" @if ($photoUrl) @click="openPreview('{{ $photoUrl }}', '2x2 Photo', false)" @endif>
+                    <button type="button" class="applicant-photo" @if ($photoUrl) @click="openPreview('{{ $photoUrl }}', 'Applicant Photo', false, 'photo')" @endif>
                         @if ($photoUrl)
-                            <img src="{{ $photoUrl }}" alt="2x2 Photo" class="w-full h-full object-cover block" loading="eager" decoding="async" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                            <img src="{{ $photoUrl }}" alt="Applicant Photo" class="w-full h-full object-cover block" loading="eager" decoding="async" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
                             <span class="w-full h-full items-center justify-center text-xs font-extrabold" style="display:none">NO PHOTO</span>
                         @else
                             NO PHOTO
@@ -574,8 +587,11 @@
                                 <button type="button" class="rounded-full border border-slate-200 bg-white px-3 py-1 text-sm font-black text-slate-700 shadow-sm transition hover:bg-slate-100" @click="zoomIn()">+</button>
                                 <button type="button" class="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-black uppercase tracking-[0.14em] text-slate-500 shadow-sm transition hover:bg-slate-100" @click="resetZoom()">Reset</button>
                             </div>
-                            <button id="download-pdf-btn" type="button" class="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-black uppercase tracking-[0.14em] text-emerald-700 shadow-sm transition hover:bg-emerald-100 flex items-center gap-1 cursor-pointer" @click="downloadPdf()">
+                            <button x-show="!photo" id="download-pdf-btn" type="button" class="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-black uppercase tracking-[0.14em] text-emerald-700 shadow-sm transition hover:bg-emerald-100 flex items-center gap-1 cursor-pointer" @click="downloadPdf()">
                                 <i data-lucide="download" class="h-3.5 w-3.5"></i> Download PDF
+                            </button>
+                            <button x-show="photo" type="button" class="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-black uppercase tracking-[0.14em] text-emerald-700 shadow-sm transition hover:bg-emerald-100 flex items-center gap-1 cursor-pointer" @click="downloadImage()">
+                                <i data-lucide="download" class="h-3.5 w-3.5"></i> Download Image
                             </button>
                             <button type="button" class="text-2xl leading-none text-slate-500" @click="closePreview()">&times;</button>
                         </div>
@@ -586,7 +602,10 @@
                          @mouseleave="stopPan()"
                          @touchstart.passive="startPan($event)"
                          @touchmove="movePan($event)">
-                        <template x-if="!pdf">
+                        <template x-if="!pdf && photo">
+                            <img :src="src" :alt="label" class="preview-photo transition-all duration-150" :style="'transform: scale(' + zoom + ');'">
+                        </template>
+                        <template x-if="!pdf && !photo">
                             <img :src="src" :alt="label" class="transition-all duration-150" :style="'max-width: none; width: ' + (zoom * 100) + '%; height: auto;'">
                         </template>
                         <template x-if="pdf"><iframe :src="src"></iframe></template>
