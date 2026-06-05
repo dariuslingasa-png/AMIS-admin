@@ -44,6 +44,18 @@ return [
         'redirect_uri'   => env('MICROSOFT_REDIRECT_URI', rtrim((string) env('APP_URL', 'http://localhost'), '/').'/auth/microsoft/callback'),
     ],
 
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect_uri' => env('GOOGLE_REDIRECT_URI', rtrim((string) env('APP_URL', 'http://localhost'), '/').'/settings/google/callback'),
+    ],
+
+    'firebase' => [
+        'project_id' => env('FIREBASE_PROJECT_ID'),
+        'api_key' => env('FIREBASE_API_KEY'),
+        'auth_domain' => env('FIREBASE_AUTH_DOMAIN'),
+    ],
+
     'enrollment_storage_url' => env('ENROLLMENT_STORAGE_URL'),
     'student_portal_url' => env('STUDENT_PORTAL_URL', env('APP_URL')),
 

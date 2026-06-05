@@ -34,7 +34,95 @@
 
 body {
     font-family: var(--font-sans);
-    min-width: 1180px;
+}
+
+[x-cloak] {
+    display: none !important;
+}
+
+.student-shell {
+    min-height: 100vh;
+    padding-top: 4rem;
+    background:
+        radial-gradient(circle at 16% 0%, rgba(16, 185, 129, .08), transparent 30rem),
+        linear-gradient(180deg, #f7fbf9 0%, #f8fafc 45%, #f9fafb 100%);
+}
+
+.student-sidebar {
+    top: 4rem;
+    height: calc(100vh - 4rem);
+}
+
+.student-content {
+    min-height: calc(100vh - 4rem);
+    padding: 1.5rem;
+}
+
+.student-content-inner {
+    width: 100%;
+    max-width: 80rem;
+    margin: 0 auto;
+}
+
+.student-id-stage {
+    width: min(100%, 58rem);
+    aspect-ratio: 1.58 / 1;
+    perspective: 1200px;
+}
+
+.student-id-flipper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transition: transform .35s ease;
+}
+
+.student-id-flipper.is-flipped {
+    transform: rotateY(180deg);
+}
+
+.student-id-face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+}
+
+.student-id-back {
+    transform: rotateY(180deg);
+}
+
+@media (max-width: 767px) {
+    .student-content {
+        padding: 1rem;
+    }
+
+    .student-id-stage {
+        aspect-ratio: auto;
+        min-height: 32rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .student-content {
+        margin-left: 16rem;
+    }
+}
+
+@media print {
+    .student-shell {
+        display: block;
+        height: auto;
+        overflow: visible;
+    }
+
+    .student-workspace,
+    .student-content {
+        display: block;
+        height: auto;
+        overflow: visible;
+        background: #fff;
+    }
 }
 
 /* Premium Academic Hero Banner */
