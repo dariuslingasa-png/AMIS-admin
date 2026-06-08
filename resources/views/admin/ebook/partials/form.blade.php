@@ -233,11 +233,8 @@
                     this.fileSizeText = '';
                 }
 
-                // Reset stages
-                this.stages[0].status = 'active';
-                this.stages[1].status = 'pending';
-                this.stages[2].status = 'pending';
-                this.stages[3].status = 'pending';
+                this.resetStages();
+                this.setStageStatus(0, 'active');
 
                 // Re-init lucide icons inside modal
                 this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
@@ -258,8 +255,8 @@
 
                 // Upload done → server saving phase
                 xhr.upload.addEventListener('load', () => {
-                    this.stages[0].status = 'done';
-                    this.stages[1].status = 'active';
+                    this.setStageStatus(0, 'done');
+                    this.setStageStatus(1, 'active');
                     this.phase = 'optimizing';
                     this.displayProgress = 80;
                     this.statusText = 'Saving eBook...';
@@ -344,9 +341,9 @@
                     }
 
                     // Update stages based on time
-                    if (tick >= 3 && this.stages[1].status === 'active') {
-                        this.stages[1].status = 'done';
-                        this.stages[2].status = 'active';
+                    if (tick >= 3 && this.stages[1]?.status === 'active') {
+                        this.setStageStatus(1, 'done');
+                        this.setStageStatus(2, 'active');
                         this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
                     }
 
@@ -383,6 +380,18 @@
                 if (this.timerInterval) {
                     clearInterval(this.timerInterval);
                     this.timerInterval = null;
+                }
+            },
+
+            resetStages() {
+                this.stages.forEach((stage) => {
+                    stage.status = 'pending';
+                });
+            },
+
+            setStageStatus(index, status) {
+                if (this.stages[index]) {
+                    this.stages[index].status = status;
                 }
             }
         };
