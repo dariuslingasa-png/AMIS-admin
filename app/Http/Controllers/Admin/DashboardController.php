@@ -16,7 +16,7 @@ class DashboardController extends Controller
 {
     public function __invoke(ApplicationQuery $applications)
     {
-        $schoolYear = (string) (EnrollmentApplicant::whereNotNull('school_year')->latest()->value('school_year') ?? config('services.school.year', '2026-2027'));
+        $schoolYear = (string) (EnrollmentApplicant::whereNotNull('school_year')->latest()->value('school_year') ?? config('services.school.year'));
 
         // Fetch application count by grade level for the enrollment trend area chart
         $gradeCounts = EnrollmentApplicant::select('grade_level', DB::raw('COUNT(*) as total'))

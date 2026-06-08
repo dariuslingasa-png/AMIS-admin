@@ -13,10 +13,11 @@
         <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-2">Select Class Group Schedule</label>
         <div class="flex flex-wrap gap-1.5">
             @foreach($sections as $section)
+                @php($sectionLabel = trim($section->grade_level . ($section->name ? ' - ' . $section->name : '')))
                 <button type="button" @click="activeSectionId = {{ $section->id }}"
                     :class="activeSectionId === {{ $section->id }} ? 'bg-indigo-700 text-white border-indigo-700 shadow-xs font-bold' : 'bg-gray-50 text-slate-600 hover:bg-gray-100 border-slate-200'"
                     class="px-3.5 py-2 text-xs rounded-xl border transition cursor-pointer shadow-3xs">
-                    {{ $section->grade_level }} @if($section->name) — {{ $section->name }} @endif
+                    {{ $sectionLabel }}
                 </button>
             @endforeach
         </div>
@@ -24,11 +25,12 @@
 
     @foreach($sections as $section)
         @php($entries = $schedulesBySection->get($section->id, collect()))
+        @php($sectionLabel = trim($section->grade_level . ($section->name ? ' - ' . $section->name : '')))
         <div class="bg-white border border-gray-150 rounded-2xl shadow-xs p-6 space-y-5" x-show="activeSectionId === {{ $section->id }}" x-transition>
             <div class="border-b border-slate-100 pb-3.5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                 <div>
                     <span class="text-slate-900 font-extrabold text-base block">
-                        {{ $section->grade_level }} @if($section->name) — {{ $section->name }} @endif Timetable
+                        {{ $sectionLabel }} Timetable
                     </span>
                     <span class="mt-1 block text-[10px] font-bold uppercase tracking-wider text-slate-400">
                         {{ $entries->count() }} scheduled classes

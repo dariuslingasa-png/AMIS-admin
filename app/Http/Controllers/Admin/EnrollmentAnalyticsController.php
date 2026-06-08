@@ -19,7 +19,7 @@ class EnrollmentAnalyticsController extends Controller
 
     public function analytics(ApplicationQuery $applications)
     {
-        $schoolYear = (string) (EnrollmentApplicant::whereNotNull('school_year')->latest()->value('school_year') ?? config('services.school.year', '2026-2027'));
+        $schoolYear = (string) (EnrollmentApplicant::whereNotNull('school_year')->latest()->value('school_year') ?? config('services.school.year'));
         $total = EnrollmentApplicant::whereNotIn('status', ['draft'])->count();
         $approved = EnrollmentApplicant::where('status', 'approved')->count();
         $withPaymentProof = EnrollmentApplicant::whereNotIn('status', ['draft'])

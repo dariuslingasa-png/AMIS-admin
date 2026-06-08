@@ -20,7 +20,7 @@ class AdminFinanceController extends Controller
      */
     public function feesIndex()
     {
-        $schoolYear = (string) config('services.school.year', '2026-2027');
+        $schoolYear = (string) config('services.school.year');
         $fees = SchoolFee::where('school_year', $schoolYear)->orderByRaw("
             FIELD(grade_level, 'Kinder 1','Kinder 2','Grade 1','Grade 2','Grade 3','Grade 4','Grade 5','Grade 6','Grade 7','Grade 8','Grade 9','Grade 10','Grade 11','Grade 12')
         ")->get();
@@ -275,7 +275,7 @@ class AdminFinanceController extends Controller
 
     private function reminderEmailHtml(string $studentName, string $balance, string $overdueList, StudentAccount $account): string
     {
-        $schoolYear = $account->school_year ?? config('services.school.year', '2026-2027');
+        $schoolYear = $account->school_year ?? config('services.school.year');
 
         return '<!DOCTYPE html><html><body style="font-family:Inter,Arial,sans-serif;background:#f3f4f6;padding:40px 20px;">
         <table width="520" style="background:white;border-radius:16px;overflow:hidden;margin:0 auto;box-shadow:0 4px 12px rgba(0,0,0,0.08);">

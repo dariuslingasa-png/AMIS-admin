@@ -2,7 +2,7 @@
     $studentName = $applicant?->full_name ?? 'Student';
     $studentNumber = $account?->student?->student_number ?? '-';
     $gradeLevel = $account?->grade_level ?? '-';
-    $schoolYear = $account?->school_year ?? config('services.school.year', '2026-2027');
+    $schoolYear = $account?->school_year ?? config('services.school.year');
     $orNumber = $payment->or_number ?? '-';
     $method = strtoupper($payment->method ?? '-');
     $referenceNo = $payment->reference_no ?? '-';

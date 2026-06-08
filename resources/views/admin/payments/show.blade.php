@@ -4,7 +4,7 @@
     $familyNo = $applicant?->family_application_id ?: $applicant?->id;
     $invoiceNo = isset($invoice) ? $invoice->invoice_no : 'INV-ENR-'.str_pad((string) $payment->id, 5, '0', STR_PAD_LEFT);
     $invoiceDate = $payment->paid_at ?? $payment->created_at;
-    $schoolYear = (string) config('services.school.year', '2026-2027');
+    $schoolYear = (string) config('services.school.year');
     $schoolAddress = (string) config('services.school.address', 'Bugac Ma-a Road, Davao City');
     $schoolEmail = (string) config('services.school.email', 'almunawwaraislamicschool@gmail.com');
     $invoiceChildAmount = (float) config('services.school.enrollment_fee', 4000);

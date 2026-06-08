@@ -13,7 +13,7 @@ class ProvisionMsTeams extends Command
 
     public function handle(): int
     {
-        $schoolYear = $this->option('year') ?: config('services.school.year', '2026-2027');
+        $schoolYear = $this->option('year') ?: config('services.school.year');
 
         $this->info("Provisioning MS Teams for all K-12 grades — SY {$schoolYear}");
         $this->info('This may take a few minutes due to MS Teams API provisioning delays...');

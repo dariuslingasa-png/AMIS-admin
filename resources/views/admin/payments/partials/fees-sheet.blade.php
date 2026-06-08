@@ -22,7 +22,7 @@
                 <!-- 2. Document Title Bar -->
                 <div class="py-5 text-center leading-tight">
                     <h2 class="font-black uppercase text-black" style="font-family: Arial, sans-serif; font-size: 28px !important; letter-spacing: 0.05em;">SCHEDULE OF FEES & DISCOUNTS</h2>
-                    <h3 class="font-bold text-black mt-1" style="font-size: 20px !important;">S.Y. {{ config('services.school.year', '2026-2027') }}</h3>
+                    <h3 class="font-bold text-black mt-1" style="font-size: 20px !important;">S.Y. {{ config('services.school.year') }}</h3>
                 </div>
 
                 <!-- 3. Schedule Table Matrix -->

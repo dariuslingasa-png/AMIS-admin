@@ -117,7 +117,7 @@ class AdminMsSyncController extends Controller
      */
     public function importFromAzure(\Illuminate\Http\Request $request)
     {
-        $schoolYear = (string) config('services.school.year', '2026-2027');
+        $schoolYear = (string) config('services.school.year');
 
         $request->validate([
             'azure_id'    => 'required|string',
@@ -192,7 +192,7 @@ class AdminMsSyncController extends Controller
     public function importAll()
     {
         @set_time_limit(180);
-        $schoolYear = (string) config('services.school.year', '2026-2027');
+        $schoolYear = (string) config('services.school.year');
 
         $graph      = new MicrosoftGraphService();
         $azureUsers = $graph->listTenantStudents();

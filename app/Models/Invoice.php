@@ -72,7 +72,7 @@ class Invoice extends Model
             $remaining = (float) $this->total_amount - ($paid + $appliedAdvance);
 
             // Retrospectively format OR numbers in the database to be 100% compliant with the new OR rules
-            $baseOr = str_replace('INV-', 'OR-', $this->invoice_no);
+            $baseOr = str_replace('INV-', config('services.school.or_prefix', 'OR-'), $this->invoice_no);
             $totalVerified = $verifiedPayments->count();
 
             if ($totalVerified === 1) {
@@ -126,7 +126,7 @@ class Invoice extends Model
                         'family_application_id' => $this->family_application_id,
                         'source_payment_id'     => $lastPayment?->id,
                         'source_invoice_id'     => $this->id,
-                        'or_number'             => $lastPayment?->or_number ?? 'OR-EXCESS',
+                        'or_number'             => $lastPayment?->or_number ?? config('services.school.or_excess_suffix', 'OR-EXCESS'),
                         'initial_amount'        => $excess,
                         'remaining_balance'     => $excess,
                         'status'                => 'available',

@@ -66,6 +66,8 @@ return [
         'email'                 => env('SCHOOL_EMAIL', 'almunawwaraislamicschool@gmail.com'),
         'soa_preview_date'      => env('SOA_PREVIEW_DATE'),
         'invoice_id_offset'     => (int) env('INVOICE_ID_OFFSET', 203),
+        'or_prefix'             => env('SCHOOL_OR_PREFIX', 'OR-'),
+        'or_excess_suffix'      => env('SCHOOL_OR_EXCESS_SUFFIX', 'OR-EXCESS'),
     ],
 
 ];

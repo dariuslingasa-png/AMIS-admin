@@ -39,7 +39,7 @@
                                 $pInvoiceNo = isset($invoice) ? $invoice->invoice_no : 'INV-ENR-'.str_pad((string) $p->id, 5, '0', STR_PAD_LEFT);
                                 
                                 // Calculate predicted OR number
-                                $baseOr = str_replace('INV-', 'OR-', $invoice ? $invoice->invoice_no : 'INV-ENR-00000');
+                                $baseOr = str_replace('INV-', config('services.school.or_prefix', 'OR-'), $invoice ? $invoice->invoice_no : 'INV-ENR-00000');
                                 $verifiedCount = $approvedPayments->count();
                                 if ($verifiedCount === 0) {
                                     $isFull = ((float)$p->amount >= (float)($invoice ? $invoice->total_amount : 0));

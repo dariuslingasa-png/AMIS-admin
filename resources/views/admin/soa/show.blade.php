@@ -1,6 +1,6 @@
 @php
     $studentName = $account->student?->applicant?->full_name ?: ($account->applicant?->full_name ?: 'Student');
-    $schoolYear = (string) config('services.school.year', '2026-2027');
+    $schoolYear = (string) config('services.school.year');
     $schoolAddress = (string) config('services.school.address', 'Bugac Ma-a Road, Davao City');
     $schoolEmail = (string) config('services.school.email', 'almunawwaraislamicschool@gmail.com');
     $enrollmentFee = (float) config('services.school.enrollment_fee', 4000);

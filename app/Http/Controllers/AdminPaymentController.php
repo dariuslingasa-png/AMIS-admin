@@ -212,7 +212,7 @@ class AdminPaymentController extends Controller
             $verifiedCount = $invoice->payments()->where('status', 'verified')->count();
             
             // Suffix the invoice number directly: e.g. INV-000204 -> OR-000204
-            $baseOr = str_replace('INV-', 'OR-', $invoice->invoice_no);
+            $baseOr = str_replace('INV-', config('services.school.or_prefix', 'OR-'), $invoice->invoice_no);
             
             if ($verifiedCount === 0) {
                 // First payment! Check if this payment is a full payment or partial payment.

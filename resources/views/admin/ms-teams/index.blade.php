@@ -2,7 +2,7 @@
     <div x-data="{
         createModal: false, editModal: false, editId: null, editName: '', editError: '', editSaving: false,
         mode: 'Flexible Online Learning', grade: 'Kinder 2', shifts: ['1st Shift'], genders: ['male', 'female'],
-        genderSingle: 'male', schoolYear: @js(config('services.school.year', '2026-2027')), previewList: [], progressMode: false,
+        genderSingle: 'male', schoolYear: @js(config('services.school.year')), previewList: [], progressMode: false,
         progressPercent: 0, progressLabel: '', progressRows: [], search: '',
         init() {
             this.$watch('mode', () => this.updatePreview()); this.$watch('grade', () => this.updatePreview());

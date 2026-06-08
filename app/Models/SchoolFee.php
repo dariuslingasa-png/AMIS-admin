@@ -16,7 +16,7 @@ class SchoolFee extends Model
 
     public static function forGrade(string $gradeLevel, ?string $schoolYear = null): ?self
     {
-        $schoolYear ??= (string) config('services.school.year', '2026-2027');
+        $schoolYear ??= (string) config('services.school.year');
         $normalizedGradeLevel = static::normalizeGradeLevel($gradeLevel);
 
         return static::where('school_year', $schoolYear)

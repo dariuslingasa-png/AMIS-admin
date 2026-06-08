@@ -2,7 +2,7 @@
         <div class="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm print:hidden">
             <div class="flex items-center gap-3">
                 <span class="inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-black text-amber-800 uppercase tracking-wider">Official Document</span>
-                <h1 class="text-lg font-black text-slate-900">Fee & Discount SY {{ config('services.school.year', '2026-2027') }}</h1>
+                <h1 class="text-lg font-black text-slate-900">Fee & Discount SY {{ config('services.school.year') }}</h1>
             </div>
             <div class="flex items-center gap-2">
                 <button onclick="window.print()" class="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-3 text-xs font-black uppercase tracking-wider text-white hover:bg-slate-800 transition">

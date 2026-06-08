@@ -21,7 +21,7 @@ class ApplicantController extends Controller
 
     public function dashboard(Request $request)
     {
-        $schoolYear = (string) (EnrollmentApplicant::whereNotNull('school_year')->latest()->value('school_year') ?? config('services.school.year', '2026-2027'));
+        $schoolYear = (string) (EnrollmentApplicant::whereNotNull('school_year')->latest()->value('school_year') ?? config('services.school.year'));
         $gradeCounts = EnrollmentApplicant::select('grade_level', DB::raw('COUNT(*) as total'))
             ->whereNotIn('status', ['draft'])
             ->whereNotNull('grade_level')
