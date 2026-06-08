@@ -47,6 +47,18 @@ return [
             'report' => false,
         ],
 
+        'ebook_private' => [
+            'driver' => 'local',
+            'root' => env(
+                'EBOOK_STORAGE_PATH',
+                is_dir(base_path('../ebook.amis.edu.ph/storage/app/private'))
+                    ? base_path('../ebook.amis.edu.ph/storage/app/private')
+                    : base_path('../amis_ebook/storage/app/private')
+            ),
+            'throw' => false,
+            'report' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

@@ -72,7 +72,7 @@
             <x-dashboard.module-card :href="route('admin.applications.dashboard')" icon="clipboard-check" name="Applications" owner="Registrar Office" summary="Enrollment, review, requirements, approvals ({{ $totalApplications }} applied)" accent="emerald" shape="soft" />
             <x-dashboard.module-card :href="route('admin.students.dashboard')" icon="users" name="Students" owner="Records Office" summary="Dashboard, records, profiles, history, documents" accent="violet" shape="arch" />
             <x-dashboard.module-card :href="route('admin.academic.dashboard')" icon="book-open-check" name="Academic" owner="Academic Office" summary="Subjects, curriculum, sections, schedules" accent="sky" shape="soft" />
-            <x-dashboard.module-card :href="route('admin.ebook.redirect')" icon="book-open" name="eBook Library" owner="LMS" summary="Manage digital textbooks, uploads, grade assignment, and public catalog access" accent="emerald" shape="soft" />
+            <x-dashboard.module-card :href="route('admin.ebook.index')" icon="book-open" name="eBook Library" owner="LMS" summary="Manage digital textbooks, uploads, grade assignment, and public catalog access" accent="emerald" shape="soft" />
             <x-dashboard.module-card icon="calendar-check" name="Attendance" owner="Academic Office" summary="QR, manual attendance, reports" accent="teal" shape="circle" status="Coming Soon" disabled />
             <x-dashboard.module-card icon="graduation-cap" name="Grades" owner="Faculty Office" summary="Encoding, assessment, report cards" accent="blue" shape="arch" status="Coming Soon" disabled />
             <x-dashboard.module-card :href="route('admin.finance.dashboard')" icon="wallet" name="Finance Management" :owner="config('services.school.finance_reviewer_name', 'Finance Office')" summary="Enrollment payment review, SOA, fees, and receipts" accent="amber" shape="soft" />
@@ -220,7 +220,7 @@
                 <x-dashboard.quick-action :href="route('admin.students.index')" icon="user-plus" label="Add Student" meta="Manage enrolled student records" />
                 <x-dashboard.quick-action :href="route('admin.payments.index')" icon="wallet" label="Enrollment Payment Review" meta="Approve or reject payment proofs" />
                 <x-dashboard.quick-action :href="route('admin.soa.index')" icon="scroll-text" label="SOA" meta="Open student accounts and billing" />
-                <x-dashboard.quick-action :href="route('admin.ebook.upload')" icon="upload-cloud" label="Upload eBook" meta="Add a PDF to the eBook library" />
+                <x-dashboard.quick-action :href="route('admin.ebook.create')" icon="upload-cloud" label="Upload eBook" meta="Add a PDF to the eBook library" />
                 {{-- Commented out for live production cleanup --}}
                 {{--
                 <x-dashboard.quick-action :href="route('admin.enrollment.reports')" icon="bar-chart-3" label="Reports" meta="Open enrollment reporting" />

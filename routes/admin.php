@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\RequirementController;
 use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\AdminClassScheduleController;
 use App\Http\Controllers\AdminDiscountSettingsController;
+use App\Http\Controllers\AdminEbookController;
 use App\Http\Controllers\AdminAcademicController;
 use App\Http\Controllers\AdminAcademicTeacherController;
 use App\Http\Controllers\AdminMsSyncController;
@@ -17,8 +18,6 @@ use App\Http\Controllers\AdminPaymentController;
 use App\Http\Controllers\AdminSoaController;
 use App\Http\Controllers\AdminStudentController;
 use App\Http\Controllers\AdminUserController;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route('admin.login'));
@@ -51,34 +50,14 @@ Route::name('admin.')->group(function () {
     Route::middleware(['auth', 'admin'])->group(function () {
         Route::get('/dashboard', DashboardController::class)->name('dashboard');
 
-        $openEbook = function (string $redirectPath = '/admin/books') {
-            $ebookUrl = rtrim((string) config('services.ebook.url'), '/');
-            $secret = (string) config('services.ebook.sso_secret');
-            $redirectPath = '/'.ltrim($redirectPath, '/');
-
-            if ($ebookUrl === '' || $secret === '') {
-                return redirect($ebookUrl !== '' ? "{$ebookUrl}{$redirectPath}" : route('admin.dashboard'));
-            }
-
-            $response = Http::withHeaders(['X-SSO-Secret' => $secret])
-                ->timeout(5)
-                ->post("{$ebookUrl}/sso/token", [
-                    'user_id' => Auth::id(),
-                    'source' => 'amis_admin',
-                ]);
-
-            if (! $response->successful() || blank($response->json('token'))) {
-                return redirect("{$ebookUrl}{$redirectPath}");
-            }
-
-            return redirect()->away("{$ebookUrl}/sso/login?".http_build_query([
-                'sso_token' => $response->json('token'),
-                'redirect' => $redirectPath,
-            ]));
-        };
-
-        Route::get('/ebook', fn () => $openEbook('/admin/books'))->name('ebook.redirect');
-        Route::get('/ebook/upload', fn () => $openEbook('/admin/books/create'))->name('ebook.upload');
+        Route::prefix('ebook')->name('ebook.')->group(function () {
+            Route::get('/', [AdminEbookController::class, 'index'])->name('index');
+            Route::get('/create', [AdminEbookController::class, 'create'])->name('create');
+            Route::post('/', [AdminEbookController::class, 'store'])->name('store');
+            Route::get('/{ebook}/edit', [AdminEbookController::class, 'edit'])->name('edit');
+            Route::put('/{ebook}', [AdminEbookController::class, 'update'])->name('update');
+            Route::delete('/{ebook}', [AdminEbookController::class, 'destroy'])->name('destroy');
+        });
 
         Route::prefix('enrollment')->name('enrollment.')->group(function () {
             Route::get('/', [EnrollmentController::class, 'index'])->name('index');

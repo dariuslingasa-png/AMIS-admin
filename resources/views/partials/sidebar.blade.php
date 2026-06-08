@@ -46,8 +46,8 @@
             'active' => request()->routeIs('admin.ebook.*'),
             'icon' => 'book-open', 'iconClass' => 'text-emerald-600', 'headerClass' => 'text-emerald-700', 'activeClass' => 'sidebar-link-active-emerald', 'title' => 'eBook',
             'links' => [
-                ['Library Dashboard', 'layout-dashboard', route('admin.ebook.redirect'), request()->routeIs('admin.ebook.redirect')],
-                ['Upload eBook', 'upload-cloud', route('admin.ebook.upload'), request()->routeIs('admin.ebook.upload')],
+                ['Library Dashboard', 'layout-dashboard', route('admin.ebook.index'), request()->routeIs('admin.ebook.index')],
+                ['Upload eBook', 'upload-cloud', route('admin.ebook.create'), request()->routeIs('admin.ebook.create')],
             ],
         ],
         [
