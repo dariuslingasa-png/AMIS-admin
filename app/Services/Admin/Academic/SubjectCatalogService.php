@@ -3,9 +3,18 @@
 namespace App\Services\Admin\Academic;
 
 use App\Models\Subject;
+use Illuminate\Support\Collection;
 
 class SubjectCatalogService
 {
+    public function list(): Collection
+    {
+        return Subject::withCount('activeTeacherAssignments')
+            ->orderBy('grade_level')
+            ->orderBy('name')
+            ->get();
+    }
+
     public function create(array $data): Subject
     {
         return Subject::create($this->payload($data));

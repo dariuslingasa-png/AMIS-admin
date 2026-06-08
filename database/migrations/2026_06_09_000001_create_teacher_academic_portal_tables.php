@@ -116,7 +116,7 @@ return new class extends Migration
                 $table->string('type', 40)->default('file');
                 $table->string('disk', 40)->nullable();
                 $table->string('path')->nullable();
-                $table->string('external_url')->nullable();
+                $table->text('external_url')->nullable();
                 $table->string('mime_type')->nullable();
                 $table->unsignedBigInteger('size_bytes')->nullable();
                 $table->string('visibility', 20)->default('published')->index();
