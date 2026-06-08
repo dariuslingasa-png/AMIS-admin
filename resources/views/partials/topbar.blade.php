@@ -11,7 +11,7 @@
                     <i data-lucide="menu" class="h-6 w-6"></i>
                 </button>
                 <a href="{{ route('admin.dashboard') }}" class="ms-2 flex items-center md:me-24">
-                    <img src="{{ asset('images/AMIS_Logo.png') }}" class="me-3 h-8 w-8 object-contain" alt="AMIS Logo">
+                    <img src="{{ asset('images/AMIS_Logo.svg') }}" class="me-3 h-8 w-8 object-contain" alt="AMIS Logo">
                     <span class="self-center whitespace-nowrap text-xl font-semibold dark:text-white">AMIS Admin Portal</span>
                 </a>
             </div>

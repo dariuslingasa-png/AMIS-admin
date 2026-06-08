@@ -2,7 +2,7 @@
     <section class="flex min-h-screen items-center justify-center px-4 py-8">
         <div class="w-full max-w-md rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800 sm:p-8">
             <div class="mb-6 flex items-center gap-3">
-                <img src="{{ asset('images/AMIS_Logo.png') }}" class="h-10 w-10 object-contain" alt="AMIS Logo">
+                <img src="{{ asset('images/AMIS_Logo.svg') }}" class="h-10 w-10 object-contain" alt="AMIS Logo">
                 <div>
                     <h1 class="text-xl font-bold text-gray-900 dark:text-white">AMIS Admin Portal</h1>
                     <p class="text-sm text-gray-500 dark:text-gray-400">Sign in to continue</p>
