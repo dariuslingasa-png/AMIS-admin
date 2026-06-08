@@ -54,6 +54,13 @@ class AdminEbookController extends Controller
             ->paginate(12)
             ->withQueryString();
 
+        $totalBytes = 0;
+        foreach (Ebook::all() as $book) {
+            if ($book->file_path && Storage::disk(self::STORAGE_DISK)->exists($book->file_path)) {
+                $totalBytes += Storage::disk(self::STORAGE_DISK)->size($book->file_path);
+            }
+        }
+
         $stats = [
             'total' => Ebook::count(),
             'published' => Ebook::where('status', 'published')->count(),
@@ -61,6 +68,7 @@ class AdminEbookController extends Controller
             'downloads_enabled' => Ebook::where('is_downloadable', true)->count(),
             'views' => Schema::hasTable('ebook_access_logs') ? EbookAccessLog::where('action', 'view')->count() : 0,
             'streams' => Schema::hasTable('ebook_access_logs') ? EbookAccessLog::where('action', 'stream')->count() : 0,
+            'storage_used' => $this->formatBytes($totalBytes),
         ];
 
         $recentLogs = Schema::hasTable('ebook_access_logs')
@@ -451,5 +459,18 @@ class AdminEbookController extends Controller
         imagedestroy($targetImage);
 
         return $saved;
+    }
+
+    private function formatBytes(int $bytes, int $precision = 2): string
+    {
+        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+
+        $bytes = max($bytes, 0);
+        $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
+        $pow = min($pow, count($units) - 1);
+
+        $bytes /= pow(1024, $pow);
+
+        return round($bytes, $precision) . ' ' . $units[$pow];
     }
 }

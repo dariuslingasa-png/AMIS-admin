@@ -27,12 +27,13 @@
         </div>
     </section>
 
-    <section class="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <section class="mt-6 grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
         @foreach ([
-            ['label' => 'Total Books', 'value' => $stats['total'], 'icon' => 'books', 'classes' => 'bg-emerald-50 text-emerald-700'],
-            ['label' => 'Published', 'value' => $stats['published'], 'icon' => 'badge-check', 'classes' => 'bg-teal-50 text-teal-700'],
-            ['label' => 'Drafts', 'value' => $stats['drafts'], 'icon' => 'file-pen-line', 'classes' => 'bg-amber-50 text-amber-700'],
-            ['label' => 'Reader Opens', 'value' => $stats['views'] + $stats['streams'], 'icon' => 'activity', 'classes' => 'bg-sky-50 text-sky-700'],
+            ['label' => 'Total Books', 'value' => number_format($stats['total']), 'icon' => 'books', 'classes' => 'bg-emerald-50 text-emerald-700'],
+            ['label' => 'Published', 'value' => number_format($stats['published']), 'icon' => 'badge-check', 'classes' => 'bg-teal-50 text-teal-700'],
+            ['label' => 'Drafts', 'value' => number_format($stats['drafts']), 'icon' => 'file-pen-line', 'classes' => 'bg-amber-50 text-amber-700'],
+            ['label' => 'Reader Opens', 'value' => number_format($stats['views'] + $stats['streams']), 'icon' => 'activity', 'classes' => 'bg-sky-50 text-sky-700'],
+            ['label' => 'PDF Storage', 'value' => $stats['storage_used'], 'icon' => 'database', 'classes' => 'bg-violet-50 text-violet-700'],
         ] as $stat)
             <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <div class="flex items-center justify-between">
@@ -42,7 +43,7 @@
                     <span class="rounded-full bg-slate-50 px-2.5 py-1 text-xs font-bold text-slate-500">Live</span>
                 </div>
                 <p class="mt-5 text-sm font-semibold text-slate-500">{{ $stat['label'] }}</p>
-                <p class="mt-1 text-3xl font-extrabold text-slate-950">{{ number_format($stat['value']) }}</p>
+                <p class="mt-1 text-3xl font-extrabold text-slate-950">{{ $stat['value'] }}</p>
             </div>
         @endforeach
     </section>
