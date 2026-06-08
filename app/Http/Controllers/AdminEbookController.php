@@ -19,6 +19,7 @@ class AdminEbookController extends Controller
     private const STORAGE_DISK = 'ebook_private';
 
     private const GRADE_LEVELS = [
+        'Kindergarten',
         'Kinder 1',
         'Kinder 2',
         'Grade 1',
