@@ -22,7 +22,7 @@
         @method('PUT')
     @endif
 
-    <fieldset :disabled="uploading" class="space-y-6">
+    <fieldset :disabled="showModal" class="space-y-6">
         <div class="grid gap-5 lg:grid-cols-2">
             <label class="block lg:col-span-2">
                 <span class="text-xs font-black uppercase tracking-wider text-slate-500">Book Title</span>
