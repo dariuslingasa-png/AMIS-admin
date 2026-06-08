@@ -204,9 +204,8 @@
             optimizeInterval: null,
             stages: [
                 { label: 'Uploading PDF to server', status: 'pending' },
-                { label: 'Compressing images & downscaling to 150 DPI', status: 'pending' },
-                { label: 'Optimizing fonts & removing duplicates', status: 'pending' },
-                { label: 'Linearizing for fast web loading', status: 'pending' },
+                { label: 'Saving eBook & generating cover', status: 'pending' },
+                { label: 'Starting background optimization', status: 'pending' },
             ],
 
             submitForm(event) {
@@ -218,8 +217,8 @@
                 this.showModal = true;
                 this.displayProgress = 0;
                 this.phase = 'uploading';
-                this.modalTitle = 'Uploading & Optimizing eBook';
-                this.modalSubtitle = 'Please wait while we process your PDF';
+                this.modalTitle = 'Uploading eBook';
+                this.modalSubtitle = 'Please wait while we upload your PDF';
                 this.statusText = 'Uploading...';
                 this.elapsedText = '0s';
                 this.startTime = Date.now();
@@ -257,13 +256,13 @@
                     }
                 });
 
-                // Upload done → server optimization phase
+                // Upload done → server saving phase
                 xhr.upload.addEventListener('load', () => {
                     this.stages[0].status = 'done';
                     this.stages[1].status = 'active';
                     this.phase = 'optimizing';
-                    this.displayProgress = 70;
-                    this.statusText = 'Compressing images...';
+                    this.displayProgress = 80;
+                    this.statusText = 'Saving eBook...';
                     this.startOptimizingAnimation();
                     this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
                 });
@@ -278,7 +277,7 @@
                         this.displayProgress = 100;
                         this.statusText = 'Complete!';
                         this.modalTitle = 'eBook Uploaded Successfully';
-                        this.modalSubtitle = 'Redirecting to library...';
+                        this.modalSubtitle = 'Optimization is running in the background. Redirecting...';
                         this.stages.forEach(s => s.status = 'done');
                         this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
                         setTimeout(() => {
@@ -345,24 +344,17 @@
                     }
 
                     // Update stages based on time
-                    if (tick >= 5 && this.stages[1].status === 'active') {
+                    if (tick >= 3 && this.stages[1].status === 'active') {
                         this.stages[1].status = 'done';
                         this.stages[2].status = 'active';
                         this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
                     }
-                    if (tick >= 12 && this.stages[2].status === 'active') {
-                        this.stages[2].status = 'done';
-                        this.stages[3].status = 'active';
-                        this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
-                    }
 
                     const messages = [
-                        'Compressing images...',
-                        'Downscaling to 150 DPI...',
-                        'Subsetting fonts...',
-                        'Removing duplicate objects...',
-                        'Linearizing for web...',
-                        'Finalizing...',
+                        'Saving eBook...',
+                        'Generating cover image...',
+                        'Starting optimization...',
+                        'Almost done...',
                     ];
                     const idx = Math.min(Math.floor(tick / 8), messages.length - 1);
                     this.statusText = messages[idx];
