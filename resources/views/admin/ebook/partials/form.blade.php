@@ -44,7 +44,7 @@
                 <span class="text-xs font-black uppercase tracking-wider text-slate-500">PDF Document</span>
                 <input type="file" name="pdf_file" accept="application/pdf" @required(! $isEdit) class="mt-2 block h-12 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 file:mr-4 file:rounded-lg file:border-0 file:bg-emerald-50 file:px-4 file:py-2 file:text-xs file:font-black file:text-emerald-700 hover:file:bg-emerald-100">
                 <span class="mt-2 block text-xs font-semibold text-slate-500">
-                    {{ $isEdit ? 'Leave blank to keep the current PDF.' : 'PDF only, maximum 50MB.' }}
+                    {{ $isEdit ? 'Leave blank to keep the current PDF.' : 'PDF only, maximum 1GB.' }}
                 </span>
             </label>
 
@@ -204,8 +204,8 @@
             optimizeInterval: null,
             stages: [
                 { label: 'Uploading PDF to server', status: 'pending' },
-                { label: 'Saving eBook & generating cover', status: 'pending' },
-                { label: 'Starting background optimization', status: 'pending' },
+                { label: 'Saving eBook record', status: 'pending' },
+                { label: 'Starting background cover and optimization', status: 'pending' },
             ],
 
             submitForm(event) {
@@ -274,7 +274,7 @@
                         this.displayProgress = 100;
                         this.statusText = 'Complete!';
                         this.modalTitle = 'eBook Uploaded Successfully';
-                        this.modalSubtitle = 'Optimization is running in the background. Redirecting...';
+                        this.modalSubtitle = 'Cover generation and optimization are running in the background. Redirecting...';
                         this.stages.forEach(s => s.status = 'done');
                         this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
                         setTimeout(() => {
@@ -349,8 +349,8 @@
 
                     const messages = [
                         'Saving eBook...',
-                        'Generating cover image...',
-                        'Starting optimization...',
+                        'Starting background cover generation...',
+                        'Starting background optimization...',
                         'Almost done...',
                     ];
                     const idx = Math.min(Math.floor(tick / 8), messages.length - 1);

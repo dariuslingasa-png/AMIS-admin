@@ -115,10 +115,6 @@ class AdminEbookController extends Controller
         $data['file_path'] = $this->storePdf($request);
         $data['created_by'] = Auth::id();
 
-        // Generate cover image from the uploaded PDF
-        $pdfAbsPath = Storage::disk(self::STORAGE_DISK)->path($data['file_path']);
-        $data['cover_image_path'] = $this->generateCoverFromPdf($pdfAbsPath);
-
         // Allow manual cover upload to override auto-generated cover
         if ($request->hasFile('cover_image')) {
             $manualCover = $this->storeManualCover($request);
@@ -127,7 +123,11 @@ class AdminEbookController extends Controller
             }
         }
 
-        Ebook::create($data);
+        $ebook = Ebook::create($data);
+
+        if (empty($data['cover_image_path'])) {
+            $this->generateCoverInBackground($ebook);
+        }
 
         return redirect()->route('admin.ebook.index')->with('success', 'eBook uploaded successfully.');
     }
@@ -143,25 +143,31 @@ class AdminEbookController extends Controller
     public function update(Request $request, Ebook $ebook): RedirectResponse
     {
         $data = $this->validatedData($request, requirePdf: false);
+        $shouldGenerateCover = false;
 
         if ($request->hasFile('pdf_file')) {
             $this->deletePdf($ebook);
+            $this->deleteCover($ebook);
             $data['file_path'] = $this->storePdf($request);
-
-            // Re-generate cover from new PDF
-            $pdfAbsPath = Storage::disk(self::STORAGE_DISK)->path($data['file_path']);
-            $data['cover_image_path'] = $this->generateCoverFromPdf($pdfAbsPath);
+            $data['cover_image_path'] = null;
+            $shouldGenerateCover = true;
         }
 
         // Allow manual cover upload to override
         if ($request->hasFile('cover_image')) {
+            $this->deleteCover($ebook);
             $manualCover = $this->storeManualCover($request);
             if ($manualCover) {
                 $data['cover_image_path'] = $manualCover;
+                $shouldGenerateCover = false;
             }
         }
 
         $ebook->update($data);
+
+        if ($shouldGenerateCover) {
+            $this->generateCoverInBackground($ebook->fresh());
+        }
 
         return redirect()->route('admin.ebook.index')->with('success', 'eBook updated successfully.');
     }
@@ -272,99 +278,6 @@ class AdminEbookController extends Controller
     }
 
     /**
-     * Generate a WebP cover image from the first page of a PDF.
-     */
-    private function generateCoverFromPdf(string $pdfAbsolutePath): ?string
-    {
-        if (! file_exists($pdfAbsolutePath)) {
-            return null;
-        }
-
-        $uuid = Str::uuid();
-        $tempDir = sys_get_temp_dir();
-        $tempPngPrefix = "{$tempDir}/ebook_cover_{$uuid}";
-
-        $coversDir = $this->getEbookPublicCoversDir();
-        if (! $coversDir) {
-            Log::warning('Cannot determine ebook public covers directory for cover generation.');
-
-            return null;
-        }
-
-        $webpFilename = "{$uuid}.webp";
-        $webpAbsolutePath = "{$coversDir}/{$webpFilename}";
-
-        // Step 1: Extract first page as PNG using pdftoppm
-        $pdftoppmCmd = sprintf(
-            'pdftoppm -f 1 -l 1 -r 150 -png %s %s 2>&1',
-            escapeshellarg($pdfAbsolutePath),
-            escapeshellarg($tempPngPrefix)
-        );
-
-        exec($pdftoppmCmd, $output, $returnCode);
-
-        if ($returnCode !== 0) {
-            Log::warning("pdftoppm failed for cover generation: " . implode("\n", $output));
-
-            return null;
-        }
-
-        // pdftoppm outputs files like: prefix-1.png or prefix-01.png
-        $tempPngPath = null;
-        foreach (glob("{$tempPngPrefix}*.png") as $file) {
-            $tempPngPath = $file;
-            break;
-        }
-
-        if (! $tempPngPath || ! file_exists($tempPngPath)) {
-            return null;
-        }
-
-        // Step 2: Convert PNG to WebP
-        $converted = false;
-
-        // Try cwebp first
-        $cwebpCmd = sprintf(
-            'cwebp -q 60 -resize 400 0 %s -o %s 2>&1',
-            escapeshellarg($tempPngPath),
-            escapeshellarg($webpAbsolutePath)
-        );
-        exec($cwebpCmd, $cwebpOutput, $cwebpReturn);
-
-        if ($cwebpReturn === 0 && file_exists($webpAbsolutePath)) {
-            $converted = true;
-        }
-
-        // Fallback: ImageMagick convert
-        if (! $converted) {
-            $convertCmd = sprintf(
-                'convert %s -resize 400x -quality 60 %s 2>&1',
-                escapeshellarg($tempPngPath),
-                escapeshellarg($webpAbsolutePath)
-            );
-            exec($convertCmd, $convertOutput, $convertReturn);
-
-            if ($convertReturn === 0 && file_exists($webpAbsolutePath)) {
-                $converted = true;
-            }
-        }
-
-        // Fallback: store as PNG
-        if (! $converted) {
-            $pngFilename = "{$uuid}.png";
-            $pngAbsolutePath = "{$coversDir}/{$pngFilename}";
-            copy($tempPngPath, $pngAbsolutePath);
-            @unlink($tempPngPath);
-
-            return file_exists($pngAbsolutePath) ? "covers/{$pngFilename}" : null;
-        }
-
-        @unlink($tempPngPath);
-
-        return "covers/{$webpFilename}";
-    }
-
-    /**
      * Delete cover image from ebook portal's public storage.
      */
     private function deleteCover(Ebook $ebook): void
@@ -380,6 +293,25 @@ class AdminEbookController extends Controller
                 @unlink($coverFile);
             }
         }
+    }
+
+    private function generateCoverInBackground(?Ebook $ebook): void
+    {
+        if (! $ebook?->id) {
+            return;
+        }
+
+        $phpBinary = PHP_BINDIR.DIRECTORY_SEPARATOR.'php';
+        $php = escapeshellarg(is_executable($phpBinary) ? $phpBinary : 'php');
+        $artisan = escapeshellarg(base_path('artisan'));
+        $ebookId = escapeshellarg((string) $ebook->id);
+        $logFile = escapeshellarg(storage_path('logs/ebook-cover.log'));
+
+        exec("nohup {$php} {$artisan} ebook:generate-cover {$ebookId} >> {$logFile} 2>&1 &");
+
+        Log::info('eBook cover generation started in background.', [
+            'ebook_id' => $ebook->id,
+        ]);
     }
 
     /**
