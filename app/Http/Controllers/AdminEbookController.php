@@ -160,7 +160,7 @@ class AdminEbookController extends Controller
             'description' => ['nullable', 'string'],
             'grade_level' => ['required', 'string', Rule::in(self::GRADE_LEVELS)],
             'pdf_file' => [$requirePdf ? 'required' : 'nullable', 'file', 'mimes:pdf', 'max:51200'],
-            'cover_image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:1024'],
+            'cover_image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
             'status' => ['required', 'string', Rule::in(['published', 'draft'])],
             'is_downloadable' => ['nullable', 'boolean'],
         ]);
@@ -209,9 +209,14 @@ class AdminEbookController extends Controller
         }
 
         $targetPath = "{$coversDir}/{$webpFilename}";
-
-        // Try to convert to WebP using ImageMagick convert
         $tempPath = $file->getRealPath();
+
+        // 1. Try to resize and compress using GD (Pure PHP - highly compatible, works on Bluehost)
+        if ($this->resizeAndCompressImageGD($tempPath, $targetPath, 400, 60)) {
+            return "covers/{$webpFilename}";
+        }
+
+        // 2. Try to convert to WebP using ImageMagick convert (System binary fallback)
         $convertCmd = sprintf(
             'convert %s -resize 400x -quality 60 %s 2>&1',
             escapeshellarg($tempPath),
@@ -223,7 +228,7 @@ class AdminEbookController extends Controller
             return "covers/{$webpFilename}";
         }
 
-        // Fallback: store as-is with original extension
+        // 3. Fallback: store as-is with original extension
         $ext = $file->getClientOriginalExtension();
         $fallbackFilename = "{$uuid}.{$ext}";
         $file->move($coversDir, $fallbackFilename);
@@ -360,5 +365,90 @@ class AdminEbookController extends Controller
         }
 
         return $coversDir;
+    }
+
+    /**
+     * Resize and compress an image using PHP's GD library.
+     * Generates a WebP image by default, falling back to JPEG if WebP isn't supported.
+     */
+    private function resizeAndCompressImageGD(string $sourcePath, string $targetPath, int $targetWidth = 400, int $quality = 60): bool
+    {
+        // 1. Get image info
+        $info = @getimagesize($sourcePath);
+        if (!$info) {
+            return false;
+        }
+
+        $mime = $info['mime'];
+
+        // 2. Create image resource from source
+        switch ($mime) {
+            case 'image/jpeg':
+            case 'image/jpg':
+                $sourceImage = @imagecreatefromjpeg($sourcePath);
+                break;
+            case 'image/png':
+                $sourceImage = @imagecreatefrompng($sourcePath);
+                break;
+            case 'image/webp':
+                $sourceImage = @imagecreatefromwebp($sourcePath);
+                break;
+            default:
+                return false;
+        }
+
+        if (!$sourceImage) {
+            return false;
+        }
+
+        // 3. Calculate new dimensions preserving aspect ratio
+        $origWidth = imagesx($sourceImage);
+        $origHeight = imagesy($sourceImage);
+
+        if ($origWidth > $targetWidth) {
+            $targetHeight = (int) (($origHeight / $origWidth) * $targetWidth);
+        } else {
+            // No need to upscale if the source is already small
+            $targetWidth = $origWidth;
+            $targetHeight = $origHeight;
+        }
+
+        // 4. Create new true color image
+        $targetImage = imagecreatetruecolor($targetWidth, $targetHeight);
+        if (!$targetImage) {
+            imagedestroy($sourceImage);
+            return false;
+        }
+
+        // Handle transparency for PNG/WebP
+        if ($mime === 'image/png' || $mime === 'image/webp') {
+            imagealphablending($targetImage, false);
+            imagesavealpha($targetImage, true);
+            $transparent = imagecolorallocatealpha($targetImage, 255, 255, 255, 127);
+            imagefilledrectangle($targetImage, 0, 0, $targetWidth, $targetHeight, $transparent);
+        }
+
+        // 5. Resample the image
+        if (!imagecopyresampled($targetImage, $sourceImage, 0, 0, 0, 0, $targetWidth, $targetHeight, $origWidth, $origHeight)) {
+            imagedestroy($sourceImage);
+            imagedestroy($targetImage);
+            return false;
+        }
+
+        // 6. Save as WebP if possible, otherwise save as JPEG
+        $saved = false;
+        if (function_exists('imagewebp')) {
+            // Save as WebP
+            $saved = @imagewebp($targetImage, $targetPath, $quality);
+        } else {
+            // Fallback to JPEG
+            $saved = @imagejpeg($targetImage, $targetPath, $quality);
+        }
+
+        // 7. Free up memory
+        imagedestroy($sourceImage);
+        imagedestroy($targetImage);
+
+        return $saved;
     }
 }
