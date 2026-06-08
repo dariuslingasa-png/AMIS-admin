@@ -81,6 +81,7 @@
                             <th class="px-5 py-4 font-black">Book</th>
                             <th class="px-5 py-4 font-black">Grade</th>
                             <th class="px-5 py-4 font-black">Status</th>
+                            <th class="px-5 py-4 font-black">Size</th>
                             <th class="px-5 py-4 font-black">Downloads</th>
                             <th class="px-5 py-4 font-black">Uploaded</th>
                             <th class="px-5 py-4 text-right font-black">Actions</th>
@@ -101,6 +102,7 @@
                                         {{ ucfirst($book->status) }}
                                     </span>
                                 </td>
+                                <td class="px-5 py-4 text-xs font-extrabold text-slate-700">{{ $book->pdf_size }}</td>
                                 <td class="px-5 py-4 text-xs font-bold text-slate-600">{{ $book->is_downloadable ? 'Enabled' : 'Disabled' }}</td>
                                 <td class="px-5 py-4 text-xs font-semibold text-slate-500">{{ optional($book->created_at)->format('M d, Y') }}</td>
                                 <td class="px-5 py-4">
@@ -122,7 +124,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="px-5 py-12 text-center">
+                                <td colspan="7" class="px-5 py-12 text-center">
                                     <div class="mx-auto flex max-w-sm flex-col items-center">
                                         <span class="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
                                             <i data-lucide="book-open" class="h-7 w-7"></i>
