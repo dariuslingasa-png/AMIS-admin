@@ -1,0 +1,272 @@
+<?php
+
+namespace App\Services\Admin\Academic;
+
+use App\Repositories\AcademicRepository;
+use App\Repositories\TeacherRepository;
+use App\Services\ImageOptimizerService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
+
+class TeacherDirectoryService
+{
+    public function __construct(
+        private readonly AcademicRepository $academic,
+        private readonly TeacherRepository $teachers,
+        private readonly TeacherAccountService $accounts
+    ) {
+    }
+
+    public function indexPayload(?string $editId = null): array
+    {
+        $teachers = $this->teachers()->values()->all();
+        $teacherGroups = collect(['Elementary Department', 'High School Department', 'Islamic School and Arabic Language Department'])
+            ->map(fn (string $department) => [
+                'name' => $department,
+                'teachers' => collect($teachers)->where('dept', $department)->values(),
+            ]);
+
+        $unassigned = collect($teachers)->filter(fn (array $teacher) => blank($teacher['dept'] ?? null))->values();
+        if ($unassigned->isNotEmpty()) {
+            $teacherGroups->push(['name' => 'Unassigned Department', 'teachers' => $unassigned]);
+        }
+
+        $dbEmails = \App\Models\User::where('email', 'like', '%@amis.edu.ph')->pluck('email');
+        $studentEmails = \App\Models\Student::whereNotNull('school_email')->pluck('school_email');
+        $teacherEmails = collect($teachers)->pluck('email');
+        $emailBank = $dbEmails->merge($studentEmails)->merge($teacherEmails)->unique()->sort()->values()->all();
+
+        return [
+            'teachers' => $teachers,
+            'teacherGroups' => $teacherGroups,
+            'selectedTeacher' => collect($teachers)->firstWhere('id', (string) $editId),
+            'emailBank' => $emailBank,
+        ];
+    }
+
+    public function create(array $data, Request $request): array
+    {
+        $teacher = $this->normalize($data);
+        $id = $this->uniqueTeacherId($teacher['name']);
+        $teacher['photo'] = $request->hasFile('photo') ? $this->storePhoto($request, $id) : null;
+        $teacher['password_changed'] = 'No';
+        $teacher['temporary_password'] = $this->accounts->generatePassword();
+
+        $this->teachers->saveTeacher($id, $teacher);
+        $this->accounts->syncCreatedTeacher($teacher, $teacher['temporary_password']);
+
+        return ['id' => $id, 'teacher' => $teacher];
+    }
+
+    public function update(array $data, Request $request): array
+    {
+        $id = Str::slug($data['id']);
+        $existing = $this->teachers->findOverride($id) ?? [];
+        $teacher = $this->normalize($data);
+        $oldEmail = $existing['email'] ?? null;
+        $password = $existing['temporary_password'] ?? null;
+
+        $teacher['photo'] = $request->hasFile('photo') ? $this->storePhoto($request, $id) : ($existing['photo'] ?? null);
+        $teacher['password_changed'] = $existing['password_changed'] ?? 'No';
+        $teacher['subjects'] = $this->cleanSubjects($existing['subjects'] ?? []);
+
+        if ($oldEmail && strtolower($oldEmail) !== strtolower($teacher['email'])) {
+            $teacher['password_changed'] = 'No';
+            $password = $this->accounts->generatePassword();
+        } elseif (blank($password) && $teacher['password_changed'] === 'No') {
+            $password = $this->accounts->generatePassword();
+        }
+
+        $teacher['temporary_password'] = $password;
+        $this->teachers->saveTeacher($id, $teacher);
+        $this->accounts->syncUpdatedTeacher($teacher, $existing, $password, $oldEmail);
+
+        return ['id' => $id, 'teacher' => $teacher];
+    }
+
+    public function updateSubjects(string $id, array $subjects): void
+    {
+        $teacher = $this->findRaw($id);
+        abort_unless($teacher, 404, 'Teacher not found.');
+        $teacher['subjects'] = $this->cleanSubjects($subjects);
+        $this->teachers->saveTeacher(Str::slug($id), $teacher);
+    }
+
+    public function resetCredentials(string $id): array
+    {
+        $teacher = $this->findRaw($id);
+        abort_unless($teacher, 404, 'Teacher not found.');
+        $credentials = $this->accounts->resetCredentials($teacher);
+        $teacher['password_changed'] = 'No';
+        $teacher['temporary_password'] = $credentials['password'];
+        $this->teachers->saveTeacher(Str::slug($id), $teacher);
+
+        return $credentials;
+    }
+
+    public function togglePasswordChanged(string $id): void
+    {
+        $teacher = $this->findRaw($id);
+        abort_unless($teacher, 404, 'Teacher not found.');
+        $teacher['password_changed'] = ($teacher['password_changed'] ?? 'No') === 'Yes' ? 'No' : 'Yes';
+        $this->teachers->saveTeacher(Str::slug($id), $teacher);
+    }
+
+    public function profile(string $id): array
+    {
+        $teacher = $this->findRaw($id);
+        abort_unless($teacher, 404, 'Teacher not found.');
+        $teacher = array_merge($this->defaults(), $teacher);
+        $teacher = array_merge($teacher, $this->subjectLoad($teacher));
+        $teacher['initials'] = $this->initials($teacher['name']);
+
+        return [
+            'teacher' => $teacher,
+            'isHighSchool' => str_contains($teacher['dept'], 'High'),
+            'isIslamicArabic' => str_contains($teacher['dept'], 'Islamic School'),
+        ];
+    }
+
+    public function find(string $id): ?array
+    {
+        return $this->teachers()->firstWhere('id', Str::slug($id));
+    }
+
+    private function findRaw(string $id): ?array
+    {
+        $id = Str::slug($id);
+        $overrides = $this->teachers->overrides();
+        $base = $this->baseTeachers()->firstWhere('id', $id);
+
+        if (! $base && ! isset($overrides[$id])) {
+            return null;
+        }
+
+        return array_merge($this->defaults(), $base ?? ['id' => $id], $overrides[$id] ?? []);
+    }
+
+    private function teachers(): Collection
+    {
+        $overrides = $this->teachers->overrides();
+        $base = $this->baseTeachers();
+        $baseIds = $base->pluck('id')->all();
+        $custom = collect($overrides)->reject(fn ($teacher, string $id) => in_array($id, $baseIds, true))
+            ->map(fn (array $teacher, string $id) => array_merge($this->defaults(), ['id' => $id], $teacher));
+
+        return $base->map(fn (array $teacher) => array_merge($this->defaults(), $teacher, $overrides[$teacher['id']] ?? []))
+            ->merge($custom)
+            ->map(fn (array $teacher) => array_merge($teacher, $this->subjectLoad($teacher)));
+    }
+
+    private function baseTeachers(): Collection
+    {
+        $advisory = $this->academic->advisoryRows()->map(fn (array $row) => [
+            'id' => $this->teacherId($row['teacher']),
+            'name' => $row['teacher'],
+            'email' => $this->teacherEmail($row['teacher']),
+            'dept' => $row['department'],
+            'sections' => $row['grade'].' / '.$row['grade_level'],
+            'status' => 'Active',
+            'photo' => $row['photo'] ?? null,
+        ]);
+
+        return $advisory->merge([
+            ['id' => 'ust-raffy-lingasa', 'name' => 'Ust. Raffy Lingasa', 'email' => 'tr.rlingasa@amis.edu.ph', 'dept' => 'Islamic School and Arabic Language Department', 'sections' => 'Qur\'an / Arabic Language', 'status' => 'Active', 'photo' => null],
+            ['id' => 'ust-ahmad-al-jamil', 'name' => 'Ust. Ahmad Al-Jamil', 'email' => 'tr.ajamil@amis.edu.ph', 'dept' => 'Islamic School and Arabic Language Department', 'sections' => 'SHAF / Islamic Studies', 'status' => 'Active', 'photo' => null],
+            ['id' => 'ust-omar-mukhtar', 'name' => 'Ust. Omar Mukhtar', 'email' => 'tr.omukhtar@amis.edu.ph', 'dept' => 'Islamic School and Arabic Language Department', 'sections' => 'Arabic Language', 'status' => 'Inactive', 'photo' => null],
+        ]);
+    }
+
+    private function normalize(array $data): array
+    {
+        $name = trim($data['name'] ?? '');
+        $email = trim($data['email'] ?? '');
+        $microsoftSync = isset($data['microsoft_sync']) ? (bool) $data['microsoft_sync'] : false;
+
+        return array_merge($this->defaults(), $data, [
+            'name' => $name,
+            'email' => $email,
+            'microsoft_sync' => $microsoftSync,
+        ]);
+    }
+
+    private function subjectLoad(array $teacher): array
+    {
+        $target = 8;
+        $pool = collect($this->subjectPool($teacher['dept'] ?? ''));
+        $subjects = collect($teacher['subjects'] ?? [])->filter()->unique()->values();
+        if (! array_key_exists('subjects', $teacher) && $subjects->isEmpty() && ($teacher['status'] ?? 'Active') === 'Active') {
+            $subjects = $pool->take(6 + (crc32((string) ($teacher['id'] ?? $teacher['name'])) % 3))->values();
+        }
+        $count = $subjects->count();
+
+        return [
+            'subjects' => $subjects->all(),
+            'subject_options' => $pool->all(),
+            'subject_count' => $count,
+            'load_target' => $target,
+            'load_percent' => min(100, (int) round(($count / $target) * 100)),
+            'load_status' => $count >= $target ? 'Full Load' : ($count >= 6 ? 'Balanced Load' : 'Needs Load'),
+        ];
+    }
+
+    private function defaults(): array
+    {
+        return ['name' => '', 'email' => '', 'dept' => '', 'sections' => '', 'status' => 'Active', 'license' => 'faculty_a1', 'photo' => null, 'first_name' => '', 'middle_name' => '', 'last_name' => '', 'gender' => 'Male', 'birthdate' => '', 'contact_number' => '', 'address' => '', 'password_changed' => 'No', 'temporary_password' => null, 'microsoft_sync' => true];
+    }
+
+    private function cleanSubjects(array $subjects): array
+    {
+        return collect($subjects)->map(fn ($subject) => trim((string) $subject))->filter()->unique()->take(8)->values()->all();
+    }
+
+    private function subjectPool(string $department): array
+    {
+        return str_contains($department, 'Islamic School')
+            ? ['Qur’an', 'Arabic Language', 'SHAF', 'Seerah', 'Hadith', 'Aqeedah', 'Fiqh', 'Islamic Values']
+            : (str_contains($department, 'High School') ? ['English', 'Mathematics', 'Science', 'Araling Panlipunan', 'Filipino', 'MAPEH', 'TLE', 'Computer Education'] : ['Reading and Literacy', 'Mathematics', 'Science', 'English', 'Filipino', 'GMRC', 'MAPEH', 'Computer Education']);
+    }
+
+    private function storePhoto(Request $request, string $id): string
+    {
+        $file = $request->file('photo');
+        $optimizer = new ImageOptimizerService();
+        if ($optimizer->isOptimizable($file->getClientMimeType())) {
+            return 'storage/' . $optimizer->optimize($file, 'public', 'images/teachers', $id)['optimized'];
+        }
+        $extension = $file->getClientOriginalExtension() ?: $file->guessExtension() ?: 'bin';
+
+        return 'storage/' . $file->storeAs('images/teachers/original', "{$id}.{$extension}", 'public');
+    }
+
+    private function teacherEmail(string $name): string
+    {
+        $cleanName = Str::of($name)->replaceMatches('/^(teacher|ust\.|ustadz\.?|ustadh\.?|sir\.?|ma\'am\.?|maam\.?|ms\.?|mrs\.?|mr\.?)\s+/i', '')->ascii()->lower()->replaceMatches('/[^a-z\s]/', '')->squish();
+        $parts = explode(' ', (string) $cleanName);
+
+        return count($parts) >= 2 ? 'tr.' . substr($parts[0], 0, 1) . end($parts) . '@amis.edu.ph' : 'tr.' . $cleanName . '@amis.edu.ph';
+    }
+
+    private function teacherId(string $name): string
+    {
+        return Str::slug(Str::of($name)->ascii());
+    }
+
+    private function uniqueTeacherId(string $name): string
+    {
+        $base = $this->teacherId($name) ?: 'teacher';
+        $id = $base;
+        $reserved = $this->baseTeachers()->pluck('id')->merge(array_keys($this->teachers->overrides()))->all();
+        for ($counter = 2; in_array($id, $reserved, true); $counter++) {
+            $id = "{$base}-{$counter}";
+        }
+
+        return $id;
+    }
+
+    private function initials(string $name): string
+    {
+        return collect(explode(' ', str_replace(['Ust. ', 'Tchr. ', 'TEACHER '], '', $name)))->filter()->map(fn ($part) => substr($part, 0, 1))->take(2)->implode('');
+    }
+}

@@ -42,10 +42,19 @@ return [
         'admin_upn'      => env('MICROSOFT_ADMIN_UPN'),
         'admin_password' => env('MICROSOFT_ADMIN_PASSWORD'),
         'redirect_uri'   => env('MICROSOFT_REDIRECT_URI', rtrim((string) env('APP_URL', 'http://localhost'), '/').'/auth/microsoft/callback'),
+        'faculty_sku_id' => env('AZURE_FACULTY_SKU_ID', '947626ab-6b22-4217-a1cc-e2a2a0612dca'),
+        'faculty_a3_sku_id' => env('AZURE_FACULTY_A3_SKU_ID', 'e97c179c-1a13-4029-917c-2e55aa8b3b35'),
+        'faculty_a5_sku_id' => env('AZURE_FACULTY_A5_SKU_ID', '0287b9a5-aa37-4a9f-a42f-dc90ec7f3334'),
+        'student_sku_id' => env('AZURE_STUDENT_SKU_ID', '314c3e15-8a2a-4275-a131-7e885c37efb4'),
     ],
 
     'enrollment_storage_url' => env('ENROLLMENT_STORAGE_URL'),
     'student_portal_url' => env('STUDENT_PORTAL_URL', env('APP_URL')),
+
+    'ebook' => [
+        'url' => env('EBOOK_PORTAL_URL', 'http://127.0.0.1:8003'),
+        'sso_secret' => env('SSO_SECRET'),
+    ],
 
     'school' => [
         'year'                  => env('SCHOOL_YEAR', '2026-2027'),

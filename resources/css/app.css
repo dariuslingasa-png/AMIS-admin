@@ -47,7 +47,8 @@ body {
     border: 1px solid rgba(99, 102, 241, 0.22);
     box-shadow: 0 10px 30px -10px rgba(79, 70, 229, 0.25), 0 1px 3px rgba(0, 0, 0, 0.05);
     color: #ffffff;
-    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+    isolation: isolate;
+    transition: box-shadow 0.18s ease;
 }
 
 @media (min-width: 768px) {
@@ -58,7 +59,39 @@ body {
 
 .academic-hero-banner:hover {
     box-shadow: 0 15px 35px -8px rgba(79, 70, 229, 0.32), 0 1px 3px rgba(0, 0, 0, 0.05);
-    transform: translateY(-1px);
+}
+
+/* Academic module performance:
+   large blur filters, backdrop filters, and many hover transforms make scroll feel sticky
+   on lower-end GPUs. Keep the visual language, but avoid repaint-heavy effects here. */
+.analytics-page .academic-hero-banner .blur-3xl,
+.space-y-6 > .academic-hero-banner .blur-3xl {
+    display: none !important;
+}
+
+.analytics-page .backdrop-blur,
+.analytics-page .backdrop-blur-xs,
+.analytics-page .backdrop-blur-sm,
+.space-y-6 > .academic-hero-banner .backdrop-blur,
+.space-y-6 > .academic-hero-banner .backdrop-blur-xs,
+.space-y-6 > .academic-hero-banner .backdrop-blur-sm {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+}
+
+.analytics-page [class*="hover:-translate-y"]:hover,
+.analytics-page [class*="hover:scale"]:hover,
+.space-y-6 [class*="hover:-translate-y"]:hover,
+.space-y-6 [class*="hover:scale"]:hover {
+    transform: none !important;
+    translate: none !important;
+    scale: none !important;
+}
+
+.analytics-page [class*="transition-all"],
+.space-y-6 [class*="transition-all"] {
+    transition-property: color, background-color, border-color, box-shadow, opacity !important;
+    transition-duration: 120ms !important;
 }
 
 /* Skeleton Loading Animation */
@@ -323,6 +356,10 @@ body {
     overflow: auto;
     border: 1px solid #edf2f7;
     border-radius: .875rem;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    -webkit-overflow-scrolling: touch;
+    contain: paint;
 }
 
 .premium-table {
@@ -354,6 +391,19 @@ body {
 
 .premium-table tr:hover td {
     background: #f8fffb;
+}
+
+.analytics-page .premium-table-wrap {
+    max-height: min(430px, calc(100vh - 18rem));
+}
+
+.analytics-page .premium-table th {
+    will-change: auto;
+}
+
+.analytics-page .premium-table tr,
+.analytics-page .premium-table td {
+    transition: background-color 80ms ease;
 }
 
 .quick-action {

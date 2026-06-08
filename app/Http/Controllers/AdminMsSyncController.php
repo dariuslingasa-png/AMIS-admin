@@ -12,10 +12,17 @@ use Illuminate\Support\Facades\Log;
 class AdminMsSyncController extends Controller
 {
     /**
-     * Fetch ALL @amis.edu.ph users from Azure AD.
-     * Show which ones exist in portal DB and which are missing (Azure-only).
+     * Show the sync shell view immediately.
      */
     public function index()
+    {
+        return view('admin.ms-sync.index');
+    }
+
+    /**
+     * Fetch and return MS Sync data as JSON.
+     */
+    public function data()
     {
         $azureUsers = [];
         $azureError = null;
@@ -29,12 +36,12 @@ class AdminMsSyncController extends Controller
         }
 
         // Index DB students by school_email and ms_user_id
-        $dbStudents   = Student::with('applicant', 'studentSection')->get();
+        $dbStudents   = Student::with('studentSection')->get();
         $dbByEmail    = $dbStudents->keyBy(fn($s) => strtolower($s->school_email ?? ''));
         $dbByMsUserId = $dbStudents->keyBy('ms_user_id');
 
         $rows = [];
-        $testAccounts = [];
+        $testAccountsCount = 0;
         $currentYear = date('y'); // Current year (26 for 2026)
 
         foreach ($azureUsers as $azUser) {
@@ -47,11 +54,7 @@ class AdminMsSyncController extends Controller
             $isTestAccount = str_starts_with($prefix, $currentYear) && str_contains($upn, 'apelyido');
             
             if ($isTestAccount) {
-                $testAccounts[] = [
-                    'upn' => $upn,
-                    'display_name' => $azUser['displayName'] ?? '—',
-                    'azure_id' => $azId,
-                ];
+                $testAccountsCount++;
             }
 
             $rows[] = [
@@ -64,7 +67,6 @@ class AdminMsSyncController extends Controller
                 'is_test'        => $isTestAccount,
                 // Portal data
                 'in_portal'      => !is_null($dbStudent),
-                'student'        => $dbStudent,
                 'teams_status'   => $dbStudent?->studentSection?->ms_status ?? 'not_enrolled',
             ];
         }
@@ -83,10 +85,14 @@ class AdminMsSyncController extends Controller
             'guest_users'    => collect($rows)->where('azure_type', 'Guest')->count(),
             'teams_enrolled' => collect($rows)->where('teams_status', 'enrolled')->count(),
             'teams_failed'   => collect($rows)->where('teams_status', 'failed')->count(),
-            'test_accounts'  => count($testAccounts),
+            'test_accounts'  => $testAccountsCount,
         ];
 
-        return view('admin.ms-sync.index', compact('rows', 'stats', 'azureError', 'testAccounts'));
+        return response()->json([
+            'rows'       => $rows,
+            'stats'      => $stats,
+            'azureError' => $azureError,
+        ]);
     }
 
     /**
@@ -138,6 +144,15 @@ class AdminMsSyncController extends Controller
         }
 
         // Find or create a portal user account
+        $azureEnabled = true;
+        try {
+            $graph = new MicrosoftGraphService();
+            $azUser = $graph->graph()->get("/users/{$azureId}")->json();
+            $azureEnabled = $azUser['accountEnabled'] ?? true;
+        } catch (\Exception $e) {
+            Log::warning("Could not fetch enabled status for imported user {$azureId}: " . $e->getMessage());
+        }
+
         $user = User::where('email', $upn)->first();
         if (!$user) {
             $nameParts = explode(' ', $displayName);
@@ -147,11 +162,11 @@ class AdminMsSyncController extends Controller
                 'username'          => $prefix,
                 'password'          => Hash::make(\Illuminate\Support\Str::random(32)),
                 'role'              => 'student',
-                'account_status'    => 'verified',
+                'account_status'    => $azureEnabled ? 'verified' : 'suspended',
                 'email_verified_at' => now(),
             ]);
         } else {
-            $user->update(['role' => 'student', 'account_status' => 'verified']);
+            $user->update(['role' => 'student', 'account_status' => $azureEnabled ? 'verified' : 'suspended']);
         }
 
         // Create student record
@@ -176,6 +191,7 @@ class AdminMsSyncController extends Controller
      */
     public function importAll()
     {
+        @set_time_limit(180);
         $schoolYear = (string) config('services.school.year', '2026-2027');
 
         $graph      = new MicrosoftGraphService();
@@ -202,6 +218,7 @@ class AdminMsSyncController extends Controller
             if (!$studentNumber) { $failed++; continue; }
 
             try {
+                $azureEnabled = $azUser['accountEnabled'] ?? true;
                 $user = User::firstOrCreate(
                     ['email' => $upn],
                     [
@@ -209,11 +226,11 @@ class AdminMsSyncController extends Controller
                         'username'          => $prefix,
                         'password'          => Hash::make(\Illuminate\Support\Str::random(32)),
                         'role'              => 'student',
-                        'account_status'    => 'verified',
+                        'account_status'    => $azureEnabled ? 'verified' : 'suspended',
                         'email_verified_at' => now(),
                     ]
                 );
-                $user->update(['role' => 'student']);
+                $user->update(['role' => 'student', 'account_status' => $azureEnabled ? 'verified' : 'suspended']);
 
                 Student::create([
                     'user_id'                 => $user->id,
@@ -243,6 +260,7 @@ class AdminMsSyncController extends Controller
      */
     public function fixGuests()
     {
+        @set_time_limit(180);
         $graph   = new MicrosoftGraphService();
         $azUsers = $graph->listTenantStudents();
         $fixed = 0; $failed = 0;
@@ -267,6 +285,7 @@ class AdminMsSyncController extends Controller
      */
     public function retryFailed()
     {
+        @set_time_limit(180);
         $failed  = \App\Models\StudentSection::where('ms_status', 'failed')->with('student')->get();
         $graph   = new MicrosoftGraphService();
         $service = new MsTeamsEnrollmentService($graph);
@@ -291,6 +310,7 @@ class AdminMsSyncController extends Controller
      */
     public function cleanupTestAccounts()
     {
+        @set_time_limit(180);
         try {
             $graph = new MicrosoftGraphService();
             $azureUsers = $graph->listTenantStudents();
@@ -341,6 +361,7 @@ class AdminMsSyncController extends Controller
      */
     public function cleanupPortalTestData()
     {
+        @set_time_limit(180);
         try {
             $currentYear = date('y'); // Current year (26 for 2026)
             
@@ -394,7 +415,7 @@ class AdminMsSyncController extends Controller
     }
 
     /**
-     * Sync a single student to Teams.
+     * Sync a single student to Teams, status, and licenses.
      */
     public function syncStudent(Student $student)
     {
@@ -404,12 +425,48 @@ class AdminMsSyncController extends Controller
 
         $graph   = new MicrosoftGraphService();
         $service = new MsTeamsEnrollmentService($graph);
+        $studentSkuId = config('services.microsoft.student_sku_id');
 
         try {
+            // 1. Sync Teams channels
             $result = $service->enrollStudent($student);
             $msg = "Synced {$student->student_number}: {$result['enrolled']} enrolled.";
             if ($result['failed'] > 0) $msg .= " {$result['failed']} failed.";
-            return back()->with('success', $msg);
+
+            // 2. Sync account status and licensing from database to Entra ID
+            $user = $student->user;
+            if ($user) {
+                $status = $user->account_status ?? 'verified';
+                $msUserId = $student->ms_user_id;
+
+                if ($status === 'verified') {
+                    // Ensure enabled in Entra ID
+                    $graph->setAccountEnabled($msUserId, true);
+                    if ($studentSkuId) {
+                        $graph->assignLicense($msUserId, [$studentSkuId], []);
+                        \App\Models\AdminAuditLog::record('license_assigned', true, "Synchronized student license and enabled state for student {$student->school_email}", [
+                            'email' => $student->school_email,
+                            'sku_id' => $studentSkuId,
+                            'ms_user_id' => $msUserId,
+                        ]);
+                    }
+                } else {
+                    // Ensure disabled in Entra ID
+                    $graph->setAccountEnabled($msUserId, false);
+                    if ($studentSkuId) {
+                        try {
+                            $graph->assignLicense($msUserId, [], [$studentSkuId]);
+                            \App\Models\AdminAuditLog::record('license_revoked', true, "Synchronized student license revocation and disabled state for student {$student->school_email}", [
+                                'email' => $student->school_email,
+                                'sku_id' => $studentSkuId,
+                                'ms_user_id' => $msUserId,
+                            ]);
+                        } catch (\Throwable $licEx) {}
+                    }
+                }
+            }
+
+            return back()->with('success', $msg . " Status and licenses synchronized successfully.");
         } catch (\Exception $e) {
             return back()->withErrors(['error' => $e->getMessage()]);
         }

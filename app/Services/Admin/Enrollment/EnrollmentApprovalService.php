@@ -105,8 +105,30 @@ class EnrollmentApprovalService
         try {
             $displayName = trim($applicant->first_name.' '.$applicant->last_name);
             $msUser = $graph->createUser($displayName, $mailNick, $schoolEmail, $tempPassword);
+            $msUserId = $msUser['id'] ?? null;
 
-            return [$msUser['id'] ?? null, null, $graph];
+            if ($msUserId) {
+                $studentSkuId = config('services.microsoft.student_sku_id');
+                if ($studentSkuId) {
+                    try {
+                        $graph->assignLicense($msUserId, [$studentSkuId], []);
+                        \App\Models\AdminAuditLog::record('license_assigned', true, "Automatically assigned student license to {$schoolEmail}", [
+                            'email' => $schoolEmail,
+                            'sku_id' => $studentSkuId,
+                            'ms_user_id' => $msUserId,
+                        ]);
+                    } catch (\Throwable $licenseEx) {
+                        Log::error("Failed to assign license to {$schoolEmail}: " . $licenseEx->getMessage());
+                        \App\Models\AdminAuditLog::record('license_assigned', false, "Failed to automatically assign student license to {$schoolEmail}: " . $licenseEx->getMessage(), [
+                            'email' => $schoolEmail,
+                            'sku_id' => $studentSkuId,
+                            'ms_user_id' => $msUserId,
+                        ]);
+                    }
+                }
+            }
+
+            return [$msUserId, null, $graph];
         } catch (\Throwable $exception) {
             $message = $exception->getMessage();
             Log::error('Microsoft Graph error for applicant '.$applicant->id.': '.$message);

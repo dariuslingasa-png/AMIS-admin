@@ -64,7 +64,7 @@
             </div>
             <div class="flex items-center gap-2">
                 <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">{{ $totalApplications }} Applications Applied</span>
-                <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">10 modules</span>
+                <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">11 modules</span>
             </div>
         </div>
 
@@ -72,13 +72,14 @@
             <x-dashboard.module-card :href="route('admin.applications.dashboard')" icon="clipboard-check" name="Applications" owner="Registrar Office" summary="Enrollment, review, requirements, approvals ({{ $totalApplications }} applied)" accent="emerald" shape="soft" />
             <x-dashboard.module-card :href="route('admin.students.dashboard')" icon="users" name="Students" owner="Records Office" summary="Dashboard, records, profiles, history, documents" accent="violet" shape="arch" />
             <x-dashboard.module-card :href="route('admin.academic.dashboard')" icon="book-open-check" name="Academic" owner="Academic Office" summary="Subjects, curriculum, sections, schedules" accent="sky" shape="soft" />
+            <x-dashboard.module-card :href="route('admin.ebook.redirect')" icon="book-open" name="eBook Library" owner="LMS" summary="Manage digital textbooks, uploads, grade assignment, and public catalog access" accent="emerald" shape="soft" />
             <x-dashboard.module-card icon="calendar-check" name="Attendance" owner="Academic Office" summary="QR, manual attendance, reports" accent="teal" shape="circle" status="Coming Soon" disabled />
             <x-dashboard.module-card icon="graduation-cap" name="Grades" owner="Faculty Office" summary="Encoding, assessment, report cards" accent="blue" shape="arch" status="Coming Soon" disabled />
             <x-dashboard.module-card :href="route('admin.finance.dashboard')" icon="wallet" name="Finance Management" :owner="config('services.school.finance_reviewer_name', 'Finance Office')" summary="Enrollment payment review, SOA, fees, and receipts" accent="amber" shape="soft" />
             <x-dashboard.module-card icon="chart-no-axes-combined" name="Analytics" owner="Admin Analytics" summary="Charts, insights, performance reports" accent="cyan" shape="circle" status="Coming Soon" disabled />
             <x-dashboard.module-card icon="file-down" name="Reports" owner="Registrar / Finance" summary="PDF, Excel, registrar and finance exports" accent="indigo" shape="arch" status="Coming Soon" disabled />
             <x-dashboard.module-card :href="route('admin.admins.index')" icon="shield-check" name="Security" owner="System Admin" summary="Admin accounts, role access, and portal security" accent="rose" shape="soft" />
-            <x-dashboard.module-card icon="settings" name="Settings" owner="System Admin" summary="School profile, MS365 sync, integrations" accent="lime" shape="circle" status="Coming Soon" disabled />
+            <x-dashboard.module-card :href="route('admin.settings.discounts')" icon="settings" name="Settings" owner="System Admin" summary="School profile, MS365 sync, integrations" accent="lime" shape="circle" />
         </div>
     </section>
 
@@ -219,6 +220,7 @@
                 <x-dashboard.quick-action :href="route('admin.students.index')" icon="user-plus" label="Add Student" meta="Manage enrolled student records" />
                 <x-dashboard.quick-action :href="route('admin.payments.index')" icon="wallet" label="Enrollment Payment Review" meta="Approve or reject payment proofs" />
                 <x-dashboard.quick-action :href="route('admin.soa.index')" icon="scroll-text" label="SOA" meta="Open student accounts and billing" />
+                <x-dashboard.quick-action :href="route('admin.ebook.upload')" icon="upload-cloud" label="Upload eBook" meta="Add a PDF to the eBook library" />
                 {{-- Commented out for live production cleanup --}}
                 {{--
                 <x-dashboard.quick-action :href="route('admin.enrollment.reports')" icon="bar-chart-3" label="Reports" meta="Open enrollment reporting" />

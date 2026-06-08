@@ -760,4 +760,49 @@ class MicrosoftGraphService
         // This method is a placeholder; actual implementation requires beta endpoint
         Log::info("MFA for user {$msUserId} should be managed via Conditional Access Policy.");
     }
+
+    /**
+     * Assign and/or remove licenses for a Microsoft user.
+     */
+    public function assignLicense(string $userId, array $addSkuIds, array $removeSkuIds): void
+    {
+        $addLicenses = [];
+        foreach ($addSkuIds as $skuId) {
+            $addLicenses[] = [
+                'disabledPlans' => [],
+                'skuId'         => $skuId,
+            ];
+        }
+
+        $payload = [
+            'addLicenses'    => $addLicenses,
+            'removeLicenses' => $removeSkuIds,
+        ];
+
+        $resolvedId = $this->resolveUserId($userId);
+
+        $response = $this->graph()->post("/users/{$resolvedId}/assignLicenses", $payload);
+
+        if (!$response->successful()) {
+            Log::error('Graph assignLicense error', ['status' => $response->status(), 'body' => $response->body()]);
+            throw new \Exception('Failed to assign/remove licenses: ' . $response->body());
+        }
+    }
+
+    /**
+     * Enable or disable a Microsoft user account.
+     */
+    public function setAccountEnabled(string $userId, bool $enabled): void
+    {
+        $resolvedId = $this->resolveUserId($userId);
+
+        $response = $this->graph()->patch("/users/{$resolvedId}", [
+            'accountEnabled' => $enabled,
+        ]);
+
+        if (!$response->successful() && $response->status() !== 204) {
+            Log::error('Graph setAccountEnabled error', ['status' => $response->status(), 'body' => $response->body()]);
+            throw new \Exception('Failed to set account enabled status: ' . $response->body());
+        }
+    }
 }

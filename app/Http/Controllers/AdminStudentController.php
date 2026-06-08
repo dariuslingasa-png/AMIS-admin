@@ -273,4 +273,78 @@ class AdminStudentController extends Controller
             Log::error('Failed to resend credentials: ' . $e->getMessage());
         }
     }
+
+    public function updateStatus(Request $request, Student $student)
+    {
+        $data = $request->validate([
+            'status' => ['required', 'in:verified,suspended,graduated,transferred,withdrawn'],
+        ]);
+
+        $status = $data['status'];
+        $user = $student->user;
+
+        if (!$user) {
+            return back()->withErrors(['error' => 'Student user record not found.']);
+        }
+
+        // Update database account status
+        $user->update([
+            'account_status' => $status,
+        ]);
+
+        // Provision/Sync to Microsoft AD
+        $graph = new MicrosoftGraphService();
+        $email = $student->school_email;
+        $studentSkuId = config('services.microsoft.student_sku_id');
+        $msError = null;
+
+        try {
+            if ($student->ms_user_id || $graph->userExists($email)) {
+                $msUserId = $student->ms_user_id ?: $graph->resolveUserId($email);
+
+                if ($status === 'verified') {
+                    // Enable account
+                    $graph->setAccountEnabled($msUserId, true);
+
+                    // Assign Student License
+                    if ($studentSkuId) {
+                        $graph->assignLicense($msUserId, [$studentSkuId], []);
+                        \App\Models\AdminAuditLog::record('license_assigned', true, "Assigned student license to student {$email} via status change to verified", [
+                            'email' => $email,
+                            'sku_id' => $studentSkuId,
+                            'ms_user_id' => $msUserId,
+                        ]);
+                    }
+                } else {
+                    // Disable account
+                    $graph->setAccountEnabled($msUserId, false);
+
+                    // Revoke Student License
+                    if ($studentSkuId) {
+                        try {
+                            $graph->assignLicense($msUserId, [], [$studentSkuId]);
+                            \App\Models\AdminAuditLog::record('license_revoked', true, "Revoked student license from student {$email} via status change to {$status}", [
+                                'email' => $email,
+                                'sku_id' => $studentSkuId,
+                                'ms_user_id' => $msUserId,
+                            ]);
+                        } catch (\Throwable $licEx) {
+                            // Ignore if license was not assigned
+                        }
+                    }
+                }
+            } else {
+                $msError = 'No Microsoft account exists for this user in Entra ID.';
+            }
+        } catch (\Throwable $exception) {
+            $msError = $exception->getMessage();
+            Log::error("Student Microsoft status sync failed for {$email}: {$msError}");
+        }
+
+        if ($msError) {
+            return back()->with('success', "Student status updated locally to '{$status}', but Microsoft AD sync failed: {$msError}");
+        }
+
+        return back()->with('success', "Student status updated successfully to '{$status}' and synced to Microsoft AD.");
+    }
 }

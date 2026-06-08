@@ -507,6 +507,24 @@
             <!-- Actions Panel -->
             <x-card title="Actions Workspace">
                 <div class="space-y-3.5">
+                    <!-- Update Status Form -->
+                    <form method="POST" action="{{ route('admin.students.update-status', $student) }}" class="border-b border-slate-100 pb-4 mb-4 dark:border-slate-800">
+                        @csrf
+                        <label class="block text-xxs font-extrabold uppercase tracking-wider text-slate-400 mb-1.5">Administrative Status</label>
+                        <div class="flex gap-2">
+                            <select name="status" class="flex-1 h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+                                <option value="verified" @selected(($student->user->account_status ?? 'verified') === 'verified')>Active / Verified</option>
+                                <option value="suspended" @selected(($student->user->account_status ?? 'verified') === 'suspended')>Suspended / Deactivated</option>
+                                <option value="graduated" @selected(($student->user->account_status ?? 'verified') === 'graduated')>Graduated</option>
+                                <option value="transferred" @selected(($student->user->account_status ?? 'verified') === 'transferred')>Transferred</option>
+                                <option value="withdrawn" @selected(($student->user->account_status ?? 'verified') === 'withdrawn')>Withdrawn</option>
+                            </select>
+                            <button type="submit" class="inline-flex h-10 items-center justify-center rounded-xl bg-emerald-600 px-4 text-xs font-bold text-white hover:bg-emerald-700 active:scale-[0.98] transition-all duration-200 cursor-pointer" title="Save Status">
+                                Save
+                            </button>
+                        </div>
+                    </form>
+
                     <!-- Resend credentials form -->
                     <form method="POST" action="{{ route('admin.students.resend', $student) }}">
                         @csrf

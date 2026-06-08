@@ -7,14 +7,18 @@ use App\Http\Controllers\Admin\EnrollmentAnalyticsController;
 use App\Http\Controllers\Admin\EnrollmentController;
 use App\Http\Controllers\Admin\RequirementController;
 use App\Http\Controllers\AdminAuthController;
+use App\Http\Controllers\AdminClassScheduleController;
 use App\Http\Controllers\AdminDiscountSettingsController;
 use App\Http\Controllers\AdminAcademicController;
+use App\Http\Controllers\AdminAcademicTeacherController;
 use App\Http\Controllers\AdminMsSyncController;
 use App\Http\Controllers\AdminMsTeamsController;
 use App\Http\Controllers\AdminPaymentController;
 use App\Http\Controllers\AdminSoaController;
 use App\Http\Controllers\AdminStudentController;
 use App\Http\Controllers\AdminUserController;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route('admin.login'));
@@ -38,8 +42,43 @@ Route::name('admin.')->group(function () {
         ->middleware('throttle:10,1')
         ->name('microsoft.callback');
 
+    Route::post('/api/identity/login', [\App\Http\Controllers\IdentityRoutingController::class, 'login'])
+        ->name('identity.login');
+    Route::post('/api/identity/link', [\App\Http\Controllers\IdentityRoutingController::class, 'link'])
+        ->middleware('auth')
+        ->name('identity.link');
+
     Route::middleware(['auth', 'admin'])->group(function () {
         Route::get('/dashboard', DashboardController::class)->name('dashboard');
+
+        $openEbook = function (string $redirectPath = '/admin/books') {
+            $ebookUrl = rtrim((string) config('services.ebook.url'), '/');
+            $secret = (string) config('services.ebook.sso_secret');
+            $redirectPath = '/'.ltrim($redirectPath, '/');
+
+            if ($ebookUrl === '' || $secret === '') {
+                return redirect($ebookUrl !== '' ? "{$ebookUrl}{$redirectPath}" : route('admin.dashboard'));
+            }
+
+            $response = Http::withHeaders(['X-SSO-Secret' => $secret])
+                ->timeout(5)
+                ->post("{$ebookUrl}/sso/token", [
+                    'user_id' => Auth::id(),
+                    'source' => 'amis_admin',
+                ]);
+
+            if (! $response->successful() || blank($response->json('token'))) {
+                return redirect("{$ebookUrl}{$redirectPath}");
+            }
+
+            return redirect()->away("{$ebookUrl}/sso/login?".http_build_query([
+                'sso_token' => $response->json('token'),
+                'redirect' => $redirectPath,
+            ]));
+        };
+
+        Route::get('/ebook', fn () => $openEbook('/admin/books'))->name('ebook.redirect');
+        Route::get('/ebook/upload', fn () => $openEbook('/admin/books/create'))->name('ebook.upload');
 
         Route::prefix('enrollment')->name('enrollment.')->group(function () {
             Route::get('/', [EnrollmentController::class, 'index'])->name('index');
@@ -73,6 +112,7 @@ Route::name('admin.')->group(function () {
         Route::get('/students/history', [AdminStudentController::class, 'history'])->name('students.history');
         Route::get('/students/{student}', [AdminStudentController::class, 'show'])->name('students.show');
         Route::post('/students/{student}/resend', [AdminStudentController::class, 'resendCredentials'])->name('students.resend');
+        Route::post('/students/{student}/status', [AdminStudentController::class, 'updateStatus'])->name('students.update-status');
 
         Route::get('/soa', [AdminSoaController::class, 'index'])->name('soa.index');
         Route::get('/soa/{account}', [AdminSoaController::class, 'show'])->name('soa.show');
@@ -98,6 +138,7 @@ Route::name('admin.')->group(function () {
         Route::post('/finance/soa/{account}/reminder', [\App\Http\Controllers\AdminFinanceController::class, 'sendReminder'])->name('finance.send-reminder');
 
         Route::get('/ms-sync', [AdminMsSyncController::class, 'index'])->name('ms-sync.index');
+        Route::get('/ms-sync/data', [AdminMsSyncController::class, 'data'])->name('ms-sync.data');
         Route::post('/ms-sync/cleanup-test', [AdminMsSyncController::class, 'cleanupTestAccounts'])->name('ms-sync.cleanup-test');
         Route::post('/ms-sync/cleanup-portal', [AdminMsSyncController::class, 'cleanupPortalTestData'])->name('ms-sync.cleanup-portal');
         Route::post('/ms-sync/fix-guests', [AdminMsSyncController::class, 'fixGuests'])->name('ms-sync.fix-guests');
@@ -125,8 +166,18 @@ Route::name('admin.')->group(function () {
             Route::get('/subjects', [AdminAcademicController::class, 'subjects'])->name('subjects');
             Route::get('/curriculum', [AdminAcademicController::class, 'curriculum'])->name('curriculum');
             Route::get('/grade-levels', [AdminAcademicController::class, 'curriculum'])->name('grade-levels');
-            Route::get('/teachers', [AdminAcademicController::class, 'teachers'])->name('teachers');
-            Route::get('/schedules', [AdminAcademicController::class, 'schedules'])->name('schedules');
+            Route::get('/class-advisory', [AdminAcademicController::class, 'classAdvisory'])->name('class-advisory');
+            Route::get('/teachers', [AdminAcademicTeacherController::class, 'index'])->name('teachers');
+            Route::post('/teachers', [AdminAcademicTeacherController::class, 'store'])->name('teachers.store');
+            Route::patch('/teachers', [AdminAcademicTeacherController::class, 'update'])->name('teachers.update');
+            Route::post('/teachers/resend', [AdminAcademicTeacherController::class, 'resendCredentials'])->name('teachers.resend');
+            Route::patch('/teachers/{id}/subjects', [AdminAcademicTeacherController::class, 'updateSubjects'])->name('teachers.subjects.update');
+            Route::get('/teachers/{id}', [AdminAcademicTeacherController::class, 'show'])->name('teachers.view');
+            Route::post('/teachers/{id}/toggle-password', [AdminAcademicTeacherController::class, 'togglePasswordChanged'])->name('teachers.toggle-password');
+            Route::get('/schedules', [AdminClassScheduleController::class, 'index'])->name('schedules');
+            Route::post('/schedules', [AdminClassScheduleController::class, 'store'])->name('schedules.store');
+            Route::patch('/schedules/{schedule}', [AdminClassScheduleController::class, 'update'])->name('schedules.update');
+            Route::delete('/schedules/{schedule}', [AdminClassScheduleController::class, 'destroy'])->name('schedules.destroy');
             Route::get('/school-years', [AdminAcademicController::class, 'schoolYears'])->name('school-years');
             Route::get('/calendar', [AdminAcademicController::class, 'calendar'])->name('calendar');
             Route::get('/operations', [AdminAcademicController::class, 'operations'])->name('operations');

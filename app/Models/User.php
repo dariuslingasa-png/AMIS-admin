@@ -65,6 +65,11 @@ class User extends Authenticatable
         return $this->hasOne(EnrollmentApplicant::class);
     }
 
+    public function linkedIdentities(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(LinkedIdentity::class);
+    }
+
     public function enrollmentApplicants(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(EnrollmentApplicant::class);

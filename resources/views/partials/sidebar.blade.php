@@ -37,12 +37,21 @@
                 ['Curriculum', 'map', route('admin.academic.curriculum'), request()->routeIs('admin.academic.curriculum') || request()->routeIs('admin.academic.grade-levels') || request()->routeIs('admin.academic.school-years') || request()->routeIs('admin.academic.calendar')],
                 ['Subjects', 'book-open', route('admin.academic.subjects'), request()->routeIs('admin.academic.subjects')],
                 ['Class Management', 'users-round', route('admin.academic.schedules'), request()->routeIs('admin.academic.schedules') || request()->routeIs('admin.ms-teams.*')],
+                ['Class Advisory', 'contact-2', route('admin.academic.class-advisory'), request()->routeIs('admin.academic.class-advisory')],
                 ['Teachers', 'contact-2', route('admin.academic.teachers'), request()->routeIs('admin.academic.teachers')],
                 ['Operations', 'activity', route('admin.academic.operations'), request()->routeIs('admin.academic.operations')],
             ],
         ],
         [
-            'active' => request()->routeIs('admin.finance.*') || request()->routeIs('admin.soa.*') || request()->routeIs('admin.payments.*') || request()->routeIs('admin.settings.discounts*'),
+            'active' => request()->routeIs('admin.ebook.*'),
+            'icon' => 'book-open', 'iconClass' => 'text-emerald-600', 'headerClass' => 'text-emerald-700', 'activeClass' => 'sidebar-link-active-emerald', 'title' => 'eBook',
+            'links' => [
+                ['Library Dashboard', 'layout-dashboard', route('admin.ebook.redirect'), request()->routeIs('admin.ebook.redirect')],
+                ['Upload eBook', 'upload-cloud', route('admin.ebook.upload'), request()->routeIs('admin.ebook.upload')],
+            ],
+        ],
+        [
+            'active' => request()->routeIs('admin.finance.*') || request()->routeIs('admin.soa.*') || request()->routeIs('admin.payments.*'),
             'icon' => 'wallet', 'iconClass' => 'text-amber-600', 'headerClass' => 'text-amber-700', 'activeClass' => 'sidebar-link-active-amber', 'title' => 'Finance Management',
             'links' => [
                 ['Dashboard', 'layout-dashboard', route('admin.finance.dashboard'), request()->routeIs('admin.finance.dashboard')],
