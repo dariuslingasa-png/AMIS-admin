@@ -16,7 +16,8 @@
     </div>
 @endif
 
-<form method="POST" action="{{ $action }}" enctype="multipart/form-data" class="space-y-6" x-data="ebookUploadForm()" @submit.prevent="submitForm($event)">
+<div x-data="ebookUploadForm()">
+<form method="POST" action="{{ $action }}" enctype="multipart/form-data" class="space-y-6" @submit.prevent="submitForm($event)">
     @csrf
     @if ($isEdit)
         @method('PUT')
@@ -395,5 +396,4 @@
         };
     }
 </script>
-
-
+</div>
