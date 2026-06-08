@@ -25,7 +25,7 @@ class AcademicPageService
                 'subjects' => $subjects->count(),
                 'sections' => $sections->count(),
                 'students' => $sections->sum('students_count'),
-                'school_year' => (string) config('services.school.year', '2026-2027'),
+                'school_year' => (string) config('services.school.year'),
             ],
             'academicCharts' => [
                 'subjectDivision' => [
@@ -54,7 +54,7 @@ class AcademicPageService
         $sections = $this->academic->sectionsWithStudentCount();
 
         return [
-            'schoolYear' => (string) config('services.school.year', '2026-2027'),
+            'schoolYear' => (string) config('services.school.year'),
             'subjects' => $this->academic->subjects(),
             'sections' => $sections,
             'schoolYears' => $this->schoolYearRows($sections),
@@ -65,11 +65,22 @@ class AcademicPageService
     public function advisory(): array
     {
         $advisories = $this->academic->advisoryRows();
+        $sections = $this->academic->sections();
 
         return [
             'advisories' => $advisories,
             'elementaryAdvisories' => $advisories->where('department', 'Elementary Department')->values(),
             'highSchoolAdvisories' => $advisories->where('department', 'High School Department')->values(),
+            'sections' => $sections,
+            'activeAdvisories' => $sections->pluck('activeAdvisory')->filter()->values(),
+            'teacherOptions' => \App\Models\User::where('role', 'teacher')
+                ->orderBy('name')
+                ->get(['id', 'name', 'email'])
+                ->map(fn ($user) => [
+                    'id' => \Illuminate\Support\Str::slug($user->name),
+                    'name' => $user->name,
+                    'email' => $user->email,
+                ]),
         ];
     }
 
@@ -92,7 +103,7 @@ class AcademicPageService
     private function schoolYearRows(Collection $sections): array
     {
         return [[
-            'year' => (string) config('services.school.year', '2026-2027'),
+            'year' => (string) config('services.school.year'),
             'semester' => '1st Semester',
             'status' => 'Active',
             'enrolled' => $sections->sum('students_count'),

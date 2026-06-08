@@ -14,7 +14,8 @@ class TeacherDirectoryService
     public function __construct(
         private readonly AcademicRepository $academic,
         private readonly TeacherRepository $teachers,
-        private readonly TeacherAccountService $accounts
+        private readonly TeacherAccountService $accounts,
+        private readonly TeacherSubjectAssignmentService $assignments
     ) {
     }
 
@@ -89,7 +90,8 @@ class TeacherDirectoryService
     {
         $teacher = $this->findRaw($id);
         abort_unless($teacher, 404, 'Teacher not found.');
-        $teacher['subjects'] = $this->cleanSubjects($subjects);
+
+        $teacher['subjects'] = $this->assignments->sync($teacher, $subjects, auth()->id());
         $this->teachers->saveTeacher(Str::slug($id), $teacher);
     }
 
@@ -125,6 +127,7 @@ class TeacherDirectoryService
             'teacher' => $teacher,
             'isHighSchool' => str_contains($teacher['dept'], 'High'),
             'isIslamicArabic' => str_contains($teacher['dept'], 'Islamic School'),
+            'assignmentHistory' => $this->assignments->history($teacher['id']),
         ];
     }
 
@@ -194,16 +197,29 @@ class TeacherDirectoryService
     private function subjectLoad(array $teacher): array
     {
         $target = 8;
-        $pool = collect($this->subjectPool($teacher['dept'] ?? ''));
-        $subjects = collect($teacher['subjects'] ?? [])->filter()->unique()->values();
-        if (! array_key_exists('subjects', $teacher) && $subjects->isEmpty() && ($teacher['status'] ?? 'Active') === 'Active') {
-            $subjects = $pool->take(6 + (crc32((string) ($teacher['id'] ?? $teacher['name'])) % 3))->values();
+        $allSubjects = \App\Models\Subject::where('status', 'active')
+            ->orderBy('grade_level')
+            ->orderBy('name')
+            ->get();
+        $activeIds = $this->assignments->activeSubjectIds($teacher['id'] ?? '');
+        $assigned = $allSubjects->whereIn('id', $activeIds)->values();
+        $fallbackNames = collect($teacher['subjects'] ?? [])->filter()->unique()->values();
+
+        if ($assigned->isEmpty() && $fallbackNames->isNotEmpty()) {
+            $assigned = $allSubjects->filter(fn ($subject) => $fallbackNames->contains($subject->name))->values();
         }
-        $count = $subjects->count();
+
+        $count = $assigned->count();
 
         return [
-            'subjects' => $subjects->all(),
-            'subject_options' => $pool->all(),
+            'subjects' => $assigned->pluck('name')->all(),
+            'subject_ids' => $assigned->pluck('id')->all(),
+            'subject_options' => $allSubjects->map(fn ($subject) => [
+                'id' => $subject->id,
+                'name' => $subject->name,
+                'code' => $subject->code,
+                'grade_level' => $subject->grade_level,
+            ])->values()->all(),
             'subject_count' => $count,
             'load_target' => $target,
             'load_percent' => min(100, (int) round(($count / $target) * 100)),
@@ -214,11 +230,6 @@ class TeacherDirectoryService
     private function defaults(): array
     {
         return ['name' => '', 'email' => '', 'dept' => '', 'sections' => '', 'status' => 'Active', 'license' => 'faculty_a1', 'photo' => null, 'first_name' => '', 'middle_name' => '', 'last_name' => '', 'gender' => 'Male', 'birthdate' => '', 'contact_number' => '', 'address' => '', 'password_changed' => 'No', 'temporary_password' => null, 'microsoft_sync' => true];
-    }
-
-    private function cleanSubjects(array $subjects): array
-    {
-        return collect($subjects)->map(fn ($subject) => trim((string) $subject))->filter()->unique()->take(8)->values()->all();
     }
 
     private function subjectPool(string $department): array

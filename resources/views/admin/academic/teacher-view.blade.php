@@ -3,13 +3,15 @@
         isResending: false,
         isToggling: false,
         isSavingSubjects: false,
-        subjects: @js($teacher['subjects'] ?? []),
+        subjectIds: @js($teacher['subject_ids'] ?? []),
+        subjectOptions: @js($teacher['subject_options'] ?? []),
         loadTarget: @js($teacher['load_target'] ?? 8),
-        customSubjectName: '',
-        editingSubjectIndex: null,
-        editingSubjectName: '',
+        selectedSubjectId: '',
         get subjectCount() {
-            return this.subjects.length;
+            return this.subjectIds.length;
+        },
+        get subjects() {
+            return this.subjectOptions.filter(subject => this.subjectIds.includes(subject.id));
         },
         get loadPercent() {
             return this.loadTarget > 0 ? Math.min(100, Math.round((this.subjectCount / this.loadTarget) * 100)) : 0;
@@ -18,35 +20,18 @@
             if (this.subjectCount >= this.loadTarget) return 'Full Load';
             return this.subjectCount >= 6 ? 'Balanced Load' : 'Needs Load';
         },
-        addCustomSubject() {
-            const value = this.customSubjectName.trim();
-            if (!value || this.subjectCount >= this.loadTarget || this.subjects.includes(value)) return;
-            this.subjects = [...this.subjects, value];
-            this.customSubjectName = '';
+        get availableSubjects() {
+            return this.subjectOptions.filter(subject => !this.subjectIds.includes(subject.id));
+        },
+        addSubject() {
+            const id = Number(this.selectedSubjectId);
+            if (!id || this.subjectCount >= this.loadTarget || this.subjectIds.includes(id)) return;
+            this.subjectIds = [...this.subjectIds, id];
+            this.selectedSubjectId = '';
             this.$nextTick(() => window.lucide?.createIcons?.());
         },
-        startEditSubject(index) {
-            this.editingSubjectIndex = index;
-            this.editingSubjectName = this.subjects[index] || '';
-            this.$nextTick(() => this.$refs.subjectEditInput?.focus());
-        },
-        saveEditedSubject() {
-            if (this.editingSubjectIndex === null) return;
-            const value = this.editingSubjectName.trim();
-            if (!value || this.subjects.some((subject, index) => subject === value && index !== this.editingSubjectIndex)) return;
-            this.subjects = this.subjects.map((subject, index) => index === this.editingSubjectIndex ? value : subject);
-            this.cancelEditSubject();
-            this.$nextTick(() => window.lucide?.createIcons?.());
-        },
-        cancelEditSubject() {
-            this.editingSubjectIndex = null;
-            this.editingSubjectName = '';
-        },
-        deleteSubject(index) {
-            this.subjects = this.subjects.filter((_, subjectIndex) => subjectIndex !== index);
-            if (this.editingSubjectIndex === index) {
-                this.cancelEditSubject();
-            }
+        removeSubject(id) {
+            this.subjectIds = this.subjectIds.filter(subjectId => subjectId !== id);
             this.$nextTick(() => window.lucide?.createIcons?.());
         }
     }">
@@ -177,8 +162,8 @@
                     @csrf
                     @method('PATCH')
 
-                    <template x-for="subject in subjects" :key="'subject-input-' + subject">
-                        <input type="hidden" name="subjects[]" :value="subject">
+                    <template x-for="subjectId in subjectIds" :key="'subject-input-' + subjectId">
+                        <input type="hidden" name="subjects[]" :value="subjectId">
                     </template>
 
                     <div class="border-b border-slate-100 pb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -222,16 +207,21 @@
                     <div class="rounded-2xl border border-slate-150 bg-slate-50/60 p-4">
                         <div class="mb-3 flex items-center justify-between gap-3">
                             <div>
-                                <span class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Create New Subject</span>
-                                <p class="mt-0.5 text-xs font-semibold text-slate-500">Add a custom subject to this teacher's load.</p>
+                                <span class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Assign Catalog Subject</span>
+                                <p class="mt-0.5 text-xs font-semibold text-slate-500">Pick from the official subject catalog. Advisory remains separate.</p>
                             </div>
                             <span class="rounded-full bg-white px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-slate-500 ring-1 ring-slate-150" x-text="(loadTarget - subjectCount) + ' slots left'"></span>
                         </div>
                         <div class="grid gap-2 sm:grid-cols-[1fr_auto]">
-                            <input type="text" x-model="customSubjectName" @keydown.enter.prevent="addCustomSubject()" placeholder="Type subject name" class="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm font-bold text-gray-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20" :disabled="subjectCount >= loadTarget">
-                            <button type="button" @click="addCustomSubject()" class="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-black text-white shadow-sm hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50" :disabled="!customSubjectName.trim() || subjectCount >= loadTarget || subjects.includes(customSubjectName.trim())">
-                                <i data-lucide="file-plus-2" class="h-4 w-4"></i>
-                                Create Subject
+                            <select x-model="selectedSubjectId" class="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm font-bold text-gray-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20" :disabled="subjectCount >= loadTarget">
+                                <option value="">Select subject</option>
+                                <template x-for="subject in availableSubjects" :key="subject.id">
+                                    <option :value="subject.id" x-text="`${subject.name} · ${subject.grade_level}`"></option>
+                                </template>
+                            </select>
+                            <button type="button" @click="addSubject()" class="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-black text-white shadow-sm hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50" :disabled="!selectedSubjectId || subjectCount >= loadTarget">
+                                <i data-lucide="plus" class="h-4 w-4"></i>
+                                Assign Subject
                             </button>
                         </div>
                     </div>
@@ -239,22 +229,17 @@
                     <div>
                         <span class="mb-2 block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Handled Subjects</span>
                         <div class="grid gap-2" x-show="subjects.length > 0">
-                            <template x-for="(subject, index) in subjects" :key="subject + index">
+                            <template x-for="subject in subjects" :key="subject.id">
                                 <div class="rounded-xl border border-slate-150 bg-white px-3 py-2 shadow-3xs">
-                                    <div class="flex items-center gap-2" x-show="editingSubjectIndex !== index">
+                                    <div class="flex items-center gap-2">
                                         <i data-lucide="book-open-check" class="h-3.5 w-3.5 text-indigo-600"></i>
-                                        <span class="min-w-0 flex-1 truncate text-xs font-bold text-slate-700" x-text="subject"></span>
-                                        <button type="button" @click="startEditSubject(index)" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:text-indigo-700" title="Edit subject">
-                                            <i data-lucide="pencil" class="h-3.5 w-3.5"></i>
-                                        </button>
-                                        <button type="button" @click="deleteSubject(index)" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-rose-100 bg-white text-rose-500 hover:bg-rose-50" title="Delete subject">
+                                        <span class="min-w-0 flex-1 truncate text-xs font-bold text-slate-700">
+                                            <span x-text="subject.name"></span>
+                                            <span class="text-slate-400" x-text="` · ${subject.grade_level}`"></span>
+                                        </span>
+                                        <button type="button" @click="removeSubject(subject.id)" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-rose-100 bg-white text-rose-500 hover:bg-rose-50" title="Remove subject">
                                             <i data-lucide="trash-2" class="h-3.5 w-3.5"></i>
                                         </button>
-                                    </div>
-                                    <div class="grid gap-2 sm:grid-cols-[1fr_auto_auto]" x-show="editingSubjectIndex === index">
-                                        <input x-ref="subjectEditInput" type="text" x-model="editingSubjectName" @keydown.enter.prevent="saveEditedSubject()" @keydown.escape.prevent="cancelEditSubject()" class="w-full rounded-lg border border-indigo-200 bg-white px-3 py-2 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20">
-                                        <button type="button" @click="saveEditedSubject()" class="rounded-lg bg-indigo-600 px-3 py-2 text-xs font-black text-white hover:bg-indigo-700">Save</button>
-                                        <button type="button" @click="cancelEditSubject()" class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-500 hover:bg-slate-50">Cancel</button>
                                     </div>
                                 </div>
                             </template>
@@ -272,6 +257,31 @@
                         </button>
                     </div>
                 </form>
+
+                <div class="bg-white border border-slate-200 rounded-2xl shadow-xs p-6">
+                    <div class="border-b border-slate-100 pb-3 flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="history" class="w-5 h-5 text-indigo-600"></i>
+                            <span class="text-slate-900 font-extrabold text-sm tracking-wide uppercase">Assignment History</span>
+                        </div>
+                        <span class="text-[10px] font-black uppercase tracking-wider text-slate-400">{{ $assignmentHistory->count() }} events</span>
+                    </div>
+                    <div class="mt-4 grid gap-2">
+                        @forelse($assignmentHistory as $event)
+                            <div class="flex items-center justify-between gap-3 rounded-xl border border-slate-150 bg-slate-50 px-3 py-2">
+                                <div class="min-w-0">
+                                    <span class="block truncate text-xs font-extrabold text-slate-800">{{ $event->subject?->name ?? 'Archived subject' }}</span>
+                                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">{{ ucfirst($event->action) }} · {{ $event->created_at?->format('M d, Y g:i A') }}</span>
+                                </div>
+                                <x-badge color="{{ $event->action === 'assigned' ? 'green' : 'gray' }}">{{ $event->action }}</x-badge>
+                            </div>
+                        @empty
+                            <div class="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-6 text-center text-xs font-bold text-slate-400">
+                                No assignment history yet.
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
                 
                 <!-- Account Credentials & Actions Card -->
                 <div class="bg-white border border-slate-200 rounded-2xl shadow-xs p-6 space-y-6">

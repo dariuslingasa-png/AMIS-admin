@@ -39,6 +39,71 @@
             </div>
         </div>
 
+        @if (session('status'))
+            <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-xs font-extrabold text-emerald-800">
+                {{ session('status') }}
+            </div>
+        @endif
+
+        <div class="grid grid-cols-1 gap-5 xl:grid-cols-[420px_1fr]">
+            <form method="POST" action="{{ route('admin.academic.class-advisory.store') }}" class="bg-white border border-gray-150 rounded-2xl shadow-xs p-5 space-y-4">
+                @csrf
+                <div class="border-b border-slate-100 pb-3">
+                    <span class="text-slate-900 font-extrabold text-sm tracking-wide uppercase">Assign Advisory Class</span>
+                    <p class="mt-1 text-xs font-semibold text-slate-500">Advisory is separate from subject assignments.</p>
+                </div>
+                <label class="grid gap-1">
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Teacher</span>
+                    <select name="teacher_key" required class="rounded-xl border border-gray-300 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-indigo-500">
+                        <option value="">Select teacher</option>
+                        @foreach($teacherOptions as $teacher)
+                            <option value="{{ $teacher['id'] }}" @selected(old('teacher_key') === $teacher['id'])>{{ $teacher['name'] }} · {{ $teacher['email'] }}</option>
+                        @endforeach
+                    </select>
+                </label>
+                <label class="grid gap-1">
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Advisory Section</span>
+                    <select name="section_id" required class="rounded-xl border border-gray-300 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-indigo-500">
+                        <option value="">Select class</option>
+                        @foreach($sections as $section)
+                            <option value="{{ $section->id }}" @selected((int) old('section_id') === $section->id)>{{ $section->section_title }}</option>
+                        @endforeach
+                    </select>
+                </label>
+                <label class="grid gap-1">
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">School Year</span>
+                    <input name="school_year" value="{{ old('school_year', config('services.school.year')) }}" required class="rounded-xl border border-gray-300 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-indigo-500">
+                </label>
+                <button class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-700 px-5 py-2.5 text-xs font-black text-white hover:bg-indigo-600">
+                    <i data-lucide="save" class="h-4 w-4"></i>
+                    Save Advisory
+                </button>
+            </form>
+
+            <div class="bg-white border border-gray-150 rounded-2xl shadow-xs overflow-hidden">
+                <div class="bg-slate-50/50 border-b border-gray-150 px-5 py-4 flex items-center justify-between gap-3">
+                    <span class="text-slate-900 font-extrabold text-sm tracking-wide uppercase">Active Database Advisories</span>
+                    <x-badge color="indigo">{{ $activeAdvisories->count() }} Active</x-badge>
+                </div>
+                <div class="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    @forelse($activeAdvisories as $assignment)
+                        <article class="rounded-2xl border border-slate-150 bg-slate-50/70 p-4">
+                            <span class="inline-flex rounded-lg border border-indigo-100 bg-indigo-50 px-2.5 py-1 text-xs font-black text-indigo-700">
+                                {{ $assignment->section?->grade_level ?? 'Class' }}
+                            </span>
+                            <h3 class="mt-3 text-base font-black text-slate-950">{{ $assignment->section?->section_title ?? 'Deleted section' }}</h3>
+                            <p class="mt-1 text-xs font-semibold text-slate-500">{{ $assignment->teacher_name }}</p>
+                            <p class="mt-3 text-[10px] font-black uppercase tracking-wider text-slate-400">SY {{ $assignment->school_year }} · Assigned {{ $assignment->assigned_at?->format('M d, Y') }}</p>
+                        </article>
+                    @empty
+                        <div class="col-span-full rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-8 text-center text-xs font-bold text-slate-400">
+                            No database advisories assigned yet.
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+        </div>
+
         @foreach([
             'CLASS ADVISORY - ELEMENTARY DEPARTMENT' => $elementaryAdvisories,
             'HIGH SCHOOL DEPARTMENT' => $highSchoolAdvisories,

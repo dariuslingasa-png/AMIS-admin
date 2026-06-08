@@ -26,6 +26,16 @@ class Section extends Model
         return $this->hasMany(StudentSection::class);
     }
 
+    public function advisoryAssignments()
+    {
+        return $this->hasMany(ClassAdvisoryAssignment::class);
+    }
+
+    public function activeAdvisory()
+    {
+        return $this->hasOne(ClassAdvisoryAssignment::class)->where('status', 'active');
+    }
+
     public function getOfficialNameAttribute(): ?string
     {
         $shift = $this->shift;

@@ -10,12 +10,23 @@ class AcademicRepository
 {
     public function subjects(): Collection
     {
-        return Subject::orderBy('grade_level')->get();
+        return Subject::withCount('activeTeacherAssignments')
+            ->orderBy('grade_level')
+            ->orderBy('name')
+            ->get();
     }
 
     public function sectionsWithStudentCount(): Collection
     {
-        return Section::withCount('students')->get();
+        return Section::with(['activeAdvisory'])->withCount('students')->get();
+    }
+
+    public function sections(): Collection
+    {
+        return Section::with('activeAdvisory')
+            ->orderBy('grade_level')
+            ->orderBy('name')
+            ->get();
     }
 
     public function advisoryRows(): Collection

@@ -4,7 +4,7 @@ namespace App\Http\Requests\Academic;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateTeacherSubjectsRequest extends FormRequest
+class ClassAdvisoryAssignmentRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -14,8 +14,9 @@ class UpdateTeacherSubjectsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'subjects' => ['nullable', 'array', 'max:12'],
-            'subjects.*' => ['nullable', 'integer', 'exists:subjects,id'],
+            'section_id' => ['required', 'integer', 'exists:sections,id'],
+            'teacher_key' => ['required', 'string', 'max:160'],
+            'school_year' => ['required', 'string', 'max:20'],
         ];
     }
 }
