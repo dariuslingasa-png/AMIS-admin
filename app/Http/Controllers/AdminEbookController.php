@@ -55,9 +55,15 @@ class AdminEbookController extends Controller
             ->withQueryString();
 
         $totalBytes = 0;
+        $chartData = [];
         foreach (Ebook::all() as $book) {
             if ($book->file_path && Storage::disk(self::STORAGE_DISK)->exists($book->file_path)) {
-                $totalBytes += Storage::disk(self::STORAGE_DISK)->size($book->file_path);
+                $sizeInBytes = Storage::disk(self::STORAGE_DISK)->size($book->file_path);
+                $totalBytes += $sizeInBytes;
+                $chartData[] = [
+                    'title' => $book->title,
+                    'size' => round($sizeInBytes / 1024 / 1024, 2), // size in MB
+                ];
             }
         }
 
@@ -80,6 +86,7 @@ class AdminEbookController extends Controller
             'gradeLevels' => self::GRADE_LEVELS,
             'stats' => $stats,
             'recentLogs' => $recentLogs,
+            'chartData' => $chartData,
             'publicCatalogUrl' => rtrim((string) config('services.ebook.url'), '/').'/books',
         ]);
     }

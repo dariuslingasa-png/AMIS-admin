@@ -149,28 +149,110 @@
             @endif
         </div>
 
-        <aside class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-4">
-                <div>
-                    <h2 class="text-base font-black text-slate-950">Recent Activity</h2>
-                    <p class="mt-1 text-xs font-semibold text-slate-500">Public reader access logs</p>
+        <div class="space-y-6">
+            <!-- Storage Distribution (Pie Chart) -->
+            @if(count($chartData) > 0)
+                <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <div class="border-b border-slate-100 pb-4">
+                        <h2 class="text-base font-black text-slate-950">Storage Breakdown</h2>
+                        <p class="mt-1 text-xs font-semibold text-slate-500">PDF size distribution per eBook</p>
+                    </div>
+                    <div class="mt-4 flex justify-center">
+                        <div id="storage-pie-chart" class="w-full"></div>
+                    </div>
                 </div>
-                <span class="rounded-full bg-slate-50 px-2.5 py-1 text-xs font-bold text-slate-500">{{ number_format($stats['views']) }} views</span>
-            </div>
-            <div class="mt-4 space-y-3">
-                @forelse ($recentLogs as $log)
-                    <div class="rounded-xl border border-slate-100 bg-slate-50/60 p-3">
-                        <p class="truncate text-sm font-black text-slate-900">{{ $log->ebook->title ?? 'Deleted eBook' }}</p>
-                        <p class="mt-1 text-xs font-semibold text-slate-500">{{ ucfirst($log->action) }} by {{ $log->user->name ?? 'Public reader' }}</p>
-                        <p class="mt-1 text-[11px] font-bold text-slate-400">{{ optional($log->created_at)->diffForHumans() }}</p>
+            @endif
+
+            <!-- Recent Activity -->
+            <aside class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                    <div>
+                        <h2 class="text-base font-black text-slate-950">Recent Activity</h2>
+                        <p class="mt-1 text-xs font-semibold text-slate-500">Public reader access logs</p>
                     </div>
-                @empty
-                    <div class="flex min-h-[180px] flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 text-center">
-                        <i data-lucide="inbox" class="h-8 w-8 text-slate-300"></i>
-                        <p class="mt-3 text-sm font-bold text-slate-500">No reader activity yet.</p>
-                    </div>
-                @endforelse
-            </div>
-        </aside>
+                    <span class="rounded-full bg-slate-50 px-2.5 py-1 text-xs font-bold text-slate-500">{{ number_format($stats['views']) }} views</span>
+                </div>
+                <div class="mt-4 space-y-3">
+                    @forelse ($recentLogs as $log)
+                        <div class="rounded-xl border border-slate-100 bg-slate-50/60 p-3">
+                            <p class="truncate text-sm font-black text-slate-900">{{ $log->ebook->title ?? 'Deleted eBook' }}</p>
+                            <p class="mt-1 text-xs font-semibold text-slate-500">{{ ucfirst($log->action) }} by {{ $log->user->name ?? 'Public reader' }}</p>
+                            <p class="mt-1 text-[11px] font-bold text-slate-400">{{ optional($log->created_at)->diffForHumans() }}</p>
+                        </div>
+                    @empty
+                        <div class="flex min-h-[180px] flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 text-center">
+                            <i data-lucide="inbox" class="h-8 w-8 text-slate-300"></i>
+                            <p class="mt-3 text-sm font-bold text-slate-500">No reader activity yet.</p>
+                        </div>
+                    @endforelse
+                </div>
+            </aside>
+        </div>
     </section>
+
+    <!-- ApexCharts Script for Storage Pie Chart -->
+    @if(count($chartData) > 0)
+        <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const chartData = @json($chartData);
+                
+                const options = {
+                    series: chartData.map(item => item.size),
+                    labels: chartData.map(item => item.title),
+                    chart: {
+                        type: 'pie',
+                        height: 340,
+                        fontFamily: 'Inter, sans-serif',
+                        toolbar: {
+                            show: false
+                        }
+                    },
+                    stroke: {
+                        colors: ['#ffffff']
+                    },
+                    colors: [
+                        '#0f766e', '#0d9488', '#14b8a6', '#2dd4bf', 
+                        '#4f46e5', '#6366f1', '#8b5cf6', '#a855f7', 
+                        '#d97706', '#f59e0b', '#10b981', '#3b82f6'
+                    ],
+                    legend: {
+                        position: 'bottom',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        labels: {
+                            colors: '#64748b'
+                        },
+                        markers: {
+                            radius: 12
+                        }
+                    },
+                    dataLabels: {
+                        enabled: true,
+                        formatter: function (val, opts) {
+                            return opts.w.globals.series[opts.seriesIndex].toFixed(1) + ' MB';
+                        },
+                        style: {
+                            fontSize: '10px',
+                            fontWeight: 'bold',
+                            colors: ['#ffffff']
+                        },
+                        dropShadow: {
+                            enabled: false
+                        }
+                    },
+                    tooltip: {
+                        y: {
+                            formatter: function(value) {
+                                return value + " MB";
+                            }
+                        }
+                    }
+                };
+
+                const chart = new ApexCharts(document.querySelector("#storage-pie-chart"), options);
+                chart.render();
+            });
+        </script>
+    @endif
 </x-admin-layout>
