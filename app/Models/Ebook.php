@@ -13,6 +13,7 @@ class Ebook extends Model
         'description',
         'grade_level',
         'file_path',
+        'cover_image_path',
         'is_downloadable',
         'status',
         'created_by',

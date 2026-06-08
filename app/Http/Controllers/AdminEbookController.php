@@ -7,6 +7,7 @@ use App\Models\EbookAccessLog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -88,6 +89,18 @@ class AdminEbookController extends Controller
         $data['file_path'] = $this->storePdf($request);
         $data['created_by'] = Auth::id();
 
+        // Generate cover image from the uploaded PDF
+        $pdfAbsPath = Storage::disk(self::STORAGE_DISK)->path($data['file_path']);
+        $data['cover_image_path'] = $this->generateCoverFromPdf($pdfAbsPath);
+
+        // Allow manual cover upload to override auto-generated cover
+        if ($request->hasFile('cover_image')) {
+            $manualCover = $this->storeManualCover($request);
+            if ($manualCover) {
+                $data['cover_image_path'] = $manualCover;
+            }
+        }
+
         Ebook::create($data);
 
         return redirect()->route('admin.ebook.index')->with('success', 'eBook uploaded successfully.');
@@ -108,6 +121,18 @@ class AdminEbookController extends Controller
         if ($request->hasFile('pdf_file')) {
             $this->deletePdf($ebook);
             $data['file_path'] = $this->storePdf($request);
+
+            // Re-generate cover from new PDF
+            $pdfAbsPath = Storage::disk(self::STORAGE_DISK)->path($data['file_path']);
+            $data['cover_image_path'] = $this->generateCoverFromPdf($pdfAbsPath);
+        }
+
+        // Allow manual cover upload to override
+        if ($request->hasFile('cover_image')) {
+            $manualCover = $this->storeManualCover($request);
+            if ($manualCover) {
+                $data['cover_image_path'] = $manualCover;
+            }
         }
 
         $ebook->update($data);
@@ -117,6 +142,11 @@ class AdminEbookController extends Controller
 
     public function destroy(Ebook $ebook): RedirectResponse
     {
+        // Delete cover image
+        if ($ebook->cover_image_path) {
+            $this->deleteCover($ebook);
+        }
+
         $this->deletePdf($ebook);
         $ebook->delete();
 
@@ -130,6 +160,7 @@ class AdminEbookController extends Controller
             'description' => ['nullable', 'string'],
             'grade_level' => ['required', 'string', Rule::in(self::GRADE_LEVELS)],
             'pdf_file' => [$requirePdf ? 'required' : 'nullable', 'file', 'mimes:pdf', 'max:51200'],
+            'cover_image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'status' => ['required', 'string', Rule::in(['published', 'draft'])],
             'is_downloadable' => ['nullable', 'boolean'],
         ]);
@@ -156,5 +187,178 @@ class AdminEbookController extends Controller
         if ($ebook->file_path) {
             Storage::disk(self::STORAGE_DISK)->delete($ebook->file_path);
         }
+    }
+
+    /**
+     * Store a manually uploaded cover image as WebP in the ebook portal's public covers dir.
+     */
+    private function storeManualCover(Request $request): ?string
+    {
+        $file = $request->file('cover_image');
+        if (! $file) {
+            return null;
+        }
+
+        $uuid = Str::uuid();
+        $webpFilename = "{$uuid}.webp";
+
+        // Get the ebook portal's public covers directory
+        $coversDir = $this->getEbookPublicCoversDir();
+        if (! $coversDir) {
+            return null;
+        }
+
+        $targetPath = "{$coversDir}/{$webpFilename}";
+
+        // Try to convert to WebP using ImageMagick convert
+        $tempPath = $file->getRealPath();
+        $convertCmd = sprintf(
+            'convert %s -resize 600x -quality 80 %s 2>&1',
+            escapeshellarg($tempPath),
+            escapeshellarg($targetPath)
+        );
+        exec($convertCmd, $output, $returnCode);
+
+        if ($returnCode === 0 && file_exists($targetPath)) {
+            return "covers/{$webpFilename}";
+        }
+
+        // Fallback: store as-is with original extension
+        $ext = $file->getClientOriginalExtension();
+        $fallbackFilename = "{$uuid}.{$ext}";
+        $file->move($coversDir, $fallbackFilename);
+
+        return "covers/{$fallbackFilename}";
+    }
+
+    /**
+     * Generate a WebP cover image from the first page of a PDF.
+     */
+    private function generateCoverFromPdf(string $pdfAbsolutePath): ?string
+    {
+        if (! file_exists($pdfAbsolutePath)) {
+            return null;
+        }
+
+        $uuid = Str::uuid();
+        $tempDir = sys_get_temp_dir();
+        $tempPngPrefix = "{$tempDir}/ebook_cover_{$uuid}";
+
+        $coversDir = $this->getEbookPublicCoversDir();
+        if (! $coversDir) {
+            Log::warning('Cannot determine ebook public covers directory for cover generation.');
+
+            return null;
+        }
+
+        $webpFilename = "{$uuid}.webp";
+        $webpAbsolutePath = "{$coversDir}/{$webpFilename}";
+
+        // Step 1: Extract first page as PNG using pdftoppm
+        $pdftoppmCmd = sprintf(
+            'pdftoppm -f 1 -l 1 -r 150 -png %s %s 2>&1',
+            escapeshellarg($pdfAbsolutePath),
+            escapeshellarg($tempPngPrefix)
+        );
+
+        exec($pdftoppmCmd, $output, $returnCode);
+
+        if ($returnCode !== 0) {
+            Log::warning("pdftoppm failed for cover generation: " . implode("\n", $output));
+
+            return null;
+        }
+
+        // pdftoppm outputs files like: prefix-1.png or prefix-01.png
+        $tempPngPath = null;
+        foreach (glob("{$tempPngPrefix}*.png") as $file) {
+            $tempPngPath = $file;
+            break;
+        }
+
+        if (! $tempPngPath || ! file_exists($tempPngPath)) {
+            return null;
+        }
+
+        // Step 2: Convert PNG to WebP
+        $converted = false;
+
+        // Try cwebp first
+        $cwebpCmd = sprintf(
+            'cwebp -q 80 -resize 600 0 %s -o %s 2>&1',
+            escapeshellarg($tempPngPath),
+            escapeshellarg($webpAbsolutePath)
+        );
+        exec($cwebpCmd, $cwebpOutput, $cwebpReturn);
+
+        if ($cwebpReturn === 0 && file_exists($webpAbsolutePath)) {
+            $converted = true;
+        }
+
+        // Fallback: ImageMagick convert
+        if (! $converted) {
+            $convertCmd = sprintf(
+                'convert %s -resize 600x -quality 80 %s 2>&1',
+                escapeshellarg($tempPngPath),
+                escapeshellarg($webpAbsolutePath)
+            );
+            exec($convertCmd, $convertOutput, $convertReturn);
+
+            if ($convertReturn === 0 && file_exists($webpAbsolutePath)) {
+                $converted = true;
+            }
+        }
+
+        // Fallback: store as PNG
+        if (! $converted) {
+            $pngFilename = "{$uuid}.png";
+            $pngAbsolutePath = "{$coversDir}/{$pngFilename}";
+            copy($tempPngPath, $pngAbsolutePath);
+            @unlink($tempPngPath);
+
+            return file_exists($pngAbsolutePath) ? "covers/{$pngFilename}" : null;
+        }
+
+        @unlink($tempPngPath);
+
+        return "covers/{$webpFilename}";
+    }
+
+    /**
+     * Delete cover image from ebook portal's public storage.
+     */
+    private function deleteCover(Ebook $ebook): void
+    {
+        if (! $ebook->cover_image_path) {
+            return;
+        }
+
+        $coversDir = $this->getEbookPublicCoversDir();
+        if ($coversDir) {
+            $coverFile = dirname($coversDir) . '/' . $ebook->cover_image_path;
+            if (file_exists($coverFile)) {
+                @unlink($coverFile);
+            }
+        }
+    }
+
+    /**
+     * Get the absolute path to the ebook portal's public covers directory.
+     */
+    private function getEbookPublicCoversDir(): ?string
+    {
+        // The ebook_private disk root points to the ebook portal's storage/app/private
+        // We need to go up to storage/app/public/covers
+        $privateRoot = Storage::disk(self::STORAGE_DISK)->path('');
+        // privateRoot = .../storage/app/private/
+        $storageAppDir = dirname(rtrim($privateRoot, '/'));
+        // storageAppDir = .../storage/app
+        $coversDir = "{$storageAppDir}/public/covers";
+
+        if (! is_dir($coversDir)) {
+            mkdir($coversDir, 0755, true);
+        }
+
+        return $coversDir;
     }
 }

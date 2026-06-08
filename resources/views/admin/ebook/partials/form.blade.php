@@ -47,6 +47,20 @@
                 </span>
             </label>
 
+            <label class="block">
+                <span class="text-xs font-black uppercase tracking-wider text-slate-500">Cover Image <span class="text-slate-400 font-bold normal-case">(Optional)</span></span>
+                @if($isEdit && $book?->cover_image_path)
+                    <div class="mt-2 mb-2">
+                        <img src="{{ asset('storage/' . $book->cover_image_path) }}" alt="Current cover" class="h-24 w-auto rounded-lg border border-slate-200 object-cover shadow-sm">
+                        <span class="mt-1 block text-xs font-semibold text-emerald-600">Current cover image</span>
+                    </div>
+                @endif
+                <input type="file" name="cover_image" accept="image/jpeg,image/png,image/webp" class="mt-2 block h-12 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 file:mr-4 file:rounded-lg file:border-0 file:bg-emerald-50 file:px-4 file:py-2 file:text-xs file:font-black file:text-emerald-700 hover:file:bg-emerald-100">
+                <span class="mt-2 block text-xs font-semibold text-slate-500">
+                    A cover is auto-generated from the PDF. Upload here to override. JPG, PNG, or WebP, max 5MB.
+                </span>
+            </label>
+
             <label class="block lg:col-span-2">
                 <span class="text-xs font-black uppercase tracking-wider text-slate-500">Description</span>
                 <textarea name="description" rows="4" class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100" placeholder="Optional short description">{{ old('description', $book?->description) }}</textarea>
