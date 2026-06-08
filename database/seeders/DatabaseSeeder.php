@@ -2,9 +2,15 @@
 
 namespace Database\Seeders;
 
+use App\Models\EnrollmentApplicant;
+use App\Models\Section;
+use App\Models\SectionSubject;
+use App\Models\Student;
+use App\Models\StudentSection;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -17,35 +23,44 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        \App\Models\User::updateOrCreate(['email' => 'admin@amis.edu.ph'], [
+        User::updateOrCreate(['email' => 'admin@amis.edu.ph'], [
             'name' => 'AMIS Admin',
             'username' => 'admin',
-            'password' => \Illuminate\Support\Facades\Hash::make('123'),
+            'password' => Hash::make('123'),
             'role' => 'admin',
             'account_status' => 'verified',
             'email_verified_at' => now(),
         ]);
 
-        \App\Models\User::updateOrCreate(['email' => 'test@example.com'], [
+        User::updateOrCreate(['email' => 'teacher@amis.edu.ph'], [
+            'name' => 'Sir Arthur Pendragon',
+            'username' => 'teacher',
+            'password' => Hash::make('teacher123'),
+            'role' => 'teacher',
+            'account_status' => 'verified',
+            'email_verified_at' => now(),
+        ]);
+
+        User::updateOrCreate(['email' => 'test@example.com'], [
             'name' => 'Test User',
             'username' => 'testuser',
-            'password' => \Illuminate\Support\Facades\Hash::make('password'),
+            'password' => Hash::make('password'),
             'role' => 'applicant',
             'account_status' => 'verified',
             'email_verified_at' => now(),
         ]);
 
         // Student User, Applicant, and Profile for student@amis.edu.ph
-        $studentUser = \App\Models\User::updateOrCreate(['email' => 'student@amis.edu.ph'], [
+        $studentUser = User::updateOrCreate(['email' => 'student@amis.edu.ph'], [
             'name' => 'AMIS Student',
             'username' => 'student',
-            'password' => \Illuminate\Support\Facades\Hash::make('123'),
+            'password' => Hash::make('123'),
             'role' => 'student',
             'account_status' => 'verified',
             'email_verified_at' => now(),
         ]);
 
-        $applicant = \App\Models\EnrollmentApplicant::updateOrCreate([
+        $applicant = EnrollmentApplicant::updateOrCreate([
             'user_id' => $studentUser->id,
             'email' => 'student@amis.edu.ph',
         ], [
@@ -77,20 +92,20 @@ class DatabaseSeeder extends Seeder
             'status' => 'approved',
         ]);
 
-        $student = \App\Models\Student::updateOrCreate([
+        $student = Student::updateOrCreate([
             'user_id' => $studentUser->id,
         ], [
             'enrollment_applicant_id' => $applicant->id,
             'student_number' => '260000',
             'school_email' => 'student@amis.edu.ph',
-            'temp_password' => \Illuminate\Support\Facades\Hash::make('123'),
+            'temp_password' => Hash::make('123'),
             'grade_level' => 'Grade 7',
             'school_year' => '2026-2027',
             'credentials_sent_at' => now(),
         ]);
 
         // Create Section for the Student
-        $section = \App\Models\Section::updateOrCreate([
+        $section = Section::updateOrCreate([
             'grade_level' => 'Grade 7',
             'gender' => 'male',
             'learning_mode' => 'Face-to-Face',
@@ -128,25 +143,60 @@ class DatabaseSeeder extends Seeder
                 'schedule' => 'M/W 1:00 PM - 2:00 PM',
             ],
             [
+                'subject_name' => 'Filipino',
+                'teacher_name' => 'Ma\'am Josefa Llanes',
+                'schedule' => 'M 7:00 AM - 7:40 AM',
+            ],
+            [
+                'subject_name' => 'Araling Panlipunan',
+                'teacher_name' => 'Sir Teodoro Agoncillo',
+                'schedule' => 'M 7:45 AM - 8:25 AM',
+            ],
+            [
+                'subject_name' => 'MAPEH',
+                'teacher_name' => 'Ma\'am Lucresia Kasilag',
+                'schedule' => 'M 8:30 AM - 9:10 AM',
+            ],
+            [
+                'subject_name' => 'Technology and Livelihood Education',
+                'teacher_name' => 'Sir Renato Santos',
+                'schedule' => 'M 11:35 AM - 12:15 PM',
+            ],
+            [
+                'subject_name' => 'GMRC',
+                'teacher_name' => 'Ma\'am Corazon Aquino',
+                'schedule' => 'M 2:05 PM - 2:45 PM',
+            ],
+            [
+                'subject_name' => 'Qur\'an',
+                'teacher_name' => 'Ust. Omar Farooq',
+                'schedule' => 'M 2:50 PM - 3:30 PM',
+            ],
+            [
+                'subject_name' => 'Reading and Literacy',
+                'teacher_name' => 'Ma\'am Paz Marquez',
+                'schedule' => 'M 3:35 PM - 4:15 PM',
+            ],
+            [
                 'subject_name' => 'Physical Education (PE)',
                 'teacher_name' => 'Sir Bruce Lee',
                 'schedule' => 'F 1:00 PM - 3:00 PM',
-            ]
+            ],
         ];
 
         foreach ($subjectsData as $sub) {
-            \App\Models\SectionSubject::updateOrCreate([
+            SectionSubject::updateOrCreate([
                 'section_id' => $section->id,
                 'subject_name' => $sub['subject_name'],
             ], [
                 'teacher_name' => $sub['teacher_name'],
                 'schedule' => $sub['schedule'],
-                'ms_channel_id' => 'test-channel-' . strtolower(str_replace(' ', '-', $sub['subject_name'])),
+                'ms_channel_id' => 'test-channel-'.strtolower(str_replace(' ', '-', $sub['subject_name'])),
             ]);
         }
 
         // Link Student to Section
-        \App\Models\StudentSection::updateOrCreate([
+        StudentSection::updateOrCreate([
             'student_id' => $student->id,
             'section_id' => $section->id,
         ], [
@@ -160,4 +210,3 @@ class DatabaseSeeder extends Seeder
         ]);
     }
 }
-

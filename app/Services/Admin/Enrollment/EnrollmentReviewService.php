@@ -3,7 +3,9 @@
 namespace App\Services\Admin\Enrollment;
 
 use App\Models\EnrollmentApplicant;
+use App\Models\Payment;
 use App\Models\SchoolFee;
+use App\Services\Admin\Finance\StudentAccountDiscountSyncService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
@@ -13,23 +15,26 @@ class EnrollmentReviewService
 
     public const STATUS_LABELS = [
         'draft' => 'Draft', 'ready_for_submission' => 'Ready for Submission', 'pending' => 'Pending',
-        'submitted' => 'Submitted', 'under_review' => 'Under Review', 'approved' => 'Approved', 'rejected' => 'Rejected'
+        'submitted' => 'Submitted', 'under_review' => 'Under Review', 'approved' => 'Approved', 'rejected' => 'Rejected',
     ];
 
     public const STATUS_BADGES = [
         'draft' => 'badge-gray', 'ready_for_submission' => 'badge-blue', 'pending' => 'badge-yellow',
-        'submitted' => 'badge-blue', 'under_review' => 'badge-purple', 'approved' => 'badge-green', 'rejected' => 'badge-red'
+        'submitted' => 'badge-blue', 'under_review' => 'badge-purple', 'approved' => 'badge-green', 'rejected' => 'badge-red',
     ];
 
     public const PAYMENT_BADGES = ['pending' => 'badge-yellow', 'verified' => 'badge-green', 'rejected' => 'badge-red'];
+
     public const PAYMENT_LABELS = ['pending' => 'Pending', 'verified' => 'Verified', 'rejected' => 'Rejected'];
 
     public const REQUIRED_DOCUMENTS = [
         'photo_2x2' => '2x2 Photo', 'birth_cert' => 'Birth Certificate',
-        'report_card' => 'Report Card', 'affidavit' => 'Temporary Proof (Affidavit)'
+        'report_card' => 'Report Card', 'affidavit' => 'Temporary Proof (Affidavit)',
     ];
 
     public const REVIEWABLE_DOCUMENTS = ['photo_2x2', 'birth_cert', 'report_card', 'marriage_contract', 'medical_record', 'affidavit'];
+
+    public function __construct(private readonly StudentAccountDiscountSyncService $discountSync) {}
 
     public function getRequiredDocuments(EnrollmentApplicant $applicant): array
     {
@@ -42,6 +47,7 @@ class EnrollmentReviewService
                 $reqs['report_card'] = 'Report Card';
             }
         }
+
         return $reqs;
     }
 
@@ -59,6 +65,7 @@ class EnrollmentReviewService
                 return false;
             }
         }
+
         return true;
     }
 
@@ -66,15 +73,15 @@ class EnrollmentReviewService
     {
         $docStatuses = $applicant->document_statuses ?? [];
         $payment = $applicant->payment;
-        if (!$payment) {
+        if (! $payment) {
             $familyId = $applicant->family_application_id ?: $applicant->id;
-            $payment = \App\Models\Payment::whereHas('applicant', function ($query) use ($familyId) {
+            $payment = Payment::whereHas('applicant', function ($query) use ($familyId) {
                 $query->where(function ($q) use ($familyId) {
                     $q->where('family_application_id', $familyId)
-                      ->orWhere('id', $familyId);
+                        ->orWhere('id', $familyId);
                 });
             })
-            ->first();
+                ->first();
         }
         $hasPaymentProof = $payment && filled($payment->receipt_url);
         $paymentOk = $hasPaymentProof && $payment->status === 'verified';
@@ -184,7 +191,7 @@ class EnrollmentReviewService
             'discount_amount' => $discountAmount,
         ]);
 
-        $this->syncStudentAccountDiscount($applicant->fresh(['student.account.monthlyBillings']));
+        $this->discountSync->sync($applicant->fresh(['student.account.monthlyBillings']));
     }
 
     public function assertReadyForApproval(EnrollmentApplicant $applicant): void
@@ -221,91 +228,19 @@ class EnrollmentReviewService
     private function studentAddress(EnrollmentApplicant $applicant): ?string
     {
         $addr = array_filter([$applicant->street_address, $applicant->city, $applicant->state_province, $applicant->postal_code, $applicant->country]);
+
         return count($addr) > 0 ? implode(', ', $addr) : $applicant->address;
     }
 
     private function homeAddress(EnrollmentApplicant $applicant): ?string
     {
         $addr = array_filter([$applicant->home_street_address, $applicant->home_city, $applicant->home_state_province, $applicant->home_postal_code]);
+
         return count($addr) > 0 ? implode(', ', $addr) : $applicant->home_address;
     }
 
     private function mobileNumber(?string $countryCode, ?string $number): string
     {
         return trim(($countryCode ? $countryCode.' ' : '').($number ?? ''));
-    }
-
-    private function syncStudentAccountDiscount(?EnrollmentApplicant $applicant): void
-    {
-        $account = $applicant?->student?->account;
-        if (!$account) {
-            return;
-        }
-
-        $discountAmount = min((float) $account->tuition_fee, (float) $applicant->discount_amount);
-        $discountedTuition = max(0, (float) $account->tuition_fee - $discountAmount);
-        
-        $billingMonthsCount = $account->monthlyBillings()->count() ?: 9;
-
-        if ($billingMonthsCount === 10) {
-            // Old 10-month system logic
-            $monthlyTuition = round($discountedTuition / 10, 2);
-            $gross = $discountedTuition + (float) $account->miscellaneous_fee + (float) $account->books_fee;
-            $totalBalance = max(0, $gross - (float) $account->enrollment_fee_paid);
-            $paid = $account->payments()->where('status', 'verified')->sum('amount');
-            $remaining = max(0, $totalBalance - $paid);
-
-            $account->update([
-                'sibling_order' => $applicant->sibling_order,
-                'discount_type' => $applicant->discount_type,
-                'discount_percentage' => $applicant->discount_percentage,
-                'discount_amount' => $discountAmount,
-                'monthly_tuition' => $monthlyTuition,
-                'gross_total' => $gross,
-                'total_balance' => $totalBalance,
-                'remaining_balance' => $remaining,
-                'status' => $remaining <= 0 ? 'paid' : ($paid > 0 ? 'partial' : 'unpaid'),
-            ]);
-
-            foreach ($account->monthlyBillings()->where('status', 'unpaid')->get() as $billing) {
-                $billing->update([
-                    'amount_due' => $billing->month_number === 1
-                        ? $monthlyTuition + (float) $account->miscellaneous_fee + (float) $account->books_fee
-                        : $monthlyTuition,
-                ]);
-            }
-        } else {
-            // New 9-month system logic
-            $gross = $discountedTuition + (float) $account->miscellaneous_fee + (float) $account->books_fee;
-            
-            // Total balance under 9-month system is the GROSS total
-            $totalBalance = $gross;
-            
-            // Recalculate remaining balance
-            $paid = $account->payments()->where('status', 'verified')->sum('amount');
-            $remaining = max(0, $totalBalance - $paid);
-            
-            // Monthly tuition is (gross - enrollment_fee_paid) / 9
-            $monthlyTuition = round(($gross - (float) $account->enrollment_fee_paid) / 9, 2);
-
-            $account->update([
-                'sibling_order' => $applicant->sibling_order,
-                'discount_type' => $applicant->discount_type,
-                'discount_percentage' => $applicant->discount_percentage,
-                'discount_amount' => $discountAmount,
-                'monthly_tuition' => $monthlyTuition,
-                'gross_total' => $gross,
-                'total_balance' => $totalBalance,
-                'remaining_balance' => $remaining,
-                'status' => $remaining <= 0 ? 'paid' : ($paid > 0 ? 'partial' : 'unpaid'),
-            ]);
-
-            // For 9-month system, all unpaid billings have the same uniform monthlyTuition
-            foreach ($account->monthlyBillings()->where('status', 'unpaid')->get() as $billing) {
-                $billing->update([
-                    'amount_due' => $monthlyTuition,
-                ]);
-            }
-        }
     }
 }

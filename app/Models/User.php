@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\UserRole;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -13,9 +15,16 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
-    public const ADMIN_PORTAL_ROLES = ['admin', 'finance', 'staff'];
+    public const ADMIN_PORTAL_ROLES = [
+        UserRole::Admin->value,
+        UserRole::Finance->value,
+        UserRole::Staff->value,
+    ];
 
-    public const PAYMENT_REVIEW_ROLES = ['admin', 'finance'];
+    public const PAYMENT_REVIEW_ROLES = [
+        UserRole::Admin->value,
+        UserRole::Finance->value,
+    ];
 
     /**
      * The attributes that are mass assignable.
@@ -68,12 +77,12 @@ class User extends Authenticatable
         ];
     }
 
-    public function enrollmentApplicant(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function enrollmentApplicant(): HasOne
     {
         return $this->hasOne(EnrollmentApplicant::class);
     }
 
-    public function enrollmentApplicants(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function enrollmentApplicants(): HasMany
     {
         return $this->hasMany(EnrollmentApplicant::class);
     }
@@ -90,7 +99,7 @@ class User extends Authenticatable
 
     public function canReviewEnrollmentApplications(): bool
     {
-        return $this->allowsAccess('document_review', $this->role === 'admin');
+        return $this->allowsAccess('document_review', $this->role === UserRole::Admin->value);
     }
 
     public function isViewOnlyAccess(): bool
@@ -102,8 +111,8 @@ class User extends Authenticatable
     {
         return [
             'payment_review' => in_array($this->role, self::PAYMENT_REVIEW_ROLES, true),
-            'document_review' => $this->role === 'admin',
-            'view_only' => $this->role === 'staff',
+            'document_review' => $this->role === UserRole::Admin->value,
+            'view_only' => $this->role === UserRole::Staff->value,
         ];
     }
 

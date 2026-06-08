@@ -1,17 +1,15 @@
 <?php
 
-use App\Http\Controllers\StudentAuthController;
 use App\Http\Controllers\StudentAccountLinkController;
-use App\Http\Controllers\StudentPortalController;
+use App\Http\Controllers\StudentAuthController;
 use App\Http\Controllers\StudentPaymentController;
+use App\Http\Controllers\StudentPortalController;
 use Illuminate\Support\Facades\Route;
 
-// Redirect home to dashboard
 Route::get('/', function () {
     return redirect()->route('student.dashboard');
 });
 
-// Guest routes
 Route::middleware('guest')->group(function () {
     Route::get('/login', [StudentAuthController::class, 'showLogin'])->name('student.login');
     Route::post('/login', [StudentAuthController::class, 'login'])
@@ -19,9 +17,11 @@ Route::middleware('guest')->group(function () {
         ->name('student.login.store');
     Route::get('/login/google/redirect', [StudentAuthController::class, 'redirectGoogle'])->name('student.login.google.redirect');
     Route::get('/login/google/callback', [StudentAuthController::class, 'callbackGoogle'])->name('student.login.google.callback');
+    Route::get('/auth/microsoft/student', [StudentAuthController::class, 'redirectMicrosoft'])->name('student.login.microsoft.redirect');
+    Route::get('/auth/microsoft/student/callback', [StudentAuthController::class, 'callbackMicrosoft'])->name('student.login.microsoft.callback');
+
 });
 
-// Authenticated Student routes
 Route::middleware(['auth', 'student'])->group(function () {
     Route::post('/logout', [StudentAuthController::class, 'logout'])->name('student.logout');
     Route::get('/dashboard', [StudentPortalController::class, 'dashboard'])->name('student.dashboard');

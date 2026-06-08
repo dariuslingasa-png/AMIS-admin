@@ -40,7 +40,7 @@ const readJsonData = (id) => {
 
 const baseChart = {
     chart: {
-        fontFamily: 'Plus Jakarta Sans, sans-serif',
+        fontFamily: 'Nunito Sans, sans-serif',
         toolbar: { show: false },
         animations: { enabled: false },
         foreColor: chartTheme.slate,

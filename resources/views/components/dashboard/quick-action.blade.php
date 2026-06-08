@@ -8,5 +8,5 @@
         <span class="block text-sm font-semibold text-slate-950">{{ $label }}</span>
         <span class="mt-0.5 block text-xs text-slate-500">{{ $meta }}</span>
     </span>
-    <i data-lucide="arrow-up-right" class="ms-auto h-4 w-4 text-slate-400"></i>
+    <i data-lucide="arrow-up-right" class="ms-auto h-4 w-4 text-slate-400 quick-action-arrow"></i>
 </a>

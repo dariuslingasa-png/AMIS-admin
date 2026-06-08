@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Payment;
+use App\Http\Controllers\Traits\PaymentHelperTrait;
 use App\Models\AdminAuditLog;
 use App\Models\EnrollmentApplicant;
+use App\Models\Invoice;
+use App\Models\Payment;
 use App\Models\StudentAccount;
 use App\Models\StudentAccountPayment;
-use App\Http\Controllers\Traits\PaymentHelperTrait;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 
@@ -15,9 +16,6 @@ class AdminPaymentController extends Controller
 {
     use PaymentHelperTrait;
 
-    /**
-     * Display the Finance Dashboard statistics and charts.
-     */
     public function dashboard()
     {
         $stats = [
@@ -67,9 +65,6 @@ class AdminPaymentController extends Controller
         ));
     }
 
-    /**
-     * Display the list of parent enrollment payments grouped by family batch.
-     */
     public function index(Request $request)
     {
         $query = Payment::with('applicant.user')->latest();
@@ -154,9 +149,6 @@ class AdminPaymentController extends Controller
         return view('admin.payments.index', compact('paymentFamilies', 'paymentSummary', 'sort', 'direction', 'perPage'));
     }
 
-    /**
-     * Display details and invoice review worksheet for a specific enrollment payment.
-     */
     public function show(Payment $payment)
     {
         $payment->load('applicant.user');
@@ -178,21 +170,16 @@ class AdminPaymentController extends Controller
                 ->get();
             $familyLabel = $this->familyLabel($familyChildren, $applicant);
 
-            // Fetch or lazily auto-generate the single family Invoice record!
-            $invoice = \App\Models\Invoice::getOrCreateForFamily($applicant);
-            if (!$payment->invoice_id) {
+            $invoice = Invoice::getOrCreateForFamily($applicant);
+            if (! $payment->invoice_id) {
                 $payment->update(['invoice_id' => $invoice->id]);
             }
-            // Trigger auto-recalculation to retrospectively convert old ORs in DB!
             $invoice->recalculate();
         }
 
         return view('admin.payments.show', compact('payment', 'applicant', 'familyChildren', 'familyLabel', 'invoice'));
     }
 
-    /**
-     * Verify and approve a parent's enrollment payment proof.
-     */
     public function verify(Request $request, Payment $payment)
     {
         $this->ensurePaymentReviewer();
@@ -201,40 +188,34 @@ class AdminPaymentController extends Controller
             return back()->withErrors(['status' => 'Cannot verify: payment proof is missing.']);
         }
 
-        $invoice = \App\Models\Invoice::getOrCreateForFamily($payment->applicant);
-        if (!$payment->invoice_id) {
+        $invoice = Invoice::getOrCreateForFamily($payment->applicant);
+        if (! $payment->invoice_id) {
             $payment->invoice_id = $invoice->id;
         }
 
         $orNumber = $request->input('or_number');
         if (blank($orNumber)) {
-            // Count verified payments already existing under this invoice
             $verifiedCount = $invoice->payments()->where('status', 'verified')->count();
-            
-            // Suffix the invoice number directly: e.g. INV-000204 -> OR-000204
             $baseOr = str_replace('INV-', 'OR-', $invoice->invoice_no);
-            
+
             if ($verifiedCount === 0) {
-                // First payment! Check if this payment is a full payment or partial payment.
-                $isFullPayment = ((float)$payment->amount >= (float)$invoice->total_amount);
+                $isFullPayment = ((float) $payment->amount >= (float) $invoice->total_amount);
                 if ($isFullPayment) {
                     $orNumber = $baseOr;
                 } else {
-                    $orNumber = $baseOr . '-1';
+                    $orNumber = $baseOr.'-1';
                 }
             } else {
-                // This is a subsequent installment payment!
-                $orNumber = $baseOr . '-' . ($verifiedCount + 1);
+                $orNumber = $baseOr.'-'.($verifiedCount + 1);
             }
         }
 
         $payment->update([
-            'status'      => 'verified',
-            'or_number'   => $orNumber,
+            'status' => 'verified',
+            'or_number' => $orNumber,
             'verified_at' => now(),
         ]);
 
-        // Sync and recalculate the single Family Invoice totals & status!
         $invoice->recalculate();
 
         AdminAuditLog::record('payment_approved', true, 'Payment proof approved.', [
@@ -254,9 +235,6 @@ class AdminPaymentController extends Controller
         return back()->with('success', $approvalMessage);
     }
 
-    /**
-     * Reject a parent's enrollment payment proof with custom remarks.
-     */
     public function reject(Request $request, Payment $payment)
     {
         $this->ensurePaymentReviewer();
@@ -264,15 +242,14 @@ class AdminPaymentController extends Controller
         $request->validate(['remarks' => 'required|string|max:500']);
 
         $payment->update([
-            'status'  => 'rejected',
+            'status' => 'rejected',
             'remarks' => $request->remarks,
         ]);
 
-        // Sync and recalculate the single Family Invoice totals & status!
         if ($payment->invoice_id) {
             $payment->invoice->recalculate();
         } else {
-            $invoice = \App\Models\Invoice::getOrCreateForFamily($payment->applicant);
+            $invoice = Invoice::getOrCreateForFamily($payment->applicant);
             $payment->update(['invoice_id' => $invoice->id]);
             $invoice->recalculate();
         }
@@ -292,17 +269,11 @@ class AdminPaymentController extends Controller
         return back()->with('success', 'Payment rejected.');
     }
 
-    /**
-     * Abort if the user doesn't have finance administrative reviewer clearance.
-     */
     private function ensurePaymentReviewer(): void
     {
         abort_unless(auth()->user()?->canReviewEnrollmentPayments(), 403);
     }
 
-    /**
-     * Display discount and fee settings management view.
-     */
     public function fees()
     {
         return view('admin.payments.fees');
