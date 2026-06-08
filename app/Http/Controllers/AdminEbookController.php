@@ -185,7 +185,7 @@ class AdminEbookController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'grade_level' => ['required', 'string', Rule::in(self::GRADE_LEVELS)],
-            'pdf_file' => [$requirePdf ? 'required' : 'nullable', 'file', 'mimes:pdf', 'max:51200'],
+            'pdf_file' => [$requirePdf ? 'required' : 'nullable', 'file', 'mimes:pdf', 'max:1048576'],
             'cover_image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
             'status' => ['required', 'string', Rule::in(['published', 'draft'])],
             'is_downloadable' => ['nullable', 'boolean'],
@@ -205,7 +205,16 @@ class AdminEbookController extends Controller
         $file = $request->file('pdf_file');
         $filename = Str::uuid().'.'.$file->getClientOriginalExtension();
 
-        return $file->storeAs('private/ebooks', $filename, self::STORAGE_DISK);
+        $path = $file->storeAs('private/ebooks', $filename, self::STORAGE_DISK);
+
+        try {
+            $absolutePath = Storage::disk(self::STORAGE_DISK)->path($path);
+            $this->optimizePdf($absolutePath);
+        } catch (\Exception $e) {
+            Log::error("Failed to optimize PDF: " . $e->getMessage());
+        }
+
+        return $path;
     }
 
     private function deletePdf(Ebook $ebook): void
@@ -489,5 +498,127 @@ class AdminEbookController extends Controller
         $bytes /= pow(1024, $pow);
 
         return round($bytes, $precision) . ' ' . $units[$pow];
+    }
+
+    /**
+     * Optimizes a PDF file for web viewing and eBook delivery.
+     *
+     * Uses Ghostscript for aggressive image recompression/downscaling,
+     * font subsetting, and duplicate removal, then QPDF for linearization
+     * (fast web view) with compressed object streams.
+     *
+     * Targets: 150 DPI for color/grayscale images, 300 DPI for mono (text),
+     * sRGB color space for screens, bicubic downsampling for quality.
+     */
+    private function optimizePdf(string $pdfAbsolutePath): void
+    {
+        if (!file_exists($pdfAbsolutePath)) {
+            return;
+        }
+
+        $originalSize = filesize($pdfAbsolutePath);
+        $tempCompressedPath = $pdfAbsolutePath . '.compressed';
+        $tempLinearizedPath = $pdfAbsolutePath . '.linearized';
+
+        // 1. Ghostscript: Recompress images, downscale, subset fonts, remove duplicates
+        $gsFlags = [
+            '-sDEVICE=pdfwrite',
+            '-dCompatibilityLevel=1.5',
+            '-dPDFSETTINGS=/ebook',
+            '-dNOPAUSE',
+            '-dQUIET',
+            '-dBATCH',
+            // Image downsampling (150 DPI for color/gray, 300 for mono/text)
+            '-dColorImageResolution=150',
+            '-dGrayImageResolution=150',
+            '-dMonoImageResolution=300',
+            '-dDownsampleColorImages=true',
+            '-dDownsampleGrayImages=true',
+            '-dDownsampleMonoImages=true',
+            '-dColorImageDownsampleType=/Bicubic',
+            '-dGrayImageDownsampleType=/Bicubic',
+            '-dMonoImageDownsampleType=/Subsample',
+            '-dColorImageDownsampleThreshold=1.0',
+            '-dGrayImageDownsampleThreshold=1.0',
+            // Auto-select best compression per image
+            '-dAutoFilterColorImages=true',
+            '-dAutoFilterGrayImages=true',
+            // Convert to sRGB for web/screen viewing
+            '-dColorConversionStrategy=/sRGB',
+            // Font optimization
+            '-dSubsetFonts=true',
+            '-dEmbedAllFonts=true',
+            '-dCompressFonts=true',
+            // Page and object optimization
+            '-dCompressPages=true',
+            '-dDetectDuplicateImages=true',
+            '-dOptimize=true',
+        ];
+
+        $gsCmd = sprintf(
+            'gs %s -sOutputFile=%s %s 2>&1',
+            implode(' ', $gsFlags),
+            escapeshellarg($tempCompressedPath),
+            escapeshellarg($pdfAbsolutePath)
+        );
+
+        exec($gsCmd, $outputGs, $returnGs);
+
+        if ($returnGs !== 0 || !file_exists($tempCompressedPath)) {
+            Log::warning("Ghostscript compression failed: " . implode("\n", $outputGs));
+            if (file_exists($tempCompressedPath)) {
+                @unlink($tempCompressedPath);
+            }
+            return;
+        }
+
+        // 2. QPDF: Linearize for fast web view + compress object streams
+        $qpdfCmd = sprintf(
+            'qpdf --linearize --compress-streams=y --object-streams=generate --recompress-flate --normalize-content=y %s %s 2>&1',
+            escapeshellarg($tempCompressedPath),
+            escapeshellarg($tempLinearizedPath)
+        );
+
+        exec($qpdfCmd, $outputQpdf, $returnQpdf);
+
+        // Determine which file to use
+        $finalSourcePath = null;
+        if ($returnQpdf === 0 && file_exists($tempLinearizedPath)) {
+            $finalSourcePath = $tempLinearizedPath;
+        } elseif (file_exists($tempCompressedPath)) {
+            $finalSourcePath = $tempCompressedPath;
+        }
+
+        if ($finalSourcePath) {
+            $optimizedSize = filesize($finalSourcePath);
+            // Replace original only if optimized size is smaller
+            if ($optimizedSize < $originalSize) {
+                if (copy($finalSourcePath, $pdfAbsolutePath)) {
+                    Log::info(sprintf(
+                        "PDF optimized: %s (Before: %s → After: %s, Saved: %s%%)",
+                        basename($pdfAbsolutePath),
+                        $this->formatBytes($originalSize),
+                        $this->formatBytes($optimizedSize),
+                        round((1 - ($optimizedSize / $originalSize)) * 100, 2)
+                    ));
+                } else {
+                    Log::error("Failed to copy optimized PDF over original file.");
+                }
+            } else {
+                Log::info(sprintf(
+                    "Optimized PDF not smaller than original, kept original. (Original: %s, Optimized: %s)",
+                    $this->formatBytes($originalSize),
+                    $this->formatBytes($optimizedSize)
+                ));
+            }
+        }
+
+        // Cleanup temp files
+        if (file_exists($tempCompressedPath)) {
+            @unlink($tempCompressedPath);
+        }
+        if (file_exists($tempLinearizedPath)) {
+            @unlink($tempLinearizedPath);
+        }
     }
 }
