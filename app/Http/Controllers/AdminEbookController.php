@@ -55,16 +55,26 @@ class AdminEbookController extends Controller
             ->withQueryString();
 
         $totalBytes = 0;
-        $chartData = [];
+        $groupedData = [];
         foreach (Ebook::all() as $book) {
             if ($book->file_path && Storage::disk(self::STORAGE_DISK)->exists($book->file_path)) {
                 $sizeInBytes = Storage::disk(self::STORAGE_DISK)->size($book->file_path);
                 $totalBytes += $sizeInBytes;
-                $chartData[] = [
-                    'title' => $book->title,
-                    'size' => round($sizeInBytes / 1024 / 1024, 2), // size in MB
-                ];
+
+                $grade = $book->grade_level ?: 'Unassigned';
+                if (! isset($groupedData[$grade])) {
+                    $groupedData[$grade] = 0;
+                }
+                $groupedData[$grade] += $sizeInBytes;
             }
+        }
+
+        $chartData = [];
+        foreach ($groupedData as $grade => $bytes) {
+            $chartData[] = [
+                'title' => $grade,
+                'size' => round($bytes / 1024 / 1024, 2), // size in MB
+            ];
         }
 
         $stats = [
