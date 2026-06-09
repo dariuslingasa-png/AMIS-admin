@@ -12,18 +12,6 @@
                 <!-- Header Banner -->
                 <tr>
                     <td style="background: linear-gradient(135deg, #059669, #047857); padding: 30px 40px; text-align: center; color: #ffffff;">
-                        @php
-                            $logoPath = public_path('images/AMIS_Logo.png');
-                            $logoCid = null;
-                            if (file_exists($logoPath) && isset($message)) {
-                                $logoCid = $message->embed($logoPath);
-                            }
-                        @endphp
-                        @if($logoCid)
-                            <img src="{{ $logoCid }}" style="height: 70px; width: auto; margin-bottom: 12px; display: inline-block;" alt="AMIS Logo">
-                        @elseif(file_exists($logoPath))
-                            <img src="{{ asset('images/AMIS_Logo.png') }}" style="height: 70px; width: auto; margin-bottom: 12px; display: inline-block;" alt="AMIS Logo">
-                        @endif
                         <h1 style="font-size: 24px; margin: 0 0 6px; font-weight: 800; tracking-tight: -0.025em;">Al Munawwara Islamic School</h1>
                         <p style="color: rgba(255, 255, 255, 0.9); font-size: 14px; margin: 0; font-weight: 600;">AMIS Enrollment Office &bull; Families Registry Report</p>
                     </td>
