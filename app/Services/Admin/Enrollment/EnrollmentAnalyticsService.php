@@ -16,6 +16,17 @@ class EnrollmentAnalyticsService
         $query = EnrollmentApplicant::with('user', 'payment')
             ->whereNotIn('status', ['draft']);
 
+        if ($request->filled('search')) {
+            $s = (string) $request->input('search');
+            $query->where(function (Builder $q) use ($s) {
+                $q->where('first_name', 'like', "%{$s}%")
+                    ->orWhere('last_name', 'like', "%{$s}%")
+                    ->orWhere('middle_name', 'like', "%{$s}%")
+                    ->orWhere('email', 'like', "%{$s}%")
+                    ->orWhereHas('user', fn (Builder $u) => $u->where('email', 'like', "%{$s}%"));
+            });
+        }
+
         if ($request->filled('status')) {
             $query->where('status', (string) $request->input('status'));
         }
@@ -26,6 +37,17 @@ class EnrollmentAnalyticsService
 
         if ($request->filled('type')) {
             $query->where('student_type', (string) $request->input('type'));
+        }
+
+        if ($request->filled('learning_mode')) {
+            $mode = (string) $request->input('learning_mode');
+            if ($mode === 'f2f') {
+                $query->where('learning_mode', 'Face-to-Face');
+            } elseif ($mode === 'flexible_1st') {
+                $query->where('learning_mode', 'like', '%1st Shift%');
+            } elseif ($mode === 'flexible_2nd') {
+                $query->where('learning_mode', 'like', '%2nd Shift%');
+            }
         }
 
         if ($request->filled('payment_status')) {

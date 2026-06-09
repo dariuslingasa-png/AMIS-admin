@@ -63,7 +63,14 @@ class TeacherAccountService
         $password = $this->generatePassword();
         $email = $teacher['email'];
 
-        User::where('email', $email)->first()?->update(['password' => Hash::make($password)]);
+        User::updateOrCreate(['email' => $email], [
+            'name' => $teacher['name'] ?? $email,
+            'username' => Str::slug($teacher['name'] ?? $email),
+            'password' => Hash::make($password),
+            'role' => 'teacher',
+            'account_status' => ($teacher['status'] ?? 'Active') === 'Active' ? 'verified' : 'suspended',
+            'email_verified_at' => now(),
+        ]);
 
         try {
             $graph = new MicrosoftGraphService();

@@ -76,4 +76,12 @@ class AdminAcademicTeacherController extends Controller
 
         return back()->with('status', 'Password changed status updated.');
     }
+
+    public function destroy(string $id)
+    {
+        Gate::authorize('manage-academic');
+        $this->teachers->delete($id);
+
+        return redirect()->route('admin.academic.teachers')->with('status', 'Teacher deleted successfully.');
+    }
 }

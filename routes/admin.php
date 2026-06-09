@@ -160,6 +160,7 @@ Route::name('admin.')->group(function () {
             Route::patch('/teachers/{id}/subjects', [AdminAcademicTeacherController::class, 'updateSubjects'])->name('teachers.subjects.update');
             Route::get('/teachers/{id}', [AdminAcademicTeacherController::class, 'show'])->name('teachers.view');
             Route::post('/teachers/{id}/toggle-password', [AdminAcademicTeacherController::class, 'togglePasswordChanged'])->name('teachers.toggle-password');
+            Route::delete('/teachers/{id}', [AdminAcademicTeacherController::class, 'destroy'])->name('teachers.destroy');
             Route::get('/schedules', [AdminClassScheduleController::class, 'index'])->name('schedules');
             Route::post('/schedules', [AdminClassScheduleController::class, 'store'])->name('schedules.store');
             Route::patch('/schedules/{schedule}', [AdminClassScheduleController::class, 'update'])->name('schedules.update');

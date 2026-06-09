@@ -290,6 +290,84 @@ class TeacherDirectoryService
         return $id;
     }
 
+    public function delete(string $id): void
+    {
+        $teacher = $this->findRaw($id);
+        if (!$teacher) {
+            return;
+        }
+
+        // Find matching local user first to get their microsoft_id, UPN, or local username
+        $localUser = null;
+        $slug = Str::slug($teacher['name'] ?? '');
+        if (!empty($teacher['email']) || !empty($slug) || !empty($id)) {
+            $localUser = \App\Models\User::where('role', 'teacher')
+                ->where(function ($query) use ($teacher, $id, $slug) {
+                    if (!empty($teacher['email'])) {
+                        $query->orWhere('email', $teacher['email']);
+                    }
+                    if (!empty($slug)) {
+                        $query->orWhere('username', $slug);
+                        $query->orWhere('name', $teacher['name']);
+                    }
+                    $query->orWhere('username', $id);
+                    $query->orWhere('username', Str::slug($id));
+                })
+                ->first();
+        }
+
+        // 1. Delete Microsoft 365 account if configured
+        $microsoftIdentifier = $localUser?->microsoft_id ?? $localUser?->email ?? $teacher['email'] ?? null;
+        if (!empty($microsoftIdentifier)) {
+            try {
+                $graph = new \App\Services\MicrosoftGraphService();
+                if ($graph->userExists($microsoftIdentifier)) {
+                    $graph->deleteAzureUser($microsoftIdentifier);
+                    try {
+                        \App\Models\AdminAuditLog::record('teacher_microsoft_deleted', true, "Deleted Microsoft account for teacher {$microsoftIdentifier}");
+                    } catch (\Throwable $e) {
+                        \Illuminate\Support\Facades\Log::error("Failed to log audit for Microsoft user deletion: " . $e->getMessage());
+                    }
+                }
+            } catch (\Throwable $exception) {
+                \Illuminate\Support\Facades\Log::error("Failed to delete Microsoft account for teacher {$microsoftIdentifier}: " . $exception->getMessage());
+            }
+        }
+
+        // 2. Delete matching user from DB
+        \App\Models\User::where('role', 'teacher')
+            ->where(function ($query) use ($teacher, $id, $slug) {
+                if (!empty($teacher['email'])) {
+                    $query->orWhere('email', $teacher['email']);
+                }
+                if (!empty($slug)) {
+                    $query->orWhere('username', $slug);
+                    $query->orWhere('name', $teacher['name']);
+                }
+                $query->orWhere('username', $id);
+                $query->orWhere('username', Str::slug($id));
+            })
+            ->delete();
+
+        // 3. Delete subject assignments
+        \App\Models\TeacherSubjectAssignment::where('teacher_key', $id)
+            ->orWhere('teacher_key', Str::slug($id))
+            ->orWhere('teacher_name', $teacher['name'])
+            ->delete();
+
+        // 4. Remove from JSON overrides
+        $overrides = $this->teachers->overrides();
+        unset($overrides[$id]);
+        unset($overrides[Str::slug($id)]);
+        foreach ($overrides as $key => $val) {
+            if ((isset($val['email']) && !empty($teacher['email']) && strtolower($val['email']) === strtolower($teacher['email'])) ||
+                (isset($val['name']) && strtolower($val['name']) === strtolower($teacher['name']))) {
+                unset($overrides[$key]);
+            }
+        }
+        $this->teachers->saveOverrides($overrides);
+    }
+
     private function initials(string $name): string
     {
         return collect(explode(' ', str_replace(['Ust. ', 'Tchr. ', 'TEACHER '], '', $name)))->filter()->map(fn ($part) => substr($part, 0, 1))->take(2)->implode('');

@@ -155,7 +155,18 @@ class MicrosoftGraphService
     public function userExists(string $upn): bool
     {
         try {
-            return $this->graph()->get("/users/{$upn}")->successful();
+            if ($this->graph()->get("/users/" . urlencode($upn))->successful()) {
+                return true;
+            }
+            if (str_contains($upn, '@')) {
+                $prefix = explode('@', $upn)[0];
+                $escapedPrefix = str_replace("'", "''", $prefix);
+                $search = $this->graph()->get('/users', [
+                    '$filter' => "mailNickname eq '{$escapedPrefix}'"
+                ]);
+                return $search->successful() && !empty($search->json('value'));
+            }
+            return false;
         } catch (\Exception) {
             return false;
         }
@@ -239,7 +250,13 @@ class MicrosoftGraphService
      */
     public function deleteAzureUser(string $msUserId): void
     {
-        $response = $this->graph()->delete("/users/{$msUserId}");
+        try {
+            $resolvedId = $this->resolveUserId($msUserId);
+        } catch (\Exception $e) {
+            $resolvedId = $msUserId;
+        }
+
+        $response = $this->graphDelegated()->delete("/users/{$resolvedId}");
 
         if (!$response->successful() && $response->status() !== 404) {
             Log::error('Graph deleteAzureUser error', ['status' => $response->status(), 'body' => $response->body()]);
@@ -290,7 +307,13 @@ class MicrosoftGraphService
 
     public function resetPassword(string $upnOrId, string $newPassword): void
     {
-        $response = $this->graph()->patch("/users/{$upnOrId}", [
+        try {
+            $resolvedId = $this->resolveUserId($upnOrId);
+        } catch (\Exception $e) {
+            $resolvedId = $upnOrId;
+        }
+
+        $response = $this->graphDelegated()->patch("/users/{$resolvedId}", [
             'passwordProfile' => [
                 'password'                      => $newPassword,
                 'forceChangePasswordNextSignIn' => true,
@@ -647,10 +670,24 @@ class MicrosoftGraphService
             return $upnOrId;
         }
         $response = $this->graph()->get("/users/" . urlencode($upnOrId) . '?$select=id');
-        if (!$response->successful()) {
-            throw new \Exception("Could not resolve user [{$upnOrId}]: " . $response->body());
+        if ($response->successful()) {
+            return $response->json('id');
         }
-        return $response->json('id');
+
+        // Fallback: search by mailNickname
+        if (str_contains($upnOrId, '@')) {
+            $prefix = explode('@', $upnOrId)[0];
+            $escapedPrefix = str_replace("'", "''", $prefix);
+            $search = $this->graph()->get('/users', [
+                '$filter' => "mailNickname eq '{$escapedPrefix}'",
+                '$select' => 'id'
+            ]);
+            if ($search->successful() && !empty($search->json('value'))) {
+                return $search->json('value')[0]['id'];
+            }
+        }
+
+        throw new \Exception("Could not resolve user [{$upnOrId}]: " . $response->body());
     }
 
     /**

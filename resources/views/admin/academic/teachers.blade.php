@@ -373,6 +373,11 @@
                                     <td style="text-align: right;" class="space-x-1.5">
                                         <button type="button" data-teacher="{{ $editPayload }}" @click.prevent="openTeacherViewerPayload($el.dataset.teacher)" class="inline-flex px-3 py-1.5 text-xxs font-bold text-indigo-700 hover:bg-indigo-50 rounded-lg border border-indigo-150 transition cursor-pointer shadow-3xs">View</button>
                                         <a href="{{ route('admin.academic.teachers', ['edit' => $t['id']]) }}" data-teacher="{{ $editPayload }}" @click.prevent="openTeacherEditorPayload($el.dataset.teacher)" class="inline-flex px-3 py-1.5 text-xxs font-bold text-slate-700 hover:bg-slate-100 rounded-lg border border-slate-200 transition cursor-pointer shadow-3xs">Edit</a>
+                                        <form method="POST" action="{{ route('admin.academic.teachers.destroy', $t['id']) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this teacher? This will permanently delete their account, subject assignments, and portal access.')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="inline-flex px-3 py-1.5 text-xxs font-bold text-rose-700 hover:bg-rose-50 rounded-lg border border-rose-150 transition cursor-pointer shadow-3xs">Delete</button>
+                                        </form>
                                     </td>
                                 </tr>
                             @endforeach
@@ -515,6 +520,11 @@
                                             </a>
                                             <button type="button" data-teacher="{{ $editPayload }}" @click.prevent="openTeacherViewerPayload($el.dataset.teacher)" class="inline-flex px-3 py-1.5 text-xxs font-bold text-indigo-700 hover:bg-indigo-50 rounded-lg border border-indigo-150 transition cursor-pointer shadow-3xs">View</button>
                                             <a href="{{ route('admin.academic.teachers', ['edit' => $t['id']]) }}" data-teacher="{{ $editPayload }}" @click.prevent="openTeacherEditorPayload($el.dataset.teacher)" class="inline-flex px-3 py-1.5 text-xxs font-bold text-slate-700 hover:bg-slate-100 rounded-lg border border-slate-200 transition cursor-pointer shadow-3xs">Edit</a>
+                                            <form method="POST" action="{{ route('admin.academic.teachers.destroy', $t['id']) }}" onsubmit="return confirm('Are you sure you want to delete this teacher? This will permanently delete their account, subject assignments, and portal access.')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="inline-flex px-3 py-1.5 text-xxs font-bold text-rose-700 hover:bg-rose-50 rounded-lg border border-rose-150 transition cursor-pointer shadow-3xs">Delete</button>
+                                            </form>
                                         </div>
                                     </div>
                                 </article>

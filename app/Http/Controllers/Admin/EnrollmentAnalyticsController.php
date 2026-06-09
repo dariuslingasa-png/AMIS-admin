@@ -94,6 +94,11 @@ class EnrollmentAnalyticsController extends Controller
 
         $reports = $query->latest()->paginate(20);
 
+        // Compute learning mode totals for the filtered set of enrollees
+        $f2fCount = (clone $filtered)->where('learning_mode', 'Face-to-Face')->count();
+        $flexible1stCount = (clone $filtered)->where('learning_mode', 'like', '%1st Shift%')->count();
+        $flexible2ndCount = (clone $filtered)->where('learning_mode', 'like', '%2nd Shift%')->count();
+
         return view('admin.enrollment.reports', [
             'reports' => $reports,
             'summary' => [
@@ -104,6 +109,9 @@ class EnrollmentAnalyticsController extends Controller
                     $query->whereDoesntHave('payment')
                         ->orWhereHas('payment', fn (Builder $payment) => $payment->whereNull('receipt_url'));
                 })->count(),
+                'f2f' => $f2fCount,
+                'flexible_1st' => $flexible1stCount,
+                'flexible_2nd' => $flexible2ndCount,
             ],
             'gradeLevels' => ApplicationQuery::GRADE_LEVELS,
             'statusLabels' => EnrollmentReviewService::STATUS_LABELS,
