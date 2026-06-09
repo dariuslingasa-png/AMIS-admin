@@ -118,6 +118,8 @@
                         status: 'pending'
                     }));
 
+                    const sleep = ms => new Promise(r => setTimeout(r, ms));
+
                     for (let i = 0; i < families.length; i++) {
                         const family = families[i];
                         this.progressCurrent = i + 1;
@@ -156,16 +158,28 @@
                                 trackItem.status = 'sent';
                             }
                         } catch (itemErr) {
+                            console.error(itemErr);
                             // Update status to 'failed'
                             if (trackItem) {
                                 trackItem.status = 'failed';
                             }
-                            throw itemErr;
                         }
+
+                        // Throttle 300ms to respect SMTP rate limits
+                        await sleep(300);
                     }
+
+                    const sentCount = this.familiesList.filter(f => f.status === 'sent').length;
+                    const failedCount = this.familiesList.filter(f => f.status === 'failed').length;
                     this.progressPercent = 100;
-                    this.progressText = `Successfully sent ${this.progressTotal} families registry report(s) done!`;
-                    this.emailSuccess = `Successfully sent all ${this.progressTotal} family email report(s) done!`;
+
+                    if (failedCount > 0) {
+                        this.progressText = `Dispatch finished: ${sentCount} sent, ${failedCount} failed.`;
+                        this.emailError = `Registry report dispatch finished with ${failedCount} failure(s). Check the log below.`;
+                    } else {
+                        this.progressText = `Successfully sent ${sentCount} families registry report(s) done!`;
+                        this.emailSuccess = `Successfully sent all ${sentCount} family email report(s) done!`;
+                    }
                 }
 
                 this.isSendingEmail = false;
