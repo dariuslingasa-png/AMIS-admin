@@ -62,7 +62,7 @@
                                 <thead>
                                     <!-- Merged Family Title Block -->
                                     <tr>
-                                        <th colspan="3" align="center" style="background-color: #ffffff; padding: 24px 20px; border-bottom: 1px solid #e2e8f0; text-align: center;">
+                                        <th colspan="4" align="center" style="background-color: #ffffff; padding: 24px 20px; border-bottom: 1px solid #e2e8f0; text-align: center;">
                                             <h2 style="margin: 0; font-size: 28px; font-weight: 800; color: #1e293b; text-transform: uppercase; letter-spacing: 0.05em; font-family: 'Outfit', Arial, sans-serif;">
                                                 FAMILY OF {{ $lastName }}
                                             </h2>
@@ -84,9 +84,10 @@
                                     </tr>
                                     <!-- Column Headers -->
                                     <tr style="background-color: #f8fafc; border-bottom: 2px solid #e2e8f0; text-align: left; font-size: 13px; font-weight: bold; color: #475569; text-transform: uppercase; letter-spacing: 0.05em;">
-                                        <th style="padding: 12px 15px; border: 1px solid #e2e8f0; width: 50%;">Children Name</th>
+                                        <th style="padding: 12px 15px; border: 1px solid #e2e8f0; width: 40%;">Children Name</th>
+                                        <th style="padding: 12px 15px; border: 1px solid #e2e8f0; width: 15%;">Grade Level</th>
                                         <th style="padding: 12px 15px; border: 1px solid #e2e8f0; width: 25%;">Learning Type</th>
-                                        <th style="padding: 12px 15px; border: 1px solid #e2e8f0; width: 25%;">Enrollment Status</th>
+                                        <th style="padding: 12px 15px; border: 1px solid #e2e8f0; width: 20%;">Enrollment Status</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -119,6 +120,9 @@
                                                 <span style="font-size: 10px; background-color: #f1f5f9; color: #475569; padding: 2px 6px; border-radius: 4px; margin-left: 6px; font-weight: 700; display: inline-block; vertical-align: middle;">
                                                     {{ $childType }}
                                                 </span>
+                                            </td>
+                                            <td style="padding: 14px 15px; border: 1px solid #e2e8f0; vertical-align: middle; font-size: 14px; color: #334155;">
+                                                {{ $child->grade_level ?? 'N/A' }}
                                             </td>
                                             <td style="padding: 14px 15px; border: 1px solid #e2e8f0; vertical-align: middle; font-size: 14px; color: #334155;">
                                                 {{ $learningMode }}
