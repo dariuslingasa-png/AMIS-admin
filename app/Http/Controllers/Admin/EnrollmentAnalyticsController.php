@@ -197,16 +197,10 @@ class EnrollmentAnalyticsController extends Controller
         }
 
         $isGradeFocused = $request->filled('grade');
-        $groupedEnrollees = null;
         $reports = null;
 
         if ($isGradeFocused) {
-            $enrollees = $query->latest()->get();
-            $groupedEnrollees = [
-                'f2f' => $enrollees->filter(fn($e) => $e->learning_mode === 'Face-to-Face'),
-                'flexible_1st' => $enrollees->filter(fn($e) => str_contains((string)$e->learning_mode, '1st Shift')),
-                'flexible_2nd' => $enrollees->filter(fn($e) => str_contains((string)$e->learning_mode, '2nd Shift')),
-            ];
+            $reports = $query->latest()->get();
         } else {
             $reports = $query->latest()->paginate(20);
         }
@@ -214,7 +208,6 @@ class EnrollmentAnalyticsController extends Controller
         return view('admin.enrollment.masters-list', [
             'reports' => $reports,
             'isGradeFocused' => $isGradeFocused,
-            'groupedEnrollees' => $groupedEnrollees,
             'summary' => [
                 'total' => (clone $filtered)->count(),
                 'approved' => (clone $filtered)->where('status', 'approved')->count(),

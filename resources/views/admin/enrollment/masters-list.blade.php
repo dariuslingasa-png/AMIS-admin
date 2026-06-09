@@ -201,10 +201,10 @@
                     </div>
                 </div>
 
-                <div class="space-y-8 pt-4 border-t border-slate-100 print:border-none print:pt-0">
-                    <div class="flex items-center justify-between print:hidden">
+                <div class="space-y-4 pt-4 border-t border-slate-100 print:border-none print:pt-0">
+                    <div class="flex items-center justify-between print:hidden mb-2">
                         <h3 class="text-sm font-black text-slate-900 uppercase tracking-wider">
-                            Active Grade Focus: {{ request('grade') }}
+                            Active Grade Focus: {{ request('grade') }} ({{ $reports->count() }} total)
                         </h3>
                         <button onclick="window.print()" class="inline-flex items-center gap-2 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-[11px] px-4 py-2 transition shadow-3xs cursor-pointer uppercase tracking-wider">
                             <i data-lucide="printer" class="h-3.5 w-3.5"></i>
@@ -212,44 +212,9 @@
                         </button>
                     </div>
 
-                    <!-- Face-to-Face List -->
-                    @if (!request('learning_mode') || request('learning_mode') === 'f2f')
-                        <div class="space-y-3">
-                            <h4 class="text-xs font-black uppercase tracking-wider text-emerald-700 flex items-center gap-1.5">
-                                <i data-lucide="school" class="h-3.5 w-3.5"></i>
-                                Face-to-Face Enrollees ({{ $groupedEnrollees['f2f']->count() }})
-                            </h4>
-                            <div class="premium-table-wrap border border-slate-100 rounded-xl overflow-hidden print:border-slate-300 print:rounded-none">
-                                @include('admin.enrollment.partials.masters-table', ['applicants' => $groupedEnrollees['f2f']])
-                            </div>
-                        </div>
-                    @endif
-
-                    <!-- Flexible (1st Shift) List -->
-                    @if (!request('learning_mode') || request('learning_mode') === 'flexible_1st')
-                        <div class="space-y-3">
-                            <h4 class="text-xs font-black uppercase tracking-wider text-blue-700 flex items-center gap-1.5">
-                                <i data-lucide="sun" class="h-3.5 w-3.5"></i>
-                                Flexible (1st Shift) Enrollees ({{ $groupedEnrollees['flexible_1st']->count() }})
-                            </h4>
-                            <div class="premium-table-wrap border border-slate-100 rounded-xl overflow-hidden print:border-slate-300 print:rounded-none">
-                                @include('admin.enrollment.partials.masters-table', ['applicants' => $groupedEnrollees['flexible_1st']])
-                            </div>
-                        </div>
-                    @endif
-
-                    <!-- Flexible (2nd Shift) List -->
-                    @if (!request('learning_mode') || request('learning_mode') === 'flexible_2nd')
-                        <div class="space-y-3">
-                            <h4 class="text-xs font-black uppercase tracking-wider text-amber-700 flex items-center gap-1.5">
-                                <i data-lucide="moon" class="h-3.5 w-3.5"></i>
-                                Flexible (2nd Shift) Enrollees ({{ $groupedEnrollees['flexible_2nd']->count() }})
-                            </h4>
-                            <div class="premium-table-wrap border border-slate-100 rounded-xl overflow-hidden print:border-slate-300 print:rounded-none">
-                                @include('admin.enrollment.partials.masters-table', ['applicants' => $groupedEnrollees['flexible_2nd']])
-                            </div>
-                        </div>
-                    @endif
+                    <div class="premium-table-wrap border border-slate-100 rounded-xl overflow-hidden print:border-slate-350 print:rounded-none">
+                        @include('admin.enrollment.partials.masters-table', ['applicants' => $reports])
+                    </div>
                 </div>
             @else
                 <!-- Show the standard global flat paginated list -->

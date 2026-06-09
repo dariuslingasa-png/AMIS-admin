@@ -1,6 +1,7 @@
 <table class="premium-table w-full">
     <thead>
         <tr>
+            <th class="w-12 px-4 py-3 text-center">#</th>
             <th class="px-4 py-3">Applicant</th>
             <th class="px-4 py-3">Email</th>
             <th class="px-4 py-3">Grade</th>
@@ -10,8 +11,18 @@
         </tr>
     </thead>
     <tbody>
+        @php
+            $startNumber = ($applicants instanceof \Illuminate\Pagination\LengthAwarePaginator) 
+                ? ($applicants->currentPage() - 1) * $applicants->perPage() 
+                : 0;
+        @endphp
         @forelse ($applicants as $applicant)
             <tr class="hover:bg-gray-50/50 transition-colors">
+                <!-- Row Number -->
+                <td class="px-4 py-4 text-center font-bold text-slate-400 text-xs">
+                    {{ $startNumber + $loop->iteration }}
+                </td>
+
                 <!-- Applicant Name -->
                 <td class="px-4 py-4">
                     <span class="font-extrabold text-slate-900 uppercase tracking-wide text-[11px]">
@@ -99,7 +110,7 @@
             </tr>
         @empty
             <tr>
-                <td colspan="6" class="px-4 py-8 text-center text-gray-400">
+                <td colspan="7" class="px-4 py-8 text-center text-gray-400">
                     <div class="empty-state">
                         <i data-lucide="inbox" class="h-8 w-8 text-slate-350"></i>
                         <p class="font-semibold text-sm">No enrollees found in this list.</p>
