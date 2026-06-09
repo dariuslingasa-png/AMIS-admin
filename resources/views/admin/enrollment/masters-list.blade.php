@@ -5,7 +5,7 @@
 <x-admin-layout title="Enrollee Masters List">
     <div class="space-y-6">
         <!-- Metrics Tracking Panel -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 print:hidden">
             <!-- Total Enrollees -->
             <div class="group relative overflow-hidden rounded-xl border border-slate-100 bg-white p-5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-sm">
                 <div class="flex items-center justify-between">
@@ -64,7 +64,7 @@
         </div>
 
         <!-- Grade Level Summary Cards with Type of Learning -->
-        <div class="bg-white rounded-2xl border border-slate-200/70 p-6 shadow-3xs">
+        <div class="bg-white rounded-2xl border border-slate-200/70 p-6 shadow-3xs print:hidden">
             <div class="mb-4">
                 <h2 class="text-base font-black text-slate-900 tracking-tight">Grade Level & Type of Learning Groupings</h2>
                 <p class="text-xs text-slate-500 mt-1">Select a grade title or specific learning mode under it to view the filtered list of enrollees.</p>
@@ -133,12 +133,12 @@
             </div>
         </div>
 
-        <div class="bg-white rounded-2xl border border-slate-200/70 p-6 shadow-3xs space-y-6">
-            <div>
+        <div class="bg-white rounded-2xl border border-slate-200/70 p-6 shadow-3xs space-y-6 print:border-none print:shadow-none print:p-0">
+            <div class="print:hidden">
                 <h2 class="text-base font-black text-slate-900 tracking-tight">Enrollee Search & Filters</h2>
             </div>
             <!-- Filter Form (Horizontal Row layout matching applicants registry) -->
-            <form method="GET" class="mb-5 grid grid-cols-12 gap-3">
+            <form method="GET" class="mb-5 grid grid-cols-12 gap-3 print:hidden">
                 <!-- Keep workspace tracking if present -->
                 @if(request()->filled('workspace'))
                     <input type="hidden" name="workspace" value="{{ request('workspace') }}">
@@ -187,11 +187,29 @@
 
             <!-- Conditional List Displays -->
             @if ($isGradeFocused)
-                <div class="space-y-8 pt-4 border-t border-slate-100">
-                    <div class="flex items-center justify-between">
+                <!-- Hidden Print Header -->
+                <div class="hidden print:block mb-8 text-center border-b-2 border-slate-300 pb-5">
+                    <h1 class="text-3xl font-black text-slate-900 tracking-tight uppercase">ENROLLEE MASTERS LIST</h1>
+                    <h2 class="text-base font-extrabold text-slate-700 uppercase tracking-wide mt-2">
+                        Grade Level: {{ request('grade') }}
+                    </h2>
+                    <div class="mt-4 flex justify-center gap-6 text-xs font-bold text-slate-500">
+                        <span>Total Enrollees: {{ $summary['total'] }}</span>
+                        <span>Face-to-Face: {{ $summary['f2f'] }}</span>
+                        <span>Flexible (1st Shift): {{ $summary['flexible_1st'] }}</span>
+                        <span>Flexible (2nd Shift): {{ $summary['flexible_2nd'] }}</span>
+                    </div>
+                </div>
+
+                <div class="space-y-8 pt-4 border-t border-slate-100 print:border-none print:pt-0">
+                    <div class="flex items-center justify-between print:hidden">
                         <h3 class="text-sm font-black text-slate-900 uppercase tracking-wider">
                             Active Grade Focus: {{ request('grade') }}
                         </h3>
+                        <button onclick="window.print()" class="inline-flex items-center gap-2 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-[11px] px-4 py-2 transition shadow-3xs cursor-pointer uppercase tracking-wider">
+                            <i data-lucide="printer" class="h-3.5 w-3.5"></i>
+                            Print / Save PDF
+                        </button>
                     </div>
 
                     <!-- Face-to-Face List -->
@@ -201,7 +219,7 @@
                                 <i data-lucide="school" class="h-3.5 w-3.5"></i>
                                 Face-to-Face Enrollees ({{ $groupedEnrollees['f2f']->count() }})
                             </h4>
-                            <div class="premium-table-wrap border border-slate-100 rounded-xl overflow-hidden">
+                            <div class="premium-table-wrap border border-slate-100 rounded-xl overflow-hidden print:border-slate-300 print:rounded-none">
                                 @include('admin.enrollment.partials.masters-table', ['applicants' => $groupedEnrollees['f2f']])
                             </div>
                         </div>
@@ -214,7 +232,7 @@
                                 <i data-lucide="sun" class="h-3.5 w-3.5"></i>
                                 Flexible (1st Shift) Enrollees ({{ $groupedEnrollees['flexible_1st']->count() }})
                             </h4>
-                            <div class="premium-table-wrap border border-slate-100 rounded-xl overflow-hidden">
+                            <div class="premium-table-wrap border border-slate-100 rounded-xl overflow-hidden print:border-slate-300 print:rounded-none">
                                 @include('admin.enrollment.partials.masters-table', ['applicants' => $groupedEnrollees['flexible_1st']])
                             </div>
                         </div>
@@ -227,7 +245,7 @@
                                 <i data-lucide="moon" class="h-3.5 w-3.5"></i>
                                 Flexible (2nd Shift) Enrollees ({{ $groupedEnrollees['flexible_2nd']->count() }})
                             </h4>
-                            <div class="premium-table-wrap border border-slate-100 rounded-xl overflow-hidden">
+                            <div class="premium-table-wrap border border-slate-100 rounded-xl overflow-hidden print:border-slate-300 print:rounded-none">
                                 @include('admin.enrollment.partials.masters-table', ['applicants' => $groupedEnrollees['flexible_2nd']])
                             </div>
                         </div>
@@ -242,4 +260,95 @@
             @endif
         </div>
     </div>
+
+    <!-- Print styling configuration -->
+    <style>
+        @media print {
+            /* Hide all navigation, sidebars, dashboard links, buttons, and filters */
+            #default-sidebar, 
+            .admin-sidebar, 
+            .admin-topbar, 
+            topbar, 
+            aside, 
+            form, 
+            nav, 
+            .breadcrumbs, 
+            .flash-messages, 
+            footer, 
+            .print\:hidden,
+            .module-dashboard-link,
+            .sidebar-section-container,
+            .sidebar-profile-card,
+            .admin-shell > a,
+            [data-lucide="arrow-left"] {
+                display: none !important;
+            }
+
+            /* Reset container styling for standard page layout */
+            .admin-content, 
+            .admin-shell, 
+            body, 
+            main, 
+            .mx-auto,
+            .space-y-6 {
+                margin: 0 !important;
+                padding: 0 !important;
+                background: transparent !important;
+                min-width: auto !important;
+                width: 100% !important;
+                box-shadow: none !important;
+            }
+
+            .admin-content {
+                margin-left: 0 !important;
+            }
+
+            /* Make the hidden print block visible */
+            .print\:block {
+                display: block !important;
+            }
+
+            /* Remove boxes, shadows, and borders from page wraps */
+            .bg-white {
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+            }
+
+            /* Expand scrolled tables to print full rows without clipping */
+            .premium-table-wrap {
+                max-height: none !important;
+                overflow: visible !important;
+                border: 1px solid #cbd5e1 !important;
+                border-radius: 0 !important;
+            }
+
+            .premium-table {
+                border-collapse: collapse !important;
+                width: 100% !important;
+            }
+
+            .premium-table th {
+                position: static !important;
+                background: #f1f5f9 !important;
+                border-bottom: 2px solid #94a3b8 !important;
+                color: #0f172a !important;
+                font-weight: 800 !important;
+                font-size: 10px !important;
+                padding: 6px 8px !important;
+            }
+
+            .premium-table td {
+                border-bottom: 1px solid #e2e8f0 !important;
+                color: #000000 !important;
+                font-size: 11px !important;
+                padding: 8px !important;
+            }
+
+            /* Page break prevention rules for clean printing */
+            .space-y-8 > div {
+                page-break-inside: avoid !important;
+            }
+        }
+    </style>
 </x-admin-layout>
