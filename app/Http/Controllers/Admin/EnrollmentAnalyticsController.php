@@ -95,7 +95,7 @@ class EnrollmentAnalyticsController extends Controller
         $isPrint = $request->filled('print');
         if ($isPrint) {
             $reports = $query->orderByRaw("CASE 
-                WHEN learning_mode = 'Face-to-Face' THEN 1
+                WHEN learning_mode LIKE '%face%' OR learning_mode LIKE '%f2f%' THEN 1
                 WHEN learning_mode LIKE '%1st Shift%' THEN 2
                 WHEN learning_mode LIKE '%2nd Shift%' THEN 3
                 ELSE 4
@@ -214,7 +214,7 @@ class EnrollmentAnalyticsController extends Controller
 
         if ($isGradeFocused) {
             $reports = $query->orderByRaw("CASE 
-                WHEN learning_mode = 'Face-to-Face' THEN 1
+                WHEN learning_mode LIKE '%face%' OR learning_mode LIKE '%f2f%' THEN 1
                 WHEN learning_mode LIKE '%1st Shift%' THEN 2
                 WHEN learning_mode LIKE '%2nd Shift%' THEN 3
                 ELSE 4
