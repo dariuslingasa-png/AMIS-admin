@@ -15,7 +15,7 @@ class UpdateTeacherSubjectsRequest extends FormRequest
     {
         return [
             'subjects' => ['nullable', 'array', 'max:12'],
-            'subjects.*' => ['nullable', 'integer', 'exists:subjects,id'],
+            'subjects.*' => ['nullable', 'string', 'max:255'],
         ];
     }
 }

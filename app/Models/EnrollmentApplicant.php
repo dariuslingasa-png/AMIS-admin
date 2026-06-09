@@ -85,6 +85,7 @@ class EnrollmentApplicant extends Model
         'discount_type',
         'discount_percentage',
         'discount_amount',
+        'registry_email_sent_at',
     ];
 
     protected $casts = [
@@ -96,6 +97,7 @@ class EnrollmentApplicant extends Model
         'sibling_order'      => 'integer',
         'discount_percentage'=> 'decimal:2',
         'discount_amount'    => 'decimal:2',
+        'registry_email_sent_at' => 'datetime',
     ];
 
     public function user(): BelongsTo

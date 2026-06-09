@@ -109,13 +109,13 @@
                 </div>
                 <div class="flex gap-1 p-1 bg-slate-100 rounded-xl border border-slate-150 max-w-md">
                     <button type="button" @click="activeTab = 'matatag'" 
-                        :class="activeTab === 'matatag' ? 'bg-white text-sky-700 shadow-xs font-black' : 'text-slate-500 hover:text-slate-955 hover:bg-white/40 font-semibold'" 
+                        :class="activeTab === 'matatag' ? 'bg-white text-sky-700 shadow-xs font-black' : 'text-slate-500 hover:text-slate-950 hover:bg-white/40 font-semibold'" 
                         class="flex-1 py-2 text-xs rounded-lg transition duration-200 cursor-pointer flex items-center justify-center gap-1.5">
                         <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
                         MATATAG Curriculum
                     </button>
                     <button type="button" @click="activeTab = 'k12'" 
-                        :class="activeTab === 'k12' ? 'bg-white text-sky-700 shadow-xs font-black' : 'text-slate-500 hover:text-slate-955 hover:bg-white/40 font-semibold'" 
+                        :class="activeTab === 'k12' ? 'bg-white text-sky-700 shadow-xs font-black' : 'text-slate-500 hover:text-slate-950 hover:bg-white/40 font-semibold'" 
                         class="flex-1 py-2 text-xs rounded-lg transition duration-200 cursor-pointer flex items-center justify-center gap-1.5">
                         <i data-lucide="graduation-cap" class="w-3.5 h-3.5"></i>
                         K-12 Basic Education
@@ -128,7 +128,7 @@
                                 <i data-lucide="check-circle-2" class="w-5 h-5"></i>
                             </div>
                             <div>
-                                <span class="text-xs font-extrabold uppercase tracking-wider block text-emerald-955">Active Implementation</span>
+                                <span class="text-xs font-extrabold uppercase tracking-wider block text-emerald-950">Active Implementation</span>
                                 <span class="text-[11px] text-emerald-600 font-medium">Applied for Kindergarten, Grade 1, 4, and 7</span>
                             </div>
                         </div>
@@ -148,7 +148,7 @@
                                 <i data-lucide="refresh-cw" class="w-5 h-5"></i>
                             </div>
                             <div>
-                                <span class="text-xs font-extrabold uppercase tracking-wider block text-amber-955">Transition / Legacy</span>
+                                <span class="text-xs font-extrabold uppercase tracking-wider block text-amber-950">Transition / Legacy</span>
                                 <span class="text-[11px] text-amber-600 font-medium">Phasing out as MATATAG rolls out gradually</span>
                             </div>
                         </div>
@@ -380,7 +380,7 @@
             <div class="admin-modal-card bg-white rounded-2xl shadow-xl w-full max-w-md p-6 flex flex-col gap-4 border border-slate-200" @click.away="createSubjectModal = false">
                 <div class="admin-modal-header border-b border-slate-100 pb-3 flex items-center justify-between">
                     <div>
-                        <span class="admin-modal-title text-base font-extrabold text-slate-955">Add New Subject</span>
+                        <span class="admin-modal-title text-base font-extrabold text-slate-950">Add New Subject</span>
                         <div class="text-[11px] text-slate-400 font-light mt-0.5">Register a course in the school database</div>
                     </div>
                     <button type="button" class="text-slate-400 hover:text-slate-655 text-xl font-bold" @click="createSubjectModal = false">&times;</button>

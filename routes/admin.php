@@ -78,6 +78,7 @@ Route::name('admin.')->group(function () {
 
         Route::prefix('applicants')->name('applicants.')->group(function () {
             Route::get('/', [ApplicantController::class, 'index'])->name('index');
+            Route::post('/email-registry', [ApplicantController::class, 'emailRegistry'])->name('email-registry');
             Route::get('/{applicant}', [ApplicantController::class, 'show'])->name('show');
             Route::patch('/{applicant}/status', [ApprovalController::class, 'updateStatus'])->name('status');
             Route::patch('/{applicant}/document', [RequirementController::class, 'update'])->name('document');

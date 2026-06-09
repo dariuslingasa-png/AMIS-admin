@@ -37,6 +37,149 @@
         ];
     @endphp
 
+    <div x-data="{
+        emailModalOpen: false,
+        isSendingEmail: false,
+        emailSuccess: null,
+        emailError: null,
+        recipientEmail: 'almunawwaraislamic@gmail.com',
+        paymentFilter: 'all',
+        limitCount: '',
+        messageBody: 'Assalamualaikum Sir Cabel,\n\nHere is the list of enrollment families.\n\n- IT Staff\nMon Zhairel Lingasa',
+        progressText: '',
+        progressPercent: 0,
+        progressCurrent: 0,
+        progressTotal: 0,
+        familiesList: [],
+        async sendEmailReport() {
+            this.isSendingEmail = true;
+            this.emailSuccess = null;
+            this.emailError = null;
+            this.progressText = 'Fetching families list, please wait...';
+            this.progressPercent = 0;
+            this.progressCurrent = 0;
+            this.progressTotal = 0;
+            this.familiesList = [];
+
+            try {
+                const listRes = await fetch('{{ route('admin.applicants.email-registry') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        recipient_email: this.recipientEmail,
+                        payment_filter: this.paymentFilter,
+                        limit_count: this.limitCount ? parseInt(this.limitCount) : null,
+                        message_body: this.messageBody,
+                        fetch_families_only: true
+                    })
+                });
+                
+                const listData = await listRes.json();
+                if (!listData.success) {
+                    throw new Error(listData.message || 'Failed to fetch families.');
+                }
+
+                const families = listData.families || [];
+                this.progressTotal = families.length;
+
+                if (families.length === 0) {
+                    this.progressText = 'Sending fallback report (No Families Found)...';
+                    this.progressPercent = 50;
+                    
+                    const res = await fetch('{{ route('admin.applicants.email-registry') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            recipient_email: this.recipientEmail,
+                            payment_filter: this.paymentFilter,
+                            limit_count: this.limitCount ? parseInt(this.limitCount) : null,
+                            message_body: this.messageBody
+                        })
+                    });
+                    const data = await res.json();
+                    if (!data.success) {
+                        throw new Error(data.message || 'Failed to send fallback report.');
+                    }
+                    this.progressPercent = 100;
+                    this.emailSuccess = data.message;
+                } else {
+                    // Populate familiesList for tracking
+                    this.familiesList = families.map(f => ({
+                        family_no: f.family_no,
+                        family_label: f.family_label,
+                        status: 'pending'
+                    }));
+
+                    for (let i = 0; i < families.length; i++) {
+                        const family = families[i];
+                        this.progressCurrent = i + 1;
+                        this.progressPercent = Math.round((i / families.length) * 100);
+                        this.progressText = `Sending email to ${this.recipientEmail} for family '${family.family_label}'... (${this.progressCurrent} of ${this.progressTotal})`;
+
+                        // Update status to 'sending'
+                        const trackItem = this.familiesList.find(item => item.family_no === family.family_no);
+                        if (trackItem) {
+                            trackItem.status = 'sending';
+                        }
+
+                        try {
+                            const res = await fetch('{{ route('admin.applicants.email-registry') }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                    'Accept': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    recipient_email: this.recipientEmail,
+                                    payment_filter: this.paymentFilter,
+                                    limit_count: this.limitCount ? parseInt(this.limitCount) : null,
+                                    message_body: this.messageBody,
+                                    family_no: family.family_no
+                                })
+                            });
+                            const data = await res.json();
+                            if (!data.success) {
+                                throw new Error(data.message || `Failed to send email for family '${family.family_label}'.`);
+                            }
+                            
+                            // Update status to 'sent'
+                            if (trackItem) {
+                                trackItem.status = 'sent';
+                            }
+                        } catch (itemErr) {
+                            // Update status to 'failed'
+                            if (trackItem) {
+                                trackItem.status = 'failed';
+                            }
+                            throw itemErr;
+                        }
+                    }
+                    this.progressPercent = 100;
+                    this.progressText = `Successfully sent ${this.progressTotal} families registry report(s) done!`;
+                    this.emailSuccess = `Successfully sent all ${this.progressTotal} family email report(s) done!`;
+                }
+
+                this.isSendingEmail = false;
+                setTimeout(() => {
+                    this.emailModalOpen = false;
+                    this.emailSuccess = null;
+                }, 5000);
+
+            } catch (err) {
+                this.isSendingEmail = false;
+                this.emailError = err.message || 'An unexpected error occurred. Please try again.';
+            }
+        }
+    }">
     <section class="rounded-lg border border-slate-200 bg-white shadow-sm">
         <div class="border-b border-slate-100 px-6 py-5">
             <div class="flex items-start justify-between gap-4">
@@ -44,9 +187,15 @@
                     <h1 class="text-xl font-bold text-slate-950">Applications</h1>
                     <p class="mt-1 text-sm text-slate-500">Family enrollment registry grouped by child applicants</p>
                 </div>
-                <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700" data-total-count="{{ $families->total() }}">
-                    {{ number_format($families->total()) }} families
-                </span>
+                <div class="flex items-center gap-3">
+                    <button type="button" @click="emailModalOpen = true; familiesList = []; emailSuccess = null; emailError = null; isSendingEmail = false;" class="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs px-4 py-2 transition shadow-3xs cursor-pointer select-none">
+                        <i data-lucide="mail" class="h-4 w-4"></i>
+                        Email Families Registry
+                    </button>
+                    <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700" data-total-count="{{ $families->total() }}">
+                        {{ number_format($families->total()) }} families
+                    </span>
+                </div>
             </div>
         </div>
 
@@ -187,6 +336,12 @@
                                                     <i data-lucide="receipt" class="h-3.5 w-3.5"></i>
                                                     {{ $family['payment_status'] }}
                                                 </span>
+                                                @if ($family['email_sent_at'])
+                                                    <span class="inline-flex items-center gap-1.5 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-black uppercase tracking-wide text-indigo-700 shadow-sm" title="Registry Emailed at: {{ $family['email_sent_at']->format('M d, Y h:i A') }}">
+                                                        <i data-lucide="mail" class="h-3.5 w-3.5"></i>
+                                                        Emailed
+                                                    </span>
+                                                @endif
                                                 <span class="inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-white/80 px-3 py-1.5 text-xs font-black uppercase tracking-wide shadow-sm {{ $accent['text'] }}">
                                                     <i data-lucide="users" class="h-3.5 w-3.5"></i>
                                                     {{ $family['children_count'] }} {{ \Illuminate\Support\Str::plural('Child', $family['children_count']) }}
@@ -252,6 +407,114 @@
             </div>
         </div>
     </section>
+
+        <!-- Email Families Registry Modal -->
+        <div class="admin-modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-xs"
+             x-show="emailModalOpen" x-cloak x-transition>
+            <div class="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-xl space-y-4">
+                <div class="mb-4 flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div>
+                        <h2 class="text-base font-extrabold text-slate-950 uppercase tracking-wider">Email Families Registry</h2>
+                        <p class="mt-0.5 text-xs font-semibold text-slate-500">Send compiled applicants report to the administrative office.</p>
+                    </div>
+                    <button type="button" @click="emailModalOpen = false" class="text-xl font-bold text-slate-400 hover:text-slate-600 cursor-pointer">&times;</button>
+                </div>
+
+                <!-- Success / Error / Sending Banners -->
+                <div x-show="isSendingEmail" class="p-3.5 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-800 text-xs font-semibold space-y-2.5 shadow-3xs" x-cloak>
+                    <div class="flex items-center gap-2.5 font-extrabold">
+                        <span class="btn-spinner animate-spin border-2 border-indigo-600 border-t-transparent rounded-full w-4 h-4 inline-block"></span>
+                        <span x-text="progressText"></span>
+                    </div>
+                    <!-- Progress Bar -->
+                    <div class="w-full bg-indigo-200/50 rounded-full h-2">
+                        <div class="bg-indigo-600 h-2 rounded-full transition-all duration-300" :style="{ width: progressPercent + '%' }"></div>
+                    </div>
+                </div>
+                <div x-show="emailSuccess" class="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-extrabold flex items-center gap-2.5 shadow-3xs" x-cloak>
+                    <i data-lucide="check-circle" class="w-4 h-4 text-emerald-600"></i>
+                    <span x-text="emailSuccess"></span>
+                </div>
+                <div x-show="emailError" class="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-extrabold flex items-center gap-2.5 shadow-3xs" x-cloak>
+                    <i data-lucide="alert-circle" class="w-4 h-4 text-rose-600"></i>
+                    <span x-text="emailError"></span>
+                </div>
+
+                <!-- Families Registry Dispatch Log (Track per-family send status) -->
+                <div x-show="familiesList.length > 0" class="rounded-xl border border-slate-150 bg-slate-50/50 p-3 space-y-2 animate-fade-in" x-cloak>
+                    <div class="flex justify-between items-center text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                        <span>Dispatch Log Status</span>
+                        <span x-text="`${familiesList.filter(f => f.status === 'sent').length} / ${familiesList.length} Sent`"></span>
+                    </div>
+                    <div class="max-h-40 overflow-y-auto rounded-lg border border-slate-200 bg-white p-1 divide-y divide-slate-100">
+                        <template x-for="item in familiesList" :key="item.family_no">
+                            <div class="flex items-center justify-between px-2.5 py-1.5 text-[11px]">
+                                <span class="font-bold text-slate-700" x-text="item.family_label"></span>
+                                <div>
+                                    <span x-show="item.status === 'pending'" class="inline-flex items-center gap-1 rounded-md bg-slate-50 px-1.5 py-0.5 font-bold text-slate-500 border border-slate-150">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                                        Pending
+                                    </span>
+                                    <span x-show="item.status === 'sending'" class="inline-flex items-center gap-1 rounded-md bg-indigo-50 px-1.5 py-0.5 font-bold text-indigo-600 border border-indigo-100 animate-pulse">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-ping"></span>
+                                        Sending
+                                    </span>
+                                    <span x-show="item.status === 'sent'" class="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-1.5 py-0.5 font-bold text-emerald-600 border border-emerald-150">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                        Sent
+                                    </span>
+                                    <span x-show="item.status === 'failed'" class="inline-flex items-center gap-1 rounded-md bg-rose-50 px-1.5 py-0.5 font-bold text-rose-600 border border-rose-150">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                                        Failed
+                                    </span>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <div class="space-y-4" x-show="!emailSuccess && !isSendingEmail && familiesList.length === 0">
+                    <!-- Recipient Email -->
+                    <div>
+                        <span class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">1. Recipient Email *</span>
+                        <input type="email" x-model="recipientEmail" placeholder="e.g. office@amis.edu.ph" class="mt-1.5 w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm font-bold text-gray-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20">
+                    </div>
+
+                    <!-- Enrollment Fee Payment Status Filter -->
+                    <div>
+                        <span class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">2. Enrollment Fee Status Filter *</span>
+                        <select x-model="paymentFilter" class="mt-1.5 w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm font-bold text-gray-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20">
+                            <option value="all">All Families (Paid & Unpaid)</option>
+                            <option value="paid">Paid / Verified Only</option>
+                            <option value="pending">Pending Payment Only</option>
+                            <option value="no_payment">No Payment Only</option>
+                        </select>
+                    </div>
+
+                    <!-- Families Limit -->
+                    <div>
+                        <span class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">3. Families Limit (Leave blank for all)</span>
+                        <input type="number" x-model="limitCount" min="1" placeholder="e.g. 50" class="mt-1.5 w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm font-bold text-gray-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20">
+                    </div>
+
+                    <!-- Message Body -->
+                    <div>
+                        <span class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">4. Email Message (Intro)</span>
+                        <textarea x-model="messageBody" rows="4" placeholder="Enter message intro..." class="mt-1.5 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm font-bold text-gray-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 resize-none"></textarea>
+                    </div>
+                </div>
+
+                <div class="pt-3 flex justify-end gap-2 border-t border-slate-100" x-show="!emailSuccess && !isSendingEmail">
+                    <button type="button" @click="emailModalOpen = false" class="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-bold text-slate-500 transition hover:bg-slate-50 cursor-pointer">Close</button>
+                    <button type="button" @click="sendEmailReport()" :disabled="isSendingEmail || !recipientEmail" class="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-black text-white shadow-sm hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer">
+                        <span class="btn-spinner" x-show="isSendingEmail"></span>
+                        <i data-lucide="send" class="h-4 w-4" x-show="!isSendingEmail"></i>
+                        Send Registry Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- New applicant polling notification -->
     <div id="new-applicant-banner" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 hidden">

@@ -13,7 +13,9 @@
         <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-2">Select Class Group Schedule</label>
         <div class="flex flex-wrap gap-1.5">
             @foreach($sections as $section)
-                @php($sectionLabel = trim($section->grade_level . ($section->name ? ' - ' . $section->name : '')))
+                @php
+                    $sectionLabel = trim($section->grade_level . ($section->name ? ' - ' . $section->name : ''));
+                @endphp
                 <button type="button" @click="activeSectionId = {{ $section->id }}"
                     :class="activeSectionId === {{ $section->id }} ? 'bg-indigo-700 text-white border-indigo-700 shadow-xs font-bold' : 'bg-gray-50 text-slate-600 hover:bg-gray-100 border-slate-200'"
                     class="px-3.5 py-2 text-xs rounded-xl border transition cursor-pointer shadow-3xs">
@@ -24,8 +26,10 @@
     </div>
 
     @foreach($sections as $section)
-        @php($entries = $schedulesBySection->get($section->id, collect()))
-        @php($sectionLabel = trim($section->grade_level . ($section->name ? ' - ' . $section->name : '')))
+        @php
+            $entries = $schedulesBySection->get($section->id, collect());
+            $sectionLabel = trim($section->grade_level . ($section->name ? ' - ' . $section->name : ''));
+        @endphp
         <div class="bg-white border border-gray-150 rounded-2xl shadow-xs p-6 space-y-5" x-show="activeSectionId === {{ $section->id }}" x-transition>
             <div class="border-b border-slate-100 pb-3.5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                 <div>

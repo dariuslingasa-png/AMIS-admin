@@ -49,7 +49,7 @@ class TeacherSubjectAssignmentService
     {
         $teacherKey = $this->teacherKey($teacher);
         $desiredSubjectIds = collect($subjects)
-            ->map(fn ($value) => $this->resolveSubject($value))
+            ->map(fn ($value) => $this->resolveSubject($value, $teacher))
             ->filter()
             ->pluck('id')
             ->unique()
@@ -84,7 +84,7 @@ class TeacherSubjectAssignmentService
         return Subject::whereIn('id', $desiredSubjectIds)->pluck('name')->all();
     }
 
-    private function resolveSubject(mixed $value): ?Subject
+    private function resolveSubject(mixed $value, array $teacher): ?Subject
     {
         if (blank($value)) {
             return null;
@@ -95,9 +95,19 @@ class TeacherSubjectAssignmentService
         }
 
         $name = trim((string) $value);
+        $gradeLevel = 'Unassigned';
+
+        if (str_contains($name, ' · ')) {
+            $parts = explode(' · ', $name, 2);
+            $name = trim($parts[0]);
+            $gradeLevel = trim($parts[1]);
+        } elseif (!empty($teacher['sections']) && str_contains($teacher['sections'], ' / ')) {
+            $parts = explode(' / ', $teacher['sections']);
+            $gradeLevel = trim(end($parts));
+        }
 
         return Subject::firstOrCreate(
-            ['name' => $name, 'grade_level' => 'Unassigned', 'school_year' => (string) config('services.school.year')],
+            ['name' => $name, 'grade_level' => $gradeLevel, 'school_year' => (string) config('services.school.year')],
             ['code' => null, 'description' => null, 'status' => 'active']
         );
     }

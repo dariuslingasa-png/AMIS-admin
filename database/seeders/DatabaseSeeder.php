@@ -38,6 +38,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             SchoolFeesSeeder::class,
             WorkflowTestingSeeder::class,
+            SubjectsSeeder::class,
         ]);
     }
 }

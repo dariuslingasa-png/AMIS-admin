@@ -95,6 +95,8 @@
         isSavingTeacher: false,
         photoPreview: null,
         editTeacher: @js($selectedTeacherPayload ?? $blankTeacherPayload),
+        viewModalOpen: false,
+        viewTeacher: @js($blankTeacherPayload),
         registerEmail: @js(old('form') === 'create' ? old('email', '') : ''),
         registerName: @js(old('form') === 'create' ? old('name', '') : ''),
         isEmailValid(email) {
@@ -132,6 +134,14 @@
         },
         openTeacherEditorPayload(payload) {
             this.openTeacherEditor(JSON.parse(atob(payload)));
+        },
+        openTeacherViewer(teacher) {
+            this.viewTeacher = { ...teacher };
+            this.viewModalOpen = true;
+            this.$nextTick(() => window.lucide?.createIcons?.());
+        },
+        openTeacherViewerPayload(payload) {
+            this.openTeacherViewer(JSON.parse(atob(payload)));
         },
         openTeacherCreator() {
             this.clearTeacherPhotoPreview();
@@ -361,7 +371,7 @@
                                         @endif
                                     </td>
                                     <td style="text-align: right;" class="space-x-1.5">
-                                        <a href="{{ route('admin.academic.teachers.view', $t['id']) }}" class="inline-flex px-3 py-1.5 text-xxs font-bold text-indigo-700 hover:bg-indigo-50 rounded-lg border border-indigo-150 transition cursor-pointer shadow-3xs">View</a>
+                                        <button type="button" data-teacher="{{ $editPayload }}" @click.prevent="openTeacherViewerPayload($el.dataset.teacher)" class="inline-flex px-3 py-1.5 text-xxs font-bold text-indigo-700 hover:bg-indigo-50 rounded-lg border border-indigo-150 transition cursor-pointer shadow-3xs">View</button>
                                         <a href="{{ route('admin.academic.teachers', ['edit' => $t['id']]) }}" data-teacher="{{ $editPayload }}" @click.prevent="openTeacherEditorPayload($el.dataset.teacher)" class="inline-flex px-3 py-1.5 text-xxs font-bold text-slate-700 hover:bg-slate-100 rounded-lg border border-slate-200 transition cursor-pointer shadow-3xs">Edit</a>
                                     </td>
                                 </tr>
@@ -493,7 +503,7 @@
                                                     <span class="rounded-lg bg-white px-2 py-1 text-[10px] font-bold text-slate-600 ring-1 ring-indigo-100">{{ $subjectName }}</span>
                                                 @endforeach
                                                 @if(($t['subject_count'] ?? 0) > 4)
-                                                    <span class="rounded-lg bg-indigo-100 px-2 py-1 text-[10px] font-black text-indigo-700">+{{ ($t['subject_count'] ?? 0) - 4 }}</span>
+                                                    <button type="button" data-teacher="{{ $editPayload }}" @click.prevent="openTeacherViewerPayload($el.dataset.teacher)" class="rounded-lg bg-indigo-100 px-2 py-1 text-[10px] font-black text-indigo-700 hover:bg-indigo-200 transition cursor-pointer select-none">+{{ ($t['subject_count'] ?? 0) - 4 }}</button>
                                                 @endif
                                             </div>
                                         </div>
@@ -503,7 +513,7 @@
                                                 <i data-lucide="activity" class="h-3.5 w-3.5"></i>
                                                 Subject Load
                                             </a>
-                                            <a href="{{ route('admin.academic.teachers.view', $t['id']) }}" class="inline-flex px-3 py-1.5 text-xxs font-bold text-indigo-700 hover:bg-indigo-50 rounded-lg border border-indigo-150 transition cursor-pointer shadow-3xs">View</a>
+                                            <button type="button" data-teacher="{{ $editPayload }}" @click.prevent="openTeacherViewerPayload($el.dataset.teacher)" class="inline-flex px-3 py-1.5 text-xxs font-bold text-indigo-700 hover:bg-indigo-50 rounded-lg border border-indigo-150 transition cursor-pointer shadow-3xs">View</button>
                                             <a href="{{ route('admin.academic.teachers', ['edit' => $t['id']]) }}" data-teacher="{{ $editPayload }}" @click.prevent="openTeacherEditorPayload($el.dataset.teacher)" class="inline-flex px-3 py-1.5 text-xxs font-bold text-slate-700 hover:bg-slate-100 rounded-lg border border-slate-200 transition cursor-pointer shadow-3xs">Edit</a>
                                         </div>
                                     </div>
@@ -520,7 +530,7 @@
         </div>
 
         <!-- Edit Teacher Modal -->
-        <div class="admin-modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-slate-955/40 p-4 backdrop-blur-xs"
+        <div class="admin-modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-xs"
              x-show="editModal" @click.self="closeTeacherEditor()" @keydown.escape.window="closeTeacherEditor()" @if (! $selectedTeacherPayload) x-cloak style="display: none;" @endif x-transition>
             <form method="POST" action="{{ route('admin.academic.teachers.update') }}" enctype="multipart/form-data" class="admin-modal-card flex max-h-[92vh] w-full max-w-2xl flex-col gap-4 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-xl" @submit="isSavingTeacher = true">
                 @csrf
@@ -530,7 +540,7 @@
 
                 <div class="admin-modal-header flex items-center justify-between border-b border-slate-100 pb-3">
                     <div>
-                        <span class="admin-modal-title text-base font-extrabold text-slate-955">Edit Teacher Profile</span>
+                        <span class="admin-modal-title text-base font-extrabold text-slate-950">Edit Teacher Profile</span>
                         <p class="mt-0.5 text-xs font-semibold text-slate-500" x-text="editTeacher.name"></p>
                     </div>
                     <a href="{{ route('admin.academic.teachers') }}" class="text-xl font-bold text-slate-400 hover:text-slate-655" @click.prevent="closeTeacherEditor()">&times;</a>
@@ -640,7 +650,7 @@
         </div>
 
         <!-- Register Modal -->
-        <div class="admin-modal-overlay flex items-center justify-center fixed inset-0 z-50 bg-slate-955/40 backdrop-blur-xs"
+        <div class="admin-modal-overlay flex items-center justify-center fixed inset-0 z-50 bg-slate-950/40 backdrop-blur-xs"
              x-show="addModal" @click.self="closeTeacherCreator()" @keydown.escape.window="closeTeacherCreator()" @if (! $createTeacherModalOpen) x-cloak style="display: none;" @endif x-transition>
             <form method="POST" action="{{ route('admin.academic.teachers.store') }}" enctype="multipart/form-data" class="admin-modal-card flex max-h-[92vh] w-full max-w-2xl flex-col gap-4 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-xl" @submit="isRegistering = true">
                 @csrf
@@ -648,7 +658,7 @@
 
                 <div class="admin-modal-header border-b border-slate-100 pb-3 flex items-center justify-between">
                     <div>
-                        <span class="admin-modal-title text-base font-extrabold text-slate-955">Register Teacher</span>
+                        <span class="admin-modal-title text-base font-extrabold text-slate-950">Register Teacher</span>
                         <p class="mt-0.5 text-xs font-semibold text-slate-500">Create a faculty profile for the roster.</p>
                     </div>
                     <button type="button" class="text-slate-400 hover:text-slate-655 text-xl font-bold" @click="closeTeacherCreator()">&times;</button>
@@ -757,6 +767,99 @@
                     </button>
                 </div>
             </form>
+        </div>
+
+        <!-- View Teacher Modal -->
+        <div class="admin-modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-xs"
+             x-show="viewModalOpen" @click.self="viewModalOpen = false" @keydown.escape.window="viewModalOpen = false" x-cloak x-transition>
+            <div class="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-xl space-y-5">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div>
+                        <h2 class="text-base font-extrabold text-slate-950 uppercase tracking-wider">Teacher Profile Details</h2>
+                        <p class="mt-0.5 text-xs font-semibold text-slate-500">Quick view of teacher info and subject load.</p>
+                    </div>
+                    <button type="button" @click="viewModalOpen = false" class="text-xl font-bold text-slate-400 hover:text-slate-600">&times;</button>
+                </div>
+
+                <div class="flex items-center gap-4 p-4 rounded-xl bg-slate-50 border border-slate-200/60">
+                    <div class="h-16 w-16 rounded-full overflow-hidden border-2 border-indigo-100 bg-white flex items-center justify-center font-black text-indigo-700 text-lg shrink-0">
+                        <template x-if="viewTeacher.photoUrl">
+                            <img :src="viewTeacher.photoUrl" class="h-full w-full object-cover object-center">
+                        </template>
+                        <template x-if="!viewTeacher.photoUrl">
+                            <span x-text="viewTeacher.initials"></span>
+                        </template>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <h3 class="text-base font-black text-slate-900 truncate" x-text="viewTeacher.name"></h3>
+                        <p class="text-xs font-semibold text-slate-500 truncate" x-text="viewTeacher.email"></p>
+                        <div class="mt-2 flex flex-wrap gap-1.5">
+                            <span class="inline-flex items-center rounded-full bg-emerald-50 border border-emerald-100 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-emerald-700" x-text="viewTeacher.status"></span>
+                            <template x-if="viewTeacher.microsoft_sync">
+                                <span class="inline-flex items-center rounded-full bg-blue-50 border border-blue-100 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-blue-700">MS365 Sync Active</span>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 text-xs font-semibold text-slate-500">
+                    <div>
+                        <span class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Department</span>
+                        <span class="mt-1 block font-bold text-slate-800" x-text="viewTeacher.dept || 'N/A'"></span>
+                    </div>
+                    <div>
+                        <span class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Advisory Assignment</span>
+                        <span class="mt-1 inline-flex rounded bg-slate-50 border border-slate-150 px-2 py-0.5 text-xs font-bold text-slate-700 shadow-3xs" x-text="viewTeacher.sections || 'None'"></span>
+                    </div>
+                </div>
+
+                <!-- Subject Load Section -->
+                <div class="space-y-3.5 border-t border-slate-100 pt-4">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Current Subject Load</span>
+                        <span class="rounded-full bg-indigo-50 border border-indigo-100 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-indigo-700" x-text="viewTeacher.load_status"></span>
+                    </div>
+
+                    <div class="rounded-xl border border-indigo-100 bg-indigo-50/20 p-3.5">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-black text-indigo-950">
+                                <span x-text="viewTeacher.subject_count"></span> / <span x-text="viewTeacher.load_target"></span> subjects assigned
+                            </span>
+                            <span class="text-[10px] font-bold text-indigo-400">Target 8</span>
+                        </div>
+                        <div class="mt-2 h-2 overflow-hidden rounded-full bg-white ring-1 ring-indigo-100">
+                            <div class="h-full rounded-full bg-indigo-600 transition-all duration-300" :style="'width: ' + viewTeacher.load_percent + '%'"></div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <span class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Assigned Subjects List</span>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[160px] overflow-y-auto pr-1">
+                            <template x-for="subjectName in viewTeacher.subjects" :key="subjectName">
+                                <div class="flex items-center gap-2 rounded-lg border border-slate-150 bg-slate-50 px-2.5 py-1.5 shadow-3xs">
+                                    <i data-lucide="book-open" class="w-3.5 h-3.5 text-indigo-500 shrink-0"></i>
+                                    <span class="text-xs font-bold text-slate-700 truncate" x-text="subjectName"></span>
+                                </div>
+                            </template>
+                            <template x-if="viewTeacher.subjects.length === 0">
+                                <div class="col-span-2 rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-6 text-center text-xs font-bold text-slate-400">
+                                    No subjects assigned yet.
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-3 flex justify-between items-center gap-2 border-t border-slate-100">
+                    <a :href="'/academic/teachers/' + viewTeacher.id" class="inline-flex items-center gap-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 px-4 py-2.5 text-xs font-bold text-indigo-700 transition">
+                        <i data-lucide="external-link" class="h-3.5 w-3.5"></i>
+                        Open Detail Profile
+                    </a>
+                    <div class="flex gap-2">
+                        <button type="button" @click="viewModalOpen = false" class="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-bold text-slate-500 transition hover:bg-slate-50">Close</button>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Local System Microsoft Email Bank Datalist -->

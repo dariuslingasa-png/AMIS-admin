@@ -6,12 +6,36 @@
         subjectIds: @js($teacher['subject_ids'] ?? []),
         subjectOptions: @js($teacher['subject_options'] ?? []),
         loadTarget: @js($teacher['load_target'] ?? 8),
-        selectedSubjectId: '',
+        selectedSubjectName: '',
+        selectedGrades: [],
+        showExistModal: false,
+        assignModalOpen: false,
+        editModalOpen: false,
+        editingSubjectId: null,
+        editSubjectName: '',
+        editGrade: '',
+        globalAssignments: @js($globalAssignments ?? []),
+        existModalTitle: 'Subject Already Assigned',
+        existModalMessage: 'This subject is already in the teacher\'s handled subjects list.',
+        existModalConfirm: false,
+        existModalAction: 'add',
+        grades: @js(str_contains($teacher['dept'], 'Elementary') ? ['Kinder 1', 'Kinder 2', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6'] : (str_contains($teacher['dept'], 'High') ? ['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'] : ['Kinder 1', 'Kinder 2', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'])),
         get subjectCount() {
             return this.subjectIds.length;
         },
         get subjects() {
-            return this.subjectOptions.filter(subject => this.subjectIds.includes(subject.id));
+            return this.subjectIds.map(val => {
+                const id = Number(val);
+                if (!isNaN(id)) {
+                    const found = this.subjectOptions.find(opt => opt.id === id);
+                    if (found) return found;
+                }
+                if (typeof val === 'string' && val.includes(' · ')) {
+                    const parts = val.split(' · ');
+                    return { id: val, name: parts[0], grade_level: parts[1] };
+                }
+                return { id: val, name: val, grade_level: 'New Subject' };
+            });
         },
         get loadPercent() {
             return this.loadTarget > 0 ? Math.min(100, Math.round((this.subjectCount / this.loadTarget) * 100)) : 0;
@@ -20,19 +44,189 @@
             if (this.subjectCount >= this.loadTarget) return 'Full Load';
             return this.subjectCount >= 6 ? 'Balanced Load' : 'Needs Load';
         },
-        get availableSubjects() {
-            return this.subjectOptions.filter(subject => !this.subjectIds.includes(subject.id));
-        },
-        addSubject() {
-            const id = Number(this.selectedSubjectId);
-            if (!id || this.subjectCount >= this.loadTarget || this.subjectIds.includes(id)) return;
-            this.subjectIds = [...this.subjectIds, id];
-            this.selectedSubjectId = '';
-            this.$nextTick(() => window.lucide?.createIcons?.());
+        addSubject(confirmOverride = false) {
+            const name = this.selectedSubjectName.trim();
+            if (!name || this.selectedGrades.length === 0) return;
+
+            let localDuplicates = [];
+            let globalDuplicates = [];
+            let validGrades = [];
+
+            for (const grade of this.selectedGrades) {
+                if (this.subjectCount + validGrades.length >= this.loadTarget) {
+                    break;
+                }
+
+                const matched = this.subjectOptions.find(opt => 
+                    opt.name.toLowerCase() === name.toLowerCase() && 
+                    opt.grade_level.toLowerCase() === grade.toLowerCase()
+                );
+                const valueToAdd = matched ? matched.id : (name + ' · ' + grade);
+
+                // 1. Local duplicate check
+                const isLocalDuplicate = this.subjectIds.some(val => {
+                    if (val === valueToAdd) return true;
+                    const valObj = typeof val === 'number' || !isNaN(Number(val))
+                        ? this.subjectOptions.find(opt => opt.id === Number(val))
+                        : (typeof val === 'string' && val.includes(' · ') ? { name: val.split(' · ')[0], grade_level: val.split(' · ')[1] } : null);
+                    
+                    if (!valObj) return false;
+                    
+                    const addObj = matched ? matched : { name: name, grade_level: grade };
+                    return valObj.name.toLowerCase() === addObj.name.toLowerCase() && 
+                           valObj.grade_level.toLowerCase() === addObj.grade_level.toLowerCase();
+                });
+
+                if (isLocalDuplicate) {
+                    localDuplicates.push(grade);
+                    continue;
+                }
+
+                // 2. Global duplicate check (assigned to another teacher)
+                const globalMatch = this.globalAssignments.find(ass => {
+                    if (matched && ass.subject_id === matched.id) return true;
+                    return ass.subject_name.toLowerCase() === name.toLowerCase() && 
+                           ass.grade_level.toLowerCase() === grade.toLowerCase();
+                });
+
+                if (globalMatch) {
+                    globalDuplicates.push({ grade: grade, teacherName: globalMatch.teacher_name, valueToAdd: valueToAdd });
+                    continue;
+                }
+
+                validGrades.push(valueToAdd);
+            }
+
+            if (localDuplicates.length > 0) {
+                this.existModalConfirm = false;
+                this.existModalAction = 'add';
+                this.existModalTitle = 'Subject Already Assigned';
+                this.existModalMessage = 'This subject is already in the teacher\'s handled subjects list.';
+                this.showExistModal = true;
+                this.assignModalOpen = false;
+                return;
+            }
+
+            if (globalDuplicates.length > 0 && !confirmOverride) {
+                const teacherNames = [...new Set(globalDuplicates.map(d => d.teacherName))];
+                this.existModalConfirm = true;
+                this.existModalAction = 'add';
+                this.existModalTitle = 'Subject Assigned to Another Teacher';
+                this.existModalMessage = `This subject is already assigned to ${teacherNames.join(', ')}. Do you still want to assign it?`;
+                this.showExistModal = true;
+                this.assignModalOpen = false;
+                return;
+            }
+
+            if (confirmOverride) {
+                for (const dupe of globalDuplicates) {
+                    validGrades.push(dupe.valueToAdd);
+                }
+            }
+
+            if (validGrades.length > 0) {
+                this.subjectIds = [...this.subjectIds, ...validGrades];
+                this.selectedSubjectName = '';
+                this.selectedGrades = [];
+                this.showExistModal = false;
+                this.assignModalOpen = false;
+                this.isSavingSubjects = true;
+                this.$nextTick(() => {
+                    document.getElementById('subject-load').submit();
+                });
+            }
         },
         removeSubject(id) {
             this.subjectIds = this.subjectIds.filter(subjectId => subjectId !== id);
+            this.isSavingSubjects = true;
+            this.$nextTick(() => {
+                document.getElementById('subject-load').submit();
+            });
+        },
+        editSubject(subject) {
+            this.editingSubjectId = subject.id;
+            this.editSubjectName = subject.name;
+            this.editGrade = subject.grade_level;
+            this.editModalOpen = true;
             this.$nextTick(() => window.lucide?.createIcons?.());
+        },
+        saveSubjectEdit(confirmOverride = false) {
+            const name = this.editSubjectName.trim();
+            const grade = this.editGrade;
+            if (!name || !grade) return;
+
+            const matched = this.subjectOptions.find(opt => 
+                opt.name.toLowerCase() === name.toLowerCase() && 
+                opt.grade_level.toLowerCase() === grade.toLowerCase()
+            );
+            const newValue = matched ? matched.id : (name + ' · ' + grade);
+
+            // 1. Local duplicate check
+            const isLocalDuplicate = this.subjectIds.some(val => {
+                if (val === this.editingSubjectId) return false;
+                if (val === newValue) return true;
+
+                const valObj = typeof val === 'number' || !isNaN(Number(val))
+                    ? this.subjectOptions.find(opt => opt.id === Number(val))
+                    : (typeof val === 'string' && val.includes(' · ') ? { name: val.split(' · ')[0], grade_level: val.split(' · ')[1] } : null);
+                
+                if (!valObj) return false;
+                
+                const addObj = matched ? matched : { name: name, grade_level: grade };
+                return valObj.name.toLowerCase() === addObj.name.toLowerCase() && 
+                       valObj.grade_level.toLowerCase() === addObj.grade_level.toLowerCase();
+            });
+
+            if (isLocalDuplicate) {
+                this.existModalConfirm = false;
+                this.existModalAction = 'edit';
+                this.existModalTitle = 'Subject Already Assigned';
+                this.existModalMessage = 'This subject is already in the teacher\'s handled subjects list.';
+                this.showExistModal = true;
+                this.editModalOpen = false;
+                return;
+            }
+
+            // 2. Global duplicate check (assigned to another teacher)
+            const globalMatch = this.globalAssignments.find(ass => {
+                if (matched && ass.subject_id === matched.id) return true;
+                return ass.subject_name.toLowerCase() === name.toLowerCase() && 
+                       ass.grade_level.toLowerCase() === grade.toLowerCase();
+            });
+
+            if (globalMatch && !confirmOverride) {
+                this.existModalConfirm = true;
+                this.existModalAction = 'edit';
+                this.existModalTitle = 'Subject Assigned to Another Teacher';
+                this.existModalMessage = `This subject is already assigned to ${globalMatch.teacher_name}. Do you still want to assign it?`;
+                this.showExistModal = true;
+                this.editModalOpen = false;
+                return;
+            }
+
+            // Replace the old value in subjectIds
+            this.subjectIds = this.subjectIds.map(val => val === this.editingSubjectId ? newValue : val);
+            this.showExistModal = false;
+            this.editModalOpen = false;
+            this.isSavingSubjects = true;
+            this.$nextTick(() => {
+                document.getElementById('subject-load').submit();
+            });
+        },
+        confirmExistModal() {
+            if (this.existModalAction === 'add') {
+                this.addSubject(true);
+            } else if (this.existModalAction === 'edit') {
+                this.saveSubjectEdit(true);
+            }
+        },
+        cancelExistModal() {
+            this.showExistModal = false;
+            if (this.existModalAction === 'add') {
+                this.assignModalOpen = true;
+            } else if (this.existModalAction === 'edit') {
+                this.editModalOpen = true;
+            }
         }
     }">
         <!-- Hero / Header Banner -->
@@ -173,10 +367,11 @@
                             </span>
                             <div>
                                 <span class="text-slate-900 font-extrabold text-sm tracking-wide uppercase">Subject Load Tracker</span>
-                                <p class="mt-0.5 text-xs font-semibold text-slate-500">Assign and maintain this teacher's handled subjects.</p>
                             </div>
                         </div>
-                        <span class="inline-flex w-fit rounded-full bg-indigo-50 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-indigo-700 ring-1 ring-indigo-100" x-text="loadStatus"></span>
+                        <span class="inline-flex w-fit rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wider ring-1 transition-all duration-150"
+                              :class="loadStatus === 'Full Load' ? 'bg-emerald-50 text-emerald-700 ring-emerald-100' : (loadStatus === 'Balanced Load' ? 'bg-sky-50 text-sky-700 ring-sky-100' : 'bg-amber-50 text-amber-700 ring-amber-100')"
+                              x-text="loadStatus"></span>
                     </div>
 
                     <div class="rounded-2xl border border-indigo-100 bg-indigo-50/70 p-4">
@@ -196,7 +391,9 @@
                             </div>
                         </div>
                         <div class="mt-4 h-2.5 overflow-hidden rounded-full bg-white ring-1 ring-indigo-100">
-                            <div class="h-full rounded-full bg-indigo-600 transition-all duration-300" :style="'width: ' + loadPercent + '%'"></div>
+                            <div class="h-full rounded-full transition-all duration-300"
+                                 :class="loadPercent >= 100 ? 'bg-emerald-600' : (loadPercent >= 75 ? 'bg-sky-500' : 'bg-amber-500')"
+                                 :style="'width: ' + loadPercent + '%'"></div>
                         </div>
                         <div class="mt-2 flex justify-between text-[10px] font-bold uppercase tracking-wider text-indigo-400">
                             <span>Minimum 6</span>
@@ -204,40 +401,34 @@
                         </div>
                     </div>
 
-                    <div class="rounded-2xl border border-slate-150 bg-slate-50/60 p-4">
-                        <div class="mb-3 flex items-center justify-between gap-3">
+                    <div class="space-y-3">
+                        <div class="mb-3 flex items-center justify-between gap-3 pt-2">
                             <div>
-                                <span class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Assign Catalog Subject</span>
-                                <p class="mt-0.5 text-xs font-semibold text-slate-500">Pick from the official subject catalog. Advisory remains separate.</p>
+                                <span class="inline-block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Handled Subjects</span>
+                                <span class="ml-1.5 rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-bold text-slate-500 ring-1 ring-slate-200" x-text="(loadTarget - subjectCount) + ' slots left'"></span>
                             </div>
-                            <span class="rounded-full bg-white px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-slate-500 ring-1 ring-slate-150" x-text="(loadTarget - subjectCount) + ' slots left'"></span>
-                        </div>
-                        <div class="grid gap-2 sm:grid-cols-[1fr_auto]">
-                            <select x-model="selectedSubjectId" class="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm font-bold text-gray-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20" :disabled="subjectCount >= loadTarget">
-                                <option value="">Select subject</option>
-                                <template x-for="subject in availableSubjects" :key="subject.id">
-                                    <option :value="subject.id" x-text="`${subject.name} · ${subject.grade_level}`"></option>
-                                </template>
-                            </select>
-                            <button type="button" @click="addSubject()" class="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-black text-white shadow-sm hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50" :disabled="!selectedSubjectId || subjectCount >= loadTarget">
-                                <i data-lucide="plus" class="h-4 w-4"></i>
+                            <button type="button" @click="assignModalOpen = true" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xxs transition shadow-3xs cursor-pointer select-none" :disabled="subjectCount >= loadTarget">
+                                <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
                                 Assign Subject
                             </button>
                         </div>
-                    </div>
-
-                    <div>
-                        <span class="mb-2 block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Handled Subjects</span>
-                        <div class="grid gap-2" x-show="subjects.length > 0">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3" x-show="subjects.length > 0">
                             <template x-for="subject in subjects" :key="subject.id">
-                                <div class="rounded-xl border border-slate-150 bg-white px-3 py-2 shadow-3xs">
-                                    <div class="flex items-center gap-2">
-                                        <i data-lucide="book-open-check" class="h-3.5 w-3.5 text-indigo-600"></i>
-                                        <span class="min-w-0 flex-1 truncate text-xs font-bold text-slate-700">
-                                            <span x-text="subject.name"></span>
-                                            <span class="text-slate-400" x-text="` · ${subject.grade_level}`"></span>
-                                        </span>
-                                        <button type="button" @click="removeSubject(subject.id)" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-rose-100 bg-white text-rose-500 hover:bg-rose-50" title="Remove subject">
+                                <div class="relative flex items-center justify-between p-3.5 rounded-xl border border-slate-200 bg-white hover:border-indigo-300 hover:shadow-2xs transition-all duration-150 group">
+                                    <div class="flex items-center gap-2.5 min-w-0">
+                                        <div class="h-8 w-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 border border-indigo-100/50 group-hover:bg-indigo-600 group-hover:text-white group-hover:border-indigo-600 transition-colors duration-150">
+                                            <i data-lucide="book-open" class="h-4 w-4"></i>
+                                        </div>
+                                        <div class="min-w-0">
+                                            <span class="block text-xs font-black text-slate-900 truncate" x-text="subject.name"></span>
+                                            <span class="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wide mt-0.5" x-text="subject.grade_level"></span>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-1.5 shrink-0">
+                                        <button type="button" @click="editSubject(subject)" class="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-slate-100 bg-slate-50/50 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 hover:border-indigo-100 transition duration-150 shrink-0" title="Edit subject">
+                                            <i data-lucide="edit-3" class="h-3.5 w-3.5"></i>
+                                        </button>
+                                        <button type="button" @click="removeSubject(subject.id)" class="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-slate-100 bg-slate-50/50 text-slate-400 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-100 transition duration-150 shrink-0" title="Remove subject">
                                             <i data-lucide="trash-2" class="h-3.5 w-3.5"></i>
                                         </button>
                                     </div>
@@ -247,42 +438,8 @@
                         <div class="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-6 text-center text-xs font-bold text-slate-400" x-show="subjects.length === 0">
                             No subjects added yet.
                         </div>
-                    </div>
+                    </div>                </form>
 
-                    <div class="flex justify-end border-t border-slate-100 pt-4">
-                        <button type="submit" class="relative inline-flex min-w-[150px] items-center justify-center gap-2 rounded-xl bg-indigo-700 px-5 py-2.5 text-xs font-black text-white shadow-sm shadow-indigo-950/20 transition hover:bg-indigo-600 disabled:cursor-wait disabled:opacity-80" :disabled="isSavingSubjects">
-                            <span class="btn-spinner" x-show="isSavingSubjects"></span>
-                            <i data-lucide="save" class="h-4 w-4" x-show="!isSavingSubjects"></i>
-                            Save Load
-                        </button>
-                    </div>
-                </form>
-
-                <div class="bg-white border border-slate-200 rounded-2xl shadow-xs p-6">
-                    <div class="border-b border-slate-100 pb-3 flex items-center justify-between gap-3">
-                        <div class="flex items-center gap-2">
-                            <i data-lucide="history" class="w-5 h-5 text-indigo-600"></i>
-                            <span class="text-slate-900 font-extrabold text-sm tracking-wide uppercase">Assignment History</span>
-                        </div>
-                        <span class="text-[10px] font-black uppercase tracking-wider text-slate-400">{{ $assignmentHistory->count() }} events</span>
-                    </div>
-                    <div class="mt-4 grid gap-2">
-                        @forelse($assignmentHistory as $event)
-                            <div class="flex items-center justify-between gap-3 rounded-xl border border-slate-150 bg-slate-50 px-3 py-2">
-                                <div class="min-w-0">
-                                    <span class="block truncate text-xs font-extrabold text-slate-800">{{ $event->subject?->name ?? 'Archived subject' }}</span>
-                                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">{{ ucfirst($event->action) }} · {{ $event->created_at?->format('M d, Y g:i A') }}</span>
-                                </div>
-                                <x-badge color="{{ $event->action === 'assigned' ? 'green' : 'gray' }}">{{ $event->action }}</x-badge>
-                            </div>
-                        @empty
-                            <div class="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-6 text-center text-xs font-bold text-slate-400">
-                                No assignment history yet.
-                            </div>
-                        @endforelse
-                    </div>
-                </div>
-                
                 <!-- Account Credentials & Actions Card -->
                 <div class="bg-white border border-slate-200 rounded-2xl shadow-xs p-6 space-y-6">
                     <div class="border-b border-slate-100 pb-3 flex items-center gap-2">
@@ -302,19 +459,7 @@
                                 </span>
                             </div>
                         </div>
-                        <div class="flex items-center gap-2">
-                            @if ($teacher['password_changed'] === 'Yes')
-                                <form method="POST" action="{{ route('admin.academic.teachers.resend') }}" @submit="isResending = true">
-                                    @csrf
-                                    <input type="hidden" name="id" value="{{ $teacher['id'] }}">
-                                    <button type="submit" :disabled="isResending" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xxs font-black bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white rounded-lg transition shadow-3xs cursor-pointer select-none border border-amber-600">
-                                        <span class="btn-spinner" x-show="isResending"></span>
-                                        <i data-lucide="key" class="w-3 h-3" x-show="!isResending"></i>
-                                        Reset & Resend
-                                    </button>
-                                </form>
-                            @endif
-                        </div>
+
                     </div>
 
                     <!-- Conditional Credentials Section: Displayed if password_changed is No -->
@@ -375,8 +520,155 @@
 
                 </div>
 
-            </div>
+        </div>
 
+        <!-- Subject Exist Warning Modal -->
+        <div class="admin-modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-xs"
+             x-show="showExistModal" @click.self="showExistModal = false" @keydown.escape.window="showExistModal = false" x-cloak x-transition>
+            <div class="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-xl text-center space-y-4">
+                <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-amber-50 text-amber-600 border border-amber-200">
+                    <i data-lucide="alert-triangle" class="h-6 w-6"></i>
+                </div>
+                <div class="space-y-2">
+                    <h3 class="text-base font-extrabold text-slate-950 uppercase tracking-wider" x-text="existModalTitle"></h3>
+                    <p class="text-xs font-semibold text-slate-500 leading-normal" x-text="existModalMessage"></p>
+                </div>
+                <div class="pt-2">
+                    <template x-if="!existModalConfirm">
+                        <button type="button" @click="cancelExistModal()" class="w-full inline-flex justify-center rounded-xl bg-slate-900 hover:bg-slate-800 px-4 py-2.5 text-xs font-black text-white shadow-sm transition">
+                            Understood
+                        </button>
+                    </template>
+                    <template x-if="existModalConfirm">
+                        <div class="flex gap-2">
+                            <button type="button" @click="cancelExistModal()" class="flex-1 inline-flex justify-center rounded-xl border border-slate-200 hover:bg-slate-50 px-4 py-2.5 text-xs font-bold text-slate-500 transition">
+                                Cancel
+                            </button>
+                            <button type="button" @click="confirmExistModal()" class="flex-1 inline-flex justify-center rounded-xl bg-emerald-600 hover:bg-emerald-700 px-4 py-2.5 text-xs font-black text-white shadow-sm transition">
+                                Assign Anyway
+                            </button>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+
+        <!-- Assign Subject Modal -->
+        <div class="admin-modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-xs"
+             x-show="assignModalOpen" @click.self="assignModalOpen = false" @keydown.escape.window="assignModalOpen = false" x-cloak x-transition>
+            <div class="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-xl space-y-4">
+                <div class="mb-4 flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div>
+                        <h2 class="text-base font-extrabold text-slate-950 uppercase tracking-wider">Assign Catalog Subject</h2>
+                        <p class="mt-0.5 text-xs font-semibold text-slate-500">Pick from the official subject catalog or type to register new ones.</p>
+                    </div>
+                    <button type="button" @click="assignModalOpen = false" class="text-xl font-bold text-slate-400 hover:text-slate-600">&times;</button>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <span class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">1. Subject Name *</span>
+                        <p class="mt-0.5 text-xs font-semibold text-slate-500">Type the subject name to assign or register.</p>
+                    </div>
+                    <input x-model="selectedSubjectName" placeholder="Type subject name (e.g. Science)..." class="w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm font-bold text-gray-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20" :disabled="subjectCount >= loadTarget" @keydown.enter.prevent="addSubject()">
+                    
+                    <div class="pt-2 flex items-center justify-between gap-4">
+                        <div>
+                            <span class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">2. Grade Level *</span>
+                            <p class="mt-0.5 text-xs font-semibold text-slate-500 font-medium">Select the target grade levels for this subject load.</p>
+                        </div>
+                        <button type="button" @click="selectedGrades = selectedGrades.length === grades.length ? [] : [...grades]"
+                                class="inline-flex shrink-0 items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-700 font-black text-xxs transition shadow-3xs cursor-pointer select-none">
+                            <span x-text="selectedGrades.length === grades.length ? 'Deselect All' : 'Select All'"></span>
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <template x-for="g in grades" :key="g">
+                            <label class="relative flex items-center justify-center rounded-xl border-2 p-3 cursor-pointer select-none transition focus-within:ring-2 focus-within:ring-emerald-500/20"
+                                   :class="selectedGrades.includes(g) ? 'border-emerald-500 bg-emerald-50/30 ring-1 ring-emerald-500/10' : 'border-slate-200 bg-white hover:border-emerald-300'">
+                                <input type="checkbox" :value="g" x-model="selectedGrades" class="sr-only">
+                                <span class="text-xs font-bold" :class="selectedGrades.includes(g) ? 'text-emerald-950 font-black' : 'text-slate-700'">
+                                    <span x-text="g"></span>
+                                </span>
+                            </label>
+                        </template>
+                    </div>
+                    
+                    <!-- Warning / Info Banner -->
+                    <div class="mt-3 space-y-2" x-show="subjectCount >= loadTarget || (selectedGrades.length > 0 && selectedGrades.length > (loadTarget - subjectCount))" x-cloak>
+                        <!-- Case 1: Limit Reached -->
+                        <div x-show="subjectCount >= loadTarget" class="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-955 text-xs font-semibold flex items-start gap-2.5 shadow-3xs">
+                            <i data-lucide="alert-circle" class="w-4.5 h-4.5 text-amber-600 shrink-0 mt-0.5"></i>
+                            <div>
+                                <span class="font-extrabold block uppercase tracking-wide text-amber-800 text-[10px] mb-0.5">Load Target Reached</span>
+                                This teacher has reached their target load of <span x-text="loadTarget"></span> subjects. Remove an existing subject to assign a new one.
+                            </div>
+                        </div>
+                        <!-- Case 2: Selected Exceeds Remaining Slots -->
+                        <div x-show="subjectCount < loadTarget && selectedGrades.length > (loadTarget - subjectCount)" class="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-955 text-xs font-semibold flex items-start gap-2.5 shadow-3xs">
+                            <i data-lucide="alert-triangle" class="w-4.5 h-4.5 text-amber-600 shrink-0 mt-0.5"></i>
+                            <div>
+                                <span class="font-extrabold block uppercase tracking-wide text-amber-800 text-[10px] mb-0.5">Exceeds Remaining Slots</span>
+                                Selecting <span x-text="selectedGrades.length"></span> grades will exceed the <span x-text="loadTarget - subjectCount"></span> remaining slot(s). Only the first <span x-text="loadTarget - subjectCount"></span> will be added.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-3 flex justify-end gap-2 border-t border-slate-100">
+                    <button type="button" @click="assignModalOpen = false" class="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-bold text-slate-500 transition hover:bg-slate-50">Close</button>
+                    <button type="button" @click="addSubject()" class="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-black text-white shadow-sm hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50" :disabled="!selectedSubjectName || selectedGrades.length === 0 || subjectCount >= loadTarget">
+                        <i data-lucide="plus" class="h-4 w-4"></i>
+                        Assign Subject
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Subject Modal -->
+        <div class="admin-modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-xs"
+             x-show="editModalOpen" @click.self="editModalOpen = false" @keydown.escape.window="editModalOpen = false" x-cloak x-transition>
+            <div class="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-xl space-y-4">
+                <div class="mb-4 flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div>
+                        <h2 class="text-base font-extrabold text-slate-950 uppercase tracking-wider">Edit Assigned Subject</h2>
+                        <p class="mt-0.5 text-xs font-semibold text-slate-500">Update subject name and grade level assignment.</p>
+                    </div>
+                    <button type="button" @click="editModalOpen = false" class="text-xl font-bold text-slate-400 hover:text-slate-600">&times;</button>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <span class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">1. Subject Name *</span>
+                        <p class="mt-0.5 text-xs font-semibold text-slate-500">Modify the subject name.</p>
+                    </div>
+                    <input x-model="editSubjectName" placeholder="Type subject name (e.g. Science)..." class="w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm font-bold text-gray-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20" @keydown.enter.prevent="saveSubjectEdit()">
+                    
+                    <div>
+                        <span class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">2. Grade Level *</span>
+                        <p class="mt-0.5 text-xs font-semibold text-slate-500 font-medium">Select the new grade level for this subject.</p>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <template x-for="g in grades" :key="g">
+                            <label class="relative flex items-center justify-center rounded-xl border-2 p-3 cursor-pointer select-none transition focus-within:ring-2 focus-within:ring-indigo-500/20"
+                                   :class="editGrade === g ? 'border-indigo-500 bg-indigo-50/30 ring-1 ring-indigo-500/10' : 'border-slate-200 bg-white hover:border-indigo-300'">
+                                <input type="radio" :value="g" x-model="editGrade" class="sr-only">
+                                <span class="text-xs font-bold" :class="editGrade === g ? 'text-indigo-950 font-black' : 'text-slate-700'">
+                                    <span x-text="g"></span>
+                                </span>
+                            </label>
+                        </template>
+                    </div>
+                </div>
+
+                <div class="pt-3 flex justify-end gap-2 border-t border-slate-100">
+                    <button type="button" @click="editModalOpen = false" class="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-bold text-slate-500 transition hover:bg-slate-50">Close</button>
+                    <button type="button" @click="saveSubjectEdit();" class="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-black text-white shadow-sm hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50" :disabled="!editSubjectName || !editGrade">
+                        <i data-lucide="check" class="h-4 w-4"></i>
+                        Save Changes
+                    </button>
+                </div>
+            </div>
         </div>
 
     </div>

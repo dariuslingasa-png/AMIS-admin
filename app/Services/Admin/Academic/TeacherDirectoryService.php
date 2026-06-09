@@ -5,6 +5,7 @@ namespace App\Services\Admin\Academic;
 use App\Repositories\AcademicRepository;
 use App\Repositories\TeacherRepository;
 use App\Services\ImageOptimizerService;
+use App\Models\TeacherSubjectAssignment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -123,11 +124,24 @@ class TeacherDirectoryService
         $teacher = array_merge($teacher, $this->subjectLoad($teacher));
         $teacher['initials'] = $this->initials($teacher['name']);
 
+        $globalAssignments = TeacherSubjectAssignment::with('subject')
+            ->where('status', 'active')
+            ->where('teacher_key', '!=', $teacher['id'])
+            ->get()
+            ->map(fn ($assignment) => [
+                'subject_id' => $assignment->subject_id,
+                'subject_name' => $assignment->subject?->name,
+                'grade_level' => $assignment->subject?->grade_level,
+                'teacher_name' => $assignment->teacher_name,
+            ])
+            ->all();
+
         return [
             'teacher' => $teacher,
             'isHighSchool' => str_contains($teacher['dept'], 'High'),
             'isIslamicArabic' => str_contains($teacher['dept'], 'Islamic School'),
             'assignmentHistory' => $this->assignments->history($teacher['id']),
+            'globalAssignments' => $globalAssignments,
         ];
     }
 

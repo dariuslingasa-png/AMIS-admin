@@ -291,12 +291,12 @@
 
         <!-- ==================== MODALS CONFIG REGISTRY ==================== -->
         <!-- Global Dataset Export Modal -->
-        <div class="admin-modal-overlay flex items-center justify-center fixed inset-0 z-50 bg-slate-955/40 backdrop-blur-xs" 
+        <div class="admin-modal-overlay flex items-center justify-center fixed inset-0 z-50 bg-slate-950/40 backdrop-blur-xs" 
              x-show="exportModal" x-cloak x-transition>
             <div class="admin-modal-card bg-white rounded-2xl shadow-xl w-full max-w-md p-6 flex flex-col gap-4 border border-slate-200" @click.away="exportModal = false">
                 <div class="admin-modal-header border-b border-slate-100 pb-3 flex items-center justify-between">
                     <div>
-                        <span class="admin-modal-title text-base font-extrabold text-slate-955">Compile Master Datasets</span>
+                        <span class="admin-modal-title text-base font-extrabold text-slate-950">Compile Master Datasets</span>
                         <div class="text-[11px] text-slate-400 font-light mt-0.5">Run background compilation of system spreadsheets</div>
                     </div>
                     <button type="button" class="text-slate-400 hover:text-slate-655 text-xl font-bold" @click="exportModal = false">&times;</button>

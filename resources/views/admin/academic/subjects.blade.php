@@ -4,7 +4,7 @@
         $grouped = $subjects->groupBy('grade_level');
     @endphp
 
-    <div class="analytics-page flex flex-col gap-6" x-data="{ createOpen: false, editId: null, search: '' }">
+    <div class="analytics-page flex flex-col gap-6" x-data="{ editId: null, search: '' }">
         <div class="academic-hero-banner">
             <div class="relative z-10 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
@@ -15,10 +15,7 @@
                     <h1 class="mt-3 text-2xl font-black tracking-tight text-white md:text-3xl">Subjects Directory</h1>
                     <p class="mt-2 max-w-2xl text-sm text-indigo-100 md:text-base">Create, update, archive, and monitor subject ownership across the AMIS Portal.</p>
                 </div>
-                <button type="button" @click="createOpen = true" class="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-black text-indigo-950 shadow-md transition hover:bg-indigo-50">
-                    <i data-lucide="plus-circle" class="h-4 w-4 text-indigo-700"></i>
-                    Create Subject
-                </button>
+
             </div>
         </div>
 
@@ -118,18 +115,6 @@
                     <p class="text-sm font-semibold">No subjects cataloged.</p>
                 </div>
             @endforelse
-        </div>
-
-        <div x-show="createOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4">
-            <div class="w-full max-w-2xl rounded-2xl border border-slate-200 bg-white p-6 shadow-xl" @click.away="createOpen = false">
-                <div class="mb-4 flex items-center justify-between border-b border-slate-100 pb-3">
-                    <h2 class="text-base font-extrabold text-slate-950">Create Subject</h2>
-                    <button type="button" @click="createOpen = false" class="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-50">
-                        <i data-lucide="x" class="h-4 w-4"></i>
-                    </button>
-                </div>
-                @include('admin.academic.partials.subject-form', ['subject' => null, 'grades' => $grades])
-            </div>
         </div>
     </div>
 </x-admin-layout>

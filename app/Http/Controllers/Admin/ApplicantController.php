@@ -10,6 +10,8 @@ use App\Services\Admin\Enrollment\EnrollmentReviewService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 class ApplicantController extends Controller
 {
@@ -159,6 +161,178 @@ class ApplicantController extends Controller
             'siblings'  => $siblings,
             ...$this->reviewService->detailData($applicant),
         ]);
+    }
+
+    public function emailRegistry(Request $request)
+    {
+        $validated = $request->validate([
+            'recipient_email'     => 'required|email',
+            'payment_filter'      => 'nullable|string|in:all,paid,pending,no_payment',
+            'limit_count'         => 'nullable|integer|min:1',
+            'message_body'        => 'nullable|string',
+            'fetch_families_only' => 'nullable|boolean',
+            'family_no'           => 'nullable|integer',
+        ]);
+
+        $recipientEmail = $validated['recipient_email'];
+        $paymentFilter  = $validated['payment_filter'] ?? 'all';
+        $limitCount     = $validated['limit_count'] ?? null;
+        $messageBody    = $validated['message_body'] ?? "Assalamualaikum Sir,\n\nHere is the list of enrollment families.\n\n-IT Staff";
+
+        try {
+            // Retrieve all families from the query (using a very high perPage limit to avoid pagination)
+            $familiesPaginator = $this->applications->paginateFamilies($request, 999999);
+            $families = collect($familiesPaginator->items());
+
+            // Apply payment status filter
+            if ($paymentFilter !== 'all') {
+                $families = $families->filter(function ($family) use ($paymentFilter) {
+                    if ($paymentFilter === 'paid') {
+                        return $family['payment_status'] === 'Paid';
+                    }
+                    if ($paymentFilter === 'pending') {
+                        return $family['payment_status'] === 'Pending';
+                    }
+                    if ($paymentFilter === 'no_payment') {
+                        return $family['payment_status'] === 'No Payment';
+                    }
+                    return true;
+                })->values();
+            }
+
+            // Apply limit count if provided
+            if ($limitCount && $limitCount > 0) {
+                $families = $families->take($limitCount)->values();
+            }
+
+            // Return family list only if requested
+            if ($request->boolean('fetch_families_only')) {
+                return response()->json([
+                    'success'  => true,
+                    'families' => $families->map(function ($f) {
+                        return [
+                            'family_no'    => $f['family_no'],
+                            'family_label' => $f['family_label'],
+                        ];
+                    })->values(),
+                ]);
+            }
+
+            // Filter by specific family_no if requested
+            if ($request->has('family_no')) {
+                $targetNo = $request->integer('family_no');
+                $families = $families->filter(function ($f) use ($targetNo) {
+                    return $f['family_no'] == $targetNo;
+                })->values();
+            }
+
+            // Send mail per family
+            if ($families->isEmpty()) {
+                // If it is a specific family request and not found, we don't send fallback email.
+                // Otherwise, send the fallback "No Families Found" email.
+                if (!$request->has('family_no')) {
+                    Mail::send('emails.applicants-registry', [
+                        'messageBody' => $messageBody,
+                        'families'    => [],
+                    ], function ($message) use ($recipientEmail) {
+                        $message->to($recipientEmail)
+                            ->subject('AMIS Families Registry Report - No Families Found');
+                    });
+                }
+            } else {
+                foreach ($families as $family) {
+                    $attachments = [];
+                    foreach ($family['children'] as $c) {
+                        if ($c->payment && $c->payment->receipt_url) {
+                            $rUrl = $c->payment->receipt_url;
+                            $localPath = base_path('../amis_enrollment/storage/app/public/' . ltrim($rUrl, '/'));
+                            if (!file_exists($localPath)) {
+                                $localPath = storage_path('app/public/' . ltrim($rUrl, '/'));
+                            }
+                            
+                            if (file_exists($localPath)) {
+                                $ext = strtolower(pathinfo($localPath, PATHINFO_EXTENSION));
+                                $mime = match ($ext) {
+                                    'pdf' => 'application/pdf',
+                                    'png' => 'image/png',
+                                    'jpg', 'jpeg' => 'image/jpeg',
+                                    'gif' => 'image/gif',
+                                    'webp' => 'image/webp',
+                                    default => 'application/octet-stream'
+                                };
+                                $appNo = str_pad($family['family_no'], 4, '0', STR_PAD_LEFT);
+                                $filename = 'payment-proof-' . $appNo . '.' . $ext;
+                                
+                                $alreadyAdded = false;
+                                foreach ($attachments as $att) {
+                                    if ($att['path'] === $localPath) {
+                                        $alreadyAdded = true;
+                                        break;
+                                    }
+                                }
+                                
+                                if (!$alreadyAdded) {
+                                    $attachments[] = [
+                                        'path' => $localPath,
+                                        'as'   => $filename,
+                                        'mime' => $mime,
+                                    ];
+                                }
+                            }
+                        }
+                    }
+
+                    $lastName = strtoupper(trim(explode(',', $family['family_label'])[0]));
+                    $appNo = str_pad($family['family_no'], 4, '0', STR_PAD_LEFT);
+                    $subjectLine = 'AMIS Family Registry Report - ' . $lastName . ' - Application #' . $appNo;
+
+                    Mail::send('emails.applicants-registry', [
+                        'messageBody' => $messageBody,
+                        'families'    => [$family],
+                    ], function ($message) use ($recipientEmail, $subjectLine, $attachments) {
+                        $message->to($recipientEmail)
+                            ->subject($subjectLine);
+                        
+                        // Clear reply/thread headers to prevent grouping in Gmail
+                        $symfonyMessage = $message->getSymfonyMessage();
+                        $headers = $symfonyMessage->getHeaders();
+                        $headers->remove('In-Reply-To');
+                        $headers->remove('References');
+                        $headers->remove('threadId');
+                        $headers->remove('reply_message_id');
+                        
+                        // Add unique header to force separate thread
+                        $headers->addTextHeader('X-Entity-Ref-ID', uniqid('amis-', true));
+                        
+                        foreach ($attachments as $attachment) {
+                            $message->attach($attachment['path'], [
+                                'as'   => $attachment['as'],
+                                'mime' => $attachment['mime'],
+                            ]);
+                        }
+                    });
+
+                    // Mark email as sent in database
+                    foreach ($family['children'] as $child) {
+                        $child->update(['registry_email_sent_at' => now()]);
+                    }
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Successfully sent ' . count($families) . ' families registry email report(s) to ' . $recipientEmail,
+            ]);
+        } catch (\Throwable $exception) {
+            Log::error('Failed to send registry email: ' . $exception->getMessage(), [
+                'trace' => $exception->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send email: ' . $exception->getMessage(),
+            ], 500);
+        }
     }
 
     public function updateDiscount(Request $request, EnrollmentApplicant $applicant)

@@ -7,9 +7,10 @@
             ->values();
 
         $crumbs = $segments->map(function ($segment, $index) use ($segments) {
+            $path = $segments->slice(0, $index + 1)->implode('/');
             return [
                 'label' => ucwords(str_replace(['-', '_'], ' ', $segment)),
-                'href' => $index === $segments->count() - 1 ? null : url($segment),
+                'href' => $index === $segments->count() - 1 ? null : url($path),
             ];
         })->all();
     }

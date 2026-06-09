@@ -181,6 +181,7 @@ class ApplicationQuery
             'pending_count' => $children->count() - $approved - $rejected,
             'payment_status' => $this->familyPaymentStatus($children),
             'overall_status' => $rejected > 0 ? 'Rejected' : ($approved === $children->count() ? 'Approved' : 'Under Review'),
+            'email_sent_at' => $children->max('registry_email_sent_at'),
             'representative' => $representative,
             'children' => $children,
         ];
