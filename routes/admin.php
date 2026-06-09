@@ -65,6 +65,8 @@ Route::name('admin.')->group(function () {
             Route::get('/analytics', [EnrollmentAnalyticsController::class, 'analytics'])->name('analytics');
             Route::get('/reports', [EnrollmentAnalyticsController::class, 'reports'])->name('reports');
             Route::get('/reports/export', [EnrollmentAnalyticsController::class, 'export'])->name('reports.export');
+            Route::get('/masters-list', [EnrollmentAnalyticsController::class, 'mastersList'])->name('masters-list');
+            Route::get('/masters-list/export', [EnrollmentAnalyticsController::class, 'mastersListExport'])->name('masters-list.export');
         });
 
         Route::prefix('applications')->name('applications.')->group(function () {

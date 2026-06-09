@@ -93,9 +93,6 @@ class ApplicantController extends Controller
             'approvedCount' => EnrollmentApplicant::where('status', 'approved')->count(),
             'reviewQueueCount' => EnrollmentApplicant::whereIn('status', ['ready_for_submission', 'pending', 'submitted', 'under_review'])->count(),
             'rejectedCount' => EnrollmentApplicant::where('status', 'rejected')->count(),
-            'f2fCount' => EnrollmentApplicant::whereNotIn('status', ['draft'])->where('learning_mode', 'Face-to-Face')->count(),
-            'flexible1stCount' => EnrollmentApplicant::whereNotIn('status', ['draft'])->where('learning_mode', 'like', '%1st Shift%')->count(),
-            'flexible2ndCount' => EnrollmentApplicant::whereNotIn('status', ['draft'])->where('learning_mode', 'like', '%2nd Shift%')->count(),
         ];
     }
 

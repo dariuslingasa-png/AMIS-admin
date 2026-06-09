@@ -10,7 +10,7 @@
             ],
         ],
         [
-            'active' => request()->routeIs('admin.applications.*') || request()->routeIs('admin.applicants.*') || request()->routeIs('admin.enrollment.index'),
+            'active' => (request()->routeIs('admin.applications.*') || request()->routeIs('admin.applicants.*') || request()->routeIs('admin.enrollment.index') || request()->routeIs('admin.enrollment.masters-list')) && request('workspace') !== 'reports',
             'icon' => 'clipboard-check', 'iconClass' => 'text-emerald-600', 'headerClass' => 'text-emerald-700', 'activeClass' => 'sidebar-link-active-emerald', 'title' => 'Applications',
             'links' => [
                 ['Dashboard', 'layout-dashboard', route('admin.applications.dashboard'), request()->routeIs('admin.applications.dashboard')],
@@ -18,6 +18,7 @@
                 ['Applicant Review', 'file-search', route('admin.applications.review'), request()->routeIs('admin.applications.review') || request()->routeIs('admin.applicants.show')],
                 ['Requirements', 'list-checks', route('admin.applications.requirements'), request()->routeIs('admin.applications.requirements')],
                 ['Approval Workflow', 'shield-check', route('admin.applications.approval'), request()->routeIs('admin.applications.approval')],
+                ['Enrollee Masters List', 'list', route('admin.enrollment.masters-list'), request()->routeIs('admin.enrollment.masters-list') && request('workspace') !== 'reports'],
             ],
         ],
         [
@@ -72,10 +73,11 @@
             ],
         ],
         [
-            'active' => request()->routeIs('admin.enrollment.reports'),
+            'active' => request()->routeIs('admin.enrollment.reports') || (request()->routeIs('admin.enrollment.masters-list') && request('workspace') === 'reports'),
             'icon' => 'file-down', 'iconClass' => 'text-slate-600', 'headerClass' => 'text-slate-700', 'activeClass' => 'sidebar-link-active-slate', 'title' => 'Reports',
             'links' => [
-                ['Export', 'download', route('admin.enrollment.reports'), true],
+                ['Enrollee Masters List', 'list', route('admin.enrollment.masters-list', ['workspace' => 'reports']), request()->routeIs('admin.enrollment.masters-list') && request('workspace') === 'reports'],
+                ['Export', 'download', route('admin.enrollment.reports'), request()->routeIs('admin.enrollment.reports')],
                 ['PDF Reports', 'file-text', route('admin.enrollment.reports'), false],
                 ['Excel Reports', 'sheet', route('admin.enrollment.reports'), false],
                 ['Registrar / Finance', 'briefcase-business', route('admin.enrollment.reports'), false],

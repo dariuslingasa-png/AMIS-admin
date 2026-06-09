@@ -147,4 +147,65 @@ class EnrollmentAnalyticsController extends Controller
             fclose($handle);
         }, $fileName, ['Content-Type' => 'text/csv']);
     }
+
+    public function mastersList(Request $request)
+    {
+        $query = $this->analyticsService->reportQuery($request);
+        $filtered = clone $query;
+
+        $reports = $query->latest()->paginate(20);
+
+        // Compute learning mode totals for the filtered set of enrollees
+        $f2fCount = (clone $filtered)->where('learning_mode', 'Face-to-Face')->count();
+        $flexible1stCount = (clone $filtered)->where('learning_mode', 'like', '%1st Shift%')->count();
+        $flexible2ndCount = (clone $filtered)->where('learning_mode', 'like', '%2nd Shift%')->count();
+
+        return view('admin.enrollment.masters-list', [
+            'reports' => $reports,
+            'summary' => [
+                'total' => (clone $filtered)->count(),
+                'approved' => (clone $filtered)->where('status', 'approved')->count(),
+                'under_review' => (clone $filtered)->where('status', 'under_review')->count(),
+                'missing_payment' => (clone $filtered)->where(function (Builder $query) {
+                    $query->whereDoesntHave('payment')
+                        ->orWhereHas('payment', fn (Builder $payment) => $payment->whereNull('receipt_url'));
+                })->count(),
+                'f2f' => $f2fCount,
+                'flexible_1st' => $flexible1stCount,
+                'flexible_2nd' => $flexible2ndCount,
+            ],
+            'gradeLevels' => ApplicationQuery::GRADE_LEVELS,
+            'statusLabels' => EnrollmentReviewService::STATUS_LABELS,
+            'statusBadges' => EnrollmentReviewService::STATUS_BADGES,
+            'pmBadges' => EnrollmentReviewService::PAYMENT_BADGES,
+        ]);
+    }
+
+    public function mastersListExport(Request $request)
+    {
+        $fileName = 'enrollee-masters-list-'.now()->format('Ymd-His').'.csv';
+        $rows = $this->analyticsService->reportQuery($request)->latest()->get();
+
+        return response()->streamDownload(function () use ($rows) {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, ['Application ID', 'Applicant', 'Email', 'Grade', 'Type', 'Learning Mode', 'Status', 'Academic Proof', 'Payment Status', 'Submitted']);
+
+            foreach ($rows as $applicant) {
+                fputcsv($handle, [
+                    str_pad((string) $applicant->id, 4, '0', STR_PAD_LEFT),
+                    trim(strtoupper(($applicant->last_name ?? '').', '.($applicant->first_name ?? '').' '.($applicant->middle_name ?? ''))),
+                    $applicant->user->email ?? $applicant->email ?? '',
+                    $applicant->grade_level ?? '',
+                    $applicant->student_type ?? '',
+                    $applicant->learning_mode ?? '',
+                    EnrollmentReviewService::STATUS_LABELS[$applicant->status] ?? $applicant->status,
+                    $applicant->report_card_url ? 'Report Card' : ($applicant->affidavit_url ? 'Affidavit' : 'Missing'),
+                    $applicant->payment?->status ? ucfirst($applicant->payment->status) : 'Missing',
+                    $applicant->created_at?->format('Y-m-d H:i:s'),
+                ]);
+            }
+
+            fclose($handle);
+        }, $fileName, ['Content-Type' => 'text/csv']);
+    }
 }
