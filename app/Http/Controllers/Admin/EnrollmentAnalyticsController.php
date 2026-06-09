@@ -93,7 +93,18 @@ class EnrollmentAnalyticsController extends Controller
         $filtered = clone $query;
 
         $isPrint = $request->filled('print');
-        $reports = $isPrint ? $query->latest()->get() : $query->latest()->paginate(20);
+        if ($isPrint) {
+            $reports = $query->orderByRaw("CASE 
+                WHEN learning_mode = 'Face-to-Face' THEN 1
+                WHEN learning_mode LIKE '%1st Shift%' THEN 2
+                WHEN learning_mode LIKE '%2nd Shift%' THEN 3
+                ELSE 4
+            END ASC")
+            ->orderBy('id', 'desc')
+            ->get();
+        } else {
+            $reports = $query->latest()->paginate(20);
+        }
 
         // Compute learning mode totals for the filtered set of enrollees
         $f2fCount = (clone $filtered)->where('learning_mode', 'Face-to-Face')->count();
@@ -202,7 +213,14 @@ class EnrollmentAnalyticsController extends Controller
         $reports = null;
 
         if ($isGradeFocused) {
-            $reports = $query->latest()->get();
+            $reports = $query->orderByRaw("CASE 
+                WHEN learning_mode = 'Face-to-Face' THEN 1
+                WHEN learning_mode LIKE '%1st Shift%' THEN 2
+                WHEN learning_mode LIKE '%2nd Shift%' THEN 3
+                ELSE 4
+            END ASC")
+            ->orderBy('id', 'desc')
+            ->get();
         } else {
             $reports = $query->latest()->paginate(20);
         }

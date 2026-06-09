@@ -176,7 +176,7 @@
                                 <!-- Applicant Name -->
                                 <td class="px-4 py-4">
                                     <span class="font-extrabold text-slate-900 uppercase tracking-wide text-[11px]">
-                                        {{ trim(($applicant->first_name ?? '').' '.($applicant->last_name ?? '')) ?: 'Applicant' }}
+                                        {{ html_entity_decode(trim(($applicant->first_name ?? '').' '.($applicant->last_name ?? '')), ENT_QUOTES, 'UTF-8') ?: 'Applicant' }}
                                     </span>
                                 </td>
 
