@@ -166,8 +166,6 @@ class EnrollmentAnalyticsController extends Controller
         $query = $this->analyticsService->reportQuery($request);
         $filtered = clone $query;
 
-        $reports = $query->latest()->paginate(20);
-
         // Compute learning mode totals for the filtered set of enrollees
         $f2fCount = (clone $filtered)->where('learning_mode', 'Face-to-Face')->count();
         $flexible1stCount = (clone $filtered)->where('learning_mode', 'like', '%1st Shift%')->count();
