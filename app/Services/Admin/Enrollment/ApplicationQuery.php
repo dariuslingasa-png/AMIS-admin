@@ -158,6 +158,17 @@ class ApplicationQuery
             $query->where('grade_level', $request->grade);
         }
 
+        if ($request->filled('learning_mode')) {
+            $mode = (string) $request->input('learning_mode');
+            if ($mode === 'f2f') {
+                $query->where('learning_mode', 'Face-to-Face');
+            } elseif ($mode === 'flexible_1st') {
+                $query->where('learning_mode', 'like', '%1st Shift%');
+            } elseif ($mode === 'flexible_2nd') {
+                $query->where('learning_mode', 'like', '%2nd Shift%');
+            }
+        }
+
         return $query->orderByDesc('id');
     }
 

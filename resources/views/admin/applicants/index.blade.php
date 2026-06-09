@@ -259,8 +259,53 @@
                 </div>
             </div>
 
+            <!-- Learning Mode Totals Panel -->
+            <div class="mb-6 grid grid-cols-1 md:grid-cols-3 gap-5">
+                <!-- Face to Face Card -->
+                <div class="group relative overflow-hidden rounded-xl border border-emerald-100 bg-emerald-50/10 p-5 transition-all duration-300 hover:-translate-y-0.5 hover:bg-emerald-50/20 hover:shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <span class="text-xs font-extrabold uppercase tracking-wider text-emerald-600">Face-to-Face (F2F)</span>
+                            <h3 class="mt-2 text-3xl font-black tracking-tight text-emerald-950">{{ number_format($f2fCount) }}</h3>
+                        </div>
+                        <div class="rounded-lg bg-emerald-100/80 p-3 text-emerald-700 transition-transform duration-300 group-hover:scale-110">
+                            <i data-lucide="school" class="h-6 w-6"></i>
+                        </div>
+                    </div>
+                    <div class="absolute bottom-0 left-0 h-1 w-full bg-emerald-500/50 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
+                </div>
+
+                <!-- Flexible 1st Shift Card -->
+                <div class="group relative overflow-hidden rounded-xl border border-blue-100 bg-blue-50/10 p-5 transition-all duration-300 hover:-translate-y-0.5 hover:bg-blue-50/20 hover:shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <span class="text-xs font-extrabold uppercase tracking-wider text-blue-600">Flexible (1st Shift)</span>
+                            <h3 class="mt-2 text-3xl font-black tracking-tight text-blue-950">{{ number_format($flexible1stCount) }}</h3>
+                        </div>
+                        <div class="rounded-lg bg-blue-100/80 p-3 text-blue-700 transition-transform duration-300 group-hover:scale-110">
+                            <i data-lucide="sun" class="h-6 w-6"></i>
+                        </div>
+                    </div>
+                    <div class="absolute bottom-0 left-0 h-1 w-full bg-blue-500/50 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
+                </div>
+
+                <!-- Flexible 2nd Shift Card -->
+                <div class="group relative overflow-hidden rounded-xl border border-amber-100 bg-amber-50/10 p-5 transition-all duration-300 hover:-translate-y-0.5 hover:bg-amber-50/20 hover:shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <span class="text-xs font-extrabold uppercase tracking-wider text-amber-600">Flexible (2nd Shift)</span>
+                            <h3 class="mt-2 text-3xl font-black tracking-tight text-amber-950">{{ number_format($flexible2ndCount) }}</h3>
+                        </div>
+                        <div class="rounded-lg bg-amber-100/80 p-3 text-amber-700 transition-transform duration-300 group-hover:scale-110">
+                            <i data-lucide="moon" class="h-6 w-6"></i>
+                        </div>
+                    </div>
+                    <div class="absolute bottom-0 left-0 h-1 w-full bg-amber-500/50 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
+                </div>
+            </div>
+
             <form method="GET" class="mb-5 grid grid-cols-12 gap-3">
-                <label class="relative col-span-4">
+                <label class="relative col-span-3">
                     <i data-lucide="search" class="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-slate-400"></i>
                     <input name="search" value="{{ request('search') }}" placeholder="Search family, child, or email" class="{{ $inputClass }} w-full pl-9">
                 </label>
@@ -276,6 +321,12 @@
                         <option value="{{ $grade }}" @selected(request('grade') === $grade)>{{ $grade }}</option>
                     @endforeach
                 </select>
+                <select name="learning_mode" class="{{ $inputClass }} col-span-2 w-full" onchange="this.form.submit()">
+                    <option value="">All modes</option>
+                    <option value="f2f" @selected(request('learning_mode') === 'f2f')>Face-to-Face</option>
+                    <option value="flexible_1st" @selected(request('learning_mode') === 'flexible_1st')>Flexible - 1st Shift</option>
+                    <option value="flexible_2nd" @selected(request('learning_mode') === 'flexible_2nd')>Flexible - 2nd Shift</option>
+                </select>
                 <label class="relative col-span-2">
                     <select name="sort" class="{{ $inputClass }} w-full" onchange="this.form.submit()">
                         <option value="number" @selected($currentSort === 'number')>Family no.</option>
@@ -286,14 +337,10 @@
                         <option value="status" @selected($currentSort === 'status')>Overall status</option>
                     </select>
                 </label>
-                <select name="dir" class="{{ $inputClass }} col-span-1 w-full px-3" onchange="this.form.submit()">
+                <select name="dir" class="{{ $inputClass }} col-span-1 w-full px-2 text-xs" onchange="this.form.submit()">
                     <option value="desc" @selected($currentDir === 'desc')>Desc</option>
                     <option value="asc" @selected($currentDir === 'asc')>Asc</option>
                 </select>
-                <button class="col-span-1 inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-800">
-                    <i data-lucide="sliders-horizontal" class="h-4 w-4"></i>
-                    Apply
-                </button>
             </form>
 
             <div class="overflow-hidden rounded-md border border-slate-200">
@@ -304,6 +351,7 @@
                             <th class="px-5 py-4 font-bold">Student Name</th>
                             <th class="w-28 px-5 py-4 font-bold">Type</th>
                             <th class="w-36 px-5 py-4 font-bold">Grade</th>
+                            <th class="w-40 px-5 py-4 font-bold">Learning Mode</th>
                             <th class="w-44 px-5 py-4 font-bold">Enrollment Status</th>
                             <th class="w-36 px-5 py-4 text-right font-bold">Action</th>
                         </tr>
@@ -320,7 +368,7 @@
                                 $discountLabel = $maxDiscount > 0 ? 'SIBLINGS DISCOUNT '.rtrim(rtrim(number_format($maxDiscount, 2), '0'), '.').'%' : 'SIBLINGS DISCOUNT';
                             @endphp
                             <tr>
-                                <td colspan="6" class="px-0 py-0">
+                                <td colspan="7" class="px-0 py-0">
                                     <div class="border-l-4 px-5 py-3 {{ $accent['wrap'] }}">
                                         <div class="flex items-center justify-between gap-4">
                                             <div class="flex items-center gap-3">
@@ -397,6 +445,25 @@
                                         <span class="rounded-md px-2.5 py-1 text-xs font-extrabold {{ $typeClass($studentType) }}">{{ $studentType }}</span>
                                     </td>
                                     <td class="px-5 py-4 font-bold text-slate-700">{{ $child->grade_level ?? 'Not provided' }}</td>
+                                    <td class="px-5 py-4">
+                                        @if(empty($child->learning_mode))
+                                            <span class="text-slate-400 font-medium">-</span>
+                                        @elseif($child->learning_mode === 'Face-to-Face')
+                                            <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-bold text-emerald-700 border border-emerald-100">
+                                                F2F
+                                            </span>
+                                        @elseif(str_contains($child->learning_mode, '1st Shift'))
+                                            <span class="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-xs font-bold text-blue-700 border border-blue-100">
+                                                Flex (1st)
+                                            </span>
+                                        @elseif(str_contains($child->learning_mode, '2nd Shift'))
+                                            <span class="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-bold text-amber-700 border border-amber-100">
+                                                Flex (2nd)
+                                            </span>
+                                        @else
+                                            <span class="text-slate-600 font-medium text-xs">{{ $child->learning_mode }}</span>
+                                        @endif
+                                    </td>
                                     <td class="px-5 py-4"><x-badge :color="$childStatusColor[$child->status] ?? 'blue'">{{ $statusLabel }}</x-badge></td>
                                     <td class="px-5 py-4 text-right">
                                         <a href="{{ route('admin.applicants.show', $child) }}" title="View child application" class="inline-flex h-9 items-center gap-2 rounded-md border border-emerald-100 bg-white px-3 text-xs font-bold text-emerald-700 transition hover:border-emerald-200 hover:bg-emerald-50">
@@ -407,7 +474,7 @@
                                 </tr>
                             @endforeach
                         @empty
-                            <tr><td colspan="6" class="px-5 py-12 text-center text-sm text-slate-500">No family applications found.</td></tr>
+                            <tr><td colspan="7" class="px-5 py-12 text-center text-sm text-slate-500">No family applications found.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
