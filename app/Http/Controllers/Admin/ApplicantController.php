@@ -242,15 +242,29 @@ class ApplicantController extends Controller
             } else {
                 foreach ($families as $family) {
                     $attachments = [];
-                    foreach ($family['children'] as $c) {
-                        if ($c->payment && $c->payment->receipt_url) {
-                            $rUrl = $c->payment->receipt_url;
-                            $localPath = base_path('../amis_enrollment/storage/app/public/' . ltrim($rUrl, '/'));
-                            if (!file_exists($localPath)) {
-                                $localPath = storage_path('app/public/' . ltrim($rUrl, '/'));
+                    $payments = $family['family_payments'] ?? collect();
+                    foreach ($payments as $p) {
+                        if ($p->receipt_url) {
+                            $rUrl = $p->receipt_url;
+                            
+                            // Check multiple possible paths to locate the file in local/cPanel environment
+                            $searchPaths = [
+                                base_path('../amis_enrollment/storage/app/public/' . ltrim($rUrl, '/')),
+                                base_path('../amis_enrollment/public/storage/' . ltrim($rUrl, '/')),
+                                storage_path('app/public/' . ltrim($rUrl, '/')),
+                                public_path('storage/' . ltrim($rUrl, '/')),
+                                public_path(ltrim($rUrl, '/')),
+                            ];
+                            
+                            $localPath = null;
+                            foreach ($searchPaths as $path) {
+                                if (file_exists($path)) {
+                                    $localPath = $path;
+                                    break;
+                                }
                             }
                             
-                            if (file_exists($localPath)) {
+                            if ($localPath) {
                                 $ext = strtolower(pathinfo($localPath, PATHINFO_EXTENSION));
                                 $mime = match ($ext) {
                                     'pdf' => 'application/pdf',

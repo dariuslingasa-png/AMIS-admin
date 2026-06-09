@@ -170,6 +170,15 @@ class ApplicationQuery
         $approved = $children->where('status', 'approved')->count();
         $rejected = $children->where('status', 'rejected')->count();
 
+        // Fetch family payments directly
+        $familyPayments = \App\Models\Payment::where(function ($query) use ($children, $representative) {
+            if ($representative->user_id) {
+                $query->where('user_id', $representative->user_id);
+            } else {
+                $query->whereIn('enrollment_applicant_id', $children->pluck('id'));
+            }
+        })->get();
+
         return [
             'family_no' => $familyId,
             'family_label' => $this->familyLabel($representative),
@@ -179,11 +188,12 @@ class ApplicationQuery
             'children_count' => $children->count(),
             'approved_count' => $approved,
             'pending_count' => $children->count() - $approved - $rejected,
-            'payment_status' => $this->familyPaymentStatus($children),
+            'payment_status' => $this->familyPaymentStatus($children, $familyPayments),
             'overall_status' => $rejected > 0 ? 'Rejected' : ($approved === $children->count() ? 'Approved' : 'Under Review'),
             'email_sent_at' => $children->max('registry_email_sent_at'),
             'representative' => $representative,
             'children' => $children,
+            'family_payments' => $familyPayments,
         ];
     }
 
@@ -221,9 +231,9 @@ class ApplicationQuery
         return trim($last).', '.trim($first);
     }
 
-    private function familyPaymentStatus(SupportCollection $children): string
+    private function familyPaymentStatus(SupportCollection $children, $familyPayments = null): string
     {
-        $statuses = $children->map(fn ($child) => $child->payment->status ?? null);
+        $statuses = $familyPayments ? $familyPayments->pluck('status') : $children->map(fn ($child) => $child->payment->status ?? null);
         if ($statuses->contains('verified')) {
             return 'Paid';
         }

@@ -51,8 +51,9 @@
 
                                 // Determine if family has payment proof
                                 $hasFamilyProof = false;
-                                foreach ($family['children'] as $child) {
-                                    if ($child->payment && $child->payment->receipt_url) {
+                                $payments = $family['family_payments'] ?? collect();
+                                foreach ($payments as $p) {
+                                    if ($p->receipt_url) {
                                         $hasFamilyProof = true;
                                         break;
                                     }
