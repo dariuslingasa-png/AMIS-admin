@@ -66,16 +66,16 @@
                                             <h2 style="margin: 0; font-size: 28px; font-weight: 800; color: #1e293b; text-transform: uppercase; letter-spacing: 0.05em; font-family: 'Outfit', Arial, sans-serif;">
                                                 FAMILY OF {{ $lastName }}
                                             </h2>
-                                            <div style="font-size: 13px; color: #64748b; margin-top: 8px; line-height: 1.4; font-weight: 500;">
+                                            <div style="font-size: 16px; color: #64748b; margin-top: 8px; line-height: 1.4; font-weight: 500;">
                                                 Parent: {{ $family['parent_name'] }} &bull; Email: {{ $family['parent_email'] }}
                                             </div>
                                             <div style="margin-top: 10px;">
                                                 @if($hasFamilyProof)
-                                                    <span style="font-size: 11px; font-weight: bold; padding: 4px 10px; border-radius: 6px; background-color: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; display: inline-block; text-transform: uppercase;">
+                                                    <span style="font-size: 14px; font-weight: bold; padding: 6px 12px; border-radius: 6px; background-color: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; display: inline-block; text-transform: uppercase;">
                                                         Payment Proof: Attached
                                                     </span>
                                                 @else
-                                                    <span style="font-size: 11px; font-weight: bold; padding: 4px 10px; border-radius: 6px; background-color: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; display: inline-block; text-transform: uppercase;">
+                                                    <span style="font-size: 14px; font-weight: bold; padding: 6px 12px; border-radius: 6px; background-color: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; display: inline-block; text-transform: uppercase;">
                                                         No Payment Proof Uploaded
                                                     </span>
                                                 @endif
