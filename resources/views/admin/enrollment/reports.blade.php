@@ -59,9 +59,41 @@
             </div>
         </div>
 
+        @php
+            $isPrint = request()->filled('print');
+        @endphp
+
+        <!-- Hidden Print Header -->
+        <div class="hidden print:block mb-6 text-center border-b-2 border-slate-300 pb-4">
+            <h1 class="uppercase tracking-tight text-slate-900 font-bold" style="font-family: Arial, sans-serif; font-size: 14px;">ENROLLEE MASTERS LIST</h1>
+            <h2 class="uppercase tracking-wide text-slate-700 font-bold mt-1" style="font-family: Arial, sans-serif; font-size: 11px;">
+                @if(request('grade'))
+                    Grade Level: {{ request('grade') }}
+                @else
+                    All Grades
+                @endif
+                @if(request('learning_mode'))
+                    | Mode: {{ request('learning_mode') === 'f2f' ? 'Face-to-Face' : (request('learning_mode') === 'flexible_1st' ? 'Flexible (1st Shift)' : 'Flexible (2nd Shift)') }}
+                @endif
+            </h2>
+            <div class="mt-3 flex justify-center gap-6 text-slate-500 font-normal" style="font-family: Arial, sans-serif; font-size: 9px;">
+                <span>Total Enrollees: {{ $summary['total'] }}</span>
+                <span>Face-to-Face: {{ $summary['f2f'] }}</span>
+                <span>Flexible (1st Shift): {{ $summary['flexible_1st'] }}</span>
+                <span>Flexible (2nd Shift): {{ $summary['flexible_2nd'] }}</span>
+            </div>
+        </div>
+
         <x-card title="Enrollment Reports" subtitle="Filtered enrollment export and masters list">
+            <x-slot:actions>
+                <a href="{{ route('admin.enrollment.reports', array_merge(request()->query(), ['print' => 1])) }}" target="_blank" class="inline-flex items-center gap-2 rounded-lg bg-slate-700 hover:bg-slate-800 text-white font-extrabold text-[11px] px-4 py-2 transition shadow-3xs cursor-pointer print:hidden uppercase tracking-wider">
+                    <i data-lucide="printer" class="h-3.5 w-3.5"></i>
+                    Print / Save PDF
+                </a>
+            </x-slot:actions>
+
             <!-- Filter Form -->
-            <form method="GET" class="mb-6 grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+            <form method="GET" class="mb-6 grid grid-cols-1 sm:grid-cols-12 gap-3 items-end print:hidden">
                 <!-- Search -->
                 <label class="relative col-span-1 sm:col-span-3">
                     <span class="block text-xs font-bold text-slate-500 mb-1.5">Search</span>
@@ -109,60 +141,273 @@
                     <a href="{{ route('admin.enrollment.reports') }}" class="flex h-10 w-1/2 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 font-semibold text-xs transition" title="Clear Filters">
                         <i data-lucide="rotate-ccw" class="h-4 w-4"></i>
                     </a>
-                    <a href="{{ route('admin.enrollment.reports.export', request()->query()) }}" class="flex h-10 w-1/2 items-center justify-center rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-xs transition shadow-3xs" title="Export CSV">
+                    <a href="{{ route('admin.enrollment.reports.export', request()->query()) }}" class="flex h-10 w-1/2 items-center justify-center rounded-lg bg-emerald-700 hover:bg-emerald-805 text-white font-semibold text-xs transition shadow-3xs" title="Export CSV">
                         <i data-lucide="download" class="h-4 w-4"></i>
                     </a>
                 </div>
             </form>
 
-            <table class="amis-table">
-                <thead>
-                    <tr>
-                        <th>Applicant</th>
-                        <th>Email</th>
-                        <th>Grade</th>
-                        <th>Learning Mode</th>
-                        <th>Status</th>
-                        <th>Submitted</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse ($reports as $applicant)
+            <div class="premium-table-wrap border border-slate-100 rounded-xl overflow-hidden print:border-slate-350 print:rounded-none">
+                <table class="amis-table w-full">
+                    <thead>
                         <tr>
-                            <td>{{ trim(($applicant->first_name ?? '').' '.($applicant->last_name ?? '')) ?: 'Applicant' }}</td>
-                            <td>{{ $applicant->user->email ?? $applicant->email ?? '-' }}</td>
-                            <td>{{ $applicant->grade_level ?? '-' }}</td>
-                            <td>
-                                @if(empty($applicant->learning_mode))
-                                    <span class="text-slate-400 font-medium">-</span>
-                                @elseif($applicant->learning_mode === 'Face-to-Face')
-                                    <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700 border border-emerald-100">
-                                        <i data-lucide="school" class="h-3 w-3"></i>
-                                        F2F
-                                    </span>
-                                @elseif(str_contains($applicant->learning_mode, '1st Shift'))
-                                    <span class="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700 border border-blue-100">
-                                        <i data-lucide="sun" class="h-3 w-3"></i>
-                                        Flex (1st)
-                                    </span>
-                                @elseif(str_contains($applicant->learning_mode, '2nd Shift'))
-                                    <span class="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700 border border-amber-100">
-                                        <i data-lucide="moon" class="h-3 w-3"></i>
-                                        Flex (2nd)
-                                    </span>
-                                @else
-                                    <span class="text-slate-600 font-medium">{{ $applicant->learning_mode }}</span>
-                                @endif
-                            </td>
-                            <td>{{ $statusLabels[$applicant->status] ?? $applicant->status ?? '-' }}</td>
-                            <td>{{ optional($applicant->created_at)->format('M d, Y') }}</td>
+                            <th class="w-12 px-4 py-3 text-center">#</th>
+                            <th class="px-4 py-3">Applicant</th>
+                            <th class="px-4 py-3">Email</th>
+                            <th class="px-4 py-3">Grade</th>
+                            <th class="px-4 py-3">Learning Mode</th>
+                            <th class="px-4 py-3">Status</th>
+                            <th class="px-4 py-3">Submitted</th>
                         </tr>
-                    @empty
-                        <tr><td colspan="6" class="text-center text-gray-500">No report rows found.</td></tr>
-                    @endforelse
-                </tbody>
-            </table>
-            <div class="mt-4">{{ $reports->links() }}</div>
+                    </thead>
+                    <tbody>
+                        @php
+                            $startNumber = ($reports instanceof \Illuminate\Pagination\LengthAwarePaginator) 
+                                ? ($reports->currentPage() - 1) * $reports->perPage() 
+                                : 0;
+                        @endphp
+                        @forelse ($reports as $applicant)
+                            <tr class="hover:bg-gray-50/50 transition-colors">
+                                <!-- Row Number -->
+                                <td class="px-4 py-4 text-center font-bold text-slate-400 text-xs">
+                                    {{ $startNumber + $loop->iteration }}
+                                </td>
+
+                                <!-- Applicant Name -->
+                                <td class="px-4 py-4">
+                                    <span class="font-extrabold text-slate-900 uppercase tracking-wide text-[11px]">
+                                        {{ trim(($applicant->first_name ?? '').' '.($applicant->last_name ?? '')) ?: 'Applicant' }}
+                                    </span>
+                                </td>
+
+                                <!-- Email -->
+                                <td class="px-4 py-4">
+                                    <span class="font-semibold text-slate-600 text-xs">
+                                        {{ $applicant->user->email ?? $applicant->email ?? '-' }}
+                                    </span>
+                                </td>
+
+                                <!-- Grade -->
+                                <td class="px-4 py-4">
+                                    <span class="font-bold text-slate-700 text-xs">
+                                        {{ $applicant->grade_level ?? '-' }}
+                                    </span>
+                                </td>
+
+                                <!-- Learning Mode Badge -->
+                                <td class="px-4 py-4">
+                                    @if(empty($applicant->learning_mode))
+                                        <span class="text-slate-400 font-medium text-xs">-</span>
+                                    @elseif($applicant->learning_mode === 'Face-to-Face')
+                                        <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-extrabold text-emerald-700 border border-emerald-100">
+                                            <i data-lucide="school" class="h-3 w-3"></i>
+                                            F2F
+                                        </span>
+                                    @elseif(str_contains($applicant->learning_mode, '1st Shift'))
+                                        <span class="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-extrabold text-blue-700 border border-blue-100">
+                                            <i data-lucide="sun" class="h-3 w-3"></i>
+                                            Flex (1st)
+                                        </span>
+                                    @elseif(str_contains($applicant->learning_mode, '2nd Shift'))
+                                        <span class="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-extrabold text-amber-700 border border-amber-100">
+                                            <i data-lucide="moon" class="h-3 w-3"></i>
+                                            Flex (2nd)
+                                        </span>
+                                    @else
+                                        <span class="text-slate-650 font-semibold text-xs">{{ $applicant->learning_mode }}</span>
+                                    @endif
+                                </td>
+
+                                <!-- Status Badge -->
+                                <td class="px-4 py-4">
+                                    @php
+                                        $status = $applicant->status;
+                                        $label = $statusLabels[$status] ?? $status;
+                                    @endphp
+                                    @if($status === 'approved')
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-100">
+                                            {{ $label }}
+                                        </span>
+                                    @elseif($status === 'rejected' || $status === 'cancelled')
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-50 text-rose-700 border border-rose-100">
+                                            {{ $label }}
+                                        </span>
+                                    @elseif($status === 'under_review')
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-100">
+                                            {{ $label }}
+                                        </span>
+                                    @elseif($status === 'submitted' || $status === 'ready_for_submission')
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                                            {{ $label }}
+                                        </span>
+                                    @elseif($status === 'pending')
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-700 border border-amber-100">
+                                            {{ $label }}
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-gray-50 text-gray-600 border border-gray-150">
+                                            {{ $label }}
+                                        </span>
+                                    @endif
+                                </td>
+
+                                <!-- Date Submitted -->
+                                <td class="px-4 py-4">
+                                    <span class="font-semibold text-slate-500 text-xs">
+                                        {{ optional($applicant->created_at)->format('M d, Y') }}
+                                    </span>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="7" class="px-4 py-8 text-center text-gray-400">
+                                    <div class="empty-state">
+                                        <i data-lucide="inbox" class="h-8 w-8 text-slate-350"></i>
+                                        <p class="font-semibold text-sm">No report rows found.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+            @if(!$isPrint)
+                <div class="mt-4">{{ $reports->links() }}</div>
+            @endif
         </x-card>
     </div>
+
+    <!-- Print styling configuration -->
+    <style>
+        @media print {
+            /* Hide all navigation, sidebars, dashboard links, buttons, and filters */
+            #default-sidebar, 
+            .admin-sidebar, 
+            .admin-topbar, 
+            topbar, 
+            aside, 
+            form, 
+            nav, 
+            .breadcrumbs, 
+            .flash-messages, 
+            footer, 
+            .print\:hidden,
+            .module-dashboard-link,
+            .sidebar-section-container,
+            .sidebar-profile-card,
+            .admin-shell > a,
+            [data-lucide="arrow-left"] {
+                display: none !important;
+            }
+
+            /* Reset container styling for standard page layout */
+            .admin-content, 
+            .admin-shell, 
+            body, 
+            main, 
+            .mx-auto,
+            .space-y-6 {
+                margin: 0 !important;
+                padding: 0 !important;
+                background: transparent !important;
+                min-width: auto !important;
+                width: 100% !important;
+                box-shadow: none !important;
+                font-family: Arial, sans-serif !important;
+            }
+
+            .admin-content {
+                margin-left: 0 !important;
+            }
+
+            /* Make the hidden print block visible */
+            .print\:block {
+                display: block !important;
+            }
+
+            /* Remove boxes, shadows, and borders from page wraps */
+            .bg-white, .amis-card {
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                background: transparent !important;
+            }
+
+            .border-b {
+                border-bottom: none !important;
+            }
+
+            /* Expand scrolled tables to print full rows without clipping */
+            .premium-table-wrap {
+                max-height: none !important;
+                overflow: visible !important;
+                border: 1px solid #cbd5e1 !important;
+                border-radius: 0 !important;
+            }
+
+            .amis-table {
+                border-collapse: collapse !important;
+                width: 100% !important;
+                font-family: Arial, sans-serif !important;
+            }
+
+            /* Table Header: 10px Bold */
+            .amis-table th {
+                position: static !important;
+                background: #f8fafc !important;
+                border-bottom: 2px solid #475569 !important;
+                color: #000000 !important;
+                font-family: Arial, sans-serif !important;
+                font-weight: bold !important;
+                font-size: 10px !important;
+                padding: 6px 8px !important;
+                text-transform: uppercase !important;
+            }
+
+            /* Table Content: 9px Regular */
+            .amis-table td,
+            .amis-table td span,
+            .amis-table td span.font-extrabold,
+            .amis-table td span.font-bold,
+            .amis-table td span.font-semibold {
+                font-family: Arial, sans-serif !important;
+                font-weight: normal !important;
+                font-size: 9px !important;
+                color: #000000 !important;
+                background: transparent !important;
+                border: none !important;
+                padding: 0 !important;
+                text-transform: none !important;
+                letter-spacing: normal !important;
+            }
+
+            /* Keep some padding on the td cells for readability */
+            .amis-table td {
+                border-bottom: 1px solid #e2e8f0 !important;
+                padding: 6px 8px !important;
+            }
+
+            /* Remove icons from learning mode badges in print to keep it clean */
+            .amis-table td svg,
+            .amis-table td i,
+            .amis-table td [data-lucide] {
+                display: none !important;
+            }
+
+            /* Page break prevention rules for clean printing */
+            .space-y-8 > div {
+                page-break-inside: avoid !important;
+            }
+        }
+    </style>
+
+    @if($isPrint)
+        <script>
+            window.addEventListener('DOMContentLoaded', () => {
+                setTimeout(() => {
+                    window.print();
+                }, 500);
+            });
+        </script>
+    @endif
 </x-admin-layout>

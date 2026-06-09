@@ -188,12 +188,12 @@
             <!-- Conditional List Displays -->
             @if ($isGradeFocused)
                 <!-- Hidden Print Header -->
-                <div class="hidden print:block mb-8 text-center border-b-2 border-slate-300 pb-5">
-                    <h1 class="text-3xl font-black text-slate-900 tracking-tight uppercase">ENROLLEE MASTERS LIST</h1>
-                    <h2 class="text-base font-extrabold text-slate-700 uppercase tracking-wide mt-2">
+                <div class="hidden print:block mb-6 text-center border-b-2 border-slate-300 pb-4">
+                    <h1 class="uppercase tracking-tight text-slate-900 font-bold" style="font-family: Arial, sans-serif; font-size: 14px;">ENROLLEE MASTERS LIST</h1>
+                    <h2 class="uppercase tracking-wide text-slate-700 font-bold mt-1" style="font-family: Arial, sans-serif; font-size: 11px;">
                         Grade Level: {{ request('grade') }}
                     </h2>
-                    <div class="mt-4 flex justify-center gap-6 text-xs font-bold text-slate-500">
+                    <div class="mt-3 flex justify-center gap-6 text-slate-500 font-normal" style="font-family: Arial, sans-serif; font-size: 9px;">
                         <span>Total Enrollees: {{ $summary['total'] }}</span>
                         <span>Face-to-Face: {{ $summary['f2f'] }}</span>
                         <span>Flexible (1st Shift): {{ $summary['flexible_1st'] }}</span>
@@ -262,6 +262,7 @@
                 min-width: auto !important;
                 width: 100% !important;
                 box-shadow: none !important;
+                font-family: Arial, sans-serif !important;
             }
 
             .admin-content {
@@ -291,23 +292,51 @@
             .premium-table {
                 border-collapse: collapse !important;
                 width: 100% !important;
+                font-family: Arial, sans-serif !important;
             }
 
+            /* Table Header: 10px Bold */
             .premium-table th {
                 position: static !important;
-                background: #f1f5f9 !important;
-                border-bottom: 2px solid #94a3b8 !important;
-                color: #0f172a !important;
-                font-weight: 800 !important;
+                background: #f8fafc !important;
+                border-bottom: 2px solid #475569 !important;
+                color: #000000 !important;
+                font-family: Arial, sans-serif !important;
+                font-weight: bold !important;
                 font-size: 10px !important;
+                padding: 6px 8px !important;
+                text-transform: uppercase !important;
+            }
+
+            /* Table Content: 9px Regular */
+            .premium-table td,
+            .premium-table td span,
+            .premium-table td span.font-extrabold,
+            .premium-table td span.font-bold,
+            .premium-table td span.font-semibold,
+            .premium-table td span.font-medium {
+                font-family: Arial, sans-serif !important;
+                font-weight: normal !important;
+                font-size: 9px !important;
+                color: #000000 !important;
+                background: transparent !important;
+                border: none !important;
+                padding: 0 !important;
+                text-transform: none !important;
+                letter-spacing: normal !important;
+            }
+
+            /* Keep some padding on the td cells for readability */
+            .premium-table td {
+                border-bottom: 1px solid #e2e8f0 !important;
                 padding: 6px 8px !important;
             }
 
-            .premium-table td {
-                border-bottom: 1px solid #e2e8f0 !important;
-                color: #000000 !important;
-                font-size: 11px !important;
-                padding: 8px !important;
+            /* Remove icons from learning mode badges in print to keep it clean */
+            .premium-table td svg,
+            .premium-table td i,
+            .premium-table td [data-lucide] {
+                display: none !important;
             }
 
             /* Page break prevention rules for clean printing */

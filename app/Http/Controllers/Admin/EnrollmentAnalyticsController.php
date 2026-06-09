@@ -92,7 +92,8 @@ class EnrollmentAnalyticsController extends Controller
         $query = $this->analyticsService->reportQuery($request);
         $filtered = clone $query;
 
-        $reports = $query->latest()->paginate(20);
+        $isPrint = $request->filled('print');
+        $reports = $isPrint ? $query->latest()->get() : $query->latest()->paginate(20);
 
         // Compute learning mode totals for the filtered set of enrollees
         $f2fCount = (clone $filtered)->where('learning_mode', 'Face-to-Face')->count();
@@ -101,6 +102,7 @@ class EnrollmentAnalyticsController extends Controller
 
         return view('admin.enrollment.reports', [
             'reports' => $reports,
+            'isPrint' => $isPrint,
             'summary' => [
                 'total' => (clone $filtered)->count(),
                 'approved' => (clone $filtered)->where('status', 'approved')->count(),
