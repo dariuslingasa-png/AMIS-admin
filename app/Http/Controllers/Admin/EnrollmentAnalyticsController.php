@@ -160,6 +160,42 @@ class EnrollmentAnalyticsController extends Controller
         $flexible1stCount = (clone $filtered)->where('learning_mode', 'like', '%1st Shift%')->count();
         $flexible2ndCount = (clone $filtered)->where('learning_mode', 'like', '%2nd Shift%')->count();
 
+        // Grouped cards data: all grades with type of learning
+        $gradeModeSummary = EnrollmentApplicant::select('grade_level', 'learning_mode', DB::raw('COUNT(*) as total'))
+            ->whereNotIn('status', ['draft'])
+            ->whereNotNull('grade_level')
+            ->groupBy('grade_level', 'learning_mode')
+            ->get();
+
+        $gradeSummaries = [];
+        foreach (ApplicationQuery::GRADE_LEVELS as $grade) {
+            $gradeSummaries[$grade] = [
+                'total' => 0,
+                'f2f' => 0,
+                'flexible_1st' => 0,
+                'flexible_2nd' => 0,
+            ];
+        }
+
+        foreach ($gradeModeSummary as $row) {
+            $grade = $row->grade_level;
+            if (!isset($gradeSummaries[$grade])) {
+                continue;
+            }
+            $mode = $row->learning_mode;
+            $count = (int) $row->total;
+
+            $gradeSummaries[$grade]['total'] += $count;
+
+            if ($mode === 'Face-to-Face') {
+                $gradeSummaries[$grade]['f2f'] += $count;
+            } elseif (str_contains((string) $mode, '1st Shift')) {
+                $gradeSummaries[$grade]['flexible_1st'] += $count;
+            } elseif (str_contains((string) $mode, '2nd Shift')) {
+                $gradeSummaries[$grade]['flexible_2nd'] += $count;
+            }
+        }
+
         return view('admin.enrollment.masters-list', [
             'reports' => $reports,
             'summary' => [
@@ -175,6 +211,7 @@ class EnrollmentAnalyticsController extends Controller
                 'flexible_2nd' => $flexible2ndCount,
             ],
             'gradeLevels' => ApplicationQuery::GRADE_LEVELS,
+            'gradeSummaries' => $gradeSummaries,
             'statusLabels' => EnrollmentReviewService::STATUS_LABELS,
             'statusBadges' => EnrollmentReviewService::STATUS_BADGES,
             'pmBadges' => EnrollmentReviewService::PAYMENT_BADGES,
