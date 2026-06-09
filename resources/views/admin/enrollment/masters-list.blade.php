@@ -78,7 +78,7 @@
                     <div class="rounded-xl border p-4 transition-all duration-200 {{ $isGradeActive ? 'border-emerald-500 bg-emerald-50/25 shadow-xs ring-1 ring-emerald-500/25' : ($hasEnrollees ? 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-2xs' : 'border-slate-100 bg-slate-50/50 opacity-60') }}">
                         <!-- Grade Title & Total -->
                         <div class="flex items-center justify-between border-b border-slate-100 pb-2 mb-3">
-                            <a href="{{ route('admin.enrollment.masters-list', array_merge(request()->query(), ['grade' => $gradeName, 'learning_mode' => ''])) }}" class="group flex items-center gap-1 font-extrabold text-slate-800 hover:text-emerald-700 transition text-xs uppercase tracking-wider">
+                            <a href="{{ route('admin.enrollment.masters-list', array_merge(request()->query(), ['grade' => $gradeName, 'learning_mode' => ''])) }}" class="group flex items-center gap-1 font-bold text-slate-800 hover:text-emerald-700 transition text-xs uppercase tracking-wider">
                                 <span>{{ $gradeName }}</span>
                                 <i data-lucide="arrow-right" class="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity text-emerald-600"></i>
                             </a>
@@ -133,7 +133,10 @@
             </div>
         </div>
 
-        <x-card title="Enrollee Masters List" subtitle="Filtered enrollment export and masters list">
+        <div class="bg-white rounded-2xl border border-slate-200/70 p-6 shadow-3xs space-y-6">
+            <div>
+                <h2 class="text-base font-black text-slate-900 tracking-tight">Enrollee Search & Filters</h2>
+            </div>
             <!-- Filter Form (Horizontal Row layout matching applicants registry) -->
             <form method="GET" class="mb-5 grid grid-cols-12 gap-3">
                 <!-- Keep workspace tracking if present -->
@@ -173,7 +176,7 @@
 
                 <!-- Reset / Export -->
                 <div class="col-span-2 flex gap-2">
-                    <a href="{{ route('admin.enrollment.masters-list', request()->filled('workspace') ? ['workspace' => request('workspace')] : []) }}" class="flex h-11 w-1/2 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 font-semibold transition animate-none" title="Clear Filters">
+                    <a href="{{ route('admin.enrollment.masters-list', request()->filled('workspace') ? ['workspace' => request('workspace')] : []) }}" class="flex h-11 w-1/2 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 font-semibold transition" title="Clear Filters">
                         <i data-lucide="rotate-ccw" class="h-4 w-4"></i>
                     </a>
                     <a href="{{ route('admin.enrollment.masters-list.export', request()->query()) }}" class="flex h-11 w-1/2 items-center justify-center rounded-lg bg-emerald-700 hover:bg-emerald-805 text-white font-semibold transition shadow-3xs" title="Export CSV">
@@ -182,54 +185,61 @@
                 </div>
             </form>
 
-            <table class="amis-table">
-                <thead>
-                    <tr>
-                        <th>Applicant</th>
-                        <th>Email</th>
-                        <th>Grade</th>
-                        <th>Learning Mode</th>
-                        <th>Status</th>
-                        <th>Submitted</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse ($reports as $applicant)
-                        <tr>
-                            <td>{{ trim(($applicant->first_name ?? '').' '.($applicant->last_name ?? '')) ?: 'Applicant' }}</td>
-                            <td>{{ $applicant->user->email ?? $applicant->email ?? '-' }}</td>
-                            <td>{{ $applicant->grade_level ?? '-' }}</td>
-                            <td>
-                                @if(empty($applicant->learning_mode))
-                                    <span class="text-slate-400 font-medium">-</span>
-                                @elseif($applicant->learning_mode === 'Face-to-Face')
-                                    <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700 border border-emerald-100">
-                                        <i data-lucide="school" class="h-3 w-3"></i>
-                                        F2F
-                                    </span>
-                                @elseif(str_contains($applicant->learning_mode, '1st Shift'))
-                                    <span class="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700 border border-blue-100">
-                                        <i data-lucide="sun" class="h-3 w-3"></i>
-                                        Flex (1st)
-                                    </span>
-                                @elseif(str_contains($applicant->learning_mode, '2nd Shift'))
-                                    <span class="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700 border border-amber-100">
-                                        <i data-lucide="moon" class="h-3 w-3"></i>
-                                        Flex (2nd)
-                                    </span>
-                                @else
-                                    <span class="text-slate-600 font-medium">{{ $applicant->learning_mode }}</span>
-                                @endif
-                            </td>
-                            <td>{{ $statusLabels[$applicant->status] ?? $applicant->status ?? '-' }}</td>
-                            <td>{{ optional($applicant->created_at)->format('M d, Y') }}</td>
-                        </tr>
-                    @empty
-                        <tr><td colspan="6" class="text-center text-gray-500">No report rows found.</td></tr>
-                    @endforelse
-                </tbody>
-            </table>
-            <div class="mt-4">{{ $reports->links() }}</div>
-        </x-card>
+            <!-- Conditional List Displays -->
+            @if ($isGradeFocused)
+                <div class="space-y-8 pt-4 border-t border-slate-100">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-sm font-black text-slate-900 uppercase tracking-wider">
+                            Active Grade Focus: {{ request('grade') }}
+                        </h3>
+                    </div>
+
+                    <!-- Face-to-Face List -->
+                    @if (!request('learning_mode') || request('learning_mode') === 'f2f')
+                        <div class="space-y-3">
+                            <h4 class="text-xs font-black uppercase tracking-wider text-emerald-700 flex items-center gap-1.5">
+                                <i data-lucide="school" class="h-3.5 w-3.5"></i>
+                                Face-to-Face Enrollees ({{ $groupedEnrollees['f2f']->count() }})
+                            </h4>
+                            <div class="premium-table-wrap border border-slate-100 rounded-xl overflow-hidden">
+                                @include('admin.enrollment.partials.masters-table', ['applicants' => $groupedEnrollees['f2f']])
+                            </div>
+                        </div>
+                    @endif
+
+                    <!-- Flexible (1st Shift) List -->
+                    @if (!request('learning_mode') || request('learning_mode') === 'flexible_1st')
+                        <div class="space-y-3">
+                            <h4 class="text-xs font-black uppercase tracking-wider text-blue-700 flex items-center gap-1.5">
+                                <i data-lucide="sun" class="h-3.5 w-3.5"></i>
+                                Flexible (1st Shift) Enrollees ({{ $groupedEnrollees['flexible_1st']->count() }})
+                            </h4>
+                            <div class="premium-table-wrap border border-slate-100 rounded-xl overflow-hidden">
+                                @include('admin.enrollment.partials.masters-table', ['applicants' => $groupedEnrollees['flexible_1st']])
+                            </div>
+                        </div>
+                    @endif
+
+                    <!-- Flexible (2nd Shift) List -->
+                    @if (!request('learning_mode') || request('learning_mode') === 'flexible_2nd')
+                        <div class="space-y-3">
+                            <h4 class="text-xs font-black uppercase tracking-wider text-amber-700 flex items-center gap-1.5">
+                                <i data-lucide="moon" class="h-3.5 w-3.5"></i>
+                                Flexible (2nd Shift) Enrollees ({{ $groupedEnrollees['flexible_2nd']->count() }})
+                            </h4>
+                            <div class="premium-table-wrap border border-slate-100 rounded-xl overflow-hidden">
+                                @include('admin.enrollment.partials.masters-table', ['applicants' => $groupedEnrollees['flexible_2nd']])
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            @else
+                <!-- Show the standard global flat paginated list -->
+                <div class="premium-table-wrap border border-slate-100 rounded-xl overflow-hidden">
+                    @include('admin.enrollment.partials.masters-table', ['applicants' => $reports])
+                </div>
+                <div class="mt-4">{{ $reports->links() }}</div>
+            @endif
+        </div>
     </div>
 </x-admin-layout>
