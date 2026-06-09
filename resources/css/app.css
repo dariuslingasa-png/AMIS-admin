@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap");
 @import "tailwindcss";
 @import "flowbite/src/themes/default";
 
@@ -28,8 +28,8 @@
     --color-primary-900: #064e3b;
     --color-gray-150: #ebedf2;
     --color-slate-150: #eef2f6;
-    --font-sans: "Plus Jakarta Sans", "ui-sans-serif", "system-ui", "-apple-system", "Segoe UI", sans-serif;
-    --font-body: "Plus Jakarta Sans", "ui-sans-serif", "system-ui", "-apple-system", "Segoe UI", sans-serif;
+    --font-sans: "Inter", "Arial", "Helvetica", sans-serif;
+    --font-body: "Inter", "Arial", "Helvetica", sans-serif;
 }
 
 body {
