@@ -172,10 +172,9 @@ class ApplicationQuery
 
         // Fetch family payments directly
         $familyPayments = \App\Models\Payment::where(function ($query) use ($children, $representative) {
+            $query->whereIn('enrollment_applicant_id', $children->pluck('id'));
             if ($representative->user_id) {
-                $query->where('user_id', $representative->user_id);
-            } else {
-                $query->whereIn('enrollment_applicant_id', $children->pluck('id'));
+                $query->orWhere('user_id', $representative->user_id);
             }
         })->get();
 

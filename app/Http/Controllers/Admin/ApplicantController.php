@@ -240,95 +240,141 @@ class ApplicantController extends Controller
                     });
                 }
             } else {
-                foreach ($families as $family) {
-                    $attachments = [];
-                    $payments = $family['family_payments'] ?? collect();
-                    foreach ($payments as $p) {
-                        if ($p->receipt_url) {
-                            $rUrl = $p->receipt_url;
-                            
-                            // Check multiple possible paths to locate the file in local/cPanel environment
-                            $searchPaths = [
-                                base_path('../amis_enrollment/storage/app/public/' . ltrim($rUrl, '/')),
-                                base_path('../amis_enrollment/public/storage/' . ltrim($rUrl, '/')),
-                                storage_path('app/public/' . ltrim($rUrl, '/')),
-                                public_path('storage/' . ltrim($rUrl, '/')),
-                                public_path(ltrim($rUrl, '/')),
-                            ];
-                            
-                            $localPath = null;
-                            foreach ($searchPaths as $path) {
-                                if (file_exists($path)) {
-                                    $localPath = $path;
-                                    break;
-                                }
-                            }
-                            
-                            if ($localPath) {
-                                $ext = strtolower(pathinfo($localPath, PATHINFO_EXTENSION));
-                                $mime = match ($ext) {
-                                    'pdf' => 'application/pdf',
-                                    'png' => 'image/png',
-                                    'jpg', 'jpeg' => 'image/jpeg',
-                                    'gif' => 'image/gif',
-                                    'webp' => 'image/webp',
-                                    default => 'application/octet-stream'
-                                };
-                                $appNo = str_pad($family['family_no'], 4, '0', STR_PAD_LEFT);
-                                $filename = 'payment-proof-' . $appNo . '.' . $ext;
+                $tempFilesToDelete = [];
+                try {
+                    foreach ($families as $family) {
+                        $attachments = [];
+                        $payments = $family['family_payments'] ?? collect();
+                        foreach ($payments as $p) {
+                            if ($p->receipt_url) {
+                                $rUrl = $p->receipt_url;
                                 
-                                $alreadyAdded = false;
-                                foreach ($attachments as $att) {
-                                    if ($att['path'] === $localPath) {
-                                        $alreadyAdded = true;
+                                // Normalize if it is a full URL
+                                if (filter_var($rUrl, FILTER_VALIDATE_URL)) {
+                                    $parsedPath = parse_url($rUrl, PHP_URL_PATH);
+                                    if (str_starts_with($parsedPath, '/storage/')) {
+                                        $rUrl = substr($parsedPath, 9);
+                                    } else {
+                                        $rUrl = ltrim($parsedPath, '/');
+                                    }
+                                }
+                                
+                                // Check multiple possible paths to locate the file in local/cPanel environment
+                                $searchPaths = [
+                                    base_path('../amis_enrollment/storage/app/public/' . ltrim($rUrl, '/')),
+                                    base_path('../amis_enrollment/public/storage/' . ltrim($rUrl, '/')),
+                                    base_path('../enrollment/storage/app/public/' . ltrim($rUrl, '/')),
+                                    base_path('../enrollment/public/storage/' . ltrim($rUrl, '/')),
+                                    base_path('../../amis_enrollment/storage/app/public/' . ltrim($rUrl, '/')),
+                                    base_path('../../public_html/amis_enrollment/storage/app/public/' . ltrim($rUrl, '/')),
+                                    base_path('../../public_html/storage/' . ltrim($rUrl, '/')),
+                                    storage_path('app/public/' . ltrim($rUrl, '/')),
+                                    public_path('storage/' . ltrim($rUrl, '/')),
+                                    public_path(ltrim($rUrl, '/')),
+                                ];
+                                
+                                $localPath = null;
+                                foreach ($searchPaths as $path) {
+                                    if (file_exists($path)) {
+                                        $localPath = $path;
                                         break;
                                     }
                                 }
                                 
-                                if (!$alreadyAdded) {
-                                    $attachments[] = [
-                                        'path' => $localPath,
-                                        'as'   => $filename,
-                                        'mime' => $mime,
-                                    ];
+                                // Fallback: Download file if it is a URL and not found locally
+                                if (!$localPath && filter_var($p->receipt_url, FILTER_VALIDATE_URL)) {
+                                    try {
+                                        $tempContent = @file_get_contents($p->receipt_url);
+                                        if ($tempContent !== false) {
+                                            $tempDir = storage_path('app/temp_attachments');
+                                            if (!file_exists($tempDir)) {
+                                                @mkdir($tempDir, 0755, true);
+                                            }
+                                            $ext = strtolower(pathinfo(parse_url($p->receipt_url, PHP_URL_PATH), PATHINFO_EXTENSION)) ?: 'jpg';
+                                            $tempFile = $tempDir . '/' . uniqid('proof_', true) . '.' . $ext;
+                                            if (@file_put_contents($tempFile, $tempContent) !== false) {
+                                                $localPath = $tempFile;
+                                                $tempFilesToDelete[] = $tempFile;
+                                            }
+                                        }
+                                    } catch (\Throwable $e) {
+                                        \Log::warning('Failed to download receipt from URL: ' . $p->receipt_url . ' - ' . $e->getMessage());
+                                    }
+                                }
+                                
+                                if ($localPath) {
+                                    $ext = strtolower(pathinfo($localPath, PATHINFO_EXTENSION));
+                                    $mime = match ($ext) {
+                                        'pdf' => 'application/pdf',
+                                        'png' => 'image/png',
+                                        'jpg', 'jpeg' => 'image/jpeg',
+                                        'gif' => 'image/gif',
+                                        'webp' => 'image/webp',
+                                        default => 'application/octet-stream'
+                                    };
+                                    $appNo = str_pad($family['family_no'], 4, '0', STR_PAD_LEFT);
+                                    $filename = 'payment-proof-' . $appNo . '.' . $ext;
+                                    
+                                    $alreadyAdded = false;
+                                    foreach ($attachments as $att) {
+                                        if ($att['path'] === $localPath) {
+                                            $alreadyAdded = true;
+                                            break;
+                                        }
+                                    }
+                                    
+                                    if (!$alreadyAdded) {
+                                        $attachments[] = [
+                                            'path' => $localPath,
+                                            'as'   => $filename,
+                                            'mime' => $mime,
+                                        ];
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    $lastName = strtoupper(trim(explode(',', $family['family_label'])[0]));
-                    $appNo = str_pad($family['family_no'], 4, '0', STR_PAD_LEFT);
-                    $subjectLine = 'AMIS Family Registry Report - ' . $lastName . ' - Application #' . $appNo;
+                        $lastName = strtoupper(trim(explode(',', $family['family_label'])[0]));
+                        $appNo = str_pad($family['family_no'], 4, '0', STR_PAD_LEFT);
+                        $subjectLine = 'AMIS Family Registry Report - ' . $lastName . ' - Application #' . $appNo;
 
-                    Mail::send('emails.applicants-registry', [
-                        'messageBody' => $messageBody,
-                        'families'    => [$family],
-                    ], function ($message) use ($recipientEmail, $subjectLine, $attachments) {
-                        $message->to($recipientEmail)
-                            ->subject($subjectLine);
-                        
-                        // Clear reply/thread headers to prevent grouping in Gmail
-                        $symfonyMessage = $message->getSymfonyMessage();
-                        $headers = $symfonyMessage->getHeaders();
-                        $headers->remove('In-Reply-To');
-                        $headers->remove('References');
-                        $headers->remove('threadId');
-                        $headers->remove('reply_message_id');
-                        
-                        // Add unique header to force separate thread
-                        $headers->addTextHeader('X-Entity-Ref-ID', uniqid('amis-', true));
-                        
-                        foreach ($attachments as $attachment) {
-                            $message->attach($attachment['path'], [
-                                'as'   => $attachment['as'],
-                                'mime' => $attachment['mime'],
-                            ]);
+                        Mail::send('emails.applicants-registry', [
+                            'messageBody' => $messageBody,
+                            'families'    => [$family],
+                        ], function ($message) use ($recipientEmail, $subjectLine, $attachments) {
+                            $message->to($recipientEmail)
+                                ->subject($subjectLine);
+                            
+                            // Clear reply/thread headers to prevent grouping in Gmail
+                            $symfonyMessage = $message->getSymfonyMessage();
+                            $headers = $symfonyMessage->getHeaders();
+                            $headers->remove('In-Reply-To');
+                            $headers->remove('References');
+                            $headers->remove('threadId');
+                            $headers->remove('reply_message_id');
+                            
+                            // Add unique header to force separate thread
+                            $headers->addTextHeader('X-Entity-Ref-ID', uniqid('amis-', true));
+                            
+                            foreach ($attachments as $attachment) {
+                                $message->attach($attachment['path'], [
+                                    'as'   => $attachment['as'],
+                                    'mime' => $attachment['mime'],
+                                ]);
+                            }
+                        });
+
+                        // Mark email as sent in database
+                        foreach ($family['children'] as $child) {
+                            $child->update(['registry_email_sent_at' => now()]);
                         }
-                    });
-
-                    // Mark email as sent in database
-                    foreach ($family['children'] as $child) {
-                        $child->update(['registry_email_sent_at' => now()]);
+                    }
+                } finally {
+                    // Clean up temp files
+                    foreach ($tempFilesToDelete as $tempFile) {
+                        if (file_exists($tempFile)) {
+                            @unlink($tempFile);
+                        }
                     }
                 }
             }
