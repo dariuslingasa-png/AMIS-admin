@@ -138,6 +138,7 @@ Route::name('admin.')->group(function () {
         Route::patch('/admins/{user}', [AdminUserController::class, 'update'])->name('admins.update');
         Route::patch('/admins/{user}/role', [AdminUserController::class, 'updateRole'])->name('admins.role');
         Route::patch('/admins/{user}/access', [AdminUserController::class, 'updateAccess'])->name('admins.access');
+        Route::patch('/admins/{user}/accept', [AdminUserController::class, 'accept'])->name('admins.accept');
         Route::delete('/admins/{user}', [AdminUserController::class, 'destroy'])->name('admins.destroy');
 
         Route::get('/settings/discounts', [AdminDiscountSettingsController::class, 'edit'])->name('settings.discounts');
@@ -190,6 +191,7 @@ Route::name('admin.')->group(function () {
             Route::delete('/{section}', [AdminMsTeamsController::class, 'destroy'])->name('destroy');
             Route::post('/{section}/subjects', [AdminMsTeamsController::class, 'storeSubject'])->name('subjects.store');
             Route::post('/{section}/retry-team', [AdminMsTeamsController::class, 'retryTeam'])->name('retry-team');
+            Route::post('/{section}/sync-advisor', [AdminMsTeamsController::class, 'syncAdvisor'])->name('sync-advisor');
         });
     });
 });

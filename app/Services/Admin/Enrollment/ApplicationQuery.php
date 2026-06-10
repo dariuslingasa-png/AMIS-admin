@@ -59,11 +59,55 @@ class ApplicationQuery
 
         if ($request->filled('search')) {
             $search = trim((string) $request->search);
+            $cleanSearch = preg_replace('/\s+/', ' ', $search);
+            $searchWithoutCommaClean = preg_replace('/\s+/', ' ', str_replace(',', '', $cleanSearch));
 
-            $query->where(function ($q) use ($search) {
-                $q->where('enrollment_applicants.first_name', 'like', "%{$search}%")
-                    ->orWhere('enrollment_applicants.last_name', 'like', "%{$search}%")
-                    ->orWhereHas('user', fn ($user) => $user->where('email', 'like', "%{$search}%"));
+            $query->where(function ($q) use ($cleanSearch, $searchWithoutCommaClean) {
+                $q->where('enrollment_applicants.first_name', 'like', "%{$cleanSearch}%")
+                    ->orWhere('enrollment_applicants.last_name', 'like', "%{$cleanSearch}%")
+                    ->orWhere('enrollment_applicants.middle_name', 'like', "%{$cleanSearch}%")
+                    ->orWhere('enrollment_applicants.father_first_name', 'like', "%{$cleanSearch}%")
+                    ->orWhere('enrollment_applicants.father_last_name', 'like', "%{$cleanSearch}%")
+                    ->orWhere('enrollment_applicants.mother_first_name', 'like', "%{$cleanSearch}%")
+                    ->orWhere('enrollment_applicants.mother_last_name', 'like', "%{$cleanSearch}%")
+                    ->orWhere('enrollment_applicants.parent_email', 'like', "%{$cleanSearch}%")
+                    ->orWhereHas('user', fn ($user) => $user->where('email', 'like', "%{$cleanSearch}%"));
+
+                $q->orWhereRaw("CONCAT(enrollment_applicants.first_name, ' ', enrollment_applicants.last_name) LIKE ?", ["%{$searchWithoutCommaClean}%"])
+                    ->orWhereRaw("CONCAT(enrollment_applicants.last_name, ' ', enrollment_applicants.first_name) LIKE ?", ["%{$searchWithoutCommaClean}%"])
+                    ->orWhereRaw("CONCAT(enrollment_applicants.last_name, ', ', enrollment_applicants.first_name) LIKE ?", ["%{$cleanSearch}%"])
+                    ->orWhereRaw("CONCAT(enrollment_applicants.first_name, ' ', COALESCE(enrollment_applicants.middle_name, ''), ' ', enrollment_applicants.last_name) LIKE ?", ["%{$searchWithoutCommaClean}%"])
+                    ->orWhereRaw("CONCAT(enrollment_applicants.last_name, ' ', enrollment_applicants.first_name, ' ', COALESCE(enrollment_applicants.middle_name, '')) LIKE ?", ["%{$searchWithoutCommaClean}%"])
+                    ->orWhereRaw("CONCAT(enrollment_applicants.last_name, ', ', enrollment_applicants.first_name, ' ', COALESCE(enrollment_applicants.middle_name, '')) LIKE ?", ["%{$cleanSearch}%"]);
+
+                $tokens = explode(' ', $searchWithoutCommaClean);
+                if (count($tokens) > 1) {
+                    $q->orWhere(function ($sub) use ($tokens) {
+                        $sub->where(function ($inner) use ($tokens) {
+                            foreach ($tokens as $token) {
+                                $tokenClean = rtrim($token, '.');
+                                $inner->where(function ($tokenQ) use ($tokenClean) {
+                                    $tokenQ->where('enrollment_applicants.first_name', 'like', "%{$tokenClean}%")
+                                        ->orWhere('enrollment_applicants.last_name', 'like', "%{$tokenClean}%")
+                                        ->orWhere('enrollment_applicants.father_first_name', 'like', "%{$tokenClean}%")
+                                        ->orWhere('enrollment_applicants.father_last_name', 'like', "%{$tokenClean}%")
+                                        ->orWhere('enrollment_applicants.mother_first_name', 'like', "%{$tokenClean}%")
+                                        ->orWhere('enrollment_applicants.mother_last_name', 'like', "%{$tokenClean}%");
+
+                                    if (strlen($tokenClean) === 1) {
+                                        $tokenQ->orWhere('enrollment_applicants.middle_name', 'like', "{$tokenClean}%")
+                                            ->orWhere('enrollment_applicants.father_middle_name', 'like', "{$tokenClean}%")
+                                            ->orWhere('enrollment_applicants.mother_middle_name', 'like', "{$tokenClean}%");
+                                    } else {
+                                        $tokenQ->orWhere('enrollment_applicants.middle_name', 'like', "%{$tokenClean}%")
+                                            ->orWhere('enrollment_applicants.father_middle_name', 'like', "%{$tokenClean}%")
+                                            ->orWhere('enrollment_applicants.mother_middle_name', 'like', "%{$tokenClean}%");
+                                    }
+                                });
+                            }
+                        });
+                    });
+                }
             });
         }
 
@@ -140,13 +184,55 @@ class ApplicationQuery
 
         if ($request->filled('search')) {
             $search = trim((string) $request->search);
-            $query->where(function ($q) use ($search) {
-                $q->where('first_name', 'like', "%{$search}%")
-                    ->orWhere('last_name', 'like', "%{$search}%")
-                    ->orWhere('father_first_name', 'like', "%{$search}%")
-                    ->orWhere('mother_first_name', 'like', "%{$search}%")
-                    ->orWhere('parent_email', 'like', "%{$search}%")
-                    ->orWhereHas('user', fn ($user) => $user->where('email', 'like', "%{$search}%"));
+            $cleanSearch = preg_replace('/\s+/', ' ', $search);
+            $searchWithoutCommaClean = preg_replace('/\s+/', ' ', str_replace(',', '', $cleanSearch));
+
+            $query->where(function ($q) use ($cleanSearch, $searchWithoutCommaClean) {
+                $q->where('first_name', 'like', "%{$cleanSearch}%")
+                    ->orWhere('last_name', 'like', "%{$cleanSearch}%")
+                    ->orWhere('middle_name', 'like', "%{$cleanSearch}%")
+                    ->orWhere('father_first_name', 'like', "%{$cleanSearch}%")
+                    ->orWhere('father_last_name', 'like', "%{$cleanSearch}%")
+                    ->orWhere('mother_first_name', 'like', "%{$cleanSearch}%")
+                    ->orWhere('mother_last_name', 'like', "%{$cleanSearch}%")
+                    ->orWhere('parent_email', 'like', "%{$cleanSearch}%")
+                    ->orWhereHas('user', fn ($user) => $user->where('email', 'like', "%{$cleanSearch}%"));
+
+                $q->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$searchWithoutCommaClean}%"])
+                    ->orWhereRaw("CONCAT(last_name, ' ', first_name) LIKE ?", ["%{$searchWithoutCommaClean}%"])
+                    ->orWhereRaw("CONCAT(last_name, ', ', first_name) LIKE ?", ["%{$cleanSearch}%"])
+                    ->orWhereRaw("CONCAT(first_name, ' ', COALESCE(middle_name, ''), ' ', last_name) LIKE ?", ["%{$searchWithoutCommaClean}%"])
+                    ->orWhereRaw("CONCAT(last_name, ' ', first_name, ' ', COALESCE(middle_name, '')) LIKE ?", ["%{$searchWithoutCommaClean}%"])
+                    ->orWhereRaw("CONCAT(last_name, ', ', first_name, ' ', COALESCE(middle_name, '')) LIKE ?", ["%{$cleanSearch}%"]);
+
+                $tokens = explode(' ', $searchWithoutCommaClean);
+                if (count($tokens) > 1) {
+                    $q->orWhere(function ($sub) use ($tokens) {
+                        $sub->where(function ($inner) use ($tokens) {
+                            foreach ($tokens as $token) {
+                                $tokenClean = rtrim($token, '.');
+                                $inner->where(function ($tokenQ) use ($tokenClean) {
+                                    $tokenQ->where('first_name', 'like', "%{$tokenClean}%")
+                                        ->orWhere('last_name', 'like', "%{$tokenClean}%")
+                                        ->orWhere('father_first_name', 'like', "%{$tokenClean}%")
+                                        ->orWhere('father_last_name', 'like', "%{$tokenClean}%")
+                                        ->orWhere('mother_first_name', 'like', "%{$tokenClean}%")
+                                        ->orWhere('mother_last_name', 'like', "%{$tokenClean}%");
+
+                                    if (strlen($tokenClean) === 1) {
+                                        $tokenQ->orWhere('middle_name', 'like', "{$tokenClean}%")
+                                            ->orWhere('father_middle_name', 'like', "{$tokenClean}%")
+                                            ->orWhere('mother_middle_name', 'like', "{$tokenClean}%");
+                                    } else {
+                                        $tokenQ->orWhere('middle_name', 'like', "%{$tokenClean}%")
+                                            ->orWhere('father_middle_name', 'like', "%{$tokenClean}%")
+                                            ->orWhere('mother_middle_name', 'like', "%{$tokenClean}%");
+                                    }
+                                });
+                            }
+                        });
+                    });
+                }
             });
         }
 

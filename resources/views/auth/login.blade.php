@@ -27,6 +27,22 @@
                 </div>
                 <button type="submit" class="w-full rounded-lg bg-primary-700 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-primary-800 focus:outline-none focus:ring-4 focus:ring-primary-300">Sign in</button>
             </form>
+
+            <div class="my-5 flex items-center justify-between">
+                <span class="w-2/5 border-b dark:border-gray-700"></span>
+                <span class="text-xs text-center text-gray-400 uppercase">or</span>
+                <span class="w-2/5 border-b dark:border-gray-700"></span>
+            </div>
+
+            <a href="{{ route('admin.microsoft.redirect') }}" class="w-full flex items-center justify-center gap-2.5 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 px-5 py-2.5 text-center text-sm font-semibold text-gray-700 transition duration-150 shadow-sm focus:outline-none focus:ring-4 focus:ring-slate-100 dark:bg-gray-700 dark:border-gray-650 dark:text-white dark:hover:bg-gray-600">
+                <svg class="h-4 w-4 shrink-0" viewBox="0 0 23 23" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="0" y="0" width="11" height="11" fill="#F25022"/>
+                    <rect x="12" y="0" width="11" height="11" fill="#7FBA00"/>
+                    <rect x="0" y="12" width="11" height="11" fill="#00A4EF"/>
+                    <rect x="12" y="12" width="11" height="11" fill="#FFB900"/>
+                </svg>
+                <span>Sign in with Microsoft</span>
+            </a>
         </div>
     </section>
 </x-guest-layout>

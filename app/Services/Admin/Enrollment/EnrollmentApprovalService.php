@@ -41,56 +41,61 @@ class EnrollmentApprovalService
             ]);
         }
 
-        $studentNumber = $this->generateStudentNumber();
+        $studentNumber = $this->generateStudentNumber($applicant);
         [$mailNick, $schoolEmail] = $this->generateSchoolEmail($applicant, $studentNumber);
         $tempPassword = 'Amis@'.strtoupper(Str::random(5)).rand(10, 99);
-
+ 
         [$msUserId, $msError, $graph] = $this->createMicrosoftAccount($applicant, $mailNick, $schoolEmail, $tempPassword);
         $student = $this->createStudent($applicant, $studentNumber, $schoolEmail, $msUserId, $tempPassword);
-
+ 
         $this->enrollInTeams($student, $msUserId, $graph);
         $this->generateSoa($student, $applicant);
-
+ 
         $documentRemarks = $this->reviewService->missingDocumentRemarks($applicant);
-
+ 
         $applicant->update([
             'status' => 'approved',
             'review_remarks' => $documentRemarks,
         ]);
-
+ 
         $this->sendOnboardingIfPossible($applicant, $student, $tempPassword, $msError);
-
+ 
         return $msError
             ? 'Application approved. Student number generated. Note: Microsoft account creation failed. Please create it manually. Error: '.$msError
             : 'Application approved. Student credentials were generated and sent to the parent.';
     }
-
-    private function generateStudentNumber(): string
+ 
+    private function generateStudentNumber(EnrollmentApplicant $applicant): string
     {
-        $year = substr(date('Y'), 2);
-        $sequence = Student::whereYear('created_at', date('Y'))->count() + 1;
-
+        $schoolYear = $applicant->school_year ?? config('services.school.year') ?? date('Y');
+        $startYear = substr(preg_replace('/\D+/', '', $schoolYear), 0, 4);
+        if (strlen($startYear) < 4) {
+            $startYear = date('Y');
+        }
+        $yearSuffix = substr($startYear, 2, 2);
+        $sequence = Student::count() + 1;
+ 
         do {
-            $studentNumber = $year.str_pad($sequence, 4, '0', STR_PAD_LEFT);
+            $studentNumber = $yearSuffix.str_pad($sequence, 4, '0', STR_PAD_LEFT);
             $sequence++;
         } while (Student::where('student_number', $studentNumber)->exists());
-
+ 
         return $studentNumber;
     }
-
+ 
     private function generateSchoolEmail(EnrollmentApplicant $applicant, string $studentNumber): array
     {
         $lastName = strtolower(preg_replace('/\s+/', '', (string) $applicant->last_name));
-        $mailNick = $lastName.'.'.$studentNumber;
+        $mailNick = $studentNumber.$lastName;
         $schoolEmail = $mailNick.'@amis.edu.ph';
         $suffix = 1;
-
+ 
         while (Student::where('school_email', $schoolEmail)->exists()) {
-            $mailNick = $lastName.'.'.$studentNumber.$suffix;
+            $mailNick = $studentNumber.$lastName.$suffix;
             $schoolEmail = $mailNick.'@amis.edu.ph';
             $suffix++;
         }
-
+ 
         return [$mailNick, $schoolEmail];
     }
 

@@ -29,6 +29,17 @@ class ClassAdvisoryAssignmentService
         ]);
 
         $this->record($assignment, 'assigned');
+
+        // Automatically sync advisor to MS Teams if section team exists
+        $section = Section::find($sectionId);
+        if ($section && $section->ms_team_id && !empty($teacher['email'])) {
+            try {
+                $graph = new \App\Services\MicrosoftGraphService();
+                $graph->addTeamOwner($section->ms_team_id, $teacher['email']);
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::warning("Could not add advisor {$teacher['email']} as Team owner during assignment: " . $e->getMessage());
+            }
+        }
     }
 
     public function rows()

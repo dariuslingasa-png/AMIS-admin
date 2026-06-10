@@ -33,11 +33,25 @@ class AcademicRepository
     {
         return collect(config('class_advisories', []))
             ->flatMap(function (array $rows, string $departmentKey) {
-                $department = $departmentKey === 'elementary'
-                    ? 'Elementary Department'
-                    : 'High School Department';
+                return collect($rows)->map(function (array $row) use ($departmentKey) {
+                    if ($departmentKey === 'elementary') {
+                        $department = 'Elementary Department';
+                    } elseif ($departmentKey === 'high_school') {
+                        $department = 'High School Department';
+                    } else {
+                        $grade = $row['grade'] ?? '';
+                        if ($grade === 'ISAL') {
+                            $department = 'Islamic School and Arabic Language Department';
+                        } else {
+                            $department = 'Elementary Department';
+                        }
+                    }
 
-                return collect($rows)->map(fn (array $row) => $row + ['department' => $department]);
+                    return $row + [
+                        'department' => $department,
+                        'config_key' => $departmentKey,
+                    ];
+                });
             })
             ->values();
     }

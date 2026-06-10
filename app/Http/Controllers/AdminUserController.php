@@ -196,6 +196,21 @@ class AdminUserController extends Controller
         return back()->with('success', "{$user->name}'s access permissions were updated.");
     }
 
+    public function accept(User $user)
+    {
+        $this->ensureSystemAdmin();
+
+        if (! in_array($user->role, User::ADMIN_PORTAL_ROLES, true)) {
+            return back()->withErrors(['error' => 'User is not an admin portal account.']);
+        }
+
+        $user->update([
+            'account_status' => 'verified',
+        ]);
+
+        return back()->with('success', "{$user->name}'s account has been verified and granted access.");
+    }
+
     private function ensureSystemAdmin(): void
     {
         abort_unless(auth()->user()?->role === 'admin', 403);

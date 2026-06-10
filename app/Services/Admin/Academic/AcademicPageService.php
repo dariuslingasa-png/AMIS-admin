@@ -69,8 +69,10 @@ class AcademicPageService
 
         return [
             'advisories' => $advisories,
-            'elementaryAdvisories' => $advisories->where('department', 'Elementary Department')->values(),
-            'highSchoolAdvisories' => $advisories->where('department', 'High School Department')->values(),
+            'elementaryAdvisories' => $advisories->where('config_key', 'elementary')->values(),
+            'highSchoolAdvisories' => $advisories->where('config_key', 'high_school')->values(),
+            'isalAdvisories' => $advisories->where('config_key', 'isal')->values(),
+            'subjectAdvisories' => $advisories->where('config_key', 'subject_teachers')->values(),
             'sections' => $sections,
             'activeAdvisories' => $sections->pluck('activeAdvisory')->filter()->values(),
             'teacherOptions' => \App\Models\User::where('role', 'teacher')

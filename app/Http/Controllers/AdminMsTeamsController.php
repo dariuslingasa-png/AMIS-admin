@@ -215,6 +215,17 @@ class AdminMsTeamsController extends Controller
                 'ms_team_id'  => $msTeamId,
                 'ms_team_url' => "https://teams.microsoft.com/l/team/{$msTeamId}",
             ]);
+
+            // Auto-invite active advisor if assigned
+            $advisor = $section->grade_advisor;
+            if ($advisor && !empty($advisor->teacher_email)) {
+                try {
+                    $graph->addTeamOwner($msTeamId, $advisor->teacher_email);
+                } catch (\Exception $e) {
+                    Log::warning("Could not add advisor {$advisor->teacher_email} to Team: " . $e->getMessage());
+                }
+            }
+
             return back()->with('success', "MS Team created: {$teamName}");
         } catch (\Exception $e) {
             Log::error("retryTeam failed [{$teamName}]: " . $e->getMessage());
@@ -230,7 +241,16 @@ class AdminMsTeamsController extends Controller
             ->latest()
             ->get();
 
-        return view('admin.ms-teams.show', compact('section', 'enrollments'));
+        $teachers = \App\Models\User::where('role', 'teacher')
+            ->orderBy('name')
+            ->get()
+            ->map(function($user) {
+                $loadCount = \App\Models\SectionSubject::where('teacher_name', $user->name)->count();
+                $user->load_count = $loadCount;
+                return $user;
+            });
+
+        return view('admin.ms-teams.show', compact('section', 'enrollments', 'teachers'));
     }
 
     /**
@@ -300,20 +320,30 @@ class AdminMsTeamsController extends Controller
     public function storeSubject(Request $request, Section $section)
     {
         $request->validate([
-            'subject_name' => 'required|string|max:255',
-            'teacher_name' => 'nullable|string|max:255',
-            'schedule'     => 'nullable|string|max:255',
+            'subject_name'   => 'required|string|max:255',
+            'teacher_name'   => 'nullable|string|max:255',
+            'schedule'       => 'nullable|string|max:255',
+            'teacher_upn'    => 'nullable|email',
+            'create_channel' => 'nullable|boolean',
         ]);
 
-        $channelId = null;
+        $createChannel = $request->input('create_channel', true);
 
-        // Create private channel in MS Teams if team exists
-        if ($section->ms_team_id) {
+        // Find existing or create new
+        $subject = SectionSubject::where('section_id', $section->id)
+            ->where('subject_name', $request->subject_name)
+            ->first();
+
+        $channelId = $subject ? $subject->ms_channel_id : null;
+        $teacherInvited = false;
+
+        // Create private channel in MS Teams if team exists, channel is not created yet, and create_channel is true
+        if ($section->ms_team_id && !$channelId && $createChannel) {
             try {
                 $graph    = new MicrosoftGraphService();
                 $adminUpn = config('services.microsoft.admin_upn');
 
-                // Team may still be provisioning — wait up to 30s before attempting channel creation
+                // Team may still be provisioning — wait up to 10s before attempting channel creation
                 $graph->waitForTeam($section->ms_team_id, 10);
 
                 $result    = $graph->createPrivateChannel(
@@ -348,20 +378,29 @@ class AdminMsTeamsController extends Controller
             }
         }
 
-        $subject = SectionSubject::create([
-            'section_id'    => $section->id,
-            'subject_name'  => $request->subject_name,
-            'teacher_name'  => $request->teacher_name,
-            'schedule'      => $request->schedule,
-            'ms_channel_id' => $channelId,
-        ]);
+        if ($subject) {
+            $subject->update([
+                'teacher_name'  => $request->teacher_name ?? $subject->teacher_name,
+                'schedule'      => $request->schedule ?? $subject->schedule,
+                'ms_channel_id' => $channelId ?? $subject->ms_channel_id,
+            ]);
+        } else {
+            $subject = SectionSubject::create([
+                'section_id'    => $section->id,
+                'subject_name'  => $request->subject_name,
+                'teacher_name'  => $request->teacher_name,
+                'schedule'      => $request->schedule,
+                'ms_channel_id' => $channelId,
+            ]);
+        }
 
-        // If a teacher UPN is provided and channel was created, invite teacher as Owner
-        $teacherInvited = false;
-        if ($channelId && $request->teacher_upn) {
+        // If a teacher UPN is provided and channel is created, invite teacher as Owner
+        $activeChannelId = $channelId ?? $subject->ms_channel_id;
+        if ($activeChannelId && $request->teacher_upn) {
             try {
+                $graph = new MicrosoftGraphService();
                 $graph->addTeamOwner($section->ms_team_id, $request->teacher_upn);
-                $graph->addChannelOwner($section->ms_team_id, $channelId, $request->teacher_upn);
+                $graph->addChannelOwner($section->ms_team_id, $activeChannelId, $request->teacher_upn);
                 $teacherInvited = true;
             } catch (\Exception $e) {
                 Log::warning("Could not invite teacher [{$request->teacher_upn}] as owner: " . $e->getMessage());
@@ -371,7 +410,7 @@ class AdminMsTeamsController extends Controller
         return response()->json([
             'success'         => true,
             'subject'         => $subject,
-            'has_channel'     => !is_null($channelId),
+            'has_channel'     => !is_null($activeChannelId),
             'teacher_invited' => $teacherInvited,
         ]);
     }
@@ -524,6 +563,27 @@ class AdminMsTeamsController extends Controller
             return back()->with('success', $msg);
         } catch (\Exception $e) {
             return back()->withErrors(['ms' => $e->getMessage()]);
+        }
+    }
+
+    public function syncAdvisor(Request $request, Section $section)
+    {
+        $advisor = $section->grade_advisor;
+        if (!$advisor || empty($advisor->teacher_email)) {
+            return response()->json(['success' => false, 'message' => 'No active advisor assigned or advisor email not found.'], 422);
+        }
+
+        if (!$section->ms_team_id) {
+            return response()->json(['success' => false, 'message' => 'MS Team not created yet.'], 422);
+        }
+
+        try {
+            $graph = new MicrosoftGraphService();
+            $graph->addTeamOwner($section->ms_team_id, $advisor->teacher_email);
+            return response()->json(['success' => true, 'message' => 'Advisor successfully synced as Team Owner.']);
+        } catch (\Exception $e) {
+            Log::error("syncAdvisor failed: " . $e->getMessage());
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
         }
     }
 }

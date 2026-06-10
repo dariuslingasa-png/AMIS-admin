@@ -1,4 +1,9 @@
-<x-admin-layout title="Academic Workspace — Sections">
+<x-admin-layout title="Academic Workspace — Class Workspace">
+    @php
+        $breadcrumbs = [
+            ['label' => 'Class Workspace', 'href' => null]
+        ];
+    @endphp
     <div x-data="{
         createModal: false, editModal: false, editId: null, editName: '', editError: '', editSaving: false,
         mode: 'Flexible Online Learning', grade: 'Kinder 2', shifts: ['1st Shift'], genders: ['male', 'female'],
@@ -153,58 +158,138 @@
             </div>
         </div>
 
-        <!-- Sections Table -->
-        <div class="admin-card bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
-            <div class="admin-card-header bg-slate-50/50 border-b border-gray-200 px-5 py-4 flex items-center justify-between">
-                <span class="admin-card-title text-slate-900 font-extrabold text-sm tracking-wide">All Active Sections</span>
-                <span class="badge badge-blue font-bold px-3 py-1 bg-blue-50 text-blue-700 text-xs">{{ $sections->count() }} Sections</span>
+        <!-- Section Header -->
+        <div class="flex items-center justify-between mt-2">
+            <div>
+                <h2 class="text-base font-bold text-slate-800 tracking-wide">Active Class Workspace Sections</h2>
+                <p class="text-xs text-slate-400 font-light mt-0.5">Manage and organize class rosters and academic course workspaces</p>
             </div>
-            <div class="admin-table-container relative overflow-x-auto">
-                <table class="admin-table w-full text-sm text-left text-gray-700">
-                    <thead class="text-xxs text-gray-400 uppercase tracking-wider bg-slate-50/20 border-b border-slate-100">
-                        <tr>
-                            <th class="px-5 py-3">Section Name</th>
-                            <th class="px-5 py-3">Grade</th>
-                            <th class="px-5 py-3">Mode</th>
-                            <th class="px-5 py-3">Gender</th>
-                            <th class="px-5 py-3">Subjects</th>
-                            <th class="px-5 py-3">Enrolled</th>
-                            <th class="px-5 py-3 text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100">
-                        @forelse ($sections as $section)
-                            @php
-                                $isFlex = str_contains($section->learning_mode ?? '', 'Flexible');
-                                $modeColor = $isFlex ? 'badge-purple' : 'badge-blue'; 
-                                $modeLabel = $isFlex ? 'Flexible ' . ($section->shift ?? '') : 'F2F';
-                            @endphp
-                            <tr class="hover:bg-slate-50/30 transition-colors" x-show="search === '' || '{{ strtolower($section->grade_level) }} {{ strtolower($section->section_title) }} {{ strtolower($section->name) }}'.includes(search.toLowerCase())">
-                                <td class="px-5 py-4 font-extrabold text-slate-900 text-sm">
-                                    {{ $section->section_title }}
-                                </td>
-                                <td class="px-5 py-4 font-semibold text-slate-500 text-xs">{{ $section->grade_level }}</td>
-                                <td class="px-5 py-4"><span class="badge {{ $modeColor }} font-bold text-xxs">{{ $modeLabel }}</span></td>
-                                <td class="px-5 py-4"><span class="badge {{ $section->gender === 'male' ? 'badge-blue' : 'badge-red' }} font-bold text-xxs">{{ $section->gender === 'male' ? 'Boys' : 'Girls' }}</span></td>
-                                <td class="px-5 py-4 font-extrabold text-xs">{{ $section->subjects_count }} subjects</td>
-                                <td class="px-5 py-4 font-black text-emerald-600 text-xs">{{ $section->enrolled_count }} enrolled</td>
-                                <td class="px-5 py-4 text-right">
-                                    <div class="flex justify-end gap-2">
-                                        <a href="{{ route('admin.ms-teams.show', $section) }}" class="px-3 py-1.5 text-xxs font-bold text-white bg-emerald-800 hover:bg-emerald-700 rounded-lg transition">Manage</a>
-                                        <button type="button" @click="openEdit({{ $section->id }}, '{{ addslashes($section->name ?? '') }}')" class="px-3 py-1.5 text-xxs font-bold text-slate-700 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 rounded-lg border border-slate-200 transition">Rename</button>
-                                        <form method="POST" action="{{ route('admin.ms-teams.destroy', $section) }}" x-on:submit.prevent="if(confirm('Delete section {{ addslashes($section->grade_level) }}?')) $el.submit()">
-                                            @csrf @method('DELETE')
-                                            <button type="submit" class="px-3 py-1.5 text-xxs font-bold text-rose-705 hover:text-white bg-rose-50 hover:bg-rose-600 rounded-lg border border-rose-100 transition">Delete</button>
-                                        </form>
+            <span class="inline-flex items-center px-3 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-full border border-blue-100/80">{{ $sections->count() }} Sections</span>
+        </div>
+
+        @php
+            $gradeOrder = [
+                'Kinder 1' => 1, 'Kinder 2' => 2,
+                'Grade 1' => 3, 'Grade 2' => 4, 'Grade 3' => 5, 'Grade 4' => 6,
+                'Grade 5' => 7, 'Grade 6' => 8, 'Grade 7' => 9, 'Grade 8' => 10,
+                'Grade 9' => 11, 'Grade 10' => 12, 'Grade 11' => 13, 'Grade 12' => 14
+            ];
+
+            $groupedSections = $sections->groupBy('grade_level')->sortBy(function ($items, $key) use ($gradeOrder) {
+                return $gradeOrder[$key] ?? 99;
+            });
+        @endphp
+
+        <!-- Sections Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            @forelse ($groupedSections as $grade => $gradeSections)
+                <div class="bg-white rounded-2xl border border-slate-150 p-5 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between"
+                     x-show="search === '' || @js($gradeSections->map(fn($s) => strtolower($s->grade_level . ' ' . $s->section_title . ' ' . $s->name))->toArray()).some(str => str.includes(search.toLowerCase()))">
+                    <div>
+                        @php
+                            $firstSection = $gradeSections->first();
+                            $gradeAdvisor = $firstSection ? $firstSection->grade_advisor : null;
+                        @endphp
+                        <!-- Grade Card Header -->
+                        <div class="flex items-center justify-between pb-3.5 border-b border-slate-100 mb-4">
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-800 flex items-center justify-center">
+                                    <i data-lucide="graduation-cap" class="w-4 h-4"></i>
+                                </div>
+                                <div>
+                                    <h2 class="text-sm font-bold text-slate-800 tracking-tight uppercase">{{ $grade }}</h2>
+                                    @if($gradeAdvisor)
+                                        <span class="text-[10px] font-bold text-teal-700 block mt-0.5 uppercase tracking-wide">
+                                            Advisor: {{ $gradeAdvisor->teacher_name }}
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600">
+                                {{ $gradeSections->count() }} {{ Str::plural('Section', $gradeSections->count()) }}
+                            </span>
+                        </div>
+
+                        <!-- Sections List within this Grade Card -->
+                        <div class="space-y-3">
+                            @foreach($gradeSections as $section)
+                                @php
+                                    $isFlex = str_contains($section->learning_mode ?? '', 'Flexible');
+                                    $modeBadgeColor = $isFlex ? 'bg-purple-100/60 text-purple-700' : 'bg-blue-100/60 text-blue-700';
+                                    $modeLabel = $isFlex ? 'Flex • ' . ($section->shift ?? '') : 'Face-to-Face';
+                                    $genderBadgeColor = $section->gender === 'male' ? 'bg-indigo-100/60 text-indigo-700' : 'bg-rose-100/60 text-rose-700';
+                                    $genderLabel = $section->gender === 'male' ? 'Boys' : 'Girls';
+                                @endphp
+                                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-slate-50/70 rounded-xl border border-slate-100 hover:border-slate-200/80 transition-colors"
+                                     x-show="search === '' || '{{ strtolower($section->grade_level) }} {{ strtolower($section->section_title) }} {{ strtolower($section->name) }}'.includes(search.toLowerCase())">
+                                    
+                                    <div class="space-y-2">
+                                        <!-- Section Title -->
+                                        <span class="text-sm font-bold text-slate-800 block tracking-tight uppercase">{{ $section->name ?? 'UNNAMED' }}</span>
+                                        
+                                        <!-- Badges Row -->
+                                        <div class="flex flex-wrap items-center gap-1.5">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold {{ $modeBadgeColor }}">
+                                                {{ $modeLabel }}
+                                            </span>
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold {{ $genderBadgeColor }}">
+                                                {{ $genderLabel }}
+                                            </span>
+                                        </div>
+
+                                        <!-- Stats Row -->
+                                        <div class="flex items-center gap-3 text-[11px] font-medium text-slate-400 tracking-wide mt-1">
+                                            <span class="flex items-center gap-1">
+                                                <i data-lucide="user-check" class="w-3.5 h-3.5 text-slate-400"></i>
+                                                <span class="text-slate-600 font-semibold">{{ $section->enrolled_count }} Enrolled</span>
+                                            </span>
+                                            <span class="text-slate-300 font-light">•</span>
+                                            <span class="flex items-center gap-1">
+                                                <i data-lucide="book-open" class="w-3.5 h-3.5 text-slate-400"></i>
+                                                <span class="text-slate-600 font-semibold">{{ $section->subjects_count }} Subjects</span>
+                                            </span>
+                                        </div>
+
+
                                     </div>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr x-show="search === ''"><td colspan="7"><div class="admin-empty">No sections configured. Create one to begin.</div></td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+
+                                    <!-- Action buttons -->
+                                    <div class="flex items-center gap-2 self-end sm:self-auto shrink-0">
+                                        <button type="button" @click="openEdit({{ $section->id }}, '{{ addslashes($section->name ?? '') }}')" 
+                                                class="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-200/50 rounded-xl transition border border-slate-200 bg-white"
+                                                title="Rename Section">
+                                            <i data-lucide="edit-3" class="w-4 h-4"></i>
+                                        </button>
+                                        <form method="POST" action="{{ route('admin.ms-teams.destroy', $section) }}" 
+                                              x-on:submit.prevent="if(confirm('Delete section {{ addslashes($section->grade_level) }}?')) $el.submit()">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="p-2 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-xl transition border border-rose-100 bg-white"
+                                                    title="Delete Section">
+                                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                            </button>
+                                        </form>
+                                        <a href="{{ route('admin.ms-teams.show', $section) }}" 
+                                           class="inline-flex items-center gap-1 bg-emerald-800 hover:bg-emerald-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl transition shadow-xs">
+                                            <span>Manage</span>
+                                            <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            @empty
+                <div class="col-span-full bg-white border border-gray-200 rounded-2xl p-10 text-center shadow-xs">
+                    <div class="max-w-md mx-auto flex flex-col items-center">
+                        <div class="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 mb-4">
+                            <i data-lucide="school" class="w-6 h-6"></i>
+                        </div>
+                        <h3 class="text-base font-extrabold text-slate-900 mb-1">No Active Sections</h3>
+                        <p class="text-xs text-slate-500 font-light mb-5">Start by creating class sections for your school year.</p>
+                    </div>
+                </div>
+            @endforelse
         </div>
     </div>
 

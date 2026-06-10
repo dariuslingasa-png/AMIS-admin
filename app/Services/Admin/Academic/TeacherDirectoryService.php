@@ -188,11 +188,14 @@ class TeacherDirectoryService
             'photo' => $row['photo'] ?? null,
         ]);
 
-        return $advisory->merge([
+        $advisoryIds = $advisory->pluck('id')->all();
+        $baseIsal = collect([
             ['id' => 'ust-raffy-lingasa', 'name' => 'Ust. Raffy Lingasa', 'email' => 'tr.rlingasa@amis.edu.ph', 'dept' => 'Islamic School and Arabic Language Department', 'sections' => 'Qur\'an / Arabic Language', 'status' => 'Active', 'photo' => null],
             ['id' => 'ust-ahmad-al-jamil', 'name' => 'Ust. Ahmad Al-Jamil', 'email' => 'tr.ajamil@amis.edu.ph', 'dept' => 'Islamic School and Arabic Language Department', 'sections' => 'SHAF / Islamic Studies', 'status' => 'Active', 'photo' => null],
             ['id' => 'ust-omar-mukhtar', 'name' => 'Ust. Omar Mukhtar', 'email' => 'tr.omukhtar@amis.edu.ph', 'dept' => 'Islamic School and Arabic Language Department', 'sections' => 'Arabic Language', 'status' => 'Inactive', 'photo' => null],
-        ]);
+        ])->reject(fn ($item) => in_array($item['id'], $advisoryIds, true));
+
+        return $advisory->merge($baseIsal);
     }
 
     private function normalize(array $data): array

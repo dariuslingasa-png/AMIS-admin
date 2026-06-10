@@ -90,8 +90,17 @@
                                         </div>
                                     </td>
                                     <td class="px-3 py-4">
-                                        <span class="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-black uppercase tracking-wider text-emerald-700 ring-1 ring-emerald-100">
-                                            {{ $admin->account_status ?? 'verified' }}
+                                        @php
+                                            $status = $admin->account_status ?? 'verified';
+                                            $badgeClasses = match ($status) {
+                                                'verified' => 'bg-emerald-50 text-emerald-700 ring-emerald-100',
+                                                'pending' => 'bg-amber-50 text-amber-700 ring-amber-100',
+                                                'disabled' => 'bg-rose-50 text-rose-700 ring-rose-100',
+                                                default => 'bg-slate-50 text-slate-700 ring-slate-100',
+                                            };
+                                        @endphp
+                                        <span class="inline-flex rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-wider ring-1 {{ $badgeClasses }}">
+                                            {{ $status }}
                                         </span>
                                     </td>
                                     <td class="px-3 py-4 text-sm font-semibold text-slate-600">
@@ -100,6 +109,15 @@
                                     <td class="px-3 py-4 text-right">
                                         @if ($isSystemAdmin)
                                             <div class="flex flex-wrap justify-end gap-2">
+                                                @if (($admin->account_status ?? 'verified') !== 'verified')
+                                                    <form method="POST" action="{{ route('admin.admins.accept', $admin) }}" onsubmit="return confirm('Verify and grant access for {{ addslashes($admin->name) }}?')">
+                                                        @csrf
+                                                        @method('PATCH')
+                                                        <button class="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-black uppercase tracking-wider text-white transition hover:bg-emerald-700">
+                                                            Accept Access
+                                                        </button>
+                                                    </form>
+                                                @endif
                                                 <a href="{{ route('admin.admins.edit', $admin) }}" class="rounded-lg bg-emerald-700 px-3 py-2 text-xs font-black uppercase tracking-wider text-white transition hover:bg-emerald-800">Edit</a>
                                                 @if ($admin->id !== auth()->id())
                                                     <form method="POST" action="{{ route('admin.admins.destroy', $admin) }}" onsubmit="return confirm('Remove admin account for {{ addslashes($admin->name) }}?')">

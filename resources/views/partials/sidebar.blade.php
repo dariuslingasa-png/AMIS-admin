@@ -36,8 +36,8 @@
             'links' => [
                 ['Dashboard', 'layout-dashboard', route('admin.academic.dashboard'), request()->routeIs('admin.academic.dashboard') || request()->routeIs('admin.academic.dashboard.index')],
                 ['Curriculum', 'map', route('admin.academic.curriculum'), request()->routeIs('admin.academic.curriculum') || request()->routeIs('admin.academic.grade-levels') || request()->routeIs('admin.academic.school-years') || request()->routeIs('admin.academic.calendar')],
-                ['Subjects', 'book-open', route('admin.academic.subjects'), request()->routeIs('admin.academic.subjects')],
-                ['Class Management', 'users-round', route('admin.academic.schedules'), request()->routeIs('admin.academic.schedules') || request()->routeIs('admin.ms-teams.*')],
+                ['Class Management', 'users-round', route('admin.academic.schedules'), request()->routeIs('admin.academic.schedules')],
+                ['Class Workspace', 'graduation-cap', route('admin.ms-teams.index'), request()->routeIs('admin.ms-teams.*')],
                 ['Class Advisory', 'contact-2', route('admin.academic.class-advisory'), request()->routeIs('admin.academic.class-advisory')],
                 ['Teachers', 'contact-2', route('admin.academic.teachers'), request()->routeIs('admin.academic.teachers')],
                 ['Operations', 'activity', route('admin.academic.operations'), request()->routeIs('admin.academic.operations')],
