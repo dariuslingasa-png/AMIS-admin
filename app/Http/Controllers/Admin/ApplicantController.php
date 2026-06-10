@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\EnrollmentApplicant;
+use App\Models\EnrollmentSetting;
 use App\Services\Admin\Enrollment\ApplicationQuery;
 use App\Services\Admin\Enrollment\EnrollmentAnalyticsService;
 use App\Services\Admin\Enrollment\EnrollmentReviewService;
@@ -157,6 +158,7 @@ class ApplicantController extends Controller
         return view('admin.applicants.show', [
             'applicant' => $applicant,
             'siblings'  => $siblings,
+            'enrollmentSetting' => EnrollmentSetting::current(),
             ...$this->reviewService->detailData($applicant),
         ]);
     }

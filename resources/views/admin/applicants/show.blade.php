@@ -104,6 +104,60 @@
                  approved: 'Enrollment application approved.',
                  rejected: 'Enrollment application declined.'
              },
+             settingsOpen: false,
+             autoSettings: {
+                 generate_microsoft_account: @js((bool) ($enrollmentSetting->generate_microsoft_account ?? false)),
+                 auto_generate_student_id: @js((bool) ($enrollmentSetting->auto_generate_student_id ?? false)),
+                 send_onboarding_email: @js((bool) ($enrollmentSetting->send_onboarding_email ?? false)),
+                 auto_generate_portal_account: @js((bool) ($enrollmentSetting->auto_generate_portal_account ?? false)),
+                 auto_mark_official_student: @js((bool) ($enrollmentSetting->auto_mark_official_student ?? false)),
+             },
+              savingSettings: false,
+              settingsSaved: false,
+              approving: false,
+              approveMessage: '',
+              approveDots: '',
+              approveMessages: [
+                  'Reading readiness checks',
+                  'Generating student number',
+                  'Creating Microsoft 365 account',
+                  'Creating student record',
+                  'Enrolling in Microsoft Teams',
+                  'Generating Statement of Account',
+                  'Sending welcome email',
+                  'Finalizing approval',
+              ],
+              approveMessageIndex: 0,
+              approveError: '',
+             async saveAutoSettings() {
+                 this.savingSettings = true;
+                 this.settingsSaved = false;
+                 try {
+                     const res = await fetch('{{ route('admin.settings.enrollment.update') }}', {
+                         method: 'POST',
+                         headers: {
+                             'Content-Type': 'application/x-www-form-urlencoded',
+                             'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content || '',
+                         },
+                         body: new URLSearchParams({
+                             _method: 'PATCH',
+                             generate_microsoft_account: this.autoSettings.generate_microsoft_account ? '1' : '0',
+                             auto_generate_student_id: this.autoSettings.auto_generate_student_id ? '1' : '0',
+                             send_onboarding_email: this.autoSettings.send_onboarding_email ? '1' : '0',
+                             auto_generate_portal_account: this.autoSettings.auto_generate_portal_account ? '1' : '0',
+                             auto_mark_official_student: this.autoSettings.auto_mark_official_student ? '1' : '0',
+                         }),
+                     });
+                     if (res.ok || res.redirected) {
+                         this.settingsSaved = true;
+                         setTimeout(() => { this.settingsSaved = false; }, 2000);
+                     }
+                 } catch (e) {
+                     console.error('Failed to save settings', e);
+                 } finally {
+                     this.savingSettings = false;
+                 }
+             },
              openPreview(url, title, isPdf, kind = 'document') {
                  this.preview = true;
                  this.src = url;
@@ -203,17 +257,69 @@
                      window.open(url, '_blank');
                  }
              },
-             downloadImage() {
-                 if (!this.src) return;
-                 const filename = (this.label || 'photo').replace(/[^a-zA-Z0-9]/g, '_');
-                 const link = document.createElement('a');
-                 link.href = this.src;
-                 link.download = filename;
-                 document.body.appendChild(link);
-                 link.click();
-                 document.body.removeChild(link);
-             }
-         }"
+              downloadImage() {
+                  if (!this.src) return;
+                  const filename = (this.label || 'photo').replace(/[^a-zA-Z0-9]/g, '_');
+                  const link = document.createElement('a');
+                  link.href = this.src;
+                  link.download = filename;
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+              },
+              async approveAndGenerateAll(event) {
+                  const form = event.target.closest('form');
+                  if (!form) return;
+
+                  this.approving = true;
+                  this.approveError = '';
+                  this.approveMessageIndex = 0;
+                  this.approveMessage = this.approveMessages[0];
+                  this.approveDots = '';
+
+                  let dotsTimer;
+                  let messageTimer;
+
+                  dotsTimer = setInterval(() => {
+                      this.approveDots = this.approveDots.length >= 3 ? '' : this.approveDots + '\u2022';
+                  }, 400);
+
+                  messageTimer = setInterval(() => {
+                      if (this.approveMessageIndex < this.approveMessages.length - 1) {
+                          this.approveMessageIndex++;
+                          this.approveMessage = this.approveMessages[this.approveMessageIndex];
+                      }
+                  }, 1800);
+
+                  try {
+                      const formData = new FormData(form);
+                      const res = await fetch(form.action, {
+                          method: 'POST',
+                          headers: {
+                              'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content || '',
+                              'X-Requested-With': 'XMLHttpRequest',
+                              'Accept': 'text/html, application/json',
+                          },
+                          body: formData,
+                      });
+
+                      clearInterval(dotsTimer);
+                      clearInterval(messageTimer);
+
+                      if (res.redirected || res.ok) {
+                          window.location.reload();
+                          return;
+                      }
+
+                      const data = await res.json().catch(() => ({}));
+                      this.approveError = data.message || 'Approval failed. Please try again.';
+                  } catch (e) {
+                      clearInterval(dotsTimer);
+                      clearInterval(messageTimer);
+                      this.approveError = 'Network error. Please check your connection and try again.';
+                  }
+              },
+          }"
          x-effect="document.body.classList.toggle('overflow-hidden', preview)"
          @keydown.escape.window="closePreview(); statusOpen = false"
          @mouseup.window="stopPan()"
@@ -538,7 +644,16 @@
                 </x-card>
                 @endif
 
-                <x-card title="Readiness">
+                <x-card>
+                    <x-slot:title>
+                        <div class="flex items-center justify-between">
+                            <span>Readiness</span>
+                            <button type="button" @click="settingsOpen = true" class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-500 transition hover:border-slate-300 hover:text-slate-700" title="Automation Settings">
+                                <i data-lucide="settings" class="h-3.5 w-3.5"></i>
+                                Settings
+                            </button>
+                        </div>
+                    </x-slot:title>
                     <div class="space-y-3 text-sm">
                         <div class="review-readiness-row"><span>Documents</span><span class="readiness-pill {{ $allDocsOk ? 'readiness-emerald' : 'readiness-amber' }}">{{ $allDocsOk ? 'Approved' : 'Pending / Not Prior' }}</span></div>
                         <div class="review-readiness-row"><span>Payment</span><span class="readiness-pill {{ $paymentOk ? 'readiness-emerald' : ($payment?->status === 'rejected' ? 'readiness-rose' : 'readiness-orange') }}">{{ $paymentReadinessLabel }}</span></div>
@@ -647,6 +762,74 @@
                             </form>
                         </div>
                     @endif
+                </div>
+            </div>
+        </template>
+
+        <template x-teleport="body">
+            <div x-show="settingsOpen" class="preview-modal" x-cloak @keydown.escape.window="settingsOpen = false">
+                <button type="button" class="preview-backdrop" @click="settingsOpen = false"></button>
+                <div class="preview-panel max-w-sm">
+                    <div class="preview-head gap-3">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="settings" class="h-4 w-4 text-slate-500"></i>
+                            <strong>Approval Automation</strong>
+                        </div>
+                        <button type="button" class="ml-auto text-2xl leading-none text-slate-400 hover:text-slate-600" @click="settingsOpen = false">&times;</button>
+                    </div>
+                    <div class="p-5 space-y-4">
+                        <p class="text-xs text-slate-500">Configure what happens automatically when you approve an application. All off by default for safety.</p>
+
+                        <div class="space-y-3">
+                            <label class="flex items-start gap-3 cursor-pointer">
+                                <input type="checkbox" x-model="autoSettings.generate_microsoft_account" class="mt-0.5 h-5 w-5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500" @change="saveAutoSettings()">
+                                <div>
+                                    <div class="text-sm font-bold text-slate-900">Auto-generate Microsoft Account</div>
+                                    <div class="text-xs text-slate-500">Automatically create a Microsoft 365 account for the student after approval.</div>
+                                </div>
+                            </label>
+
+                            <label class="flex items-start gap-3 cursor-pointer">
+                                <input type="checkbox" x-model="autoSettings.auto_generate_student_id" class="mt-0.5 h-5 w-5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500" @change="saveAutoSettings()">
+                                <div>
+                                    <div class="text-sm font-bold text-slate-900">Auto-generate New AMIS Student ID</div>
+                                    <div class="text-xs text-slate-500">Automatically generate a new AMIS Student ID after approval.</div>
+                                </div>
+                            </label>
+
+                            <label class="flex items-start gap-3 cursor-pointer">
+                                <input type="checkbox" x-model="autoSettings.send_onboarding_email" class="mt-0.5 h-5 w-5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500" @change="saveAutoSettings()">
+                                <div>
+                                    <div class="text-sm font-bold text-slate-900">Auto-send Welcome Email</div>
+                                    <div class="text-xs text-slate-500">Automatically send the welcome message/email to the parent or student after approval.</div>
+                                </div>
+                            </label>
+
+                            <label class="flex items-start gap-3 cursor-pointer">
+                                <input type="checkbox" x-model="autoSettings.auto_generate_portal_account" class="mt-0.5 h-5 w-5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500" @change="saveAutoSettings()">
+                                <div>
+                                    <div class="text-sm font-bold text-slate-900">Auto-generate Student Portal Account</div>
+                                    <div class="text-xs text-slate-500">Automatically create the student portal login account after approval.</div>
+                                </div>
+                            </label>
+
+                            <label class="flex items-start gap-3 cursor-pointer">
+                                <input type="checkbox" x-model="autoSettings.auto_mark_official_student" class="mt-0.5 h-5 w-5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500" @change="saveAutoSettings()">
+                                <div>
+                                    <div class="text-sm font-bold text-slate-900">Auto-mark as Official Student</div>
+                                    <div class="text-xs text-slate-500">Automatically update the student status to Official after approval.</div>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div x-show="savingSettings" class="flex items-center gap-2 text-xs text-slate-500">
+                            <i data-lucide="loader-2" class="h-3.5 w-3.5 animate-spin"></i>
+                            Saving...
+                        </div>
+                        <div x-show="settingsSaved" class="rounded-lg bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700">
+                            ✅ Settings saved.
+                        </div>
+                    </div>
                 </div>
             </div>
         </template>

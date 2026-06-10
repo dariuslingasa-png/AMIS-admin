@@ -3,6 +3,7 @@
 namespace App\Services\Admin\Enrollment;
 
 use App\Models\EnrollmentApplicant;
+use App\Models\EnrollmentSetting;
 use App\Models\SchoolFee;
 use App\Models\Student;
 use App\Services\MicrosoftGraphService;
@@ -41,14 +42,23 @@ class EnrollmentApprovalService
             ]);
         }
 
-        $studentNumber = $this->generateStudentNumber();
-        [$mailNick, $schoolEmail] = $this->generateSchoolEmail($applicant, $studentNumber);
-        $tempPassword = 'Amis@'.strtoupper(Str::random(5)).rand(10, 99);
+        $setting = EnrollmentSetting::current();
+        $studentNumber = $this->generateStudentNumber($applicant);
 
-        [$msUserId, $msError, $graph] = $this->createMicrosoftAccount($applicant, $mailNick, $schoolEmail, $tempPassword);
-        $student = $this->createStudent($applicant, $studentNumber, $schoolEmail, $msUserId, $tempPassword);
-
-        $this->enrollInTeams($student, $msUserId, $graph);
+        if ($setting->generate_microsoft_account) {
+            [$mailNick, $schoolEmail] = $this->generateSchoolEmail($applicant, $studentNumber);
+            $tempPassword = 'Amis@'.strtoupper(Str::random(5)).rand(10, 99);
+            [$msUserId, $msError, $graph] = $this->createMicrosoftAccount($applicant, $mailNick, $schoolEmail, $tempPassword);
+            $student = $this->createStudent($applicant, $studentNumber, $schoolEmail, $msUserId, $tempPassword);
+            $this->enrollInTeams($student, $msUserId, $graph);
+        } else {
+            $schoolEmail = null;
+            $msUserId = null;
+            $msError = null;
+            $graph = null;
+            $tempPassword = '';
+            $student = $this->createStudent($applicant, $studentNumber, null, null, '');
+        }
         $this->generateSoa($student, $applicant);
 
         $documentRemarks = $this->reviewService->missingDocumentRemarks($applicant);
@@ -62,7 +72,11 @@ class EnrollmentApprovalService
 
         return $msError
             ? 'Application approved. Student number generated. Note: Microsoft account creation failed. Please create it manually. Error: '.$msError
-            : 'Application approved. Student credentials were generated and sent to the parent.';
+            : ($setting->send_onboarding_email && $setting->generate_microsoft_account
+                ? 'Application approved. Student credentials were generated and sent to the parent.'
+                : ($setting->send_onboarding_email
+                    ? 'Application approved. Student record created and welcome email sent.'
+                    : 'Application approved. Student record created successfully.'));
     }
 
     private function generateStudentNumber(): string
@@ -118,7 +132,7 @@ class EnrollmentApprovalService
     private function createStudent(
         EnrollmentApplicant $applicant,
         string $studentNumber,
-        string $schoolEmail,
+        ?string $schoolEmail,
         ?string $msUserId,
         string $tempPassword,
     ): Student {
@@ -167,10 +181,10 @@ class EnrollmentApprovalService
         try {
             (new SoaService())->generate($student, $applicant);
         } catch (\Throwable $exception) {
-            Log::error('SOA generation failed: '.$exception->getMessage());
-
-            throw ValidationException::withMessages([
-                'status' => 'Application approval created the student record, but SOA generation failed: '.$exception->getMessage(),
+            Log::warning('SOA generation skipped: '.$exception->getMessage(), [
+                'student_id' => $student->id,
+                'grade_level' => $applicant->grade_level,
+                'school_year' => $applicant->school_year,
             ]);
         }
     }
@@ -192,6 +206,10 @@ class EnrollmentApprovalService
         string $tempPassword,
         ?string $msError,
     ): void {
+        if (!EnrollmentSetting::current()->send_onboarding_email) {
+            return;
+        }
+
         $recipients = collect([$applicant->parent_email ?: null, $applicant->email ?: null])
             ->filter(fn ($email) => $email && $email !== 'NA' && filter_var($email, FILTER_VALIDATE_EMAIL))
             ->unique()
@@ -201,7 +219,9 @@ class EnrollmentApprovalService
             return;
         }
 
-        $this->sendOnboardingEmail($applicant, $student, $tempPassword, $msError, $recipients->all());
+        $hasCredentials = $student->school_email && $tempPassword;
+
+        $this->sendOnboardingEmail($applicant, $student, $tempPassword, $msError, $recipients->all(), $hasCredentials);
     }
 
     private function sendOnboardingEmail(
@@ -210,10 +230,44 @@ class EnrollmentApprovalService
         string $tempPassword,
         ?string $msError,
         array $recipients,
+        bool $hasCredentials,
     ): void {
         $studentName = trim($applicant->first_name.' '.$applicant->last_name);
         $genderWord = strtolower((string) ($applicant->gender ?? 'male')) === 'female' ? 'daughter' : 'son';
         $pronoun = $genderWord === 'son' ? 'him' : 'her';
+
+        $credentialsHtml = $hasCredentials
+            ? '
+        <p style="font-size:14px;color:#374151;margin:0 0 20px;line-height:1.7;">Below are the school credentials for Microsoft 365 and the Student Portal:</p>
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:20px 24px;margin-bottom:24px;">
+            <table width="100%" cellpadding="0" cellspacing="0">
+                <tr><td style="padding:7px 0;font-size:13px;color:#6b7280;width:160px;">Student Number</td><td style="padding:7px 0;font-size:15px;font-weight:800;color:#059669;">'.$student->student_number.'</td></tr>
+                <tr><td style="padding:7px 0;font-size:13px;color:#6b7280;">Grade Level</td><td style="padding:7px 0;font-size:14px;font-weight:600;color:#111827;">'.$student->grade_level.'</td></tr>
+                <tr><td style="padding:7px 0;font-size:13px;color:#6b7280;">School Email</td><td style="padding:7px 0;font-size:14px;font-weight:600;color:#111827;">'.$student->school_email.'</td></tr>
+                <tr><td style="padding:7px 0;font-size:13px;color:#6b7280;">Temp Password</td><td style="padding:7px 0;font-size:14px;font-weight:700;color:#111827;letter-spacing:0.08em;background:#fef9c3;padding:4px 8px;border-radius:6px;">'.$tempPassword.'</td></tr>
+            </table>
+        </div>
+        <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:14px 18px;margin-bottom:20px;">
+            <p style="font-size:13px;color:#9a3412;margin:0;font-weight:600;">Important reminders:</p>
+            <ul style="font-size:13px;color:#9a3412;margin:8px 0 0;padding-left:18px;line-height:1.8;">
+                <li>Please change the temporary password upon first login.</li>
+                <li>Use the school email to sign in to Microsoft Teams for online classes.</li>
+                <li>Keep these credentials safe and do not share them.</li>
+            </ul>
+        </div>
+        <p style="font-size:13px;color:#6b7280;margin:0 0 6px;">Sign in at: <a href="https://portal.office.com" style="color:#059669;font-weight:600;">portal.office.com</a></p>'
+            : '
+        <p style="font-size:14px;color:#374151;margin:0 0 20px;line-height:1.7;">The school will provide the Student Portal and Microsoft 365 credentials in a follow-up email. Please keep your enrollment documents handy for future reference.</p>
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:20px 24px;margin-bottom:24px;">
+            <table width="100%" cellpadding="0" cellspacing="0">
+                <tr><td style="padding:7px 0;font-size:13px;color:#6b7280;width:160px;">Student Number</td><td style="padding:7px 0;font-size:15px;font-weight:800;color:#059669;">'.$student->student_number.'</td></tr>
+                <tr><td style="padding:7px 0;font-size:13px;color:#6b7280;">Grade Level</td><td style="padding:7px 0;font-size:14px;font-weight:600;color:#111827;">'.$student->grade_level.'</td></tr>
+            </table>
+        </div>';
+
+        $msErrorNote = $msError
+            ? '<p style="color:#dc2626;font-size:12px;background:#fff1f2;padding:10px 14px;border-radius:8px;margin-top:12px;">Note: Microsoft account setup encountered an issue. The school will complete the setup and notify you once the credentials are ready.</p>'
+            : '';
 
         $html = '
 <!DOCTYPE html>
@@ -236,25 +290,8 @@ class EnrollmentApprovalService
             <span style="color:#059669;font-weight:700;">officially approved</span> for <strong>School Year '.$applicant->school_year.'</strong>.
             We warmly welcome '.$pronoun.' to the AMIS family.
         </p>
-        <p style="font-size:14px;color:#374151;margin:0 0 20px;line-height:1.7;">Below are the school credentials for Microsoft 365 and the Student Portal:</p>
-        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:20px 24px;margin-bottom:24px;">
-            <table width="100%" cellpadding="0" cellspacing="0">
-                <tr><td style="padding:7px 0;font-size:13px;color:#6b7280;width:160px;">Student Number</td><td style="padding:7px 0;font-size:15px;font-weight:800;color:#059669;">'.$student->student_number.'</td></tr>
-                <tr><td style="padding:7px 0;font-size:13px;color:#6b7280;">Grade Level</td><td style="padding:7px 0;font-size:14px;font-weight:600;color:#111827;">'.$student->grade_level.'</td></tr>
-                <tr><td style="padding:7px 0;font-size:13px;color:#6b7280;">School Email</td><td style="padding:7px 0;font-size:14px;font-weight:600;color:#111827;">'.$student->school_email.'</td></tr>
-                <tr><td style="padding:7px 0;font-size:13px;color:#6b7280;">Temp Password</td><td style="padding:7px 0;font-size:14px;font-weight:700;color:#111827;letter-spacing:0.08em;background:#fef9c3;padding:4px 8px;border-radius:6px;">'.$tempPassword.'</td></tr>
-            </table>
-        </div>
-        <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:14px 18px;margin-bottom:20px;">
-            <p style="font-size:13px;color:#9a3412;margin:0;font-weight:600;">Important reminders:</p>
-            <ul style="font-size:13px;color:#9a3412;margin:8px 0 0;padding-left:18px;line-height:1.8;">
-                <li>Please change the temporary password upon first login.</li>
-                <li>Use the school email to sign in to Microsoft Teams for online classes.</li>
-                <li>Keep these credentials safe and do not share them.</li>
-            </ul>
-        </div>
-        <p style="font-size:13px;color:#6b7280;margin:0 0 6px;">Sign in at: <a href="https://portal.office.com" style="color:#059669;font-weight:600;">portal.office.com</a></p>
-        '.($msError ? '<p style="color:#dc2626;font-size:12px;background:#fff1f2;padding:10px 14px;border-radius:8px;margin-top:12px;">Note: Microsoft account setup is still in progress. The school will notify you once it is ready.</p>' : '').'
+        '.$credentialsHtml.'
+        '.$msErrorNote.'
         <p style="font-size:14px;color:#374151;margin:24px 0 0;line-height:1.7;">May Allah bless your '.$genderWord.'\'s journey of learning. We look forward to a fruitful school year together.</p>
         <p style="font-size:14px;color:#374151;margin:8px 0 0;font-weight:600;">Wassalamualaikum Warahmatullahi Wabarakatuh.</p>
     </td></tr>

@@ -47,6 +47,20 @@ return [
     'enrollment_storage_url' => env('ENROLLMENT_STORAGE_URL'),
     'student_portal_url' => env('STUDENT_PORTAL_URL', env('APP_URL')),
 
+    'enrollment' => [
+        'send_onboarding_email' => env('ENROLLMENT_SEND_ONBOARDING_EMAIL', true),
+        'readiness' => [
+            'require_documents_approved' => env('ENROLLMENT_READINESS_REQUIRE_DOCUMENTS', true),
+            'require_payment_verified'   => env('ENROLLMENT_READINESS_REQUIRE_PAYMENT', true),
+            'require_complete_fields'    => env('ENROLLMENT_READINESS_REQUIRE_FIELDS', true),
+        ],
+    ],
+
+    'ebook' => [
+        'url' => env('EBOOK_PORTAL_URL', 'http://127.0.0.1:8003'),
+        'sso_secret' => env('SSO_SECRET'),
+    ],
+
     'school' => [
         'year'                  => env('SCHOOL_YEAR', '2026-2027'),
         'previous_year'         => env('SCHOOL_PREVIOUS_YEAR', '2025-2026'),

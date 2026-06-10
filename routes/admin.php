@@ -1,4 +1,4 @@
-<?php
+w<?php
 
 use App\Http\Controllers\Admin\ApplicantController;
 use App\Http\Controllers\Admin\ApprovalController;
@@ -8,6 +8,8 @@ use App\Http\Controllers\Admin\EnrollmentController;
 use App\Http\Controllers\Admin\RequirementController;
 use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\AdminDiscountSettingsController;
+use App\Http\Controllers\AdminEnrollmentSettingsController;
+use App\Http\Controllers\AdminEbookController;
 use App\Http\Controllers\AdminAcademicController;
 use App\Http\Controllers\AdminMsSyncController;
 use App\Http\Controllers\AdminMsTeamsController;
@@ -73,6 +75,10 @@ Route::name('admin.')->group(function () {
         Route::get('/students/history', [AdminStudentController::class, 'history'])->name('students.history');
         Route::get('/students/{student}', [AdminStudentController::class, 'show'])->name('students.show');
         Route::post('/students/{student}/resend', [AdminStudentController::class, 'resendCredentials'])->name('students.resend');
+        Route::post('/students/{student}/send-welcome-email', [AdminStudentController::class, 'sendWelcomeEmail'])->name('students.send-welcome-email');
+        Route::post('/students/{student}/status', [AdminStudentController::class, 'updateStatus'])->name('students.update-status');
+        Route::post('/students/{student}/update-email', [AdminStudentController::class, 'updateEmail'])->name('students.update-email');
+        Route::post('/students/{student}/update-grade', [AdminStudentController::class, 'updateGrade'])->name('students.update-grade');
 
         Route::get('/soa', [AdminSoaController::class, 'index'])->name('soa.index');
         Route::get('/soa/{account}', [AdminSoaController::class, 'show'])->name('soa.show');
@@ -118,6 +124,8 @@ Route::name('admin.')->group(function () {
 
         Route::get('/settings/discounts', [AdminDiscountSettingsController::class, 'edit'])->name('settings.discounts');
         Route::patch('/settings/discounts', [AdminDiscountSettingsController::class, 'update'])->name('settings.discounts.update');
+        Route::get('/settings/enrollment', [AdminEnrollmentSettingsController::class, 'edit'])->name('settings.enrollment');
+        Route::patch('/settings/enrollment', [AdminEnrollmentSettingsController::class, 'update'])->name('settings.enrollment.update');
 
         Route::prefix('academic')->name('academic.')->group(function () {
             Route::get('/', [AdminAcademicController::class, 'dashboard'])->name('dashboard');

@@ -3,8 +3,10 @@
 namespace App\Services\Admin\Enrollment;
 
 use App\Models\EnrollmentApplicant;
+use App\Models\EnrollmentSetting;
 use App\Models\SchoolFee;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class EnrollmentReviewService
@@ -190,6 +192,107 @@ class EnrollmentReviewService
     public function assertReadyForApproval(EnrollmentApplicant $applicant): void
     {
         $applicant->loadMissing('payment');
+
+        $setting = EnrollmentSetting::current();
+        $readiness = [
+            'require_documents_approved' => $setting->require_documents_approved,
+            'require_payment_verified' => $setting->require_payment_verified,
+            'require_complete_fields' => $setting->require_complete_fields,
+        ];
+        $skipped = [];
+
+        try {
+            // 1. Check: All required documents approved
+            if ($this->isReadinessCheckEnabled('require_documents_approved', $readiness)) {
+                if (! $this->areAllDocumentsApproved($applicant)) {
+                    $missing = $this->missingDocumentsList($applicant);
+                    throw ValidationException::withMessages([
+                        'status' => 'Not all required documents have been approved: ' . implode(', ', $missing),
+                    ]);
+                }
+            } else {
+                $skipped[] = 'documents';
+            }
+
+            // 2. Check: Payment verified
+            if ($this->isReadinessCheckEnabled('require_payment_verified', $readiness)) {
+                $payment = $applicant->payment;
+                if (! $payment || $payment->status !== 'verified') {
+                    throw ValidationException::withMessages([
+                        'status' => 'Payment has not been verified yet. Current status: ' . ($payment->status ?? 'no payment'),
+                    ]);
+                }
+            } else {
+                $skipped[] = 'payment';
+            }
+
+            // 3. Check: Required fields complete
+            if ($this->isReadinessCheckEnabled('require_complete_fields', $readiness)) {
+                $missingFields = $this->missingRequiredFields($applicant);
+                if (! empty($missingFields)) {
+                    throw ValidationException::withMessages([
+                        'status' => 'Missing required fields: ' . implode(', ', $missingFields),
+                    ]);
+                }
+            } else {
+                $skipped[] = 'fields';
+            }
+        } finally {
+            if (! empty($skipped)) {
+                Log::info('Enrollment readiness checks skipped for applicant ' . $applicant->id, [
+                    'applicant_id' => $applicant->id,
+                    'skipped_checks' => $skipped,
+                    'readiness_config' => $readiness,
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Check if a specific readiness check is enabled in config.
+     * Defaults to true (strict) if not explicitly set.
+     */
+    private function isReadinessCheckEnabled(string $key, array $readiness): bool
+    {
+        return (bool) ($readiness[$key] ?? true);
+    }
+
+    /**
+     * Return a human-readable list of missing (not approved) documents.
+     */
+    private function missingDocumentsList(EnrollmentApplicant $applicant): array
+    {
+        $statuses = $applicant->document_statuses ?? [];
+        $missing = collect($this->getRequiredDocuments($applicant))
+            ->filter(fn (string $label, string $key) => ($statuses[$key] ?? '') !== 'approved')
+            ->values()
+            ->all();
+
+        return $missing;
+    }
+
+    /**
+     * Return a list of required fields that are missing/blank.
+     */
+    private function missingRequiredFields(EnrollmentApplicant $applicant): array
+    {
+        $required = [
+            'first_name'   => 'First Name',
+            'last_name'    => 'Last Name',
+            'grade_level'  => 'Grade Level',
+            'school_year'  => 'School Year',
+            'parent_email' => 'Parent Email',
+        ];
+
+        $missing = [];
+        foreach ($required as $field => $label) {
+            $value = $applicant->$field ?? null;
+            if ($value === null || trim((string) $value) === '' || $value === 'NA') {
+                $missing[] = $label;
+            }
+        }
+
+        return $missing;
     }
 
     public function missingDocumentRemarks(EnrollmentApplicant $applicant): ?string

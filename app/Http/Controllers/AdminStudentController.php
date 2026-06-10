@@ -243,6 +243,93 @@ class AdminStudentController extends Controller
         return back()->with('success', 'Credentials resent to ' . ($parentEmail ?? 'parent') . '.');
     }
 
+    public function sendWelcomeEmail(Student $student)
+    {
+        $student->loadMissing('applicant');
+        $applicant = $student->applicant;
+
+        $parentEmail = $applicant->parent_email ?: $applicant->email;
+
+        if (!$parentEmail || $parentEmail === 'NA' || !filter_var($parentEmail, FILTER_VALIDATE_EMAIL)) {
+            return back()->with('error', 'No valid parent/guardian email on file for this student.');
+        }
+
+        $studentName = trim(($applicant->first_name ?? '') . ' ' . ($applicant->last_name ?? ''));
+        $genderWord = strtolower((string) ($applicant->gender ?? 'male')) === 'female' ? 'daughter' : 'son';
+        $pronoun = $genderWord === 'son' ? 'him' : 'her';
+
+        $html = '<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:Inter,Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:40px 20px;">
+<tr><td align="center">
+<table width="540" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.08);">
+    <tr><td style="background:linear-gradient(135deg,#059669,#047857);padding:36px 40px;text-align:center;">
+        <img src="' . asset('images/AMIS_Logo.png') . '" alt="AMIS" width="64" height="64" style="margin-bottom:14px;border-radius:12px;">
+        <h1 style="color:#fff;font-size:22px;margin:0 0 4px;font-weight:800;">Al Munawwara Islamic School</h1>
+        <p style="color:rgba(255,255,255,0.85);font-size:13px;margin:0;">AMIS Enrollment Office</p>
+    </td></tr>
+    <tr><td style="padding:36px 40px;">
+        <p style="font-size:18px;font-weight:700;color:#059669;margin:0 0 6px;">Assalamualaikum Warahmatullahi Wabarakatuh,</p>
+        <p style="font-size:14px;color:#374151;margin:0 0 20px;">Dear Parent/Guardian of <strong>' . $studentName . '</strong>,</p>
+        <p style="font-size:14px;color:#374151;margin:0 0 20px;line-height:1.7;">
+            Thank you for enrolling your <strong>' . $genderWord . '</strong>, <strong>' . $studentName . '</strong>,
+            at Al Munawwara Islamic School for <strong>School Year ' . ($student->school_year ?? $applicant->school_year ?? date('Y')) . '</strong>.
+            We are honored to welcome ' . $pronoun . ' to the AMIS family.
+        </p>
+        <p style="font-size:14px;color:#374151;margin:0 0 20px;line-height:1.7;">
+            Your child\'s enrollment has been processed. Below are the school credentials for accessing Microsoft 365, Microsoft Teams, and the Student Portal:
+        </p>
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:20px 24px;margin-bottom:24px;">
+            <table width="100%" cellpadding="0" cellspacing="0">
+                <tr><td style="padding:7px 0;font-size:13px;color:#6b7280;width:160px;">Student Number</td><td style="padding:7px 0;font-size:15px;font-weight:800;color:#059669;">' . $student->student_number . '</td></tr>
+                <tr><td style="padding:7px 0;font-size:13px;color:#6b7280;">Grade Level</td><td style="padding:7px 0;font-size:14px;font-weight:600;color:#111827;">' . ($student->grade_level ?? $applicant->grade_level ?? '-') . '</td></tr>
+                <tr><td style="padding:7px 0;font-size:13px;color:#6b7280;">School Email</td><td style="padding:7px 0;font-size:14px;font-weight:600;color:#111827;">' . $student->school_email . '</td></tr>
+                <tr><td style="padding:7px 0;font-size:13px;color:#6b7280;">Learning Mode</td><td style="padding:7px 0;font-size:14px;font-weight:600;color:#111827;">' . ($applicant->learning_mode ?? 'Not specified') . '</td></tr>
+            </table>
+        </div>
+        <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:14px 18px;margin-bottom:20px;">
+            <p style="font-size:13px;color:#9a3412;margin:0;font-weight:600;">Important reminders:</p>
+            <ul style="font-size:13px;color:#9a3412;margin:8px 0 0;padding-left:18px;line-height:1.8;">
+                <li>Sign in at the Microsoft Teams app using the school email above.</li>
+                <li>Use Microsoft Teams for online classes and announcements.</li>
+                <li>For any concerns, please contact us at <a href="mailto:' . config('mail.from.address', 'amisonlinesupport@gmail.com') . '" style="color:#059669;font-weight:600;">' . config('mail.from.address', 'amisonlinesupport@gmail.com') . '</a>.</li>
+            </ul>
+        </div>
+        <p style="font-size:14px;color:#374151;margin:24px 0 0;line-height:1.7;">May Allah bless your ' . $genderWord . '\'s journey of learning. We look forward to a fruitful and blessed school year together.</p>
+        <p style="font-size:14px;color:#374151;margin:8px 0 0;font-weight:600;">Wassalamualaikum Warahmatullahi Wabarakatuh.</p>
+    </td></tr>
+    <tr><td style="background:#f9fafb;padding:20px 40px;text-align:center;border-top:1px solid #e5e7eb;">
+        <p style="color:#9ca3af;font-size:11px;margin:0 0 4px;font-weight:600;">Al Munawwara Islamic School</p>
+        <p style="color:#9ca3af;font-size:11px;margin:0;">Bugac Ma-a Road, Davao City</p>
+        <p style="color:#9ca3af;font-size:11px;margin:0;">&copy; ' . date('Y') . ' All rights reserved.</p>
+    </td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>';
+
+        try {
+            Mail::html($html, function ($message) use ($parentEmail, $studentName) {
+                $message->to($parentEmail)
+                    ->subject('AMIS — Welcome to Al Munawwara Islamic School!');
+            });
+
+            \App\Models\AdminAuditLog::record('email_sent', true, "Welcome email sent to {$parentEmail} for student {$student->student_number}", [
+                'student_number' => $student->student_number,
+                'email' => $parentEmail,
+            ]);
+
+            return back()->with('success', 'Welcome email sent to ' . $parentEmail . '.');
+        } catch (\Throwable $exception) {
+            Log::error('Failed to send welcome email: ' . $exception->getMessage());
+
+            return back()->with('error', 'Failed to send welcome email. Please try again.');
+        }
+    }
+
     private function sendCredentialsEmail($applicant, Student $student, string $tempPassword): void
     {
         $parentEmail = $applicant->parent_email ?: $applicant->email;
@@ -272,5 +359,196 @@ class AdminStudentController extends Controller
         } catch (\Exception $e) {
             Log::error('Failed to resend credentials: ' . $e->getMessage());
         }
+    }
+
+    public function updateStatus(Request $request, Student $student)
+    {
+        $data = $request->validate([
+            'status' => ['required', 'in:verified,suspended,graduated,transferred,withdrawn'],
+        ]);
+
+        $status = $data['status'];
+        $user = $student->user;
+
+        if (!$user) {
+            return back()->withErrors(['error' => 'Student user record not found.']);
+        }
+
+        // Update database account status
+        $user->update([
+            'account_status' => $status,
+        ]);
+
+        // Provision/Sync to Microsoft AD
+        $graph = new MicrosoftGraphService();
+        $email = $student->school_email;
+        $studentSkuId = config('services.microsoft.student_sku_id');
+        $msError = null;
+
+        try {
+            if ($student->ms_user_id || $graph->userExists($email)) {
+                $msUserId = $student->ms_user_id ?: $graph->resolveUserId($email);
+
+                if ($status === 'verified') {
+                    // Enable account
+                    $graph->setAccountEnabled($msUserId, true);
+
+                    // Assign Student License
+                    if ($studentSkuId) {
+                        $graph->assignLicense($msUserId, [$studentSkuId], []);
+                        \App\Models\AdminAuditLog::record('license_assigned', true, "Assigned student license to student {$email} via status change to verified", [
+                            'email' => $email,
+                            'sku_id' => $studentSkuId,
+                            'ms_user_id' => $msUserId,
+                        ]);
+                    }
+                } else {
+                    // Disable account
+                    $graph->setAccountEnabled($msUserId, false);
+
+                    // Revoke Student License
+                    if ($studentSkuId) {
+                        try {
+                            $graph->assignLicense($msUserId, [], [$studentSkuId]);
+                            \App\Models\AdminAuditLog::record('license_revoked', true, "Revoked student license from student {$email} via status change to {$status}", [
+                                'email' => $email,
+                                'sku_id' => $studentSkuId,
+                                'ms_user_id' => $msUserId,
+                            ]);
+                        } catch (\Throwable $licEx) {
+                            // Ignore if license was not assigned
+                        }
+                    }
+                }
+            } else {
+                $msError = 'No Microsoft account exists for this user in Entra ID.';
+            }
+        } catch (\Throwable $exception) {
+            $msError = $exception->getMessage();
+            Log::error("Student Microsoft status sync failed for {$email}: {$msError}");
+        }
+
+        if ($msError) {
+            return back()->with('success', "Student status updated locally to '{$status}', but Microsoft AD sync failed: {$msError}");
+        }
+
+        return back()->with('success', "Student status updated successfully to '{$status}' and synced to Microsoft AD.");
+    }
+
+    public function updateEmail(Request $request, Student $student)
+    {
+        $request->validate([
+            'email' => [
+                'required',
+                'email',
+                'regex:/^[a-zA-Z0-9._%+-]+@amis\.edu\.ph$/i',
+                'unique:students,school_email,' . $student->id,
+                'unique:users,email,' . ($student->user_id ?? 'NULL'),
+            ],
+        ], [
+            'email.regex' => 'The email must be a valid @amis.edu.ph address.',
+            'email.unique' => 'This school email is already assigned to another user.',
+        ]);
+
+        $oldEmail = $student->school_email;
+        $newEmail = strtolower(trim($request->email));
+
+        if ($oldEmail === $newEmail) {
+            return back()->with('success', 'Email is already set to ' . $newEmail);
+        }
+
+        // Update local student record
+        $student->update([
+            'school_email' => $newEmail,
+        ]);
+
+        // Update local user account if it exists
+        if ($student->user) {
+            $student->user->update([
+                'email' => $newEmail,
+            ]);
+        }
+
+        $msError = null;
+
+        // Sync the rename to Microsoft AD if Microsoft Sync is initialized
+        try {
+            $graph = new MicrosoftGraphService();
+            if ($student->ms_user_id || $graph->userExists($oldEmail)) {
+                $msUserId = $student->ms_user_id ?: $graph->resolveUserId($oldEmail);
+                $token = (new \ReflectionMethod($graph, 'getAccessToken'))->invoke($graph);
+                
+                $mailNickname = strstr($newEmail, '@', true);
+
+                $response = \Illuminate\Support\Facades\Http::withToken($token)
+                    ->patch("https://graph.microsoft.com/v1.0/users/{$msUserId}", [
+                        'userPrincipalName' => $newEmail,
+                        'mail' => $newEmail,
+                        'mailNickname' => $mailNickname,
+                    ]);
+
+                if ($response->failed()) {
+                    $msError = $response->json()['error']['message'] ?? 'Microsoft API returned an error.';
+                } else {
+                    // Update the student UPN in the database if it wasn't set correctly
+                    if (!$student->ms_user_id) {
+                        $student->update(['ms_user_id' => $msUserId]);
+                    }
+                    \App\Models\AdminAuditLog::record('email_renamed', true, "Renamed student Microsoft account from {$oldEmail} to {$newEmail}", [
+                        'old_email' => $oldEmail,
+                        'new_email' => $newEmail,
+                        'ms_user_id' => $msUserId,
+                    ]);
+                }
+            }
+        } catch (\Throwable $e) {
+            $msError = $e->getMessage();
+            Log::error("Failed to update student Microsoft email from {$oldEmail} to {$newEmail}: " . $msError);
+        }
+
+        if ($msError) {
+            return back()->with('success', "School email updated locally to '{$newEmail}', but Microsoft AD update failed: {$msError}");
+        }
+
+        return back()->with('success', "School email successfully updated to '{$newEmail}' locally and synced to Microsoft AD.");
+    }
+
+    public function updateGrade(Request $request, Student $student)
+    {
+        $request->validate([
+            'grade_level' => [
+                'required',
+                'string',
+                \Illuminate\Validation\Rule::in(\App\Services\Admin\Enrollment\ApplicationQuery::GRADE_LEVELS),
+            ],
+        ]);
+
+        $oldGrade = $student->grade_level;
+        $newGrade = $request->grade_level;
+
+        if ($oldGrade === $newGrade) {
+            return back()->with('success', 'Grade level is already set to ' . $newGrade);
+        }
+
+        // Update local student record
+        $student->update([
+            'grade_level' => $newGrade,
+        ]);
+
+        // Update local applicant record if it exists
+        if ($student->applicant) {
+            $student->applicant->update([
+                'grade_level' => $newGrade,
+            ]);
+        }
+
+        // Audit log
+        \App\Models\AdminAuditLog::record('grade_updated', true, "Updated student grade level from {$oldGrade} to {$newGrade} for student {$student->school_email}", [
+            'student_number' => $student->student_number,
+            'old_grade' => $oldGrade,
+            'new_grade' => $newGrade,
+        ]);
+
+        return back()->with('success', "Grade level successfully updated to '{$newGrade}'.");
     }
 }

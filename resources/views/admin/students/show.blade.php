@@ -507,6 +507,61 @@
             <!-- Actions Panel -->
             <x-card title="Actions Workspace">
                 <div class="space-y-3.5">
+                    <!-- Update Status Form -->
+                    <form method="POST" action="{{ route('admin.students.update-status', $student) }}" class="border-b border-slate-100 pb-4 mb-4 dark:border-slate-800">
+                        @csrf
+                        <label class="block text-xxs font-extrabold uppercase tracking-wider text-slate-400 mb-1.5">Administrative Status</label>
+                        <div class="flex gap-2">
+                            <select name="status" class="flex-1 h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+                                <option value="verified" @selected(($student->user->account_status ?? 'verified') === 'verified')>Active / Verified</option>
+                                <option value="suspended" @selected(($student->user->account_status ?? 'verified') === 'suspended')>Suspended / Deactivated</option>
+                                <option value="graduated" @selected(($student->user->account_status ?? 'verified') === 'graduated')>Graduated</option>
+                                <option value="transferred" @selected(($student->user->account_status ?? 'verified') === 'transferred')>Transferred</option>
+                                <option value="withdrawn" @selected(($student->user->account_status ?? 'verified') === 'withdrawn')>Withdrawn</option>
+                            </select>
+                            <button type="submit" class="inline-flex h-10 items-center justify-center rounded-xl bg-emerald-600 px-4 text-xs font-bold text-white hover:bg-emerald-700 active:scale-[0.98] transition-all duration-200 cursor-pointer" title="Save Status">
+                                Save
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Update Microsoft Email Form -->
+                    <form method="POST" action="{{ route('admin.students.update-email', $student) }}" class="border-b border-slate-100 pb-4 mb-4 dark:border-slate-800">
+                        @csrf
+                        <label class="block text-xxs font-extrabold uppercase tracking-wider text-slate-400 mb-1.5">Microsoft / School Email</label>
+                        <div class="flex gap-2">
+                            <input type="email" name="email" value="{{ $student->school_email }}" required class="flex-1 h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+                            <button type="submit" class="inline-flex h-10 items-center justify-center rounded-xl bg-emerald-600 px-4 text-xs font-bold text-white hover:bg-emerald-700 active:scale-[0.98] transition-all duration-200 cursor-pointer" title="Save Email">
+                                Rename
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Update Grade Level Form -->
+                    <form method="POST" action="{{ route('admin.students.update-grade', $student) }}" class="border-b border-slate-100 pb-4 mb-4 dark:border-slate-800">
+                        @csrf
+                        <label class="block text-xxs font-extrabold uppercase tracking-wider text-slate-400 mb-1.5">Grade Level</label>
+                        <div class="flex gap-2">
+                            <select name="grade_level" class="flex-1 h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+                                @foreach(\App\Services\Admin\Enrollment\ApplicationQuery::GRADE_LEVELS as $g)
+                                    <option value="{{ $g }}" @selected($student->grade_level === $g)>{{ $g }}</option>
+                                @endforeach
+                            </select>
+                            <button type="submit" class="inline-flex h-10 items-center justify-center rounded-xl bg-emerald-600 px-4 text-xs font-bold text-white hover:bg-emerald-700 active:scale-[0.98] transition-all duration-200 cursor-pointer" title="Save Grade">
+                                Save
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Send Welcome Email form -->
+                    <form method="POST" action="{{ route('admin.students.send-welcome-email', $student) }}">
+                        @csrf
+                        <button type="submit" class="w-full inline-flex h-11 items-center justify-center gap-2.5 rounded-xl bg-blue-600 px-4 text-sm font-bold text-white hover:bg-blue-700 active:scale-[0.98] transition-all duration-200 cursor-pointer">
+                            <i data-lucide="mail" class="h-4 w-4"></i>
+                            <span>Send Welcome Email</span>
+                        </button>
+                    </form>
+
                     <!-- Resend credentials form -->
                     <form method="POST" action="{{ route('admin.students.resend', $student) }}">
                         @csrf
