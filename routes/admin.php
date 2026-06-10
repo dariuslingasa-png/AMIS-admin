@@ -96,6 +96,7 @@ Route::name('admin.')->group(function () {
         Route::get('/students/{student}', [AdminStudentController::class, 'show'])->name('students.show');
         Route::post('/students/{student}/resend', [AdminStudentController::class, 'resendCredentials'])->name('students.resend');
         Route::post('/students/{student}/status', [AdminStudentController::class, 'updateStatus'])->name('students.update-status');
+        Route::post('/students/{student}/update-email', [AdminStudentController::class, 'updateEmail'])->name('students.update-email');
 
         Route::get('/soa', [AdminSoaController::class, 'index'])->name('soa.index');
         Route::get('/soa/{account}', [AdminSoaController::class, 'show'])->name('soa.show');

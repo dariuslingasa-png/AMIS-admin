@@ -347,4 +347,82 @@ class AdminStudentController extends Controller
 
         return back()->with('success', "Student status updated successfully to '{$status}' and synced to Microsoft AD.");
     }
+
+    public function updateEmail(Request $request, Student $student)
+    {
+        $request->validate([
+            'email' => [
+                'required',
+                'email',
+                'regex:/^[a-zA-Z0-9._%+-]+@amis\.edu\.ph$/i',
+                'unique:students,school_email,' . $student->id,
+                'unique:users,email,' . ($student->user_id ?? 'NULL'),
+            ],
+        ], [
+            'email.regex' => 'The email must be a valid @amis.edu.ph address.',
+            'email.unique' => 'This school email is already assigned to another user.',
+        ]);
+
+        $oldEmail = $student->school_email;
+        $newEmail = strtolower(trim($request->email));
+
+        if ($oldEmail === $newEmail) {
+            return back()->with('success', 'Email is already set to ' . $newEmail);
+        }
+
+        // Update local student record
+        $student->update([
+            'school_email' => $newEmail,
+        ]);
+
+        // Update local user account if it exists
+        if ($student->user) {
+            $student->user->update([
+                'email' => $newEmail,
+            ]);
+        }
+
+        $msError = null;
+
+        // Sync the rename to Microsoft AD if Microsoft Sync is initialized
+        try {
+            $graph = new MicrosoftGraphService();
+            if ($student->ms_user_id || $graph->userExists($oldEmail)) {
+                $msUserId = $student->ms_user_id ?: $graph->resolveUserId($oldEmail);
+                $token = (new \ReflectionMethod($graph, 'getAccessToken'))->invoke($graph);
+                
+                $mailNickname = strstr($newEmail, '@', true);
+
+                $response = \Illuminate\Support\Facades\Http::withToken($token)
+                    ->patch("https://graph.microsoft.com/v1.0/users/{$msUserId}", [
+                        'userPrincipalName' => $newEmail,
+                        'mail' => $newEmail,
+                        'mailNickname' => $mailNickname,
+                    ]);
+
+                if ($response->failed()) {
+                    $msError = $response->json()['error']['message'] ?? 'Microsoft API returned an error.';
+                } else {
+                    // Update the student UPN in the database if it wasn't set correctly
+                    if (!$student->ms_user_id) {
+                        $student->update(['ms_user_id' => $msUserId]);
+                    }
+                    \App\Models\AdminAuditLog::record('email_renamed', true, "Renamed student Microsoft account from {$oldEmail} to {$newEmail}", [
+                        'old_email' => $oldEmail,
+                        'new_email' => $newEmail,
+                        'ms_user_id' => $msUserId,
+                    ]);
+                }
+            }
+        } catch (\Throwable $e) {
+            $msError = $e->getMessage();
+            Log::error("Failed to update student Microsoft email from {$oldEmail} to {$newEmail}: " . $msError);
+        }
+
+        if ($msError) {
+            return back()->with('success', "School email updated locally to '{$newEmail}', but Microsoft AD update failed: {$msError}");
+        }
+
+        return back()->with('success', "School email successfully updated to '{$newEmail}' locally and synced to Microsoft AD.");
+    }
 }

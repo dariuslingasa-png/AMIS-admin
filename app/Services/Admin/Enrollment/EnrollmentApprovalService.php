@@ -85,17 +85,18 @@ class EnrollmentApprovalService
  
     private function generateSchoolEmail(EnrollmentApplicant $applicant, string $studentNumber): array
     {
-        $lastName = strtolower(preg_replace('/\s+/', '', (string) $applicant->last_name));
-        $mailNick = $studentNumber.$lastName;
+        $firstLetterOfLastName = strtolower(substr(preg_replace('/[^a-zA-Z]/', '', (string) $applicant->last_name), 0, 1));
+        $firstName = strtolower(preg_replace('/[^a-zA-Z]/', '', (string) $applicant->first_name));
+        $mailNick = $studentNumber.$firstLetterOfLastName.$firstName;
         $schoolEmail = $mailNick.'@amis.edu.ph';
         $suffix = 1;
- 
+
         while (Student::where('school_email', $schoolEmail)->exists()) {
-            $mailNick = $studentNumber.$lastName.$suffix;
+            $mailNick = $studentNumber.$firstLetterOfLastName.$firstName.$suffix;
             $schoolEmail = $mailNick.'@amis.edu.ph';
             $suffix++;
         }
- 
+
         return [$mailNick, $schoolEmail];
     }
 

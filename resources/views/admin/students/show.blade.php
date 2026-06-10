@@ -525,6 +525,18 @@
                         </div>
                     </form>
 
+                    <!-- Update Microsoft Email Form -->
+                    <form method="POST" action="{{ route('admin.students.update-email', $student) }}" class="border-b border-slate-100 pb-4 mb-4 dark:border-slate-800">
+                        @csrf
+                        <label class="block text-xxs font-extrabold uppercase tracking-wider text-slate-400 mb-1.5">Microsoft / School Email</label>
+                        <div class="flex gap-2">
+                            <input type="email" name="email" value="{{ $student->school_email }}" required class="flex-1 h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+                            <button type="submit" class="inline-flex h-10 items-center justify-center rounded-xl bg-emerald-600 px-4 text-xs font-bold text-white hover:bg-emerald-700 active:scale-[0.98] transition-all duration-200 cursor-pointer" title="Save Email">
+                                Rename
+                            </button>
+                        </div>
+                    </form>
+
                     <!-- Resend credentials form -->
                     <form method="POST" action="{{ route('admin.students.resend', $student) }}">
                         @csrf
