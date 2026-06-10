@@ -68,13 +68,22 @@
                                 $fullName = trim(($student->applicant->first_name ?? '').' '.($student->applicant->middle_name ?? '').' '.($student->applicant->last_name ?? ''));
                                 $name = $fullName ? \Illuminate\Support\Str::upper($fullName) : 'STUDENT PROFILE';
                                 $initials = collect(explode(' ', $name))->filter()->take(2)->map(fn ($part) => \Illuminate\Support\Str::substr($part, 0, 1))->join('');
+                                $photoUrl = \App\Support\EnrollmentStorage::url($student->applicant->photo_2x2_url ?? null);
                                 $msStatus = $student->studentSection->ms_status ?? 'pending';
                             @endphp
                             <tr class="transition hover:bg-slate-50">
-                                <!-- Student Initials & Name -->
+                                <!-- Student Photo & Name -->
                                 <td class="px-5 py-4">
                                     <div class="flex items-center gap-3">
-                                        <span class="inline-flex h-10 w-10 items-center justify-center rounded-md bg-emerald-50 text-xs font-extrabold text-emerald-700 ring-1 ring-emerald-100">{{ $initials ?: 'ST' }}</span>
+                                        <x-smart-image
+                                            :src="$photoUrl"
+                                            :alt="$name"
+                                            :fallback-initials="$initials ?: 'ST'"
+                                            size="40"
+                                            rounded="rounded-md"
+                                            containerClass="bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100 font-extrabold"
+                                            :eager="false"
+                                        />
                                         <div>
                                             <div class="font-extrabold text-slate-950">{{ $name }}</div>
                                             <div class="mt-0.5 text-xs font-medium text-slate-500">SY {{ $student->school_year ?? '-' }}</div>

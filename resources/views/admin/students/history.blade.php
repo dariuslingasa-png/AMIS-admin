@@ -71,6 +71,7 @@
                                 $fullName = trim(($log->applicant->first_name ?? '').' '.($log->applicant->middle_name ?? '').' '.($log->applicant->last_name ?? ''));
                                 $name = $fullName ? \Illuminate\Support\Str::upper($fullName) : 'STUDENT ACCOUNT';
                                 $initials = collect(explode(' ', $name))->filter()->take(2)->map(fn ($part) => \Illuminate\Support\Str::substr($part, 0, 1))->join('');
+                                $photoUrl = \App\Support\EnrollmentStorage::url($log->applicant->photo_2x2_url ?? null);
                                 $msStatus = $log->studentSection->ms_status ?? 'pending';
                                 $paddedAppId = $log->applicant ? 'APPLICANT #' . str_pad($log->applicant->id, 4, '0', STR_PAD_LEFT) : 'APPLICANT';
                             @endphp
@@ -82,7 +83,15 @@
                                         <div class="relative flex flex-col items-center">
                                             <div class="h-2 w-2 rounded-full bg-violet-600 ring-4 ring-violet-50"></div>
                                         </div>
-                                        <span class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-xs font-black text-violet-700 ring-1 ring-violet-100">{{ $initials ?: 'ST' }}</span>
+                                        <x-smart-image
+                                            :src="$photoUrl"
+                                            :alt="$name"
+                                            :fallback-initials="$initials ?: 'ST'"
+                                            size="40"
+                                            rounded="rounded-xl"
+                                            containerClass="bg-violet-50 text-violet-700 ring-1 ring-violet-100 font-extrabold"
+                                            :eager="false"
+                                        />
                                         <div>
                                             <div class="font-extrabold text-slate-900 leading-tight">{{ $name }}</div>
                                             <div class="mt-1 text-[10px] font-bold text-slate-400 flex items-center gap-1">
