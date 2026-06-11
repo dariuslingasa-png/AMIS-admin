@@ -41,11 +41,14 @@ class AdminFinanceMasterController extends Controller
         $statsQuery = clone $query;
         $totalEntries = $statsQuery->count();
         $totalAmount = (float) $statsQuery->sum('amount');
-        $totalStudents = (int) FinanceMasterEntryStudent::whereIn(
-            'finance_master_entry_id',
-            (clone $statsQuery)->select('id')->pluck('id')
-        )->distinct('student_name')->count('student_name');
-        $totalFamilies = (int) (clone $statsQuery)->distinct('family_name')->count('family_name');
+
+        $entryIds = (clone $statsQuery)->select('id')->get()->pluck('id');
+        $totalStudents = $entryIds->isNotEmpty()
+            ? (int) FinanceMasterEntryStudent::whereIn('finance_master_entry_id', $entryIds)->distinct('student_name')->count('student_name')
+            : 0;
+        $totalFamilies = $entryIds->isNotEmpty()
+            ? (int) (clone $statsQuery)->distinct('family_name')->count('family_name')
+            : 0;
 
         // Pagination
         $perPage = (int) $request->input('per_page', 15);
