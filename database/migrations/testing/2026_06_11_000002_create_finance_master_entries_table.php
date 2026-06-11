@@ -31,6 +31,7 @@ return new class extends Migration
                 $table->id();
                 $table->foreignId('finance_master_entry_id')->constrained('finance_master_entries')->onDelete('cascade');
                 $table->string('student_name');
+                $table->string('gender')->nullable();
                 $table->string('grade_level');
                 $table->string('learning_mode');
                 $table->string('student_type');

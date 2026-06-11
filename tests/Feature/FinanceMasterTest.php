@@ -75,6 +75,7 @@ class FinanceMasterTest extends TestCase
             'family_application_id' => 1234,
             'first_name' => 'Abdullah',
             'last_name' => 'Sace',
+            'gender' => 'male',
             'student_type' => 'Old',
             'grade_level' => 'Grade 8',
             'learning_mode' => 'Flexible Online Learning – 1st Shift',
@@ -116,10 +117,51 @@ class FinanceMasterTest extends TestCase
         // Check database for student details
         $this->assertDatabaseHas('finance_master_entry_students', [
             'student_name' => 'Abdullah Sace',
+            'gender' => 'male',
             'grade_level' => 'Grade 8',
             'learning_mode' => 'ODL',
             'student_type' => 'OLD',
         ]);
+    }
+
+    /** @test */
+    public function admin_can_open_payment_review_for_small_payment_amount()
+    {
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'account_status' => 'verified',
+        ]);
+
+        $parent = User::factory()->create([
+            'role' => 'applicant',
+        ]);
+
+        $applicant = EnrollmentApplicant::create([
+            'user_id' => $parent->id,
+            'family_application_id' => 4321,
+            'first_name' => 'Aisha',
+            'last_name' => 'Rahman',
+            'gender' => 'female',
+            'student_type' => 'New',
+            'grade_level' => 'Grade 1',
+            'learning_mode' => 'F2F',
+            'status' => 'submitted',
+        ]);
+
+        $payment = Payment::create([
+            'user_id' => $parent->id,
+            'enrollment_applicant_id' => $applicant->id,
+            'amount' => 500.00,
+            'method' => 'bdo',
+            'reference_no' => 'BDO-500',
+            'receipt_url' => 'receipts/small_bdo.jpg',
+            'status' => 'pending',
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('admin.payments.show', $payment));
+
+        $response->assertStatus(200);
+        $response->assertSee('500.00');
     }
 
     /** @test */

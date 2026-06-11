@@ -201,15 +201,24 @@ class AdminPaymentController extends Controller
     {
         $this->ensurePaymentReviewer();
 
+        if (! $payment->applicant) {
+            return back()->withErrors(['status' => 'Cannot verify: payment is not linked to an applicant.']);
+        }
+
         if (blank($payment->receipt_url)) {
             return back()->withErrors(['status' => 'Cannot verify: payment proof is missing.']);
         }
 
         $request->validate([
             'finance_amount' => 'nullable|numeric|min:0',
+            'finance_method' => 'nullable|string|in:remittance,gcash,bdo,maya,cash,other',
+            'finance_payment_date' => 'nullable|date',
+            'finance_reference_no' => 'nullable|string|max:100',
+            'remittance_source' => 'nullable|string|max:100',
         ]);
 
         $amount = $request->input('finance_amount') !== null ? (float) $request->input('finance_amount') : $payment->amount;
+        $financeMethod = $request->input('finance_method', $payment->method ?: 'remittance');
 
         $invoice = \App\Models\Invoice::getOrCreateForFamily($payment->applicant);
         if (!$payment->invoice_id) {
@@ -238,16 +247,23 @@ class AdminPaymentController extends Controller
             }
         }
 
-        \Illuminate\Support\Facades\DB::transaction(function () use ($request, $payment, $invoice, $orNumber, $amount) {
-            $payment->update([
+        $canStorePaymentMethod = $this->canStorePaymentMethod($financeMethod);
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($request, $payment, $invoice, $orNumber, $amount, $financeMethod, $canStorePaymentMethod) {
+            $paymentUpdates = [
                 'status'      => 'verified',
                 'amount'      => $amount,
                 'or_number'   => $orNumber,
                 'verified_at' => now(),
-                'method'      => $request->input('finance_method', $payment->method),
                 'reference_no'=> $request->input('finance_reference_no', $payment->reference_no),
                 'paid_at'     => $request->input('finance_payment_date') ? \Carbon\Carbon::parse($request->input('finance_payment_date')) : ($payment->paid_at ?? now()),
-            ]);
+            ];
+
+            if ($canStorePaymentMethod) {
+                $paymentUpdates['method'] = $financeMethod;
+            }
+
+            $payment->update($paymentUpdates);
 
             // Automatically verify other pending duplicate payments in the same family/invoice
             $duplicatePendingPayments = $invoice->payments()
@@ -321,25 +337,32 @@ class AdminPaymentController extends Controller
                 $financeEntry = \App\Models\FinanceMasterEntry::create([
                     'payment_id' => $payment->id,
                     'family_name' => $familyLabel,
-                    'remittance_source' => $request->input('remittance_source'),
+                    'remittance_source' => $financeMethod === 'remittance' ? $request->input('remittance_source') : null,
                     'reference_no' => $request->input('finance_reference_no'),
-                    'method' => $request->input('finance_method', 'remittance'),
+                    'method' => $financeMethod,
                     'payment_date' => $request->input('finance_payment_date') ? \Carbon\Carbon::parse($request->input('finance_payment_date'))->format('Y-m-d') : now()->format('Y-m-d'),
                     'amount' => $amount,
                     'or_number' => $orNumber,
                     'verified_by' => auth()->id(),
                 ]);
 
+                $storesGender = \Illuminate\Support\Facades\Schema::hasColumn('finance_master_entry_students', 'gender');
+
                 // Auto-create FinanceMasterEntryStudent records
                 foreach ($familyChildren as $child) {
-                    \App\Models\FinanceMasterEntryStudent::create([
+                    $studentEntry = [
                         'finance_master_entry_id' => $financeEntry->id,
                         'student_name' => $child->full_name,
-                        'gender' => $child->gender ?? null,
                         'grade_level' => $child->grade_level ?: 'Pending',
                         'learning_mode' => $normalizeLearningMode($child->learning_mode),
                         'student_type' => $normalizeStudentType($child->student_type),
-                    ]);
+                    ];
+
+                    if ($storesGender) {
+                        $studentEntry['gender'] = $child->gender ?? null;
+                    }
+
+                    \App\Models\FinanceMasterEntryStudent::create($studentEntry);
                 }
             }
         });
@@ -351,7 +374,7 @@ class AdminPaymentController extends Controller
             'method' => $payment->method,
         ]);
 
-        $payment->loadMissing('applicant.student');
+        $payment->loadMissing('applicant');
 
         $approvalMessage = 'Payment verified successfully.';
         if ($payment->applicant && $payment->applicant->status === 'approved') {
@@ -511,6 +534,27 @@ class AdminPaymentController extends Controller
     private function ensurePaymentReviewer(): void
     {
         abort_unless(auth()->user()?->canReviewEnrollmentPayments(), 403);
+    }
+
+    /**
+     * Some live installs may still have the old payment method enum. Keep approval
+     * working and let the finance master ledger carry newer methods like remittance.
+     */
+    private function canStorePaymentMethod(string $method): bool
+    {
+        if (in_array($method, ['gcash', 'maya', 'bdo'], true)) {
+            return true;
+        }
+
+        try {
+            $definition = strtolower(\Illuminate\Support\Facades\Schema::getColumnType('payments', 'method', true));
+        } catch (\Throwable) {
+            return false;
+        }
+
+        return ! str_contains($definition, 'enum(')
+            || str_contains($definition, "'{$method}'")
+            || str_contains($definition, "\"{$method}\"");
     }
 
     /**
