@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -11,7 +12,7 @@ return new class extends Migration
         if (!Schema::hasTable('enrollment_settings')) {
             Schema::create('enrollment_settings', function (Blueprint $table) {
                 $table->id();
-                $table->boolean('send_onboarding_email')->default(true);
+                $table->boolean('send_onboarding_email')->default(false);
                 $table->boolean('generate_amis_id')->default(true);
                 $table->boolean('generate_microsoft_account')->default(true);
                 $table->boolean('generate_soa')->default(true);
@@ -24,7 +25,7 @@ return new class extends Migration
             // Insert default settings row if table is empty
             if (DB::table('enrollment_settings')->count() === 0) {
                 DB::table('enrollment_settings')->insert([
-                    'send_onboarding_email' => true,
+                    'send_onboarding_email' => false,
                     'generate_amis_id' => true,
                     'generate_microsoft_account' => true,
                     'generate_soa' => true,

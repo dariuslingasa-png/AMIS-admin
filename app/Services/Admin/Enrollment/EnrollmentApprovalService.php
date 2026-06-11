@@ -74,11 +74,15 @@ class EnrollmentApprovalService
                 'review_remarks' => $documentRemarks,
             ]);
 
-            $this->sendOnboardingIfPossible($applicant, $student, $tempPassword, $msError);
+            $onboardingSent = $this->sendOnboardingIfPossible($settings, $applicant, $student, $tempPassword, $msError);
 
-            return $msError
-                ? 'Application approved. Student number generated. Note: Microsoft account creation failed. Please create it manually. Error: '.$msError
-                : 'Application approved. Student credentials were generated and sent to the parent.';
+            if ($msError) {
+                return 'Application approved. Student number generated. Note: Microsoft account creation failed. Please create it manually. Error: '.$msError;
+            }
+
+            return $onboardingSent
+                ? 'Application approved. Student credentials were generated and sent to the parent.'
+                : 'Application approved. Student credentials were generated. Welcome email auto-send is currently disabled.';
         });
     }
  
@@ -200,7 +204,6 @@ class EnrollmentApprovalService
             'temp_password' => Hash::make($tempPassword),
             'grade_level' => $applicant->grade_level,
             'school_year' => $applicant->school_year,
-            'credentials_sent_at' => now(),
         ]);
     }
 
@@ -254,13 +257,14 @@ class EnrollmentApprovalService
     }
 
     private function sendOnboardingIfPossible(
+        EnrollmentSetting $settings,
         EnrollmentApplicant $applicant,
         Student $student,
         string $tempPassword,
         ?string $msError,
-    ): void {
-        if (! (EnrollmentSetting::current()->send_onboarding_email ?? true)) {
-            return;
+    ): bool {
+        if (! ($settings->send_onboarding_email ?? false)) {
+            return false;
         }
 
         $recipients = collect([$applicant->parent_email ?: null, $applicant->email ?: null])
@@ -269,10 +273,16 @@ class EnrollmentApprovalService
             ->values();
 
         if ($recipients->isEmpty()) {
-            return;
+            return false;
         }
 
-        $this->sendOnboardingEmail($applicant, $student, $tempPassword, $msError, $recipients->all());
+        if (! $this->sendOnboardingEmail($applicant, $student, $tempPassword, $msError, $recipients->all())) {
+            return false;
+        }
+
+        $student->update(['credentials_sent_at' => now()]);
+
+        return true;
     }
 
     private function sendOnboardingEmail(
@@ -281,7 +291,7 @@ class EnrollmentApprovalService
         string $tempPassword,
         ?string $msError,
         array $recipients,
-    ): void {
+    ): bool {
         $studentName = trim($applicant->first_name.' '.$applicant->last_name);
         $genderWord = strtolower((string) ($applicant->gender ?? 'male')) === 'female' ? 'daughter' : 'son';
         $pronoun = $genderWord === 'son' ? 'him' : 'her';
@@ -344,8 +354,12 @@ class EnrollmentApprovalService
                 $message->to($recipients)
                     ->subject('AMIS Enrollment Approved for '.$studentName);
             });
+
+            return true;
         } catch (\Throwable $exception) {
             Log::error('Failed to send onboarding email: '.$exception->getMessage());
+
+            return false;
         }
     }
 }

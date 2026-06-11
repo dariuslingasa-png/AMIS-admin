@@ -29,6 +29,14 @@ class EnrollmentSetting extends Model
     public static function current(): self
     {
         return static::query()->latest()->first()
-            ?? static::query()->create();
+            ?? static::query()->create([
+                'send_onboarding_email' => false,
+                'generate_amis_id' => true,
+                'generate_microsoft_account' => true,
+                'generate_soa' => true,
+                'require_documents_approved' => true,
+                'require_payment_verified' => true,
+                'require_complete_fields' => true,
+            ]);
     }
 }

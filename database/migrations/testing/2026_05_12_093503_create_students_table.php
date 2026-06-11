@@ -24,6 +24,11 @@ return new class extends Migration
             $table->string('section', 100)->nullable();
             $table->string('student_id_url')->nullable();
             $table->timestamp('credentials_sent_at')->nullable();
+            $table->string('ms_user_id')->nullable();
+            $table->string('ms_email')->nullable();
+            $table->timestamp('ms_account_created_at')->nullable();
+            $table->timestamp('ms_teams_enrolled_at')->nullable();
+            $table->boolean('mfa_enabled')->default(false);
             $table->timestamps();
         });
     }
