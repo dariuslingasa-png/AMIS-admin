@@ -12,6 +12,7 @@
              panTop: 0,
              approveModal: false,
              rejectModal: false,
+             showRejectForm: false,
              currentPayment: null,
              currentInvoice: '',
              predictedOr: '',
