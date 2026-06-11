@@ -17,6 +17,18 @@
     $paymentIsPdf = $payment?->receipt_url && strtolower(pathinfo($payment->receipt_url, PATHINFO_EXTENSION)) === 'pdf';
 
     $badgeColor = fn ($s) => Str::after($statusBadges[$s] ?? 'badge-gray', 'badge-');
+    $typeLabel = fn ($type) => match (Str::of((string) $type)->lower()->replace(['_', '-'], ' ')->squish()->toString()) {
+        'old', 'old student', 'returning', 'returnee', 'existing' => 'OLD STUDENT',
+        'transferee', 'transfer', 'transferee student' => 'TRANSFEREE STUDENT',
+        'new', 'new student' => 'NEW STUDENT',
+        default => 'NOT SET',
+    };
+    $typeClass = fn ($label) => match ($label) {
+        'OLD STUDENT' => 'bg-green-100 text-green-800',
+        'TRANSFEREE STUDENT' => 'bg-amber-100 text-amber-800',
+        'NEW STUDENT' => 'bg-blue-100 text-blue-800',
+        default => 'bg-slate-100 text-slate-600',
+    };
 @endphp
 
 <x-admin-layout title="Family Enrollment Review" :breadcrumbs="[['label' => 'Applications', 'href' => route('admin.applications.enrollment')], ['label' => 'Family Review', 'href' => null]]">
@@ -97,7 +109,7 @@
                                 <tr>
                                     <th class="px-5 py-3 font-bold">Name</th>
                                     <th class="px-5 py-3 font-bold">Grade</th>
-                                    <th class="px-5 py-3 font-bold">Type</th>
+                                    <th class="px-5 py-3 font-bold">Student Type</th>
                                     <th class="px-5 py-3 font-bold">Status</th>
                                     <th class="px-5 py-3 font-bold text-right">Action</th>
                                 </tr>
@@ -107,6 +119,7 @@
                                 @php
                                     $photoUrl = \App\Support\EnrollmentStorage::url($child->photo_2x2_url);
                                     $initials = collect(explode(' ', trim($child->full_name)))->filter()->take(2)->map(fn ($p) => Str::substr($p, 0, 1))->join('');
+                                    $studentType = $typeLabel($child->student_type);
                                 @endphp
                                 <tr class="transition hover:bg-slate-50">
                                     <td class="px-5 py-4">
@@ -121,7 +134,9 @@
                                         </div>
                                     </td>
                                     <td class="px-5 py-4 font-bold text-slate-700">{{ $child->grade_level ?: '-' }}</td>
-                                    <td class="px-5 py-4 text-xs font-extrabold text-slate-600">{{ strtoupper($child->student_type ?: 'New') }}</td>
+                                    <td class="px-5 py-4">
+                                        <span class="rounded-md px-2.5 py-1 text-xs font-extrabold {{ $typeClass($studentType) }}">{{ $studentType }}</span>
+                                    </td>
                                     <td class="px-5 py-4">
                                         <x-badge :color="$badgeColor($child->status)">{{ $statusLabels[$child->status] ?? Str::headline($child->status) }}</x-badge>
                                     </td>

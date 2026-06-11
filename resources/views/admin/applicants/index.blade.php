@@ -15,17 +15,16 @@
             'Pending' => 'border-amber-200 bg-amber-50 text-amber-700',
             default => 'border-slate-200 bg-white/80 text-slate-600',
         };
-        $typeLabel = fn ($type) => match (strtolower((string) $type)) {
-            'old' => 'OLD',
-            'returning', 'returnee', 'existing' => 'RETURNING',
-            'transferee', 'transfer' => 'TRANSFEREE',
-            'new' => 'NEW',
+        $typeLabel = fn ($type) => match (\Illuminate\Support\Str::of((string) $type)->lower()->replace(['_', '-'], ' ')->squish()->toString()) {
+            'old', 'old student', 'returning', 'returnee', 'existing' => 'OLD STUDENT',
+            'transferee', 'transfer', 'transferee student' => 'TRANSFEREE STUDENT',
+            'new', 'new student' => 'NEW STUDENT',
             default => 'NOT SET',
         };
         $typeClass = fn ($label) => match ($label) {
-            'OLD', 'RETURNING' => 'bg-green-100 text-green-800',
-            'TRANSFEREE' => 'bg-amber-100 text-amber-800',
-            'NEW' => 'bg-blue-100 text-blue-800',
+            'OLD STUDENT' => 'bg-green-100 text-green-800',
+            'TRANSFEREE STUDENT' => 'bg-amber-100 text-amber-800',
+            'NEW STUDENT' => 'bg-blue-100 text-blue-800',
             default => 'bg-slate-100 text-slate-600',
         };
         $familyAccents = [
@@ -302,7 +301,7 @@
                         <tr>
                             <th class="w-36 px-5 py-4 font-bold">Child</th>
                             <th class="px-5 py-4 font-bold">Student Name</th>
-                            <th class="w-28 px-5 py-4 font-bold">Type</th>
+                            <th class="w-36 px-5 py-4 font-bold">Student Type</th>
                             <th class="w-36 px-5 py-4 font-bold">Grade</th>
                             <th class="w-44 px-5 py-4 font-bold">Enrollment Status</th>
                             <th class="w-36 px-5 py-4 text-right font-bold">Action</th>

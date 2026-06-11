@@ -17,6 +17,18 @@
                 default => ['Ready', 'green', 'Approval allowed; follow up documents/payment separately'],
             };
         };
+        $typeLabel = fn ($type) => match (\Illuminate\Support\Str::of((string) $type)->lower()->replace(['_', '-'], ' ')->squish()->toString()) {
+            'old', 'old student', 'returning', 'returnee', 'existing' => 'OLD STUDENT',
+            'transferee', 'transfer', 'transferee student' => 'TRANSFEREE STUDENT',
+            'new', 'new student' => 'NEW STUDENT',
+            default => 'NOT SET',
+        };
+        $typeClass = fn ($label) => match ($label) {
+            'OLD STUDENT' => 'bg-green-100 text-green-800',
+            'TRANSFEREE STUDENT' => 'bg-amber-100 text-amber-800',
+            'NEW STUDENT' => 'bg-blue-100 text-blue-800',
+            default => 'bg-slate-100 text-slate-600',
+        };
     @endphp
 
     <section class="rounded-lg border border-slate-200 bg-white shadow-sm">
@@ -81,11 +93,16 @@
                             @php
                                 $name = \Illuminate\Support\Str::upper(trim($applicant->first_name.' '.$applicant->middle_name.' '.$applicant->last_name));
                                 [$readyLabel, $readyColor, $nextStep] = $readiness($applicant);
+                                $studentType = $typeLabel($applicant->student_type);
                             @endphp
                             <tr class="transition hover:bg-slate-50">
                                 <td class="px-5 py-4">
                                     <div class="font-extrabold text-slate-950">{{ $name }}</div>
-                                    <div class="mt-0.5 text-xs font-medium text-slate-500">{{ $applicant->grade_level }} / Applicant #{{ str_pad($applicant->id, 4, '0', STR_PAD_LEFT) }}</div>
+                                    <div class="mt-1 flex flex-wrap items-center gap-2 text-xs font-medium text-slate-500">
+                                        <span>{{ $applicant->grade_level }}</span>
+                                        <span class="rounded-md px-2 py-0.5 text-[10px] font-extrabold {{ $typeClass($studentType) }}">{{ $studentType }}</span>
+                                        <span>Applicant #{{ str_pad($applicant->id, 4, '0', STR_PAD_LEFT) }}</span>
+                                    </div>
                                 </td>
                                 <td class="px-5 py-4"><x-badge :color="$statusColor[$applicant->status] ?? 'gray'">{{ $statusLabels[$applicant->status] ?? 'Under Review' }}</x-badge></td>
                                 <td class="px-5 py-4"><x-badge :color="$readyColor">{{ $readyLabel }}</x-badge></td>

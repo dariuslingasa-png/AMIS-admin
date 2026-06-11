@@ -15,12 +15,17 @@
             default => 'No Payment',
         };
         $paymentColor = fn ($label) => ['Paid' => 'green', 'Pending' => 'yellow', 'Rejected' => 'red', 'No Payment' => 'gray'][$label] ?? 'gray';
-        $typeLabel = fn ($type) => match (strtolower((string) $type)) {
-            'old' => 'OLD',
-            'returning', 'returnee', 'existing' => 'RETURNING',
-            'transferee', 'transfer' => 'TRANSFEREE',
-            'new' => 'NEW',
+        $typeLabel = fn ($type) => match (\Illuminate\Support\Str::of((string) $type)->lower()->replace(['_', '-'], ' ')->squish()->toString()) {
+            'old', 'old student', 'returning', 'returnee', 'existing' => 'OLD STUDENT',
+            'transferee', 'transfer', 'transferee student' => 'TRANSFEREE STUDENT',
+            'new', 'new student' => 'NEW STUDENT',
             default => 'NOT SET',
+        };
+        $typeClass = fn ($label) => match ($label) {
+            'OLD STUDENT' => 'bg-green-100 text-green-800',
+            'TRANSFEREE STUDENT' => 'bg-amber-100 text-amber-800',
+            'NEW STUDENT' => 'bg-blue-100 text-blue-800',
+            default => 'bg-slate-100 text-slate-600',
         };
     @endphp
 
@@ -66,7 +71,7 @@
                     <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                         <tr>
                             <th class="px-5 py-4 font-bold">Applicant</th>
-                            <th class="w-28 px-5 py-4 font-bold">Type</th>
+                            <th class="w-36 px-5 py-4 font-bold">Student Type</th>
                             <th class="w-32 px-5 py-4 font-bold">Grade</th>
                             <th class="w-44 px-5 py-4 font-bold">Status</th>
                             <th class="w-40 px-5 py-4 font-bold">Payment</th>
@@ -79,6 +84,7 @@
                                 $name = \Illuminate\Support\Str::upper(trim($applicant->first_name.' '.$applicant->middle_name.' '.$applicant->last_name));
                                 $initials = collect(explode(' ', $name))->filter()->take(2)->map(fn ($part) => \Illuminate\Support\Str::substr($part, 0, 1))->join('');
                                 $pay = $paymentLabel($applicant);
+                                $studentType = $typeLabel($applicant->student_type);
                             @endphp
                             <tr class="transition hover:bg-slate-50">
                                 <td class="px-5 py-4">
@@ -90,7 +96,9 @@
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-5 py-4 text-xs font-extrabold text-slate-600">{{ $typeLabel($applicant->student_type) }}</td>
+                                <td class="px-5 py-4">
+                                    <span class="rounded-md px-2.5 py-1 text-xs font-extrabold {{ $typeClass($studentType) }}">{{ $studentType }}</span>
+                                </td>
                                 <td class="px-5 py-4 font-bold text-slate-700">{{ $applicant->grade_level }}</td>
                                 <td class="px-5 py-4"><x-badge :color="$statusColor[$applicant->status] ?? 'gray'">{{ $statusLabels[$applicant->status] ?? 'Under Review' }}</x-badge></td>
                                 <td class="px-5 py-4"><x-badge :color="$paymentColor($pay)">{{ $pay }}</x-badge></td>
