@@ -3,6 +3,8 @@
     $maxCountry = max((int) ($countryCounts->max() ?? 0), 1);
     $maxProvince = max((int) ($provinceCounts->max() ?? 0), 1);
     $maxCity = max((int) ($cityCounts->max() ?? 0), 1);
+    $newStudentPercent = $summary['total'] > 0 ? round(($summary['new_students'] / $summary['total']) * 100, 1) : 0;
+    $oldStudentPercent = $summary['total'] > 0 ? round(($summary['old_students'] / $summary['total']) * 100, 1) : 0;
 @endphp
 
 <div class="space-y-6">
@@ -141,6 +143,55 @@
                     {{ number_format($summary['limited_slots']) }} <span class="text-gray-300 dark:text-gray-600 font-normal">/</span> {{ number_format($summary['full_slots']) }}
                 </span>
                 <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-1 font-medium">Critical grade levels</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Type Analytics -->
+    <div class="grid grid-cols-1 gap-5 lg:grid-cols-3">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-150 dark:border-gray-700/50 p-5 shadow-xs hover:shadow-md transition-all duration-200 hover:-translate-y-1 relative overflow-hidden group border-t-4 border-t-blue-500">
+            <div class="flex items-center justify-between">
+                <span class="font-bold text-gray-400 dark:text-gray-500 text-xs tracking-wider uppercase">New Students</span>
+                <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.25" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.375 21 12.318 12.318 0 0 1 3 19.235Z" />
+                    </svg>
+                </div>
+            </div>
+            <div class="mt-3">
+                <span class="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                    {{ number_format($summary['new_students']) }}
+                </span>
+                <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-1 font-medium">{{ $newStudentPercent }}% of active applications</p>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-150 dark:border-gray-700/50 p-5 shadow-xs hover:shadow-md transition-all duration-200 hover:-translate-y-1 relative overflow-hidden group border-t-4 border-t-green-500">
+            <div class="flex items-center justify-between">
+                <span class="font-bold text-gray-400 dark:text-gray-500 text-xs tracking-wider uppercase">Old Students</span>
+                <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 group-hover:scale-110 transition-transform">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.25" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 18.75h-9m9 0a3 3 0 0 1 3 3h-15a3 3 0 0 1 3-3m9 0v-3.375c0-.621-.504-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 0 0-.982-3.456m-4.025 3.456a7.454 7.454 0 0 1 .982-3.456m3.043 0a3.375 3.375 0 1 0-6.044 0m6.044 0H7.478" />
+                    </svg>
+                </div>
+            </div>
+            <div class="mt-3">
+                <span class="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-white group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">
+                    {{ number_format($summary['old_students']) }}
+                </span>
+                <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-1 font-medium">{{ $oldStudentPercent }}% of active applications</p>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-150 dark:border-gray-700/50 shadow-xs p-5 hover:shadow-sm transition-all duration-200">
+            <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-700 pb-3 mb-3">
+                <div>
+                    <h3 class="text-sm font-bold text-gray-800 dark:text-white uppercase tracking-wider">Student Type Breakdown</h3>
+                    <p class="text-xs text-gray-400 mt-0.5 font-light">NEW STUDENT vs OLD STUDENT applications</p>
+                </div>
+            </div>
+            <div class="min-h-[190px] flex items-center justify-center">
+                <div id="studentTypeBarChart" class="w-full"></div>
             </div>
         </div>
     </div>
@@ -446,6 +497,65 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Country Records (Donut Chart)
+    const studentTypeCounts = @json($typeCounts);
+    const studentTypeLabels = Object.keys(studentTypeCounts);
+    const studentTypeData = Object.values(studentTypeCounts);
+
+    if (studentTypeData.length > 0) {
+        const studentTypeOptions = {
+            series: [{
+                name: 'Applications',
+                data: studentTypeData
+            }],
+            chart: {
+                type: 'bar',
+                height: 190,
+                toolbar: { show: false },
+                fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
+            },
+            plotOptions: {
+                bar: {
+                    borderRadius: 6,
+                    horizontal: true,
+                    barHeight: '58%',
+                    distributed: true
+                }
+            },
+            colors: ['#2563eb', '#16a34a', '#d97706', '#64748b'],
+            dataLabels: {
+                enabled: true,
+                style: { fontSize: '11px', fontWeight: 800, colors: ['#ffffff'] }
+            },
+            legend: { show: false },
+            xaxis: {
+                categories: studentTypeLabels,
+                labels: {
+                    style: { colors: '#94a3b8', fontSize: '11px', fontWeight: 550 }
+                },
+                axisBorder: { show: false },
+                axisTicks: { show: false }
+            },
+            yaxis: {
+                labels: {
+                    style: { colors: '#475569', fontSize: '11px', fontWeight: 800 }
+                }
+            },
+            grid: {
+                borderColor: 'rgba(148, 163, 184, 0.08)',
+                strokeDashArray: 4,
+                xaxis: { lines: { show: true } },
+                yaxis: { lines: { show: false } }
+            },
+            tooltip: {
+                theme: 'light',
+                style: { fontSize: '12px' }
+            }
+        };
+        new ApexCharts(document.querySelector("#studentTypeBarChart"), studentTypeOptions).render();
+    } else {
+        document.querySelector("#studentTypeBarChart").innerHTML = '<div class="py-12 text-center text-xs text-gray-400">No student type records yet.</div>';
+    }
+
     const countryCounts = @json($countryCounts);
     const countryLabels = Object.keys(countryCounts).map(c => c.toUpperCase());
     const countryData = Object.values(countryCounts);

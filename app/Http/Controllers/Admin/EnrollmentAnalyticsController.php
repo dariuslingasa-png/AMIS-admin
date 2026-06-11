@@ -10,6 +10,7 @@ use App\Services\Admin\Enrollment\EnrollmentReviewService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class EnrollmentAnalyticsController extends Controller
 {
@@ -38,6 +39,8 @@ class EnrollmentAnalyticsController extends Controller
             ->orderBy('grade_level')
             ->pluck('total', 'grade_level');
 
+        $typeCounts = $this->studentTypeCounts();
+
         $countryCounts = $this->analyticsService->locationCounts('country');
         $provinceCounts = $this->analyticsService->locationCounts('state_province');
         $cityCounts = $this->analyticsService->locationCounts('city');
@@ -65,6 +68,8 @@ class EnrollmentAnalyticsController extends Controller
                 'limited_slots' => $slotTotals['limited'],
                 'pending_review' => EnrollmentApplicant::whereIn('status', ['ready_for_submission', 'pending', 'submitted', 'under_review'])->count(),
                 'approved' => $approved,
+                'new_students' => (int) ($typeCounts['NEW STUDENT'] ?? 0),
+                'old_students' => (int) ($typeCounts['OLD STUDENT'] ?? 0),
                 'rejected' => EnrollmentApplicant::where('status', 'rejected')->count(),
                 'with_payment_proof' => $withPaymentProof,
                 'missing_payment_proof' => max(0, $total - $withPaymentProof),
@@ -73,6 +78,7 @@ class EnrollmentAnalyticsController extends Controller
             'schoolYear' => $schoolYear,
             'statusCounts' => $statusCounts,
             'gradeCounts' => $gradeCounts,
+            'typeCounts' => $typeCounts,
             'countryCounts' => $countryCounts,
             'provinceCounts' => $provinceCounts,
             'cityCounts' => $cityCounts,
@@ -85,6 +91,33 @@ class EnrollmentAnalyticsController extends Controller
             'statusLabels' => EnrollmentReviewService::STATUS_LABELS,
             'pmBadges' => EnrollmentReviewService::PAYMENT_BADGES,
         ]);
+    }
+
+    private function studentTypeCounts()
+    {
+        $counts = collect([
+            'NEW STUDENT' => 0,
+            'OLD STUDENT' => 0,
+            'TRANSFEREE STUDENT' => 0,
+            'NOT SET' => 0,
+        ]);
+
+        EnrollmentApplicant::select('student_type', DB::raw('COUNT(*) as total'))
+            ->whereNotIn('status', ['draft'])
+            ->groupBy('student_type')
+            ->pluck('total', 'student_type')
+            ->each(function ($total, $type) use ($counts) {
+                $label = match (Str::of((string) $type)->lower()->replace(['_', '-'], ' ')->squish()->toString()) {
+                    'old', 'old student', 'returning', 'returnee', 'existing' => 'OLD STUDENT',
+                    'transferee', 'transfer', 'transferee student' => 'TRANSFEREE STUDENT',
+                    'new', 'new student' => 'NEW STUDENT',
+                    default => 'NOT SET',
+                };
+
+                $counts[$label] = (int) $counts[$label] + (int) $total;
+            });
+
+        return $counts->filter(fn ($total, $label) => $total > 0 || in_array($label, ['NEW STUDENT', 'OLD STUDENT'], true));
     }
 
     public function reports(Request $request)
