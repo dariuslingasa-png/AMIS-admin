@@ -118,13 +118,22 @@
                     text-transform: uppercase !important;
                 }
 
-                /* Keep badges simple/flat on print */
-                .rounded-full, .rounded {
-                    border: 1px solid #cbd5e1 !important;
+                /* Keep badges simple/flat plain text on print */
+                td .rounded-full, 
+                td .rounded,
+                td [class*="bg-"],
+                td [class*="text-"],
+                td .border,
+                td .ring-1 {
+                    border: none !important;
                     background: transparent !important;
                     color: #000000 !important;
                     box-shadow: none !important;
-                    padding: 2px 6px !important;
+                    padding: 0 !important;
+                    margin: 0 !important;
+                    border-radius: 0 !important;
+                    font-size: 11px !important;
+                    font-weight: inherit !important;
                 }
 
                 /* Force background colors to show on screen/PDF printers */
