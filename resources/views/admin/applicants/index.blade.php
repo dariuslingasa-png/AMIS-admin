@@ -384,6 +384,7 @@
                                                 :fallback-initials="$childInitials ?: 'ST'"
                                                 size="40"
                                                 rounded="rounded-lg"
+                                                containerClass="bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100 font-extrabold"
                                                 :eager="false"
                                             />
                                             <div>
