@@ -1,5 +1,29 @@
 <x-admin-layout title="Finance Masters List">
-    <x-card title="Finance Masters List" subtitle="Master Ledger of Auto-Populated verified payments & remittance logs">
+    <div x-data="{
+        editModal: false,
+        isSubmitting: false,
+        actionUrl: '',
+        entry: {
+            payment_date: '',
+            method: '',
+            reference_no: '',
+            remittance_source: '',
+            amount: '',
+            or_number: ''
+        },
+        openEditModal(item) {
+            this.entry.payment_date = item.payment_date || '';
+            this.entry.method = item.method || 'remittance';
+            this.entry.reference_no = item.reference_no || '';
+            this.entry.remittance_source = item.remittance_source || '';
+            this.entry.amount = item.amount || '';
+            this.entry.or_number = item.or_number || '';
+            this.actionUrl = `/admin/finance/masters-list/${item.id}`;
+            this.isSubmitting = false;
+            this.editModal = true;
+        }
+    }">
+        <x-card title="Finance Masters List" subtitle="Master Ledger of Auto-Populated verified payments & remittance logs">
         
         <!-- Search and Filters -->
         <div class="border-b border-slate-100 bg-slate-50/70 px-5 py-4">
@@ -72,6 +96,7 @@
                         <th class="px-5 py-4 text-right">Amount</th>
                         <th class="px-5 py-4">OR Number</th>
                         <th class="px-5 py-4">Verified By</th>
+                        <th class="px-5 py-4 text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 bg-white font-semibold text-slate-700">
@@ -200,10 +225,28 @@
                                     {{ $entry->created_at?->format('M d, Y h:i A') }}
                                 </div>
                             </td>
+
+                            <!-- Actions -->
+                            <td class="px-5 py-4 align-top text-right">
+                                <button type="button" 
+                                        @click="openEditModal(@js([
+                                            'id' => $entry->id,
+                                            'payment_date' => $entry->payment_date?->format('Y-m-d'),
+                                            'method' => $entry->method,
+                                            'reference_no' => $entry->reference_no,
+                                            'remittance_source' => $entry->remittance_source,
+                                            'amount' => $entry->amount,
+                                            'or_number' => $entry->or_number,
+                                        ]))"
+                                        class="inline-flex items-center gap-1.5 rounded-xl bg-amber-50 px-3.5 py-2 text-xs font-black uppercase tracking-wider text-amber-700 ring-1 ring-amber-200 transition hover:bg-amber-100 hover:text-amber-800 cursor-pointer">
+                                    <i data-lucide="pencil" class="h-3.5 w-3.5"></i>
+                                    Edit
+                                </button>
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="px-5 py-14 text-center">
+                            <td colspan="9" class="px-5 py-14 text-center">
                                 <div class="mx-auto flex max-w-sm flex-col items-center">
                                     <span class="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
                                         <i data-lucide="search-x" class="h-6 w-6"></i>
@@ -222,5 +265,84 @@
         <div class="border-t border-slate-100 px-5 py-4">
             {{ $entries->links() }}
         </div>
-    </x-card>
+        </x-card>
+
+        <!-- Edit Modal -->
+        <div x-show="editModal" x-cloak x-transition class="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm">
+            <div class="relative w-full max-w-lg overflow-hidden rounded-3xl bg-white shadow-2xl p-6 space-y-4" @click.away="!isSubmitting && (editModal = false)">
+                <!-- Header -->
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <h3 class="font-black text-slate-950 uppercase tracking-wider flex items-center gap-2" style="font-size: 19.5px !important;">
+                        <i data-lucide="pencil" class="h-6 w-6 text-amber-600"></i>
+                        Edit Ledger Entry
+                    </h3>
+                    <button type="button" @click="editModal = false" :disabled="isSubmitting" class="rounded-full bg-slate-100 p-2 text-slate-500 hover:bg-slate-200 transition disabled:opacity-50">
+                        <i data-lucide="x" class="h-4 w-4"></i>
+                    </button>
+                </div>
+                
+                <!-- Body Form -->
+                <form :action="actionUrl" method="POST" @submit="isSubmitting = true" class="space-y-4 text-left">
+                    @csrf
+                    @method('PATCH')
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[13.5px] text-slate-500 font-bold uppercase tracking-wider block mb-1">Method of Payment</label>
+                            <select name="method" x-model="entry.method" required class="w-full rounded-2xl border border-slate-250 bg-white px-4 py-2.5 text-base text-black focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
+                                <option value="remittance">Remittance</option>
+                                <option value="gcash">GCash</option>
+                                <option value="bdo">BDO Bank Transfer</option>
+                                <option value="maya">Maya</option>
+                                <option value="cash">Cash</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[13.5px] text-slate-500 font-bold uppercase tracking-wider block mb-1">Payment Date</label>
+                            <input type="date" name="payment_date" x-model="entry.payment_date" required class="w-full rounded-2xl border border-slate-250 bg-white px-4 py-2.5 text-base text-black focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[13.5px] text-slate-500 font-bold uppercase tracking-wider block mb-1">Amount</label>
+                            <input type="number" step="0.01" name="amount" x-model="entry.amount" required class="w-full rounded-2xl border border-slate-250 bg-white px-4 py-2.5 text-base text-black focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
+                        </div>
+                        <div>
+                            <label class="text-[13.5px] text-slate-500 font-bold uppercase tracking-wider block mb-1">Reference No</label>
+                            <input type="text" name="reference_no" x-model="entry.reference_no" placeholder="Reference No" class="w-full rounded-2xl border border-slate-250 bg-white px-4 py-2.5 text-base text-black focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
+                        </div>
+                    </div>
+
+                    <div x-show="entry.method === 'remittance'" x-transition>
+                        <label class="text-[13.5px] text-slate-500 font-bold uppercase tracking-wider block mb-1">Remittance Source</label>
+                        <input type="text" name="remittance_source" x-model="entry.remittance_source" placeholder="e.g. AL GHURAIR EXCHANGE" :required="entry.method === 'remittance'" class="w-full rounded-2xl border border-slate-250 bg-white px-4 py-2.5 text-base text-black focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
+                    </div>
+
+                    <div>
+                        <label class="text-[13.5px] text-slate-500 font-bold uppercase tracking-wider block mb-1">OR Number</label>
+                        <input type="text" name="or_number" x-model="entry.or_number" placeholder="OR Number" class="w-full rounded-2xl border border-slate-250 bg-white px-4 py-2.5 text-base text-black focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
+                    </div>
+
+                    <!-- Footer Action Buttons -->
+                    <div class="flex justify-end gap-2 border-t border-slate-100 pt-3">
+                        <button type="button" @click="editModal = false" :disabled="isSubmitting" class="px-5 py-2.5 rounded-2xl border border-slate-200 bg-white text-sm font-black text-slate-600 transition hover:bg-slate-50 disabled:opacity-50 cursor-pointer">
+                            Cancel
+                        </button>
+                        <button type="submit" class="px-5 py-2.5 rounded-2xl bg-amber-600 hover:bg-amber-700 text-sm font-black text-white transition shadow-sm disabled:opacity-50 cursor-pointer">
+                            <span x-show="!isSubmitting">Save Changes</span>
+                            <span x-show="isSubmitting" class="flex items-center gap-1.5 justify-center">
+                                <svg class="animate-spin h-4.5 w-4.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Saving...
+                            </span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </x-admin-layout>

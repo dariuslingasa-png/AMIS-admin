@@ -343,4 +343,82 @@ class FinanceMasterTest extends TestCase
         $expectedBaseOr = str_replace('INV-', config('services.school.or_prefix', 'OR-'), $invoice->invoice_no);
         $this->assertEquals($expectedBaseOr, $or1);
     }
+
+    /** @test */
+    public function admin_can_edit_finance_master_entry_and_syncs_with_payment_and_invoice()
+    {
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'account_status' => 'verified',
+        ]);
+
+        $parent = User::factory()->create([
+            'role' => 'applicant',
+        ]);
+
+        $applicant = EnrollmentApplicant::create([
+            'user_id' => $parent->id,
+            'family_application_id' => 7788,
+            'first_name' => 'John',
+            'last_name' => 'Doe',
+            'student_type' => 'New',
+            'grade_level' => 'Grade 10',
+            'learning_mode' => 'F2F',
+            'status' => 'submitted',
+        ]);
+
+        $payment = Payment::create([
+            'user_id' => $parent->id,
+            'enrollment_applicant_id' => $applicant->id,
+            'amount' => 4000.00,
+            'method' => 'gcash',
+            'reference_no' => '555666',
+            'receipt_url' => 'receipts/test_edit.jpg',
+            'status' => 'verified',
+            'or_number' => 'OR-TEST-123',
+        ]);
+
+        $entry = FinanceMasterEntry::create([
+            'payment_id' => $payment->id,
+            'family_name' => 'FAMILY OF DOE',
+            'method' => 'gcash',
+            'reference_no' => '555666',
+            'payment_date' => '2026-06-11',
+            'amount' => 4000.00,
+            'or_number' => 'OR-TEST-123',
+            'verified_by' => $admin->id,
+        ]);
+
+        $invoice = \App\Models\Invoice::getOrCreateForFamily($applicant);
+        $payment->update(['invoice_id' => $invoice->id]);
+        $invoice->recalculate();
+
+        $response = $this->actingAs($admin)->patch(route('admin.finance.masters-list.update', $entry), [
+            'payment_date' => '2026-06-12',
+            'method' => 'bdo',
+            'reference_no' => '777888',
+            'amount' => 5000.00,
+            'or_number' => 'OR-UPDATED-456',
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $response->assertRedirect();
+
+        // Assert FinanceMasterEntry is updated
+        $this->assertEquals('2026-06-12', $entry->fresh()->payment_date->format('Y-m-d'));
+        $this->assertEquals('bdo', $entry->fresh()->method);
+        $this->assertEquals('777888', $entry->fresh()->reference_no);
+        $this->assertEquals(5000.00, (float) $entry->fresh()->amount);
+        $this->assertEquals('OR-UPDATED-456', $entry->fresh()->or_number);
+
+        // Assert associated Payment is synced
+        $this->assertEquals('2026-06-12', $payment->fresh()->paid_at->format('Y-m-d'));
+        $this->assertEquals('bdo', $payment->fresh()->method);
+        $this->assertEquals('777888', $payment->fresh()->reference_no);
+        $this->assertEquals(5000.00, (float) $payment->fresh()->amount);
+        $this->assertEquals('OR-UPDATED-456', $payment->fresh()->or_number);
+
+        // Assert Invoice is recalculated with the new amount
+        $this->assertEquals(5000.00, (float) $invoice->fresh()->amount_paid);
+    }
 }

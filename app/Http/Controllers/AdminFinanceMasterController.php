@@ -57,6 +57,55 @@ class AdminFinanceMasterController extends Controller
     }
 
     /**
+     * Update a specific Finance Master Entry.
+     */
+    public function update(Request $request, FinanceMasterEntry $entry)
+    {
+        $this->ensurePaymentReviewer();
+
+        $request->validate([
+            'payment_date'      => 'required|date',
+            'method'            => 'required|string|in:remittance,gcash,bdo,maya,cash,other',
+            'reference_no'      => 'nullable|string|max:100',
+            'remittance_source' => 'nullable|string|max:100',
+            'amount'            => 'required|numeric|min:0',
+            'or_number'         => 'nullable|string|max:100',
+        ]);
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($request, $entry) {
+            $entry->update([
+                'payment_date'      => $request->input('payment_date'),
+                'method'            => $request->input('method'),
+                'reference_no'      => $request->input('reference_no'),
+                'remittance_source' => $request->input('method') === 'remittance' ? $request->input('remittance_source') : null,
+                'amount'            => $request->input('amount'),
+                'or_number'         => $request->input('or_number'),
+            ]);
+
+            // Sync with associated Payment record if exists
+            if ($entry->payment_id) {
+                $payment = \App\Models\Payment::find($entry->payment_id);
+                if ($payment) {
+                    $payment->update([
+                        'paid_at'      => $request->input('payment_date'),
+                        'method'       => $request->input('method'),
+                        'reference_no' => $request->input('reference_no'),
+                        'amount'       => $request->input('amount'),
+                        'or_number'    => $request->input('or_number'),
+                    ]);
+
+                    // Recalculate associated invoice if any
+                    if ($payment->invoice_id) {
+                        $payment->invoice?->recalculate();
+                    }
+                }
+            }
+        });
+
+        return back()->with('success', 'Finance master entry updated successfully.');
+    }
+
+    /**
      * Abort if the user doesn't have finance administrative reviewer clearance.
      */
     private function ensurePaymentReviewer(): void

@@ -97,6 +97,14 @@ class Invoice extends Model
                 $correctOr = $isFullPayment ? $baseOr : $baseOr . '-1';
                 
                 foreach ($group as $paymentRecord) {
+                    if (filled($paymentRecord->or_number)) {
+                        $orPrefix = config('services.school.or_prefix', 'OR-');
+                        $invoiceNumberOnly = preg_replace('/^INV-/', '', $this->invoice_no);
+                        $standardOrPattern = '/^' . preg_quote($orPrefix, '/') . preg_quote($invoiceNumberOnly, '/') . '(-[0-9]+)?$/i';
+                        if (!preg_match($standardOrPattern, $paymentRecord->or_number)) {
+                            continue;
+                        }
+                    }
                     if ($paymentRecord->or_number !== $correctOr) {
                         $paymentRecord->update(['or_number' => $correctOr]);
                     }
@@ -106,6 +114,14 @@ class Invoice extends Model
                 foreach ($uniqueGroups as $groupKey => $group) {
                     $correctOr = $baseOr . '-' . $index;
                     foreach ($group as $paymentRecord) {
+                        if (filled($paymentRecord->or_number)) {
+                            $orPrefix = config('services.school.or_prefix', 'OR-');
+                            $invoiceNumberOnly = preg_replace('/^INV-/', '', $this->invoice_no);
+                            $standardOrPattern = '/^' . preg_quote($orPrefix, '/') . preg_quote($invoiceNumberOnly, '/') . '(-[0-9]+)?$/i';
+                            if (!preg_match($standardOrPattern, $paymentRecord->or_number)) {
+                                continue;
+                            }
+                        }
                         if ($paymentRecord->or_number !== $correctOr) {
                             $paymentRecord->update(['or_number' => $correctOr]);
                         }
