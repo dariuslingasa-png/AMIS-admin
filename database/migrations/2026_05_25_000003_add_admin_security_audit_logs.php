@@ -17,18 +17,20 @@ return new class extends Migration
             }
         });
 
-        Schema::create('admin_audit_logs', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
-            $table->string('event');
-            $table->string('email')->nullable();
-            $table->string('ip_address', 45)->nullable();
-            $table->text('user_agent')->nullable();
-            $table->boolean('successful')->default(false);
-            $table->text('message')->nullable();
-            $table->json('metadata')->nullable();
-            $table->timestamps();
-        });
+        if (! Schema::hasTable('admin_audit_logs')) {
+            Schema::create('admin_audit_logs', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
+                $table->string('event');
+                $table->string('email')->nullable();
+                $table->string('ip_address', 45)->nullable();
+                $table->text('user_agent')->nullable();
+                $table->boolean('successful')->default(false);
+                $table->text('message')->nullable();
+                $table->json('metadata')->nullable();
+                $table->timestamps();
+            });
+        }
     }
 
     public function down(): void
