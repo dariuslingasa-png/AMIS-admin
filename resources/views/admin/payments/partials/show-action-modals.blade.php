@@ -1,4 +1,4 @@
-        <div x-show="approveModal" x-cloak x-transition class="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm">
+        <div x-show="approveModal" x-cloak x-transition :class="preview ? 'fixed inset-0 z-[60] flex items-center justify-center p-4' : 'fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm'">
             <div class="relative w-full max-w-lg overflow-hidden rounded-3xl bg-white shadow-2xl p-6 space-y-4" @click.away="!isSubmitting && (approveModal = false)">
                 <!-- Header -->
                 <div class="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -76,7 +76,7 @@
         </div>
 
         <!-- Reject Payment Modal -->
-        <div x-show="rejectModal" x-cloak x-transition class="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm">
+        <div x-show="rejectModal" x-cloak x-transition :class="preview ? 'fixed inset-0 z-[60] flex items-center justify-center p-4' : 'fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm'">
             <div class="relative w-full max-w-lg overflow-hidden rounded-3xl bg-white shadow-2xl p-6 space-y-4" @click.away="!isSubmitting && (rejectModal = false)">
                 <!-- Header -->
                 <div class="flex items-center justify-between border-b border-slate-100 pb-3">
