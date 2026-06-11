@@ -27,6 +27,9 @@
         <style>
             @media print {
                 /* Hide non-printable elements */
+                #default-sidebar,
+                .admin-sidebar,
+                .admin-topbar,
                 .sidebar,
                 aside,
                 header,
@@ -42,6 +45,13 @@
                 .amis-card > div:first-child, /* Card header */
                 th:last-child, /* Actions column header */
                 td:last-child { /* Actions column cells */
+                    display: none !important;
+                }
+
+                /* Hide icons in print to keep it clean */
+                td svg,
+                td i,
+                td [data-lucide] {
                     display: none !important;
                 }
 
@@ -80,6 +90,12 @@
                     box-shadow: none !important;
                     padding: 0 !important;
                     margin: 0 !important;
+                }
+
+                /* Expand scrolled tables to print full rows without clipping */
+                .overflow-x-auto {
+                    overflow: visible !important;
+                    max-height: none !important;
                 }
 
                 /* Table grid styling for print */
@@ -212,7 +228,9 @@
                         <tr class="transition hover:bg-slate-50/80">
                             <!-- Family Name -->
                             <td class="px-5 py-4 align-top">
-                                <div class="font-black text-slate-950 text-base">{{ $entry->family_name }}</div>
+                                <div class="font-black text-slate-950 text-base max-w-[120px] break-words whitespace-normal leading-tight">
+                                    {{ str_ireplace('FAMILY OF ', '', $entry->family_name) }}
+                                </div>
                                 <div class="mt-1 text-[10px] text-slate-400 uppercase tracking-wider">
                                     Entry ID: #{{ str_pad((string) $entry->id, 5, '0', STR_PAD_LEFT) }}
                                 </div>
@@ -223,9 +241,9 @@
                                 <div class="space-y-2.5">
                                     @forelse ($entry->students as $student)
                                         <div class="flex items-center gap-2 flex-wrap @if(!$loop->last) pb-2.5 border-b border-slate-100/70 @endif">
-                                            <span class="font-bold text-slate-900 text-[13.5px]">{{ $student->student_name }}</span>
+                                            <span class="font-bold text-slate-900 text-[13.5px] max-w-[150px] break-words whitespace-normal inline-block leading-tight">{{ $student->student_name }}</span>
                                             
-                                            <span class="rounded-full bg-slate-50 px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-wide text-slate-500 border border-slate-200/60">
+                                            <span class="rounded-full bg-slate-50 px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-wide text-slate-500 border border-slate-200/60 max-w-[100px] break-words whitespace-normal inline-block text-center">
                                                 {{ $student->grade_level }}
                                             </span>
 
@@ -265,7 +283,7 @@
                                                         : 'bg-slate-50 text-slate-600 border border-slate-200';
                                                 }
                                             @endphp
-                                            <span class="rounded-full px-2 py-0.5 text-[9.5px] font-black uppercase tracking-wider {{ $badgeClass }}">
+                                            <span class="rounded-full px-2 py-0.5 text-[9.5px] font-black uppercase tracking-wider {{ $badgeClass }} max-w-[100px] break-words whitespace-normal inline-block text-center">
                                                 {{ $badgeText }}
                                             </span>
                                         </div>
