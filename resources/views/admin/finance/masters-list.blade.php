@@ -255,6 +255,7 @@
                 <thead class="bg-white text-[11px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-100">
                     <tr>
                         <th class="px-5 py-4">Student Name</th>
+                        <th class="px-5 py-4">Gender</th>
                         <th class="px-5 py-4">Grade</th>
                         <th class="px-5 py-4">Learning Mode</th>
                         <th class="px-5 py-4">MOP</th>
@@ -273,6 +274,7 @@
                                 <td class="px-5 py-4 align-top">-</td>
                                 <td class="px-5 py-4 align-top">-</td>
                                 <td class="px-5 py-4 align-top">-</td>
+                                <td class="px-5 py-4 align-top">-</td>
                                 <td class="px-5 py-4 align-top text-right actions-col">-</td>
                             </tr>
                         @else
@@ -281,6 +283,11 @@
                                     <td class="px-5 py-4 align-top">
                                         <span class="font-bold text-slate-900 text-[13.5px] max-w-[180px] break-words whitespace-normal inline-block leading-tight">
                                             {{ $student->student_name }}
+                                        </span>
+                                    </td>
+                                    <td class="px-5 py-4 align-top">
+                                        <span class="text-xs font-bold uppercase {{ strtolower($student->gender ?? '') === 'female' ? 'text-pink-600' : 'text-sky-600' }}">
+                                            {{ $student->gender ? strtoupper(substr($student->gender, 0, 1)) : '-' }}
                                         </span>
                                     </td>
                                     <td class="px-5 py-4 align-top">
@@ -350,7 +357,7 @@
                         @endif
                     @empty
                         <tr>
-                            <td colspan="5" class="px-5 py-14 text-center">
+                            <td colspan="6" class="px-5 py-14 text-center">
                                 <div class="mx-auto flex max-w-sm flex-col items-center">
                                     <span class="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
                                         <i data-lucide="search-x" class="h-6 w-6"></i>

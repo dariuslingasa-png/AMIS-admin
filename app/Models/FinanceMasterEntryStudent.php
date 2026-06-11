@@ -10,6 +10,7 @@ class FinanceMasterEntryStudent extends Model
     protected $fillable = [
         'finance_master_entry_id',
         'student_name',
+        'gender',
         'grade_level',
         'learning_mode',
         'student_type',

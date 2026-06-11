@@ -151,7 +151,11 @@ class AdminPaymentController extends Controller
             ]
         );
 
-        return view('admin.payments.index', compact('paymentFamilies', 'paymentSummary', 'sort', 'direction', 'perPage'));
+        return response()
+            ->view('admin.payments.index', compact('paymentFamilies', 'paymentSummary', 'sort', 'direction', 'perPage'))
+            ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
     }
 
     /**
@@ -331,6 +335,7 @@ class AdminPaymentController extends Controller
                     \App\Models\FinanceMasterEntryStudent::create([
                         'finance_master_entry_id' => $financeEntry->id,
                         'student_name' => $child->full_name,
+                        'gender' => $child->gender ?? null,
                         'grade_level' => $child->grade_level ?: 'Pending',
                         'learning_mode' => $normalizeLearningMode($child->learning_mode),
                         'student_type' => $normalizeStudentType($child->student_type),
