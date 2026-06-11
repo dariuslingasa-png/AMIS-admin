@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\FinanceMasterEntry;
+use App\Models\FinanceMasterEntryStudent;
 use Illuminate\Http\Request;
 
 class AdminFinanceMasterController extends Controller
