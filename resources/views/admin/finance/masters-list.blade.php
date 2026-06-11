@@ -100,14 +100,26 @@
                 /* Table grid styling for print */
                 table {
                     width: 100% !important;
+                    min-width: 0 !important;
                     border-collapse: collapse !important;
                     margin-top: 15px !important;
-                    font-size: 11px !important;
+                    font-size: 9.5px !important;
+                    table-layout: auto !important;
+                }
+
+                thead {
+                    display: table-header-group !important;
+                }
+
+                tbody,
+                tr {
+                    break-inside: avoid !important;
+                    page-break-inside: avoid !important;
                 }
 
                 th, td {
                     border: 1px solid #cbd5e1 !important;
-                    padding: 8px 10px !important;
+                    padding: 5px 7px !important;
                     color: #000000 !important;
                     background: transparent !important;
                 }
@@ -140,6 +152,18 @@
                 * {
                     -webkit-print-color-adjust: exact !important;
                     print-color-adjust: exact !important;
+                }
+
+                @page {
+                    size: A4 landscape;
+                    margin: 10mm;
+                }
+
+                .max-w-screen-2xl,
+                .finance-master-table-wrap,
+                .finance-master-table {
+                    max-width: none !important;
+                    width: 100% !important;
                 }
             }
         </style>
@@ -198,7 +222,7 @@
                         <i data-lucide="filter" class="h-4 w-4"></i>
                         Filter
                     </button>
-                    <button type="button" onclick="window.location.href='{{ route('admin.finance.masters-list', array_merge(request()->all(), ['print' => 1])) }}'" class="inline-flex h-11 items-center gap-2 rounded-xl bg-slate-800 px-4 text-sm font-black text-white shadow-sm transition hover:bg-slate-900 cursor-pointer">
+                    <button type="button" onclick="window.location.href='{{ route('admin.finance.masters-list', array_merge(request()->except('page'), ['print' => 1])) }}'" class="inline-flex h-11 items-center gap-2 rounded-xl bg-slate-800 px-4 text-sm font-black text-white shadow-sm transition hover:bg-slate-900 cursor-pointer">
                         <i data-lucide="printer" class="h-4 w-4"></i>
                         Print PDF
                     </button>
@@ -253,8 +277,8 @@
         </div>
 
         <!-- Master List Table -->
-        <div class="overflow-x-auto">
-            <table class="w-full min-w-[1200px] text-left text-sm">
+        <div class="finance-master-table-wrap overflow-x-auto">
+            <table class="finance-master-table w-full min-w-[1200px] text-left text-sm">
                 <thead class="bg-white text-[11px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-100">
                     <tr>
                         <th class="px-5 py-4">
@@ -297,8 +321,16 @@
                                         </span>
                                     </td>
                                     <td class="px-5 py-4 align-top">
+                                        @php
+                                            $gender = strtolower((string) ($student->gender ?? ''));
+                                            $genderLabel = match (true) {
+                                                str_starts_with($gender, 'f') => 'F',
+                                                str_starts_with($gender, 'm') => 'M',
+                                                default => '-',
+                                            };
+                                        @endphp
                                         <span class="text-xs font-bold uppercase {{ strtolower($student->gender ?? '') === 'female' ? 'text-pink-600' : 'text-sky-600' }}">
-                                            {{ $student->gender ? strtoupper(substr($student->gender, 0, 1)) : '-' }}
+                                            {{ $genderLabel }}
                                         </span>
                                     </td>
                                     <td class="px-5 py-4 align-top">
@@ -384,9 +416,11 @@
         </div>
 
         <!-- Pagination -->
-        <div class="border-t border-slate-100 px-5 py-4">
-            {{ $entries->links() }}
-        </div>
+        @if (request('print') !== '1' && method_exists($entries, 'links'))
+            <div class="border-t border-slate-100 px-5 py-4">
+                {{ $entries->links() }}
+            </div>
+        @endif
         </x-card>
 
         <!-- Edit Modal -->

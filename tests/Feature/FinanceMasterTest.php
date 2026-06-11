@@ -59,6 +59,105 @@ class FinanceMasterTest extends TestCase
     }
 
     /** @test */
+    public function finance_masters_list_displays_gender_for_old_rows_without_stored_gender()
+    {
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'account_status' => 'verified',
+        ]);
+
+        $parent = User::factory()->create([
+            'role' => 'applicant',
+        ]);
+
+        $applicant = EnrollmentApplicant::create([
+            'user_id' => $parent->id,
+            'family_application_id' => 9090,
+            'first_name' => 'Hana',
+            'last_name' => 'Saleh',
+            'gender' => 'female',
+            'student_type' => 'New',
+            'grade_level' => 'Grade 4',
+            'learning_mode' => 'F2F',
+            'status' => 'submitted',
+        ]);
+
+        $payment = Payment::create([
+            'user_id' => $parent->id,
+            'enrollment_applicant_id' => $applicant->id,
+            'amount' => 500.00,
+            'method' => 'bdo',
+            'reference_no' => 'OLD-GENDER-ROW',
+            'receipt_url' => 'receipts/old_gender.jpg',
+            'status' => 'verified',
+        ]);
+
+        $entry = FinanceMasterEntry::create([
+            'payment_id' => $payment->id,
+            'family_name' => 'FAMILY OF SALEH',
+            'method' => 'bdo',
+            'reference_no' => 'OLD-GENDER-ROW',
+            'payment_date' => '2026-06-11',
+            'amount' => 500.00,
+            'or_number' => 'OR-GENDER-1',
+            'verified_by' => $admin->id,
+        ]);
+
+        FinanceMasterEntryStudent::create([
+            'finance_master_entry_id' => $entry->id,
+            'student_name' => 'Hana Saleh',
+            'gender' => null,
+            'grade_level' => 'Grade 4',
+            'learning_mode' => 'F2F',
+            'student_type' => 'NEW',
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('admin.finance.masters-list'));
+
+        $response->assertStatus(200);
+        $response->assertSeeInOrder(['Hana Saleh', 'F']);
+    }
+
+    /** @test */
+    public function finance_masters_print_mode_includes_all_filtered_pages()
+    {
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'account_status' => 'verified',
+        ]);
+
+        foreach (['Print One' => 'male', 'Print Two' => 'female'] as $name => $gender) {
+            $entry = FinanceMasterEntry::create([
+                'family_name' => 'FAMILY OF PRINT',
+                'method' => 'remittance',
+                'reference_no' => strtoupper(str_replace(' ', '-', $name)),
+                'payment_date' => '2026-06-11',
+                'amount' => 500.00,
+                'or_number' => 'OR-' . strtoupper(str_replace(' ', '-', $name)),
+                'verified_by' => $admin->id,
+            ]);
+
+            FinanceMasterEntryStudent::create([
+                'finance_master_entry_id' => $entry->id,
+                'student_name' => $name,
+                'gender' => $gender,
+                'grade_level' => 'Grade 1',
+                'learning_mode' => 'F2F',
+                'student_type' => 'NEW',
+            ]);
+        }
+
+        $response = $this->actingAs($admin)->get(route('admin.finance.masters-list', [
+            'print' => 1,
+            'per_page' => 1,
+        ]));
+
+        $response->assertStatus(200);
+        $response->assertSee('Print One');
+        $response->assertSee('Print Two');
+    }
+
+    /** @test */
     public function verifying_payment_proof_auto_populates_finance_masters_list()
     {
         $admin = User::factory()->create([

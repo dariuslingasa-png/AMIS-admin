@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\FinanceMasterEntry;
 use App\Models\FinanceMasterEntryStudent;
+use App\Models\EnrollmentApplicant;
 use Illuminate\Http\Request;
 
 class AdminFinanceMasterController extends Controller
@@ -15,7 +16,7 @@ class AdminFinanceMasterController extends Controller
     {
         $this->ensurePaymentReviewer();
 
-        $query = FinanceMasterEntry::with(['students', 'verifier', 'payment.invoice.payments'])
+        $query = FinanceMasterEntry::with(['students', 'verifier', 'payment.applicant', 'payment.invoice.payments'])
             ->orderBy('payment_date', 'desc')
             ->orderBy('id', 'desc');
 
@@ -112,15 +113,14 @@ class AdminFinanceMasterController extends Controller
 
         if ($request->input('print') === '1') {
             $entries = $query->get();
-            $allEntries = $entries;
         } else {
-            $allEntries = $query->get();
             $entries = $query->paginate($perPage)->withQueryString();
         }
 
+        $this->hydrateMissingStudentGenders($entries);
+
         return view('admin.finance.masters-list', compact(
             'entries',
-            'allEntries',
             'totalEntries',
             'totalAmount',
             'totalStudents',
@@ -185,5 +185,111 @@ class AdminFinanceMasterController extends Controller
     private function ensurePaymentReviewer(): void
     {
         abort_unless(auth()->user()?->canReviewEnrollmentPayments(), 403);
+    }
+
+    /**
+     * Old finance-master rows were created before gender was stored on the ledger
+     * student rows. Fill the display value from the linked family application.
+     */
+    private function hydrateMissingStudentGenders($entries): void
+    {
+        $collection = method_exists($entries, 'getCollection')
+            ? $entries->getCollection()
+            : collect($entries);
+
+        $needsGender = $collection->filter(function ($entry) {
+            return $entry->payment?->applicant
+                && $entry->students->contains(fn ($student) => blank($student->gender));
+        });
+
+        if ($needsGender->isEmpty()) {
+            return;
+        }
+
+        $seedApplicants = $needsGender
+            ->pluck('payment.applicant')
+            ->filter();
+
+        $familyIds = $seedApplicants
+            ->pluck('family_application_id')
+            ->filter()
+            ->unique()
+            ->values();
+
+        $userIds = $seedApplicants
+            ->filter(fn ($applicant) => blank($applicant->family_application_id))
+            ->pluck('user_id')
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($familyIds->isEmpty() && $userIds->isEmpty()) {
+            return;
+        }
+
+        $familyApplicants = EnrollmentApplicant::query()
+            ->select('id', 'user_id', 'family_application_id', 'first_name', 'middle_name', 'last_name', 'gender')
+            ->whereNotNull('gender')
+            ->where(function ($query) use ($familyIds, $userIds) {
+                if ($familyIds->isNotEmpty()) {
+                    $query->whereIn('family_application_id', $familyIds);
+                }
+
+                if ($userIds->isNotEmpty()) {
+                    $query->orWhere(function ($userQuery) use ($userIds) {
+                        $userQuery->whereIn('user_id', $userIds)
+                            ->whereNull('family_application_id');
+                    });
+                }
+            })
+            ->get();
+
+        $byFamily = $familyApplicants->whereNotNull('family_application_id')->groupBy('family_application_id');
+        $byUser = $familyApplicants->whereNull('family_application_id')->groupBy('user_id');
+
+        foreach ($needsGender as $entry) {
+            $applicant = $entry->payment?->applicant;
+            $applicants = $applicant?->family_application_id
+                ? ($byFamily[$applicant->family_application_id] ?? collect())
+                : ($byUser[$applicant?->user_id] ?? collect());
+
+            if ($applicants->isEmpty()) {
+                continue;
+            }
+
+            $genderByName = $applicants->flatMap(function ($applicant) {
+                $fullName = $this->studentNameKey(collect([
+                    $applicant->first_name,
+                    $applicant->middle_name,
+                    $applicant->last_name,
+                ])->filter()->join(' '));
+
+                $firstLast = $this->studentNameKey(collect([
+                    $applicant->first_name,
+                    $applicant->last_name,
+                ])->filter()->join(' '));
+
+                return collect([$fullName, $firstLast])
+                    ->filter()
+                    ->unique()
+                    ->mapWithKeys(fn ($name) => [$name => $applicant->gender]);
+            });
+
+            foreach ($entry->students as $student) {
+                if (filled($student->gender)) {
+                    continue;
+                }
+
+                $gender = $genderByName[$this->studentNameKey($student->student_name)] ?? null;
+                if ($gender) {
+                    $student->setAttribute('gender', $gender);
+                }
+            }
+        }
+    }
+
+    private function studentNameKey(?string $name): string
+    {
+        return strtolower(preg_replace('/\s+/', ' ', trim((string) $name)));
     }
 }
