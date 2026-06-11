@@ -17,6 +17,10 @@
              predictedOr: '',
              orNumber: '',
              remarks: '',
+             financeMethod: '',
+             remittanceSource: '',
+             financePaymentDate: '',
+             financeReferenceNo: '',
              isSubmitting: false,
              familySubmitting: false,
              openPreview(url, title, isPdf) {

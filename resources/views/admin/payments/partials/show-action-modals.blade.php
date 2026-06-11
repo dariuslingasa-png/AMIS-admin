@@ -1,4 +1,4 @@
-        <div x-show="approveModal" x-cloak x-transition class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm">
+        <div x-show="approveModal" x-cloak x-transition class="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm">
             <div class="relative w-full max-w-lg overflow-hidden rounded-3xl bg-white shadow-2xl p-6 space-y-4" @click.away="!isSubmitting && (approveModal = false)">
                 <!-- Header -->
                 <div class="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -19,6 +19,34 @@
                     <div>
                         <span class="text-[13.5px] text-slate-400 font-bold uppercase tracking-wider">Invoice No</span>
                         <div class="font-black text-slate-900 mt-0.5" style="font-size: 19.5px !important;" x-text="currentInvoice"></div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[13.5px] text-slate-500 font-bold uppercase tracking-wider block mb-1">Method of Payment</label>
+                            <select name="finance_method" x-model="financeMethod" required class="w-full rounded-2xl border border-slate-250 bg-white px-4 py-2.5 text-base text-black focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
+                                <option value="remittance">Remittance</option>
+                                <option value="gcash">GCash</option>
+                                <option value="bdo">BDO Bank Transfer</option>
+                                <option value="maya">Maya</option>
+                                <option value="cash">Cash</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[13.5px] text-slate-500 font-bold uppercase tracking-wider block mb-1">Payment Date</label>
+                            <input type="date" name="finance_payment_date" x-model="financePaymentDate" required class="w-full rounded-2xl border border-slate-250 bg-white px-4 py-2.5 text-base text-black focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-[13.5px] text-slate-500 font-bold uppercase tracking-wider block mb-1">Reference No</label>
+                        <input type="text" name="finance_reference_no" x-model="financeReferenceNo" placeholder="e.g. 105251011098847" class="w-full rounded-2xl border border-slate-250 bg-white px-4 py-2.5 text-base text-black focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
+                    </div>
+
+                    <div x-show="financeMethod === 'remittance'" x-transition>
+                        <label class="text-[13.5px] text-slate-500 font-bold uppercase tracking-wider block mb-1">Remittance Source</label>
+                        <input type="text" name="remittance_source" x-model="remittanceSource" placeholder="e.g. AL GHURAIR EXCHANGE, RAKBANK" :required="financeMethod === 'remittance'" class="w-full rounded-2xl border border-slate-250 bg-white px-4 py-2.5 text-base text-black focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
                     </div>
                     
                     <div class="space-y-1.5 rounded-2xl bg-emerald-50 border border-emerald-100 p-4">
@@ -48,7 +76,7 @@
         </div>
 
         <!-- Reject Payment Modal -->
-        <div x-show="rejectModal" x-cloak x-transition class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm">
+        <div x-show="rejectModal" x-cloak x-transition class="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm">
             <div class="relative w-full max-w-lg overflow-hidden rounded-3xl bg-white shadow-2xl p-6 space-y-4" @click.away="!isSubmitting && (rejectModal = false)">
                 <!-- Header -->
                 <div class="flex items-center justify-between border-b border-slate-100 pb-3">

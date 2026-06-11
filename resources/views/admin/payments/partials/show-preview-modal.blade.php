@@ -39,12 +39,12 @@
                             <p class="text-[11.5px] text-amber-700 font-semibold normal-case mt-0.5">Please check the receipt amount and reference number before verifying.</p>
                         </div>
                         <div class="flex items-center gap-2">
-                            <form id="modal-approve-form-finance" action="" method="POST">
+                            <button type="button" @click="approveModal = true; document.getElementById('approve-form').action = document.getElementById('modal-approve-form-finance').action;" class="btn-premium btn-approve cursor-pointer">
+                                Verify Payment
+                            </button>
+                            <form id="modal-approve-form-finance" action="" method="POST" class="hidden">
                                 @csrf
                                 @method('PATCH')
-                                <button type="submit" class="btn-premium btn-approve cursor-pointer">
-                                    Verify Payment
-                                </button>
                             </form>
                             <button type="button" onclick="document.getElementById('modal-reject-form-finance-container').classList.toggle('hidden')" class="btn-premium btn-reject cursor-pointer">
                                 Reject

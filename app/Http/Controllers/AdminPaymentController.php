@@ -228,14 +228,83 @@ class AdminPaymentController extends Controller
             }
         }
 
-        $payment->update([
-            'status'      => 'verified',
-            'or_number'   => $orNumber,
-            'verified_at' => now(),
-        ]);
+        \Illuminate\Support\Facades\DB::transaction(function () use ($request, $payment, $invoice, $orNumber) {
+            $payment->update([
+                'status'      => 'verified',
+                'or_number'   => $orNumber,
+                'verified_at' => now(),
+                'method'      => $request->input('finance_method', $payment->method),
+                'reference_no'=> $request->input('finance_reference_no', $payment->reference_no),
+                'paid_at'     => $request->input('finance_payment_date') ? \Carbon\Carbon::parse($request->input('finance_payment_date')) : ($payment->paid_at ?? now()),
+            ]);
 
-        // Sync and recalculate the single Family Invoice totals & status!
-        $invoice->recalculate();
+            // Sync and recalculate the single Family Invoice totals & status!
+            $invoice->recalculate();
+
+            // Resolve family and children
+            $applicant = $payment->applicant;
+            $familyChildren = collect();
+            if ($applicant) {
+                $familyChildren = EnrollmentApplicant::where(function ($query) use ($applicant) {
+                    if ($applicant->family_application_id) {
+                        $query->where('family_application_id', $applicant->family_application_id);
+                    } else {
+                        $query->where('user_id', $applicant->user_id);
+                    }
+                })
+                ->orderBy('id')
+                ->get();
+            }
+            $familyLabel = $this->familyLabel($familyChildren, $applicant);
+
+            $normalizeLearningMode = function ($mode) {
+                $normalized = strtolower(trim((string) $mode));
+                return match ($normalized) {
+                    'face_to_face', 'face-to-face', 'f2f', 'face to face' => 'F2F',
+                    'flexible_1st_shift', 'flexible learning - 1st shift', 'flexible 1st shift', '1st shift', 'flexible online learning - 1st shift', 'fol - 1st shift', 'flexible online learning – 1st shift' => 'FOL - 1ST SHIFT',
+                    'flexible_2nd_shift', 'flexible learning - 2nd shift', 'flexible 2nd shift', '2nd shift', 'flexible online learning - 2nd shift', 'fol - 2nd shift', 'flexible online learning – 2nd shift' => 'FOL - 2ND SHIFT',
+                    default => $mode ? strtoupper(str_replace('flexible online learning', 'FOL', str_replace('flexible learning', 'FOL', (string) $mode))) : 'PENDING',
+                };
+            };
+
+            $normalizeStudentType = function ($type) {
+                $normalized = strtolower(trim((string) $type));
+                return match ($normalized) {
+                    'new', 'new_student', 'new student' => 'NEW',
+                    'old', 'old_student', 'old student' => 'OLD',
+                    'transferee', 'transferee student' => 'TRANSFEREE',
+                    'returning', 'returning student' => 'RETURNING',
+                    default => $type ? strtoupper((string) $type) : 'NEW',
+                };
+            };
+
+            // Delete any existing entries for this payment to prevent duplicates on re-verify
+            \App\Models\FinanceMasterEntry::where('payment_id', $payment->id)->delete();
+
+            // Auto-create FinanceMasterEntry record
+            $financeEntry = \App\Models\FinanceMasterEntry::create([
+                'payment_id' => $payment->id,
+                'family_name' => $familyLabel,
+                'remittance_source' => $request->input('remittance_source'),
+                'reference_no' => $request->input('finance_reference_no'),
+                'method' => $request->input('finance_method', 'remittance'),
+                'payment_date' => $request->input('finance_payment_date') ? \Carbon\Carbon::parse($request->input('finance_payment_date'))->format('Y-m-d') : now()->format('Y-m-d'),
+                'amount' => $payment->amount,
+                'or_number' => $orNumber,
+                'verified_by' => auth()->id(),
+            ]);
+
+            // Auto-create FinanceMasterEntryStudent records
+            foreach ($familyChildren as $child) {
+                \App\Models\FinanceMasterEntryStudent::create([
+                    'finance_master_entry_id' => $financeEntry->id,
+                    'student_name' => $child->full_name,
+                    'grade_level' => $child->grade_level ?: 'Pending',
+                    'learning_mode' => $normalizeLearningMode($child->learning_mode),
+                    'student_type' => $normalizeStudentType($child->student_type),
+                ]);
+            }
+        });
 
         AdminAuditLog::record('payment_approved', true, 'Payment proof approved.', [
             'payment_id' => $payment->id,

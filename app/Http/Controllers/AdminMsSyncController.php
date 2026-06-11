@@ -143,6 +143,10 @@ class AdminMsSyncController extends Controller
             return back()->withErrors(['error' => "Student {$upn} already exists in portal."]);
         }
 
+        if (Student::where('student_number', $studentNumber)->exists()) {
+            return back()->withErrors(['error' => "Student number {$studentNumber} is already taken by another student."]);
+        }
+
         // Find or create a portal user account
         $azureEnabled = true;
         try {
@@ -199,6 +203,7 @@ class AdminMsSyncController extends Controller
 
         $dbByEmail    = Student::pluck('school_email')->map('strtolower')->flip();
         $dbByMsUserId = Student::pluck('ms_user_id')->flip();
+        $dbByStudentNumber = Student::pluck('student_number')->flip();
 
         $imported = 0; $skipped = 0; $failed = 0;
 
@@ -216,6 +221,12 @@ class AdminMsSyncController extends Controller
             $studentNumber = $m[1] ?? null;
 
             if (!$studentNumber) { $failed++; continue; }
+
+            if ($dbByStudentNumber->has($studentNumber)) {
+                Log::warning("importAll: student_number {$studentNumber} already in use, skipping {$upn}");
+                $failed++;
+                continue;
+            }
 
             try {
                 $azureEnabled = $azUser['accountEnabled'] ?? true;

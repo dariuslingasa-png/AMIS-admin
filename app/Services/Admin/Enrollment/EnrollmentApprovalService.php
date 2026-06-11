@@ -3,11 +3,13 @@
 namespace App\Services\Admin\Enrollment;
 
 use App\Models\EnrollmentApplicant;
+use App\Models\EnrollmentSetting;
 use App\Models\SchoolFee;
 use App\Models\Student;
 use App\Services\MicrosoftGraphService;
 use App\Services\MsTeamsEnrollmentService;
 use App\Services\SoaService;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -35,34 +37,49 @@ class EnrollmentApprovalService
             return 'Student already onboarded.';
         }
 
-        if ($this->shouldGenerateSoa($applicant) && ! SchoolFee::forGrade($applicant->grade_level, $applicant->school_year)) {
-            throw ValidationException::withMessages([
-                'status' => "No school fees found for {$applicant->grade_level} SY {$applicant->school_year}. Add the fee first, then approve again.",
-            ]);
+        $settings = EnrollmentSetting::current();
+
+        if ($settings->generate_soa ?? true) {
+            if ($this->shouldGenerateSoa($applicant) && ! SchoolFee::forGrade($applicant->grade_level, $applicant->school_year)) {
+                throw ValidationException::withMessages([
+                    'status' => "No school fees found for {$applicant->grade_level} SY {$applicant->school_year}. Add the fee first, then approve again.",
+                ]);
+            }
         }
 
-        $studentNumber = $this->generateStudentNumber($applicant);
-        [$mailNick, $schoolEmail] = $this->generateSchoolEmail($applicant, $studentNumber);
-        $tempPassword = 'Amis@'.strtoupper(Str::random(5)).rand(10, 99);
- 
-        [$msUserId, $msError, $graph] = $this->createMicrosoftAccount($applicant, $mailNick, $schoolEmail, $tempPassword);
-        $student = $this->createStudent($applicant, $studentNumber, $schoolEmail, $msUserId, $tempPassword);
- 
-        $this->enrollInTeams($student, $msUserId, $graph);
-        $this->generateSoa($student, $applicant);
- 
-        $documentRemarks = $this->reviewService->missingDocumentRemarks($applicant);
- 
-        $applicant->update([
-            'status' => 'approved',
-            'review_remarks' => $documentRemarks,
-        ]);
- 
-        $this->sendOnboardingIfPossible($applicant, $student, $tempPassword, $msError);
- 
-        return $msError
-            ? 'Application approved. Student number generated. Note: Microsoft account creation failed. Please create it manually. Error: '.$msError
-            : 'Application approved. Student credentials were generated and sent to the parent.';
+        return DB::transaction(function () use ($applicant, $settings) {
+            $studentNumber = $this->generateStudentNumber($applicant);
+            [$mailNick, $schoolEmail] = $this->generateSchoolEmail($applicant, $studentNumber);
+            $tempPassword = 'Amis@'.strtoupper(Str::random(5)).rand(10, 99);
+
+            if ($settings->generate_microsoft_account ?? true) {
+                [$msUserId, $msError, $graph] = $this->createMicrosoftAccount($applicant, $mailNick, $schoolEmail, $tempPassword);
+            } else {
+                $msUserId = null;
+                $msError = null;
+                $graph = new MicrosoftGraphService();
+            }
+            $student = $this->createStudent($applicant, $studentNumber, $schoolEmail, $msUserId, $tempPassword);
+
+            $this->enrollInTeams($student, $msUserId, $graph);
+
+            if ($settings->generate_soa ?? true) {
+                $this->generateSoa($student, $applicant);
+            }
+
+            $documentRemarks = $this->reviewService->missingDocumentRemarks($applicant);
+
+            $applicant->update([
+                'status' => 'approved',
+                'review_remarks' => $documentRemarks,
+            ]);
+
+            $this->sendOnboardingIfPossible($applicant, $student, $tempPassword, $msError);
+
+            return $msError
+                ? 'Application approved. Student number generated. Note: Microsoft account creation failed. Please create it manually. Error: '.$msError
+                : 'Application approved. Student credentials were generated and sent to the parent.';
+        });
     }
  
     private function generateStudentNumber(EnrollmentApplicant $applicant): string
@@ -73,13 +90,29 @@ class EnrollmentApprovalService
             $startYear = date('Y');
         }
         $yearSuffix = substr($startYear, 2, 2);
-        $sequence = Student::count() + 1;
- 
-        do {
-            $studentNumber = $yearSuffix.str_pad($sequence, 4, '0', STR_PAD_LEFT);
-            $sequence++;
-        } while (Student::where('student_number', $studentNumber)->exists());
- 
+
+        $studentNumber = DB::transaction(function () use ($yearSuffix) {
+            $latest = Student::where('student_number', 'like', $yearSuffix.'%')
+                ->lockForUpdate()
+                ->orderByRaw('CAST(student_number AS UNSIGNED) DESC')
+                ->value('student_number');
+
+            if ($latest) {
+                $num = (int) substr($latest, 2) + 1;
+            } else {
+                $num = 1;
+            }
+
+            $candidate = $yearSuffix.str_pad($num, 4, '0', STR_PAD_LEFT);
+
+            while (Student::where('student_number', $candidate)->exists()) {
+                $num++;
+                $candidate = $yearSuffix.str_pad($num, 4, '0', STR_PAD_LEFT);
+            }
+
+            return $candidate;
+        });
+
         return $studentNumber;
     }
  
@@ -110,8 +143,14 @@ class EnrollmentApprovalService
 
         try {
             $displayName = trim($applicant->first_name.' '.$applicant->last_name);
-            $msUser = $graph->createUser($displayName, $mailNick, $schoolEmail, $tempPassword);
-            $msUserId = $msUser['id'] ?? null;
+
+            if ($graph->userExists($schoolEmail)) {
+                $msUserId = $graph->resolveUserId($schoolEmail);
+                Log::info("Microsoft account already exists for {$schoolEmail}, reusing existing user {$msUserId}");
+            } else {
+                $msUser = $graph->createUser($displayName, $mailNick, $schoolEmail, $tempPassword);
+                $msUserId = $msUser['id'] ?? null;
+            }
 
             if ($msUserId) {
                 $studentSkuId = config('services.microsoft.student_sku_id');
@@ -220,6 +259,10 @@ class EnrollmentApprovalService
         string $tempPassword,
         ?string $msError,
     ): void {
+        if (! (EnrollmentSetting::current()->send_onboarding_email ?? true)) {
+            return;
+        }
+
         $recipients = collect([$applicant->parent_email ?: null, $applicant->email ?: null])
             ->filter(fn ($email) => $email && $email !== 'NA' && filter_var($email, FILTER_VALIDATE_EMAIL))
             ->unique()

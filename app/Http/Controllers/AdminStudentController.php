@@ -6,6 +6,7 @@ use App\Models\Student;
 use App\Models\Section;
 use App\Services\MicrosoftGraphService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -424,5 +425,45 @@ class AdminStudentController extends Controller
         }
 
         return back()->with('success', "School email successfully updated to '{$newEmail}' locally and synced to Microsoft AD.");
+    }
+
+    public function destroy(Student $student)
+    {
+        $name = $student->student_number.' ('.$student->school_email.')';
+        $msError = null;
+
+        if ($student->ms_user_id) {
+            try {
+                (new MicrosoftGraphService())->deleteAzureUser($student->ms_user_id);
+            } catch (\Throwable $e) {
+                $msError = $e->getMessage();
+                Log::error("Failed to delete Azure AD user for student {$student->id}: ".$msError);
+            }
+        }
+
+        DB::transaction(function () use ($student) {
+            if ($student->account) {
+                $student->account->payments()->delete();
+                $student->account->monthlyBillings()->delete();
+                $student->account->delete();
+            }
+
+            if ($student->applicant) {
+                $student->applicant->update([
+                    'status' => 'under_review',
+                    'review_remarks' => 'Student record was deleted. Re-review required.',
+                ]);
+            }
+
+            $student->delete();
+        });
+
+        if ($msError) {
+            return redirect()->route('admin.students.index')
+                ->with('warning', "Student {$name} deleted from portal, but Azure AD deletion failed: {$msError}");
+        }
+
+        return redirect()->route('admin.students.index')
+            ->with('success', "Student {$name} deleted from portal and Microsoft 365.");
     }
 }

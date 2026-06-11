@@ -120,6 +120,13 @@ class MicrosoftGraphService
         string $upn,
         string $tempPassword
     ): array {
+        if ($this->userExists($upn)) {
+            $existingId = $this->resolveUserId($upn);
+            Log::info("Graph createUser: {$upn} already exists, returning existing user {$existingId}");
+
+            return ['id' => $existingId, 'userPrincipalName' => $upn, 'displayName' => $displayName];
+        }
+
         $response = $this->graph()->post('/users', [
             'accountEnabled'    => true,
             'displayName'       => $displayName,
@@ -247,6 +254,7 @@ class MicrosoftGraphService
     }
     /**
      * Delete a user from Azure AD permanently.
+     * Tries application token first, falls back to delegated ROPC if needed.
      */
     public function deleteAzureUser(string $msUserId): void
     {
@@ -256,7 +264,12 @@ class MicrosoftGraphService
             $resolvedId = $msUserId;
         }
 
-        $response = $this->graphDelegated()->delete("/users/{$resolvedId}");
+        $response = $this->graph()->delete("/users/{$resolvedId}");
+
+        if ($response->status() === 403) {
+            Log::warning('Graph deleteAzureUser: app token got 403, trying delegated ROPC...');
+            $response = $this->graphDelegated()->delete("/users/{$resolvedId}");
+        }
 
         if (!$response->successful() && $response->status() !== 404) {
             Log::error('Graph deleteAzureUser error', ['status' => $response->status(), 'body' => $response->body()]);

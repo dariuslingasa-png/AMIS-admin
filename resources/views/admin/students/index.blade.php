@@ -118,10 +118,20 @@
 
                                 <!-- Action -->
                                 <td class="px-5 py-4 text-right">
-                                    <a href="{{ route('admin.students.show', $student) }}" class="inline-flex h-9 items-center gap-2 rounded-md border border-emerald-100 bg-white px-3 text-xs font-bold text-emerald-700 transition hover:bg-emerald-50">
-                                        <i data-lucide="file-search" class="h-4 w-4"></i>
-                                        Manage
-                                    </a>
+                                    <div class="flex items-center justify-end gap-1.5">
+                                        <a href="{{ route('admin.students.show', $student) }}" class="inline-flex h-9 items-center gap-2 rounded-md border border-emerald-100 bg-white px-3 text-xs font-bold text-emerald-700 transition hover:bg-emerald-50">
+                                            <i data-lucide="file-search" class="h-4 w-4"></i>
+                                            Manage
+                                        </a>
+                                        <form method="POST" action="{{ route('admin.students.destroy', $student) }}"
+                                              onsubmit="return confirm('Delete {{ $student->student_number }} ({{ $student->school_email }})?\n\nThis will permanently delete the student from the portal and Microsoft 365. This action cannot be undone.')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-rose-200 bg-white text-rose-500 transition hover:bg-rose-50" title="Delete Student">
+                                                <i data-lucide="trash-2" class="h-4 w-4"></i>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         @empty

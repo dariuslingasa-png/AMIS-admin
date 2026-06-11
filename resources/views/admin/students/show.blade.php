@@ -556,6 +556,19 @@
                             </button>
                         </form>
                     @endif
+
+                    <!-- Delete Student -->
+                    <div class="border-t border-rose-100 pt-4 mt-4 dark:border-rose-900/30">
+                        <form method="POST" action="{{ route('admin.students.destroy', $student) }}"
+                              onsubmit="return confirm('Delete {{ $student->student_number }} ({{ $student->school_email }})?\n\nThis will permanently delete the student from the portal and Microsoft 365. This action cannot be undone.')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="w-full inline-flex h-11 items-center justify-center gap-2.5 rounded-xl border border-rose-200 bg-white px-4 text-sm font-bold text-rose-600 hover:bg-rose-50 active:scale-[0.98] transition-all duration-200 cursor-pointer">
+                                <i data-lucide="trash-2" class="h-4 w-4"></i>
+                                <span>Delete Student</span>
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </x-card>
 

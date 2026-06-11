@@ -57,6 +57,7 @@
             'links' => [
                 ['Dashboard', 'layout-dashboard', route('admin.finance.dashboard'), request()->routeIs('admin.finance.dashboard')],
                 ['Enrollment Payment Approval', 'credit-card', route('admin.payments.index'), request()->routeIs('admin.payments.*')],
+                ['Finance Masters List', 'list-checks', route('admin.finance.masters-list'), request()->routeIs('admin.finance.masters-list')],
                 ['SOA', 'scroll-text', route('admin.soa.index'), request()->routeIs('admin.soa.*')],
                 ['Fee & Discount', 'receipt', route('admin.finance.fees'), request()->routeIs('admin.finance.fees')],
                 ['Billing', 'file-spreadsheet', route('admin.soa.index'), false],
