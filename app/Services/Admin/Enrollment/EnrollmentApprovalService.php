@@ -68,7 +68,11 @@ class EnrollmentApprovalService
     private function generateStudentNumber(): string
     {
         $year = substr(date('Y'), 2);
-        $sequence = Student::whereYear('created_at', date('Y'))->count() + 1;
+        $latest = Student::where('student_number', 'like', $year.'%')
+            ->orderByRaw('CAST(student_number AS UNSIGNED) DESC')
+            ->value('student_number');
+
+        $sequence = $latest ? (int) substr($latest, 2) + 1 : 1;
 
         do {
             $studentNumber = $year.str_pad($sequence, 4, '0', STR_PAD_LEFT);

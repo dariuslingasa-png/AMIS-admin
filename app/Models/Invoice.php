@@ -73,22 +73,44 @@ class Invoice extends Model
 
             // Retrospectively format OR numbers in the database to be 100% compliant with the new OR rules
             $baseOr = str_replace('INV-', 'OR-', $this->invoice_no);
-            $totalVerified = $verifiedPayments->count();
+            
+            // Group verified payments by reference_no/receipt_url to determine unique physical transactions
+            $uniqueGroups = $verifiedPayments->groupBy(function ($p) {
+                $ref = trim((string)$p->reference_no);
+                $url = trim((string)$p->receipt_url);
+                if ($ref !== '') {
+                    return 'ref_' . strtolower($ref);
+                }
+                if ($url !== '') {
+                    return 'url_' . strtolower($url);
+                }
+                return 'id_' . $p->id;
+            });
 
-            if ($totalVerified === 1) {
-                $singlePayment = $verifiedPayments->first();
-                $isFullPayment = ((float)$singlePayment->amount >= (float)$this->total_amount);
+            $totalUniqueGroups = $uniqueGroups->count();
+
+            if ($totalUniqueGroups === 1) {
+                $group = $uniqueGroups->first();
+                // Sum up the payment amount for this unique transaction
+                $groupAmount = (float) $group->sum('amount');
+                $isFullPayment = ($groupAmount >= (float)$this->total_amount);
                 $correctOr = $isFullPayment ? $baseOr : $baseOr . '-1';
                 
-                if ($singlePayment->or_number !== $correctOr) {
-                    $singlePayment->update(['or_number' => $correctOr]);
-                }
-            } elseif ($totalVerified > 1) {
-                foreach ($verifiedPayments as $index => $paymentRecord) {
-                    $correctOr = $baseOr . '-' . ($index + 1);
+                foreach ($group as $paymentRecord) {
                     if ($paymentRecord->or_number !== $correctOr) {
                         $paymentRecord->update(['or_number' => $correctOr]);
                     }
+                }
+            } elseif ($totalUniqueGroups > 1) {
+                $index = 1;
+                foreach ($uniqueGroups as $groupKey => $group) {
+                    $correctOr = $baseOr . '-' . $index;
+                    foreach ($group as $paymentRecord) {
+                        if ($paymentRecord->or_number !== $correctOr) {
+                            $paymentRecord->update(['or_number' => $correctOr]);
+                        }
+                    }
+                    $index++;
                 }
             }
 
@@ -271,6 +293,19 @@ class Invoice extends Model
 
             // Recalculate status and balance
             $invoice->recalculate();
+        } else {
+            // Link any newly added family payments to the existing invoice
+            $children = EnrollmentApplicant::where(function ($query) use ($familyId, $userId) {
+                if ($familyId) {
+                    $query->where('family_application_id', $familyId);
+                } else {
+                    $query->where('user_id', $userId);
+                }
+            })->get();
+            $childIds = $children->pluck('id');
+            Payment::whereIn('enrollment_applicant_id', $childIds)
+                ->whereNull('invoice_id')
+                ->update(['invoice_id' => $invoice->id]);
         }
 
         return $invoice;

@@ -7,7 +7,7 @@
                     Payment Transaction
                 </h3>
                 <span class="rounded-full bg-slate-100 px-3 py-1 text-[13.5px] font-bold text-slate-600">
-                    {{ $allPayments->count() }} {{ Str::plural('record', $allPayments->count()) }}
+                    {{ $uniquePayments->count() }} {{ Str::plural('record', $uniquePayments->count()) }}
                 </span>
             </div>
 
@@ -28,7 +28,7 @@
                         </tr>
                     </thead>
                     <tbody class="font-semibold text-black">
-                        @forelse ($allPayments as $p)
+                        @forelse ($uniquePayments as $p)
                             @php
                                 $pIsPdf = $p->receipt_url && strtolower(pathinfo($p->receipt_url, PATHINFO_EXTENSION)) === 'pdf';
                                 $statusColor = match(strtolower($p->status)) {
@@ -40,7 +40,7 @@
                                 
                                 // Calculate predicted OR number
                                 $baseOr = str_replace('INV-', 'OR-', $invoice ? $invoice->invoice_no : 'INV-ENR-00000');
-                                $verifiedCount = $approvedPayments->count();
+                                $verifiedCount = $uniqueApprovedPayments->count();
                                 if ($verifiedCount === 0) {
                                     $isFull = ((float)$p->amount >= (float)($invoice ? $invoice->total_amount : 0));
                                     $predictedOr = $isFull ? $baseOr : $baseOr . '-1';

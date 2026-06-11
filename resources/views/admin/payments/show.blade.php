@@ -26,8 +26,35 @@
         }
     }
 
+    // Collapse duplicate payments (same reference_no or receipt_url) for display in the table
+    $uniquePayments = $allPayments->sortByDesc(fn($p) => (float)$p->amount)->unique(function ($p) {
+        $ref = trim((string)$p->reference_no);
+        $url = trim((string)$p->receipt_url);
+        if ($ref !== '') {
+            return 'ref_' . strtolower($ref);
+        }
+        if ($url !== '') {
+            return 'url_' . strtolower($url);
+        }
+        return 'id_' . $p->id;
+    })->sortBy('created_at')->values();
+
     // Sum up verified/approved payments for PAID block
     $approvedPayments = $allPayments->filter(fn($p) => strtolower($p->status) === 'verified');
+
+    // Group approved payments to count unique transactions for OR numbering/display
+    $uniqueApprovedPayments = $approvedPayments->unique(function ($p) {
+        $ref = trim((string)$p->reference_no);
+        $url = trim((string)$p->receipt_url);
+        if ($ref !== '') {
+            return 'ref_' . strtolower($ref);
+        }
+        if ($url !== '') {
+            return 'url_' . strtolower($url);
+        }
+        return 'id_' . $p->id;
+    });
+
     $actualPaid = isset($invoice) ? (float) $invoice->amount_paid : (float) $approvedPayments->sum('amount');
 
     // Display only the latest verified OR number in the PAID summary row
