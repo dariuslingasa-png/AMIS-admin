@@ -9,7 +9,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('enrollment_applicants', function (Blueprint $table) {
-            $table->timestamp('registry_email_sent_at')->nullable();
+            if (! Schema::hasColumn('enrollment_applicants', 'registry_email_sent_at')) {
+                $table->timestamp('registry_email_sent_at')->nullable();
+            }
         });
     }
 
