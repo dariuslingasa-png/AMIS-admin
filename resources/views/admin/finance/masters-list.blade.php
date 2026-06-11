@@ -258,7 +258,27 @@
                                 <td class="px-5 py-4 align-top">-</td>
                                 <!-- Reference No -->
                                 <td class="px-5 py-4 align-top font-mono text-slate-800 text-sm tracking-tight">
-                                    {{ $entry->reference_no ?: '-' }}
+                                    <div>{{ $entry->reference_no ?: '-' }}</div>
+                                    @php
+                                        $receiptUrls = $entry->all_receipt_urls;
+                                    @endphp
+                                    @if (!empty($receiptUrls))
+                                        <div class="mt-1.5 flex flex-col gap-1 print:hidden">
+                                            @if (count($receiptUrls) === 1)
+                                                <a href="{{ \App\Support\EnrollmentStorage::url($receiptUrls[0]) }}" target="_blank" class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 hover:text-emerald-700 hover:underline">
+                                                    <i data-lucide="external-link" class="h-3.5 w-3.5"></i>
+                                                    View Proof
+                                                </a>
+                                            @else
+                                                @foreach ($receiptUrls as $idx => $url)
+                                                    <a href="{{ \App\Support\EnrollmentStorage::url($url) }}" target="_blank" class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 hover:text-emerald-700 hover:underline">
+                                                        <i data-lucide="external-link" class="h-3.5 w-3.5"></i>
+                                                        Proof {{ $idx + 1 }}
+                                                    </a>
+                                                @endforeach
+                                            @endif
+                                        </div>
+                                    @endif
                                 </td>
                                 <!-- MOP & Source -->
                                 <td class="px-5 py-4 align-top">
@@ -402,7 +422,27 @@
                                     @if ($index === 0)
                                         <!-- Reference No -->
                                         <td class="px-5 py-4 align-top font-mono text-slate-800 text-sm tracking-tight" rowspan="{{ $studentCount }}">
-                                            {{ $entry->reference_no ?: '-' }}
+                                            <div>{{ $entry->reference_no ?: '-' }}</div>
+                                            @php
+                                                $receiptUrls = $entry->all_receipt_urls;
+                                            @endphp
+                                            @if (!empty($receiptUrls))
+                                                <div class="mt-1.5 flex flex-col gap-1 print:hidden">
+                                                    @if (count($receiptUrls) === 1)
+                                                        <a href="{{ \App\Support\EnrollmentStorage::url($receiptUrls[0]) }}" target="_blank" class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 hover:text-emerald-700 hover:underline">
+                                                            <i data-lucide="external-link" class="h-3.5 w-3.5"></i>
+                                                            View Proof
+                                                        </a>
+                                                    @else
+                                                        @foreach ($receiptUrls as $idx => $url)
+                                                            <a href="{{ \App\Support\EnrollmentStorage::url($url) }}" target="_blank" class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 hover:text-emerald-700 hover:underline">
+                                                                <i data-lucide="external-link" class="h-3.5 w-3.5"></i>
+                                                                Proof {{ $idx + 1 }}
+                                                            </a>
+                                                        @endforeach
+                                                    @endif
+                                                </div>
+                                            @endif
                                         </td>
 
                                         <!-- MOP & Source -->

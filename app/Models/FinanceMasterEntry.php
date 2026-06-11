@@ -51,4 +51,19 @@ class FinanceMasterEntry extends Model
             default => ucfirst($this->method),
         };
     }
+
+    public function getAllReceiptUrlsAttribute(): array
+    {
+        if ($this->payment && $this->payment->invoice) {
+            return $this->payment->invoice->payments
+                ->whereNotNull('receipt_url')
+                ->filter(fn($url) => !blank($url))
+                ->pluck('receipt_url')
+                ->unique()
+                ->values()
+                ->toArray();
+        }
+
+        return $this->payment && !blank($this->payment->receipt_url) ? [$this->payment->receipt_url] : [];
+    }
 }

@@ -14,7 +14,7 @@ class AdminFinanceMasterController extends Controller
     {
         $this->ensurePaymentReviewer();
 
-        $query = FinanceMasterEntry::with(['students', 'verifier'])
+        $query = FinanceMasterEntry::with(['students', 'verifier', 'payment.invoice.payments'])
             ->orderBy('payment_date', 'desc')
             ->orderBy('id', 'desc');
 
