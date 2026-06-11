@@ -43,8 +43,7 @@
                 .grid.gap-3.border-b, /* Stats cards */
                 .border-t.border-slate-100.px-5.py-4, /* Pagination container */
                 .amis-card > div:first-child, /* Card header */
-                th:last-child, /* Actions column header */
-                td:last-child { /* Actions column cells */
+                .actions-col {
                     display: none !important;
                 }
 
@@ -213,166 +212,268 @@
                 <thead class="bg-white text-[11px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-100">
                     <tr>
                         <th class="px-5 py-4">Family Name</th>
-                        <th class="px-5 py-4">Children Details</th>
+                        <th class="px-5 py-4">Student Name</th>
+                        <th class="px-5 py-4">Grade</th>
+                        <th class="px-5 py-4">Learning Mode</th>
                         <th class="px-5 py-4">Reference No</th>
                         <th class="px-5 py-4">MOP & Source</th>
                         <th class="px-5 py-4">Payment Date</th>
                         <th class="px-5 py-4 text-right">Amount</th>
                         <th class="px-5 py-4">OR Number</th>
                         <th class="px-5 py-4">Verified By</th>
-                        <th class="px-5 py-4 text-right">Actions</th>
+                        <th class="px-5 py-4 text-right actions-col">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 bg-white font-semibold text-slate-700">
                     @forelse ($entries as $entry)
-                        <tr class="transition hover:bg-slate-50/80">
-                            <!-- Family Name -->
-                            <td class="px-5 py-4 align-top">
-                                <div class="font-black text-slate-950 text-base max-w-[120px] break-words whitespace-normal leading-tight">
-                                    {{ str_ireplace('FAMILY OF ', '', $entry->family_name) }}
-                                </div>
-                                <div class="mt-1 text-[10px] text-slate-400 uppercase tracking-wider">
-                                    Entry ID: #{{ str_pad((string) $entry->id, 5, '0', STR_PAD_LEFT) }}
-                                </div>
-                            </td>
-
-                            <!-- Children Details -->
-                            <td class="px-5 py-4 align-top">
-                                <div class="space-y-2.5">
-                                    @forelse ($entry->students as $student)
-                                        <div class="flex items-center gap-2 flex-wrap @if(!$loop->last) pb-2.5 border-b border-slate-100/70 @endif">
-                                            <span class="font-bold text-slate-900 text-[13.5px] max-w-[150px] break-words whitespace-normal inline-block leading-tight">{{ $student->student_name }}</span>
-                                            
-                                            <span class="rounded-full bg-slate-50 px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-wide text-slate-500 border border-slate-200/60 max-w-[100px] break-words whitespace-normal inline-block text-center">
-                                                {{ $student->grade_level }}
-                                            </span>
-
-                                            @php
-                                                $type = strtoupper($student->student_type ?? '');
-                                                $mode = strtoupper($student->learning_mode ?? '');
-                                                
-                                                // Normalize mode: if it contains FOL, ODL, SHIFT, or FLEXIBLE, it's ODL. Otherwise, F2F.
-                                                $cleanMode = (str_contains($mode, 'FOL') || str_contains($mode, 'ODL') || str_contains($mode, 'SHIFT') || str_contains($mode, 'FLEXIBLE')) ? 'ODL' : 'F2F';
-                                                
-                                                // Normalize type
-                                                if (str_contains($type, 'NEW')) {
-                                                    $cleanType = 'NEW';
-                                                } elseif (str_contains($type, 'OLD')) {
-                                                    $cleanType = 'OLD';
-                                                } elseif (str_contains($type, 'TRANSFER')) {
-                                                    $cleanType = 'TRANSFEREE';
-                                                } elseif (str_contains($type, 'RETURN')) {
-                                                    $cleanType = 'RETURNING';
-                                                } else {
-                                                    $cleanType = $type ?: 'NEW';
-                                                }
-
-                                                $badgeText = "{$cleanType} {$cleanMode}";
-
-                                                if ($cleanType === 'NEW') {
-                                                    $badgeClass = $cleanMode === 'ODL' 
-                                                        ? 'bg-purple-50 text-purple-700 border border-purple-100' 
-                                                        : 'bg-sky-50 text-sky-700 border border-sky-100';
-                                                } elseif ($cleanType === 'OLD') {
-                                                    $badgeClass = $cleanMode === 'ODL' 
-                                                        ? 'bg-amber-50 text-amber-700 border border-amber-100' 
-                                                        : 'bg-emerald-50 text-emerald-700 border border-emerald-100';
-                                                } else {
-                                                    $badgeClass = $cleanMode === 'ODL'
-                                                        ? 'bg-indigo-50 text-indigo-700 border border-indigo-100'
-                                                        : 'bg-slate-50 text-slate-600 border border-slate-200';
-                                                }
-                                            @endphp
-                                            <span class="rounded-full px-2 py-0.5 text-[9.5px] font-black uppercase tracking-wider {{ $badgeClass }} max-w-[100px] break-words whitespace-normal inline-block text-center">
-                                                {{ $badgeText }}
-                                            </span>
-                                        </div>
-                                    @empty
-                                        <span class="text-xs font-semibold text-slate-400">No student records</span>
-                                    @endforelse
-                                </div>
-                            </td>
-
-                            <!-- Reference No -->
-                            <td class="px-5 py-4 align-top font-mono text-slate-800 text-sm tracking-tight">
-                                {{ $entry->reference_no ?: '-' }}
-                            </td>
-
-                            <!-- MOP & Source -->
-                            <td class="px-5 py-4 align-top">
-                                @php
-                                    $method = strtolower($entry->method);
-                                    $badgeClass = match($method) {
-                                        'remittance' => 'bg-amber-50 text-amber-700 border-amber-200',
-                                        'gcash' => 'bg-sky-50 text-sky-700 border-sky-200',
-                                        'bdo' => 'bg-indigo-50 text-indigo-700 border-indigo-200',
-                                        'maya' => 'bg-violet-50 text-violet-700 border-violet-200',
-                                        'cash' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
-                                        default => 'bg-slate-50 text-slate-700 border-slate-200'
-                                    };
-                                @endphp
-                                <span class="inline-flex rounded border px-2.5 py-1 text-[11px] font-black uppercase tracking-wider {{ $badgeClass }}">
-                                    {{ $entry->method_label }}
-                                </span>
-                                @if ($entry->remittance_source)
-                                    <div class="mt-1 text-[11px] font-black text-amber-600 uppercase tracking-wide">
-                                        {{ $entry->remittance_source }}
+                        @php
+                            $students = $entry->students;
+                            $studentCount = max(1, $students->count());
+                        @endphp
+                        @if ($students->isEmpty())
+                            <tr class="transition hover:bg-slate-50/80 border-b border-slate-100">
+                                <!-- Family Name -->
+                                <td class="px-5 py-4 align-top">
+                                    <div class="font-black text-slate-950 text-base max-w-[120px] break-words whitespace-normal leading-tight">
+                                        {{ str_ireplace('FAMILY OF ', '', $entry->family_name) }}
                                     </div>
-                                @endif
-                            </td>
-
-                            <!-- Payment Date -->
-                            <td class="px-5 py-4 align-top">
-                                <div class="text-slate-900 text-sm font-semibold">{{ $entry->payment_date?->format('M d, Y') }}</div>
-                                <div class="mt-0.5 text-[11px] text-slate-400 font-medium">{{ $entry->payment_date?->format('l') }}</div>
-                            </td>
-
-                            <!-- Amount -->
-                            <td class="px-5 py-4 align-top text-right font-black text-slate-900 text-[15px] tabular-nums">
-                                {{ number_format($entry->amount, 2) }}
-                            </td>
-
-                            <!-- OR Number -->
-                            <td class="px-5 py-4 align-top font-bold text-slate-900">
-                                @if ($entry->or_number)
-                                    <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs text-emerald-800 font-bold border border-emerald-100">
-                                        <i data-lucide="receipt" class="h-3.5 w-3.5"></i>
-                                        {{ $entry->or_number }}
+                                    <div class="mt-1 text-[10px] text-slate-400 uppercase tracking-wider">
+                                        Entry ID: #{{ str_pad((string) $entry->id, 5, '0', STR_PAD_LEFT) }}
+                                    </div>
+                                </td>
+                                <!-- Student Name -->
+                                <td class="px-5 py-4 align-top text-slate-400 italic">No student records</td>
+                                <!-- Grade -->
+                                <td class="px-5 py-4 align-top">-</td>
+                                <!-- Learning Mode -->
+                                <td class="px-5 py-4 align-top">-</td>
+                                <!-- Reference No -->
+                                <td class="px-5 py-4 align-top font-mono text-slate-800 text-sm tracking-tight">
+                                    {{ $entry->reference_no ?: '-' }}
+                                </td>
+                                <!-- MOP & Source -->
+                                <td class="px-5 py-4 align-top">
+                                    @php
+                                        $method = strtolower($entry->method);
+                                        $badgeClass = match($method) {
+                                            'remittance' => 'bg-amber-50 text-amber-700 border-amber-200',
+                                            'gcash' => 'bg-sky-50 text-sky-700 border-sky-200',
+                                            'bdo' => 'bg-indigo-50 text-indigo-700 border-indigo-200',
+                                            'maya' => 'bg-violet-50 text-violet-700 border-violet-200',
+                                            'cash' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                                            default => 'bg-slate-50 text-slate-700 border-slate-200'
+                                        };
+                                    @endphp
+                                    <span class="inline-flex rounded border px-2.5 py-1 text-[11px] font-black uppercase tracking-wider {{ $badgeClass }}">
+                                        {{ $entry->method_label }}
                                     </span>
-                                @else
-                                    <span class="text-slate-400 font-normal italic">No OR</span>
-                                @endif
-                            </td>
+                                    @if ($entry->remittance_source)
+                                        <div class="mt-1 text-[11px] font-black text-amber-600 uppercase tracking-wide">
+                                            {{ $entry->remittance_source }}
+                                        </div>
+                                    @endif
+                                </td>
+                                <!-- Payment Date -->
+                                <td class="px-5 py-4 align-top">
+                                    <div class="text-slate-900 text-sm font-semibold">{{ $entry->payment_date?->format('M d, Y') }}</div>
+                                    <div class="mt-0.5 text-[11px] text-slate-400 font-medium">{{ $entry->payment_date?->format('l') }}</div>
+                                </td>
+                                <!-- Amount -->
+                                <td class="px-5 py-4 align-top text-right font-black text-slate-900 text-[15px] tabular-nums">
+                                    {{ number_format($entry->amount, 2) }}
+                                </td>
+                                <!-- OR Number -->
+                                <td class="px-5 py-4 align-top font-bold text-slate-900">
+                                    @if ($entry->or_number)
+                                        <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs text-emerald-800 font-bold border border-emerald-100">
+                                            <i data-lucide="receipt" class="h-3.5 w-3.5"></i>
+                                            {{ $entry->or_number }}
+                                        </span>
+                                    @else
+                                        <span class="text-slate-400 font-normal italic">No OR</span>
+                                    @endif
+                                </td>
+                                <!-- Verified By -->
+                                <td class="px-5 py-4 align-top">
+                                    <div class="text-slate-900 text-xs font-bold">{{ $entry->verifier?->name ?? 'System' }}</div>
+                                    <div class="mt-0.5 text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
+                                        {{ $entry->created_at?->format('M d, Y h:i A') }}
+                                    </div>
+                                </td>
+                                <!-- Actions -->
+                                <td class="px-5 py-4 align-top text-right actions-col">
+                                    <button type="button" 
+                                            @click="openEditModal(@js([
+                                                'id' => $entry->id,
+                                                'payment_date' => $entry->payment_date?->format('Y-m-d'),
+                                                'method' => $entry->method,
+                                                'reference_no' => $entry->reference_no,
+                                                'remittance_source' => $entry->remittance_source,
+                                                'amount' => $entry->amount,
+                                                'or_number' => $entry->or_number,
+                                            ]))"
+                                            class="inline-flex items-center gap-1.5 rounded-xl bg-amber-50 px-3.5 py-2 text-xs font-black uppercase tracking-wider text-amber-700 ring-1 ring-amber-200 transition hover:bg-amber-100 hover:text-amber-800 cursor-pointer">
+                                        <i data-lucide="pencil" class="h-3.5 w-3.5"></i>
+                                        Edit
+                                    </button>
+                                </td>
+                            </tr>
+                        @else
+                            @foreach ($students as $index => $student)
+                                <tr class="transition hover:bg-slate-50/80 @if($loop->last) border-b border-slate-250 @else border-b border-slate-100/40 @endif">
+                                    @if ($index === 0)
+                                        <!-- Family Name -->
+                                        <td class="px-5 py-4 align-top" rowspan="{{ $studentCount }}">
+                                            <div class="font-black text-slate-950 text-base max-w-[120px] break-words whitespace-normal leading-tight">
+                                                {{ str_ireplace('FAMILY OF ', '', $entry->family_name) }}
+                                            </div>
+                                            <div class="mt-1 text-[10px] text-slate-400 uppercase tracking-wider">
+                                                Entry ID: #{{ str_pad((string) $entry->id, 5, '0', STR_PAD_LEFT) }}
+                                            </div>
+                                        </td>
+                                    @endif
 
-                            <!-- Verified By -->
-                            <td class="px-5 py-4 align-top">
-                                <div class="text-slate-900 text-xs font-bold">{{ $entry->verifier?->name ?? 'System' }}</div>
-                                <div class="mt-0.5 text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
-                                    {{ $entry->created_at?->format('M d, Y h:i A') }}
-                                </div>
-                            </td>
+                                    <!-- Student Name -->
+                                    <td class="px-5 py-4 align-top">
+                                        <span class="font-bold text-slate-900 text-[13.5px] max-w-[150px] break-words whitespace-normal inline-block leading-tight">
+                                            {{ $student->student_name }}
+                                        </span>
+                                    </td>
 
-                            <!-- Actions -->
-                            <td class="px-5 py-4 align-top text-right">
-                                <button type="button" 
-                                        @click="openEditModal(@js([
-                                            'id' => $entry->id,
-                                            'payment_date' => $entry->payment_date?->format('Y-m-d'),
-                                            'method' => $entry->method,
-                                            'reference_no' => $entry->reference_no,
-                                            'remittance_source' => $entry->remittance_source,
-                                            'amount' => $entry->amount,
-                                            'or_number' => $entry->or_number,
-                                        ]))"
-                                        class="inline-flex items-center gap-1.5 rounded-xl bg-amber-50 px-3.5 py-2 text-xs font-black uppercase tracking-wider text-amber-700 ring-1 ring-amber-200 transition hover:bg-amber-100 hover:text-amber-800 cursor-pointer">
-                                    <i data-lucide="pencil" class="h-3.5 w-3.5"></i>
-                                    Edit
-                                </button>
-                            </td>
-                        </tr>
+                                    <!-- Grade -->
+                                    <td class="px-5 py-4 align-top">
+                                        <span class="rounded-full bg-slate-50 px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-wide text-slate-500 border border-slate-200/60 max-w-[100px] break-words whitespace-normal inline-block text-center">
+                                            {{ $student->grade_level }}
+                                        </span>
+                                    </td>
+
+                                    <!-- Learning Mode -->
+                                    <td class="px-5 py-4 align-top">
+                                        @php
+                                            $type = strtoupper($student->student_type ?? '');
+                                            $mode = strtoupper($student->learning_mode ?? '');
+                                            
+                                            // Normalize mode: if it contains FOL, ODL, SHIFT, or FLEXIBLE, it's ODL. Otherwise, F2F.
+                                            $cleanMode = (str_contains($mode, 'FOL') || str_contains($mode, 'ODL') || str_contains($mode, 'SHIFT') || str_contains($mode, 'FLEXIBLE')) ? 'ODL' : 'F2F';
+                                            
+                                            // Normalize type
+                                            if (str_contains($type, 'NEW')) {
+                                                $cleanType = 'NEW';
+                                            } elseif (str_contains($type, 'OLD')) {
+                                                $cleanType = 'OLD';
+                                            } elseif (str_contains($type, 'TRANSFER')) {
+                                                $cleanType = 'TRANSFEREE';
+                                            } elseif (str_contains($type, 'RETURN')) {
+                                                $cleanType = 'RETURNING';
+                                            } else {
+                                                $cleanType = $type ?: 'NEW';
+                                            }
+
+                                            $badgeText = "{$cleanType} {$cleanMode}";
+
+                                            if ($cleanType === 'NEW') {
+                                                $badgeClass = $cleanMode === 'ODL' 
+                                                    ? 'bg-purple-50 text-purple-700 border border-purple-100' 
+                                                    : 'bg-sky-50 text-sky-700 border border-sky-100';
+                                            } elseif ($cleanType === 'OLD') {
+                                                $badgeClass = $cleanMode === 'ODL' 
+                                                    ? 'bg-amber-50 text-amber-700 border border-amber-100' 
+                                                    : 'bg-emerald-50 text-emerald-700 border border-emerald-100';
+                                            } else {
+                                                $badgeClass = $cleanMode === 'ODL'
+                                                    ? 'bg-indigo-50 text-indigo-700 border border-indigo-100'
+                                                    : 'bg-slate-50 text-slate-600 border border-slate-200';
+                                            }
+                                        @endphp
+                                        <span class="rounded-full px-2 py-0.5 text-[9.5px] font-black uppercase tracking-wider {{ $badgeClass }} max-w-[100px] break-words whitespace-normal inline-block text-center">
+                                            {{ $badgeText }}
+                                        </span>
+                                    </td>
+
+                                    @if ($index === 0)
+                                        <!-- Reference No -->
+                                        <td class="px-5 py-4 align-top font-mono text-slate-800 text-sm tracking-tight" rowspan="{{ $studentCount }}">
+                                            {{ $entry->reference_no ?: '-' }}
+                                        </td>
+
+                                        <!-- MOP & Source -->
+                                        <td class="px-5 py-4 align-top" rowspan="{{ $studentCount }}">
+                                            @php
+                                                $method = strtolower($entry->method);
+                                                $badgeClass = match($method) {
+                                                    'remittance' => 'bg-amber-50 text-amber-700 border-amber-200',
+                                                    'gcash' => 'bg-sky-50 text-sky-700 border-sky-200',
+                                                    'bdo' => 'bg-indigo-50 text-indigo-700 border-indigo-200',
+                                                    'maya' => 'bg-violet-50 text-violet-700 border-violet-200',
+                                                    'cash' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                                                    default => 'bg-slate-50 text-slate-700 border-slate-200'
+                                                };
+                                            @endphp
+                                            <span class="inline-flex rounded border px-2.5 py-1 text-[11px] font-black uppercase tracking-wider {{ $badgeClass }}">
+                                                {{ $entry->method_label }}
+                                            </span>
+                                            @if ($entry->remittance_source)
+                                                <div class="mt-1 text-[11px] font-black text-amber-600 uppercase tracking-wide">
+                                                    {{ $entry->remittance_source }}
+                                                </div>
+                                            @endif
+                                        </td>
+
+                                        <!-- Payment Date -->
+                                        <td class="px-5 py-4 align-top" rowspan="{{ $studentCount }}">
+                                            <div class="text-slate-900 text-sm font-semibold">{{ $entry->payment_date?->format('M d, Y') }}</div>
+                                            <div class="mt-0.5 text-[11px] text-slate-400 font-medium">{{ $entry->payment_date?->format('l') }}</div>
+                                        </td>
+
+                                        <!-- Amount -->
+                                        <td class="px-5 py-4 align-top text-right font-black text-slate-900 text-[15px] tabular-nums" rowspan="{{ $studentCount }}">
+                                            {{ number_format($entry->amount, 2) }}
+                                        </td>
+
+                                        <!-- OR Number -->
+                                        <td class="px-5 py-4 align-top font-bold text-slate-900" rowspan="{{ $studentCount }}">
+                                            @if ($entry->or_number)
+                                                <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs text-emerald-800 font-bold border border-emerald-100">
+                                                    <i data-lucide="receipt" class="h-3.5 w-3.5"></i>
+                                                    {{ $entry->or_number }}
+                                                </span>
+                                            @else
+                                                <span class="text-slate-400 font-normal italic">No OR</span>
+                                            @endif
+                                        </td>
+
+                                        <!-- Verified By -->
+                                        <td class="px-5 py-4 align-top" rowspan="{{ $studentCount }}">
+                                            <div class="text-slate-900 text-xs font-bold">{{ $entry->verifier?->name ?? 'System' }}</div>
+                                            <div class="mt-0.5 text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
+                                                {{ $entry->created_at?->format('M d, Y h:i A') }}
+                                            </div>
+                                        </td>
+
+                                        <!-- Actions -->
+                                        <td class="px-5 py-4 align-top text-right actions-col" rowspan="{{ $studentCount }}">
+                                            <button type="button" 
+                                                    @click="openEditModal(@js([
+                                                        'id' => $entry->id,
+                                                        'payment_date' => $entry->payment_date?->format('Y-m-d'),
+                                                        'method' => $entry->method,
+                                                        'reference_no' => $entry->reference_no,
+                                                        'remittance_source' => $entry->remittance_source,
+                                                        'amount' => $entry->amount,
+                                                        'or_number' => $entry->or_number,
+                                                    ]))"
+                                                    class="inline-flex items-center gap-1.5 rounded-xl bg-amber-50 px-3.5 py-2 text-xs font-black uppercase tracking-wider text-amber-700 ring-1 ring-amber-200 transition hover:bg-amber-100 hover:text-amber-800 cursor-pointer">
+                                                <i data-lucide="pencil" class="h-3.5 w-3.5"></i>
+                                                Edit
+                                            </button>
+                                        </td>
+                                    @endif
+                                </tr>
+                            @endforeach
+                        @endif
                     @empty
                         <tr>
-                            <td colspan="9" class="px-5 py-14 text-center">
+                            <td colspan="11" class="px-5 py-14 text-center">
                                 <div class="mx-auto flex max-w-sm flex-col items-center">
                                     <span class="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
                                         <i data-lucide="search-x" class="h-6 w-6"></i>
