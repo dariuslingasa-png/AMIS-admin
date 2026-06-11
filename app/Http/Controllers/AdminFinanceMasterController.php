@@ -38,6 +38,60 @@ class AdminFinanceMasterController extends Controller
             $query->where('method', $request->input('method'));
         }
 
+        // Grade filter
+        if ($request->filled('grade')) {
+            $query->whereHas('students', function ($sq) use ($request) {
+                $sq->where('grade_level', $request->input('grade'));
+            });
+        }
+
+        // Fetch distinct grade levels for filter dropdown
+        $gradeLevels = FinanceMasterEntryStudent::select('grade_level')
+            ->whereNotNull('grade_level')
+            ->distinct()
+            ->orderByRaw("
+                CASE grade_level
+                    WHEN 'Kinder 1' THEN 1 WHEN 'Kinder 2' THEN 2
+                    WHEN 'Grade 1' THEN 3 WHEN 'Grade 2' THEN 4
+                    WHEN 'Grade 3' THEN 5 WHEN 'Grade 4' THEN 6
+                    WHEN 'Grade 5' THEN 7 WHEN 'Grade 6' THEN 8
+                    WHEN 'Grade 7' THEN 9 WHEN 'Grade 8' THEN 10
+                    WHEN 'Grade 9' THEN 11 WHEN 'Grade 10' THEN 12
+                    WHEN 'Grade 11' THEN 13 WHEN 'Grade 12' THEN 14
+                    ELSE 99 END
+            ")
+            ->pluck('grade_level');
+
+        // Calculate total stats BEFORE any sort join
+        $statsQuery = clone $query;
+        $totalEntries = $statsQuery->count();
+        $totalAmount = (float) $statsQuery->sum('amount');
+
+        $entryIds = (clone $statsQuery)->select('id')->get()->pluck('id');
+        $totalStudents = $entryIds->isNotEmpty()
+            ? (int) FinanceMasterEntryStudent::whereIn('finance_master_entry_id', $entryIds)->distinct('student_name')->count('student_name')
+            : 0;
+        $totalFamilies = $entryIds->isNotEmpty()
+            ? (int) (clone $statsQuery)->distinct('family_name')->count('family_name')
+            : 0;
+
+        // Grade sort (subquery avoids join/groupBy issues with pagination)
+        if ($request->input('sort') === 'grade') {
+            $gradeOrder = "
+                CASE grade_level
+                    WHEN 'Kinder 1' THEN 1 WHEN 'Kinder 2' THEN 2
+                    WHEN 'Grade 1' THEN 3 WHEN 'Grade 2' THEN 4
+                    WHEN 'Grade 3' THEN 5 WHEN 'Grade 4' THEN 6
+                    WHEN 'Grade 5' THEN 7 WHEN 'Grade 6' THEN 8
+                    WHEN 'Grade 7' THEN 9 WHEN 'Grade 8' THEN 10
+                    WHEN 'Grade 9' THEN 11 WHEN 'Grade 10' THEN 12
+                    WHEN 'Grade 11' THEN 13 WHEN 'Grade 12' THEN 14
+                    ELSE 99 END
+            ";
+            $query->orderByRaw("(SELECT MIN({$gradeOrder}) FROM finance_master_entry_students WHERE finance_master_entry_id = finance_master_entries.id) asc")
+                ->orderBy('payment_date', 'desc');
+        }
+
         // Calculate total stats for the filtered records
         $statsQuery = clone $query;
         $totalEntries = $statsQuery->count();
@@ -63,7 +117,8 @@ class AdminFinanceMasterController extends Controller
             'totalAmount',
             'totalStudents',
             'totalFamilies',
-            'perPage'
+            'perPage',
+            'gradeLevels'
         ));
     }
 

@@ -154,16 +154,27 @@
         <x-card title="Finance Masters List" subtitle="Master Ledger of Auto-Populated verified payments & remittance logs">
         
         <!-- Search and Filters -->
+        @php
+            $sort = request('sort');
+            $isGradeSort = $sort === 'grade';
+        @endphp
         <div class="border-b border-slate-100 bg-slate-50/70 px-5 py-4">
-            <form method="GET" class="grid gap-3 xl:grid-cols-[minmax(280px,1fr)_180px_120px_auto]">
+            <form method="GET" class="grid gap-3 xl:grid-cols-[minmax(260px,1fr)_140px_130px_120px_auto]">
                 <label class="relative block">
                     <i data-lucide="search" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"></i>
-                    <input name="search" value="{{ request('search') }}" placeholder="Search family, student, ref, source, OR..." class="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100">
+                    <input name="search" value="{{ request('search') }}" placeholder="Search student name..." class="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100">
                 </label>
 
+                <select name="grade" class="h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100" onchange="this.form.submit()">
+                    <option value="">All Grades</option>
+                    @foreach ($gradeLevels as $g)
+                        <option value="{{ $g }}" @selected(request('grade') === $g)>{{ $g }}</option>
+                    @endforeach
+                </select>
+
                 <select name="method" class="h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100">
-                    <option value="">All Methods</option>
-                    @foreach (['remittance' => 'Remittance', 'gcash' => 'GCash', 'bdo' => 'BDO Bank Transfer', 'maya' => 'Maya', 'cash' => 'Cash', 'other' => 'Other'] as $methodValue => $methodLabel)
+                    <option value="">All MOP</option>
+                    @foreach (['remittance' => 'Remittance', 'gcash' => 'GCash', 'bdo' => 'BDO', 'maya' => 'Maya', 'cash' => 'Cash', 'other' => 'Other'] as $methodValue => $methodLabel)
                         <option value="{{ $methodValue }}" @selected(request('method') === $methodValue)>{{ $methodLabel }}</option>
                     @endforeach
                 </select>
@@ -175,6 +186,11 @@
                 </select>
 
                 <div class="flex gap-2 flex-wrap">
+                    <a href="{{ route('admin.finance.masters-list', array_merge(request()->except(['sort']), ['sort' => 'grade'])) }}"
+                       class="inline-flex h-11 items-center gap-2 rounded-xl border px-4 text-sm font-black transition {{ $isGradeSort ? 'border-purple-300 bg-purple-50 text-purple-700' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50' }}">
+                        <i data-lucide="arrow-up-down" class="h-4 w-4"></i>
+                        K1→K12
+                    </a>
                     <button class="inline-flex h-11 items-center gap-2 rounded-xl bg-emerald-700 px-4 text-sm font-black text-white shadow-sm transition hover:bg-emerald-800 cursor-pointer">
                         <i data-lucide="filter" class="h-4 w-4"></i>
                         Filter
@@ -183,7 +199,7 @@
                         <i data-lucide="printer" class="h-4 w-4"></i>
                         Print PDF
                     </button>
-                    @if (request()->hasAny(['search', 'method', 'per_page']))
+                    @if (request()->hasAny(['search', 'method', 'grade', 'sort']))
                         <a href="{{ route('admin.finance.masters-list') }}" class="inline-flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-black text-slate-600 transition hover:bg-slate-50">
                             <i data-lucide="rotate-ccw" class="h-4 w-4"></i>
                             Reset
