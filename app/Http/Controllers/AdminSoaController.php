@@ -15,7 +15,7 @@ class AdminSoaController extends Controller
 
     public function index(Request $request)
     {
-        $query = StudentAccount::with(['student.applicant', 'applicant'])->latest();
+        $query = StudentAccount::with(['student.applicant', 'applicant']);
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -25,72 +25,45 @@ class AdminSoaController extends Controller
         }
         if ($request->filled('search')) {
             $s = $request->search;
-            $query->whereHas('student', fn($q) =>
-                $q->where('student_number', 'like', "%{$s}%")
-                  ->orWhereHas('applicant', fn($a) =>
-                      $a->where('first_name', 'like', "%{$s}%")
-                        ->orWhere('last_name', 'like', "%{$s}%")
-                  )
-            );
+            $query->where(function ($q) use ($s) {
+                $q->whereHas('student', fn($sq) =>
+                    $sq->where('student_number', 'like', "%{$s}%")
+                      ->orWhereHas('applicant', fn($a) =>
+                          $a->where('first_name', 'like', "%{$s}%")
+                            ->orWhere('last_name', 'like', "%{$s}%")
+                      )
+                )->orWhereHas('applicant', fn($a) =>
+                    $a->where('first_name', 'like', "%{$s}%")
+                      ->orWhere('last_name', 'like', "%{$s}%")
+                );
+            });
         }
 
-        $accounts = $query->get();
+        $sort = $request->query('sort', 'name');
+        $dir  = $request->query('dir', 'asc');
 
-        // Group accounts by family robustly
-        $familyRows = $accounts->groupBy(function ($account) {
-            $applicant = $account->applicant;
-            if (!$applicant) {
-                return 'single:' . $account->id;
-            }
-            if ($applicant->family_application_id) {
-                return 'family:' . $applicant->family_application_id;
-            }
-            return 'user:' . $applicant->user_id;
-        })->map(function ($familyAccounts, $key) {
-            $first = $familyAccounts->first();
-            $applicant = $first->applicant;
+        if ($sort === 'grade') {
+            $query->orderBy('grade_level', $dir)->orderByRaw('COALESCE(student_number, id) '.$dir);
+        } elseif ($sort === 'balance') {
+            $query->orderBy('remaining_balance', $dir);
+        } elseif ($sort === 'paid') {
+            $query->orderBy('amount_paid', $dir);
+        } elseif ($sort === 'tuition') {
+            $query->orderBy('total_balance', $dir);
+        } else {
+            $query->orderBy('grade_level', 'asc')->orderBy('id', 'asc');
+        }
 
-            // Sort sibling accounts
-            $children = $familyAccounts->sortBy('id');
+        $accounts = $query->paginate(20)->withQueryString();
 
-            // Sum totals
-            $totalAmount = $children->sum(fn($a) => (float) ($a->total_balance ?? 0));
-            $paidAmount = $children->sum(fn($a) => (float) ($a->amount_paid ?? 0));
-            $remainingBalance = $children->sum(fn($a) => (float) ($a->remaining_balance ?? 0));
+        $gradeLevels = \App\Models\StudentAccount::select('grade_level')
+            ->whereNotNull('grade_level')
+            ->distinct()
+            ->orderBy('grade_level')
+            ->pluck('grade_level')
+            ->map(fn($g) => ['label' => $g, 'value' => $g]);
 
-            $familyLabel = $this->familyLabel($children->map(fn($a) => $a->applicant)->filter(), $applicant);
-            $familyNo = $applicant?->family_application_id ?: $applicant?->id;
-
-            return [
-                'key' => $key,
-                'family_no' => $familyNo,
-                'family_label' => $familyLabel,
-                'accounts' => $children,
-                'total_amount' => $totalAmount,
-                'amount_paid' => $paidAmount,
-                'remaining_balance' => $remainingBalance,
-                'status' => $remainingBalance <= 0 ? 'paid' : ($paidAmount > 0 ? 'partial' : 'unpaid'),
-            ];
-        })->values();
-
-        // Chronologically order families with active balances first
-        $familyRows = $familyRows->sortByDesc(fn($f) => $f['remaining_balance'])->values();
-
-        $page = max((int) $request->input('page', 1), 1);
-        $perPage = 15;
-
-        $groupedFamilies = new \Illuminate\Pagination\LengthAwarePaginator(
-            $familyRows->forPage($page, $perPage)->values(),
-            $familyRows->count(),
-            $perPage,
-            $page,
-            [
-                'path' => $request->url(),
-                'query' => $request->query(),
-            ]
-        );
-
-        return view('admin.soa.index', compact('groupedFamilies'));
+        return view('admin.soa.index', compact('accounts', 'gradeLevels'));
     }
 
     public function show(StudentAccount $account)

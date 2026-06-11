@@ -1,89 +1,123 @@
 <x-admin-layout title="SOA Review">
+    @php
+        $sort = request('sort', 'name');
+        $dir  = request('dir', 'asc');
+        $sortLink = fn($col) => route('admin.soa.index', array_merge(request()->except(['page', 'sort', 'dir']), ['sort' => $col, 'dir' => $sort === $col && $dir === 'asc' ? 'desc' : 'asc']));
+        $sortIcon = fn($col) => $sort === $col ? ($dir === 'asc' ? 'chevron-up' : 'chevron-down') : 'chevrons-up-down';
+        $inputClass = 'h-11 rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-amber-400 focus:ring-4 focus:ring-amber-100';
+    @endphp
+
     <div class="space-y-6">
-        <!-- Title Banner -->
         <section class="overflow-hidden rounded-3xl border border-amber-100 bg-gradient-to-br from-slate-950 via-amber-800 to-orange-700 p-6 text-white shadow-xl shadow-amber-900/10">
             <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
                 <div>
                     <span class="inline-flex rounded-full bg-white/15 px-3 py-1 text-xs font-black uppercase tracking-[0.22em] text-amber-50">Finance Management</span>
                     <h1 class="mt-4 text-3xl font-black tracking-tight">Statement of Accounts</h1>
-                    <p class="mt-2 max-w-2xl text-sm font-medium leading-6 text-amber-50/90">Track tuition balances, monthly billings, and verified SOA payments grouped by family account.</p>
+                    <p class="mt-2 max-w-2xl text-sm font-medium leading-6 text-amber-50/90">Individual student accounts with tuition balances, payments, and printable SOA.</p>
                 </div>
-                <a href="{{ route('admin.finance.dashboard') }}" class="inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-black text-amber-700 shadow-lg shadow-amber-900/20 transition hover:bg-amber-50">
-                    <i data-lucide="layout-dashboard" class="h-4 w-4"></i>
-                    Finance Dashboard
-                </a>
+                <div class="flex items-center gap-3">
+                    <button onclick="window.print()" class="inline-flex items-center gap-2 rounded-2xl bg-white/20 px-5 py-3 text-sm font-black text-white backdrop-blur-sm transition hover:bg-white/30 no-print">
+                        <i data-lucide="printer" class="h-4 w-4"></i>
+                        Print PDF
+                    </button>
+                    <a href="{{ route('admin.finance.dashboard') }}" class="inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-black text-amber-700 shadow-lg shadow-amber-900/20 transition hover:bg-amber-50 no-print">
+                        <i data-lucide="layout-dashboard" class="h-4 w-4"></i>
+                        Finance Dashboard
+                    </a>
+                </div>
             </div>
         </section>
 
-        <!-- Filters & Table Dashboard -->
-        <x-card title="Student Accounts" subtitle="Grouped by family batch. Click on a child's name to open their individual Statement of Account (SOA).">
-            <form method="GET" class="mb-5 flex gap-3">
-                <input name="search" value="{{ request('search') }}" placeholder="Search parent name or child name..." class="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold outline-none transition focus:border-amber-400 focus:ring-4 focus:ring-amber-100">
-                <button class="rounded-xl bg-amber-600 px-6 py-3 text-sm font-black uppercase tracking-wider text-white hover:bg-amber-700">Search</button>
+        <x-card title="Student Accounts" subtitle="Each row is an individual student account. Click name to open SOA. Use column headers to sort.">
+            <form method="GET" class="mb-5 grid grid-cols-12 gap-3">
+                <label class="relative col-span-5">
+                    <i data-lucide="search" class="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-slate-400"></i>
+                    <input name="search" value="{{ request('search') }}" placeholder="Search student name or number..." class="{{ $inputClass }} w-full pl-9">
+                </label>
+                <select name="grade" class="{{ $inputClass }} col-span-3 w-full" onchange="this.form.submit()">
+                    <option value="">All Grades</option>
+                    @foreach ($gradeLevels as $g)
+                        <option value="{{ $g['value'] }}" @selected(request('grade') === $g['value'])>{{ $g['label'] }}</option>
+                    @endforeach
+                </select>
+                <select name="status" class="{{ $inputClass }} col-span-2 w-full" onchange="this.form.submit()">
+                    <option value="">All Status</option>
+                    <option value="paid" @selected(request('status') === 'paid')>Paid</option>
+                    <option value="partial" @selected(request('status') === 'partial')>Partial</option>
+                    <option value="unpaid" @selected(request('status') === 'unpaid')>Unpaid</option>
+                </select>
+                <button class="col-span-2 inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-amber-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-amber-700 no-print">
+                    <i data-lucide="filter" class="h-4 w-4"></i>
+                    Filter
+                </button>
             </form>
 
             <div class="overflow-x-auto">
                 <table class="amis-table w-full text-left">
                     <thead>
                         <tr>
-                            <th class="px-3 py-3">Family / Parent</th>
-                            <th class="px-3 py-3">Children (Click to Open SOA)</th>
-                            <th class="px-3 py-3 text-right">Total Tuition</th>
-                            <th class="px-3 py-3 text-right">Amount Paid</th>
-                            <th class="px-3 py-3 text-right font-black">Remaining Balance</th>
-                            <th class="px-3 py-3 text-center">Status</th>
+                            <th class="px-3 py-3">
+                                <a href="{{ $sortLink('name') }}" class="inline-flex items-center gap-1 text-xs font-extrabold uppercase tracking-wider text-slate-500 hover:text-slate-700 no-underline">
+                                    Student Name <i data-lucide="{{ $sortIcon('name') }}" class="h-3.5 w-3.5"></i>
+                                </a>
+                            </th>
+                            <th class="px-3 py-3 w-32">
+                                <a href="{{ $sortLink('grade') }}" class="inline-flex items-center gap-1 text-xs font-extrabold uppercase tracking-wider text-slate-500 hover:text-slate-700 no-underline">
+                                    Grade <i data-lucide="{{ $sortIcon('grade') }}" class="h-3.5 w-3.5"></i>
+                                </a>
+                            </th>
+                            <th class="px-3 py-3 w-36 text-right">
+                                <a href="{{ $sortLink('tuition') }}" class="inline-flex items-center gap-1 text-xs font-extrabold uppercase tracking-wider text-slate-500 hover:text-slate-700 no-underline">
+                                    Tuition <i data-lucide="{{ $sortIcon('tuition') }}" class="h-3.5 w-3.5"></i>
+                                </a>
+                            </th>
+                            <th class="px-3 py-3 w-36 text-right">
+                                <a href="{{ $sortLink('paid') }}" class="inline-flex items-center gap-1 text-xs font-extrabold uppercase tracking-wider text-slate-500 hover:text-slate-700 no-underline">
+                                    Paid <i data-lucide="{{ $sortIcon('paid') }}" class="h-3.5 w-3.5"></i>
+                                </a>
+                            </th>
+                            <th class="px-3 py-3 w-36 text-right">
+                                <a href="{{ $sortLink('balance') }}" class="inline-flex items-center gap-1 text-xs font-extrabold uppercase tracking-wider text-slate-500 hover:text-slate-700 no-underline">
+                                    Balance <i data-lucide="{{ $sortIcon('balance') }}" class="h-3.5 w-3.5"></i>
+                                </a>
+                            </th>
+                            <th class="px-3 py-3 w-28 text-center">Status</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse ($groupedFamilies as $family)
+                        @forelse ($accounts as $account)
+                            @php
+                                $studentName = $account->student?->applicant?->full_name ?: ($account->applicant?->full_name ?: 'Unknown');
+                                $studentNumber = $account->student?->student_number ?: '-';
+                                $grade = $account->grade_level ?: '-';
+                                $acctStatus = strtolower((string) ($account->status ?? 'unpaid'));
+                                $statusColor = match ($acctStatus) {
+                                    'paid' => 'green',
+                                    'partial' => 'yellow',
+                                    default => 'red',
+                                };
+                            @endphp
                             <tr class="transition-colors hover:bg-slate-50">
-                                <!-- Family / Parent Details -->
                                 <td class="px-3 py-4">
-                                    <div class="font-black text-slate-950 uppercase tracking-tight" style="font-size: 16px !important;">{{ $family['family_label'] }}</div>
-                                    <div class="mt-1 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-slate-400">
-                                        <span>{{ $family['family_no'] ? 'FAMILY #'.str_pad($family['family_no'], 4, '0', STR_PAD_LEFT) : 'Single application' }}</span>
-                                        <span>&middot;</span>
-                                        <span>{{ $family['accounts']->count() }} {{ Str::plural('CHILD', $family['accounts']->count()) }}</span>
-                                    </div>
+                                    <a href="{{ route('admin.soa.show', $account) }}" class="font-extrabold text-slate-950 uppercase tracking-tight hover:text-amber-700 transition" style="font-size: 15px;">
+                                        {{ $studentName }}
+                                    </a>
+                                    <div class="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">#{{ $studentNumber }}</div>
                                 </td>
-
-                                <!-- Sibling horizontal clickable chips -->
                                 <td class="px-3 py-4">
-                                    <div class="flex max-w-xl flex-wrap gap-2">
-                                        @foreach ($family['accounts'] as $childAcc)
-                                            @php
-                                                $childStatus = strtolower((string) ($childAcc->status ?? 'unpaid'));
-                                                $childBadgeClasses = match ($childStatus) {
-                                                    'paid' => 'bg-emerald-50 text-emerald-700 border-emerald-250 hover:bg-emerald-100 hover:text-emerald-800',
-                                                    'partial' => 'bg-amber-50 text-amber-700 border-amber-250 hover:bg-amber-100 hover:text-amber-800',
-                                                    default => 'bg-rose-50 text-rose-700 border-rose-250 hover:bg-rose-100 hover:text-rose-800',
-                                                };
-                                            @endphp
-                                            <a href="{{ route('admin.soa.show', $childAcc) }}" 
-                                               class="inline-flex items-center rounded-full border px-3 py-1.5 text-[11px] font-black uppercase tracking-wide transition shadow-sm {{ $childBadgeClasses }}" 
-                                               title="Open Statement of Account for {{ $childAcc->student?->applicant?->full_name }}">
-                                                {{ $childAcc->student?->applicant?->full_name }}
-                                            </a>
-                                        @endforeach
-                                    </div>
+                                    <span class="inline-flex items-center rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-extrabold text-slate-700">{{ $grade }}</span>
                                 </td>
-
-                                <!-- Financial summary figures -->
-                                <td class="px-3 py-4 text-right font-semibold text-slate-700" style="font-size: 15px !important;">
-                                    PHP {{ number_format($family['total_amount'], 2) }}
+                                <td class="px-3 py-4 text-right font-semibold text-slate-700" style="font-size: 14px;">
+                                    PHP {{ number_format((float) ($account->total_balance ?? 0), 2) }}
                                 </td>
-                                <td class="px-3 py-4 text-right font-semibold text-emerald-700" style="font-size: 15px !important;">
-                                    PHP {{ number_format($family['amount_paid'], 2) }}
+                                <td class="px-3 py-4 text-right font-semibold text-emerald-700" style="font-size: 14px;">
+                                    PHP {{ number_format((float) ($account->amount_paid ?? 0), 2) }}
                                 </td>
-                                <td class="px-3 py-4 text-right font-black text-amber-700" style="font-size: 16px !important;">
-                                    PHP {{ number_format($family['remaining_balance'], 2) }}
+                                <td class="px-3 py-4 text-right font-black text-amber-700" style="font-size: 15px;">
+                                    PHP {{ number_format((float) ($account->remaining_balance ?? 0), 2) }}
                                 </td>
-
-                                <!-- Unified family badge -->
                                 <td class="px-3 py-4 text-center">
-                                    <x-badge color="{{ $family['status'] === 'paid' ? 'green' : ($family['status'] === 'partial' ? 'yellow' : 'red') }}">
-                                        {{ Str::upper($family['status']) }}
-                                    </x-badge>
+                                    <x-badge :color="$statusColor">{{ Str::upper($acctStatus) }}</x-badge>
                                 </td>
                             </tr>
                         @empty
@@ -97,8 +131,20 @@
                 </table>
             </div>
 
-            <!-- Pagination links -->
-            <div class="mt-5">{{ $groupedFamilies->links() }}</div>
+            <div class="mt-5">{{ $accounts->links() }}</div>
         </x-card>
     </div>
+
+    <style>
+        @media print {
+            body * { visibility: hidden; }
+            .amis-table, .amis-table * { visibility: visible; }
+            .amis-table { position: absolute; left: 0; top: 0; width: 100%; }
+            .no-print { display: none !important; }
+            nav, aside, .breadcrumbs, footer, button, form { display: none !important; }
+            @page { size: landscape; margin: 10mm; }
+            .amis-table th { background: #f8fafc !important; color: #334155 !important; -webkit-print-color-adjust: exact; }
+            .amis-table td, .amis-table th { font-size: 12px !important; padding: 6px 8px !important; }
+        }
+    </style>
 </x-admin-layout>
