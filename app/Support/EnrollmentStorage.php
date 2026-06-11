@@ -26,6 +26,14 @@ class EnrollmentStorage
             return rtrim($baseUrl, '/').'/'.$path;
         }
 
+        // Fallback for subdomains (e.g. admin.amis.edu.ph -> amis.edu.ph)
+        $host = request()->getHost();
+        if (str_starts_with($host, 'admin.')) {
+            $mainDomain = substr($host, 6);
+            $scheme = request()->isSecure() ? 'https' : 'http';
+            return $scheme . '://' . $mainDomain . '/storage/' . $path;
+        }
+
         return asset('storage/'.$path);
     }
 }
