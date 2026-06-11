@@ -18,6 +18,7 @@
              predictedOr: '',
              orNumber: '',
              remarks: '',
+             financeAmount: '',
              financeMethod: '',
              remittanceSource: '',
              financePaymentDate: '',

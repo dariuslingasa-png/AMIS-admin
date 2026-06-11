@@ -117,8 +117,62 @@ class FinanceMasterTest extends TestCase
         $this->assertDatabaseHas('finance_master_entry_students', [
             'student_name' => 'Abdullah Sace',
             'grade_level' => 'Grade 8',
-            'learning_mode' => 'FOL - 1ST SHIFT',
+            'learning_mode' => 'ODL',
             'student_type' => 'OLD',
+        ]);
+    }
+
+    /** @test */
+    public function verifying_payment_proof_with_custom_amount_auto_populates_finance_masters_list()
+    {
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'account_status' => 'verified',
+        ]);
+
+        $parent = User::factory()->create([
+            'role' => 'applicant',
+        ]);
+
+        $applicant = EnrollmentApplicant::create([
+            'user_id' => $parent->id,
+            'family_application_id' => 1234,
+            'first_name' => 'Abdullah',
+            'last_name' => 'Sace',
+            'student_type' => 'Old',
+            'grade_level' => 'Grade 8',
+            'learning_mode' => 'Flexible Online Learning – 1st Shift',
+            'status' => 'submitted',
+        ]);
+
+        $payment = Payment::create([
+            'user_id' => $parent->id,
+            'enrollment_applicant_id' => $applicant->id,
+            'amount' => 71385.00,
+            'method' => 'remittance',
+            'reference_no' => '105251011098847',
+            'receipt_url' => 'receipts/test_proof.jpg',
+            'status' => 'pending',
+        ]);
+
+        $response = $this->actingAs($admin)->patch(route('admin.payments.verify', $payment), [
+            'finance_method' => 'remittance',
+            'remittance_source' => 'AL GHURAIR EXCHANGE',
+            'finance_payment_date' => '2025-07-12',
+            'finance_reference_no' => '105251011098847',
+            'finance_amount' => 4500.00,
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $response->assertRedirect();
+
+        // Check payment amount updated
+        $this->assertEquals(4500.00, $payment->fresh()->amount);
+
+        // Check the database for entry
+        $this->assertDatabaseHas('finance_master_entries', [
+            'payment_id' => $payment->id,
+            'amount' => 4500.00,
         ]);
     }
 }

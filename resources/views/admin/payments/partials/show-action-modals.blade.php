@@ -39,9 +39,15 @@
                         </div>
                     </div>
 
-                    <div>
-                        <label class="text-[13.5px] text-slate-500 font-bold uppercase tracking-wider block mb-1">Reference No</label>
-                        <input type="text" name="finance_reference_no" x-model="financeReferenceNo" placeholder="e.g. 105251011098847" class="w-full rounded-2xl border border-slate-250 bg-white px-4 py-2.5 text-base text-black focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[13.5px] text-slate-500 font-bold uppercase tracking-wider block mb-1">Amount</label>
+                            <input type="number" step="0.01" name="finance_amount" x-model="financeAmount" required class="w-full rounded-2xl border border-slate-250 bg-white px-4 py-2.5 text-base text-black focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
+                        </div>
+                        <div>
+                            <label class="text-[13.5px] text-slate-500 font-bold uppercase tracking-wider block mb-1">Reference No</label>
+                            <input type="text" name="finance_reference_no" x-model="financeReferenceNo" placeholder="e.g. 105251011098847" class="w-full rounded-2xl border border-slate-250 bg-white px-4 py-2.5 text-base text-black focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
+                        </div>
                     </div>
 
                     <div x-show="financeMethod === 'remittance'" x-transition>

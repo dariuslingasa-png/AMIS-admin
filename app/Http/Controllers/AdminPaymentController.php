@@ -201,6 +201,12 @@ class AdminPaymentController extends Controller
             return back()->withErrors(['status' => 'Cannot verify: payment proof is missing.']);
         }
 
+        $request->validate([
+            'finance_amount' => 'nullable|numeric|min:0',
+        ]);
+
+        $amount = $request->input('finance_amount') !== null ? (float) $request->input('finance_amount') : $payment->amount;
+
         $invoice = \App\Models\Invoice::getOrCreateForFamily($payment->applicant);
         if (!$payment->invoice_id) {
             $payment->invoice_id = $invoice->id;
@@ -216,7 +222,7 @@ class AdminPaymentController extends Controller
             
             if ($verifiedCount === 0) {
                 // First payment! Check if this payment is a full payment or partial payment.
-                $isFullPayment = ((float)$payment->amount >= (float)$invoice->total_amount);
+                $isFullPayment = ($amount >= (float)$invoice->total_amount);
                 if ($isFullPayment) {
                     $orNumber = $baseOr;
                 } else {
@@ -228,9 +234,10 @@ class AdminPaymentController extends Controller
             }
         }
 
-        \Illuminate\Support\Facades\DB::transaction(function () use ($request, $payment, $invoice, $orNumber) {
+        \Illuminate\Support\Facades\DB::transaction(function () use ($request, $payment, $invoice, $orNumber, $amount) {
             $payment->update([
                 'status'      => 'verified',
+                'amount'      => $amount,
                 'or_number'   => $orNumber,
                 'verified_at' => now(),
                 'method'      => $request->input('finance_method', $payment->method),
@@ -261,9 +268,9 @@ class AdminPaymentController extends Controller
                 $normalized = strtolower(trim((string) $mode));
                 return match ($normalized) {
                     'face_to_face', 'face-to-face', 'f2f', 'face to face' => 'F2F',
-                    'flexible_1st_shift', 'flexible learning - 1st shift', 'flexible 1st shift', '1st shift', 'flexible online learning - 1st shift', 'fol - 1st shift', 'flexible online learning – 1st shift' => 'FOL - 1ST SHIFT',
-                    'flexible_2nd_shift', 'flexible learning - 2nd shift', 'flexible 2nd shift', '2nd shift', 'flexible online learning - 2nd shift', 'fol - 2nd shift', 'flexible online learning – 2nd shift' => 'FOL - 2ND SHIFT',
-                    default => $mode ? strtoupper(str_replace('flexible online learning', 'FOL', str_replace('flexible learning', 'FOL', (string) $mode))) : 'PENDING',
+                    'flexible_1st_shift', 'flexible learning - 1st shift', 'flexible 1st shift', '1st shift', 'flexible online learning - 1st shift', 'fol - 1st shift', 'flexible online learning – 1st shift', 'odl', 'online distance learning' => 'ODL',
+                    'flexible_2nd_shift', 'flexible learning - 2nd shift', 'flexible 2nd shift', '2nd shift', 'flexible online learning - 2nd shift', 'fol - 2nd shift', 'flexible online learning – 2nd shift' => 'ODL',
+                    default => $mode ? (str_contains(strtolower($mode), 'f2f') || str_contains(strtolower($mode), 'face') ? 'F2F' : 'ODL') : 'ODL',
                 };
             };
 
@@ -289,7 +296,7 @@ class AdminPaymentController extends Controller
                 'reference_no' => $request->input('finance_reference_no'),
                 'method' => $request->input('finance_method', 'remittance'),
                 'payment_date' => $request->input('finance_payment_date') ? \Carbon\Carbon::parse($request->input('finance_payment_date'))->format('Y-m-d') : now()->format('Y-m-d'),
-                'amount' => $payment->amount,
+                'amount' => $amount,
                 'or_number' => $orNumber,
                 'verified_by' => auth()->id(),
             ]);
@@ -309,7 +316,7 @@ class AdminPaymentController extends Controller
         AdminAuditLog::record('payment_approved', true, 'Payment proof approved.', [
             'payment_id' => $payment->id,
             'applicant_id' => $payment->enrollment_applicant_id,
-            'amount' => $payment->amount,
+            'amount' => $amount,
             'method' => $payment->method,
         ]);
 

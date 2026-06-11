@@ -87,33 +87,53 @@
 
                             <!-- Children Details -->
                             <td class="px-5 py-4 align-top">
-                                <div class="space-y-3">
+                                <div class="space-y-2.5">
                                     @forelse ($entry->students as $student)
-                                        <div class="flex items-center gap-1.5 flex-wrap">
-                                            <span class="font-black text-slate-900 text-[13.5px]">{{ $student->student_name }}</span>
+                                        <div class="flex items-center gap-2 flex-wrap @if(!$loop->last) pb-2.5 border-b border-slate-100/70 @endif">
+                                            <span class="font-bold text-slate-900 text-[13.5px]">{{ $student->student_name }}</span>
                                             
-                                            <span class="rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wide text-slate-600 ring-1 ring-slate-200">
+                                            <span class="rounded-full bg-slate-50 px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-wide text-slate-500 border border-slate-200/60">
                                                 {{ $student->grade_level }}
                                             </span>
 
                                             @php
-                                                $mode = strtoupper($student->learning_mode);
-                                                $modeClass = str_contains($mode, 'FOL') || str_contains($mode, 'ODL') || str_contains($mode, 'SHIFT') 
-                                                    ? 'bg-amber-50 text-amber-700 ring-amber-100' 
-                                                    : 'bg-blue-50 text-blue-700 ring-blue-100';
-                                            @endphp
-                                            <span class="rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wide ring-1 {{ $modeClass }}">
-                                                {{ $student->learning_mode }}
-                                            </span>
+                                                $type = strtoupper($student->student_type ?? '');
+                                                $mode = strtoupper($student->learning_mode ?? '');
+                                                
+                                                // Normalize mode: if it contains FOL, ODL, SHIFT, or FLEXIBLE, it's ODL. Otherwise, F2F.
+                                                $cleanMode = (str_contains($mode, 'FOL') || str_contains($mode, 'ODL') || str_contains($mode, 'SHIFT') || str_contains($mode, 'FLEXIBLE')) ? 'ODL' : 'F2F';
+                                                
+                                                // Normalize type
+                                                if (str_contains($type, 'NEW')) {
+                                                    $cleanType = 'NEW';
+                                                } elseif (str_contains($type, 'OLD')) {
+                                                    $cleanType = 'OLD';
+                                                } elseif (str_contains($type, 'TRANSFER')) {
+                                                    $cleanType = 'TRANSFEREE';
+                                                } elseif (str_contains($type, 'RETURN')) {
+                                                    $cleanType = 'RETURNING';
+                                                } else {
+                                                    $cleanType = $type ?: 'NEW';
+                                                }
 
-                                            @php
-                                                $type = strtoupper($student->student_type);
-                                                $typeClass = $type === 'NEW' 
-                                                    ? 'bg-purple-50 text-purple-700 ring-purple-100' 
-                                                    : 'bg-emerald-50 text-emerald-700 ring-emerald-100';
+                                                $badgeText = "{$cleanType} {$cleanMode}";
+
+                                                if ($cleanType === 'NEW') {
+                                                    $badgeClass = $cleanMode === 'ODL' 
+                                                        ? 'bg-purple-50 text-purple-700 border border-purple-100' 
+                                                        : 'bg-sky-50 text-sky-700 border border-sky-100';
+                                                } elseif ($cleanType === 'OLD') {
+                                                    $badgeClass = $cleanMode === 'ODL' 
+                                                        ? 'bg-amber-50 text-amber-700 border border-amber-100' 
+                                                        : 'bg-emerald-50 text-emerald-700 border border-emerald-100';
+                                                } else {
+                                                    $badgeClass = $cleanMode === 'ODL'
+                                                        ? 'bg-indigo-50 text-indigo-700 border border-indigo-100'
+                                                        : 'bg-slate-50 text-slate-600 border border-slate-200';
+                                                }
                                             @endphp
-                                            <span class="rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wide ring-1 {{ $typeClass }}">
-                                                {{ $student->student_type }}
+                                            <span class="rounded-full px-2 py-0.5 text-[9.5px] font-black uppercase tracking-wider {{ $badgeClass }}">
+                                                {{ $badgeText }}
                                             </span>
                                         </div>
                                     @empty
