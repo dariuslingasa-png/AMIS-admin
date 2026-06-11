@@ -18,7 +18,7 @@
             this.entry.remittance_source = item.remittance_source || '';
             this.entry.amount = item.amount || '';
             this.entry.or_number = item.or_number || '';
-            this.actionUrl = `/admin/finance/masters-list/${item.id}`;
+            this.actionUrl = `{{ route('admin.finance.masters-list.update', '__ID__') }}`.replace('__ID__', item.id);
             this.isSubmitting = false;
             this.editModal = true;
         }
