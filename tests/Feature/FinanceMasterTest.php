@@ -175,4 +175,65 @@ class FinanceMasterTest extends TestCase
             'amount' => 4500.00,
         ]);
     }
+
+    /** @test */
+    public function verifying_payment_proof_auto_clears_duplicate_pending_payments()
+    {
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'account_status' => 'verified',
+        ]);
+
+        $parent = User::factory()->create([
+            'role' => 'applicant',
+        ]);
+
+        $applicant = EnrollmentApplicant::create([
+            'user_id' => $parent->id,
+            'family_application_id' => 1234,
+            'first_name' => 'Abdullah',
+            'last_name' => 'Sace',
+            'student_type' => 'Old',
+            'grade_level' => 'Grade 8',
+            'learning_mode' => 'Flexible Online Learning – 1st Shift',
+            'status' => 'submitted',
+        ]);
+
+        $payment1 = Payment::create([
+            'user_id' => $parent->id,
+            'enrollment_applicant_id' => $applicant->id,
+            'amount' => 4000.00,
+            'method' => 'gcash',
+            'reference_no' => '190372528',
+            'receipt_url' => 'receipts/test_proof.jpg',
+            'status' => 'pending',
+        ]);
+
+        $payment2 = Payment::create([
+            'user_id' => $parent->id,
+            'enrollment_applicant_id' => $applicant->id,
+            'amount' => 4000.00,
+            'method' => 'gcash',
+            'reference_no' => '190372528',
+            'receipt_url' => 'receipts/test_proof.jpg',
+            'status' => 'pending',
+        ]);
+
+        $response = $this->actingAs($admin)->patch(route('admin.payments.verify', $payment1), [
+            'finance_method' => 'gcash',
+            'finance_payment_date' => '2026-05-26',
+            'finance_reference_no' => '190372528',
+            'finance_amount' => 4000.00,
+        ]);
+
+        $response->assertSessionHasNoErrors();
+
+        // Assert payment 1 is verified for 4000.00
+        $this->assertEquals('verified', $payment1->fresh()->status);
+        $this->assertEquals(4000.00, (float) $payment1->fresh()->amount);
+
+        // Assert duplicate payment 2 is auto-verified for 0.00
+        $this->assertEquals('verified', $payment2->fresh()->status);
+        $this->assertEquals(0.00, (float) $payment2->fresh()->amount);
+    }
 }

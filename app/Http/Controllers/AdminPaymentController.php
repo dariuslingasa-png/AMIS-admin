@@ -245,6 +245,30 @@ class AdminPaymentController extends Controller
                 'paid_at'     => $request->input('finance_payment_date') ? \Carbon\Carbon::parse($request->input('finance_payment_date')) : ($payment->paid_at ?? now()),
             ]);
 
+            // Automatically verify other pending duplicate payments in the same family/invoice
+            $duplicatePendingPayments = $invoice->payments()
+                ->where('id', '!=', $payment->id)
+                ->where('status', 'pending')
+                ->where(function ($query) use ($payment) {
+                    $query->where('receipt_url', $payment->receipt_url);
+                    if (filled($payment->reference_no)) {
+                        $query->orWhere('reference_no', $payment->reference_no);
+                    }
+                })
+                ->get();
+                
+            foreach ($duplicatePendingPayments as $otherPayment) {
+                $otherPayment->update([
+                    'status'      => 'verified',
+                    'amount'      => 0.00, // Zero out amount to prevent duplication of paid totals
+                    'or_number'   => $orNumber,
+                    'verified_at' => now(),
+                    'method'      => $payment->method,
+                    'reference_no'=> $payment->reference_no,
+                    'paid_at'     => $payment->paid_at,
+                ]);
+            }
+
             // Sync and recalculate the single Family Invoice totals & status!
             $invoice->recalculate();
 
@@ -288,28 +312,30 @@ class AdminPaymentController extends Controller
             // Delete any existing entries for this payment to prevent duplicates on re-verify
             \App\Models\FinanceMasterEntry::where('payment_id', $payment->id)->delete();
 
-            // Auto-create FinanceMasterEntry record
-            $financeEntry = \App\Models\FinanceMasterEntry::create([
-                'payment_id' => $payment->id,
-                'family_name' => $familyLabel,
-                'remittance_source' => $request->input('remittance_source'),
-                'reference_no' => $request->input('finance_reference_no'),
-                'method' => $request->input('finance_method', 'remittance'),
-                'payment_date' => $request->input('finance_payment_date') ? \Carbon\Carbon::parse($request->input('finance_payment_date'))->format('Y-m-d') : now()->format('Y-m-d'),
-                'amount' => $amount,
-                'or_number' => $orNumber,
-                'verified_by' => auth()->id(),
-            ]);
-
-            // Auto-create FinanceMasterEntryStudent records
-            foreach ($familyChildren as $child) {
-                \App\Models\FinanceMasterEntryStudent::create([
-                    'finance_master_entry_id' => $financeEntry->id,
-                    'student_name' => $child->full_name,
-                    'grade_level' => $child->grade_level ?: 'Pending',
-                    'learning_mode' => $normalizeLearningMode($child->learning_mode),
-                    'student_type' => $normalizeStudentType($child->student_type),
+            if ($amount > 0) {
+                // Auto-create FinanceMasterEntry record
+                $financeEntry = \App\Models\FinanceMasterEntry::create([
+                    'payment_id' => $payment->id,
+                    'family_name' => $familyLabel,
+                    'remittance_source' => $request->input('remittance_source'),
+                    'reference_no' => $request->input('finance_reference_no'),
+                    'method' => $request->input('finance_method', 'remittance'),
+                    'payment_date' => $request->input('finance_payment_date') ? \Carbon\Carbon::parse($request->input('finance_payment_date'))->format('Y-m-d') : now()->format('Y-m-d'),
+                    'amount' => $amount,
+                    'or_number' => $orNumber,
+                    'verified_by' => auth()->id(),
                 ]);
+
+                // Auto-create FinanceMasterEntryStudent records
+                foreach ($familyChildren as $child) {
+                    \App\Models\FinanceMasterEntryStudent::create([
+                        'finance_master_entry_id' => $financeEntry->id,
+                        'student_name' => $child->full_name,
+                        'grade_level' => $child->grade_level ?: 'Pending',
+                        'learning_mode' => $normalizeLearningMode($child->learning_mode),
+                        'student_type' => $normalizeStudentType($child->student_type),
+                    ]);
+                }
             }
         });
 
@@ -354,10 +380,18 @@ class AdminPaymentController extends Controller
         }
 
         $payment->loadMissing('applicant');
-        $payment->applicant?->update([
-            'status' => 'rejected',
-            'review_remarks' => $request->remarks,
-        ]);
+        
+        $hasVerifiedPayment = false;
+        if ($payment->invoice) {
+            $hasVerifiedPayment = $payment->invoice->payments()->where('status', 'verified')->exists();
+        }
+        
+        if (! $hasVerifiedPayment) {
+            $payment->applicant?->update([
+                'status' => 'rejected',
+                'review_remarks' => $request->remarks,
+            ]);
+        }
 
         AdminAuditLog::record('payment_rejected', true, 'Payment proof rejected.', [
             'payment_id' => $payment->id,
