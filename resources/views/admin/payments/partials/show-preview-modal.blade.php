@@ -39,33 +39,21 @@
                             <p class="text-[11.5px] text-amber-700 font-semibold normal-case mt-0.5">Please check the receipt amount and reference number before verifying.</p>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button type="button" @click="approveModal = true; document.getElementById('approve-form').action = document.getElementById('modal-approve-form-finance').action;" class="btn-premium btn-approve cursor-pointer">
+                            <button type="button" @click="preview = false; approveModal = true; document.getElementById('approve-form').action = document.getElementById('modal-approve-form-finance').action;" class="btn-premium btn-approve cursor-pointer">
                                 Verify Payment
                             </button>
                             <form id="modal-approve-form-finance" action="" method="POST" class="hidden">
                                 @csrf
                                 @method('PATCH')
                             </form>
-                            <button type="button" onclick="document.getElementById('modal-reject-form-finance-container').classList.toggle('hidden')" class="btn-premium btn-reject cursor-pointer">
+                            <button type="button" @click="preview = false; rejectModal = true; remarks = ''; isSubmitting = false; document.getElementById('reject-form').action = document.getElementById('modal-reject-form-finance').action;" class="btn-premium btn-reject cursor-pointer">
                                 Reject
                             </button>
+                            <form id="modal-reject-form-finance" action="" method="POST" class="hidden">
+                                @csrf
+                                @method('PATCH')
+                            </form>
                         </div>
-                    </div>
-                    
-                    <!-- Modal Reject Form in Finance -->
-                    <div id="modal-reject-form-finance-container" x-show="currentPayment" class="hidden bg-rose-50 border-t border-rose-250 p-4 text-left select-text">
-                        <form id="modal-reject-form-finance" action="" method="POST" class="space-y-3">
-                            @csrf
-                            @method('PATCH')
-                            <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-rose-800 mb-1">Rejection Remarks</label>
-                                <textarea name="remarks" x-model="remarks" required placeholder="Reason for rejection..." class="w-full rounded-xl border border-slate-250 bg-white px-4 py-3 text-sm text-black focus:outline-none" rows="2"></textarea>
-                            </div>
-                            <div class="flex justify-end gap-2">
-                                <button type="button" onclick="document.getElementById('modal-reject-form-finance-container').classList.add('hidden')" class="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700">Cancel</button>
-                                <button type="submit" class="rounded-xl bg-rose-600 px-4 py-1.5 text-xs font-black uppercase tracking-wider text-white hover:bg-rose-700">Submit Rejection</button>
-                            </div>
-                        </form>
                     </div>
                 @endif
             </div>
