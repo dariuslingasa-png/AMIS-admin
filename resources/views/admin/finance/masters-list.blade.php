@@ -23,6 +23,110 @@
             this.editModal = true;
         }
     }">
+        <!-- Print CSS Style Overrides -->
+        <style>
+            @media print {
+                /* Hide non-printable elements */
+                .sidebar,
+                aside,
+                header,
+                nav,
+                footer,
+                .breadcrumbs,
+                .breadcrumb,
+                .print\:hidden,
+                form,
+                .border-b.border-slate-100, /* Search/filters container */
+                .grid.gap-3.border-b, /* Stats cards */
+                .border-t.border-slate-100.px-5.py-4, /* Pagination container */
+                .amis-card > div:first-child, /* Card header */
+                th:last-child, /* Actions column header */
+                td:last-child { /* Actions column cells */
+                    display: none !important;
+                }
+
+                /* Reset background colors and layout margins for print */
+                body, html {
+                    background: #ffffff !important;
+                    color: #000000 !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    font-family: sans-serif !important;
+                }
+
+                .admin-shell {
+                    display: block !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                }
+
+                .admin-content {
+                    margin-left: 0 !important;
+                    padding: 0 !important;
+                    background: #ffffff !important;
+                }
+
+                main {
+                    padding: 0 !important;
+                }
+
+                /* Ensure card container has no border/shadow on print */
+                .amis-card,
+                .bg-white,
+                .rounded-3xl,
+                .shadow-sm,
+                .border {
+                    border: none !important;
+                    box-shadow: none !important;
+                    padding: 0 !important;
+                    margin: 0 !important;
+                }
+
+                /* Table grid styling for print */
+                table {
+                    width: 100% !important;
+                    border-collapse: collapse !important;
+                    margin-top: 15px !important;
+                    font-size: 11px !important;
+                }
+
+                th, td {
+                    border: 1px solid #cbd5e1 !important;
+                    padding: 8px 10px !important;
+                    color: #000000 !important;
+                    background: transparent !important;
+                }
+
+                th {
+                    background-color: #f1f5f9 !important;
+                    font-weight: bold !important;
+                    text-transform: uppercase !important;
+                }
+
+                /* Keep badges simple/flat on print */
+                .rounded-full, .rounded {
+                    border: 1px solid #cbd5e1 !important;
+                    background: transparent !important;
+                    color: #000000 !important;
+                    box-shadow: none !important;
+                    padding: 2px 6px !important;
+                }
+
+                /* Force background colors to show on screen/PDF printers */
+                * {
+                    -webkit-print-color-adjust: exact !important;
+                    print-color-adjust: exact !important;
+                }
+            }
+        </style>
+
+        <!-- Print Header (Only visible on print) -->
+        <div class="hidden print:block text-center mb-6 pt-4">
+            <h2 class="text-2xl font-black uppercase tracking-wider text-black">Al Munawwara Islamic School</h2>
+            <h3 class="text-lg font-bold uppercase tracking-widest text-slate-700 mt-1">Finance Masters List</h3>
+            <p class="text-xs text-slate-500 mt-1">Generated on {{ now()->format('F d, Y h:i A') }}</p>
+        </div>
+
         <x-card title="Finance Masters List" subtitle="Master Ledger of Auto-Populated verified payments & remittance logs">
         
         <!-- Search and Filters -->
@@ -46,10 +150,14 @@
                     @endforeach
                 </select>
 
-                <div class="flex gap-2">
+                <div class="flex gap-2 flex-wrap">
                     <button class="inline-flex h-11 items-center gap-2 rounded-xl bg-emerald-700 px-4 text-sm font-black text-white shadow-sm transition hover:bg-emerald-800 cursor-pointer">
                         <i data-lucide="filter" class="h-4 w-4"></i>
                         Filter
+                    </button>
+                    <button type="button" onclick="window.print()" class="inline-flex h-11 items-center gap-2 rounded-xl bg-slate-800 px-4 text-sm font-black text-white shadow-sm transition hover:bg-slate-900 cursor-pointer">
+                        <i data-lucide="printer" class="h-4 w-4"></i>
+                        Print PDF
                     </button>
                     @if (request()->hasAny(['search', 'method', 'per_page']))
                         <a href="{{ route('admin.finance.masters-list') }}" class="inline-flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-black text-slate-600 transition hover:bg-slate-50">
