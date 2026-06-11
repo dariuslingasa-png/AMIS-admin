@@ -105,14 +105,21 @@ class AdminFinanceMasterController extends Controller
             ? (int) (clone $statsQuery)->distinct('family_name')->count('family_name')
             : 0;
 
-        // Pagination
+        // Pagination (skip if print mode)
         $perPage = (int) $request->input('per_page', 15);
         $perPage = in_array($perPage, [10, 15, 25, 50, 100], true) ? $perPage : 15;
 
-        $entries = $query->paginate($perPage)->withQueryString();
+        if ($request->input('print') === '1') {
+            $entries = $query->get();
+            $allEntries = $entries;
+        } else {
+            $allEntries = $query->get();
+            $entries = $query->paginate($perPage)->withQueryString();
+        }
 
         return view('admin.finance.masters-list', compact(
             'entries',
+            'allEntries',
             'totalEntries',
             'totalAmount',
             'totalStudents',

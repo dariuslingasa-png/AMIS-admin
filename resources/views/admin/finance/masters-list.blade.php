@@ -195,7 +195,7 @@
                         <i data-lucide="filter" class="h-4 w-4"></i>
                         Filter
                     </button>
-                    <button type="button" onclick="window.print()" class="inline-flex h-11 items-center gap-2 rounded-xl bg-slate-800 px-4 text-sm font-black text-white shadow-sm transition hover:bg-slate-900 cursor-pointer">
+                    <button type="button" onclick="window.location.href='{{ route('admin.finance.masters-list', array_merge(request()->all(), ['print' => 1])) }}'" class="inline-flex h-11 items-center gap-2 rounded-xl bg-slate-800 px-4 text-sm font-black text-white shadow-sm transition hover:bg-slate-900 cursor-pointer">
                         <i data-lucide="printer" class="h-4 w-4"></i>
                         Print PDF
                     </button>
@@ -456,4 +456,8 @@
             </div>
         </div>
     </div>
+
+    @if (request('print') == '1')
+    <script>window.onload = function() { window.print(); }</script>
+    @endif
 </x-admin-layout>
