@@ -118,6 +118,7 @@ class AdminFinanceMasterController extends Controller
         }
 
         $this->hydrateMissingStudentGenders($entries);
+        $this->numberLedgerStudents($entries);
 
         return view('admin.finance.masters-list', compact(
             'entries',
@@ -291,5 +292,20 @@ class AdminFinanceMasterController extends Controller
     private function studentNameKey(?string $name): string
     {
         return strtolower(preg_replace('/\s+/', ' ', trim((string) $name)));
+    }
+
+    private function numberLedgerStudents($entries): void
+    {
+        $collection = method_exists($entries, 'getCollection')
+            ? $entries->getCollection()
+            : collect($entries);
+
+        $number = method_exists($entries, 'firstItem') ? (int) $entries->firstItem() : 1;
+
+        foreach ($collection as $entry) {
+            foreach ($entry->students as $student) {
+                $student->setAttribute('ledger_row_number', $number++);
+            }
+        }
     }
 }

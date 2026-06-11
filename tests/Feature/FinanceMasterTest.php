@@ -115,7 +115,7 @@ class FinanceMasterTest extends TestCase
         $response = $this->actingAs($admin)->get(route('admin.finance.masters-list'));
 
         $response->assertStatus(200);
-        $response->assertSeeInOrder(['Hana Saleh', 'F']);
+        $response->assertSeeInOrder(['HANA SALEH', 'F']);
     }
 
     /** @test */
@@ -153,8 +153,9 @@ class FinanceMasterTest extends TestCase
         ]));
 
         $response->assertStatus(200);
-        $response->assertSee('Print One');
-        $response->assertSee('Print Two');
+        $response->assertSee('A4 portrait');
+        $response->assertSee('PRINT ONE');
+        $response->assertSee('PRINT TWO');
     }
 
     /** @test */

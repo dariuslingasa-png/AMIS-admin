@@ -47,6 +47,10 @@
                     display: none !important;
                 }
 
+                .print-hidden-col {
+                    display: none !important;
+                }
+
                 /* Hide icons in print to keep it clean */
                 td svg,
                 td i,
@@ -102,9 +106,9 @@
                     width: 100% !important;
                     min-width: 0 !important;
                     border-collapse: collapse !important;
-                    margin-top: 15px !important;
+                    margin-top: 12px !important;
                     font-size: 9.5px !important;
-                    table-layout: auto !important;
+                    table-layout: fixed !important;
                 }
 
                 thead {
@@ -155,7 +159,7 @@
                 }
 
                 @page {
-                    size: A4 landscape;
+                    size: A4 portrait;
                     margin: 10mm;
                 }
 
@@ -281,6 +285,7 @@
             <table class="finance-master-table w-full min-w-[1200px] text-left text-sm">
                 <thead class="bg-white text-[11px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-100">
                     <tr>
+                        <th class="px-5 py-4 w-16">#</th>
                         <th class="px-5 py-4">
                             <a href="{{ $sortLink('name') }}" class="inline-flex items-center gap-1 hover:text-slate-700 no-underline">
                                 Student Name <i data-lucide="{{ $sortIcon('name') }}" class="h-3.5 w-3.5"></i>
@@ -293,7 +298,7 @@
                             </a>
                         </th>
                         <th class="px-5 py-4">Learning Mode</th>
-                        <th class="px-5 py-4">MOP</th>
+                        <th class="px-5 py-4 print-hidden-col">MOP</th>
                         <th class="px-5 py-4 text-right actions-col">Actions</th>
                     </tr>
                 </thead>
@@ -305,19 +310,23 @@
                         @endphp
                         @if ($students->isEmpty())
                             <tr class="transition hover:bg-slate-50/80 border-b border-slate-100">
+                                <td class="px-5 py-4 align-top">-</td>
                                 <td class="px-5 py-4 align-top text-slate-400 italic">No student records</td>
                                 <td class="px-5 py-4 align-top">-</td>
                                 <td class="px-5 py-4 align-top">-</td>
                                 <td class="px-5 py-4 align-top">-</td>
-                                <td class="px-5 py-4 align-top">-</td>
+                                <td class="px-5 py-4 align-top print-hidden-col">-</td>
                                 <td class="px-5 py-4 align-top text-right actions-col">-</td>
                             </tr>
                         @else
                             @foreach ($students as $index => $student)
                                 <tr class="transition hover:bg-slate-50/80 @if($loop->last) border-b border-slate-250 @else border-b border-slate-100/40 @endif">
+                                    <td class="px-5 py-4 align-top font-black tabular-nums text-slate-500">
+                                        {{ $student->ledger_row_number ?? '-' }}
+                                    </td>
                                     <td class="px-5 py-4 align-top">
-                                        <span class="font-bold text-slate-900 text-[13.5px] max-w-[180px] break-words whitespace-normal inline-block leading-tight">
-                                            {{ $student->student_name }}
+                                        <span class="font-bold uppercase text-slate-900 text-[13.5px] max-w-[260px] break-words whitespace-normal inline-block leading-tight">
+                                            {{ Str::upper($student->student_name) }}
                                         </span>
                                     </td>
                                     <td class="px-5 py-4 align-top">
@@ -362,7 +371,7 @@
                                         </span>
                                     </td>
                                     @if ($index === 0)
-                                    <td class="px-5 py-4 align-top" rowspan="{{ $studentCount }}">
+                                    <td class="px-5 py-4 align-top print-hidden-col" rowspan="{{ $studentCount }}">
                                         @php
                                             $method = strtolower($entry->method);
                                             $badgeClass = match($method) {
@@ -400,7 +409,7 @@
                         @endif
                     @empty
                         <tr>
-                            <td colspan="6" class="px-5 py-14 text-center">
+                            <td colspan="7" class="px-5 py-14 text-center">
                                 <div class="mx-auto flex max-w-sm flex-col items-center">
                                     <span class="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
                                         <i data-lucide="search-x" class="h-6 w-6"></i>
