@@ -9,17 +9,25 @@ use Illuminate\Validation\ValidationException;
 
 class EnrollmentReviewService
 {
-    public const STATUSES = ['ready_for_submission', 'pending', 'submitted', 'under_review', 'approved', 'rejected'];
+    public const STATUSES = ['ready_for_submission', 'pending', 'submitted', 'under_review', 'for_correction', 'pending_verification', 'approved', 'rejected'];
+
+    public const MANUAL_REVIEW_STATUSES = ['for_correction', 'pending_verification', 'approved', 'rejected'];
 
     public const STATUS_LABELS = [
         'draft' => 'Draft', 'ready_for_submission' => 'Ready for Submission', 'pending' => 'Pending',
-        'submitted' => 'Submitted', 'under_review' => 'Under Review', 'approved' => 'Approved', 'rejected' => 'Rejected'
+        'submitted' => 'Submitted', 'under_review' => 'Under Review',
+        'for_correction' => 'For Correction', 'pending_verification' => 'Pending Verification',
+        'approved' => 'Approved', 'rejected' => 'Rejected'
     ];
 
     public const STATUS_BADGES = [
         'draft' => 'badge-gray', 'ready_for_submission' => 'badge-blue', 'pending' => 'badge-yellow',
-        'submitted' => 'badge-blue', 'under_review' => 'badge-purple', 'approved' => 'badge-green', 'rejected' => 'badge-red'
+        'submitted' => 'badge-blue', 'under_review' => 'badge-purple',
+        'for_correction' => 'badge-red', 'pending_verification' => 'badge-yellow',
+        'approved' => 'badge-green', 'rejected' => 'badge-red'
     ];
+
+    public const VERIFY_SECTIONS = ['student_info', 'documents', 'photo_2x2', 'report_card_affidavit'];
 
     public const PAYMENT_BADGES = ['pending' => 'badge-yellow', 'verified' => 'badge-green', 'rejected' => 'badge-red'];
     public const PAYMENT_LABELS = ['pending' => 'Pending', 'verified' => 'Verified', 'rejected' => 'Rejected'];
@@ -79,6 +87,22 @@ class EnrollmentReviewService
         $hasPaymentProof = $payment && filled($payment->receipt_url);
         $paymentOk = $hasPaymentProof && $payment->status === 'verified';
         $allDocsOk = $this->areAllDocumentsApproved($applicant);
+        $enrollmentFee = (float) config('services.school.enrollment_fee', 4000);
+
+        $familyChildren = \App\Models\EnrollmentApplicant::where(function ($query) use ($applicant) {
+            if ($applicant->family_application_id) {
+                $query->where('family_application_id', $applicant->family_application_id);
+            } else {
+                $query->where('user_id', $applicant->user_id);
+            }
+        })
+        ->whereNotIn('status', ['draft'])
+        ->orderBy('id')
+        ->get();
+
+        $totalFamilyChildren = $familyChildren->count();
+        $expectedPayment = $enrollmentFee * $totalFamilyChildren;
+        $paymentInsufficient = $totalFamilyChildren > 1 && $payment && (float) $payment->amount < $expectedPayment;
 
         return [
             'statusBadges' => self::STATUS_BADGES,
@@ -99,13 +123,18 @@ class EnrollmentReviewService
             'homeAddress' => $this->homeAddress($applicant),
             'studentMobile' => $this->mobileNumber($applicant->mobile_country_code, $applicant->mobile_number),
             'parentMobile' => $this->mobileNumber($applicant->parent_country_code, $applicant->parent_mobile),
+            'enrollmentFee' => $enrollmentFee,
+            'familyChildren' => $familyChildren,
+            'totalFamilyChildren' => $totalFamilyChildren,
+            'expectedPayment' => $expectedPayment,
+            'paymentInsufficient' => $paymentInsufficient,
         ];
     }
 
     public function updateStatus(Request $request, EnrollmentApplicant $applicant): void
     {
         $validated = $request->validate([
-            'status' => 'required|in:'.implode(',', self::STATUSES),
+            'status' => 'required|in:'.implode(',', self::MANUAL_REVIEW_STATUSES),
             'remarks' => 'nullable|string|max:1000',
         ]);
 
@@ -125,6 +154,8 @@ class EnrollmentReviewService
             $updates['review_remarks'] = $remarks;
         } elseif ($status === 'approved') {
             $updates['review_remarks'] = null;
+        } elseif ($remarks !== '') {
+            $updates['review_remarks'] = $remarks;
         }
 
         $applicant->update($updates);
@@ -204,6 +235,65 @@ class EnrollmentReviewService
         }
 
         return 'Approved with missing/pending documents: '.$missing->join(', ').'. Please follow up and complete document verification.';
+    }
+
+    public function verifySection(EnrollmentApplicant $applicant, string $section, string $action): void
+    {
+        $docStatuses = $applicant->document_statuses ?? [];
+
+        switch ($section) {
+            case 'student_info':
+                $docStatuses['_student_info'] = $action === 'approve' ? 'approved' : 'rejected';
+                if ($action === 'reject') {
+                    $this->appendReviewRemark($applicant, 'Student information requires correction.');
+                }
+                break;
+
+            case 'documents':
+                foreach ($this->documentMap($applicant) as $key => $doc) {
+                    if (in_array($key, self::REVIEWABLE_DOCUMENTS, true) && filled($doc['url'] ?? null)) {
+                        $docStatuses[$key] = $action === 'approve' ? 'approved' : 'rejected';
+                    }
+                }
+                if ($action === 'reject') {
+                    $this->appendReviewRemark($applicant, 'Uploaded documents require correction.');
+                }
+                break;
+
+            case 'photo_2x2':
+                $docStatuses['photo_2x2'] = $action === 'approve' ? 'approved' : 'rejected';
+                if ($action === 'reject') {
+                    $this->appendReviewRemark($applicant, '2x2 picture is missing or invalid.');
+                }
+                break;
+
+            case 'report_card_affidavit':
+                $hasReportCard = filled($applicant->report_card_url);
+                $hasAffidavit = filled($applicant->affidavit_url);
+                if ($hasReportCard) {
+                    $docStatuses['report_card'] = $action === 'approve' ? 'approved' : 'rejected';
+                }
+                if ($hasAffidavit) {
+                    $docStatuses['affidavit'] = $action === 'approve' ? 'approved' : 'rejected';
+                }
+                if (!$hasReportCard && !$hasAffidavit) {
+                    $docStatuses['report_card'] = $action === 'approve' ? 'approved' : 'rejected';
+                }
+                if ($action === 'reject') {
+                    $this->appendReviewRemark($applicant, 'Required report card or affidavit is missing.');
+                }
+                break;
+        }
+
+        $applicant->update(['document_statuses' => $docStatuses]);
+    }
+
+    public function appendReviewRemark(EnrollmentApplicant $applicant, string $remark): void
+    {
+        $existing = trim((string) $applicant->review_remarks);
+        $applicant->update([
+            'review_remarks' => $existing ? $existing . "\n" . $remark : $remark,
+        ]);
     }
 
     private function documentMap(EnrollmentApplicant $applicant): array

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\EnrollmentApplicant;
+use App\Models\EnrollmentSetting;
 use App\Services\Admin\Enrollment\ApplicationQuery;
 use App\Services\Admin\Enrollment\EnrollmentAnalyticsService;
 use App\Services\Admin\Enrollment\EnrollmentReviewService;
@@ -159,6 +160,28 @@ class ApplicantController extends Controller
         return view('admin.applicants.show', [
             'applicant' => $applicant,
             'siblings'  => $siblings,
+            'enrollmentSetting' => EnrollmentSetting::current(),
+            ...$this->reviewService->detailData($applicant),
+        ]);
+    }
+
+    public function reviewApplicant(EnrollmentApplicant $applicant)
+    {
+        if ($applicant->status === 'submitted') {
+            $applicant->update(['status' => 'under_review']);
+        }
+
+        $applicant->load('user', 'payment', 'student');
+
+        $siblings = EnrollmentApplicant::where('user_id', $applicant->user_id)
+            ->where('id', '!=', $applicant->id)
+            ->whereNotIn('status', ['draft'])
+            ->get();
+
+        return view('admin.applicants.review', [
+            'applicant' => $applicant,
+            'siblings'  => $siblings,
+            'enrollmentSetting' => EnrollmentSetting::current(),
             ...$this->reviewService->detailData($applicant),
         ]);
     }

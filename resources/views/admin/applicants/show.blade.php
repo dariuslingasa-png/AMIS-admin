@@ -374,112 +374,66 @@
                     </div>
                 </x-card>
 
-                <x-card title="Payment Proof" subtitle="Enrollment fee verification">
-                    @if ($paymentUrl)
-                        @if ($payment->status === 'pending' && $canReviewPayments)
-                            <!-- Actionable Verification Banner directly in Applicant Review -->
-                            <div class="mb-6 flex flex-col sm:flex-row sm:items-center gap-4 rounded-2xl border border-amber-100 bg-amber-50/50 p-4 text-amber-950 dark:border-amber-900/30 dark:bg-amber-950/20 transition hover:bg-amber-100/50 duration-300">
-                                <div class="flex items-center gap-3">
-                                    <div class="rounded-xl bg-amber-500 p-2.5 text-white shadow-md shadow-amber-500/20 animate-pulse">
-                                        <i data-lucide="shield-check" class="h-5 w-5"></i>
-                                    </div>
-                                    <div class="text-xs">
-                                        <h4 class="font-extrabold uppercase tracking-wider text-amber-800">Verify Payment Proof</h4>
-                                        <p class="mt-0.5 font-medium text-amber-700">Review the attached proof. You can verify the payment directly from this page.</p>
-                                    </div>
-                                </div>
-                                <div class="sm:ml-auto flex flex-wrap items-center gap-2">
-                                    <form method="POST" action="{{ route('admin.payments.verify', $payment) }}">
-                                        @csrf
-                                        @method('PATCH')
-                                        <button type="submit" class="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-emerald-600/20 transition-all hover:bg-emerald-700 active:scale-[0.98] cursor-pointer">
-                                            <i data-lucide="check" class="h-4 w-4"></i> Verify Payment
-                                        </button>
-                                    </form>
-                                    <button type="button" onclick="document.getElementById('payment-reject-form').classList.toggle('hidden')" class="inline-flex items-center gap-1.5 rounded-xl bg-rose-600 px-4 py-2.5 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-rose-600/20 transition-all hover:bg-rose-700 active:scale-[0.98] cursor-pointer">
-                                        <i data-lucide="x" class="h-4 w-4"></i> Reject
-                                    </button>
-                                    <a href="{{ route('admin.payments.show', $payment) }}" class="inline-flex items-center gap-1.5 rounded-xl bg-white border border-slate-200 px-4 py-2.5 text-xs font-black uppercase tracking-wider text-slate-700 transition hover:bg-slate-50">
-                                        Open in Finance
-                                    </a>
-                                </div>
+                @if ($canReviewApplications)
+                <x-card title="System Verification" subtitle="Approve or reject per section. Rejections auto-generate remarks.">
+                    <div class="space-y-0 divide-y divide-slate-100">
+                        @foreach ([
+                            ['key' => 'student_info', 'label' => 'Student Information'],
+                            ['key' => 'documents', 'label' => 'Document Verification'],
+                            ['key' => 'photo_2x2', 'label' => '2x2 Picture'],
+                            ['key' => 'report_card_affidavit', 'label' => 'Report Card / Affidavit'],
+                        ] as $section)
+                        @php
+                            $sKey = $section['key'];
+                            if ($sKey === 'student_info') {
+                                $verified = ($docStatuses['_student_info'] ?? '') === 'approved';
+                                $rejected = ($docStatuses['_student_info'] ?? '') === 'rejected';
+                            } elseif ($sKey === 'documents') {
+                                $verified = $allDocsOk && !$anyDocRejected;
+                                $rejected = $anyDocRejected;
+                            } elseif ($sKey === 'photo_2x2') {
+                                $verified = ($docStatuses['photo_2x2'] ?? '') === 'approved';
+                                $rejected = ($docStatuses['photo_2x2'] ?? '') === 'rejected';
+                            } elseif ($sKey === 'report_card_affidavit') {
+                                $verified = ($docStatuses['report_card'] ?? '') === 'approved' || ($docStatuses['affidavit'] ?? '') === 'approved';
+                                $rejected = (($docStatuses['report_card'] ?? '') === 'rejected' || ($docStatuses['affidavit'] ?? '') === 'rejected') && !$verified;
+                            }
+                        @endphp
+                        <div class="flex items-center justify-between px-1 py-3 first:pt-0 last:pb-0">
+                            <div>
+                                <p class="text-sm font-bold text-slate-900">{{ $section['label'] }}</p>
+                                <p class="text-xs mt-0.5">
+                                    @if ($verified)<span class="text-emerald-600 font-bold">Verified</span>
+                                    @elseif ($rejected)<span class="text-rose-600 font-bold">Rejected</span>
+                                    @else<span class="text-amber-600">Pending Verification</span>
+                                    @endif
+                                </p>
                             </div>
-
-                            <!-- Reject Form (hidden by default) -->
-                            <div id="payment-reject-form" class="mb-6 hidden rounded-2xl border border-rose-100 bg-rose-50/50 p-4">
-                                <form method="POST" action="{{ route('admin.payments.reject', $payment) }}" class="space-y-3">
+                            <div class="flex items-center gap-2">
+                                <form method="POST" action="{{ route('admin.applicants.verify-section', $applicant) }}">
                                     @csrf
-                                    @method('PATCH')
-                                    <div>
-                                        <label class="block text-xs font-bold uppercase tracking-wider text-rose-800 mb-1">Rejection Remarks</label>
-                                        <textarea name="remarks" rows="2" class="w-full rounded-xl border border-rose-200 bg-white p-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500" placeholder="Provide a reason for rejection (e.g. Incorrect amount, blurry receipt, invalid reference number)" required></textarea>
-                                    </div>
-                                    <div class="flex justify-end gap-2">
-                                        <button type="button" onclick="document.getElementById('payment-reject-form').classList.add('hidden')" class="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50">Cancel</button>
-                                        <button type="submit" class="rounded-xl bg-rose-600 px-4 py-1.5 text-xs font-black uppercase tracking-wider text-white hover:bg-rose-700">Submit Rejection</button>
-                                    </div>
+                                    <input type="hidden" name="section" value="{{ $sKey }}">
+                                    <input type="hidden" name="action" value="approve">
+                                    <button class="inline-flex items-center gap-1 rounded-lg border border-emerald-200 px-3 py-1.5 text-xs font-bold transition {{ $verified ? 'bg-emerald-100 text-emerald-500 cursor-default' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' }} {{ $verified ? 'pointer-events-none' : '' }}">
+                                        <i data-lucide="{{ $verified ? 'check' : 'check' }}" class="h-3.5 w-3.5"></i>
+                                        {{ $verified ? 'Approved' : 'Approve' }}
+                                    </button>
+                                </form>
+                                <form method="POST" action="{{ route('admin.applicants.verify-section', $applicant) }}">
+                                    @csrf
+                                    <input type="hidden" name="section" value="{{ $sKey }}">
+                                    <input type="hidden" name="action" value="reject">
+                                    <button class="inline-flex items-center gap-1 rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-bold transition {{ $rejected ? 'bg-rose-100 text-rose-500 cursor-default' : 'bg-rose-50 text-rose-700 hover:bg-rose-100' }} {{ $rejected ? 'pointer-events-none' : '' }}">
+                                        <i data-lucide="{{ $rejected ? 'x' : 'x' }}" class="h-3.5 w-3.5"></i>
+                                        {{ $rejected ? 'Rejected' : 'Reject' }}
+                                    </button>
                                 </form>
                             </div>
-                        @else
-                            <!-- Show read-only status banner or standard Open in Finance -->
-                            <div class="mb-6 flex flex-col sm:flex-row sm:items-center gap-4 rounded-2xl border border-emerald-100 bg-emerald-50/50 p-4 text-emerald-950 dark:border-emerald-900/30 dark:bg-emerald-950/20 transition hover:bg-emerald-100/50 duration-300">
-                                <div class="flex items-center gap-3">
-                                    <div class="rounded-xl bg-emerald-600 p-2.5 text-white shadow-md shadow-emerald-600/20">
-                                        <i data-lucide="landmark" class="h-5 w-5"></i>
-                                    </div>
-                                    <div class="text-xs">
-                                        <h4 class="font-extrabold uppercase tracking-wider text-emerald-800">
-                                            @if ($payment->status === 'verified')
-                                                Payment Verified ✅
-                                            @elseif ($payment->status === 'rejected')
-                                                Payment Rejected ❌
-                                            @else
-                                                Finance Payment Proof
-                                            @endif
-                                        </h4>
-                                        <p class="mt-0.5 font-medium text-emerald-700">
-                                            @if ($payment->status === 'verified')
-                                                This family payment proof has been successfully verified (OR #{{ $payment->or_number ?? '-' }}).
-                                            @elseif ($payment->status === 'rejected')
-                                                This payment proof was rejected: {{ $payment->remarks }}
-                                            @else
-                                                Enrollment fee payment proof is submitted and under review.
-                                            @endif
-                                        </p>
-                                    </div>
-                                </div>
-                                <div class="sm:ml-auto">
-                                    <a href="{{ route('admin.payments.show', $payment) }}" class="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-emerald-600/20 transition-all hover:bg-emerald-750 active:scale-[0.98]">
-                                        Open in Finance <i data-lucide="arrow-right" class="h-4 w-4"></i>
-                                    </a>
-                                </div>
-                            </div>
-                        @endif
-
-                        <div class="grid grid-cols-3 gap-4">
-                            <a href="#" @click.prevent="openPreview('{{ $paymentUrl }}', 'Payment Proof', {{ $paymentIsPdf ? 'true' : 'false' }})" class="upload-preview rounded-xl border border-slate-200 block overflow-hidden transition-all hover:ring-4 hover:ring-emerald-100" title="Click to view payment proof">
-                                @if ($paymentIsPdf)
-                                    <span class="upload-pdf"><i data-lucide="file-text" class="h-9 w-9"></i>PDF Receipt</span>
-                                @else
-                                    <x-smart-preview-image :src="$paymentUrl" alt="Payment Proof" />
-                                @endif
-                            </a>
-                            <dl class="detail-grid col-span-2">
-                                <x-applicant.field label="Status" :value="$pmLabels[$payment->status] ?? $payment->status" />
-                                <x-applicant.field label="Method" :value="$payment->method_label ?? $payment->method" />
-                                <x-applicant.field label="Reference No." :value="$payment->reference_no" />
-                                <x-applicant.field label="Amount" :value="$payment->amount ? 'PHP '.number_format((float) $payment->amount, 2) : null" />
-                                <x-applicant.field label="Submitted At" :value="$payment->paid_at?->format('M d, Y h:i A')" />
-                                <x-applicant.field label="Verified At" :value="$payment->verified_at?->format('M d, Y h:i A')" />
-                            </dl>
                         </div>
-                    @else
-                        <div class="empty-state">
-                            <i data-lucide="receipt-text" class="h-8 w-8"></i>
-                            <p>No payment proof uploaded.</p>
-                        </div>
-                    @endif
+                        @endforeach
+                    </div>
                 </x-card>
+                @endif
             </main>
 
             <aside class="review-panel space-y-4">
@@ -500,77 +454,20 @@
                     </div>
                 </x-card>
 
-                @if ($canReviewApplications)
-                <x-card title="Review Actions">
-                    <form method="POST" action="{{ route('admin.applicants.status', $applicant) }}" class="space-y-4">
-                        @csrf
-                        @method('PATCH')
-                        <div>
-                            <label class="mb-2 block text-sm font-bold text-slate-900">Application Status</label>
-                            <input type="hidden" name="status" :value="statusValue">
-                            <div class="review-select-wrap" @click.outside="statusOpen = false">
-                                <button type="button" class="review-select-button" :class="{ 'review-select-button-open': statusOpen }" @click="statusOpen = !statusOpen">
-                                    <span x-text="statusLabel"></span>
-                                    <i data-lucide="chevron-down" class="h-4 w-4"></i>
-                                </button>
-                                <div x-show="statusOpen" x-transition class="review-select-menu" x-cloak>
-                                    @foreach ($statusLabels ?? [] as $value => $label)
-                                        <button type="button" class="review-select-option" :class="{ 'review-select-option-active': statusValue === @js($value) }" @click="chooseStatus(@js($value), @js($label))">
-                                            <div class="text-left pr-4">
-                                                <div class="font-bold">{{ $label }}</div>
-                                                <div class="text-[10px] text-slate-400 mt-0.5" :class="{ 'text-emerald-700/80': statusValue === @js($value) }" x-text="statusDescriptions[@js($value)]"></div>
-                                            </div>
-                                            <i data-lucide="check" class="h-4 w-4 shrink-0 text-emerald-600" x-show="statusValue === @js($value)"></i>
-                                        </button>
-                                    @endforeach
-                                </div>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="mb-2 block text-sm font-bold text-slate-900">Remarks</label>
-                            <textarea name="remarks" rows="2" class="w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm">{{ old('remarks', $applicant->review_remarks) }}</textarea>
-                        </div>
-                        <button class="review-save-button">
-                            <i data-lucide="check-circle-2" class="h-4 w-4"></i>
-                            Save Review
-                        </button>
-                    </form>
-                </x-card>
-                @endif
-
-                <x-card title="Readiness">
+                <x-card title="Status">
                     <div class="space-y-3 text-sm">
-                        <div class="review-readiness-row"><span>Documents</span><span class="readiness-pill {{ $allDocsOk ? 'readiness-emerald' : 'readiness-amber' }}">{{ $allDocsOk ? 'Approved' : 'Pending / Not Prior' }}</span></div>
-                        <div class="review-readiness-row"><span>Payment</span><span class="readiness-pill {{ $paymentOk ? 'readiness-emerald' : ($payment?->status === 'rejected' ? 'readiness-rose' : 'readiness-orange') }}">{{ $paymentReadinessLabel }}</span></div>
-                        <div class="review-readiness-row"><span>Approval</span><span class="readiness-pill {{ $applicant->status === 'approved' || $canApprove ? 'readiness-emerald' : 'readiness-amber' }}">{{ $approvalReadinessLabel }}</span></div>
-                        @if (!$paymentOk)
-                            <div class="rounded-xl border border-amber-100 bg-amber-50 px-3 py-2 text-xs font-bold leading-5 text-amber-700">
-                                @if ($payment?->status === 'rejected')
-                                    Payment rejected by {{ $financeReviewer }}. You may still approve; finance follow-up remains separate.
-                                @else
-                                    Payment is not verified yet. You may still approve; finance can verify or follow up later.
-                                @endif
-                            </div>
-                        @elseif (!$allDocsOk)
-                            <div class="rounded-xl border border-amber-100 bg-amber-50 px-3 py-2 text-xs font-bold leading-5 text-amber-700">
-                                Documents are not prior. You may approve; missing document remarks will be kept for follow-up while AMIS ID, SOA, and Microsoft account generation continue.
-                            </div>
-                        @endif
-                        @if ($canApprove && $applicant->status !== 'approved')
-                            <div class="pt-3.5 border-t border-slate-100 mt-2">
-                                <form method="POST" action="{{ route('admin.applicants.status', $applicant) }}">
-                                    @csrf
-                                    @method('PATCH')
-                                    <input type="hidden" name="status" value="approved">
-                                    <button type="submit" class="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-emerald-700/10 hover:bg-emerald-750 transition active:scale-[0.98] cursor-pointer">
-                                        <i data-lucide="check-circle-2" class="h-4.5 w-4.5 text-emerald-100"></i>
-                                        Approve & Generate All Three
-                                    </button>
-                                </form>
-                            </div>
-                        @endif
+                        <div class="review-readiness-row"><span>Documents</span><span class="readiness-pill {{ $allDocsOk ? 'readiness-emerald' : 'readiness-amber' }}">{{ $allDocsOk ? 'Approved' : 'Pending' }}</span></div>
+                        <div class="review-readiness-row"><span>Payment</span><span class="readiness-pill {{ $paymentOk ? 'readiness-emerald' : ($payment?->status === 'rejected' ? 'readiness-rose' : 'readiness-orange') }}">{{ $paymentOk ? 'Verified' : ($payment?->status === 'rejected' ? 'Rejected' : 'Pending') }}</span></div>
+                        <div class="review-readiness-row"><span>Approval</span><span class="readiness-pill {{ $applicant->status === 'approved' ? 'readiness-emerald' : 'readiness-amber' }}">{{ $statusLabels[$applicant->status] ?? Str::headline($applicant->status) }}</span></div>
                     </div>
                 </x-card>
+
+                @if ($canReviewApplications)
+                <a href="{{ route('admin.applicants.review', $applicant) }}" class="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700 transition hover:bg-emerald-100">
+                    <i data-lucide="users" class="h-4 w-4"></i>
+                    Family Enrollment Review
+                </a>
+                @endif
             </aside>
         </div>
 
@@ -610,43 +507,6 @@
                         </template>
                         <template x-if="pdf"><iframe :src="src"></iframe></template>
                     </div>
-
-                    @if ($payment && $payment->status === 'pending' && $canReviewPayments)
-                        <div x-show="label === 'Payment Proof'" class="bg-amber-50 border-t border-amber-200 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 select-text">
-                            <div class="text-xs text-amber-900 font-bold uppercase tracking-wider text-left">
-                                Verify Payment Proof
-                                <p class="text-[11px] text-amber-700 font-semibold normal-case mt-0.5">Please check the receipt amount and reference number before verifying.</p>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <form method="POST" action="{{ route('admin.payments.verify', $payment) }}">
-                                    @csrf
-                                    @method('PATCH')
-                                    <button type="submit" class="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-black uppercase tracking-wider text-white hover:bg-emerald-700 shadow-md cursor-pointer">
-                                        <i data-lucide="check" class="h-4 w-4"></i> Verify Payment
-                                    </button>
-                                </form>
-                                <button type="button" onclick="document.getElementById('modal-reject-form-applicant').classList.toggle('hidden')" class="inline-flex items-center gap-1.5 rounded-xl bg-rose-600 px-4 py-2 text-xs font-black uppercase tracking-wider text-white hover:bg-rose-700 shadow-md cursor-pointer">
-                                    <i data-lucide="x" class="h-4 w-4"></i> Reject
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <!-- Modal Reject Form -->
-                        <div id="modal-reject-form-applicant" x-show="label === 'Payment Proof'" class="hidden bg-rose-50 border-t border-rose-250 p-4 text-left select-text">
-                            <form method="POST" action="{{ route('admin.payments.reject', $payment) }}" class="space-y-3">
-                                @csrf
-                                @method('PATCH')
-                                <div>
-                                    <label class="block text-xs font-bold uppercase tracking-wider text-rose-800 mb-1">Rejection Remarks</label>
-                                    <textarea name="remarks" rows="2" class="w-full rounded-xl border border-rose-200 bg-white p-2.5 text-sm text-slate-900 focus:outline-none" placeholder="Provide a reason for rejection..." required></textarea>
-                                </div>
-                                <div class="flex justify-end gap-2">
-                                    <button type="button" onclick="document.getElementById('modal-reject-form-applicant').classList.add('hidden')" class="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700">Cancel</button>
-                                    <button type="submit" class="rounded-xl bg-rose-600 px-4 py-1.5 text-xs font-black uppercase tracking-wider text-white hover:bg-rose-700">Submit Rejection</button>
-                                </div>
-                            </form>
-                        </div>
-                    @endif
                 </div>
             </div>
         </template>

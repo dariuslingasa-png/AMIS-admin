@@ -95,7 +95,7 @@
                                 <td class="px-5 py-4"><x-badge :color="$statusColor[$applicant->status] ?? 'gray'">{{ $statusLabels[$applicant->status] ?? 'Under Review' }}</x-badge></td>
                                 <td class="px-5 py-4"><x-badge :color="$paymentColor($pay)">{{ $pay }}</x-badge></td>
                                 <td class="px-5 py-4 text-right">
-                                    <a href="{{ route('admin.applicants.show', $applicant) }}" class="inline-flex h-9 items-center gap-2 rounded-md border border-emerald-100 bg-white px-3 text-xs font-bold text-emerald-700 transition hover:bg-emerald-50">
+                                    <a href="{{ route('admin.applicants.review', $applicant) }}" class="inline-flex h-9 items-center gap-2 rounded-md border border-emerald-100 bg-white px-3 text-xs font-bold text-emerald-700 transition hover:bg-emerald-50">
                                         <i data-lucide="file-search" class="h-4 w-4"></i>
                                         Review
                                     </a>

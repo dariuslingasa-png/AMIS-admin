@@ -26,10 +26,16 @@
                 <h1 class="mt-1 text-xl font-bold text-slate-950">Approval Workflow</h1>
                 <p class="mt-1 text-sm text-slate-500">Final review queue for application approval and account creation.</p>
             </div>
-            <a href="{{ route('admin.applications.requirements') }}" class="inline-flex h-10 items-center gap-2 rounded-lg border border-emerald-100 bg-emerald-50 px-4 text-sm font-bold text-emerald-700 transition hover:bg-emerald-100">
-                <i data-lucide="list-checks" class="h-4 w-4"></i>
-                Requirements
-            </a>
+            <div class="flex items-center gap-2">
+                <a href="{{ route('admin.applications.requirements') }}" class="inline-flex h-10 items-center gap-2 rounded-lg border border-emerald-100 bg-emerald-50 px-4 text-sm font-bold text-emerald-700 transition hover:bg-emerald-100">
+                    <i data-lucide="list-checks" class="h-4 w-4"></i>
+                    Requirements
+                </a>
+                <a href="{{ route('admin.settings.enrollment') }}" class="inline-flex h-10 items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 text-sm font-bold text-amber-700 transition hover:bg-amber-100">
+                    <i data-lucide="settings" class="h-4 w-4"></i>
+                    Settings
+                </a>
+            </div>
         </div>
 
         <div class="px-6 py-5">
@@ -85,7 +91,7 @@
                                 <td class="px-5 py-4"><x-badge :color="$readyColor">{{ $readyLabel }}</x-badge></td>
                                 <td class="px-5 py-4 font-medium text-slate-600">{{ $nextStep }}</td>
                                 <td class="px-5 py-4 text-right">
-                                    <a href="{{ route('admin.applicants.show', $applicant) }}" class="inline-flex h-9 items-center gap-2 rounded-md border border-emerald-100 bg-white px-3 text-xs font-bold text-emerald-700 transition hover:bg-emerald-50">
+                                    <a href="{{ route('admin.applicants.review', $applicant) }}" class="inline-flex h-9 items-center gap-2 rounded-md border border-emerald-100 bg-white px-3 text-xs font-bold text-emerald-700 transition hover:bg-emerald-50">
                                         <i data-lucide="shield-check" class="h-4 w-4"></i>
                                         Open
                                     </a>
