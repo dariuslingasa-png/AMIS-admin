@@ -236,4 +236,111 @@ class FinanceMasterTest extends TestCase
         $this->assertEquals('verified', $payment2->fresh()->status);
         $this->assertEquals(0.00, (float) $payment2->fresh()->amount);
     }
+
+    /** @test */
+    public function verifying_rejection_auto_rejects_duplicates_and_invoice_groups_or_numbering_correctly()
+    {
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'account_status' => 'verified',
+        ]);
+
+        $parent = User::factory()->create([
+            'role' => 'applicant',
+        ]);
+
+        $applicant1 = EnrollmentApplicant::create([
+            'user_id' => $parent->id,
+            'family_application_id' => 5678,
+            'first_name' => 'ChildOne',
+            'last_name' => 'Test',
+            'student_type' => 'New',
+            'grade_level' => 'Grade 1',
+            'learning_mode' => 'F2F',
+            'status' => 'submitted',
+        ]);
+
+        $applicant2 = EnrollmentApplicant::create([
+            'user_id' => $parent->id,
+            'family_application_id' => 5678,
+            'first_name' => 'ChildTwo',
+            'last_name' => 'Test',
+            'student_type' => 'New',
+            'grade_level' => 'Grade 2',
+            'learning_mode' => 'F2F',
+            'status' => 'submitted',
+        ]);
+
+        // Scenario 1: Rejection auto-rejects duplicate pending payments
+        $paymentPending1 = Payment::create([
+            'user_id' => $parent->id,
+            'enrollment_applicant_id' => $applicant1->id,
+            'amount' => 4000.00,
+            'method' => 'gcash',
+            'reference_no' => '999888',
+            'receipt_url' => 'receipts/proof_reject.jpg',
+            'status' => 'pending',
+        ]);
+
+        $paymentPending2 = Payment::create([
+            'user_id' => $parent->id,
+            'enrollment_applicant_id' => $applicant2->id,
+            'amount' => 4000.00,
+            'method' => 'gcash',
+            'reference_no' => '999888',
+            'receipt_url' => 'receipts/proof_reject.jpg',
+            'status' => 'pending',
+        ]);
+
+        $response = $this->actingAs($admin)->patch(route('admin.payments.reject', $paymentPending1), [
+            'remarks' => 'Wrong receipt',
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $this->assertEquals('rejected', $paymentPending1->fresh()->status);
+        $this->assertEquals('rejected', $paymentPending2->fresh()->status);
+
+        // Scenario 2: Verification of duplicates groups them under same OR number without incrementing suffixes
+        $paymentVerify1 = Payment::create([
+            'user_id' => $parent->id,
+            'enrollment_applicant_id' => $applicant1->id,
+            'amount' => 4000.00,
+            'method' => 'gcash',
+            'reference_no' => '111222',
+            'receipt_url' => 'receipts/proof_verify.jpg',
+            'status' => 'pending',
+        ]);
+
+        $paymentVerify2 = Payment::create([
+            'user_id' => $parent->id,
+            'enrollment_applicant_id' => $applicant2->id,
+            'amount' => 4000.00,
+            'method' => 'gcash',
+            'reference_no' => '111222',
+            'receipt_url' => 'receipts/proof_verify.jpg',
+            'status' => 'pending',
+        ]);
+
+        $responseVerify = $this->actingAs($admin)->patch(route('admin.payments.verify', $paymentVerify1), [
+            'finance_method' => 'gcash',
+            'finance_payment_date' => '2026-06-11',
+            'finance_reference_no' => '111222',
+            'finance_amount' => 8000.00,
+        ]);
+
+        $responseVerify->assertSessionHasNoErrors();
+        $invoice = \App\Models\Invoice::getOrCreateForFamily($applicant1);
+
+        $this->assertEquals('verified', $paymentVerify1->fresh()->status);
+        $this->assertEquals('verified', $paymentVerify2->fresh()->status);
+
+        // They must share the exact same OR number
+        $or1 = $paymentVerify1->fresh()->or_number;
+        $or2 = $paymentVerify2->fresh()->or_number;
+        $this->assertEquals($or1, $or2);
+        
+        // Since it's a single unique transaction of 8000 (total due is 8000), it should be the base OR (e.g. OR-XXXXXX)
+        $expectedBaseOr = str_replace('INV-', config('services.school.or_prefix', 'OR-'), $invoice->invoice_no);
+        $this->assertEquals($expectedBaseOr, $or1);
+    }
 }

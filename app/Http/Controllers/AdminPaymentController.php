@@ -365,19 +365,43 @@ class AdminPaymentController extends Controller
 
         $request->validate(['remarks' => 'required|string|max:500']);
 
-        $payment->update([
-            'status'  => 'rejected',
-            'remarks' => $request->remarks,
-        ]);
-
-        // Sync and recalculate the single Family Invoice totals & status!
+        $invoice = null;
         if ($payment->invoice_id) {
-            $payment->invoice->recalculate();
-        } else {
+            $invoice = $payment->invoice;
+        } elseif ($payment->applicant) {
             $invoice = \App\Models\Invoice::getOrCreateForFamily($payment->applicant);
             $payment->update(['invoice_id' => $invoice->id]);
-            $invoice->recalculate();
         }
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($payment, $invoice, $request) {
+            $payment->update([
+                'status'  => 'rejected',
+                'remarks' => $request->remarks,
+            ]);
+
+            if ($invoice) {
+                // Automatically reject other pending duplicate payments in the same family/invoice
+                $duplicatePendingPayments = $invoice->payments()
+                    ->where('id', '!=', $payment->id)
+                    ->where('status', 'pending')
+                    ->where(function ($query) use ($payment) {
+                        $query->where('receipt_url', $payment->receipt_url);
+                        if (filled($payment->reference_no)) {
+                            $query->orWhere('reference_no', $payment->reference_no);
+                        }
+                    })
+                    ->get();
+
+                foreach ($duplicatePendingPayments as $otherPayment) {
+                    $otherPayment->update([
+                        'status'  => 'rejected',
+                        'remarks' => $request->remarks,
+                    ]);
+                }
+
+                $invoice->recalculate();
+            }
+        });
 
         $payment->loadMissing('applicant');
         
