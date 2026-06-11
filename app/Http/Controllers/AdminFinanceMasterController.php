@@ -75,34 +75,7 @@ class AdminFinanceMasterController extends Controller
             ? (int) (clone $statsQuery)->distinct('family_name')->count('family_name')
             : 0;
 
-        // Sort by name or grade via subquery (avoids join/groupBy pagination issues)
-        $sort = $request->input('sort');
-        $dir  = $request->input('dir', 'asc');
-
-        if ($sort === 'grade') {
-            $gradeOrder = "
-                CASE grade_level
-                    WHEN 'Kinder 1' THEN 1 WHEN 'Kinder 2' THEN 2
-                    WHEN 'Grade 1' THEN 3 WHEN 'Grade 2' THEN 4
-                    WHEN 'Grade 3' THEN 5 WHEN 'Grade 4' THEN 6
-                    WHEN 'Grade 5' THEN 7 WHEN 'Grade 6' THEN 8
-                    WHEN 'Grade 7' THEN 9 WHEN 'Grade 8' THEN 10
-                    WHEN 'Grade 9' THEN 11 WHEN 'Grade 10' THEN 12
-                    WHEN 'Grade 11' THEN 13 WHEN 'Grade 12' THEN 14
-                    ELSE 99 END
-            ";
-            $query->orderByRaw("(SELECT MIN({$gradeOrder}) FROM finance_master_entry_students WHERE finance_master_entry_id = finance_master_entries.id) {$dir}")
-                ->orderBy('payment_date', 'desc');
-        } elseif ($sort === 'name') {
-            $query->orderByRaw("(SELECT MIN(student_name) FROM finance_master_entry_students WHERE finance_master_entry_id = finance_master_entries.id) {$dir}")
-                ->orderBy('payment_date', 'desc');
-        } elseif ($sort === 'date') {
-            $query->orderBy('payment_date', $dir);
-        } elseif ($sort === 'amount') {
-            $query->orderBy('amount', $dir);
-        }
-
-        // Calculate total stats for the filtered records
+        // Calculate total stats BEFORE sort modifications
         $statsQuery = clone $query;
         $totalEntries = $statsQuery->count();
         $totalAmount = (float) $statsQuery->sum('amount');
@@ -114,6 +87,24 @@ class AdminFinanceMasterController extends Controller
         $totalFamilies = $entryIds->isNotEmpty()
             ? (int) (clone $statsQuery)->distinct('family_name')->count('family_name')
             : 0;
+
+        // Custom sort: reorder() clears default ordering for proper sort
+        $sort = $request->input('sort');
+        $dir  = $request->input('dir', 'asc');
+
+        if (in_array($sort, ['grade', 'name', 'date', 'amount'])) {
+            $query->reorder();
+            if ($sort === 'grade') {
+                $gradeOrder = "CASE grade_level WHEN 'Kinder 1' THEN 1 WHEN 'Kinder 2' THEN 2 WHEN 'Grade 1' THEN 3 WHEN 'Grade 2' THEN 4 WHEN 'Grade 3' THEN 5 WHEN 'Grade 4' THEN 6 WHEN 'Grade 5' THEN 7 WHEN 'Grade 6' THEN 8 WHEN 'Grade 7' THEN 9 WHEN 'Grade 8' THEN 10 WHEN 'Grade 9' THEN 11 WHEN 'Grade 10' THEN 12 WHEN 'Grade 11' THEN 13 WHEN 'Grade 12' THEN 14 ELSE 99 END";
+                $query->orderByRaw("(SELECT MIN({$gradeOrder}) FROM finance_master_entry_students WHERE finance_master_entry_id = finance_master_entries.id) {$dir}");
+            } elseif ($sort === 'name') {
+                $query->orderByRaw("(SELECT MIN(student_name) FROM finance_master_entry_students WHERE finance_master_entry_id = finance_master_entries.id) {$dir}");
+            } elseif ($sort === 'date') {
+                $query->orderBy('payment_date', $dir);
+            } elseif ($sort === 'amount') {
+                $query->orderBy('amount', $dir);
+            }
+        }
 
         // Pagination (skip if print mode)
         $perPage = (int) $request->input('per_page', 15);
