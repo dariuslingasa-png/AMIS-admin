@@ -156,7 +156,9 @@
         <!-- Search and Filters -->
         @php
             $sort = request('sort');
-            $isGradeSort = $sort === 'grade';
+            $dir  = request('dir', 'asc');
+            $sortLink = fn($col) => route('admin.finance.masters-list', array_merge(request()->except(['page', 'sort', 'dir']), ['sort' => $col, 'dir' => $sort === $col && $dir === 'asc' ? 'desc' : 'asc']));
+            $sortIcon = fn($col) => $sort === $col ? ($dir === 'asc' ? 'chevron-up' : 'chevron-down') : 'chevrons-up-down';
         @endphp
         <div class="border-b border-slate-100 bg-slate-50/70 px-5 py-4">
             <form method="GET" class="grid gap-3 xl:grid-cols-[minmax(260px,1fr)_140px_130px_120px_auto]">
@@ -186,11 +188,12 @@
                 </select>
 
                 <div class="flex gap-2 flex-wrap">
-                    <a href="{{ route('admin.finance.masters-list', array_merge(request()->except(['sort']), ['sort' => 'grade'])) }}"
-                       class="inline-flex h-11 items-center gap-2 rounded-xl border px-4 text-sm font-black transition {{ $isGradeSort ? 'border-purple-300 bg-purple-50 text-purple-700' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50' }}">
-                        <i data-lucide="arrow-up-down" class="h-4 w-4"></i>
-                        K1→K12
-                    </a>
+                    @if ($sort)
+                        <a href="{{ route('admin.finance.masters-list', request()->except(['sort', 'dir'])) }}" class="inline-flex h-11 items-center gap-2 rounded-xl border border-purple-200 bg-purple-50 px-4 text-sm font-black text-purple-700 transition hover:bg-purple-100">
+                            <i data-lucide="arrow-up-down" class="h-4 w-4"></i>
+                            Reset Sort
+                        </a>
+                    @endif
                     <button class="inline-flex h-11 items-center gap-2 rounded-xl bg-emerald-700 px-4 text-sm font-black text-white shadow-sm transition hover:bg-emerald-800 cursor-pointer">
                         <i data-lucide="filter" class="h-4 w-4"></i>
                         Filter
@@ -254,9 +257,17 @@
             <table class="w-full min-w-[1200px] text-left text-sm">
                 <thead class="bg-white text-[11px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-100">
                     <tr>
-                        <th class="px-5 py-4">Student Name</th>
+                        <th class="px-5 py-4">
+                            <a href="{{ $sortLink('name') }}" class="inline-flex items-center gap-1 hover:text-slate-700 no-underline">
+                                Student Name <i data-lucide="{{ $sortIcon('name') }}" class="h-3.5 w-3.5"></i>
+                            </a>
+                        </th>
                         <th class="px-5 py-4">Gender</th>
-                        <th class="px-5 py-4">Grade</th>
+                        <th class="px-5 py-4">
+                            <a href="{{ $sortLink('grade') }}" class="inline-flex items-center gap-1 hover:text-slate-700 no-underline">
+                                Grade <i data-lucide="{{ $sortIcon('grade') }}" class="h-3.5 w-3.5"></i>
+                            </a>
+                        </th>
                         <th class="px-5 py-4">Learning Mode</th>
                         <th class="px-5 py-4">MOP</th>
                         <th class="px-5 py-4 text-right actions-col">Actions</th>
