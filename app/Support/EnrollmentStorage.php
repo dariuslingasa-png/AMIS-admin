@@ -20,20 +20,9 @@ class EnrollmentStorage
             $path = str_replace('optimized/', "thumbnails/{$size}/", $path);
         }
 
-        $baseUrl = trim((string) config('services.enrollment_storage_url'));
-
-        if ($baseUrl !== '') {
-            return rtrim($baseUrl, '/').'/'.$path;
-        }
-
-        // Fallback for subdomains (e.g. admin.amis.edu.ph -> amis.edu.ph)
-        $host = request()->getHost();
-        if (str_starts_with($host, 'admin.')) {
-            $mainDomain = substr($host, 6);
-            $scheme = request()->isSecure() ? 'https' : 'http';
-            return $scheme . '://' . $mainDomain . '/storage/' . $path;
-        }
-
-        return asset('storage/'.$path);
+        // Return the secure local proxy route to bypass CORS/ORB/symlink blocks
+        return app()->has('router') 
+            ? route('admin.payments.receipt-file', ['path' => $path]) 
+            : asset('storage/' . $path);
     }
 }

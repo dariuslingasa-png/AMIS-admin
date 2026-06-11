@@ -111,6 +111,7 @@ Route::name('admin.')->group(function () {
         Route::get('/finance', [AdminPaymentController::class, 'dashboard'])->name('finance.dashboard');
         Route::get('/finance/fees', [AdminPaymentController::class, 'fees'])->name('finance.fees');
         Route::get('/finance/masters-list', [\App\Http\Controllers\AdminFinanceMasterController::class, 'index'])->name('finance.masters-list');
+        Route::get('/payments/receipt-file', [AdminPaymentController::class, 'viewReceiptFile'])->name('payments.receipt-file');
         Route::get('/payments/{payment}', [AdminPaymentController::class, 'show'])->name('payments.show');
         Route::patch('/payments/{payment}/verify', [AdminPaymentController::class, 'verify'])->name('payments.verify');
         Route::patch('/payments/{payment}/reject', [AdminPaymentController::class, 'reject'])->name('payments.reject');

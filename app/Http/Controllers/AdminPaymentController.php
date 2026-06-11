@@ -362,6 +362,80 @@ class AdminPaymentController extends Controller
     }
 
     /**
+     * Serve a payment receipt file securely from local or neighbor directories.
+     */
+    public function viewReceiptFile(Request $request)
+    {
+        $this->ensurePaymentReviewer();
+
+        $path = $request->query('path');
+        if (blank($path)) {
+            abort(400, 'Path is required.');
+        }
+
+        // Search in local paths and neighboring directories
+        $searchPaths = [
+            base_path('../amis_enrollment/storage/app/public/' . ltrim($path, '/')),
+            base_path('../amis_enrollment/public/storage/' . ltrim($path, '/')),
+            base_path('../enrollment/storage/app/public/' . ltrim($path, '/')),
+            base_path('../enrollment/public/storage/' . ltrim($path, '/')),
+            base_path('../../amis_enrollment/storage/app/public/' . ltrim($path, '/')),
+            base_path('../../public_html/amis_enrollment/storage/app/public/' . ltrim($path, '/')),
+            base_path('../../public_html/storage/' . ltrim($path, '/')),
+            storage_path('app/public/' . ltrim($path, '/')),
+            public_path('storage/' . ltrim($path, '/')),
+            public_path(ltrim($path, '/')),
+        ];
+
+        $filePath = null;
+        foreach ($searchPaths as $p) {
+            if (file_exists($p) && is_file($p)) {
+                $filePath = $p;
+                break;
+            }
+        }
+
+        if (!$filePath) {
+            // Try downloading if it is a full URL
+            if (filter_var($path, FILTER_VALIDATE_URL)) {
+                try {
+                    $content = file_get_contents($path);
+                    if ($content !== false) {
+                        $ext = strtolower(pathinfo(parse_url($path, PHP_URL_PATH), PATHINFO_EXTENSION)) ?: 'jpg';
+                        $mime = match ($ext) {
+                            'pdf' => 'application/pdf',
+                            'png' => 'image/png',
+                            'jpg', 'jpeg' => 'image/jpeg',
+                            'gif' => 'image/gif',
+                            'webp' => 'image/webp',
+                            default => 'application/octet-stream'
+                        };
+                        return response($content)->header('Content-Type', $mime);
+                    }
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning('Failed to fetch remote receipt URL: ' . $path);
+                }
+            }
+            abort(404, 'Payment proof file not found.');
+        }
+
+        $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+        $mime = match ($ext) {
+            'pdf' => 'application/pdf',
+            'png' => 'image/png',
+            'jpg', 'jpeg' => 'image/jpeg',
+            'gif' => 'image/gif',
+            'webp' => 'image/webp',
+            default => 'application/octet-stream'
+        };
+
+        return response()->file($filePath, [
+            'Content-Type' => $mime,
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+        ]);
+    }
+
+    /**
      * Abort if the user doesn't have finance administrative reviewer clearance.
      */
     private function ensurePaymentReviewer(): void
