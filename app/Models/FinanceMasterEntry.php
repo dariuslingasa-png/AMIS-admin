@@ -27,7 +27,26 @@ class FinanceMasterEntry extends Model
 
     public function students(): HasMany
     {
-        return $this->hasMany(FinanceMasterEntryStudent::class, 'finance_master_entry_id');
+        return $this->hasMany(FinanceMasterEntryStudent::class, 'finance_master_entry_id')
+            ->orderByRaw("
+                CASE grade_level
+                    WHEN 'Kinder 1' THEN 1
+                    WHEN 'Kinder 2' THEN 2
+                    WHEN 'Grade 1' THEN 3
+                    WHEN 'Grade 2' THEN 4
+                    WHEN 'Grade 3' THEN 5
+                    WHEN 'Grade 4' THEN 6
+                    WHEN 'Grade 5' THEN 7
+                    WHEN 'Grade 6' THEN 8
+                    WHEN 'Grade 7' THEN 9
+                    WHEN 'Grade 8' THEN 10
+                    WHEN 'Grade 9' THEN 11
+                    WHEN 'Grade 10' THEN 12
+                    WHEN 'Grade 11' THEN 13
+                    WHEN 'Grade 12' THEN 14
+                    ELSE 99
+                END
+            ");
     }
 
     public function payment(): BelongsTo

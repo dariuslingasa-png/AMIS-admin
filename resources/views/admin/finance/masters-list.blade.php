@@ -213,6 +213,24 @@
                     <div class="mt-0.5 text-2xl font-black text-slate-950">₱{{ number_format($totalAmount, 2) }}</div>
                 </div>
             </div>
+            <div class="rounded-xl border border-slate-200 bg-white p-4 flex items-center gap-4">
+                <div class="p-3 bg-purple-50 rounded-xl text-purple-600">
+                    <i data-lucide="users" class="h-6 w-6"></i>
+                </div>
+                <div>
+                    <div class="text-[10px] font-black uppercase tracking-wider text-slate-400">Students</div>
+                    <div class="mt-0.5 text-2xl font-black text-slate-950">{{ number_format($totalStudents) }}</div>
+                </div>
+            </div>
+            <div class="rounded-xl border border-slate-200 bg-white p-4 flex items-center gap-4">
+                <div class="p-3 bg-amber-50 rounded-xl text-amber-600">
+                    <i data-lucide="home" class="h-6 w-6"></i>
+                </div>
+                <div>
+                    <div class="text-[10px] font-black uppercase tracking-wider text-slate-400">Families</div>
+                    <div class="mt-0.5 text-2xl font-black text-slate-950">{{ number_format($totalFamilies) }}</div>
+                </div>
+            </div>
         </div>
 
         <!-- Master List Table -->
@@ -220,16 +238,10 @@
             <table class="w-full min-w-[1200px] text-left text-sm">
                 <thead class="bg-white text-[11px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-100">
                     <tr>
-                        <th class="px-5 py-4">Family Name</th>
                         <th class="px-5 py-4">Student Name</th>
                         <th class="px-5 py-4">Grade</th>
                         <th class="px-5 py-4">Learning Mode</th>
-                        <th class="px-5 py-4">Reference No</th>
-                        <th class="px-5 py-4">MOP & Source</th>
-                        <th class="px-5 py-4">Payment Date</th>
-                        <th class="px-5 py-4 text-right">Amount</th>
-                        <th class="px-5 py-4">OR Number</th>
-                        <th class="px-5 py-4">Verified By</th>
+                        <th class="px-5 py-4">MOP</th>
                         <th class="px-5 py-4 text-right actions-col">Actions</th>
                     </tr>
                 </thead>
@@ -241,288 +253,88 @@
                         @endphp
                         @if ($students->isEmpty())
                             <tr class="transition hover:bg-slate-50/80 border-b border-slate-100">
-                                <!-- Family Name -->
-                                <td class="px-5 py-4 align-top">
-                                    <div class="font-black text-slate-950 text-base max-w-[120px] break-words whitespace-normal leading-tight">
-                                        {{ str_ireplace('FAMILY OF ', '', $entry->family_name) }}
-                                    </div>
-                                    <div class="mt-1 text-[10px] text-slate-400 uppercase tracking-wider">
-                                        Entry ID: #{{ str_pad((string) $entry->id, 5, '0', STR_PAD_LEFT) }}
-                                    </div>
-                                </td>
-                                <!-- Student Name -->
                                 <td class="px-5 py-4 align-top text-slate-400 italic">No student records</td>
-                                <!-- Grade -->
                                 <td class="px-5 py-4 align-top">-</td>
-                                <!-- Learning Mode -->
                                 <td class="px-5 py-4 align-top">-</td>
-                                <!-- Reference No -->
-                                <td class="px-5 py-4 align-top font-mono text-slate-800 text-sm tracking-tight">
-                                    <div>{{ $entry->reference_no ?: '-' }}</div>
-                                    @php
-                                        $receiptUrls = $entry->all_receipt_urls;
-                                    @endphp
-                                    @if (!empty($receiptUrls))
-                                        <div class="mt-1.5 flex flex-col gap-1 print:hidden">
-                                            @if (count($receiptUrls) === 1)
-                                                <a href="{{ \App\Support\EnrollmentStorage::url($receiptUrls[0]) }}" target="_blank" class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 hover:text-emerald-700 hover:underline">
-                                                    <i data-lucide="external-link" class="h-3.5 w-3.5"></i>
-                                                    View Proof
-                                                </a>
-                                            @else
-                                                @foreach ($receiptUrls as $idx => $url)
-                                                    <a href="{{ \App\Support\EnrollmentStorage::url($url) }}" target="_blank" class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 hover:text-emerald-700 hover:underline">
-                                                        <i data-lucide="external-link" class="h-3.5 w-3.5"></i>
-                                                        Proof {{ $idx + 1 }}
-                                                    </a>
-                                                @endforeach
-                                            @endif
-                                        </div>
-                                    @endif
-                                </td>
-                                <!-- MOP & Source -->
-                                <td class="px-5 py-4 align-top">
-                                    @php
-                                        $method = strtolower($entry->method);
-                                        $badgeClass = match($method) {
-                                            'remittance' => 'bg-amber-50 text-amber-700 border-amber-200',
-                                            'gcash' => 'bg-sky-50 text-sky-700 border-sky-200',
-                                            'bdo' => 'bg-indigo-50 text-indigo-700 border-indigo-200',
-                                            'maya' => 'bg-violet-50 text-violet-700 border-violet-200',
-                                            'cash' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
-                                            default => 'bg-slate-50 text-slate-700 border-slate-200'
-                                        };
-                                    @endphp
-                                    <span class="inline-flex rounded border px-2.5 py-1 text-[11px] font-black uppercase tracking-wider {{ $badgeClass }}">
-                                        {{ $entry->method_label }}
-                                    </span>
-                                    @if ($entry->remittance_source)
-                                        <div class="mt-1 text-[11px] font-black text-amber-600 uppercase tracking-wide">
-                                            {{ $entry->remittance_source }}
-                                        </div>
-                                    @endif
-                                </td>
-                                <!-- Payment Date -->
-                                <td class="px-5 py-4 align-top">
-                                    <div class="text-slate-900 text-sm font-semibold">{{ $entry->payment_date?->format('M d, Y') }}</div>
-                                    <div class="mt-0.5 text-[11px] text-slate-400 font-medium">{{ $entry->payment_date?->format('l') }}</div>
-                                </td>
-                                <!-- Amount -->
-                                <td class="px-5 py-4 align-top text-right font-black text-slate-900 text-[15px] tabular-nums">
-                                    {{ number_format($entry->amount, 2) }}
-                                </td>
-                                <!-- OR Number -->
-                                <td class="px-5 py-4 align-top font-bold text-slate-900">
-                                    @if ($entry->or_number)
-                                        <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs text-emerald-800 font-bold border border-emerald-100">
-                                            <i data-lucide="receipt" class="h-3.5 w-3.5"></i>
-                                            {{ $entry->or_number }}
-                                        </span>
-                                    @else
-                                        <span class="text-slate-400 font-normal italic">No OR</span>
-                                    @endif
-                                </td>
-                                <!-- Verified By -->
-                                <td class="px-5 py-4 align-top">
-                                    <div class="text-slate-900 text-xs font-bold">{{ $entry->verifier?->name ?? 'System' }}</div>
-                                    <div class="mt-0.5 text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
-                                        {{ $entry->created_at?->format('M d, Y h:i A') }}
-                                    </div>
-                                </td>
-                                <!-- Actions -->
-                                <td class="px-5 py-4 align-top text-right actions-col">
-                                    <button type="button" 
-                                            @click="openEditModal(@js([
-                                                'id' => $entry->id,
-                                                'payment_date' => $entry->payment_date?->format('Y-m-d'),
-                                                'method' => $entry->method,
-                                                'reference_no' => $entry->reference_no,
-                                                'remittance_source' => $entry->remittance_source,
-                                                'amount' => $entry->amount,
-                                                'or_number' => $entry->or_number,
-                                            ]))"
-                                            class="inline-flex items-center gap-1.5 rounded-xl bg-amber-50 px-3.5 py-2 text-xs font-black uppercase tracking-wider text-amber-700 ring-1 ring-amber-200 transition hover:bg-amber-100 hover:text-amber-800 cursor-pointer">
-                                        <i data-lucide="pencil" class="h-3.5 w-3.5"></i>
-                                        Edit
-                                    </button>
-                                </td>
+                                <td class="px-5 py-4 align-top">-</td>
+                                <td class="px-5 py-4 align-top text-right actions-col">-</td>
                             </tr>
                         @else
                             @foreach ($students as $index => $student)
                                 <tr class="transition hover:bg-slate-50/80 @if($loop->last) border-b border-slate-250 @else border-b border-slate-100/40 @endif">
-                                    @if ($index === 0)
-                                        <!-- Family Name -->
-                                        <td class="px-5 py-4 align-top" rowspan="{{ $studentCount }}">
-                                            <div class="font-black text-slate-950 text-base max-w-[120px] break-words whitespace-normal leading-tight">
-                                                {{ str_ireplace('FAMILY OF ', '', $entry->family_name) }}
-                                            </div>
-                                            <div class="mt-1 text-[10px] text-slate-400 uppercase tracking-wider">
-                                                Entry ID: #{{ str_pad((string) $entry->id, 5, '0', STR_PAD_LEFT) }}
-                                            </div>
-                                        </td>
-                                    @endif
-
-                                    <!-- Student Name -->
                                     <td class="px-5 py-4 align-top">
-                                        <span class="font-bold text-slate-900 text-[13.5px] max-w-[150px] break-words whitespace-normal inline-block leading-tight">
+                                        <span class="font-bold text-slate-900 text-[13.5px] max-w-[180px] break-words whitespace-normal inline-block leading-tight">
                                             {{ $student->student_name }}
                                         </span>
                                     </td>
-
-                                    <!-- Grade -->
                                     <td class="px-5 py-4 align-top">
-                                        <span class="rounded-full bg-slate-50 px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-wide text-slate-500 border border-slate-200/60 max-w-[100px] break-words whitespace-normal inline-block text-center">
+                                        <span class="rounded-full bg-slate-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-600 border border-slate-200/60 inline-block">
                                             {{ $student->grade_level }}
                                         </span>
                                     </td>
-
-                                    <!-- Learning Mode -->
                                     <td class="px-5 py-4 align-top">
                                         @php
                                             $type = strtoupper($student->student_type ?? '');
                                             $mode = strtoupper($student->learning_mode ?? '');
-                                            
-                                            // Normalize mode: if it contains FOL, ODL, SHIFT, or FLEXIBLE, it's ODL. Otherwise, F2F.
                                             $cleanMode = (str_contains($mode, 'FOL') || str_contains($mode, 'ODL') || str_contains($mode, 'SHIFT') || str_contains($mode, 'FLEXIBLE')) ? 'ODL' : 'F2F';
-                                            
-                                            // Normalize type
-                                            if (str_contains($type, 'NEW')) {
-                                                $cleanType = 'NEW';
-                                            } elseif (str_contains($type, 'OLD')) {
-                                                $cleanType = 'OLD';
-                                            } elseif (str_contains($type, 'TRANSFER')) {
-                                                $cleanType = 'TRANSFEREE';
-                                            } elseif (str_contains($type, 'RETURN')) {
-                                                $cleanType = 'RETURNING';
-                                            } else {
-                                                $cleanType = $type ?: 'NEW';
-                                            }
-
+                                            if (str_contains($type, 'NEW')) $cleanType = 'NEW';
+                                            elseif (str_contains($type, 'OLD')) $cleanType = 'OLD';
+                                            elseif (str_contains($type, 'TRANSFER')) $cleanType = 'TRANSFEREE';
+                                            elseif (str_contains($type, 'RETURN')) $cleanType = 'RETURNING';
+                                            else $cleanType = $type ?: 'NEW';
                                             $badgeText = "{$cleanType} {$cleanMode}";
-
-                                            if ($cleanType === 'NEW') {
-                                                $badgeClass = $cleanMode === 'ODL' 
-                                                    ? 'bg-purple-50 text-purple-700 border border-purple-100' 
-                                                    : 'bg-sky-50 text-sky-700 border border-sky-100';
-                                            } elseif ($cleanType === 'OLD') {
-                                                $badgeClass = $cleanMode === 'ODL' 
-                                                    ? 'bg-amber-50 text-amber-700 border border-amber-100' 
-                                                    : 'bg-emerald-50 text-emerald-700 border border-emerald-100';
-                                            } else {
-                                                $badgeClass = $cleanMode === 'ODL'
-                                                    ? 'bg-indigo-50 text-indigo-700 border border-indigo-100'
-                                                    : 'bg-slate-50 text-slate-600 border border-slate-200';
-                                            }
+                                            $badgeClass = match (true) {
+                                                $cleanType === 'NEW' && $cleanMode === 'ODL' => 'bg-purple-50 text-purple-700 border border-purple-100',
+                                                $cleanType === 'NEW' => 'bg-sky-50 text-sky-700 border border-sky-100',
+                                                $cleanType === 'OLD' && $cleanMode === 'ODL' => 'bg-amber-50 text-amber-700 border border-amber-100',
+                                                $cleanType === 'OLD' => 'bg-emerald-50 text-emerald-700 border border-emerald-100',
+                                                default => $cleanMode === 'ODL' ? 'bg-indigo-50 text-indigo-700 border border-indigo-100' : 'bg-slate-50 text-slate-600 border border-slate-200',
+                                            };
                                         @endphp
-                                        <span class="rounded-full px-2 py-0.5 text-[9.5px] font-black uppercase tracking-wider {{ $badgeClass }} max-w-[100px] break-words whitespace-normal inline-block text-center">
+                                        <span class="rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wider {{ $badgeClass }} inline-block">
                                             {{ $badgeText }}
                                         </span>
                                     </td>
-
                                     @if ($index === 0)
-                                        <!-- Reference No -->
-                                        <td class="px-5 py-4 align-top font-mono text-slate-800 text-sm tracking-tight" rowspan="{{ $studentCount }}">
-                                            <div>{{ $entry->reference_no ?: '-' }}</div>
-                                            @php
-                                                $receiptUrls = $entry->all_receipt_urls;
-                                            @endphp
-                                            @if (!empty($receiptUrls))
-                                                <div class="mt-1.5 flex flex-col gap-1 print:hidden">
-                                                    @if (count($receiptUrls) === 1)
-                                                        <a href="{{ \App\Support\EnrollmentStorage::url($receiptUrls[0]) }}" target="_blank" class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 hover:text-emerald-700 hover:underline">
-                                                            <i data-lucide="external-link" class="h-3.5 w-3.5"></i>
-                                                            View Proof
-                                                        </a>
-                                                    @else
-                                                        @foreach ($receiptUrls as $idx => $url)
-                                                            <a href="{{ \App\Support\EnrollmentStorage::url($url) }}" target="_blank" class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 hover:text-emerald-700 hover:underline">
-                                                                <i data-lucide="external-link" class="h-3.5 w-3.5"></i>
-                                                                Proof {{ $idx + 1 }}
-                                                            </a>
-                                                        @endforeach
-                                                    @endif
-                                                </div>
-                                            @endif
-                                        </td>
-
-                                        <!-- MOP & Source -->
-                                        <td class="px-5 py-4 align-top" rowspan="{{ $studentCount }}">
-                                            @php
-                                                $method = strtolower($entry->method);
-                                                $badgeClass = match($method) {
-                                                    'remittance' => 'bg-amber-50 text-amber-700 border-amber-200',
-                                                    'gcash' => 'bg-sky-50 text-sky-700 border-sky-200',
-                                                    'bdo' => 'bg-indigo-50 text-indigo-700 border-indigo-200',
-                                                    'maya' => 'bg-violet-50 text-violet-700 border-violet-200',
-                                                    'cash' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
-                                                    default => 'bg-slate-50 text-slate-700 border-slate-200'
-                                                };
-                                            @endphp
-                                            <span class="inline-flex rounded border px-2.5 py-1 text-[11px] font-black uppercase tracking-wider {{ $badgeClass }}">
-                                                {{ $entry->method_label }}
-                                            </span>
-                                            @if ($entry->remittance_source)
-                                                <div class="mt-1 text-[11px] font-black text-amber-600 uppercase tracking-wide">
-                                                    {{ $entry->remittance_source }}
-                                                </div>
-                                            @endif
-                                        </td>
-
-                                        <!-- Payment Date -->
-                                        <td class="px-5 py-4 align-top" rowspan="{{ $studentCount }}">
-                                            <div class="text-slate-900 text-sm font-semibold">{{ $entry->payment_date?->format('M d, Y') }}</div>
-                                            <div class="mt-0.5 text-[11px] text-slate-400 font-medium">{{ $entry->payment_date?->format('l') }}</div>
-                                        </td>
-
-                                        <!-- Amount -->
-                                        <td class="px-5 py-4 align-top text-right font-black text-slate-900 text-[15px] tabular-nums" rowspan="{{ $studentCount }}">
-                                            {{ number_format($entry->amount, 2) }}
-                                        </td>
-
-                                        <!-- OR Number -->
-                                        <td class="px-5 py-4 align-top font-bold text-slate-900" rowspan="{{ $studentCount }}">
-                                            @if ($entry->or_number)
-                                                <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs text-emerald-800 font-bold border border-emerald-100">
-                                                    <i data-lucide="receipt" class="h-3.5 w-3.5"></i>
-                                                    {{ $entry->or_number }}
-                                                </span>
-                                            @else
-                                                <span class="text-slate-400 font-normal italic">No OR</span>
-                                            @endif
-                                        </td>
-
-                                        <!-- Verified By -->
-                                        <td class="px-5 py-4 align-top" rowspan="{{ $studentCount }}">
-                                            <div class="text-slate-900 text-xs font-bold">{{ $entry->verifier?->name ?? 'System' }}</div>
-                                            <div class="mt-0.5 text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
-                                                {{ $entry->created_at?->format('M d, Y h:i A') }}
-                                            </div>
-                                        </td>
-
-                                        <!-- Actions -->
-                                        <td class="px-5 py-4 align-top text-right actions-col" rowspan="{{ $studentCount }}">
-                                            <button type="button" 
-                                                    @click="openEditModal(@js([
-                                                        'id' => $entry->id,
-                                                        'payment_date' => $entry->payment_date?->format('Y-m-d'),
-                                                        'method' => $entry->method,
-                                                        'reference_no' => $entry->reference_no,
-                                                        'remittance_source' => $entry->remittance_source,
-                                                        'amount' => $entry->amount,
-                                                        'or_number' => $entry->or_number,
-                                                    ]))"
-                                                    class="inline-flex items-center gap-1.5 rounded-xl bg-amber-50 px-3.5 py-2 text-xs font-black uppercase tracking-wider text-amber-700 ring-1 ring-amber-200 transition hover:bg-amber-100 hover:text-amber-800 cursor-pointer">
-                                                <i data-lucide="pencil" class="h-3.5 w-3.5"></i>
-                                                Edit
-                                            </button>
-                                        </td>
+                                    <td class="px-5 py-4 align-top" rowspan="{{ $studentCount }}">
+                                        @php
+                                            $method = strtolower($entry->method);
+                                            $badgeClass = match($method) {
+                                                'remittance' => 'bg-amber-50 text-amber-700 border-amber-200',
+                                                'gcash' => 'bg-sky-50 text-sky-700 border-sky-200',
+                                                'bdo' => 'bg-indigo-50 text-indigo-700 border-indigo-200',
+                                                'maya' => 'bg-violet-50 text-violet-700 border-violet-200',
+                                                'cash' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                                                default => 'bg-slate-50 text-slate-700 border-slate-200'
+                                            };
+                                        @endphp
+                                        <span class="inline-flex rounded border px-2.5 py-1 text-[11px] font-black uppercase tracking-wider {{ $badgeClass }}">
+                                            {{ $entry->method_label }}
+                                        </span>
+                                    </td>
+                                    <td class="px-5 py-4 align-top text-right actions-col" rowspan="{{ $studentCount }}">
+                                        <button type="button"
+                                                @click="openEditModal(@js([
+                                                    'id' => $entry->id,
+                                                    'payment_date' => $entry->payment_date?->format('Y-m-d'),
+                                                    'method' => $entry->method,
+                                                    'reference_no' => $entry->reference_no,
+                                                    'remittance_source' => $entry->remittance_source,
+                                                    'amount' => $entry->amount,
+                                                    'or_number' => $entry->or_number,
+                                                ]))"
+                                                class="inline-flex items-center gap-1.5 rounded-xl bg-amber-50 px-3.5 py-2 text-xs font-black uppercase tracking-wider text-amber-700 ring-1 ring-amber-200 transition hover:bg-amber-100 hover:text-amber-800 cursor-pointer">
+                                            <i data-lucide="pencil" class="h-3.5 w-3.5"></i>
+                                            Edit
+                                        </button>
+                                    </td>
                                     @endif
                                 </tr>
                             @endforeach
                         @endif
                     @empty
                         <tr>
-                            <td colspan="11" class="px-5 py-14 text-center">
+                            <td colspan="5" class="px-5 py-14 text-center">
                                 <div class="mx-auto flex max-w-sm flex-col items-center">
                                     <span class="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
                                         <i data-lucide="search-x" class="h-6 w-6"></i>
