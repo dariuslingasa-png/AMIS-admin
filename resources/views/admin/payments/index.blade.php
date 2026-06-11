@@ -211,14 +211,32 @@
                             $proofUrl = $proofPayment ? \App\Support\EnrollmentStorage::url($proofPayment->receipt_url) : null;
                             $proofIsPdf = $proofPayment && $proofPayment->receipt_url && strtolower(pathinfo($proofPayment->receipt_url, PATHINFO_EXTENSION)) === 'pdf';
                         @endphp
-                        <tr class="transition hover:bg-slate-50/80">
+                        @php
+                            $rowClass = match($familyStatus) {
+                                'verified' => 'bg-emerald-50/15 hover:bg-emerald-50/25 transition border-b border-slate-100',
+                                'rejected' => 'bg-rose-50/15 hover:bg-rose-50/25 transition border-b border-slate-100',
+                                default => 'transition hover:bg-slate-50/80',
+                            };
+                        @endphp
+                        <tr class="{{ $rowClass }}">
                             <td class="px-4 py-4 align-top">
-                                <div class="font-black text-slate-950">{{ $familyLabel }}</div>
-                                <div class="mt-1.5 flex flex-wrap items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-slate-400">
-                                    <span>Family #{{ str_pad((string) $familyNo, 4, '0', STR_PAD_LEFT) }}</span>
-                                    @if ($children->count() > 1)
-                                        <span>&middot; {{ $children->count() }} children</span>
+                                <div class="flex items-start gap-2.5">
+                                    @if ($familyStatus === 'verified')
+                                        <i data-lucide="check-circle" class="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" title="Verified"></i>
+                                    @elseif ($familyStatus === 'rejected')
+                                        <i data-lucide="x-circle" class="h-5 w-5 text-rose-600 shrink-0 mt-0.5" title="Rejected"></i>
+                                    @else
+                                        <i data-lucide="clock" class="h-5 w-5 text-amber-500 shrink-0 mt-0.5" title="Pending Review"></i>
                                     @endif
+                                    <div>
+                                        <div class="font-black text-slate-950">{{ $familyLabel }}</div>
+                                        <div class="mt-1.5 flex flex-wrap items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-slate-400">
+                                            <span>Family #{{ str_pad((string) $familyNo, 4, '0', STR_PAD_LEFT) }}</span>
+                                            @if ($children->count() > 1)
+                                                <span>&middot; {{ $children->count() }} children</span>
+                                            @endif
+                                        </div>
+                                    </div>
                                 </div>
                             </td>
                             <td class="px-4 py-4 align-top">
@@ -279,8 +297,12 @@
                                         </button>
                                     @endif
                                     @if ($payment->applicant)
-                                        <a href="{{ route('admin.payments.show', $payment) }}" class="inline-flex items-center gap-2 rounded-xl bg-slate-100 px-3.5 py-2 text-xs font-black uppercase tracking-wider text-slate-700 transition hover:bg-emerald-50 hover:text-emerald-700">
-                                            Review
+                                        <a href="{{ route('admin.payments.show', $payment) }}" 
+                                           class="inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-black uppercase tracking-wider transition
+                                                  {{ $familyStatus === 'pending' 
+                                                     ? 'bg-slate-900 text-white hover:bg-slate-800' 
+                                                     : 'bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-800' }}">
+                                            {{ $familyStatus === 'pending' ? 'Review' : 'View' }}
                                             <i data-lucide="arrow-right" class="h-3.5 w-3.5"></i>
                                         </a>
                                     @endif
