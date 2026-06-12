@@ -11,6 +11,7 @@
     $allFamily = $familyChildren ?? collect([$applicant]);
     $childrenCount = $allFamily->count();
     $approvedCount = $allFamily->where('status', 'approved')->count();
+    $familyApprovalCount = $allFamily->filter(fn ($child) => !in_array($child->status, ['approved', 'draft'], true))->count();
     $familyLastName = trim($applicant->mother_last_name ?: ($applicant->father_last_name ?: $applicant->last_name ?: 'Family'));
 
     $paymentUrl = \App\Support\EnrollmentStorage::url($payment?->receipt_url);
@@ -223,6 +224,28 @@
                         <h2 class="text-sm font-extrabold uppercase tracking-wider text-slate-700">Review Decision</h2>
                     </div>
                     @if ($canReviewApplications)
+                    <div class="border-b border-slate-100 bg-emerald-50/40 px-6 py-5">
+                        <form method="POST" action="{{ route('admin.applicants.approve-family', $applicant) }}" @submit="approving = true">
+                            @csrf
+                            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                <div>
+                                    <p class="text-sm font-black text-slate-900">Approve & Generate Family</p>
+                                    <p class="mt-1 text-xs font-medium text-slate-500">
+                                        {{ $approvedCount }}/{{ $childrenCount }} approved
+                                        @if ($familyApprovalCount > 0)
+                                            &middot; {{ $familyApprovalCount }} {{ Str::plural('child', $familyApprovalCount) }} ready to process
+                                        @else
+                                            &middot; all children already approved
+                                        @endif
+                                    </p>
+                                </div>
+                                <button class="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-black text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-300" @disabled($familyApprovalCount === 0)>
+                                    <i data-lucide="users-round" class="h-4 w-4"></i>
+                                    Approve & Generate Family
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                     <form method="POST" action="{{ route('admin.applicants.status', $applicant) }}" class="p-6 space-y-4" @submit="if (statusValue === 'approved') approving = true">
                         @csrf
                         @method('PATCH')
@@ -255,7 +278,7 @@
                         <button class="review-save-button">
                             <i data-lucide="save" class="h-4 w-4" x-show="statusValue !== 'approved'"></i>
                             <i data-lucide="users-round" class="h-4 w-4" x-show="statusValue === 'approved'"></i>
-                            <span x-text="statusValue === 'approved' ? 'Approve Family' : 'Save Review'">Save Review</span>
+                            <span x-text="statusValue === 'approved' ? 'Approve & Generate Family' : 'Save Review'">Save Review</span>
                         </button>
                     </form>
                     @endif
