@@ -12,6 +12,28 @@
     $gradeTotals = collect($analytics['grades'] ?? [])->keyBy('grade_level');
     $genderAnalytics = $analytics['gender'] ?? ['male' => 0, 'female' => 0, 'not_set' => 0];
     $genderLabels = ['male' => 'Male', 'female' => 'Female', 'not_set' => 'Not Set'];
+
+    $studentTypeLabel = function (?string $type) {
+        $typeLower = strtolower(trim((string) $type));
+        if (str_contains($typeLower, 'old') || str_contains($typeLower, 'returning')) {
+            return 'OLD';
+        }
+        if (str_contains($typeLower, 'transfer')) {
+            return 'TRANSFEREE';
+        }
+        return 'NEW';
+    };
+
+    $learningModeAbbreviation = function (?string $mode) {
+        $modeLower = strtolower(trim((string) $mode));
+        if (str_contains($modeLower, 'flexible') || str_contains($modeLower, 'online') || str_contains($modeLower, 'odl')) {
+            return 'ODL';
+        }
+        if (str_contains($modeLower, 'face') || str_contains($modeLower, 'f2f')) {
+            return 'F2F';
+        }
+        return 'ODL';
+    };
 @endphp
 
 <x-admin-layout
@@ -187,7 +209,18 @@
 
                                 <!-- Grade Level & Section -->
                                 <td class="px-5 py-4">
-                                    <div class="font-bold text-slate-700">{{ $student->grade_level ?? '-' }}</div>
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="font-bold text-slate-700">{{ $student->grade_level ?? '-' }}</span>
+                                        @php
+                                            $sType = $studentTypeLabel($student->applicant->student_type ?? '');
+                                            $sMode = $learningModeAbbreviation($student->applicant->learning_mode ?? '');
+                                            $badgeText = "{$sType} + {$sMode}";
+                                            $badgeColorClass = $sType === 'OLD' ? 'bg-green-50 text-green-700 ring-green-600/10' : 'bg-blue-50 text-blue-700 ring-blue-600/10';
+                                        @endphp
+                                        <span class="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-bold ring-1 ring-inset {{ $badgeColorClass }}">
+                                            {{ $badgeText }}
+                                        </span>
+                                    </div>
                                     <div class="mt-0.5 text-xxs font-semibold uppercase text-slate-400">
                                         {{ $student->studentSection->section->official_name ?? $student->studentSection->section->name ?? 'No Section' }}
                                     </div>
