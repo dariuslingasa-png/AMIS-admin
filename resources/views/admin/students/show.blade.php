@@ -23,6 +23,10 @@
             ['AMIS Student ID', $student->applicant->amis_student_id],
         ]],
         ['title' => 'Personal Details', 'icon' => 'id-card', 'fields' => [
+            ['First Name', $student->applicant->first_name],
+            ['Middle Name', $student->applicant->middle_name],
+            ['Last Name', $student->applicant->last_name],
+            ['Suffix', $student->applicant->suffix],
             ['Gender', $student->applicant->gender], ['Date of Birth', optional($student->applicant->date_of_birth)->format('M d, Y')],
             ['Place of Birth', $student->applicant->place_of_birth], ['Religion', $student->applicant->religion],
             ['Ethnicity', $student->applicant->ethnicity],
