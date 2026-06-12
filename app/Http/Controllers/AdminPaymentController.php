@@ -2,14 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Payment;
+use App\Http\Controllers\Traits\PaymentHelperTrait;
 use App\Models\AdminAuditLog;
 use App\Models\EnrollmentApplicant;
+use App\Models\FinanceMasterEntry;
+use App\Models\FinanceMasterEntryStudent;
+use App\Models\Invoice;
+use App\Models\Payment;
 use App\Models\StudentAccount;
 use App\Models\StudentAccountPayment;
-use App\Http\Controllers\Traits\PaymentHelperTrait;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 class AdminPaymentController extends Controller
 {
@@ -183,8 +190,8 @@ class AdminPaymentController extends Controller
             $familyLabel = $this->familyLabel($familyChildren, $applicant);
 
             // Fetch or lazily auto-generate the single family Invoice record!
-            $invoice = \App\Models\Invoice::getOrCreateForFamily($applicant);
-            if (!$payment->invoice_id) {
+            $invoice = Invoice::getOrCreateForFamily($applicant);
+            if (! $payment->invoice_id) {
                 $payment->update(['invoice_id' => $invoice->id]);
             }
             // Trigger auto-recalculation to retrospectively convert old ORs in DB!
@@ -220,8 +227,8 @@ class AdminPaymentController extends Controller
         $amount = $request->input('finance_amount') !== null ? (float) $request->input('finance_amount') : $payment->amount;
         $financeMethod = $request->input('finance_method', $payment->method ?: 'remittance');
 
-        $invoice = \App\Models\Invoice::getOrCreateForFamily($payment->applicant);
-        if (!$payment->invoice_id) {
+        $invoice = Invoice::getOrCreateForFamily($payment->applicant);
+        if (! $payment->invoice_id) {
             $payment->invoice_id = $invoice->id;
         }
 
@@ -229,34 +236,34 @@ class AdminPaymentController extends Controller
         if (blank($orNumber)) {
             // Count verified payments already existing under this invoice
             $verifiedCount = $invoice->payments()->where('status', 'verified')->count();
-            
+
             // Suffix the invoice number directly: e.g. INV-000204 -> OR-000204
             $baseOr = str_replace('INV-', config('services.school.or_prefix', 'OR-'), $invoice->invoice_no);
-            
+
             if ($verifiedCount === 0) {
                 // First payment! Check if this payment is a full payment or partial payment.
-                $isFullPayment = ($amount >= (float)$invoice->total_amount);
+                $isFullPayment = ($amount >= (float) $invoice->total_amount);
                 if ($isFullPayment) {
                     $orNumber = $baseOr;
                 } else {
-                    $orNumber = $baseOr . '-1';
+                    $orNumber = $baseOr.'-1';
                 }
             } else {
                 // This is a subsequent installment payment!
-                $orNumber = $baseOr . '-' . ($verifiedCount + 1);
+                $orNumber = $baseOr.'-'.($verifiedCount + 1);
             }
         }
 
         $canStorePaymentMethod = $this->canStorePaymentMethod($financeMethod);
 
-        \Illuminate\Support\Facades\DB::transaction(function () use ($request, $payment, $invoice, $orNumber, $amount, $financeMethod, $canStorePaymentMethod) {
+        DB::transaction(function () use ($request, $payment, $invoice, $orNumber, $amount, $financeMethod, $canStorePaymentMethod) {
             $paymentUpdates = [
-                'status'      => 'verified',
-                'amount'      => $amount,
-                'or_number'   => $orNumber,
+                'status' => 'verified',
+                'amount' => $amount,
+                'or_number' => $orNumber,
                 'verified_at' => now(),
-                'reference_no'=> $request->input('finance_reference_no', $payment->reference_no),
-                'paid_at'     => $request->input('finance_payment_date') ? \Carbon\Carbon::parse($request->input('finance_payment_date')) : ($payment->paid_at ?? now()),
+                'reference_no' => $request->input('finance_reference_no', $payment->reference_no),
+                'paid_at' => $request->input('finance_payment_date') ? Carbon::parse($request->input('finance_payment_date')) : ($payment->paid_at ?? now()),
             ];
 
             if ($canStorePaymentMethod) {
@@ -276,16 +283,16 @@ class AdminPaymentController extends Controller
                     }
                 })
                 ->get();
-                
+
             foreach ($duplicatePendingPayments as $otherPayment) {
                 $otherPayment->update([
-                    'status'      => 'verified',
-                    'amount'      => 0.00, // Zero out amount to prevent duplication of paid totals
-                    'or_number'   => $orNumber,
+                    'status' => 'verified',
+                    'amount' => 0.00, // Zero out amount to prevent duplication of paid totals
+                    'or_number' => $orNumber,
                     'verified_at' => now(),
-                    'method'      => $payment->method,
-                    'reference_no'=> $payment->reference_no,
-                    'paid_at'     => $payment->paid_at,
+                    'method' => $payment->method,
+                    'reference_no' => $payment->reference_no,
+                    'paid_at' => $payment->paid_at,
                 ]);
             }
 
@@ -303,13 +310,14 @@ class AdminPaymentController extends Controller
                         $query->where('user_id', $applicant->user_id);
                     }
                 })
-                ->orderBy('id')
-                ->get();
+                    ->orderBy('id')
+                    ->get();
             }
             $familyLabel = $this->familyLabel($familyChildren, $applicant);
 
             $normalizeLearningMode = function ($mode) {
                 $normalized = strtolower(trim((string) $mode));
+
                 return match ($normalized) {
                     'face_to_face', 'face-to-face', 'f2f', 'face to face' => 'F2F',
                     'flexible_1st_shift', 'flexible learning - 1st shift', 'flexible 1st shift', '1st shift', 'flexible online learning - 1st shift', 'fol - 1st shift', 'flexible online learning – 1st shift', 'odl', 'online distance learning' => 'ODL',
@@ -320,6 +328,7 @@ class AdminPaymentController extends Controller
 
             $normalizeStudentType = function ($type) {
                 $normalized = strtolower(trim((string) $type));
+
                 return match ($normalized) {
                     'new', 'new_student', 'new student' => 'NEW',
                     'old', 'old_student', 'old student' => 'OLD',
@@ -330,23 +339,23 @@ class AdminPaymentController extends Controller
             };
 
             // Delete any existing entries for this payment to prevent duplicates on re-verify
-            \App\Models\FinanceMasterEntry::where('payment_id', $payment->id)->delete();
+            FinanceMasterEntry::where('payment_id', $payment->id)->delete();
 
             if ($amount > 0) {
                 // Auto-create FinanceMasterEntry record
-                $financeEntry = \App\Models\FinanceMasterEntry::create([
+                $financeEntry = FinanceMasterEntry::create([
                     'payment_id' => $payment->id,
                     'family_name' => $familyLabel,
                     'remittance_source' => $financeMethod === 'remittance' ? $request->input('remittance_source') : null,
                     'reference_no' => $request->input('finance_reference_no'),
                     'method' => $financeMethod,
-                    'payment_date' => $request->input('finance_payment_date') ? \Carbon\Carbon::parse($request->input('finance_payment_date'))->format('Y-m-d') : now()->format('Y-m-d'),
+                    'payment_date' => $request->input('finance_payment_date') ? Carbon::parse($request->input('finance_payment_date'))->format('Y-m-d') : now()->format('Y-m-d'),
                     'amount' => $amount,
                     'or_number' => $orNumber,
                     'verified_by' => auth()->id(),
                 ]);
 
-                $storesGender = \Illuminate\Support\Facades\Schema::hasColumn('finance_master_entry_students', 'gender');
+                $storesGender = Schema::hasColumn('finance_master_entry_students', 'gender');
 
                 // Auto-create FinanceMasterEntryStudent records
                 foreach ($familyChildren as $child) {
@@ -362,7 +371,7 @@ class AdminPaymentController extends Controller
                         $studentEntry['gender'] = $child->gender ?? null;
                     }
 
-                    \App\Models\FinanceMasterEntryStudent::create($studentEntry);
+                    FinanceMasterEntryStudent::create($studentEntry);
                 }
             }
         });
@@ -397,13 +406,13 @@ class AdminPaymentController extends Controller
         if ($payment->invoice_id) {
             $invoice = $payment->invoice;
         } elseif ($payment->applicant) {
-            $invoice = \App\Models\Invoice::getOrCreateForFamily($payment->applicant);
+            $invoice = Invoice::getOrCreateForFamily($payment->applicant);
             $payment->update(['invoice_id' => $invoice->id]);
         }
 
-        \Illuminate\Support\Facades\DB::transaction(function () use ($payment, $invoice, $request) {
+        DB::transaction(function () use ($payment, $invoice, $request) {
             $payment->update([
-                'status'  => 'rejected',
+                'status' => 'rejected',
                 'remarks' => $request->remarks,
             ]);
 
@@ -422,7 +431,7 @@ class AdminPaymentController extends Controller
 
                 foreach ($duplicatePendingPayments as $otherPayment) {
                     $otherPayment->update([
-                        'status'  => 'rejected',
+                        'status' => 'rejected',
                         'remarks' => $request->remarks,
                     ]);
                 }
@@ -432,12 +441,12 @@ class AdminPaymentController extends Controller
         });
 
         $payment->loadMissing('applicant');
-        
+
         $hasVerifiedPayment = false;
         if ($payment->invoice) {
             $hasVerifiedPayment = $payment->invoice->payments()->where('status', 'verified')->exists();
         }
-        
+
         if (! $hasVerifiedPayment) {
             $payment->applicant?->update([
                 'status' => 'rejected',
@@ -468,15 +477,15 @@ class AdminPaymentController extends Controller
 
         // Search in local paths and neighboring directories
         $searchPaths = [
-            base_path('../amis_enrollment/storage/app/public/' . ltrim($path, '/')),
-            base_path('../amis_enrollment/public/storage/' . ltrim($path, '/')),
-            base_path('../enrollment/storage/app/public/' . ltrim($path, '/')),
-            base_path('../enrollment/public/storage/' . ltrim($path, '/')),
-            base_path('../../amis_enrollment/storage/app/public/' . ltrim($path, '/')),
-            base_path('../../public_html/amis_enrollment/storage/app/public/' . ltrim($path, '/')),
-            base_path('../../public_html/storage/' . ltrim($path, '/')),
-            storage_path('app/public/' . ltrim($path, '/')),
-            public_path('storage/' . ltrim($path, '/')),
+            base_path('../amis_enrollment/storage/app/public/'.ltrim($path, '/')),
+            base_path('../amis_enrollment/public/storage/'.ltrim($path, '/')),
+            base_path('../enrollment/storage/app/public/'.ltrim($path, '/')),
+            base_path('../enrollment/public/storage/'.ltrim($path, '/')),
+            base_path('../../amis_enrollment/storage/app/public/'.ltrim($path, '/')),
+            base_path('../../public_html/amis_enrollment/storage/app/public/'.ltrim($path, '/')),
+            base_path('../../public_html/storage/'.ltrim($path, '/')),
+            storage_path('app/public/'.ltrim($path, '/')),
+            public_path('storage/'.ltrim($path, '/')),
             public_path(ltrim($path, '/')),
         ];
 
@@ -488,7 +497,11 @@ class AdminPaymentController extends Controller
             }
         }
 
-        if (!$filePath) {
+        if (! $filePath) {
+            $filePath = $this->findReceiptFallbackFile($path);
+        }
+
+        if (! $filePath) {
             // Try downloading if it is a full URL
             if (filter_var($path, FILTER_VALIDATE_URL)) {
                 try {
@@ -503,10 +516,11 @@ class AdminPaymentController extends Controller
                             'webp' => 'image/webp',
                             default => 'application/octet-stream'
                         };
+
                         return response($content)->header('Content-Type', $mime);
                     }
                 } catch (\Throwable $e) {
-                    \Illuminate\Support\Facades\Log::warning('Failed to fetch remote receipt URL: ' . $path);
+                    Log::warning('Failed to fetch remote receipt URL: '.$path);
                 }
             }
             abort(404, 'Payment proof file not found.');
@@ -528,6 +542,63 @@ class AdminPaymentController extends Controller
         ]);
     }
 
+    private function findReceiptFallbackFile(string $path): ?string
+    {
+        $path = ltrim($path, '/');
+
+        if (! str_contains($path, 'optimized/') && ! str_contains($path, 'thumbnails/')) {
+            return null;
+        }
+
+        $normalized = preg_replace('#thumbnails/(small|medium|large)/#', 'optimized/', $path);
+        $variants = [
+            $normalized,
+            str_replace('optimized/', 'thumbnails/large/', $normalized),
+            str_replace('optimized/', 'thumbnails/medium/', $normalized),
+            str_replace('optimized/', 'thumbnails/small/', $normalized),
+        ];
+
+        $roots = [
+            base_path('../amis_enrollment/storage/app/public'),
+            base_path('../amis_enrollment/public/storage'),
+            base_path('../enrollment/storage/app/public'),
+            base_path('../enrollment/public/storage'),
+            base_path('../../amis_enrollment/storage/app/public'),
+            base_path('../../public_html/amis_enrollment/storage/app/public'),
+            base_path('../../public_html/storage'),
+            storage_path('app/public'),
+            public_path('storage'),
+            public_path(),
+        ];
+
+        foreach ($roots as $root) {
+            foreach ($variants as $variant) {
+                $candidate = rtrim($root, '/').'/'.ltrim($variant, '/');
+                if (is_file($candidate) && filesize($candidate) > 0) {
+                    return $candidate;
+                }
+            }
+
+            if (str_contains($normalized, 'optimized/')) {
+                $originalDirectory = dirname(str_replace('optimized/', 'original/', $normalized));
+                $filename = pathinfo($normalized, PATHINFO_FILENAME);
+                $directory = rtrim($root, '/').'/'.$originalDirectory;
+
+                if (! is_dir($directory)) {
+                    continue;
+                }
+
+                foreach (glob($directory.'/'.$filename.'.*') ?: [] as $candidate) {
+                    if (is_file($candidate) && filesize($candidate) > 0) {
+                        return $candidate;
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
     /**
      * Abort if the user doesn't have finance administrative reviewer clearance.
      */
@@ -547,7 +618,7 @@ class AdminPaymentController extends Controller
         }
 
         try {
-            $definition = strtolower(\Illuminate\Support\Facades\Schema::getColumnType('payments', 'method', true));
+            $definition = strtolower(Schema::getColumnType('payments', 'method', true));
         } catch (\Throwable) {
             return false;
         }

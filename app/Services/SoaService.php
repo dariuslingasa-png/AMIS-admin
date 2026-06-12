@@ -193,19 +193,43 @@ class SoaService
 
     private function canStoreStudentAccountPaymentMethod(string $method): bool
     {
-        if (in_array($method, ['gcash', 'maya', 'bdo'], true)) {
+        if (in_array($method, ['gcash', 'maya', 'bdo', 'cash'], true)) {
             return true;
         }
 
         try {
-            $definition = strtolower(Schema::getColumnType('student_account_payments', 'method', true));
-        } catch (\Throwable) {
-            return false;
+            // Retrieve the column type definition via raw SQL to get the exact enum values on MySQL/MariaDB
+            $results = \Illuminate\Support\Facades\DB::select("SHOW COLUMNS FROM student_account_payments LIKE 'method'");
+            if (!empty($results)) {
+                $type = strtolower($results[0]->Type ?? $results[0]->type ?? '');
+                if (str_contains($type, 'enum(')) {
+                    preg_match_all("/'([^']+)'/", $type, $matches);
+                    if (!empty($matches[1])) {
+                        return in_array($method, $matches[1], true);
+                    }
+                } else {
+                    // If the column is not an enum (e.g. varchar), it can store any string
+                    return true;
+                }
+            }
+        } catch (\Throwable $e) {
+            // Fallback for SQLite or when SHOW COLUMNS fails
+            try {
+                $definition = strtolower(Schema::getColumnType('student_account_payments', 'method', true));
+                if (str_contains($definition, 'enum(')) {
+                    return str_contains($definition, "'{$method}'") || str_contains($definition, "\"{$method}\"");
+                }
+                // If it is just 'enum' without values, or if we cannot determine, return false to enforce fallback
+                if ($definition === 'enum') {
+                    return false;
+                }
+                return true;
+            } catch (\Throwable) {
+                return false;
+            }
         }
 
-        return ! str_contains($definition, 'enum(')
-            || str_contains($definition, "'{$method}'")
-            || str_contains($definition, "\"{$method}\"");
+        return false;
     }
 
     private function generateMonthlyBillings(

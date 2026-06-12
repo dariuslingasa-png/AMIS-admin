@@ -1,4 +1,18 @@
 <x-admin-layout title="Enrollment Payment Approval">
+    <style>
+        .row-verified {
+            background-color: #ecfdf5 !important;
+        }
+        .row-verified:hover {
+            background-color: #d1fae5 !important;
+        }
+        .row-rejected {
+            background-color: #fff1f2 !important;
+        }
+        .row-rejected:hover {
+            background-color: #ffe4e6 !important;
+        }
+    </style>
     @php
         $sortLink = function (string $key) use ($sort, $direction) {
             $nextDirection = $sort === $key && $direction === 'asc' ? 'desc' : 'asc';
@@ -213,8 +227,8 @@
                         @endphp
                         @php
                             $rowClass = match($familyStatus) {
-                                'verified' => 'bg-emerald-50/15 hover:bg-emerald-50/25 transition border-b border-slate-100',
-                                'rejected' => 'bg-rose-50/15 hover:bg-rose-50/25 transition border-b border-slate-100',
+                                'verified' => 'row-verified transition border-b border-slate-100',
+                                'rejected' => 'row-rejected transition border-b border-slate-100',
                                 default => 'transition hover:bg-slate-50/80',
                             };
                         @endphp
@@ -272,7 +286,20 @@
                             </td>
                             <td class="px-4 py-4 align-top font-semibold tabular-nums text-slate-700">{{ number_format((float) $family['amount'], 2) }}</td>
                             <td class="px-4 py-4 align-top font-semibold text-slate-700">{{ $family['methods']->isNotEmpty() ? $family['methods']->join(', ') : '-' }}</td>
-                            <td class="px-4 py-4 align-top"><x-badge color="{{ $statusColor }}">{{ Str::upper($familyStatus) }}</x-badge></td>
+                            <td class="px-4 py-4 align-top">
+                                <x-badge color="{{ $statusColor }}">
+                                    <span class="flex items-center gap-1">
+                                        @if ($familyStatus === 'verified')
+                                            <i data-lucide="check-circle" class="h-3 w-3"></i>
+                                        @elseif ($familyStatus === 'rejected')
+                                            <i data-lucide="x-circle" class="h-3 w-3"></i>
+                                        @else
+                                            <i data-lucide="clock" class="h-3 w-3"></i>
+                                        @endif
+                                        <span>{{ Str::upper($familyStatus) }}</span>
+                                    </span>
+                                </x-badge>
+                            </td>
                             <td class="px-4 py-4 align-top font-semibold text-slate-500">{{ optional($family['updated_at'])->format('M d, Y') }}</td>
                             <td class="px-4 py-4 text-right align-top">
                                 <div class="flex items-center justify-end gap-2">
