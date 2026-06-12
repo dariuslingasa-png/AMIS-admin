@@ -373,6 +373,25 @@ class MicrosoftGraphService
         }
     }
 
+    public function uploadUserPhoto(string $upnOrId, string $photoBytes, string $contentType): void
+    {
+        $resolvedId = $this->resolveUserId($upnOrId);
+
+        $response = $this->graph()
+            ->withBody($photoBytes, $contentType)
+            ->put("/users/{$resolvedId}/photo/\$value");
+
+        if (! $response->successful() && $response->status() !== 204) {
+            Log::error('Graph uploadUserPhoto error', [
+                'user' => $upnOrId,
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+
+            throw new \Exception('Failed to upload Microsoft profile photo: '.$response->body());
+        }
+    }
+
     public function resetPassword(string $upnOrId, string $newPassword): void
     {
         try {

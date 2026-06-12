@@ -65,6 +65,8 @@ class EnrollmentApprovalService
                         'ms_user_id' => $msUserId,
                         'ms_account_created_at' => now(),
                     ]);
+
+                    $this->uploadApplicantPhotoToMicrosoft($applicant, $student, $graph, $msUserId);
                 }
             } else {
                 $msUserId = null;
@@ -284,6 +286,138 @@ class EnrollmentApprovalService
         } catch (\Throwable $exception) {
             Log::error('Teams enrollment failed for '.$student->student_number.': '.$exception->getMessage());
         }
+    }
+
+    private function uploadApplicantPhotoToMicrosoft(
+        EnrollmentApplicant $applicant,
+        Student $student,
+        MicrosoftGraphService $graph,
+        string $msUserId,
+    ): void {
+        $photo = $this->applicantPhotoForMicrosoft($applicant);
+
+        if (! $photo) {
+            return;
+        }
+
+        try {
+            $graph->uploadUserPhoto($msUserId, $photo['bytes'], $photo['content_type']);
+
+            AdminAuditLog::record('student_photo_uploaded', true, "Uploaded 2x2 photo to Microsoft profile for {$student->school_email}", [
+                'student_id' => $student->id,
+                'applicant_id' => $applicant->id,
+                'email' => $student->school_email,
+                'photo_path' => $photo['path'],
+                'content_type' => $photo['content_type'],
+            ]);
+        } catch (\Throwable $exception) {
+            Log::error('Microsoft profile photo upload failed for '.$student->school_email.': '.$exception->getMessage());
+
+            AdminAuditLog::record('student_photo_uploaded', false, "Failed to upload 2x2 photo to Microsoft profile for {$student->school_email}", [
+                'student_id' => $student->id,
+                'applicant_id' => $applicant->id,
+                'email' => $student->school_email,
+                'photo_path' => $photo['path'],
+                'error' => $exception->getMessage(),
+            ]);
+        }
+    }
+
+    private function applicantPhotoForMicrosoft(EnrollmentApplicant $applicant): ?array
+    {
+        $photoPath = $this->resolveApplicantPhotoPath($applicant->photo_2x2_url);
+
+        if (! $photoPath) {
+            return null;
+        }
+
+        $bytes = @file_get_contents($photoPath);
+
+        if ($bytes === false || $bytes === '') {
+            return null;
+        }
+
+        return [
+            'path' => $photoPath,
+            'bytes' => $bytes,
+            'content_type' => $this->imageContentType($photoPath),
+        ];
+    }
+
+    private function resolveApplicantPhotoPath(?string $path): ?string
+    {
+        if (blank($path) || filter_var($path, FILTER_VALIDATE_URL)) {
+            return null;
+        }
+
+        $path = ltrim((string) $path, '/');
+        $candidates = [];
+
+        if (str_contains($path, '/optimized/')) {
+            $originalDirectory = dirname(str_replace('/optimized/', '/original/', $path));
+            $filename = pathinfo($path, PATHINFO_FILENAME);
+
+            foreach ($this->enrollmentStorageRoots() as $root) {
+                $directory = rtrim($root, '/').'/'.$originalDirectory;
+                if (! is_dir($directory)) {
+                    continue;
+                }
+
+                foreach (glob($directory.'/'.$filename.'.*') ?: [] as $file) {
+                    $candidates[] = $file;
+                }
+            }
+        }
+
+        $variantPaths = collect([
+            str_replace('/optimized/', '/thumbnails/large/', $path),
+            str_replace('/optimized/', '/thumbnails/medium/', $path),
+            $path,
+        ])->unique();
+
+        foreach ($this->enrollmentStorageRoots() as $root) {
+            foreach ($variantPaths as $variantPath) {
+                $candidates[] = rtrim($root, '/').'/'.ltrim($variantPath, '/');
+            }
+        }
+
+        foreach ($candidates as $candidate) {
+            if (is_file($candidate) && filesize($candidate) > 0) {
+                return $candidate;
+            }
+        }
+
+        return null;
+    }
+
+    private function enrollmentStorageRoots(): array
+    {
+        return [
+            base_path('../amis_enrollment/storage/app/public'),
+            base_path('../amis_enrollment/public/storage'),
+            base_path('../enrollment/storage/app/public'),
+            base_path('../enrollment/public/storage'),
+            base_path('../../amis_enrollment/storage/app/public'),
+            base_path('../../public_html/amis_enrollment/storage/app/public'),
+            base_path('../../public_html/storage'),
+            storage_path('app/public'),
+            public_path('storage'),
+        ];
+    }
+
+    private function imageContentType(string $path): string
+    {
+        $mime = function_exists('mime_content_type') ? mime_content_type($path) : null;
+
+        if ($mime && str_starts_with(strtolower($mime), 'image/')) {
+            return $mime;
+        }
+
+        return match (strtolower(pathinfo($path, PATHINFO_EXTENSION))) {
+            'png' => 'image/png',
+            'webp' => 'image/webp',
+            default => 'image/jpeg',
+        };
     }
 
     private function generateSoa(Student $student, EnrollmentApplicant $applicant): void
