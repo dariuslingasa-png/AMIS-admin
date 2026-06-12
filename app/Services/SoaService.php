@@ -8,6 +8,7 @@ use App\Models\SoaMonthlyBilling;
 use App\Models\Student;
 use App\Models\StudentAccount;
 use App\Models\StudentAccountPayment;
+use Illuminate\Support\Facades\Schema;
 
 class SoaService
 {
@@ -118,18 +119,21 @@ class SoaService
         if ($totalVerifiedAmount > 0) {
             // Use the first verified payment as representative for Gcash receipt metadata
             $repPayment = $verifiedPayments->first();
+            $sourcePaymentMethod = strtolower(trim((string) $repPayment->method));
+            $paymentMethod = $this->studentAccountPaymentMethod($sourcePaymentMethod);
+            $paymentMethodRemark = $paymentMethod === $sourcePaymentMethod ? '' : ' Original payment method: '.$sourcePaymentMethod.'.';
             
             // 1. Create Enrollment Fee payment record.
             StudentAccountPayment::create([
                 'student_account_id' => $account->id,
                 'student_id'         => $student->id,
-                'method'             => $repPayment->method,
+                'method'             => $paymentMethod,
                 'reference_no'       => $repPayment->reference_no,
                 'or_number'          => $repPayment->or_number ?? $repPayment->reference_no,
                 'checked_by'         => $financeCheckedBy,
                 'amount'             => $enrollPaid, // Allocated paid enrollment downpayment!
                 'status'             => 'verified',
-                'remarks'            => 'Paid Enrollment Fee (Allocated)',
+                'remarks'            => 'Paid Enrollment Fee (Allocated)'.$paymentMethodRemark,
                 'paid_at'            => $repPayment->paid_at ?? now(),
                 'verified_at'        => $repPayment->verified_at ?? now(),
             ]);
@@ -139,13 +143,13 @@ class SoaService
                 StudentAccountPayment::create([
                     'student_account_id' => $account->id,
                     'student_id'         => $student->id,
-                    'method'             => $repPayment->method,
+                    'method'             => $paymentMethod,
                     'reference_no'       => $repPayment->reference_no,
                     'or_number'          => ($repPayment->or_number ?? $repPayment->reference_no) . '-EXCESS',
                     'checked_by'         => $financeCheckedBy,
                     'amount'             => $excessPaid, // Additional SOA paid!
                     'status'             => 'verified',
-                    'remarks'            => 'Paid Additional SOA Paid (Allocated Excess)',
+                    'remarks'            => 'Paid Additional SOA Paid (Allocated Excess)'.$paymentMethodRemark,
                     'paid_at'            => $repPayment->paid_at ?? now(),
                     'verified_at'        => $repPayment->verified_at ?? now(),
                 ]);
@@ -170,6 +174,38 @@ class SoaService
         $account->recalculate();
 
         return $account;
+    }
+
+    private function studentAccountPaymentMethod(string $method): string
+    {
+        $method = strtolower(trim($method)) ?: 'gcash';
+
+        if ($this->canStoreStudentAccountPaymentMethod($method)) {
+            return $method;
+        }
+
+        return match ($method) {
+            'remittance', 'bank_transfer', 'bank transfer', 'cash', 'other' => 'bdo',
+            'maya' => $this->canStoreStudentAccountPaymentMethod('maya') ? 'maya' : 'gcash',
+            default => 'gcash',
+        };
+    }
+
+    private function canStoreStudentAccountPaymentMethod(string $method): bool
+    {
+        if (in_array($method, ['gcash', 'maya', 'bdo'], true)) {
+            return true;
+        }
+
+        try {
+            $definition = strtolower(Schema::getColumnType('student_account_payments', 'method', true));
+        } catch (\Throwable) {
+            return false;
+        }
+
+        return ! str_contains($definition, 'enum(')
+            || str_contains($definition, "'{$method}'")
+            || str_contains($definition, "\"{$method}\"");
     }
 
     private function generateMonthlyBillings(
