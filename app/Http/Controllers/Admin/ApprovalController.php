@@ -21,6 +21,10 @@ class ApprovalController extends Controller
         $this->ensureApplicationReviewer();
 
         if ($request->input('status') === 'approved') {
+            if ($request->input('approval_scope') === 'family') {
+                return $this->approveFamily($request, $applicant);
+            }
+
             $message = $this->approvalService->approve($applicant);
             AdminAuditLog::record('application_approved', true, 'Enrollment application approved.', [
                 'applicant_id' => $applicant->id,
@@ -62,10 +66,13 @@ class ApprovalController extends Controller
             }
         };
 
-        $familyEnrollees = EnrollmentApplicant::where($familyQuery)->get();
+        $familyEnrollees = EnrollmentApplicant::where($familyQuery)
+            ->orderBy('id')
+            ->get();
 
         $approvedCount = 0;
         $messages = [];
+        $failedCount = 0;
 
         foreach ($familyEnrollees as $child) {
             if (!in_array($child->status, ['approved', 'draft'], true)) {
@@ -77,6 +84,7 @@ class ApprovalController extends Controller
                     $messages[] = "{$child->full_name}: {$msg}";
                     $approvedCount++;
                 } catch (\Throwable $e) {
+                    $failedCount++;
                     $messages[] = "{$child->full_name} failed: " . $e->getMessage();
                 }
             }
@@ -84,6 +92,12 @@ class ApprovalController extends Controller
 
         if ($approvedCount > 0) {
             $this->addPaymentInsufficiencyRemark($applicant, $familyEnrollees, $familyQuery);
+        }
+
+        if ($approvedCount === 0 && $failedCount > 0) {
+            return back()->withErrors([
+                'approval' => 'No family enrollees were approved: ' . implode(' | ', $messages),
+            ]);
         }
 
         if ($approvedCount === 0) {

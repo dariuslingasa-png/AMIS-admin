@@ -97,6 +97,95 @@ class EnrollmentApprovalTest extends TestCase
     }
 
     #[Test]
+    public function family_review_approved_status_approves_remaining_children_in_the_family()
+    {
+        Mail::fake();
+
+        EnrollmentSetting::create([
+            'send_onboarding_email' => false,
+            'generate_amis_id' => true,
+            'generate_microsoft_account' => false,
+            'generate_soa' => false,
+            'require_documents_approved' => false,
+            'require_payment_verified' => false,
+            'require_complete_fields' => false,
+        ]);
+
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'account_status' => 'verified',
+        ]);
+
+        $parent = User::factory()->create([
+            'role' => 'applicant',
+        ]);
+
+        $zainab = EnrollmentApplicant::create([
+            'user_id' => $parent->id,
+            'family_application_id' => 396,
+            'first_name' => 'Zainab',
+            'middle_name' => 'Mustafa',
+            'last_name' => 'Islam',
+            'gender' => 'female',
+            'student_type' => 'Old',
+            'grade_level' => 'Grade 11',
+            'learning_mode' => 'Flexible Online Learning - 1st Shift',
+            'school_year' => '2026-2027',
+            'parent_email' => 'parent@example.com',
+            'email' => 'zainab@example.com',
+            'status' => 'approved',
+        ]);
+
+        $sophia = EnrollmentApplicant::create([
+            'user_id' => $parent->id,
+            'family_application_id' => 396,
+            'first_name' => 'Sophia',
+            'middle_name' => 'Mustafa',
+            'last_name' => 'Islam',
+            'gender' => 'female',
+            'student_type' => 'Old',
+            'grade_level' => 'Grade 8',
+            'learning_mode' => 'Flexible Online Learning - 1st Shift',
+            'school_year' => '2026-2027',
+            'parent_email' => 'parent@example.com',
+            'email' => 'sophia@example.com',
+            'status' => 'submitted',
+        ]);
+
+        $suzana = EnrollmentApplicant::create([
+            'user_id' => $parent->id,
+            'family_application_id' => 396,
+            'first_name' => 'Suzana',
+            'middle_name' => 'Mustafa',
+            'last_name' => 'Islam',
+            'gender' => 'female',
+            'student_type' => 'Old',
+            'grade_level' => 'Grade 5',
+            'learning_mode' => 'Flexible Online Learning - 1st Shift',
+            'school_year' => '2026-2027',
+            'parent_email' => 'parent@example.com',
+            'email' => 'suzana@example.com',
+            'status' => 'submitted',
+        ]);
+
+        $response = $this->actingAs($admin)->patch(route('admin.applicants.status', $zainab), [
+            'status' => 'approved',
+            'approval_scope' => 'family',
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        $this->assertSame('approved', $zainab->fresh()->status);
+        $this->assertSame('approved', $sophia->fresh()->status);
+        $this->assertSame('approved', $suzana->fresh()->status);
+        $this->assertTrue(Student::where('enrollment_applicant_id', $sophia->id)->exists());
+        $this->assertTrue(Student::where('enrollment_applicant_id', $suzana->id)->exists());
+
+        Mail::assertNothingSent();
+    }
+
+    #[Test]
     public function approval_sends_welcome_email_when_onboarding_email_is_enabled()
     {
         Mail::fake();

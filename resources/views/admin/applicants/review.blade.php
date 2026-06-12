@@ -223,9 +223,10 @@
                         <h2 class="text-sm font-extrabold uppercase tracking-wider text-slate-700">Review Decision</h2>
                     </div>
                     @if ($canReviewApplications)
-                    <form method="POST" action="{{ route('admin.applicants.status', $applicant) }}" class="p-6 space-y-4">
+                    <form method="POST" action="{{ route('admin.applicants.status', $applicant) }}" class="p-6 space-y-4" @submit="if (statusValue === 'approved') approving = true">
                         @csrf
                         @method('PATCH')
+                        <input type="hidden" name="approval_scope" value="family">
                         <div>
                             <label class="mb-2 block text-sm font-bold text-slate-900">Status</label>
                             <input type="hidden" name="status" :value="statusValue">
@@ -252,8 +253,9 @@
                             <textarea name="remarks" rows="3" class="w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm">{{ old('remarks', $applicant->review_remarks) }}</textarea>
                         </div>
                         <button class="review-save-button">
-                            <i data-lucide="save" class="h-4 w-4"></i>
-                            Save Review
+                            <i data-lucide="save" class="h-4 w-4" x-show="statusValue !== 'approved'"></i>
+                            <i data-lucide="users-round" class="h-4 w-4" x-show="statusValue === 'approved'"></i>
+                            <span x-text="statusValue === 'approved' ? 'Approve Family' : 'Save Review'">Save Review</span>
                         </button>
                     </form>
                     @endif
