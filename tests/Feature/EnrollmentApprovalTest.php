@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Mail\EnrollmentOnboardingMail;
 use App\Models\EnrollmentApplicant;
 use App\Models\EnrollmentSetting;
+use App\Models\Payment;
 use App\Models\Student;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -133,6 +134,15 @@ class EnrollmentApprovalTest extends TestCase
             'status' => 'submitted',
         ]);
 
+        Payment::create([
+            'user_id' => $parent->id,
+            'enrollment_applicant_id' => $applicant->id,
+            'amount' => 4000.00,
+            'method' => 'gcash',
+            'receipt_url' => 'receipts/payment-proof.jpg',
+            'status' => 'pending',
+        ]);
+
         $response = $this->actingAs($admin)->post(route('admin.applicants.approve', $applicant));
 
         $response->assertRedirect();
@@ -148,5 +158,56 @@ class EnrollmentApprovalTest extends TestCase
                 && $mail->hasTo('layla@example.com')
                 && $mail->student->is($student);
         });
+    }
+
+    #[Test]
+    public function approval_does_not_send_welcome_email_without_uploaded_payment_proof()
+    {
+        Mail::fake();
+
+        EnrollmentSetting::create([
+            'send_onboarding_email' => true,
+            'generate_amis_id' => true,
+            'generate_microsoft_account' => false,
+            'generate_soa' => false,
+            'require_documents_approved' => false,
+            'require_payment_verified' => false,
+            'require_complete_fields' => false,
+        ]);
+
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'account_status' => 'verified',
+        ]);
+
+        $parent = User::factory()->create([
+            'role' => 'applicant',
+        ]);
+
+        $applicant = EnrollmentApplicant::create([
+            'user_id' => $parent->id,
+            'first_name' => 'Noor',
+            'last_name' => 'Pending',
+            'gender' => 'female',
+            'student_type' => 'Old',
+            'grade_level' => 'Grade 2',
+            'learning_mode' => 'F2F',
+            'school_year' => '2026-2027',
+            'parent_email' => 'parent@example.com',
+            'email' => 'noor@example.com',
+            'status' => 'submitted',
+        ]);
+
+        $response = $this->actingAs($admin)->post(route('admin.applicants.approve', $applicant));
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success', fn ($message) => str_contains($message, 'no payment proof is uploaded'));
+
+        $student = Student::where('enrollment_applicant_id', $applicant->id)->first();
+
+        $this->assertNotNull($student);
+        $this->assertNull($student->credentials_sent_at);
+
+        Mail::assertNothingSent();
     }
 }

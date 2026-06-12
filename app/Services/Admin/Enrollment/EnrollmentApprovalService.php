@@ -6,6 +6,7 @@ use App\Mail\EnrollmentOnboardingMail;
 use App\Models\AdminAuditLog;
 use App\Models\EnrollmentApplicant;
 use App\Models\EnrollmentSetting;
+use App\Models\Payment;
 use App\Models\SchoolFee;
 use App\Models\Student;
 use App\Services\MicrosoftGraphService;
@@ -87,15 +88,19 @@ class EnrollmentApprovalService
                 'review_remarks' => $documentRemarks,
             ]);
 
-            $onboardingSent = $this->sendOnboardingIfPossible($settings, $applicant, $student, $tempPassword, $msError);
+            $onboardingStatus = $this->sendOnboardingIfPossible($settings, $applicant, $student, $tempPassword, $msError);
 
             if ($msError) {
                 return 'Application approved. Student number generated. Note: Microsoft account creation failed. Please create it manually. Error: '.$msError;
             }
 
-            return $onboardingSent
-                ? 'Application approved. Student credentials were generated and sent to the parent.'
-                : 'Application approved. Student credentials were generated. Welcome email auto-send is currently disabled.';
+            return match ($onboardingStatus) {
+                'sent' => 'Application approved. Student credentials were generated and sent to the parent.',
+                'missing_payment_proof' => 'Application approved. Student credentials were generated. Welcome email was not sent because no payment proof is uploaded yet.',
+                'missing_recipient' => 'Application approved. Student credentials were generated. Welcome email was not sent because no valid recipient email was found.',
+                'failed' => 'Application approved. Student credentials were generated. Welcome email failed to send; please check the mail logs.',
+                default => 'Application approved. Student credentials were generated. Welcome email auto-send is currently disabled.',
+            };
         });
     }
 
@@ -458,9 +463,13 @@ class EnrollmentApprovalService
         Student $student,
         string $tempPassword,
         ?string $msError,
-    ): bool {
+    ): string {
         if (! ($settings->send_onboarding_email ?? false)) {
-            return false;
+            return 'disabled';
+        }
+
+        if (! $this->hasUploadedPaymentProof($applicant)) {
+            return 'missing_payment_proof';
         }
 
         $recipients = collect([$applicant->parent_email ?: null, $applicant->email ?: null])
@@ -469,16 +478,38 @@ class EnrollmentApprovalService
             ->values();
 
         if ($recipients->isEmpty()) {
-            return false;
+            return 'missing_recipient';
         }
 
         if (! $this->sendOnboardingEmail($applicant, $student, $tempPassword, $msError, $recipients->all())) {
-            return false;
+            return 'failed';
         }
 
         $student->update(['credentials_sent_at' => now()]);
 
-        return true;
+        return 'sent';
+    }
+
+    private function hasUploadedPaymentProof(EnrollmentApplicant $applicant): bool
+    {
+        $applicant->loadMissing('payment');
+
+        if (filled($applicant->payment?->receipt_url)) {
+            return true;
+        }
+
+        return Payment::whereHas('applicant', function ($query) use ($applicant) {
+            if ($applicant->family_application_id) {
+                $query->where('family_application_id', $applicant->family_application_id);
+            } elseif ($applicant->user_id) {
+                $query->where('user_id', $applicant->user_id);
+            } else {
+                $query->whereRaw('1 = 0');
+            }
+        })
+            ->whereNotNull('receipt_url')
+            ->where('receipt_url', '!=', '')
+            ->exists();
     }
 
     private function sendOnboardingEmail(

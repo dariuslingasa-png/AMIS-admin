@@ -10,7 +10,7 @@
                 <label class="flex items-center gap-3 text-sm font-medium text-gray-900 cursor-pointer">
                     <input type="hidden" name="send_onboarding_email" value="0">
                     <input type="checkbox" name="send_onboarding_email" value="1" @checked(old('send_onboarding_email', $setting->send_onboarding_email ?? false)) class="h-5 w-5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
-                    <span>Send welcome email with student credentials after approval (currently paused)</span>
+                    <span>Send welcome email with student credentials after approval when payment proof is uploaded</span>
                 </label>
             </div>
 

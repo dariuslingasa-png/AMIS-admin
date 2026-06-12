@@ -30,7 +30,7 @@ class EnrollmentSetting extends Model
     {
         return static::query()->latest()->first()
             ?? static::query()->create([
-                'send_onboarding_email' => false,
+                'send_onboarding_email' => true,
                 'generate_amis_id' => true,
                 'generate_microsoft_account' => true,
                 'generate_soa' => true,
