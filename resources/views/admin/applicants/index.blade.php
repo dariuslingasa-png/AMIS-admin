@@ -311,7 +311,7 @@
                         @forelse ($families as $family)
                             @php
                                 $representative = $family['representative'];
-                                [$familyLastName, $familyFirstName] = array_pad(explode(', ', \Illuminate\Support\Str::upper($family['family_label']), 2), 2, 'GUARDIAN');
+                                [$familyLastName, $familyFirstName] = array_pad(explode(', ', \Illuminate\Support\Str::upper(html_entity_decode($family['family_label'], ENT_QUOTES, 'UTF-8')), 2), 2, 'GUARDIAN');
                                 $familyHeader = 'FAMILY OF '.$familyLastName.', '.$familyFirstName;
                                 $initials = collect([$familyLastName, $familyFirstName])->filter()->map(fn ($part) => \Illuminate\Support\Str::substr($part, 0, 1))->join('');
                                 $accent = $familyAccents[$family['family_no'] % count($familyAccents)];
@@ -366,7 +366,7 @@
                             </tr>
                             @foreach ($family['children'] as $index => $child)
                                 @php
-                                    $childName = \Illuminate\Support\Str::upper(trim(($child->first_name ?? '').' '.($child->middle_name ?? '').' '.($child->last_name ?? '')) ?: 'Student');
+                                    $childName = \Illuminate\Support\Str::upper(html_entity_decode(trim(($child->first_name ?? '').' '.($child->middle_name ?? '').' '.($child->last_name ?? '')), ENT_QUOTES, 'UTF-8') ?: 'Student');
                                     $childInitials = collect(explode(' ', $childName))->filter()->take(2)->map(fn ($part) => \Illuminate\Support\Str::substr($part, 0, 1))->join('');
                                     $photoUrl = \App\Support\EnrollmentStorage::url($child->photo_2x2_url, 'medium');
                                     $statusLabel = $statusLabels[$child->status] ?? \Illuminate\Support\Str::headline($child->status ?? 'under_review');

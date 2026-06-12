@@ -5,7 +5,7 @@
     $accentClasses = ['accent-green', 'accent-blue', 'accent-amber', 'accent-violet', 'accent-rose'];
     $accentClass = $accentClasses[$familyNo % 5];
 
-    $name = trim(($applicant->first_name ?? '').' '.($applicant->middle_name ?? '').' '.($applicant->last_name ?? ''));
+    $name = html_entity_decode(trim(($applicant->first_name ?? '').' '.($applicant->middle_name ?? '').' '.($applicant->last_name ?? '')), ENT_QUOTES, 'UTF-8');
     $displayName = $name ? Str::upper($name) : 'APPLICANT';
     $breadcrumbName = $displayName;
     $photoUrl = \App\Support\EnrollmentStorage::url($applicant->photo_2x2_url);
@@ -258,7 +258,7 @@
                             $nextSibling = $siblings->where('id', '>', $applicant->id)->first() ?? $siblings->first();
                         @endphp
                         <a href="{{ route('admin.applicants.show', $nextSibling) }}" class="applicant-next-sibling">
-                            Next Sibling: {{ Str::upper($nextSibling->full_name ?: 'Applicant') }}
+                            Next Sibling: {{ Str::upper(html_entity_decode($nextSibling->full_name ?: 'Applicant', ENT_QUOTES, 'UTF-8')) }}
                             <i data-lucide="arrow-right" class="h-4 w-4"></i>
                         </a>
                     @endif
@@ -303,7 +303,7 @@
                             <tbody class="divide-y divide-slate-100">
                                 @foreach($siblings as $sibling)
                                 <tr>
-                                    <td class="py-3 pr-4 font-bold text-slate-900">{{ Str::upper($sibling->full_name) }}</td>
+                                    <td class="py-3 pr-4 font-bold text-slate-900">{{ Str::upper(html_entity_decode($sibling->full_name, ENT_QUOTES, 'UTF-8')) }}</td>
                                     <td class="py-3 pr-4">{{ $sibling->grade_level ?: '-' }}</td>
                                     <td class="py-3 pr-4">
                                         @if(in_array($sibling->status, ['draft', 'pending', 'ready_for_submission']))

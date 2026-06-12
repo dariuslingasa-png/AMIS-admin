@@ -6,7 +6,7 @@
     $accentClasses = ['accent-green', 'accent-blue', 'accent-amber', 'accent-violet', 'accent-rose'];
     $accentClass = $accentClasses[$familyNo % 5];
 
-    $name = trim(($student->applicant->first_name ?? '').' '.($student->applicant->middle_name ?? '').' '.($student->applicant->last_name ?? ''));
+    $name = html_entity_decode(trim(($student->applicant->first_name ?? '').' '.($student->applicant->middle_name ?? '').' '.($student->applicant->last_name ?? '')), ENT_QUOTES, 'UTF-8');
     $displayName = $name ? Str::upper($name) : 'STUDENT PROFILE';
     
     $photoUrl = \App\Support\EnrollmentStorage::url($student->applicant->photo_2x2_url);
@@ -291,7 +291,7 @@
                             <tbody class="divide-y divide-slate-100">
                                 @foreach($siblings as $sibling)
                                 <tr>
-                                    <td class="py-3 pr-4 font-bold text-slate-900">{{ Str::upper($sibling->full_name) }}</td>
+                                    <td class="py-3 pr-4 font-bold text-slate-900">{{ Str::upper(html_entity_decode($sibling->full_name, ENT_QUOTES, 'UTF-8')) }}</td>
                                     <td class="py-3 pr-4">{{ $sibling->grade_level ?: '-' }}</td>
                                     <td class="py-3 pr-4">
                                         @if(in_array($sibling->status, ['draft', 'pending', 'ready_for_submission']))
