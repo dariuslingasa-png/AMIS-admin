@@ -235,13 +235,13 @@
                                         @if ($familyApprovalCount > 0)
                                             &middot; {{ $familyApprovalCount }} {{ Str::plural('child', $familyApprovalCount) }} ready to process
                                         @else
-                                            &middot; all children already approved
+                                            &middot; all children already approved, photo sync available
                                         @endif
                                     </p>
                                 </div>
-                                <button class="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-black text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-300" @disabled($familyApprovalCount === 0)>
+                                <button class="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-black text-white shadow-sm transition hover:bg-emerald-700">
                                     <i data-lucide="users-round" class="h-4 w-4"></i>
-                                    Approve & Generate Family
+                                    {{ $familyApprovalCount > 0 ? 'Approve & Generate Family' : 'Sync Family Photos' }}
                                 </button>
                             </div>
                         </form>

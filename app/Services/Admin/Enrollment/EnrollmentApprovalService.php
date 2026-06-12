@@ -31,17 +31,19 @@ class EnrollmentApprovalService
         $applicant->loadMissing('payment', 'student.account');
         $this->reviewService->assertReadyForApproval($applicant);
 
+        $settings = EnrollmentSetting::current();
+
         if ($applicant->student) {
+            $this->backfillMicrosoftPhoto($applicant);
+
             if (! $applicant->student->account && $this->shouldGenerateSoa($applicant)) {
                 $this->generateSoa($applicant->student, $applicant);
 
-                return 'Student already onboarded. Missing SOA was generated.';
+                return 'Student already onboarded. Missing SOA was generated. Microsoft profile photo sync was retried.';
             }
 
-            return 'Student already onboarded.';
+            return 'Student already onboarded. Microsoft profile photo sync was retried.';
         }
-
-        $settings = EnrollmentSetting::current();
 
         if ($settings->generate_soa ?? true) {
             if ($this->shouldGenerateSoa($applicant) && ! SchoolFee::forGrade($applicant->grade_level, $applicant->school_year)) {
@@ -293,6 +295,23 @@ class EnrollmentApprovalService
         }
     }
 
+    public function backfillMicrosoftPhoto(EnrollmentApplicant $applicant): void
+    {
+        $applicant->loadMissing('student');
+
+        if (! $applicant->student) {
+            return;
+        }
+
+        $identifier = $applicant->student->ms_user_id ?: $applicant->student->school_email;
+
+        if (blank($identifier)) {
+            return;
+        }
+
+        $this->uploadApplicantPhotoToMicrosoft($applicant, $applicant->student, new MicrosoftGraphService, $identifier);
+    }
+
     private function uploadApplicantPhotoToMicrosoft(
         EnrollmentApplicant $applicant,
         Student $student,
@@ -400,9 +419,13 @@ class EnrollmentApprovalService
         return [
             base_path('../amis_enrollment/storage/app/public'),
             base_path('../amis_enrollment/public/storage'),
+            base_path('../enrollment.amis.edu.ph/storage/app/public'),
+            base_path('../enrollment.amis.edu.ph/public/storage'),
             base_path('../enrollment/storage/app/public'),
             base_path('../enrollment/public/storage'),
             base_path('../../amis_enrollment/storage/app/public'),
+            base_path('../../enrollment.amis.edu.ph/storage/app/public'),
+            base_path('../../enrollment.amis.edu.ph/public/storage'),
             base_path('../../public_html/amis_enrollment/storage/app/public'),
             base_path('../../public_html/storage'),
             storage_path('app/public'),

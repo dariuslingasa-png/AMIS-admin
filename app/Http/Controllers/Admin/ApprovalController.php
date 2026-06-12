@@ -73,20 +73,30 @@ class ApprovalController extends Controller
         $approvedCount = 0;
         $messages = [];
         $failedCount = 0;
+        $photoRetryCount = 0;
 
         foreach ($familyEnrollees as $child) {
-            if (!in_array($child->status, ['approved', 'draft'], true)) {
-                try {
-                    $msg = $this->approvalService->approve($child);
-                    AdminAuditLog::record('application_approved', true, 'Enrollment application approved (family batch).', [
-                        'applicant_id' => $child->id,
-                    ]);
-                    $messages[] = "{$child->full_name}: {$msg}";
-                    $approvedCount++;
-                } catch (\Throwable $e) {
-                    $failedCount++;
-                    $messages[] = "{$child->full_name} failed: " . $e->getMessage();
-                }
+            if ($child->status === 'draft') {
+                continue;
+            }
+
+            if ($child->status === 'approved') {
+                $this->approvalService->backfillMicrosoftPhoto($child);
+                $photoRetryCount++;
+
+                continue;
+            }
+
+            try {
+                $msg = $this->approvalService->approve($child);
+                AdminAuditLog::record('application_approved', true, 'Enrollment application approved (family batch).', [
+                    'applicant_id' => $child->id,
+                ]);
+                $messages[] = "{$child->full_name}: {$msg}";
+                $approvedCount++;
+            } catch (\Throwable $e) {
+                $failedCount++;
+                $messages[] = "{$child->full_name} failed: " . $e->getMessage();
             }
         }
 
@@ -98,6 +108,10 @@ class ApprovalController extends Controller
             return back()->withErrors([
                 'approval' => 'No family enrollees were approved: ' . implode(' | ', $messages),
             ]);
+        }
+
+        if ($approvedCount === 0 && $photoRetryCount > 0) {
+            return back()->with('success', "All enrollees in this family are already approved. Microsoft profile photo sync was retried for {$photoRetryCount} children.");
         }
 
         if ($approvedCount === 0) {

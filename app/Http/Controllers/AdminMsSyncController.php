@@ -477,6 +477,11 @@ class AdminMsSyncController extends Controller
                 }
             }
 
+            if ($student->applicant) {
+                app(\App\Services\Admin\Enrollment\EnrollmentApprovalService::class)->backfillMicrosoftPhoto($student->applicant);
+                $msg .= ' Microsoft profile photo sync retried.';
+            }
+
             return back()->with('success', $msg . " Status and licenses synchronized successfully.");
         } catch (\Exception $e) {
             return back()->withErrors(['error' => $e->getMessage()]);
