@@ -16,30 +16,90 @@ class AdminStudentController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Student::with(['applicant.user', 'studentSection.section'])->latest();
+        $gradeOrder = ['Kinder 1', 'Kinder 2', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'];
 
-        if ($request->filled('search')) {
-            $s = $request->search;
-            $query->where(function ($q) use ($s) {
-                $q->where('student_number', 'like', "%{$s}%")
-                  ->orWhere('school_email', 'like', "%{$s}%")
-                  ->orWhereHas('applicant', fn($a) =>
-                      $a->where('first_name', 'like', "%{$s}%")
-                        ->orWhere('last_name', 'like', "%{$s}%")
-                  );
-            });
-        }
+        $applyFilters = function ($query) use ($request) {
+            if ($request->filled('search')) {
+                $s = $request->search;
+                $query->where(function ($q) use ($s) {
+                    $q->where('student_number', 'like', "%{$s}%")
+                      ->orWhere('school_email', 'like', "%{$s}%")
+                      ->orWhereHas('applicant', fn($a) =>
+                          $a->where('first_name', 'like', "%{$s}%")
+                            ->orWhere('middle_name', 'like', "%{$s}%")
+                            ->orWhere('last_name', 'like', "%{$s}%")
+                      );
+                });
+            }
 
-        if ($request->filled('grade')) {
-            $query->where('grade_level', $request->grade);
-        }
+            if ($request->filled('grade')) {
+                $query->where('grade_level', $request->grade);
+            }
 
-        if ($request->filled('mode')) {
-            $mode = $request->mode;
-            $query->whereHas('applicant', fn($q) =>
-                $q->where('learning_mode', 'like', "%{$mode}%")
-            );
-        }
+            if ($request->filled('gender')) {
+                $gender = strtolower((string) $request->gender);
+                if (in_array($gender, ['male', 'female'], true)) {
+                    $query->whereHas('applicant', fn($q) => $q->whereRaw('LOWER(gender) = ?', [$gender]));
+                } elseif ($gender === 'not_set') {
+                    $query->where(function ($q) {
+                        $q->whereDoesntHave('applicant')
+                          ->orWhereHas('applicant', fn($a) => $a->whereNull('gender')->orWhere('gender', ''));
+                    });
+                }
+            }
+
+            if ($request->filled('mode')) {
+                $mode = $request->mode;
+                $query->whereHas('applicant', fn($q) =>
+                    $q->where('learning_mode', 'like', "%{$mode}%")
+                );
+            }
+
+            return $query;
+        };
+
+        $query = $applyFilters(Student::with(['applicant.user', 'studentSection.section']));
+        $analyticsBase = $applyFilters(Student::query());
+
+        $gradeField = "FIELD(students.grade_level, 'Kinder 1', 'Kinder 2', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12')";
+        $direction = strtolower((string) $request->input('direction', 'desc')) === 'asc' ? 'asc' : 'desc';
+
+        match ($request->input('sort', 'latest')) {
+            'grade' => $query
+                ->orderByRaw("CASE WHEN {$gradeField} = 0 THEN 1 ELSE 0 END ASC")
+                ->orderByRaw("{$gradeField} {$direction}")
+                ->orderBy('students.id', 'desc'),
+            'gender' => $query
+                ->leftJoin('enrollment_applicants as sort_applicants', 'sort_applicants.id', '=', 'students.enrollment_applicant_id')
+                ->select('students.*')
+                ->orderByRaw("CASE LOWER(COALESCE(sort_applicants.gender, '')) WHEN 'male' THEN 1 WHEN 'female' THEN 2 ELSE 3 END {$direction}")
+                ->orderBy('students.id', 'desc'),
+            'student_id' => $query->orderBy('student_number', $direction)->orderBy('students.id', 'desc'),
+            default => $query->latest('students.created_at'),
+        };
+
+        $gradeAnalytics = (clone $analyticsBase)
+            ->select('students.grade_level', DB::raw('count(*) as total'))
+            ->groupBy('students.grade_level')
+            ->orderByRaw("CASE WHEN {$gradeField} = 0 THEN 1 ELSE 0 END ASC")
+            ->orderByRaw($gradeField)
+            ->get();
+
+        $genderCounts = (clone $analyticsBase)
+            ->leftJoin('enrollment_applicants', 'enrollment_applicants.id', '=', 'students.enrollment_applicant_id')
+            ->selectRaw("LOWER(COALESCE(NULLIF(enrollment_applicants.gender, ''), 'not_set')) as gender_key, COUNT(*) as total")
+            ->groupBy('gender_key')
+            ->pluck('total', 'gender_key');
+
+        $analytics = [
+            'filtered_total' => (clone $analyticsBase)->count(),
+            'grades' => $gradeAnalytics,
+            'gender' => [
+                'male' => (int) ($genderCounts['male'] ?? 0),
+                'female' => (int) ($genderCounts['female'] ?? 0),
+                'not_set' => (int) ($genderCounts['not_set'] ?? 0),
+            ],
+        ];
 
         $stats = [
             'total_students' => Student::count(),
@@ -50,9 +110,9 @@ class AdminStudentController extends Controller
             'allocated_slots' => \App\Models\StudentSection::count(),
         ];
 
-        $students = $query->paginate(20);
+        $students = $query->paginate(20)->withQueryString();
 
-        return view('admin.students.index', compact('students', 'stats'));
+        return view('admin.students.index', compact('students', 'stats', 'analytics', 'gradeOrder'));
     }
 
     public function dashboard()
