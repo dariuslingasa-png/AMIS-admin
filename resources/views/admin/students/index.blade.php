@@ -12,28 +12,6 @@
     $gradeTotals = collect($analytics['grades'] ?? [])->keyBy('grade_level');
     $genderAnalytics = $analytics['gender'] ?? ['male' => 0, 'female' => 0, 'not_set' => 0];
     $genderLabels = ['male' => 'Male', 'female' => 'Female', 'not_set' => 'Not Set'];
-
-    $studentTypeLabel = function (?string $type) {
-        $typeLower = strtolower(trim((string) $type));
-        if (str_contains($typeLower, 'old') || str_contains($typeLower, 'returning')) {
-            return 'OLD';
-        }
-        if (str_contains($typeLower, 'transfer')) {
-            return 'TRANSFEREE';
-        }
-        return 'NEW';
-    };
-
-    $learningModeAbbreviation = function (?string $mode) {
-        $modeLower = strtolower(trim((string) $mode));
-        if (str_contains($modeLower, 'flexible') || str_contains($modeLower, 'online') || str_contains($modeLower, 'odl')) {
-            return 'ODL';
-        }
-        if (str_contains($modeLower, 'face') || str_contains($modeLower, 'f2f')) {
-            return 'F2F';
-        }
-        return 'ODL';
-    };
 @endphp
 
 <x-admin-layout
@@ -62,9 +40,9 @@
             <form method="GET" class="mb-5 grid grid-cols-12 gap-3">
                 <input type="hidden" name="sort" value="{{ $sort }}">
                 <input type="hidden" name="direction" value="{{ $direction }}">
-                <label class="relative col-span-12 lg:col-span-4">
+                <label class="relative col-span-12 lg:col-span-3">
                     <i data-lucide="search" class="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-slate-400"></i>
-                    <input name="search" value="{{ request('search') }}" placeholder="Search name, student number, or email" class="{{ $inputClass }} w-full pl-9">
+                    <input name="search" value="{{ request('search') }}" placeholder="Search name, ID, or email" class="{{ $inputClass }} w-full pl-9">
                 </label>
                 <select name="grade" class="{{ $inputClass }} col-span-6 lg:col-span-2 w-full" onchange="this.form.submit()">
                     <option value="">All grades</option>
@@ -72,23 +50,30 @@
                         <option value="{{ $g }}" @selected(request('grade') === $g)>{{ $g }}</option>
                     @endforeach
                 </select>
+                <select name="type" class="{{ $inputClass }} col-span-6 lg:col-span-2 w-full" onchange="this.form.submit()">
+                    <option value="">All types</option>
+                    <option value="new" @selected(request('type') === 'new')>New Student</option>
+                    <option value="old" @selected(request('type') === 'old')>Old Student</option>
+                    <option value="transferee" @selected(request('type') === 'transferee')>Transferee</option>
+                </select>
                 <select name="gender" class="{{ $inputClass }} col-span-6 lg:col-span-2 w-full" onchange="this.form.submit()">
                     <option value="">All genders</option>
                     <option value="male" @selected(request('gender') === 'male')>Male</option>
                     <option value="female" @selected(request('gender') === 'female')>Female</option>
                     <option value="not_set" @selected(request('gender') === 'not_set')>Not Set</option>
                 </select>
-                <select name="mode" class="{{ $inputClass }} col-span-8 lg:col-span-2 w-full" onchange="this.form.submit()">
+                <select name="mode" class="{{ $inputClass }} col-span-6 lg:col-span-2 w-full" onchange="this.form.submit()">
                     <option value="">All learning modes</option>
                     <option value="Face-to-Face" @selected(request('mode') === 'Face-to-Face')>Face-to-Face</option>
                     <option value="Flexible" @selected(request('mode') === 'Flexible')>Flexible Online Learning</option>
                 </select>
-                <button class="col-span-4 lg:col-span-2 inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-800">
+                <button class="col-span-12 lg:col-span-1 inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-800">
                     <i data-lucide="filter" class="h-4 w-4"></i>
-                    Filter
+                    <span class="lg:hidden">Filter</span>
                 </button>
             </form>
 
+            <!-- Grid Analytics Top Row -->
             <div class="mb-5 grid grid-cols-1 gap-3 xl:grid-cols-[220px_1fr_300px]">
                 <div class="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
                     <p class="text-xs font-extrabold uppercase tracking-wider text-slate-500">Filtered Students</p>
@@ -132,6 +117,52 @@
                                 <div class="mt-1 text-2xl font-black">{{ number_format((int) ($genderAnalytics[$genderKey] ?? 0)) }}</div>
                             </a>
                         @endforeach
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grid Analytics Bottom Row (Type & Learning Mode) -->
+            <div class="mb-5 grid grid-cols-1 gap-3 md:grid-cols-2">
+                <!-- Student Type Grid -->
+                <div class="rounded-lg border border-slate-200 bg-white px-4 py-3">
+                    <div class="mb-3 flex items-center justify-between gap-3">
+                        <p class="text-xs font-extrabold uppercase tracking-wider text-slate-500">Student Type Grid</p>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <a href="{{ route('admin.students.index', array_merge(request()->except('page'), ['type' => 'new'])) }}"
+                           class="rounded-md border px-3 py-2 text-center transition {{ request('type') === 'new' ? 'border-sky-300 bg-sky-50 text-sky-800' : 'border-slate-100 bg-slate-50 text-slate-600 hover:border-slate-200 hover:bg-white' }}">
+                            <div class="text-[11px] font-black uppercase">New Students</div>
+                            <div class="mt-1 text-2xl font-black">{{ number_format((int) ($analytics['type']['new'] ?? 0)) }}</div>
+                        </a>
+                        <a href="{{ route('admin.students.index', array_merge(request()->except('page'), ['type' => 'old'])) }}"
+                           class="rounded-md border px-3 py-2 text-center transition {{ request('type') === 'old' ? 'border-emerald-300 bg-emerald-50 text-emerald-800' : 'border-slate-100 bg-slate-50 text-slate-600 hover:border-slate-200 hover:bg-white' }}">
+                            <div class="text-[11px] font-black uppercase">Old Students</div>
+                            <div class="mt-1 text-2xl font-black">{{ number_format((int) ($analytics['type']['old'] ?? 0)) }}</div>
+                        </a>
+                        <a href="{{ route('admin.students.index', array_merge(request()->except('page'), ['type' => 'transferee'])) }}"
+                           class="rounded-md border px-3 py-2 text-center transition {{ request('type') === 'transferee' ? 'border-amber-300 bg-amber-50 text-amber-800' : 'border-slate-100 bg-slate-50 text-slate-600 hover:border-slate-200 hover:bg-white' }}">
+                            <div class="text-[11px] font-black uppercase">Transferees</div>
+                            <div class="mt-1 text-2xl font-black">{{ number_format((int) ($analytics['type']['transferee'] ?? 0)) }}</div>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Learning Mode Grid -->
+                <div class="rounded-lg border border-slate-200 bg-white px-4 py-3">
+                    <div class="mb-3 flex items-center justify-between gap-3">
+                        <p class="text-xs font-extrabold uppercase tracking-wider text-slate-500">Learning Mode Grid</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <a href="{{ route('admin.students.index', array_merge(request()->except('page'), ['mode' => 'Face-to-Face'])) }}"
+                           class="rounded-md border px-3 py-2 text-center transition {{ request('mode') === 'Face-to-Face' ? 'border-emerald-300 bg-emerald-50 text-emerald-800' : 'border-slate-100 bg-slate-50 text-slate-600 hover:border-slate-200 hover:bg-white' }}">
+                            <div class="text-[11px] font-black uppercase">F2F (Face-to-Face)</div>
+                            <div class="mt-1 text-2xl font-black">{{ number_format((int) ($analytics['mode']['f2f'] ?? 0)) }}</div>
+                        </a>
+                        <a href="{{ route('admin.students.index', array_merge(request()->except('page'), ['mode' => 'Flexible'])) }}"
+                           class="rounded-md border px-3 py-2 text-center transition {{ request('mode') === 'Flexible' ? 'border-violet-300 bg-violet-50 text-violet-800' : 'border-slate-100 bg-slate-50 text-slate-600 hover:border-slate-200 hover:bg-white' }}">
+                            <div class="text-[11px] font-black uppercase">ODL (Flexible / Online)</div>
+                            <div class="mt-1 text-2xl font-black">{{ number_format((int) ($analytics['mode']['odl'] ?? 0)) }}</div>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -209,18 +240,7 @@
 
                                 <!-- Grade Level & Section -->
                                 <td class="px-5 py-4">
-                                    <div class="flex items-center gap-1.5">
-                                        <span class="font-bold text-slate-700">{{ $student->grade_level ?? '-' }}</span>
-                                        @php
-                                            $sType = $studentTypeLabel($student->applicant->student_type ?? '');
-                                            $sMode = $learningModeAbbreviation($student->applicant->learning_mode ?? '');
-                                            $badgeText = "{$sType} + {$sMode}";
-                                            $badgeColorClass = $sType === 'OLD' ? 'bg-green-50 text-green-700 ring-green-600/10' : 'bg-blue-50 text-blue-700 ring-blue-600/10';
-                                        @endphp
-                                        <span class="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-bold ring-1 ring-inset {{ $badgeColorClass }}">
-                                            {{ $badgeText }}
-                                        </span>
-                                    </div>
+                                    <div class="font-bold text-slate-700">{{ $student->grade_level ?? '-' }}</div>
                                     <div class="mt-0.5 text-xxs font-semibold uppercase text-slate-400">
                                         {{ $student->studentSection->section->official_name ?? $student->studentSection->section->name ?? 'No Section' }}
                                     </div>

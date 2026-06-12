@@ -48,6 +48,13 @@ class AdminStudentController extends Controller
                 }
             }
 
+            if ($request->filled('type')) {
+                $type = strtolower((string) $request->type);
+                if (in_array($type, ['new', 'old', 'transferee'], true)) {
+                    $query->whereHas('applicant', fn($q) => $q->whereRaw('LOWER(student_type) LIKE ?', ["%{$type}%"]));
+                }
+            }
+
             if ($request->filled('mode')) {
                 $mode = $request->mode;
                 $query->whereHas('applicant', fn($q) =>
@@ -91,6 +98,25 @@ class AdminStudentController extends Controller
             ->groupBy('gender_key')
             ->pluck('total', 'gender_key');
 
+        $typeCounts = (clone $analyticsBase)
+            ->leftJoin('enrollment_applicants as ta', 'ta.id', '=', 'students.enrollment_applicant_id')
+            ->selectRaw("LOWER(COALESCE(NULLIF(ta.student_type, ''), 'new')) as type_key, COUNT(*) as total")
+            ->groupBy('type_key')
+            ->pluck('total', 'type_key');
+
+        $modeCounts = (clone $analyticsBase)
+            ->leftJoin('enrollment_applicants as ma', 'ma.id', '=', 'students.enrollment_applicant_id')
+            ->selectRaw("
+                CASE 
+                    WHEN LOWER(ma.learning_mode) LIKE '%flexible%' OR LOWER(ma.learning_mode) LIKE '%online%' OR LOWER(ma.learning_mode) LIKE '%odl%' THEN 'odl'
+                    WHEN LOWER(ma.learning_mode) LIKE '%face%' OR LOWER(ma.learning_mode) LIKE '%f2f%' THEN 'f2f'
+                    ELSE 'odl'
+                END as mode_key, 
+                COUNT(*) as total
+            ")
+            ->groupBy('mode_key')
+            ->pluck('total', 'mode_key');
+
         $analytics = [
             'filtered_total' => (clone $analyticsBase)->count(),
             'grades' => $gradeAnalytics,
@@ -98,6 +124,15 @@ class AdminStudentController extends Controller
                 'male' => (int) ($genderCounts['male'] ?? 0),
                 'female' => (int) ($genderCounts['female'] ?? 0),
                 'not_set' => (int) ($genderCounts['not_set'] ?? 0),
+            ],
+            'type' => [
+                'new' => (int) ($typeCounts['new'] ?? 0),
+                'old' => (int) ($typeCounts['old'] ?? 0),
+                'transferee' => (int) ($typeCounts['transferee'] ?? 0),
+            ],
+            'mode' => [
+                'f2f' => (int) ($modeCounts['f2f'] ?? 0),
+                'odl' => (int) ($modeCounts['odl'] ?? 0),
             ],
         ];
 
