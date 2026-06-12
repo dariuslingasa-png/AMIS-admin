@@ -325,9 +325,21 @@
                                         {{ $student->ledger_row_number ?? '-' }}
                                     </td>
                                     <td class="px-5 py-4 align-top">
-                                        <span class="font-bold uppercase text-slate-900 text-[13.5px] max-w-[260px] break-words whitespace-normal inline-block leading-tight">
-                                            {{ Str::upper($student->student_name) }}
-                                        </span>
+                                        @if ($student->enrollment_url ?? false)
+                                            <a href="{{ $student->enrollment_url }}" class="group inline-flex max-w-[280px] flex-col gap-1 no-underline" title="Open enrollment application">
+                                                <span class="font-bold uppercase text-slate-900 text-[13.5px] break-words whitespace-normal leading-tight group-hover:text-emerald-700">
+                                                    {{ Str::upper($student->student_name) }}
+                                                </span>
+                                                <span class="inline-flex w-fit items-center gap-1 rounded-lg bg-emerald-50 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-emerald-700 ring-1 ring-emerald-100 print:hidden">
+                                                    <i data-lucide="external-link" class="h-3 w-3"></i>
+                                                    Enrollment
+                                                </span>
+                                            </a>
+                                        @else
+                                            <span class="font-bold uppercase text-slate-900 text-[13.5px] max-w-[260px] break-words whitespace-normal inline-block leading-tight">
+                                                {{ Str::upper($student->student_name) }}
+                                            </span>
+                                        @endif
                                     </td>
                                     <td class="px-5 py-4 align-top">
                                         @php
@@ -388,20 +400,29 @@
                                         </span>
                                     </td>
                                     <td class="px-5 py-4 align-top text-right actions-col" rowspan="{{ $studentCount }}">
-                                        <button type="button"
-                                                @click="openEditModal(@js([
-                                                    'id' => $entry->id,
-                                                    'payment_date' => $entry->payment_date?->format('Y-m-d'),
-                                                    'method' => $entry->method,
-                                                    'reference_no' => $entry->reference_no,
-                                                    'remittance_source' => $entry->remittance_source,
-                                                    'amount' => $entry->amount,
-                                                    'or_number' => $entry->or_number,
-                                                ]))"
-                                                class="inline-flex items-center gap-1.5 rounded-xl bg-amber-50 px-3.5 py-2 text-xs font-black uppercase tracking-wider text-amber-700 ring-1 ring-amber-200 transition hover:bg-amber-100 hover:text-amber-800 cursor-pointer">
-                                            <i data-lucide="pencil" class="h-3.5 w-3.5"></i>
-                                            Edit
-                                        </button>
+                                        <div class="flex justify-end gap-2">
+                                            @if ($entry->enrollment_url ?? false)
+                                                <a href="{{ $entry->enrollment_url }}"
+                                                   class="inline-flex items-center gap-1.5 rounded-xl bg-emerald-50 px-3.5 py-2 text-xs font-black uppercase tracking-wider text-emerald-700 ring-1 ring-emerald-200 transition hover:bg-emerald-100 hover:text-emerald-800">
+                                                    <i data-lucide="external-link" class="h-3.5 w-3.5"></i>
+                                                    Enrollment
+                                                </a>
+                                            @endif
+                                            <button type="button"
+                                                    @click="openEditModal(@js([
+                                                        'id' => $entry->id,
+                                                        'payment_date' => $entry->payment_date?->format('Y-m-d'),
+                                                        'method' => $entry->method,
+                                                        'reference_no' => $entry->reference_no,
+                                                        'remittance_source' => $entry->remittance_source,
+                                                        'amount' => $entry->amount,
+                                                        'or_number' => $entry->or_number,
+                                                    ]))"
+                                                    class="inline-flex items-center gap-1.5 rounded-xl bg-amber-50 px-3.5 py-2 text-xs font-black uppercase tracking-wider text-amber-700 ring-1 ring-amber-200 transition hover:bg-amber-100 hover:text-amber-800 cursor-pointer">
+                                                <i data-lucide="pencil" class="h-3.5 w-3.5"></i>
+                                                Edit
+                                            </button>
+                                        </div>
                                     </td>
                                     @endif
                                 </tr>

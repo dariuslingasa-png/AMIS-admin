@@ -2,12 +2,14 @@
 
 namespace Tests\Feature;
 
+use App\Mail\EnrollmentOnboardingMail;
 use App\Models\EnrollmentApplicant;
 use App\Models\EnrollmentSetting;
 use App\Models\Student;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class EnrollmentApprovalTest extends TestCase
@@ -24,7 +26,7 @@ class EnrollmentApprovalTest extends TestCase
         ];
     }
 
-    /** @test */
+    #[Test]
     public function family_approval_generates_students_without_auto_sending_welcome_email()
     {
         Mail::fake();
@@ -91,5 +93,60 @@ class EnrollmentApprovalTest extends TestCase
         $this->assertSame(0, Student::whereNotNull('credentials_sent_at')->count());
 
         Mail::assertNothingSent();
+    }
+
+    #[Test]
+    public function approval_sends_welcome_email_when_onboarding_email_is_enabled()
+    {
+        Mail::fake();
+
+        EnrollmentSetting::create([
+            'send_onboarding_email' => true,
+            'generate_amis_id' => true,
+            'generate_microsoft_account' => false,
+            'generate_soa' => false,
+            'require_documents_approved' => false,
+            'require_payment_verified' => false,
+            'require_complete_fields' => false,
+        ]);
+
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'account_status' => 'verified',
+        ]);
+
+        $parent = User::factory()->create([
+            'role' => 'applicant',
+        ]);
+
+        $applicant = EnrollmentApplicant::create([
+            'user_id' => $parent->id,
+            'first_name' => 'Layla',
+            'last_name' => 'Welcome',
+            'gender' => 'female',
+            'student_type' => 'Old',
+            'grade_level' => 'Grade 2',
+            'learning_mode' => 'F2F',
+            'school_year' => '2026-2027',
+            'parent_email' => 'parent@example.com',
+            'email' => 'layla@example.com',
+            'status' => 'submitted',
+        ]);
+
+        $response = $this->actingAs($admin)->post(route('admin.applicants.approve', $applicant));
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success', fn ($message) => str_contains($message, 'sent to the parent'));
+
+        $student = Student::where('enrollment_applicant_id', $applicant->id)->first();
+
+        $this->assertNotNull($student);
+        $this->assertNotNull($student->credentials_sent_at);
+
+        Mail::assertSent(EnrollmentOnboardingMail::class, function (EnrollmentOnboardingMail $mail) use ($student) {
+            return $mail->hasTo('parent@example.com')
+                && $mail->hasTo('layla@example.com')
+                && $mail->student->is($student);
+        });
     }
 }

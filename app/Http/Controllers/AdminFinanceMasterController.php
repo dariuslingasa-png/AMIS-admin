@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\EnrollmentApplicant;
 use App\Models\FinanceMasterEntry;
 use App\Models\FinanceMasterEntryStudent;
-use App\Models\EnrollmentApplicant;
+use App\Models\Payment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class AdminFinanceMasterController extends Controller
 {
@@ -22,15 +24,15 @@ class AdminFinanceMasterController extends Controller
 
         // Search filter
         if ($request->filled('search')) {
-            $search = '%' . $request->input('search') . '%';
+            $search = '%'.$request->input('search').'%';
             $query->where(function ($q) use ($search) {
                 $q->where('family_name', 'like', $search)
-                  ->orWhere('reference_no', 'like', $search)
-                  ->orWhere('remittance_source', 'like', $search)
-                  ->orWhere('or_number', 'like', $search)
-                  ->orWhereHas('students', function ($sq) use ($search) {
-                      $sq->where('student_name', 'like', $search);
-                  });
+                    ->orWhere('reference_no', 'like', $search)
+                    ->orWhere('remittance_source', 'like', $search)
+                    ->orWhere('or_number', 'like', $search)
+                    ->orWhereHas('students', function ($sq) use ($search) {
+                        $sq->where('student_name', 'like', $search);
+                    });
             });
         }
 
@@ -91,7 +93,7 @@ class AdminFinanceMasterController extends Controller
 
         // Custom sort: reorder() clears default ordering for proper sort
         $sort = $request->input('sort');
-        $dir  = $request->input('dir', 'asc');
+        $dir = $request->input('dir', 'asc');
 
         if (in_array($sort, ['grade', 'name', 'date', 'amount'])) {
             $query->reorder();
@@ -118,6 +120,7 @@ class AdminFinanceMasterController extends Controller
         }
 
         $this->hydrateMissingStudentGenders($entries);
+        $this->hydrateStudentEnrollmentLinks($entries);
         $this->numberLedgerStudents($entries);
 
         return view('admin.finance.masters-list', compact(
@@ -139,34 +142,34 @@ class AdminFinanceMasterController extends Controller
         $this->ensurePaymentReviewer();
 
         $request->validate([
-            'payment_date'      => 'required|date',
-            'method'            => 'required|string|in:remittance,gcash,bdo,maya,cash,other',
-            'reference_no'      => 'nullable|string|max:100',
+            'payment_date' => 'required|date',
+            'method' => 'required|string|in:remittance,gcash,bdo,maya,cash,other',
+            'reference_no' => 'nullable|string|max:100',
             'remittance_source' => 'nullable|string|max:100',
-            'amount'            => 'required|numeric|min:0',
-            'or_number'         => 'nullable|string|max:100',
+            'amount' => 'required|numeric|min:0',
+            'or_number' => 'nullable|string|max:100',
         ]);
 
-        \Illuminate\Support\Facades\DB::transaction(function () use ($request, $entry) {
+        DB::transaction(function () use ($request, $entry) {
             $entry->update([
-                'payment_date'      => $request->input('payment_date'),
-                'method'            => $request->input('method'),
-                'reference_no'      => $request->input('reference_no'),
+                'payment_date' => $request->input('payment_date'),
+                'method' => $request->input('method'),
+                'reference_no' => $request->input('reference_no'),
                 'remittance_source' => $request->input('method') === 'remittance' ? $request->input('remittance_source') : null,
-                'amount'            => $request->input('amount'),
-                'or_number'         => $request->input('or_number'),
+                'amount' => $request->input('amount'),
+                'or_number' => $request->input('or_number'),
             ]);
 
             // Sync with associated Payment record if exists
             if ($entry->payment_id) {
-                $payment = \App\Models\Payment::find($entry->payment_id);
+                $payment = Payment::find($entry->payment_id);
                 if ($payment) {
                     $payment->update([
-                        'paid_at'      => $request->input('payment_date'),
-                        'method'       => $request->input('method'),
+                        'paid_at' => $request->input('payment_date'),
+                        'method' => $request->input('method'),
                         'reference_no' => $request->input('reference_no'),
-                        'amount'       => $request->input('amount'),
-                        'or_number'    => $request->input('or_number'),
+                        'amount' => $request->input('amount'),
+                        'or_number' => $request->input('or_number'),
                     ]);
 
                     // Recalculate associated invoice if any
@@ -292,6 +295,105 @@ class AdminFinanceMasterController extends Controller
     private function studentNameKey(?string $name): string
     {
         return strtolower(preg_replace('/\s+/', ' ', trim((string) $name)));
+    }
+
+    /**
+     * Attach direct enrollment application URLs to each finance ledger student.
+     */
+    private function hydrateStudentEnrollmentLinks($entries): void
+    {
+        $collection = method_exists($entries, 'getCollection')
+            ? $entries->getCollection()
+            : collect($entries);
+
+        $withApplicants = $collection->filter(fn ($entry) => $entry->payment?->applicant);
+
+        if ($withApplicants->isEmpty()) {
+            return;
+        }
+
+        $seedApplicants = $withApplicants
+            ->pluck('payment.applicant')
+            ->filter();
+
+        $familyIds = $seedApplicants
+            ->pluck('family_application_id')
+            ->filter()
+            ->unique()
+            ->values();
+
+        $userIds = $seedApplicants
+            ->filter(fn ($applicant) => blank($applicant->family_application_id))
+            ->pluck('user_id')
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($familyIds->isEmpty() && $userIds->isEmpty()) {
+            foreach ($withApplicants as $entry) {
+                $fallbackUrl = route('admin.applicants.show', $entry->payment->applicant);
+                $entry->setAttribute('enrollment_url', $fallbackUrl);
+
+                foreach ($entry->students as $student) {
+                    $student->setAttribute('enrollment_url', $fallbackUrl);
+                }
+            }
+
+            return;
+        }
+
+        $familyApplicants = EnrollmentApplicant::query()
+            ->select('id', 'user_id', 'family_application_id', 'first_name', 'middle_name', 'last_name')
+            ->where(function ($query) use ($familyIds, $userIds) {
+                if ($familyIds->isNotEmpty()) {
+                    $query->whereIn('family_application_id', $familyIds);
+                }
+
+                if ($userIds->isNotEmpty()) {
+                    $query->orWhere(function ($userQuery) use ($userIds) {
+                        $userQuery->whereIn('user_id', $userIds)
+                            ->whereNull('family_application_id');
+                    });
+                }
+            })
+            ->get();
+
+        $byFamily = $familyApplicants->whereNotNull('family_application_id')->groupBy('family_application_id');
+        $byUser = $familyApplicants->whereNull('family_application_id')->groupBy('user_id');
+
+        foreach ($withApplicants as $entry) {
+            $seedApplicant = $entry->payment->applicant;
+            $fallbackUrl = route('admin.applicants.show', $seedApplicant);
+            $entry->setAttribute('enrollment_url', $fallbackUrl);
+
+            $applicants = $seedApplicant->family_application_id
+                ? ($byFamily[$seedApplicant->family_application_id] ?? collect([$seedApplicant]))
+                : ($byUser[$seedApplicant->user_id] ?? collect([$seedApplicant]));
+
+            $applicantByName = $applicants->flatMap(function ($applicant) {
+                $fullName = $this->studentNameKey(collect([
+                    $applicant->first_name,
+                    $applicant->middle_name,
+                    $applicant->last_name,
+                ])->filter()->join(' '));
+
+                $firstLast = $this->studentNameKey(collect([
+                    $applicant->first_name,
+                    $applicant->last_name,
+                ])->filter()->join(' '));
+
+                return collect([$fullName, $firstLast])
+                    ->filter()
+                    ->unique()
+                    ->mapWithKeys(fn ($name) => [$name => $applicant]);
+            });
+
+            foreach ($entry->students as $student) {
+                $matchedApplicant = $applicantByName[$this->studentNameKey($student->student_name)] ?? $seedApplicant;
+
+                $student->setAttribute('enrollment_url', route('admin.applicants.show', $matchedApplicant));
+            }
+        }
     }
 
     private function numberLedgerStudents($entries): void

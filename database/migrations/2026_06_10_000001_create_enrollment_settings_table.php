@@ -9,7 +9,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (!Schema::hasTable('enrollment_settings')) {
+        if (! Schema::hasTable('enrollment_settings')) {
             Schema::create('enrollment_settings', function (Blueprint $table) {
                 $table->id();
                 $table->boolean('send_onboarding_email')->default(false);
@@ -38,25 +38,25 @@ return new class extends Migration
             }
         } else {
             Schema::table('enrollment_settings', function (Blueprint $table) {
-                if (!Schema::hasColumn('enrollment_settings', 'send_onboarding_email')) {
-                    $table->boolean('send_onboarding_email')->default(true);
+                if (! Schema::hasColumn('enrollment_settings', 'send_onboarding_email')) {
+                    $table->boolean('send_onboarding_email')->default(false);
                 }
-                if (!Schema::hasColumn('enrollment_settings', 'generate_amis_id')) {
+                if (! Schema::hasColumn('enrollment_settings', 'generate_amis_id')) {
                     $table->boolean('generate_amis_id')->default(true);
                 }
-                if (!Schema::hasColumn('enrollment_settings', 'generate_microsoft_account')) {
+                if (! Schema::hasColumn('enrollment_settings', 'generate_microsoft_account')) {
                     $table->boolean('generate_microsoft_account')->default(true);
                 }
-                if (!Schema::hasColumn('enrollment_settings', 'generate_soa')) {
+                if (! Schema::hasColumn('enrollment_settings', 'generate_soa')) {
                     $table->boolean('generate_soa')->default(true);
                 }
-                if (!Schema::hasColumn('enrollment_settings', 'require_documents_approved')) {
+                if (! Schema::hasColumn('enrollment_settings', 'require_documents_approved')) {
                     $table->boolean('require_documents_approved')->default(true);
                 }
-                if (!Schema::hasColumn('enrollment_settings', 'require_payment_verified')) {
+                if (! Schema::hasColumn('enrollment_settings', 'require_payment_verified')) {
                     $table->boolean('require_payment_verified')->default(true);
                 }
-                if (!Schema::hasColumn('enrollment_settings', 'require_complete_fields')) {
+                if (! Schema::hasColumn('enrollment_settings', 'require_complete_fields')) {
                     $table->boolean('require_complete_fields')->default(true);
                 }
             });

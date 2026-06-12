@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\EnrollmentApplicant;
 use App\Models\FinanceMasterEntry;
 use App\Models\FinanceMasterEntryStudent;
+use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -116,6 +117,8 @@ class FinanceMasterTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSeeInOrder(['HANA SALEH', 'F']);
+        $response->assertSee(route('admin.applicants.show', $applicant), false);
+        $response->assertSee('Enrollment');
     }
 
     /** @test */
@@ -133,7 +136,7 @@ class FinanceMasterTest extends TestCase
                 'reference_no' => strtoupper(str_replace(' ', '-', $name)),
                 'payment_date' => '2026-06-11',
                 'amount' => 500.00,
-                'or_number' => 'OR-' . strtoupper(str_replace(' ', '-', $name)),
+                'or_number' => 'OR-'.strtoupper(str_replace(' ', '-', $name)),
                 'verified_by' => $admin->id,
             ]);
 
@@ -471,7 +474,7 @@ class FinanceMasterTest extends TestCase
         ]);
 
         $responseVerify->assertSessionHasNoErrors();
-        $invoice = \App\Models\Invoice::getOrCreateForFamily($applicant1);
+        $invoice = Invoice::getOrCreateForFamily($applicant1);
 
         $this->assertEquals('verified', $paymentVerify1->fresh()->status);
         $this->assertEquals('verified', $paymentVerify2->fresh()->status);
@@ -480,7 +483,7 @@ class FinanceMasterTest extends TestCase
         $or1 = $paymentVerify1->fresh()->or_number;
         $or2 = $paymentVerify2->fresh()->or_number;
         $this->assertEquals($or1, $or2);
-        
+
         // Since it's a single unique transaction of 8000 (total due is 8000), it should be the base OR (e.g. OR-XXXXXX)
         $expectedBaseOr = str_replace('INV-', config('services.school.or_prefix', 'OR-'), $invoice->invoice_no);
         $this->assertEquals($expectedBaseOr, $or1);
@@ -531,7 +534,7 @@ class FinanceMasterTest extends TestCase
             'verified_by' => $admin->id,
         ]);
 
-        $invoice = \App\Models\Invoice::getOrCreateForFamily($applicant);
+        $invoice = Invoice::getOrCreateForFamily($applicant);
         $payment->update(['invoice_id' => $invoice->id]);
         $invoice->recalculate();
 
