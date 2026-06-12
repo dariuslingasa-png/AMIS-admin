@@ -169,7 +169,8 @@ class EnrollmentApprovalService
     private function baseMailNickname(EnrollmentApplicant $applicant, string $studentNumber): string
     {
         $firstLetterOfLastName = strtolower(substr(preg_replace('/[^a-zA-Z]/', '', (string) $applicant->last_name), 0, 1));
-        $firstName = strtolower(preg_replace('/[^a-zA-Z]/', '', (string) $applicant->first_name));
+        $firstGivenName = preg_split('/\s+/', trim((string) $applicant->first_name))[0] ?? '';
+        $firstName = strtolower(preg_replace('/[^a-zA-Z]/', '', $firstGivenName));
 
         return $studentNumber.$firstLetterOfLastName.($firstName ?: 'student');
     }

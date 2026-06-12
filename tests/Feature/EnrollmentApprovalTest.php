@@ -186,6 +186,55 @@ class EnrollmentApprovalTest extends TestCase
     }
 
     #[Test]
+    public function school_email_uses_only_the_first_given_name_token()
+    {
+        Mail::fake();
+
+        EnrollmentSetting::create([
+            'send_onboarding_email' => false,
+            'generate_amis_id' => true,
+            'generate_microsoft_account' => false,
+            'generate_soa' => false,
+            'require_documents_approved' => false,
+            'require_payment_verified' => false,
+            'require_complete_fields' => false,
+        ]);
+
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'account_status' => 'verified',
+        ]);
+
+        $parent = User::factory()->create([
+            'role' => 'applicant',
+        ]);
+
+        $applicant = EnrollmentApplicant::create([
+            'user_id' => $parent->id,
+            'first_name' => 'Mohammed Ilias',
+            'last_name' => 'Al-Shaud',
+            'gender' => 'male',
+            'student_type' => 'Old',
+            'grade_level' => 'Grade 5',
+            'learning_mode' => 'F2F',
+            'school_year' => '2026-2027',
+            'parent_email' => 'parent@example.com',
+            'email' => 'mohammed@example.com',
+            'status' => 'submitted',
+        ]);
+
+        $response = $this->actingAs($admin)->post(route('admin.applicants.approve', $applicant));
+
+        $response->assertRedirect();
+
+        $schoolEmail = Student::where('enrollment_applicant_id', $applicant->id)->value('school_email');
+
+        $this->assertNotNull($schoolEmail);
+        $this->assertStringEndsWith('amohammed@amis.edu.ph', $schoolEmail);
+        $this->assertStringNotContainsString('ilias', $schoolEmail);
+    }
+
+    #[Test]
     public function approval_sends_welcome_email_when_onboarding_email_is_enabled()
     {
         Mail::fake();
