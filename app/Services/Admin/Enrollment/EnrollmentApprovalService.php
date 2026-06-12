@@ -377,9 +377,11 @@ class EnrollmentApprovalService
         $path = ltrim((string) $path, '/');
         $candidates = [];
 
-        if (str_contains($path, '/optimized/')) {
-            $originalDirectory = dirname(str_replace('/optimized/', '/original/', $path));
-            $filename = pathinfo($path, PATHINFO_FILENAME);
+        $optimizedPath = preg_replace('#thumbnails/(small|medium|large)/#', 'optimized/', $path);
+
+        if (str_contains($optimizedPath, 'optimized/')) {
+            $originalDirectory = dirname(str_replace('optimized/', 'original/', $optimizedPath));
+            $filename = pathinfo($optimizedPath, PATHINFO_FILENAME);
 
             foreach ($this->enrollmentStorageRoots() as $root) {
                 $directory = rtrim($root, '/').'/'.$originalDirectory;
@@ -394,8 +396,9 @@ class EnrollmentApprovalService
         }
 
         $variantPaths = collect([
-            str_replace('/optimized/', '/thumbnails/large/', $path),
-            str_replace('/optimized/', '/thumbnails/medium/', $path),
+            str_replace('optimized/', 'thumbnails/large/', $optimizedPath),
+            str_replace('optimized/', 'thumbnails/medium/', $optimizedPath),
+            $optimizedPath,
             $path,
         ])->unique();
 
