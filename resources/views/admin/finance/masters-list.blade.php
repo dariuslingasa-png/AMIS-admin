@@ -320,6 +320,16 @@
                             </tr>
                         @else
                             @foreach ($students as $index => $student)
+                                @php
+                                    $enrollmentStatusLabel = $student->enrollment_status_label ?? null;
+                                    $enrollmentStatusClass = match ($student->enrollment_status_color ?? 'slate') {
+                                        'emerald' => 'bg-emerald-50 text-emerald-700 ring-emerald-100',
+                                        'blue' => 'bg-blue-50 text-blue-700 ring-blue-100',
+                                        'rose' => 'bg-rose-50 text-rose-700 ring-rose-100',
+                                        'amber' => 'bg-amber-50 text-amber-700 ring-amber-100',
+                                        default => 'bg-slate-50 text-slate-600 ring-slate-100',
+                                    };
+                                @endphp
                                 <tr class="transition hover:bg-slate-50/80 @if($loop->last) border-b border-slate-250 @else border-b border-slate-100/40 @endif">
                                     <td class="px-5 py-4 align-top font-black tabular-nums text-slate-500">
                                         {{ $student->ledger_row_number ?? '-' }}
@@ -330,14 +340,30 @@
                                                 <span class="font-bold uppercase text-slate-900 text-[13.5px] break-words whitespace-normal leading-tight group-hover:text-emerald-700">
                                                     {{ Str::upper($student->student_name) }}
                                                 </span>
-                                                <span class="inline-flex w-fit items-center gap-1 rounded-lg bg-emerald-50 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-emerald-700 ring-1 ring-emerald-100 print:hidden">
-                                                    <i data-lucide="external-link" class="h-3 w-3"></i>
-                                                    Enrollment
+                                                <span class="flex flex-wrap items-center gap-1 print:hidden">
+                                                    <span class="inline-flex w-fit items-center gap-1 rounded-lg bg-emerald-50 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-emerald-700 ring-1 ring-emerald-100">
+                                                        <i data-lucide="external-link" class="h-3 w-3"></i>
+                                                        Enrollment
+                                                    </span>
+                                                    @if ($enrollmentStatusLabel)
+                                                        <span class="inline-flex w-fit items-center gap-1 rounded-lg px-2 py-0.5 text-[10px] font-black uppercase tracking-wider ring-1 {{ $enrollmentStatusClass }}" title="{{ $student->enrollment_status_title ?? $enrollmentStatusLabel }}">
+                                                            <i data-lucide="{{ $enrollmentStatusLabel === 'Enrolled' ? 'check-circle-2' : 'clock-3' }}" class="h-3 w-3"></i>
+                                                            {{ $enrollmentStatusLabel }}
+                                                        </span>
+                                                    @endif
                                                 </span>
                                             </a>
                                         @else
-                                            <span class="font-bold uppercase text-slate-900 text-[13.5px] max-w-[260px] break-words whitespace-normal inline-block leading-tight">
-                                                {{ Str::upper($student->student_name) }}
+                                            <span class="inline-flex max-w-[280px] flex-col gap-1">
+                                                <span class="font-bold uppercase text-slate-900 text-[13.5px] max-w-[260px] break-words whitespace-normal inline-block leading-tight">
+                                                    {{ Str::upper($student->student_name) }}
+                                                </span>
+                                                @if ($enrollmentStatusLabel)
+                                                    <span class="inline-flex w-fit items-center gap-1 rounded-lg px-2 py-0.5 text-[10px] font-black uppercase tracking-wider ring-1 {{ $enrollmentStatusClass }} print:hidden" title="{{ $student->enrollment_status_title ?? $enrollmentStatusLabel }}">
+                                                        <i data-lucide="{{ $enrollmentStatusLabel === 'Enrolled' ? 'check-circle-2' : 'clock-3' }}" class="h-3 w-3"></i>
+                                                        {{ $enrollmentStatusLabel }}
+                                                    </span>
+                                                @endif
                                             </span>
                                         @endif
                                     </td>

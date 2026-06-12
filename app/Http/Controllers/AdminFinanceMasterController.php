@@ -6,6 +6,7 @@ use App\Models\EnrollmentApplicant;
 use App\Models\FinanceMasterEntry;
 use App\Models\FinanceMasterEntryStudent;
 use App\Models\Payment;
+use App\Models\Student;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -331,11 +332,13 @@ class AdminFinanceMasterController extends Controller
 
         if ($familyIds->isEmpty() && $userIds->isEmpty()) {
             foreach ($withApplicants as $entry) {
+                $entry->payment->applicant->loadMissing('student:id,enrollment_applicant_id,student_number');
                 $fallbackUrl = route('admin.applicants.show', $entry->payment->applicant);
                 $entry->setAttribute('enrollment_url', $fallbackUrl);
 
                 foreach ($entry->students as $student) {
                     $student->setAttribute('enrollment_url', $fallbackUrl);
+                    $this->setLedgerStudentEnrollmentStatus($student, $entry->payment->applicant);
                 }
             }
 
@@ -343,7 +346,8 @@ class AdminFinanceMasterController extends Controller
         }
 
         $familyApplicants = EnrollmentApplicant::query()
-            ->select('id', 'user_id', 'family_application_id', 'first_name', 'middle_name', 'last_name')
+            ->select('id', 'user_id', 'family_application_id', 'first_name', 'middle_name', 'last_name', 'status')
+            ->with('student:id,enrollment_applicant_id,student_number')
             ->where(function ($query) use ($familyIds, $userIds) {
                 if ($familyIds->isNotEmpty()) {
                     $query->whereIn('family_application_id', $familyIds);
@@ -363,6 +367,7 @@ class AdminFinanceMasterController extends Controller
 
         foreach ($withApplicants as $entry) {
             $seedApplicant = $entry->payment->applicant;
+            $seedApplicant->loadMissing('student:id,enrollment_applicant_id,student_number');
             $fallbackUrl = route('admin.applicants.show', $seedApplicant);
             $entry->setAttribute('enrollment_url', $fallbackUrl);
 
@@ -392,8 +397,69 @@ class AdminFinanceMasterController extends Controller
                 $matchedApplicant = $applicantByName[$this->studentNameKey($student->student_name)] ?? $seedApplicant;
 
                 $student->setAttribute('enrollment_url', route('admin.applicants.show', $matchedApplicant));
+                $this->setLedgerStudentEnrollmentStatus($student, $matchedApplicant);
             }
         }
+    }
+
+    private function setLedgerStudentEnrollmentStatus(FinanceMasterEntryStudent $student, ?EnrollmentApplicant $applicant): void
+    {
+        $status = $this->enrollmentStatusForApplicant($applicant);
+
+        $student->setAttribute('enrollment_status_label', $status['label']);
+        $student->setAttribute('enrollment_status_color', $status['color']);
+        $student->setAttribute('enrollment_status_title', $status['title']);
+    }
+
+    private function enrollmentStatusForApplicant(?EnrollmentApplicant $applicant): array
+    {
+        if (! $applicant) {
+            return [
+                'label' => 'No Match',
+                'color' => 'slate',
+                'title' => 'No enrollment application matched to this ledger row.',
+            ];
+        }
+
+        $student = $applicant->relationLoaded('student')
+            ? $applicant->student
+            : Student::where('enrollment_applicant_id', $applicant->id)->first(['student_number']);
+
+        if ($student) {
+            return [
+                'label' => 'Enrolled',
+                'color' => 'emerald',
+                'title' => 'Official student record generated: '.($student->student_number ?: 'student record exists'),
+            ];
+        }
+
+        return match ($applicant->status) {
+            'approved' => [
+                'label' => 'Approved',
+                'color' => 'blue',
+                'title' => 'Application is approved, but no official student record was found yet.',
+            ],
+            'rejected' => [
+                'label' => 'Rejected',
+                'color' => 'rose',
+                'title' => 'Enrollment application was rejected.',
+            ],
+            'for_correction' => [
+                'label' => 'For Correction',
+                'color' => 'amber',
+                'title' => 'Enrollment application needs correction before approval.',
+            ],
+            'pending_verification' => [
+                'label' => 'Pending Verification',
+                'color' => 'amber',
+                'title' => 'Enrollment application is pending verification.',
+            ],
+            default => [
+                'label' => 'Pending Approval',
+                'color' => 'amber',
+                'title' => 'Enrollment application is not enrolled yet.',
+            ],
+        };
     }
 
     private function numberLedgerStudents($entries): void
