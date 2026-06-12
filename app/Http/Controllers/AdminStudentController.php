@@ -108,9 +108,10 @@ class AdminStudentController extends Controller
             ->leftJoin('enrollment_applicants as ma', 'ma.id', '=', 'students.enrollment_applicant_id')
             ->selectRaw("
                 CASE 
-                    WHEN LOWER(ma.learning_mode) LIKE '%flexible%' OR LOWER(ma.learning_mode) LIKE '%online%' OR LOWER(ma.learning_mode) LIKE '%odl%' THEN 'odl'
+                    WHEN LOWER(ma.learning_mode) LIKE '%1st shift%' THEN 'flexible_1st'
+                    WHEN LOWER(ma.learning_mode) LIKE '%2nd shift%' THEN 'flexible_2nd'
                     WHEN LOWER(ma.learning_mode) LIKE '%face%' OR LOWER(ma.learning_mode) LIKE '%f2f%' THEN 'f2f'
-                    ELSE 'odl'
+                    ELSE 'f2f'
                 END as mode_key, 
                 COUNT(*) as total
             ")
@@ -132,7 +133,8 @@ class AdminStudentController extends Controller
             ],
             'mode' => [
                 'f2f' => (int) ($modeCounts['f2f'] ?? 0),
-                'odl' => (int) ($modeCounts['odl'] ?? 0),
+                'flexible_1st' => (int) ($modeCounts['flexible_1st'] ?? 0),
+                'flexible_2nd' => (int) ($modeCounts['flexible_2nd'] ?? 0),
             ],
         ];
 
@@ -145,9 +147,10 @@ class AdminStudentController extends Controller
             'allocated_slots' => \App\Models\StudentSection::count(),
         ];
 
-        $students = $query->paginate(20)->withQueryString();
+        $isPrint = $request->filled('print');
+        $students = $isPrint ? $query->get() : $query->paginate(20)->withQueryString();
 
-        return view('admin.students.index', compact('students', 'stats', 'analytics', 'gradeOrder'));
+        return view('admin.students.index', compact('students', 'stats', 'analytics', 'gradeOrder', 'isPrint'));
     }
 
     public function dashboard()

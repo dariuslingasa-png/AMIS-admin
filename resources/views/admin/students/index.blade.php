@@ -29,15 +29,42 @@
                 <h1 class="mt-1 text-xl font-bold text-slate-950">Student Records</h1>
                 <p class="mt-1 text-sm text-slate-500">View enrolled student accounts, credentials, and synchronized teams channels.</p>
             </div>
-            <a href="{{ route('admin.students.dashboard') }}" class="inline-flex h-10 items-center gap-2 rounded-lg border border-emerald-100 bg-emerald-50 px-4 text-sm font-bold text-emerald-700 transition hover:bg-emerald-100">
-                <i data-lucide="layout-dashboard" class="h-4 w-4"></i>
-                Dashboard
-            </a>
+            <div class="flex items-center gap-2 print:hidden">
+                <a href="{{ route('admin.students.index', array_merge(request()->query(), ['print' => 1])) }}" target="_blank" class="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 transition hover:bg-slate-50">
+                    <i data-lucide="printer" class="h-4 w-4"></i>
+                    Print List
+                </a>
+                <a href="{{ route('admin.students.dashboard') }}" class="inline-flex h-10 items-center gap-2 rounded-lg border border-emerald-100 bg-emerald-50 px-4 text-sm font-bold text-emerald-700 transition hover:bg-emerald-100">
+                    <i data-lucide="layout-dashboard" class="h-4 w-4"></i>
+                    Dashboard
+                </a>
+            </div>
+        </div>
+
+        <!-- Hidden Print Header -->
+        <div class="hidden print:block mb-6 text-center border-b-2 border-slate-350 pb-4">
+            <h1 class="uppercase tracking-tight text-slate-900 font-bold" style="font-family: Arial, sans-serif; font-size: 14px;">STUDENT RECORDS MASTERS LIST</h1>
+            <h2 class="uppercase tracking-wide text-slate-700 font-bold mt-1" style="font-family: Arial, sans-serif; font-size: 11px;">
+                @if(request('grade'))
+                    Grade Level: {{ request('grade') }}
+                @else
+                    All Grades
+                @endif
+                @if(request('type'))
+                    | Type: {{ strtoupper(request('type')) }}
+                @endif
+                @if(request('mode'))
+                    | Mode: {{ request('mode') }}
+                @endif
+            </h2>
+            <div class="mt-3 flex justify-center gap-6 text-slate-500 font-normal" style="font-family: Arial, sans-serif; font-size: 9px;">
+                <span>Total Filtered: {{ $isPrint ? $students->count() : $students->total() }}</span>
+            </div>
         </div>
 
         <div class="px-6 py-5">
             <!-- Filter Bar Form -->
-            <form method="GET" class="mb-5 grid grid-cols-12 gap-3">
+            <form method="GET" class="mb-5 grid grid-cols-12 gap-3 print:hidden">
                 <input type="hidden" name="sort" value="{{ $sort }}">
                 <input type="hidden" name="direction" value="{{ $direction }}">
                 <label class="relative col-span-12 lg:col-span-3">
@@ -65,7 +92,8 @@
                 <select name="mode" class="{{ $inputClass }} col-span-6 lg:col-span-2 w-full" onchange="this.form.submit()">
                     <option value="">All learning modes</option>
                     <option value="Face-to-Face" @selected(request('mode') === 'Face-to-Face')>Face-to-Face</option>
-                    <option value="Flexible" @selected(request('mode') === 'Flexible')>Flexible Online Learning</option>
+                    <option value="1st Shift" @selected(request('mode') === '1st Shift')>Flexible Online 1st Shift</option>
+                    <option value="2nd Shift" @selected(request('mode') === '2nd Shift')>Flexible Online 2nd Shift</option>
                 </select>
                 <button class="col-span-12 lg:col-span-1 inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-800">
                     <i data-lucide="filter" class="h-4 w-4"></i>
@@ -148,20 +176,25 @@
                 </div>
 
                 <!-- Learning Mode Grid -->
-                <div class="rounded-lg border border-slate-200 bg-white px-4 py-3">
+                <div class="rounded-lg border border-slate-200 bg-white px-4 py-3 print:hidden">
                     <div class="mb-3 flex items-center justify-between gap-3">
                         <p class="text-xs font-extrabold uppercase tracking-wider text-slate-500">Learning Mode Grid</p>
                     </div>
-                    <div class="grid grid-cols-2 gap-2">
+                    <div class="grid grid-cols-3 gap-2">
                         <a href="{{ route('admin.students.index', array_merge(request()->except('page'), ['mode' => 'Face-to-Face'])) }}"
                            class="rounded-md border px-3 py-2 text-center transition {{ request('mode') === 'Face-to-Face' ? 'border-emerald-300 bg-emerald-50 text-emerald-800' : 'border-slate-100 bg-slate-50 text-slate-600 hover:border-slate-200 hover:bg-white' }}">
                             <div class="text-[11px] font-black uppercase">F2F (Face-to-Face)</div>
                             <div class="mt-1 text-2xl font-black">{{ number_format((int) ($analytics['mode']['f2f'] ?? 0)) }}</div>
                         </a>
-                        <a href="{{ route('admin.students.index', array_merge(request()->except('page'), ['mode' => 'Flexible'])) }}"
-                           class="rounded-md border px-3 py-2 text-center transition {{ request('mode') === 'Flexible' ? 'border-violet-300 bg-violet-50 text-violet-800' : 'border-slate-100 bg-slate-50 text-slate-600 hover:border-slate-200 hover:bg-white' }}">
-                            <div class="text-[11px] font-black uppercase">ODL (Flexible / Online)</div>
-                            <div class="mt-1 text-2xl font-black">{{ number_format((int) ($analytics['mode']['odl'] ?? 0)) }}</div>
+                        <a href="{{ route('admin.students.index', array_merge(request()->except('page'), ['mode' => '1st Shift'])) }}"
+                           class="rounded-md border px-3 py-2 text-center transition {{ request('mode') === '1st Shift' ? 'border-sky-300 bg-sky-50 text-sky-800' : 'border-slate-100 bg-slate-50 text-slate-600 hover:border-slate-200 hover:bg-white' }}">
+                            <div class="text-[11px] font-black uppercase">ODL (1st Shift)</div>
+                            <div class="mt-1 text-2xl font-black">{{ number_format((int) ($analytics['mode']['flexible_1st'] ?? 0)) }}</div>
+                        </a>
+                        <a href="{{ route('admin.students.index', array_merge(request()->except('page'), ['mode' => '2nd Shift'])) }}"
+                           class="rounded-md border px-3 py-2 text-center transition {{ request('mode') === '2nd Shift' ? 'border-amber-300 bg-amber-50 text-amber-800' : 'border-slate-100 bg-slate-50 text-slate-600 hover:border-slate-200 hover:bg-white' }}">
+                            <div class="text-[11px] font-black uppercase">ODL (2nd Shift)</div>
+                            <div class="mt-1 text-2xl font-black">{{ number_format((int) ($analytics['mode']['flexible_2nd'] ?? 0)) }}</div>
                         </a>
                     </div>
                 </div>
@@ -288,7 +321,131 @@
             </div>
 
             <!-- Pagination links -->
-            <div class="mt-5">{{ $students->links() }}</div>
+            @if(!$isPrint)
+                <div class="mt-5">{{ $students->links() }}</div>
+            @endif
         </div>
     </section>
+
+    <!-- Print styling configuration -->
+    <style>
+        @media print {
+            /* Hide all navigation, sidebars, dashboard links, buttons, and filters */
+            #default-sidebar, 
+            .admin-sidebar, 
+            .admin-topbar, 
+            topbar, 
+            aside, 
+            form, 
+            nav, 
+            .breadcrumbs, 
+            .flash-messages, 
+            footer, 
+            .print\:hidden,
+            .module-dashboard-link,
+            .sidebar-section-container,
+            .sidebar-profile-card,
+            .admin-shell > a,
+            .mb-5.grid,
+            .mb-5,
+            [data-lucide="arrow-left"] {
+                display: none !important;
+            }
+
+            /* Reset container styling for standard page layout */
+            .admin-content, 
+            .admin-shell, 
+            body, 
+            main, 
+            .mx-auto,
+            section,
+            .bg-white {
+                margin: 0 !important;
+                padding: 0 !important;
+                background: transparent !important;
+                min-width: auto !important;
+                width: 100% !important;
+                box-shadow: none !important;
+                border: none !important;
+                font-family: Arial, sans-serif !important;
+            }
+
+            .admin-content {
+                margin-left: 0 !important;
+            }
+
+            /* Make the hidden print block visible */
+            .print\:block {
+                display: block !important;
+            }
+
+            /* Style the table to be simple plain raw text */
+            table {
+                border-collapse: collapse !important;
+                width: 100% !important;
+                font-family: Arial, sans-serif !important;
+                border: 1px solid #000000 !important;
+            }
+
+            table th {
+                position: static !important;
+                background: #f1f5f9 !important;
+                border: 1px solid #000000 !important;
+                color: #000000 !important;
+                font-family: Arial, sans-serif !important;
+                font-weight: bold !important;
+                font-size: 10px !important;
+                padding: 6px 8px !important;
+                text-transform: uppercase !important;
+                text-align: left !important;
+            }
+
+            table td {
+                border: 1px solid #000000 !important;
+                padding: 6px 8px !important;
+                font-family: Arial, sans-serif !important;
+                font-size: 9px !important;
+                color: #000000 !important;
+                background: transparent !important;
+            }
+
+            /* Hide the actions column in the table during print */
+            table th:last-child, 
+            table td:last-child {
+                display: none !important;
+            }
+
+            /* Remove icons and styling from inside table td */
+            table td svg,
+            table td i,
+            table td [data-lucide],
+            table td .inline-flex,
+            table td span {
+                display: inline !important;
+                background: transparent !important;
+                border: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                box-shadow: none !important;
+                color: #000000 !important;
+                font-size: 9px !important;
+                font-weight: normal !important;
+            }
+
+            /* Page break prevention rules for clean printing */
+            tr {
+                page-break-inside: avoid !important;
+            }
+        }
+    </style>
+
+    @if($isPrint)
+        <script>
+            window.addEventListener('DOMContentLoaded', () => {
+                setTimeout(() => {
+                    window.print();
+                }, 500);
+            });
+        </script>
+    @endif
 </x-admin-layout>
