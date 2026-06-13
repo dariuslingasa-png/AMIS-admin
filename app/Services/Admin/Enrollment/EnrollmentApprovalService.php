@@ -551,15 +551,25 @@ class EnrollmentApprovalService
                 (new MicrosoftGraphService)->resetPassword($student->school_email, $tempPassword);
             }
         } catch (\Throwable $exception) {
+            $msError = 'Microsoft password reset failed: '.$exception->getMessage();
+
             Log::error('Failed to reset Microsoft password before onboarding resend: '.$exception->getMessage(), [
                 'applicant_id' => $applicant->id,
                 'student_id' => $student->id,
                 'school_email' => $student->school_email,
             ]);
 
-            $this->markOnboardingEmail($applicant, 'failed', 'Microsoft password reset failed: '.$exception->getMessage());
+            [$sent, $error] = $this->sendOnboardingEmail($applicant, $student, '', $msError, $recipients->all());
 
-            return 'Inbox email was not resent because Microsoft password reset failed. Please retry when Microsoft sync is healthy.';
+            if (! $sent) {
+                $this->markOnboardingEmail($applicant, 'failed', $error);
+
+                return 'Inbox email failed to send after Microsoft password reset failed. Please check mail logs.';
+            }
+
+            $this->markOnboardingEmail($applicant, 'sent_reset_pending', $msError, now());
+
+            return 'Inbox email sent to '.$recipients->implode(', ').', but Microsoft password reset is still blocked. Fix Microsoft permissions before resending credentials.';
         }
 
         $student->update(['temp_password' => Hash::make($tempPassword)]);

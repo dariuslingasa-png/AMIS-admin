@@ -37,6 +37,7 @@
 
             return match ($status) {
                 'sent' => ['Sent', 'green', $sentLabel],
+                'sent_reset_pending' => ['Sent / Reset Pending', 'yellow', data_get($applicant, 'onboarding_email_error')],
                 'failed' => ['Failed', 'red', data_get($applicant, 'onboarding_email_error')],
                 'missing_recipient' => ['No Email', 'red', 'No valid parent or applicant email'],
                 'missing_payment_proof' => ['No Payment Proof', 'yellow', 'Waiting for payment proof'],

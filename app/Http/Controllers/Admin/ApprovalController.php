@@ -131,7 +131,7 @@ class ApprovalController extends Controller
             'status' => $applicant->fresh()?->onboarding_email_status,
         ]);
 
-        if ($applicant->fresh()?->onboarding_email_status !== 'sent') {
+        if (! in_array($applicant->fresh()?->onboarding_email_status, ['sent', 'sent_reset_pending'], true)) {
             return back()->withErrors(['onboarding_email' => $message]);
         }
 

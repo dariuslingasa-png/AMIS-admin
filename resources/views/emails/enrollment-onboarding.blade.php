@@ -24,7 +24,11 @@
                 <tr><td style="padding:7px 0;font-size:13px;color:#6b7280;width:160px;">Student Number</td><td style="padding:7px 0;font-size:15px;font-weight:800;color:#059669;">{{ $student->student_number }}</td></tr>
                 <tr><td style="padding:7px 0;font-size:13px;color:#6b7280;">Grade Level</td><td style="padding:7px 0;font-size:14px;font-weight:600;color:#111827;">{{ $student->grade_level }}</td></tr>
                 <tr><td style="padding:7px 0;font-size:13px;color:#6b7280;">School Email</td><td style="padding:7px 0;font-size:14px;font-weight:600;color:#111827;">{{ $student->school_email }}</td></tr>
-                <tr><td style="padding:7px 0;font-size:13px;color:#6b7280;">Temp Password</td><td style="padding:7px 0;font-size:14px;font-weight:700;color:#111827;letter-spacing:0.08em;background:#fef9c3;padding:4px 8px;border-radius:6px;">{{ $tempPassword }}</td></tr>
+                @if ($msError)
+                    <tr><td style="padding:7px 0;font-size:13px;color:#6b7280;">Password</td><td style="padding:7px 0;font-size:14px;font-weight:700;color:#92400e;background:#fef3c7;padding:4px 8px;border-radius:6px;">Pending school reset</td></tr>
+                @else
+                    <tr><td style="padding:7px 0;font-size:13px;color:#6b7280;">Temp Password</td><td style="padding:7px 0;font-size:14px;font-weight:700;color:#111827;letter-spacing:0.08em;background:#fef9c3;padding:4px 8px;border-radius:6px;">{{ $tempPassword }}</td></tr>
+                @endif
             </table>
         </div>
         <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:14px 18px;margin-bottom:20px;">
