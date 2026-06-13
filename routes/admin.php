@@ -137,6 +137,7 @@ Route::name('admin.')->group(function () {
         Route::post('/ms-sync/import', [AdminMsSyncController::class, 'importFromAzure'])->name('ms-sync.import');
         Route::post('/ms-sync/delete-azure', [AdminMsSyncController::class, 'deleteFromAzure'])->name('ms-sync.delete-azure');
         Route::post('/ms-sync/students/{student}', [AdminMsSyncController::class, 'syncStudent'])->name('ms-sync.student');
+        Route::post('/ms-sync/sync-all-licenses', [AdminMsSyncController::class, 'syncAllLicenses'])->name('ms-sync.sync-all-licenses');
 
         Route::get('/admins', [AdminUserController::class, 'index'])->name('admins.index');
         Route::get('/admins/audit-logs', [AdminUserController::class, 'auditLogs'])->name('admins.audit-logs');

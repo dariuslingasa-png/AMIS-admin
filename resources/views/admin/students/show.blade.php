@@ -550,13 +550,13 @@
                         </button>
                     </form>
 
-                    <!-- Force Teams Sync -->
+                    <!-- Force Teams & License Sync -->
                     @if($student->ms_user_id)
                         <form method="POST" action="{{ route('admin.ms-sync.student', $student) }}">
                             @csrf
-                            <button type="submit" class="w-full inline-flex h-11 items-center justify-center gap-2.5 rounded-xl bg-emerald-600 px-4 text-sm font-bold text-white hover:bg-emerald-700 active:scale-[0.98] transition-all duration-200 cursor-pointer">
-                                <i data-lucide="refresh-cw" class="h-4 w-4"></i>
-                                <span>Sync Teams Account</span>
+                            <button type="submit" class="w-full inline-flex h-11 items-center justify-center gap-2.5 rounded-xl bg-violet-600 px-4 text-sm font-bold text-white hover:bg-violet-700 active:scale-[0.98] transition-all duration-200 cursor-pointer">
+                                <i data-lucide="shield-check" class="h-4 w-4"></i>
+                                <span>Sync Microsoft License</span>
                             </button>
                         </form>
                     @endif

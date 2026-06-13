@@ -487,4 +487,74 @@ class AdminMsSyncController extends Controller
             return back()->withErrors(['error' => $e->getMessage()]);
         }
     }
+
+    /**
+     * Sync Microsoft status and license for all students in the database.
+     */
+    public function syncAllLicenses()
+    {
+        @set_time_limit(300); // 5 minutes limit for bulk operation
+        
+        $students = Student::whereNotNull('ms_user_id')->get();
+        $graph = new MicrosoftGraphService();
+        $studentSkuId = config('services.microsoft.student_sku_id');
+        
+        if (!$studentSkuId) {
+            return back()->withErrors(['error' => 'Student SKU ID is not configured.']);
+        }
+        
+        $successCount = 0;
+        $failedCount = 0;
+        $errors = [];
+        
+        foreach ($students as $student) {
+            try {
+                $user = $student->user;
+                if ($user) {
+                    $status = $user->account_status ?? 'verified';
+                    $msUserId = $student->ms_user_id;
+                    
+                    if ($status === 'verified') {
+                        // Ensure enabled in Entra ID
+                        $graph->setAccountEnabled($msUserId, true);
+                        $graph->assignLicense($msUserId, [$studentSkuId], []);
+                        
+                        \App\Models\AdminAuditLog::record('license_assigned', true, "Synchronized student license and enabled state for student {$student->school_email} via bulk sync", [
+                            'email' => $student->school_email,
+                            'sku_id' => $studentSkuId,
+                            'ms_user_id' => $msUserId,
+                        ]);
+                        
+                        $successCount++;
+                    } else {
+                        // Ensure disabled in Entra ID
+                        $graph->setAccountEnabled($msUserId, false);
+                        try {
+                            $graph->assignLicense($msUserId, [], [$studentSkuId]);
+                            \App\Models\AdminAuditLog::record('license_revoked', true, "Synchronized student license revocation and disabled state for student {$student->school_email} via bulk sync", [
+                                'email' => $student->school_email,
+                                'sku_id' => $studentSkuId,
+                                'ms_user_id' => $msUserId,
+                            ]);
+                        } catch (\Throwable $e) {}
+                        $successCount++;
+                    }
+                }
+            } catch (\Exception $e) {
+                $failedCount++;
+                $errors[] = "{$student->school_email}: {$e->getMessage()}";
+                Log::error("Bulk license assignment failed for {$student->school_email}: " . $e->getMessage());
+            }
+            
+            // Tiny delay to respect API rate limits
+            usleep(100000); // 0.1 seconds
+        }
+        
+        $msg = "License synchronization complete: {$successCount} succeeded, {$failedCount} failed.";
+        if ($failedCount > 0) {
+            return back()->with('warning', $msg . " Errors: " . implode(', ', array_slice($errors, 0, 5)));
+        }
+        
+        return back()->with('success', $msg);
+    }
 }

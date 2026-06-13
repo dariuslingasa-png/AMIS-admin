@@ -42,10 +42,10 @@ return [
         'admin_upn'      => env('MICROSOFT_ADMIN_UPN'),
         'admin_password' => env('MICROSOFT_ADMIN_PASSWORD'),
         'redirect_uri'   => env('MICROSOFT_REDIRECT_URI', rtrim((string) env('APP_URL', 'http://localhost'), '/').'/auth/microsoft/callback'),
-        'faculty_sku_id' => env('AZURE_FACULTY_SKU_ID', '947626ab-6b22-4217-a1cc-e2a2a0612dca'),
-        'faculty_a3_sku_id' => env('AZURE_FACULTY_A3_SKU_ID', 'e97c179c-1a13-4029-917c-2e55aa8b3b35'),
+        'faculty_sku_id' => env('AZURE_FACULTY_SKU_ID', '94763226-9b3c-4e75-a931-5c89701abe66'),
+        'faculty_a3_sku_id' => env('AZURE_FACULTY_A3_SKU_ID', 'e578b273-6db4-4691-bba0-8d691f4da603'),
         'faculty_a5_sku_id' => env('AZURE_FACULTY_A5_SKU_ID', '0287b9a5-aa37-4a9f-a42f-dc90ec7f3334'),
-        'student_sku_id' => env('AZURE_STUDENT_SKU_ID', '314c3e15-8a2a-4275-a131-7e885c37efb4'),
+        'student_sku_id' => env('AZURE_STUDENT_SKU_ID', '314c4481-f395-4525-be8b-2ec4bb1e9d91'),
     ],
 
     'enrollment_storage_url' => env('ENROLLMENT_STORAGE_URL'),

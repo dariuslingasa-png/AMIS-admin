@@ -30,6 +30,13 @@
                 <p class="mt-1 text-sm text-slate-500">View enrolled student accounts, credentials, and synchronized teams channels. <span class="font-semibold text-slate-700">({{ number_format($analytics['filtered_total'] ?? $students->total()) }} of {{ number_format($stats['total_students'] ?? 0) }} total)</span></p>
             </div>
             <div class="flex items-center gap-2 print:hidden">
+                <form method="POST" action="{{ route('admin.ms-sync.sync-all-licenses') }}" onsubmit="return confirm('Sync and assign licenses for all students? This may take a few minutes.')" class="inline-block">
+                    @csrf
+                    <button type="submit" class="inline-flex h-10 items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-4 text-sm font-bold text-violet-700 transition hover:bg-violet-100 cursor-pointer">
+                        <i data-lucide="shield-check" class="h-4 w-4"></i>
+                        Sync All Licenses
+                    </button>
+                </form>
                 <a href="{{ route('admin.students.index', array_merge(request()->query(), ['print' => 1])) }}" target="_blank" class="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 transition hover:bg-slate-50">
                     <i data-lucide="printer" class="h-4 w-4"></i>
                     Print List
@@ -198,8 +205,17 @@
                                 </td>
 
                                 <!-- Action -->
-                                <td class="px-5 py-4 text-right">
+                                 <td class="px-5 py-4 text-right">
                                     <div class="flex items-center justify-end gap-1.5">
+                                        @if($student->ms_user_id)
+                                            <form method="POST" action="{{ route('admin.ms-sync.student', $student) }}" class="inline-block">
+                                                @csrf
+                                                <button type="submit" class="inline-flex h-9 items-center gap-1.5 rounded-md border border-violet-100 bg-violet-50 px-2.5 text-xs font-bold text-violet-700 transition hover:bg-violet-100 cursor-pointer" title="Sync Microsoft Account & License">
+                                                    <i data-lucide="refresh-cw" class="h-3.5 w-3.5"></i>
+                                                    <span>Sync License</span>
+                                                </button>
+                                            </form>
+                                        @endif
                                         <a href="{{ route('admin.students.show', $student) }}" class="inline-flex h-9 items-center gap-2 rounded-md border border-emerald-100 bg-white px-3 text-xs font-bold text-emerald-700 transition hover:bg-emerald-50">
                                             <i data-lucide="file-search" class="h-4 w-4"></i>
                                             Manage

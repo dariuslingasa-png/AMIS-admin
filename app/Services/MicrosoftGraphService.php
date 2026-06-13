@@ -923,7 +923,7 @@ class MicrosoftGraphService
 
         $resolvedId = $this->resolveUserId($userId);
 
-        $response = $this->graph()->post("/users/{$resolvedId}/assignLicenses", $payload);
+        $response = $this->graph()->post("/users/{$resolvedId}/assignLicense", $payload);
 
         if (! $response->successful()) {
             Log::error('Graph assignLicense error', ['status' => $response->status(), 'body' => $response->body()]);
