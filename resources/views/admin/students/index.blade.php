@@ -148,7 +148,7 @@
                                 </a>
                             </th>
                             <th class="w-40 px-5 py-4 font-bold">Section</th>
-                            <th class="w-48 px-5 py-4 font-bold">School Email</th>
+                            <th class="w-48 px-5 py-4 font-bold">School Email / Temp Pass</th>
                             <th class="w-40 px-5 py-4 font-bold">MS Sync State</th>
                             <th class="w-36 px-5 py-4 text-right font-bold">Action</th>
                         </tr>
@@ -205,9 +205,22 @@
                                     {{ $student->studentSection->section->official_name ?? $student->studentSection->section->name ?? 'No Section' }}
                                 </td>
 
-                                <!-- School Email -->
-                                <td class="px-5 py-4 font-medium text-slate-600">
-                                    {{ $student->school_email ?? '-' }}
+                                <!-- School Email / Temp Pass -->
+                                <td class="px-5 py-4 text-xs">
+                                    <div class="font-semibold text-slate-800 break-all select-all">{{ $student->school_email ?? '-' }}</div>
+                                    <div class="mt-1 flex items-center gap-1">
+                                        <span class="text-slate-400 font-extrabold uppercase tracking-wider text-[10px]">Pass:</span>
+                                        @php
+                                            $isHashed = str_starts_with($student->temp_password ?? '', '$2y$');
+                                        @endphp
+                                        @if ($isHashed)
+                                            <span class="italic text-slate-400 text-[10px]">Changed</span>
+                                        @elseif (blank($student->temp_password))
+                                            <span class="text-slate-500 font-semibold text-[10px]">-</span>
+                                        @else
+                                            <span class="font-mono bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-[11px] text-slate-800 dark:text-slate-200 select-all font-semibold">{{ $student->temp_password }}</span>
+                                        @endif
+                                    </div>
                                 </td>
 
                                 <!-- MS Sync status -->
