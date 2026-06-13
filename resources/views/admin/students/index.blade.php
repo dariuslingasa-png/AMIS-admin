@@ -27,7 +27,7 @@
             <div>
                 <p class="text-xs font-extrabold uppercase tracking-wider text-emerald-700">Students Workspace</p>
                 <h1 class="mt-1 text-xl font-bold text-slate-950">Student Records</h1>
-                <p class="mt-1 text-sm text-slate-500">View enrolled student accounts, credentials, and synchronized teams channels.</p>
+                <p class="mt-1 text-sm text-slate-500">View enrolled student accounts, credentials, and synchronized teams channels. <span class="font-semibold text-slate-700">({{ number_format($analytics['filtered_total'] ?? $students->total()) }} of {{ number_format($stats['total_students'] ?? 0) }} total)</span></p>
             </div>
             <div class="flex items-center gap-2 print:hidden">
                 <a href="{{ route('admin.students.index', array_merge(request()->query(), ['print' => 1])) }}" target="_blank" class="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 transition hover:bg-slate-50">
@@ -101,104 +101,7 @@
                 </button>
             </form>
 
-            <!-- Grid Analytics Top Row -->
-            <div class="mb-5 grid grid-cols-1 gap-3 xl:grid-cols-[220px_1fr_300px]">
-                <div class="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
-                    <p class="text-xs font-extrabold uppercase tracking-wider text-slate-500">Filtered Students</p>
-                    <p class="mt-1 text-3xl font-black text-slate-950">{{ number_format($analytics['filtered_total'] ?? $students->total()) }}</p>
-                    <p class="mt-1 text-xs font-bold text-slate-400">of {{ number_format($stats['total_students'] ?? 0) }} total</p>
-                </div>
 
-                <div class="rounded-lg border border-slate-200 bg-white px-4 py-3">
-                    <div class="mb-3 flex items-center justify-between gap-3">
-                        <p class="text-xs font-extrabold uppercase tracking-wider text-slate-500">Grade Grid</p>
-                        <a href="{{ $sortUrl('grade') }}" class="inline-flex items-center gap-1.5 rounded-md border border-slate-200 px-2.5 py-1 text-xs font-black text-slate-600 transition hover:bg-slate-50">
-                            Sort
-                            <i data-lucide="{{ $sortIcon('grade') }}" class="h-3.5 w-3.5"></i>
-                        </a>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2 sm:grid-cols-4 xl:grid-cols-7">
-                        @foreach ($gradeOrder as $grade)
-                            @php $gradeCount = (int) optional($gradeTotals->get($grade))->total; @endphp
-                            <a href="{{ route('admin.students.index', array_merge(request()->except('page'), ['grade' => $grade])) }}"
-                               class="rounded-md border px-2.5 py-2 transition {{ request('grade') === $grade ? 'border-emerald-300 bg-emerald-50 text-emerald-800' : 'border-slate-100 bg-slate-50 text-slate-600 hover:border-slate-200 hover:bg-white' }}">
-                                <div class="text-[11px] font-black">{{ $grade }}</div>
-                                <div class="mt-1 text-lg font-black">{{ $gradeCount }}</div>
-                            </a>
-                        @endforeach
-                    </div>
-                </div>
-
-                <div class="rounded-lg border border-slate-200 bg-white px-4 py-3">
-                    <div class="mb-3 flex items-center justify-between gap-3">
-                        <p class="text-xs font-extrabold uppercase tracking-wider text-slate-500">Gender Grid</p>
-                        <a href="{{ $sortUrl('gender') }}" class="inline-flex items-center gap-1.5 rounded-md border border-slate-200 px-2.5 py-1 text-xs font-black text-slate-600 transition hover:bg-slate-50">
-                            Sort
-                            <i data-lucide="{{ $sortIcon('gender') }}" class="h-3.5 w-3.5"></i>
-                        </a>
-                    </div>
-                    <div class="grid grid-cols-3 gap-2">
-                        @foreach ($genderLabels as $genderKey => $genderLabel)
-                            <a href="{{ route('admin.students.index', array_merge(request()->except('page'), ['gender' => $genderKey])) }}"
-                               class="rounded-md border px-3 py-2 text-center transition {{ request('gender') === $genderKey ? 'border-violet-300 bg-violet-50 text-violet-800' : 'border-slate-100 bg-slate-50 text-slate-600 hover:border-slate-200 hover:bg-white' }}">
-                                <div class="text-[11px] font-black uppercase">{{ $genderLabel }}</div>
-                                <div class="mt-1 text-2xl font-black">{{ number_format((int) ($genderAnalytics[$genderKey] ?? 0)) }}</div>
-                            </a>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-
-            <!-- Grid Analytics Bottom Row (Type & Learning Mode) -->
-            <div class="mb-5 grid grid-cols-1 gap-3 md:grid-cols-2">
-                <!-- Student Type Grid -->
-                <div class="rounded-lg border border-slate-200 bg-white px-4 py-3">
-                    <div class="mb-3 flex items-center justify-between gap-3">
-                        <p class="text-xs font-extrabold uppercase tracking-wider text-slate-500">Student Type Grid</p>
-                    </div>
-                    <div class="grid grid-cols-3 gap-2">
-                        <a href="{{ route('admin.students.index', array_merge(request()->except('page'), ['type' => 'new'])) }}"
-                           class="rounded-md border px-3 py-2 text-center transition {{ request('type') === 'new' ? 'border-sky-300 bg-sky-50 text-sky-800' : 'border-slate-100 bg-slate-50 text-slate-600 hover:border-slate-200 hover:bg-white' }}">
-                            <div class="text-[11px] font-black uppercase">New Students</div>
-                            <div class="mt-1 text-2xl font-black">{{ number_format((int) ($analytics['type']['new'] ?? 0)) }}</div>
-                        </a>
-                        <a href="{{ route('admin.students.index', array_merge(request()->except('page'), ['type' => 'old'])) }}"
-                           class="rounded-md border px-3 py-2 text-center transition {{ request('type') === 'old' ? 'border-emerald-300 bg-emerald-50 text-emerald-800' : 'border-slate-100 bg-slate-50 text-slate-600 hover:border-slate-200 hover:bg-white' }}">
-                            <div class="text-[11px] font-black uppercase">Old Students</div>
-                            <div class="mt-1 text-2xl font-black">{{ number_format((int) ($analytics['type']['old'] ?? 0)) }}</div>
-                        </a>
-                        <a href="{{ route('admin.students.index', array_merge(request()->except('page'), ['type' => 'transferee'])) }}"
-                           class="rounded-md border px-3 py-2 text-center transition {{ request('type') === 'transferee' ? 'border-amber-300 bg-amber-50 text-amber-800' : 'border-slate-100 bg-slate-50 text-slate-600 hover:border-slate-200 hover:bg-white' }}">
-                            <div class="text-[11px] font-black uppercase">Transferees</div>
-                            <div class="mt-1 text-2xl font-black">{{ number_format((int) ($analytics['type']['transferee'] ?? 0)) }}</div>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Learning Mode Grid -->
-                <div class="rounded-lg border border-slate-200 bg-white px-4 py-3 print:hidden">
-                    <div class="mb-3 flex items-center justify-between gap-3">
-                        <p class="text-xs font-extrabold uppercase tracking-wider text-slate-500">Learning Mode Grid</p>
-                    </div>
-                    <div class="grid grid-cols-3 gap-2">
-                        <a href="{{ route('admin.students.index', array_merge(request()->except('page'), ['mode' => 'Face-to-Face'])) }}"
-                           class="rounded-md border px-3 py-2 text-center transition {{ request('mode') === 'Face-to-Face' ? 'border-emerald-300 bg-emerald-50 text-emerald-800' : 'border-slate-100 bg-slate-50 text-slate-600 hover:border-slate-200 hover:bg-white' }}">
-                            <div class="text-[11px] font-black uppercase">F2F (Face-to-Face)</div>
-                            <div class="mt-1 text-2xl font-black">{{ number_format((int) ($analytics['mode']['f2f'] ?? 0)) }}</div>
-                        </a>
-                        <a href="{{ route('admin.students.index', array_merge(request()->except('page'), ['mode' => '1st Shift'])) }}"
-                           class="rounded-md border px-3 py-2 text-center transition {{ request('mode') === '1st Shift' ? 'border-sky-300 bg-sky-50 text-sky-800' : 'border-slate-100 bg-slate-50 text-slate-600 hover:border-slate-200 hover:bg-white' }}">
-                            <div class="text-[11px] font-black uppercase">ODL (1st Shift)</div>
-                            <div class="mt-1 text-2xl font-black">{{ number_format((int) ($analytics['mode']['flexible_1st'] ?? 0)) }}</div>
-                        </a>
-                        <a href="{{ route('admin.students.index', array_merge(request()->except('page'), ['mode' => '2nd Shift'])) }}"
-                           class="rounded-md border px-3 py-2 text-center transition {{ request('mode') === '2nd Shift' ? 'border-amber-300 bg-amber-50 text-amber-800' : 'border-slate-100 bg-slate-50 text-slate-600 hover:border-slate-200 hover:bg-white' }}">
-                            <div class="text-[11px] font-black uppercase">ODL (2nd Shift)</div>
-                            <div class="mt-1 text-2xl font-black">{{ number_format((int) ($analytics['mode']['flexible_2nd'] ?? 0)) }}</div>
-                        </a>
-                    </div>
-                </div>
-            </div>
 
             <!-- Table Wrapper -->
             <div class="overflow-hidden rounded-md border border-slate-200">
@@ -218,12 +121,13 @@
                                     <i data-lucide="{{ $sortIcon('gender') }}" class="h-3.5 w-3.5"></i>
                                 </a>
                             </th>
-                            <th class="w-44 px-5 py-4 font-bold">
+                            <th class="w-32 px-5 py-4 font-bold">
                                 <a href="{{ $sortUrl('grade') }}" class="inline-flex items-center gap-1.5 hover:text-slate-800">
-                                    Academic Profile
+                                    Grade
                                     <i data-lucide="{{ $sortIcon('grade') }}" class="h-3.5 w-3.5"></i>
                                 </a>
                             </th>
+                            <th class="w-40 px-5 py-4 font-bold">Section</th>
                             <th class="w-48 px-5 py-4 font-bold">School Email</th>
                             <th class="w-40 px-5 py-4 font-bold">MS Sync State</th>
                             <th class="w-36 px-5 py-4 text-right font-bold">Action</th>
@@ -271,12 +175,14 @@
                                     <span class="inline-flex rounded-md px-2.5 py-1 text-xs font-extrabold ring-1 {{ $genderClass }}">{{ $genderLabel }}</span>
                                 </td>
 
-                                <!-- Grade Level & Section -->
-                                <td class="px-5 py-4">
-                                    <div class="font-bold text-slate-700">{{ $student->grade_level ?? '-' }}</div>
-                                    <div class="mt-0.5 text-xxs font-semibold uppercase text-slate-400">
-                                        {{ $student->studentSection->section->official_name ?? $student->studentSection->section->name ?? 'No Section' }}
-                                    </div>
+                                <!-- Grade -->
+                                <td class="px-5 py-4 font-extrabold text-slate-700">
+                                    {{ $student->grade_level ?? '-' }}
+                                </td>
+
+                                <!-- Section -->
+                                <td class="px-5 py-4 font-medium text-slate-600">
+                                    {{ $student->studentSection->section->official_name ?? $student->studentSection->section->name ?? 'No Section' }}
                                 </td>
 
                                 <!-- School Email -->
@@ -311,7 +217,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="px-5 py-12 text-center text-sm text-slate-500">
+                                <td colspan="8" class="px-5 py-12 text-center text-sm text-slate-500">
                                     No enrolled students found.
                                 </td>
                             </tr>
