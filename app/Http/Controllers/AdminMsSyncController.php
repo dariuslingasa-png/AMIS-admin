@@ -557,6 +557,7 @@ class AdminMsSyncController extends Controller
                 'id' => $licenseReqId,
                 'method' => 'POST',
                 'url' => "users/{$msUserId}/assignLicense",
+                'dependsOn' => [$enableReqId], // Force sequential order for this student within the batch
                 'headers' => [
                     'Content-Type' => 'application/json',
                 ],
@@ -577,6 +578,7 @@ class AdminMsSyncController extends Controller
         $successCount = 0;
         $failedCount = 0;
         $errors = [];
+        $retryQueue = [];
         
         // Chunk into batches of 20 requests (each batch processes up to 10 students)
         $chunks = array_chunk($batchRequests, 20);
@@ -613,6 +615,23 @@ class AdminMsSyncController extends Controller
                     $enableOk = ($enableStatus >= 200 && $enableStatus < 300);
                     $licenseOk = ($licenseStatus >= 200 && $licenseStatus < 300);
                     
+                    $isConcurrencyError = false;
+                    
+                    if (!$enableOk) {
+                        $errBody = $enableRes['body'] ?? [];
+                        $code = $errBody['error']['code'] ?? '';
+                        if ($code === 'Directory_ConcurrencyViolation' || str_contains(json_encode($errBody), 'Directory_ConcurrencyViolation')) {
+                            $isConcurrencyError = true;
+                        }
+                    }
+                    if (!$licenseOk && $status === 'verified') {
+                        $errBody = $licenseRes['body'] ?? [];
+                        $code = $errBody['error']['code'] ?? '';
+                        if ($code === 'Directory_ConcurrencyViolation' || str_contains(json_encode($errBody), 'Directory_ConcurrencyViolation')) {
+                            $isConcurrencyError = true;
+                        }
+                    }
+                    
                     if ($enableOk && ($licenseOk || $status !== 'verified')) {
                         if ($status === 'verified') {
                             \App\Models\AdminAuditLog::record('license_assigned', true, "Synchronized student license and enabled state for student {$student->school_email} via bulk sync (batched)", [
@@ -628,6 +647,8 @@ class AdminMsSyncController extends Controller
                             ]);
                         }
                         $successCount++;
+                    } elseif ($isConcurrencyError) {
+                        $retryQueue[] = $op;
                     } else {
                         $failedCount++;
                         $errorMsg = "";
@@ -656,20 +677,70 @@ class AdminMsSyncController extends Controller
                     }
                 }
                 
+                $hasConcurrencyMsg = str_contains($e->getMessage(), 'Directory_ConcurrencyViolation');
+                
                 foreach (array_keys($chunkStudentIds) as $studentId) {
                     $op = $studentOperations[$studentId] ?? null;
                     if (!$op) {
                         continue;
                     }
-                    $student = $op['student'];
-                    $failedCount++;
-                    $errors[] = "{$student->school_email}: Batch error: {$e->getMessage()}";
+                    if ($hasConcurrencyMsg) {
+                        $retryQueue[] = $op;
+                    } else {
+                        $failedCount++;
+                        $errors[] = "{$op['student']->school_email}: Batch error: {$e->getMessage()}";
+                    }
                 }
                 Log::error("Bulk license assignment batch failed: " . $e->getMessage());
             }
             
             // Tiny delay between batch requests to respect API rate limits
             usleep(100000); // 0.1 seconds
+        }
+        
+        // Process retries sequentially with a delay to cool down the tenant
+        if (!empty($retryQueue)) {
+            Log::info("Retrying " . count($retryQueue) . " students sequentially due to concurrency/batch issues...");
+            
+            foreach ($retryQueue as $op) {
+                sleep(1); // Wait 1 second before each retry to guarantee sequential execution without conflicts
+                
+                $student = $op['student'];
+                $status = $op['status'];
+                $msUserId = $student->ms_user_id;
+                
+                try {
+                    $enabled = ($status === 'verified');
+                    
+                    // Enable/Disable
+                    $graph->setAccountEnabled($msUserId, $enabled);
+                    
+                    // Assign/Remove license
+                    if ($enabled) {
+                        $graph->assignLicense($msUserId, [$studentSkuId], []);
+                        \App\Models\AdminAuditLog::record('license_assigned', true, "Synchronized student license and enabled state for student {$student->school_email} via sequential retry", [
+                            'email' => $student->school_email,
+                            'sku_id' => $studentSkuId,
+                            'ms_user_id' => $msUserId,
+                        ]);
+                    } else {
+                        try {
+                            $graph->assignLicense($msUserId, [], [$studentSkuId]);
+                            \App\Models\AdminAuditLog::record('license_revoked', true, "Synchronized student license revocation and disabled state for student {$student->school_email} via sequential retry", [
+                                'email' => $student->school_email,
+                                'sku_id' => $studentSkuId,
+                                'ms_user_id' => $msUserId,
+                            ]);
+                        } catch (\Throwable $e) {}
+                    }
+                    
+                    $successCount++;
+                } catch (\Exception $e) {
+                    $failedCount++;
+                    $errors[] = "{$student->school_email}: {$e->getMessage()}";
+                    Log::error("Sequential retry failed for {$student->school_email}: " . $e->getMessage());
+                }
+            }
         }
         
         $msg = "License synchronization complete: {$successCount} succeeded, {$failedCount} failed.";
