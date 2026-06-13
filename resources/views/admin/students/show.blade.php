@@ -508,7 +508,10 @@
                     <div class="border-t border-slate-100 pt-3.5 dark:border-slate-800">
                         <dt class="font-extrabold uppercase tracking-wider text-slate-400">Temporary Password</dt>
                         <dd class="mt-1 select-all break-all">
-                            @if (blank($student->temp_password))
+                            @php
+                                $isHashed = str_starts_with($student->temp_password ?? '', '$');
+                            @endphp
+                            @if ($isHashed || blank($student->temp_password))
                                 <span class="text-slate-500 font-semibold">-</span>
                             @else
                                 <span class="font-mono bg-slate-50 dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-200">{{ $student->temp_password }}</span>

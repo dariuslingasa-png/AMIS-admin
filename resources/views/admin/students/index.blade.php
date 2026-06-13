@@ -210,7 +210,10 @@
                                     <div class="font-semibold text-slate-800 break-all select-all">{{ $student->school_email ?? '-' }}</div>
                                     <div class="mt-1 flex items-center gap-1">
                                         <span class="text-slate-400 font-extrabold uppercase tracking-wider text-[10px]">Pass:</span>
-                                        @if (blank($student->temp_password))
+                                        @php
+                                            $isHashed = str_starts_with($student->temp_password ?? '', '$');
+                                        @endphp
+                                        @if ($isHashed || blank($student->temp_password))
                                             <span class="text-slate-500 font-semibold text-[10px]">-</span>
                                         @else
                                             <span class="font-mono bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-[11px] text-slate-800 dark:text-slate-200 select-all font-semibold">{{ $student->temp_password }}</span>
