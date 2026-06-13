@@ -87,9 +87,16 @@ class AdminStudentController extends Controller
         $analyticsBase = $applyFilters(Student::query());
 
         $gradeField = "FIELD(students.grade_level, 'Kinder 1', 'Kinder 2', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12')";
-        $direction = strtolower((string) $request->input('direction', 'desc')) === 'asc' ? 'asc' : 'desc';
+        $sort = $request->input('sort', 'name');
+        $direction = strtolower((string) $request->input('direction', $sort === 'name' ? 'asc' : 'desc')) === 'asc' ? 'asc' : 'desc';
 
-        match ($request->input('sort', 'latest')) {
+        match ($sort) {
+            'name' => $query
+                ->leftJoin('enrollment_applicants as sort_applicants', 'sort_applicants.id', '=', 'students.enrollment_applicant_id')
+                ->select('students.*')
+                ->orderBy('sort_applicants.last_name', $direction)
+                ->orderBy('sort_applicants.first_name', $direction)
+                ->orderBy('students.id', 'desc'),
             'grade' => $query
                 ->orderByRaw("CASE WHEN {$gradeField} = 0 THEN 1 ELSE 0 END ASC")
                 ->orderByRaw("{$gradeField} {$direction}")

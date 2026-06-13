@@ -2,8 +2,8 @@
     $inputClass = 'h-11 rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100';
     $msSyncColor = ['enrolled' => 'green', 'failed' => 'red', 'pending' => 'yellow'];
     $msSyncLabel = ['enrolled' => 'Synced', 'failed' => 'Sync Failed', 'pending' => 'Pending Teams'];
-    $sort = request('sort', 'latest');
-    $direction = request('direction', 'desc') === 'asc' ? 'asc' : 'desc';
+    $sort = request('sort', 'name');
+    $direction = request('direction', $sort === 'name' ? 'asc' : 'desc') === 'asc' ? 'asc' : 'desc';
     $sortUrl = fn ($key) => route('admin.students.index', array_merge(request()->except('page'), [
         'sort' => $key,
         'direction' => $sort === $key && $direction === 'asc' ? 'desc' : 'asc',
@@ -123,12 +123,18 @@
 
 
 
+            @if (!$isPrint)
             <!-- Table Wrapper -->
             <div class="overflow-hidden rounded-md border border-slate-200">
                 <table class="w-full text-left text-sm">
                     <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                         <tr>
-                            <th class="px-5 py-4 font-bold">Student</th>
+                            <th class="px-5 py-4 font-bold">
+                                <a href="{{ $sortUrl('name') }}" class="inline-flex items-center gap-1.5 hover:text-slate-800">
+                                    Student
+                                    <i data-lucide="{{ $sortIcon('name') }}" class="h-3.5 w-3.5"></i>
+                                </a>
+                            </th>
                             <th class="w-36 px-5 py-4 font-bold">
                                 <a href="{{ $sortUrl('student_id') }}" class="inline-flex items-center gap-1.5 hover:text-slate-800">
                                     Student ID
@@ -147,15 +153,15 @@
                                     <i data-lucide="{{ $sortIcon('grade') }}" class="h-3.5 w-3.5"></i>
                                 </a>
                             </th>
-                            <th class="w-40 px-5 py-4 font-bold">Section</th>
+                            <th class="w-40 px-5 py-4 font-bold print:hidden">Section</th>
                             <th class="w-48 px-5 py-4 font-bold">School Email / Temp Pass</th>
-                            <th class="w-40 px-5 py-4 font-bold">MS Sync State</th>
-                            <th class="w-36 px-5 py-4 text-right font-bold">Action</th>
+                            <th class="w-40 px-5 py-4 font-bold print:hidden">MS Sync State</th>
+                            <th class="w-36 px-5 py-4 text-right font-bold print:hidden">Action</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 bg-white">
                         @forelse ($students as $student)
-                            @php
+                             @php
                                 $fullName = html_entity_decode(trim(($student->applicant->first_name ?? '').' '.($student->applicant->middle_name ?? '').' '.($student->applicant->last_name ?? '')), ENT_QUOTES, 'UTF-8');
                                 $name = $fullName ? \Illuminate\Support\Str::upper($fullName) : 'STUDENT PROFILE';
                                 $initials = collect(explode(' ', $name))->filter()->take(2)->map(fn ($part) => \Illuminate\Support\Str::substr($part, 0, 1))->join('');
@@ -164,6 +170,14 @@
                                 $gender = strtolower((string) ($student->applicant->gender ?? ''));
                                 $genderLabel = $gender === 'male' ? 'Male' : ($gender === 'female' ? 'Female' : 'Not Set');
                                 $genderClass = $gender === 'male' ? 'bg-blue-50 text-blue-700 ring-blue-100' : ($gender === 'female' ? 'bg-violet-50 text-violet-700 ring-violet-100' : 'bg-slate-50 text-slate-500 ring-slate-100');
+                                
+                                $studentType = $student->applicant ? $student->applicant->student_type : 'New';
+                                $learningMode = $student->applicant ? $student->applicant->learning_mode : 'F2F';
+                                $modeAbbr = 'F2F';
+                                $lmLower = strtolower($learningMode);
+                                if (str_contains($lmLower, 'online') || str_contains($lmLower, 'flexible') || str_contains($lmLower, 'odl') || str_contains($lmLower, 'shift')) {
+                                    $modeAbbr = 'ODL';
+                                }
                             @endphp
                             <tr class="transition hover:bg-slate-50">
                                 <!-- Student Photo & Name -->
@@ -175,12 +189,18 @@
                                             :fallback-initials="$initials ?: 'ST'"
                                             size="40"
                                             rounded="rounded-md"
-                                            containerClass="bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100 font-extrabold"
+                                            containerClass="bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100 font-extrabold print:hidden"
                                             :eager="false"
                                         />
                                         <div>
                                             <div class="font-extrabold text-slate-950">{{ $name }}</div>
-                                            <div class="mt-0.5 text-xs font-medium text-slate-500">SY {{ $student->school_year ?? '-' }}</div>
+                                            <div class="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs font-semibold text-slate-500">
+                                                <span>SY {{ $student->school_year ?? '-' }}</span>
+                                                <span class="text-slate-300">•</span>
+                                                <span class="text-violet-700 bg-violet-50 px-1.5 py-0.5 rounded">{{ strtoupper($studentType) }}</span>
+                                                <span class="text-slate-300">•</span>
+                                                <span class="text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded">{{ $modeAbbr }}</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </td>
@@ -201,14 +221,14 @@
                                 </td>
 
                                 <!-- Section -->
-                                <td class="px-5 py-4 font-medium text-slate-600">
+                                <td class="px-5 py-4 font-medium text-slate-600 print:hidden">
                                     {{ $student->studentSection->section->official_name ?? $student->studentSection->section->name ?? 'No Section' }}
                                 </td>
 
                                 <!-- School Email / Temp Pass -->
                                 <td class="px-5 py-4 text-xs">
                                     <div class="font-semibold text-slate-800 break-all select-all">{{ $student->school_email ?? '-' }}</div>
-                                    <div class="mt-1 flex items-center gap-1">
+                                    <div class="mt-1 flex items-center gap-1 print:hidden">
                                         <span class="text-slate-400 font-extrabold uppercase tracking-wider text-[10px]">Pass:</span>
                                         @php
                                             $isHashed = str_starts_with($student->temp_password ?? '', '$');
@@ -222,14 +242,14 @@
                                 </td>
 
                                 <!-- MS Sync status -->
-                                <td class="px-5 py-4">
+                                <td class="px-5 py-4 print:hidden">
                                     <x-badge :color="$msSyncColor[$msStatus] ?? 'gray'">
                                         {{ $msSyncLabel[$msStatus] ?? 'Pending' }}
                                     </x-badge>
                                 </td>
 
                                 <!-- Action -->
-                                 <td class="px-5 py-4 text-right">
+                                 <td class="px-5 py-4 text-right print:hidden">
                                     <div class="flex items-center justify-end gap-1.5">
                                         @if($student->ms_user_id && $msStatus !== 'enrolled')
                                             <form method="POST" action="{{ route('admin.ms-sync.student', $student) }}" class="inline-block">
@@ -265,6 +285,49 @@
                     </tbody>
                 </table>
             </div>
+            @else
+            <!-- Printable view: Grouped by Grade Level -->
+            @php
+                $groupedStudents = $students->groupBy('grade_level')->sortBy(function ($group, $gradeName) use ($gradeOrder) {
+                    $pos = array_search($gradeName, $gradeOrder);
+                    return $pos === false ? 999 : $pos;
+                });
+            @endphp
+
+            @foreach ($groupedStudents as $gradeName => $gradeStudents)
+                <div class="grade-print-section mb-10 {{ !$loop->last ? 'page-break-after' : '' }}">
+                    <h2 class="text-sm font-bold text-slate-800 mb-3 border-b border-slate-300 pb-1.5 uppercase tracking-wider" style="font-family: Arial, sans-serif;">
+                        {{ $gradeName }} <span class="text-slate-500 font-normal">({{ $gradeStudents->count() }} Students)</span>
+                    </h2>
+                    <table class="w-full text-left text-sm print-table mb-6">
+                        <thead>
+                            <tr>
+                                <th style="width: 40%">Student</th>
+                                <th style="width: 20%">AMIS ID</th>
+                                <th style="width: 15%">Gender</th>
+                                <th style="width: 25%">AMIS School Email</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($gradeStudents as $student)
+                                @php
+                                    $fullName = html_entity_decode(trim(($student->applicant->first_name ?? '').' '.($student->applicant->middle_name ?? '').' '.($student->applicant->last_name ?? '')), ENT_QUOTES, 'UTF-8');
+                                    $name = $fullName ? \Illuminate\Support\Str::upper($fullName) : 'STUDENT PROFILE';
+                                    $gender = strtolower((string) ($student->applicant->gender ?? ''));
+                                    $genderLabel = $gender === 'male' ? 'MALE' : ($gender === 'female' ? 'FEMALE' : 'NOT SET');
+                                @endphp
+                                <tr>
+                                    <td class="font-bold text-slate-900">{{ $name }}</td>
+                                    <td class="font-semibold">{{ $student->student_number ?? '-' }}</td>
+                                    <td>{{ $genderLabel }}</td>
+                                    <td>{{ $student->school_email ?? '-' }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endforeach
+            @endif
 
             <!-- Pagination links -->
             @if(!$isPrint)
@@ -330,35 +393,31 @@
                 border-collapse: collapse !important;
                 width: 100% !important;
                 font-family: Arial, sans-serif !important;
-                border: 1px solid #000000 !important;
+                border: none !important;
+                margin-bottom: 2rem !important;
             }
 
             table th {
                 position: static !important;
-                background: #f1f5f9 !important;
-                border: 1px solid #000000 !important;
-                color: #000000 !important;
+                background: #f8fafc !important;
+                border-bottom: 1.5px solid #cbd5e1 !important;
+                color: #1e293b !important;
                 font-family: Arial, sans-serif !important;
                 font-weight: bold !important;
                 font-size: 10px !important;
-                padding: 6px 8px !important;
+                padding: 8px 10px !important;
                 text-transform: uppercase !important;
                 text-align: left !important;
             }
 
             table td {
-                border: 1px solid #000000 !important;
-                padding: 6px 8px !important;
+                border: none !important;
+                border-bottom: 1px solid #e2e8f0 !important;
+                padding: 8px 10px !important;
                 font-family: Arial, sans-serif !important;
                 font-size: 9px !important;
-                color: #000000 !important;
+                color: #334155 !important;
                 background: transparent !important;
-            }
-
-            /* Hide the actions column in the table during print */
-            table th:last-child, 
-            table td:last-child {
-                display: none !important;
             }
 
             /* Remove icons and styling from inside table td */
@@ -373,14 +432,42 @@
                 padding: 0 !important;
                 margin: 0 !important;
                 box-shadow: none !important;
-                color: #000000 !important;
+                color: #334155 !important;
                 font-size: 9px !important;
                 font-weight: normal !important;
+            }
+
+            /* Hide sort icons in table headers during print */
+            table th svg,
+            table th i,
+            table th [data-lucide] {
+                display: none !important;
+            }
+
+            /* Ensure print:hidden takes precedence even inside table cells */
+            .print\:hidden,
+            table td .print\:hidden,
+            table td span.print\:hidden,
+            table td div.print\:hidden,
+            table td x-smart-image.print\:hidden {
+                display: none !important;
+            }
+
+            /* Hide student photos during print */
+            table td img,
+            table td .flex-shrink-0,
+            table td x-smart-image {
+                display: none !important;
             }
 
             /* Page break prevention rules for clean printing */
             tr {
                 page-break-inside: avoid !important;
+            }
+
+            .page-break-after {
+                page-break-after: always !important;
+                break-after: page !important;
             }
         }
     </style>
