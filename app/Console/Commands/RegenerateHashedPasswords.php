@@ -10,20 +10,27 @@ use Illuminate\Support\Facades\Log;
 
 class RegenerateHashedPasswords extends Command
 {
-    protected $signature = 'student:recover-passwords {--run : Run the recovery (default is dry-run)}';
+    protected $signature = 'student:recover-passwords {--run : Run the recovery (default is dry-run)} {--limit= : Limit the number of students to process}';
 
     protected $description = 'Recover hashed/lost temporary passwords by regenerating new readable passwords and syncing to Microsoft AD';
 
     public function handle()
     {
-        $students = Student::where('temp_password', 'like', '$%')->get();
+        $query = Student::where('temp_password', 'like', '$%');
+
+        $limit = $this->option('limit');
+        if (filled($limit)) {
+            $query->limit((int) $limit);
+        }
+
+        $students = $query->get();
 
         if ($students->isEmpty()) {
             $this->info('No students with hashed/lost temporary passwords found.');
             return 0;
         }
 
-        $this->info("Found {$students->count()} students with hashed/lost temporary passwords.");
+        $this->info("Processing {$students->count()} students with hashed/lost temporary passwords...");
 
         $run = $this->option('run');
 
@@ -35,10 +42,14 @@ class RegenerateHashedPasswords extends Command
         $rows = [];
 
         $graph = new MicrosoftGraphService();
+        $total = $students->count();
 
-        foreach ($students as $student) {
+        foreach ($students as $index => $student) {
             $applicant = $student->applicant;
             $fullName = $applicant ? "{$applicant->first_name} {$applicant->last_name}" : 'Unknown';
+            $currentNum = $index + 1;
+
+            $this->info("[{$currentNum}/{$total}] Processing: {$student->school_email}...");
 
             // Generate new temp password in the exact AMIS format: Amis@XXXXXxx
             $newTempPass = 'Amis@' . strtoupper(Str::random(5)) . rand(10, 99);
