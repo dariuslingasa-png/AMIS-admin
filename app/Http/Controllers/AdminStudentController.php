@@ -62,6 +62,24 @@ class AdminStudentController extends Controller
                 );
             }
 
+            if ($request->filled('ms_status')) {
+                $status = $request->ms_status;
+                if ($status === 'enrolled') {
+                    $query->whereHas('studentSection', fn($q) => $q->where('ms_status', 'enrolled'));
+                } elseif ($status === 'failed') {
+                    $query->whereHas('studentSection', fn($q) => $q->where('ms_status', 'failed'));
+                } elseif ($status === 'pending') {
+                    $query->whereHas('studentSection', fn($q) => $q->where('ms_status', 'pending'));
+                } elseif ($status === 'no_account') {
+                    $query->whereNull('ms_user_id');
+                } elseif ($status === 'no_license') {
+                    $query->where(function($q) {
+                        $q->whereDoesntHave('studentSection', fn($sq) => $sq->where('ms_status', 'enrolled'))
+                          ->orWhereNull('ms_user_id');
+                    });
+                }
+            }
+
             return $query;
         };
 

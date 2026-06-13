@@ -84,13 +84,13 @@
                         <option value="{{ $g }}" @selected(request('grade') === $g)>{{ $g }}</option>
                     @endforeach
                 </select>
-                <select name="type" class="{{ $inputClass }} col-span-6 lg:col-span-2 w-full" onchange="this.form.submit()">
+                <select name="type" class="{{ $inputClass }} col-span-6 lg:col-span-1 w-full" onchange="this.form.submit()">
                     <option value="">All types</option>
                     <option value="new" @selected(request('type') === 'new')>New Student</option>
                     <option value="old" @selected(request('type') === 'old')>Old Student</option>
                     <option value="transferee" @selected(request('type') === 'transferee')>Transferee</option>
                 </select>
-                <select name="gender" class="{{ $inputClass }} col-span-6 lg:col-span-2 w-full" onchange="this.form.submit()">
+                <select name="gender" class="{{ $inputClass }} col-span-6 lg:col-span-1 w-full" onchange="this.form.submit()">
                     <option value="">All genders</option>
                     <option value="male" @selected(request('gender') === 'male')>Male</option>
                     <option value="female" @selected(request('gender') === 'female')>Female</option>
@@ -101,6 +101,14 @@
                     <option value="Face-to-Face" @selected(request('mode') === 'Face-to-Face')>Face-to-Face</option>
                     <option value="1st Shift" @selected(request('mode') === '1st Shift')>Flexible Online 1st Shift</option>
                     <option value="2nd Shift" @selected(request('mode') === '2nd Shift')>Flexible Online 2nd Shift</option>
+                </select>
+                <select name="ms_status" class="{{ $inputClass }} col-span-6 lg:col-span-2 w-full" onchange="this.form.submit()">
+                    <option value="">All sync states</option>
+                    <option value="no_license" @selected(request('ms_status') === 'no_license')>No License / Sync Failed</option>
+                    <option value="enrolled" @selected(request('ms_status') === 'enrolled')>Synced (With License)</option>
+                    <option value="failed" @selected(request('ms_status') === 'failed')>Sync Failed</option>
+                    <option value="pending" @selected(request('ms_status') === 'pending')>Pending Teams</option>
+                    <option value="no_account" @selected(request('ms_status') === 'no_account')>No Microsoft Account</option>
                 </select>
                 <button class="col-span-12 lg:col-span-1 inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-800">
                     <i data-lucide="filter" class="h-4 w-4"></i>
