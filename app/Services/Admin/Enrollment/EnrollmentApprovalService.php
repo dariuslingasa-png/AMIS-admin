@@ -352,22 +352,71 @@ class EnrollmentApprovalService
 
     private function applicantPhotoForMicrosoft(EnrollmentApplicant $applicant): ?array
     {
-        $photoPath = $this->resolveApplicantPhotoPath($applicant->photo_2x2_url);
-
-        if (! $photoPath) {
+        $urlOrPath = $applicant->photo_2x2_url;
+        if (blank($urlOrPath)) {
             return null;
         }
 
-        $bytes = @file_get_contents($photoPath);
+        $bytes = null;
+        $contentType = null;
+        $resolvedPathOrUrl = null;
 
-        if ($bytes === false || $bytes === '') {
+        // 1. Try to resolve as a local file path
+        $localPath = $this->resolveApplicantPhotoPath($urlOrPath);
+        if ($localPath) {
+            $bytes = @file_get_contents($localPath);
+            if ($bytes !== false && $bytes !== '') {
+                $contentType = $this->imageContentType($localPath);
+                $resolvedPathOrUrl = $localPath;
+            }
+        }
+
+        // 2. If local resolution failed or if it's a URL, try fetching via HTTP
+        if (!$bytes) {
+            $url = null;
+            if (filter_var($urlOrPath, FILTER_VALIDATE_URL)) {
+                $url = $urlOrPath;
+            } else {
+                $storageUrl = config('services.enrollment_storage_url')
+                    ?? env('ENROLLMENT_STORAGE_URL')
+                    ?? 'https://enrollment.amis.edu.ph/storage';
+
+                $url = rtrim($storageUrl, '/') . '/' . ltrim($urlOrPath, '/');
+            }
+
+            if ($url) {
+                try {
+                    $response = \Illuminate\Support\Facades\Http::timeout(10)->get($url);
+                    if ($response->successful()) {
+                        $bytes = $response->body();
+                        $contentType = $response->header('Content-Type');
+
+                        // Parse Content-Type or extract from path extension
+                        if (!$contentType || !str_starts_with(strtolower($contentType), 'image/')) {
+                            $ext = strtolower(pathinfo(parse_url($url, PHP_URL_PATH) ?? '', PATHINFO_EXTENSION));
+                            $contentType = match ($ext) {
+                                'png'  => 'image/png',
+                                'webp' => 'image/webp',
+                                default => 'image/jpeg',
+                            };
+                        }
+
+                        $resolvedPathOrUrl = $url;
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning("Failed to fetch photo from URL {$url}: " . $e->getMessage());
+                }
+            }
+        }
+
+        if (!$bytes) {
             return null;
         }
 
         return [
-            'path' => $photoPath,
+            'path' => $resolvedPathOrUrl,
             'bytes' => $bytes,
-            'content_type' => $this->imageContentType($photoPath),
+            'content_type' => $contentType ?: 'image/jpeg',
         ];
     }
 
