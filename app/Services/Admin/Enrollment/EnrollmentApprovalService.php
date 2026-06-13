@@ -608,14 +608,38 @@ class EnrollmentApprovalService
         array $recipients,
     ): array {
         try {
-            Mail::to($recipients)->send(new EnrollmentOnboardingMail($applicant, $student, $tempPassword, $msError));
+            $mailer = $this->onboardingMailer();
+            Mail::mailer($mailer)->to($recipients)->send(new EnrollmentOnboardingMail($applicant, $student, $tempPassword, $msError));
+
+            Log::info('Onboarding email sent', [
+                'applicant_id' => $applicant->id,
+                'student_id' => $student->id,
+                'recipients' => $recipients,
+                'mailer' => $mailer,
+            ]);
 
             return [true, null];
         } catch (\Throwable $exception) {
-            Log::error('Failed to send onboarding email: '.$exception->getMessage());
+            Log::error('Failed to send onboarding email: '.$exception->getMessage(), [
+                'applicant_id' => $applicant->id,
+                'student_id' => $student->id,
+                'recipients' => $recipients,
+                'mailer' => $this->onboardingMailer(),
+            ]);
 
             return [false, $exception->getMessage()];
         }
+    }
+
+    private function onboardingMailer(): string
+    {
+        $default = (string) config('mail.default', 'log');
+
+        if (in_array($default, ['log', 'array'], true) && array_key_exists('sendmail', config('mail.mailers', []))) {
+            return 'sendmail';
+        }
+
+        return $default;
     }
 
     private function onboardingRecipients(EnrollmentApplicant $applicant): \Illuminate\Support\Collection

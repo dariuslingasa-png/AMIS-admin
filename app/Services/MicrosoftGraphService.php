@@ -400,15 +400,29 @@ class MicrosoftGraphService
             $resolvedId = $upnOrId;
         }
 
-        $response = $this->graphDelegated()->patch("/users/{$resolvedId}", [
+        $payload = [
             'passwordProfile' => [
                 'password' => $newPassword,
                 'forceChangePasswordNextSignIn' => true,
             ],
+        ];
+
+        $response = $this->graph()->patch("/users/{$resolvedId}", $payload);
+
+        if ($response->successful()) {
+            return;
+        }
+
+        Log::warning('Application token password reset failed; retrying with delegated token', [
+            'user' => $upnOrId,
+            'status' => $response->status(),
+            'body' => $response->body(),
         ]);
 
-        if (! $response->successful()) {
-            throw new \Exception('Failed to reset password: '.$response->body());
+        $delegatedResponse = $this->graphDelegated()->patch("/users/{$resolvedId}", $payload);
+
+        if (! $delegatedResponse->successful()) {
+            throw new \Exception('Failed to reset password: '.$delegatedResponse->body());
         }
     }
 
