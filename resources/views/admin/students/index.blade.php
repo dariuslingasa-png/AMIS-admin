@@ -180,15 +180,34 @@
 
     <main class="page">
         <!-- Print Header -->
-        <header class="header">
-            <div class="brand-mark">
-                <img class="brand-logo" src="{{ asset('images/AMIS_Logo.png') }}" alt="AMIS Logo">
+        <header class="header" style="border-bottom: 2px solid #059669; padding-bottom: 10px; margin-bottom: 20px;">
+            <div style="display: table; width: 100%; border-collapse: collapse;">
+                <div style="display: table-row;">
+                    <!-- Left: English Name -->
+                    <div style="display: table-cell; vertical-align: middle; width: 40%; text-align: left;">
+                        <h1 style="font-family: Arial, sans-serif; font-weight: 900; font-size: 14px; margin: 0; text-transform: uppercase; letter-spacing: 0.05em; color: #0f172a;">
+                            AL MUNAWWARA ISLAMIC SCHOOL
+                        </h1>
+                        <div style="margin-top: 2px; color: #64748b; font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">
+                            Official School Portal
+                        </div>
+                    </div>
+                    <!-- Center: Logo -->
+                    <div style="display: table-cell; vertical-align: middle; width: 20%; text-align: center;">
+                        <img src="{{ asset('images/AMIS_Logo.png') }}" alt="AMIS Logo" style="height: 54px; width: auto; display: inline-block;">
+                    </div>
+                    <!-- Right: Arabic Name -->
+                    <div style="display: table-cell; vertical-align: middle; width: 40%; text-align: right; direction: rtl;">
+                        <h1 style="font-family: 'Times New Roman', serif; font-weight: 900; font-size: 18px; margin: 0; color: #059669; letter-spacing: 0.03em;">
+                            المدرسة المنورة الإسلامية
+                        </h1>
+                    </div>
+                </div>
             </div>
-            <div class="brand-text">
-                <h1>AL MUNAWWARA ISLAMIC SCHOOL</h1>
-                <div class="subtitle">Official School Portal - Student Records Master List</div>
+            <!-- Address Centered Below Logo -->
+            <div style="text-align: center; font-size: 9px; color: #475569; font-weight: 700; margin-top: 8px; font-family: Arial, sans-serif; text-transform: uppercase; letter-spacing: 0.03em;">
+                Don Julian Rodriguez Avenue, Ma-a, Davao City, Philippines, 8000
             </div>
-            <div class="status"><span class="badge">STUDENT RECORDS</span></div>
         </header>
 
         <div class="mb-6">
