@@ -417,7 +417,9 @@
     <script>
     document.querySelectorAll('form').forEach(form => {
         if (form.action.includes('ms-sync/sync-all-licenses') || form.action.includes('ms-sync/students')) {
-            form.addEventListener('submit', function() {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault(); // Prevent standard page navigation immediately
+                
                 const modal = document.getElementById('sync-loading-modal');
                 const modalTitle = modal.querySelector('h3');
                 const modalText = modal.querySelector('p');
@@ -431,6 +433,23 @@
                 }
                 
                 modal.classList.remove('hidden');
+                
+                // Submit via fetch to keep the page alive and avoid aborting active images/logo
+                fetch(form.action, {
+                    method: 'POST',
+                    body: new FormData(form),
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => {
+                    // Navigate to the final redirected URL once sync is done
+                    window.location.href = response.url || window.location.href;
+                })
+                .catch(err => {
+                    console.error('Sync error:', err);
+                    window.location.reload();
+                });
             });
         }
     });
