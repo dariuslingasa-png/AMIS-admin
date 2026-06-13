@@ -513,13 +513,17 @@
                                         />
                                         <div>
                                             <div class="font-extrabold text-slate-950">{{ $name }}</div>
-                                            <div class="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs font-semibold text-slate-500">
-                                                <span>SY {{ $student->school_year ?? '-' }}</span>
-                                                <span class="text-slate-300">•</span>
-                                                <span class="text-violet-700 bg-violet-50 px-1.5 py-0.5 rounded">{{ strtoupper($studentType) }}</span>
-                                                <span class="text-slate-300">•</span>
-                                                <span class="text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded">{{ $modeAbbr }}</span>
-                                            </div>
+                                            <div class="mt-0.5 flex flex-wrap items-center gap-1.5 text-[10px] text-slate-400 font-extrabold print:hidden">
+                                                 <span class="text-slate-400">SY {{ $student->school_year ?? '-' }}</span>
+                                                 <span class="text-slate-300">•</span>
+                                                 <span class="inline-flex items-center rounded bg-slate-100 px-1.5 py-0.5 font-bold text-slate-600 uppercase">{{ $studentType }}</span>
+                                                 <span class="text-slate-300">•</span>
+                                                 <span class="inline-flex items-center rounded bg-slate-100 px-1.5 py-0.5 font-bold text-slate-600 uppercase">{{ $modeAbbr }}</span>
+                                                 @if (!$student->applicant || $student->applicant->completion_percentage < 100)
+                                                     <span class="text-slate-300">•</span>
+                                                     <span class="inline-flex items-center rounded bg-amber-50 px-1.5 py-0.5 font-bold text-amber-700 ring-1 ring-amber-100 uppercase">Incomplete</span>
+                                                 @endif
+                                             </div>
                                         </div>
                                     </div>
                                 </td>

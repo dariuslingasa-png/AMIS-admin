@@ -216,6 +216,9 @@
                         <span class="applicant-pill applicant-pill-type">{{ Str::upper($student->applicant->student_type ?: 'Student') }}</span>
                         <span class="applicant-pill applicant-pill-mode">{{ Str::upper($student->applicant->learning_mode ?: 'Learning mode pending') }}</span>
                         <span class="applicant-pill applicant-pill-year">SY {{ $student->school_year ?? '-' }}</span>
+                        @if (!$student->applicant || $student->applicant->completion_percentage < 100)
+                            <span class="applicant-pill bg-amber-500/20 text-amber-200 border border-amber-500/30 font-extrabold">INCOMPLETE</span>
+                        @endif
                     </div>
                 </div>
             </section>
