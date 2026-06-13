@@ -499,7 +499,7 @@ class AdminMsSyncController extends Controller
         
         $studentsQuery = $this->bulkLicenseSyncQuery($request);
         $studentCount = (clone $studentsQuery)->count();
-        $maxBatchSize = 80;
+        $maxBatchSize = 150; // Increased since batching is extremely efficient
 
         if ($studentCount > $maxBatchSize && ! $request->boolean('force_all')) {
             return back()->with('warning', "Bulk sync found {$studentCount} students. Please filter the list first, or sync by smaller batches to avoid request timeouts.");
@@ -513,50 +513,162 @@ class AdminMsSyncController extends Controller
             return back()->withErrors(['error' => 'Student SKU ID is not configured.']);
         }
         
+        $batchRequests = [];
+        $studentOperations = [];
+        
+        foreach ($students as $student) {
+            $user = $student->user;
+            if (!$user) {
+                continue;
+            }
+            
+            $status = $user->account_status ?? 'verified';
+            $msUserId = $student->ms_user_id;
+            
+            $enabled = ($status === 'verified');
+            $enableReqId = "enable-" . $student->id;
+            
+            $batchRequests[] = [
+                'id' => $enableReqId,
+                'method' => 'PATCH',
+                'url' => "users/{$msUserId}",
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                ],
+                'body' => [
+                    'accountEnabled' => $enabled,
+                ],
+            ];
+            
+            $licenseReqId = "license-" . $student->id;
+            $addLicenses = [];
+            $removeLicenses = [];
+            
+            if ($enabled) {
+                $addLicenses[] = [
+                    'disabledPlans' => [],
+                    'skuId' => $studentSkuId,
+                ];
+            } else {
+                $removeLicenses[] = $studentSkuId;
+            }
+            
+            $batchRequests[] = [
+                'id' => $licenseReqId,
+                'method' => 'POST',
+                'url' => "users/{$msUserId}/assignLicense",
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                ],
+                'body' => [
+                    'addLicenses' => $addLicenses,
+                    'removeLicenses' => $removeLicenses,
+                ],
+            ];
+            
+            $studentOperations[$student->id] = [
+                'student' => $student,
+                'status' => $status,
+                'enableReqId' => $enableReqId,
+                'licenseReqId' => $licenseReqId,
+            ];
+        }
+        
         $successCount = 0;
         $failedCount = 0;
         $errors = [];
         
-        foreach ($students as $student) {
+        // Chunk into batches of 20 requests (each batch processes up to 10 students)
+        $chunks = array_chunk($batchRequests, 20);
+        
+        foreach ($chunks as $chunk) {
             try {
-                $user = $student->user;
-                if ($user) {
-                    $status = $user->account_status ?? 'verified';
-                    $msUserId = $student->ms_user_id;
+                $responses = $graph->executeBatch($chunk);
+                $keyedResponses = collect($responses)->keyBy('id');
+                
+                // Identify which students were processed in this chunk
+                $chunkStudentIds = [];
+                foreach ($chunk as $req) {
+                    $parts = explode('-', $req['id']);
+                    $studentId = $parts[1] ?? null;
+                    if ($studentId) {
+                        $chunkStudentIds[$studentId] = true;
+                    }
+                }
+                
+                foreach (array_keys($chunkStudentIds) as $studentId) {
+                    $op = $studentOperations[$studentId] ?? null;
+                    if (!$op) {
+                        continue;
+                    }
                     
-                    if ($status === 'verified') {
-                        // Ensure enabled in Entra ID
-                        $graph->setAccountEnabled($msUserId, true);
-                        $graph->assignLicense($msUserId, [$studentSkuId], []);
-                        
-                        \App\Models\AdminAuditLog::record('license_assigned', true, "Synchronized student license and enabled state for student {$student->school_email} via bulk sync", [
-                            'email' => $student->school_email,
-                            'sku_id' => $studentSkuId,
-                            'ms_user_id' => $msUserId,
-                        ]);
-                        
-                        $successCount++;
-                    } else {
-                        // Ensure disabled in Entra ID
-                        $graph->setAccountEnabled($msUserId, false);
-                        try {
-                            $graph->assignLicense($msUserId, [], [$studentSkuId]);
-                            \App\Models\AdminAuditLog::record('license_revoked', true, "Synchronized student license revocation and disabled state for student {$student->school_email} via bulk sync", [
+                    $student = $op['student'];
+                    $status = $op['status'];
+                    $enableRes = $keyedResponses->get($op['enableReqId']);
+                    $licenseRes = $keyedResponses->get($op['licenseReqId']);
+                    
+                    $enableStatus = $enableRes['status'] ?? 500;
+                    $licenseStatus = $licenseRes['status'] ?? 500;
+                    
+                    $enableOk = ($enableStatus >= 200 && $enableStatus < 300);
+                    $licenseOk = ($licenseStatus >= 200 && $licenseStatus < 300);
+                    
+                    if ($enableOk && ($licenseOk || $status !== 'verified')) {
+                        if ($status === 'verified') {
+                            \App\Models\AdminAuditLog::record('license_assigned', true, "Synchronized student license and enabled state for student {$student->school_email} via bulk sync (batched)", [
                                 'email' => $student->school_email,
                                 'sku_id' => $studentSkuId,
-                                'ms_user_id' => $msUserId,
+                                'ms_user_id' => $student->ms_user_id,
                             ]);
-                        } catch (\Throwable $e) {}
+                        } else {
+                            \App\Models\AdminAuditLog::record('license_revoked', true, "Synchronized student license revocation and disabled state for student {$student->school_email} via bulk sync (batched)", [
+                                'email' => $student->school_email,
+                                'sku_id' => $studentSkuId,
+                                'ms_user_id' => $student->ms_user_id,
+                            ]);
+                        }
                         $successCount++;
+                    } else {
+                        $failedCount++;
+                        $errorMsg = "";
+                        if (!$enableOk) {
+                            $errBody = $enableRes['body'] ?? [];
+                            $msg = $errBody['error']['message'] ?? 'Unknown error';
+                            $errorMsg .= "Enable status update failed ({$enableStatus}): {$msg}. ";
+                        }
+                        if (!$licenseOk && $status === 'verified') {
+                            $errBody = $licenseRes['body'] ?? [];
+                            $msg = $errBody['error']['message'] ?? 'Unknown error';
+                            $errorMsg .= "License assignment failed ({$licenseStatus}): {$msg}.";
+                        }
+                        
+                        $errors[] = "{$student->school_email}: " . trim($errorMsg);
+                        Log::error("Bulk license assignment failed for {$student->school_email}: " . $errorMsg);
                     }
                 }
             } catch (\Exception $e) {
-                $failedCount++;
-                $errors[] = "{$student->school_email}: {$e->getMessage()}";
-                Log::error("Bulk license assignment failed for {$student->school_email}: " . $e->getMessage());
+                $chunkStudentIds = [];
+                foreach ($chunk as $req) {
+                    $parts = explode('-', $req['id']);
+                    $studentId = $parts[1] ?? null;
+                    if ($studentId) {
+                        $chunkStudentIds[$studentId] = true;
+                    }
+                }
+                
+                foreach (array_keys($chunkStudentIds) as $studentId) {
+                    $op = $studentOperations[$studentId] ?? null;
+                    if (!$op) {
+                        continue;
+                    }
+                    $student = $op['student'];
+                    $failedCount++;
+                    $errors[] = "{$student->school_email}: Batch error: {$e->getMessage()}";
+                }
+                Log::error("Bulk license assignment batch failed: " . $e->getMessage());
             }
             
-            // Tiny delay to respect API rate limits
+            // Tiny delay between batch requests to respect API rate limits
             usleep(100000); // 0.1 seconds
         }
         

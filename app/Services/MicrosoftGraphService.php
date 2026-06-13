@@ -961,4 +961,31 @@ class MicrosoftGraphService
             throw new \Exception('Failed to set account enabled status: '.$response->body());
         }
     }
+
+    /**
+     * Execute a JSON batch request to Microsoft Graph.
+     *
+     * @param array $requests An array of request arrays as defined by Microsoft Graph batch API.
+     * @return array The responses array from Microsoft Graph.
+     */
+    public function executeBatch(array $requests): array
+    {
+        if (empty($requests)) {
+            return [];
+        }
+
+        $response = $this->graph()->post('/$batch', [
+            'requests' => $requests,
+        ]);
+
+        if (!$response->successful()) {
+            Log::error('Graph batch request failed', [
+                'status' => $response->status(),
+                'body' => $response->body()
+            ]);
+            throw new \Exception('Failed to execute Microsoft Graph batch request: ' . $response->body());
+        }
+
+        return $response->json('responses') ?? [];
+    }
 }
