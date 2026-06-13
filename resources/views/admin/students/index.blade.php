@@ -207,7 +207,7 @@
                                 <!-- Action -->
                                  <td class="px-5 py-4 text-right">
                                     <div class="flex items-center justify-end gap-1.5">
-                                        @if($student->ms_user_id)
+                                        @if($student->ms_user_id && $msStatus !== 'enrolled')
                                             <form method="POST" action="{{ route('admin.ms-sync.student', $student) }}" class="inline-block">
                                                 @csrf
                                                 <button type="submit" class="inline-flex h-9 items-center gap-1.5 rounded-md border border-violet-100 bg-violet-50 px-2.5 text-xs font-bold text-violet-700 transition hover:bg-violet-100 cursor-pointer" title="Sync Microsoft Account & License">
