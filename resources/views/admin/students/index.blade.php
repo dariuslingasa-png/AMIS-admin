@@ -238,6 +238,39 @@
         @endphp
 
         @foreach ($groupedStudents as $gradeName => $gradeStudents)
+            @php
+                $sortedGradeStudents = $gradeStudents->sort(function ($a, $b) {
+                    $lmA = strtolower($a->applicant->learning_mode ?? 'face-to-face');
+                    $lmB = strtolower($b->applicant->learning_mode ?? 'face-to-face');
+                    
+                    $weightA = 9;
+                    if (str_contains($lmA, 'face') || str_contains($lmA, 'f2f')) {
+                        $weightA = 1;
+                    } elseif (str_contains($lmA, '1st')) {
+                        $weightA = 2;
+                    } elseif (str_contains($lmA, '2nd')) {
+                        $weightA = 3;
+                    }
+                    
+                    $weightB = 9;
+                    if (str_contains($lmB, 'face') || str_contains($lmB, 'f2f')) {
+                        $weightB = 1;
+                    } elseif (str_contains($lmB, '1st')) {
+                        $weightB = 2;
+                    } elseif (str_contains($lmB, '2nd')) {
+                        $weightB = 3;
+                    }
+                    
+                    if ($weightA !== $weightB) {
+                        return $weightA <=> $weightB;
+                    }
+                    
+                    $nameA = html_entity_decode(trim(($a->applicant->last_name ?? '').', '.($a->applicant->first_name ?? '')), ENT_QUOTES, 'UTF-8');
+                    $nameB = html_entity_decode(trim(($b->applicant->last_name ?? '').', '.($b->applicant->first_name ?? '')), ENT_QUOTES, 'UTF-8');
+                    
+                    return strcasecmp($nameA, $nameB);
+                });
+            @endphp
             <div class="grade-print-section mb-10 {{ !$loop->last ? 'page-break-after' : '' }}">
                 <h2 class="text-sm font-bold text-slate-800 mb-3 border-b border-slate-300 pb-1.5 uppercase tracking-wider" style="font-family: Arial, sans-serif;">
                     {{ $gradeName }} <span class="text-slate-500 font-normal">({{ $gradeStudents->count() }} Students)</span>
@@ -254,7 +287,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($gradeStudents as $student)
+                        @foreach ($sortedGradeStudents as $student)
                             @php
                                 $fullName = html_entity_decode(trim(($student->applicant->first_name ?? '').' '.($student->applicant->middle_name ?? '').' '.($student->applicant->last_name ?? '')), ENT_QUOTES, 'UTF-8');
                                 $name = $fullName ? \Illuminate\Support\Str::upper($fullName) : 'STUDENT PROFILE';

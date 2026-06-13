@@ -94,6 +94,12 @@ class AdminStudentController extends Controller
             'name' => $query
                 ->leftJoin('enrollment_applicants as sort_applicants', 'sort_applicants.id', '=', 'students.enrollment_applicant_id')
                 ->select('students.*')
+                ->orderByRaw("CASE 
+                    WHEN LOWER(sort_applicants.learning_mode) LIKE '%face%' OR LOWER(sort_applicants.learning_mode) LIKE '%f2f%' THEN 1 
+                    WHEN LOWER(sort_applicants.learning_mode) LIKE '%1st%' THEN 2 
+                    WHEN LOWER(sort_applicants.learning_mode) LIKE '%2nd%' THEN 3 
+                    ELSE 9 
+                END ASC")
                 ->orderBy('sort_applicants.last_name', $direction)
                 ->orderBy('sort_applicants.first_name', $direction)
                 ->orderBy('students.id', 'desc'),
