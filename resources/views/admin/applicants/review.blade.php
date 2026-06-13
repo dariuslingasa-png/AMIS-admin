@@ -7,6 +7,7 @@
     $canReviewApplications = auth()->user()?->canReviewEnrollmentApplications() ?? false;
     $currentStatus = $applicant->status ?? 'under_review';
     $docStatuses = $docStatuses ?? [];
+    $inboxNeedsResend = fn ($child) => $child->status === 'approved' && $child->onboarding_email_status !== 'sent';
 
     $allFamily = $familyChildren ?? collect([$applicant]);
     $childrenCount = $allFamily->count();
@@ -143,9 +144,19 @@
                                     </td>
                                     <td class="px-5 py-4 text-right">
                                         @if ($canReviewApplications)
-                                        <a href="{{ route('admin.applicants.show', $child) }}" class="inline-flex h-8 items-center gap-1.5 rounded-lg border border-emerald-100 bg-white px-3 text-xs font-bold text-emerald-700 transition hover:bg-emerald-50" title="View details">
-                                            <i data-lucide="eye" class="h-3.5 w-3.5"></i> View
-                                        </a>
+                                            <div class="flex items-center justify-end gap-2">
+                                                @if ($inboxNeedsResend($child))
+                                                    <form method="POST" action="{{ route('admin.applicants.resend-onboarding-inbox', $child) }}" onsubmit="return confirm('Resend inbox email and reset temporary password for this student?')">
+                                                        @csrf
+                                                        <button class="inline-flex h-8 items-center gap-1.5 rounded-lg border border-amber-100 bg-amber-50 px-3 text-xs font-bold text-amber-700 transition hover:bg-amber-100" title="Resend inbox email">
+                                                            <i data-lucide="send" class="h-3.5 w-3.5"></i> Resend Inbox
+                                                        </button>
+                                                    </form>
+                                                @endif
+                                                <a href="{{ route('admin.applicants.show', $child) }}" class="inline-flex h-8 items-center gap-1.5 rounded-lg border border-emerald-100 bg-white px-3 text-xs font-bold text-emerald-700 transition hover:bg-emerald-50" title="View details">
+                                                    <i data-lucide="eye" class="h-3.5 w-3.5"></i> View
+                                                </a>
+                                            </div>
                                         @endif
                                     </td>
                                 </tr>

@@ -54,7 +54,7 @@ class ApplicationQuery
 
     public function paginateApplicants(Request $request, int $perPage = 20): LengthAwarePaginator
     {
-        $query = EnrollmentApplicant::with('user', 'payment')
+        $query = EnrollmentApplicant::with('user', 'payment', 'student')
             ->whereNotIn('enrollment_applicants.status', ['draft']);
 
         if ($request->filled('search')) {
@@ -117,6 +117,24 @@ class ApplicationQuery
 
         if ($request->filled('grade')) {
             $query->where('enrollment_applicants.grade_level', $request->grade);
+        }
+
+        if ($request->filled('inbox_status')) {
+            match ((string) $request->inbox_status) {
+                'sent' => $query->where('enrollment_applicants.onboarding_email_status', 'sent'),
+                'failed' => $query->where('enrollment_applicants.onboarding_email_status', 'failed'),
+                'missing' => $query->where('enrollment_applicants.status', 'approved')
+                    ->where(function ($q) {
+                        $q->whereNull('enrollment_applicants.onboarding_email_status')
+                            ->orWhereIn('enrollment_applicants.onboarding_email_status', [
+                                'failed',
+                                'missing_recipient',
+                                'missing_payment_proof',
+                                'disabled',
+                            ]);
+                    }),
+                default => null,
+            };
         }
 
         $sort = (string) $request->query('sort', 'number');

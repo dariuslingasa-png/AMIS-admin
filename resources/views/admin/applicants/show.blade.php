@@ -13,6 +13,7 @@
     $paymentIsPdf = $payment?->receipt_url && strtolower(pathinfo($payment->receipt_url, PATHINFO_EXTENSION)) === 'pdf';
     $canReviewPayments = auth()->user()?->canReviewEnrollmentPayments() ?? false;
     $canReviewApplications = auth()->user()?->canReviewEnrollmentApplications() ?? false;
+    $inboxNeedsResend = $applicant->status === 'approved' && $applicant->onboarding_email_status !== 'sent';
     $financeReviewer = (string) config('services.school.finance_reviewer_name', 'Finance Office');
     $paymentReadinessLabel = match (true) {
         !$payment?->receipt_url => "Waiting for Verification ({$financeReviewer})",
@@ -222,7 +223,16 @@
          @keydown.escape.window="closePreview(); statusOpen = false"
          @mouseup.window="stopPan()"
          @touchend.window="stopPan()">
-        <div class="mb-5 flex justify-end">
+        <div class="mb-5 flex justify-end gap-2">
+            @if ($canReviewApplications && $inboxNeedsResend)
+                <form method="POST" action="{{ route('admin.applicants.resend-onboarding-inbox', $applicant) }}" onsubmit="return confirm('Resend inbox email and reset temporary password for this student?')">
+                    @csrf
+                    <button class="inline-flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-bold text-amber-700 shadow-sm transition hover:border-amber-300 hover:bg-amber-100">
+                        <i data-lucide="send" class="h-4 w-4"></i>
+                        Resend Inbox
+                    </button>
+                </form>
+            @endif
             <a href="{{ route('admin.applications.enrollment') }}"
                class="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-white px-4 py-2 text-sm font-bold text-emerald-700 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50">
                 <i data-lucide="arrow-left" class="h-4 w-4"></i>

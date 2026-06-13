@@ -8,6 +8,7 @@
     @php
         $inputClass = 'h-11 rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100';
         $statusColor = ['approved' => 'green', 'rejected' => 'red', 'under_review' => 'blue', 'ready_for_submission' => 'yellow', 'pending' => 'yellow', 'submitted' => 'purple'];
+        $canReviewApplications = auth()->user()?->canReviewEnrollmentApplications() ?? false;
         $readiness = function ($applicant) use ($reviewService) {
             $docsReady = $reviewService->areAllDocumentsApproved($applicant);
             return match (true) {
@@ -28,6 +29,18 @@
             'TRANSFEREE STUDENT' => 'bg-amber-100 text-amber-800',
             'NEW STUDENT' => 'bg-blue-100 text-blue-800',
             default => 'bg-slate-100 text-slate-600',
+        };
+        $inboxState = function ($applicant) {
+            return match ($applicant->onboarding_email_status) {
+                'sent' => ['Sent', 'green', $applicant->onboarding_email_sent_at?->format('M d, g:i A')],
+                'failed' => ['Failed', 'red', $applicant->onboarding_email_error],
+                'missing_recipient' => ['No Email', 'red', 'No valid parent or applicant email'],
+                'missing_payment_proof' => ['No Payment Proof', 'yellow', 'Waiting for payment proof'],
+                'disabled' => ['Disabled', 'gray', 'Auto-send disabled in settings'],
+                default => $applicant->status === 'approved'
+                    ? ['Not Sent', 'yellow', 'Approved but no sent email is recorded']
+                    : ['Pending', 'gray', 'Available after approval'],
+            };
         };
     @endphp
 
@@ -52,7 +65,7 @@
 
         <div class="px-6 py-5">
             <form method="GET" class="mb-5 grid grid-cols-12 gap-3">
-                <label class="relative col-span-6">
+                <label class="relative col-span-4">
                     <i data-lucide="search" class="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-slate-400"></i>
                     <input name="search" value="{{ request('search') }}" placeholder="Search approval queue" class="{{ $inputClass }} w-full pl-9">
                 </label>
@@ -62,7 +75,13 @@
                         <option value="{{ $value }}" @selected(request('status') === $value)>{{ $label }}</option>
                     @endforeach
                 </select>
-                <button class="col-span-3 inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-800">
+                <select name="inbox_status" class="{{ $inputClass }} col-span-3 w-full" onchange="this.form.submit()">
+                    <option value="">All inbox states</option>
+                    <option value="missing" @selected(request('inbox_status') === 'missing')>Needs resend</option>
+                    <option value="failed" @selected(request('inbox_status') === 'failed')>Failed</option>
+                    <option value="sent" @selected(request('inbox_status') === 'sent')>Sent</option>
+                </select>
+                <button class="col-span-2 inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-800">
                     <i data-lucide="shield-check" class="h-4 w-4"></i>
                     Filter Queue
                 </button>
@@ -84,8 +103,9 @@
                             <th class="px-5 py-4 font-bold">Applicant</th>
                             <th class="w-44 px-5 py-4 font-bold">Current Status</th>
                             <th class="w-48 px-5 py-4 font-bold">Readiness</th>
+                            <th class="w-48 px-5 py-4 font-bold">Inbox Email</th>
                             <th class="px-5 py-4 font-bold">Next Step</th>
-                            <th class="w-36 px-5 py-4 text-right font-bold">Action</th>
+                            <th class="w-52 px-5 py-4 text-right font-bold">Action</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 bg-white">
@@ -93,6 +113,7 @@
                             @php
                                 $name = \Illuminate\Support\Str::upper(trim($applicant->first_name.' '.$applicant->middle_name.' '.$applicant->last_name));
                                 [$readyLabel, $readyColor, $nextStep] = $readiness($applicant);
+                                [$inboxLabel, $inboxColor, $inboxNote] = $inboxState($applicant);
                                 $studentType = $typeLabel($applicant->student_type);
                             @endphp
                             <tr class="transition hover:bg-slate-50">
@@ -106,16 +127,33 @@
                                 </td>
                                 <td class="px-5 py-4"><x-badge :color="$statusColor[$applicant->status] ?? 'gray'">{{ $statusLabels[$applicant->status] ?? 'Under Review' }}</x-badge></td>
                                 <td class="px-5 py-4"><x-badge :color="$readyColor">{{ $readyLabel }}</x-badge></td>
+                                <td class="px-5 py-4">
+                                    <x-badge :color="$inboxColor">{{ $inboxLabel }}</x-badge>
+                                    @if ($inboxNote)
+                                        <div class="mt-1 max-w-44 truncate text-[11px] font-medium text-slate-400" title="{{ $inboxNote }}">{{ $inboxNote }}</div>
+                                    @endif
+                                </td>
                                 <td class="px-5 py-4 font-medium text-slate-600">{{ $nextStep }}</td>
                                 <td class="px-5 py-4 text-right">
-                                    <a href="{{ route('admin.applicants.review', $applicant) }}" class="inline-flex h-9 items-center gap-2 rounded-md border border-emerald-100 bg-white px-3 text-xs font-bold text-emerald-700 transition hover:bg-emerald-50">
-                                        <i data-lucide="shield-check" class="h-4 w-4"></i>
-                                        Open
-                                    </a>
+                                    <div class="flex items-center justify-end gap-2">
+                                        @if ($canReviewApplications && $applicant->status === 'approved' && $applicant->onboarding_email_status !== 'sent')
+                                            <form method="POST" action="{{ route('admin.applicants.resend-onboarding-inbox', $applicant) }}" onsubmit="return confirm('Resend inbox email and reset temporary password for this student?')">
+                                                @csrf
+                                                <button class="inline-flex h-9 items-center gap-2 rounded-md border border-amber-100 bg-amber-50 px-3 text-xs font-bold text-amber-700 transition hover:bg-amber-100">
+                                                    <i data-lucide="send" class="h-4 w-4"></i>
+                                                    Resend Inbox
+                                                </button>
+                                            </form>
+                                        @endif
+                                        <a href="{{ route('admin.applicants.review', $applicant) }}" class="inline-flex h-9 items-center gap-2 rounded-md border border-emerald-100 bg-white px-3 text-xs font-bold text-emerald-700 transition hover:bg-emerald-50">
+                                            <i data-lucide="shield-check" class="h-4 w-4"></i>
+                                            Open
+                                        </a>
+                                    </div>
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="5" class="px-5 py-12 text-center text-sm text-slate-500">No applications in the approval queue.</td></tr>
+                            <tr><td colspan="6" class="px-5 py-12 text-center text-sm text-slate-500">No applications in the approval queue.</td></tr>
                         @endforelse
                     </tbody>
                 </table>

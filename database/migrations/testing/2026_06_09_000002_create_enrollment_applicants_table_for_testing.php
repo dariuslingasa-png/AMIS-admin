@@ -68,6 +68,9 @@ return new class extends Migration
             $table->decimal('discount_percentage', 5, 2)->nullable();
             $table->decimal('discount_amount', 10, 2)->nullable();
             $table->timestamp('registry_email_sent_at')->nullable();
+            $table->string('onboarding_email_status')->nullable();
+            $table->timestamp('onboarding_email_sent_at')->nullable();
+            $table->text('onboarding_email_error')->nullable();
             $table->timestamps();
         });
     }

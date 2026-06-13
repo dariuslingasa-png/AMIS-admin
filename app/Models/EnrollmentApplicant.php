@@ -86,6 +86,9 @@ class EnrollmentApplicant extends Model
         'discount_percentage',
         'discount_amount',
         'registry_email_sent_at',
+        'onboarding_email_status',
+        'onboarding_email_sent_at',
+        'onboarding_email_error',
     ];
 
     protected $casts = [
@@ -98,6 +101,7 @@ class EnrollmentApplicant extends Model
         'discount_percentage'=> 'decimal:2',
         'discount_amount'    => 'decimal:2',
         'registry_email_sent_at' => 'datetime',
+        'onboarding_email_sent_at' => 'datetime',
     ];
 
     public function user(): BelongsTo

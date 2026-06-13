@@ -121,6 +121,19 @@ class ApprovalController extends Controller
         return back()->with('success', 'Family enrollees approved successfully: ' . implode(' | ', $messages));
     }
 
+    public function resendOnboardingInbox(EnrollmentApplicant $applicant)
+    {
+        $this->ensureApplicationReviewer();
+
+        $message = $this->approvalService->resendOnboardingInbox($applicant);
+        AdminAuditLog::record('onboarding_email_resent', true, 'Enrollment onboarding inbox email resend requested.', [
+            'applicant_id' => $applicant->id,
+            'status' => $applicant->fresh()?->onboarding_email_status,
+        ]);
+
+        return back()->with('success', $message);
+    }
+
     public function verifySection(Request $request, EnrollmentApplicant $applicant)
     {
         $this->ensureApplicationReviewer();

@@ -492,29 +492,90 @@ class EnrollmentApprovalService
         ?string $msError,
     ): string {
         if (! ($settings->send_onboarding_email ?? false)) {
+            $this->markOnboardingEmail($applicant, 'disabled');
+
             return 'disabled';
         }
 
         if (! $this->hasUploadedPaymentProof($applicant)) {
+            $this->markOnboardingEmail($applicant, 'missing_payment_proof');
+
             return 'missing_payment_proof';
         }
 
-        $recipients = collect([$applicant->parent_email ?: null, $applicant->email ?: null])
-            ->filter(fn ($email) => $email && $email !== 'NA' && filter_var($email, FILTER_VALIDATE_EMAIL))
-            ->unique()
-            ->values();
+        $recipients = $this->onboardingRecipients($applicant);
 
         if ($recipients->isEmpty()) {
+            $this->markOnboardingEmail($applicant, 'missing_recipient');
+
             return 'missing_recipient';
         }
 
-        if (! $this->sendOnboardingEmail($applicant, $student, $tempPassword, $msError, $recipients->all())) {
+        [$sent, $error] = $this->sendOnboardingEmail($applicant, $student, $tempPassword, $msError, $recipients->all());
+
+        if (! $sent) {
+            $this->markOnboardingEmail($applicant, 'failed', $error);
+
             return 'failed';
         }
 
         $student->update(['credentials_sent_at' => now()]);
+        $this->markOnboardingEmail($applicant, 'sent', sentAt: now());
 
         return 'sent';
+    }
+
+    public function resendOnboardingInbox(EnrollmentApplicant $applicant): string
+    {
+        $applicant->loadMissing('student');
+
+        if ($applicant->status !== 'approved' || ! $applicant->student) {
+            throw ValidationException::withMessages([
+                'onboarding_email' => 'Only approved applicants with generated student credentials can receive the onboarding inbox email.',
+            ]);
+        }
+
+        $recipients = $this->onboardingRecipients($applicant);
+
+        if ($recipients->isEmpty()) {
+            $this->markOnboardingEmail($applicant, 'missing_recipient');
+
+            return 'No valid parent or applicant email was found.';
+        }
+
+        $student = $applicant->student;
+        $tempPassword = 'Amis@'.strtoupper(Str::random(5)).rand(10, 99);
+
+        try {
+            if (filled($student->school_email)) {
+                (new MicrosoftGraphService)->resetPassword($student->school_email, $tempPassword);
+            }
+        } catch (\Throwable $exception) {
+            Log::error('Failed to reset Microsoft password before onboarding resend: '.$exception->getMessage(), [
+                'applicant_id' => $applicant->id,
+                'student_id' => $student->id,
+                'school_email' => $student->school_email,
+            ]);
+
+            $this->markOnboardingEmail($applicant, 'failed', 'Microsoft password reset failed: '.$exception->getMessage());
+
+            return 'Inbox email was not resent because Microsoft password reset failed. Please retry when Microsoft sync is healthy.';
+        }
+
+        $student->update(['temp_password' => Hash::make($tempPassword)]);
+
+        [$sent, $error] = $this->sendOnboardingEmail($applicant, $student, $tempPassword, null, $recipients->all());
+
+        if (! $sent) {
+            $this->markOnboardingEmail($applicant, 'failed', $error);
+
+            return 'Inbox email failed to resend. Please check mail logs.';
+        }
+
+        $student->update(['credentials_sent_at' => now()]);
+        $this->markOnboardingEmail($applicant, 'sent', sentAt: now());
+
+        return 'Inbox email resent to '.$recipients->implode(', ').'.';
     }
 
     private function hasUploadedPaymentProof(EnrollmentApplicant $applicant): bool
@@ -545,15 +606,36 @@ class EnrollmentApprovalService
         string $tempPassword,
         ?string $msError,
         array $recipients,
-    ): bool {
+    ): array {
         try {
             Mail::to($recipients)->send(new EnrollmentOnboardingMail($applicant, $student, $tempPassword, $msError));
 
-            return true;
+            return [true, null];
         } catch (\Throwable $exception) {
             Log::error('Failed to send onboarding email: '.$exception->getMessage());
 
-            return false;
+            return [false, $exception->getMessage()];
         }
+    }
+
+    private function onboardingRecipients(EnrollmentApplicant $applicant): \Illuminate\Support\Collection
+    {
+        return collect([$applicant->parent_email ?: null, $applicant->email ?: null])
+            ->filter(fn ($email) => $email && $email !== 'NA' && filter_var($email, FILTER_VALIDATE_EMAIL))
+            ->unique()
+            ->values();
+    }
+
+    private function markOnboardingEmail(
+        EnrollmentApplicant $applicant,
+        string $status,
+        ?string $error = null,
+        mixed $sentAt = null,
+    ): void {
+        $applicant->forceFill([
+            'onboarding_email_status' => $status,
+            'onboarding_email_sent_at' => $sentAt,
+            'onboarding_email_error' => $error ? Str::limit($error, 1000, '') : null,
+        ])->save();
     }
 }

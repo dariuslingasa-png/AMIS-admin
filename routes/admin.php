@@ -88,6 +88,7 @@ Route::name('admin.')->group(function () {
             Route::patch('/{applicant}/discount', [ApplicantController::class, 'updateDiscount'])->name('discount');
             Route::post('/{applicant}/approve', [ApprovalController::class, 'approve'])->name('approve');
             Route::post('/{applicant}/approve-family', [ApprovalController::class, 'approveFamily'])->name('approve-family');
+            Route::post('/{applicant}/resend-onboarding-inbox', [ApprovalController::class, 'resendOnboardingInbox'])->name('resend-onboarding-inbox');
             Route::post('/{applicant}/verify-section', [ApprovalController::class, 'verifySection'])->name('verify-section');
         });
 
