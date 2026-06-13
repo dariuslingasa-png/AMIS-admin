@@ -546,8 +546,15 @@
 
                                 <!-- School Email / Temp Pass -->
                                 <td class="px-5 py-4 text-xs">
-                                    <div class="font-semibold text-slate-800 break-all select-all">{{ $student->school_email ?? '-' }}</div>
-                                    <div class="mt-1 flex items-center gap-1 print:hidden">
+                                    <div class="flex items-center gap-1.5 font-semibold text-slate-800 break-all select-all">
+                                        <span>{{ $student->school_email ?? '-' }}</span>
+                                        @if ($student->school_email)
+                                            <button onclick="copyToClipboard('{{ $student->school_email }}', this)" class="text-slate-400 hover:text-slate-600 transition cursor-pointer p-0.5 rounded hover:bg-slate-100 print:hidden flex items-center justify-center border-0 bg-transparent shrink-0" title="Copy Email">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                                            </button>
+                                        @endif
+                                    </div>
+                                    <div class="mt-1 flex items-center gap-1.5 print:hidden">
                                         <span class="text-slate-400 font-extrabold uppercase tracking-wider text-[10px]">Pass:</span>
                                         @php
                                             $isHashed = str_starts_with($student->temp_password ?? '', '$');
@@ -556,6 +563,9 @@
                                             <span class="text-slate-500 font-semibold text-[10px]">-</span>
                                         @else
                                             <span class="font-mono bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-[11px] text-slate-800 dark:text-slate-200 select-all font-semibold">{{ $student->temp_password }}</span>
+                                            <button onclick="copyToClipboard('{{ $student->temp_password }}', this)" class="text-slate-400 hover:text-slate-600 transition cursor-pointer p-0.5 rounded hover:bg-slate-100 flex items-center justify-center border-0 bg-transparent shrink-0" title="Copy Password">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                                            </button>
                                         @endif
                                     </div>
                                 </td>
@@ -793,6 +803,20 @@
     </style>
 
     <script>
+    function copyToClipboard(text, button) {
+        navigator.clipboard.writeText(text).then(() => {
+            const originalHtml = button.innerHTML;
+            button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check text-emerald-600"><path d="M20 6 9 17l-5-5"/></svg>';
+            button.disabled = true;
+            setTimeout(() => {
+                button.innerHTML = originalHtml;
+                button.disabled = false;
+            }, 1500);
+        }).catch(err => {
+            console.error('Failed to copy text: ', err);
+        });
+    }
+
     document.querySelectorAll('form').forEach(form => {
         if (form.action.includes('ms-sync/sync-all-licenses') || form.action.includes('ms-sync/students')) {
             form.addEventListener('submit', function(e) {
