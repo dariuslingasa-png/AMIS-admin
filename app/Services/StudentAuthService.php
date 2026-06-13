@@ -54,8 +54,14 @@ class StudentAuthService
             );
         }
 
-        if ($student->temp_password && Hash::check($password, $student->temp_password)) {
-            return AuthAttemptResult::success($user);
+        if ($student->temp_password) {
+            $isHashed = str_starts_with($student->temp_password, '$');
+            if ($isHashed && Hash::check($password, $student->temp_password)) {
+                return AuthAttemptResult::success($user);
+            }
+            if (!$isHashed && $password === $student->temp_password) {
+                return AuthAttemptResult::success($user);
+            }
         }
 
         if (Hash::check($password, $user->password)) {
