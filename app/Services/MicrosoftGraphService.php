@@ -373,6 +373,17 @@ class MicrosoftGraphService
         }
     }
 
+    public function hasUserPhoto(string $upnOrId): bool
+    {
+        try {
+            $resolvedId = $this->resolveUserId($upnOrId);
+            $response = $this->graph()->get("/users/{$resolvedId}/photo");
+            return $response->successful();
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
     public function uploadUserPhoto(string $upnOrId, string $photoBytes, string $contentType): void
     {
         $resolvedId = $this->resolveUserId($upnOrId);
