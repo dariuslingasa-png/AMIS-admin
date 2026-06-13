@@ -56,4 +56,33 @@ class Payment extends Model
             default => ucfirst($this->method),
         };
     }
+
+    public function getReceiptUrlAttribute($value): ?string
+    {
+        if (blank($value)) {
+            return null;
+        }
+        if (str_starts_with($value, '[') && str_ends_with($value, ']')) {
+            $decoded = json_decode($value, true);
+            if (is_array($decoded) && count($decoded) > 0) {
+                return $decoded[0];
+            }
+        }
+        return $value;
+    }
+
+    public function getReceiptUrlsAttribute(): array
+    {
+        $value = $this->attributes['receipt_url'] ?? null;
+        if (blank($value)) {
+            return [];
+        }
+        if (str_starts_with($value, '[') && str_ends_with($value, ']')) {
+            $decoded = json_decode($value, true);
+            if (is_array($decoded)) {
+                return $decoded;
+            }
+        }
+        return [$value];
+    }
 }

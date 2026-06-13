@@ -77,13 +77,25 @@
                                     </span>
                                 </td>
                                 <td class="px-4 py-4 text-center">
-                                    @if ($p->receipt_url)
-                                        <button type="button" 
-                                                @click="openPreview('{{ \App\Support\EnrollmentStorage::url($p->receipt_url) }}', 'Payment Proof: {{ $familyLabel }}', {{ $pIsPdf ? 'true' : 'false' }}); if ('{{ strtolower($p->status) }}' === 'pending') { currentPayment = {{ $p->id }}; currentInvoice = '{{ $pInvoiceNo }}'; predictedOr = '{{ $predictedOr }}'; financeAmount = '{{ $p->amount }}'; financeMethod = '{{ in_array(strtolower($p->method), ['remittance', 'gcash', 'bdo', 'maya', 'cash']) ? strtolower($p->method) : 'other' }}'; remittanceSource = ''; financePaymentDate = '{{ $p->paid_at?->format('Y-m-d') ?: ($p->created_at?->format('Y-m-d') ?: now()->format('Y-m-d')) }}'; financeReferenceNo = '{{ $p->reference_no }}'; document.getElementById('modal-approve-form-finance').action = '{{ route('admin.payments.verify', $p) }}'; document.getElementById('modal-reject-form-finance').action = '{{ route('admin.payments.reject', $p) }}'; remarks = ''; }"
-                                                class="btn-premium btn-view">
-                                            <i data-lucide="eye" class="h-4 w-4"></i>
-                                            View
-                                        </button>
+                                    @php
+                                        $receipts = $p->receipt_urls ?? [];
+                                    @endphp
+                                    @if (count($receipts) > 0)
+                                        <div class="flex flex-col gap-1.5 items-center justify-center">
+                                            @foreach ($receipts as $index => $receiptPath)
+                                                @php
+                                                    $rUrl = \App\Support\EnrollmentStorage::url($receiptPath);
+                                                    $rIsPdf = $receiptPath && strtolower(pathinfo($receiptPath, PATHINFO_EXTENSION)) === 'pdf';
+                                                    $btnLabel = count($receipts) > 1 ? 'View #' . ($index + 1) : 'View';
+                                                @endphp
+                                                <button type="button" 
+                                                        @click="openPreview('{{ $rUrl }}', 'Payment Proof: {{ $familyLabel }} (#{{ $index + 1 }})', {{ $rIsPdf ? 'true' : 'false' }}); if ('{{ strtolower($p->status) }}' === 'pending') { currentPayment = {{ $p->id }}; currentInvoice = '{{ $pInvoiceNo }}'; predictedOr = '{{ $predictedOr }}'; financeAmount = '{{ $p->amount }}'; financeMethod = '{{ in_array(strtolower($p->method), ['remittance', 'gcash', 'bdo', 'maya', 'cash']) ? strtolower($p->method) : 'other' }}'; remittanceSource = ''; financePaymentDate = '{{ $p->paid_at?->format('Y-m-d') ?: ($p->created_at?->format('Y-m-d') ?: now()->format('Y-m-d')) }}'; financeReferenceNo = '{{ $p->reference_no }}'; document.getElementById('modal-approve-form-finance').action = '{{ route('admin.payments.verify', $p) }}'; document.getElementById('modal-reject-form-finance').action = '{{ route('admin.payments.reject', $p) }}'; remarks = ''; }"
+                                                        class="btn-premium btn-view">
+                                                    <i data-lucide="eye" class="h-4 w-4"></i>
+                                                    {{ $btnLabel }}
+                                                </button>
+                                            @endforeach
+                                        </div>
                                     @else
                                         <span class="text-[13.5px] text-slate-400 font-semibold">No Proof</span>
                                     @endif

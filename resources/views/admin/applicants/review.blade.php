@@ -190,15 +190,30 @@
                             </div>
                         </div>
 
-                        @if ($paymentUrl)
-                            <div class="rounded-xl border border-slate-100 overflow-hidden">
-                                <a href="#" @click.prevent="openPreview('{{ $paymentUrl }}', 'Payment Proof', {{ $paymentIsPdf ? 'true' : 'false' }})" class="block">
-                                    @if ($paymentIsPdf)
-                                        <span class="upload-pdf"><i data-lucide="file-text" class="h-9 w-9"></i>PDF Receipt</span>
-                                    @else
-                                        <x-smart-preview-image :src="$paymentUrl" alt="Payment Proof" />
-                                    @endif
-                                </a>
+                        @php
+                            $receipts = $payment?->receipt_urls ?? [];
+                        @endphp
+                        @if (count($receipts) > 0)
+                            <div class="space-y-3">
+                                @foreach ($receipts as $index => $receiptPath)
+                                    @php
+                                        $url = \App\Support\EnrollmentStorage::url($receiptPath);
+                                        $isPdf = $receiptPath && strtolower(pathinfo($receiptPath, PATHINFO_EXTENSION)) === 'pdf';
+                                    @endphp
+                                    <div class="rounded-xl border border-slate-100 overflow-hidden">
+                                        <div class="bg-slate-50 px-4 py-1.5 text-[11px] font-extrabold text-slate-500 border-b border-slate-100 flex items-center justify-between">
+                                            <span>RECEIPT #{{ $index + 1 }}</span>
+                                            <a href="{{ $url }}" target="_blank" class="text-emerald-600 hover:text-emerald-700 hover:underline">Open in new tab</a>
+                                        </div>
+                                        <a href="#" @click.prevent="openPreview('{{ $url }}', 'Payment Proof #{{ $index + 1 }}', {{ $isPdf ? 'true' : 'false' }})" class="block">
+                                            @if ($isPdf)
+                                                <span class="upload-pdf"><i data-lucide="file-text" class="h-9 w-9"></i>PDF Receipt</span>
+                                            @else
+                                                <x-smart-preview-image :src="$url" alt="Payment Proof #{{ $index + 1 }}" />
+                                            @endif
+                                        </a>
+                                    </div>
+                                @endforeach
                             </div>
                         @else
                             <div class="rounded-xl border border-dashed border-slate-200 p-6 text-center">

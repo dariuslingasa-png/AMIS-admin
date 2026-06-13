@@ -269,31 +269,36 @@ class ApplicantController extends Controller
                         $attachments = [];
                         $payments = $family['family_payments'] ?? collect();
                         foreach ($payments as $p) {
-                            if ($p->receipt_url) {
-                                $rUrl = $p->receipt_url;
+                            $receipts = $p->receipt_urls ?? [];
+                            foreach ($receipts as $idx => $rUrl) {
+                                if (blank($rUrl)) {
+                                    continue;
+                                }
                                 
                                 // Normalize if it is a full URL
                                 if (filter_var($rUrl, FILTER_VALIDATE_URL)) {
                                     $parsedPath = parse_url($rUrl, PHP_URL_PATH);
                                     if (str_starts_with($parsedPath, '/storage/')) {
-                                        $rUrl = substr($parsedPath, 9);
+                                        $rUrlPath = substr($parsedPath, 9);
                                     } else {
-                                        $rUrl = ltrim($parsedPath, '/');
+                                        $rUrlPath = ltrim($parsedPath, '/');
                                     }
+                                } else {
+                                    $rUrlPath = ltrim($rUrl, '/');
                                 }
                                 
                                 // Check multiple possible paths to locate the file in local/cPanel environment
                                 $searchPaths = [
-                                    base_path('../amis_enrollment/storage/app/public/' . ltrim($rUrl, '/')),
-                                    base_path('../amis_enrollment/public/storage/' . ltrim($rUrl, '/')),
-                                    base_path('../enrollment/storage/app/public/' . ltrim($rUrl, '/')),
-                                    base_path('../enrollment/public/storage/' . ltrim($rUrl, '/')),
-                                    base_path('../../amis_enrollment/storage/app/public/' . ltrim($rUrl, '/')),
-                                    base_path('../../public_html/amis_enrollment/storage/app/public/' . ltrim($rUrl, '/')),
-                                    base_path('../../public_html/storage/' . ltrim($rUrl, '/')),
-                                    storage_path('app/public/' . ltrim($rUrl, '/')),
-                                    public_path('storage/' . ltrim($rUrl, '/')),
-                                    public_path(ltrim($rUrl, '/')),
+                                    base_path('../amis_enrollment/storage/app/public/' . $rUrlPath),
+                                    base_path('../amis_enrollment/public/storage/' . $rUrlPath),
+                                    base_path('../enrollment/storage/app/public/' . $rUrlPath),
+                                    base_path('../enrollment/public/storage/' . $rUrlPath),
+                                    base_path('../../amis_enrollment/storage/app/public/' . $rUrlPath),
+                                    base_path('../../public_html/amis_enrollment/storage/app/public/' . $rUrlPath),
+                                    base_path('../../public_html/storage/' . $rUrlPath),
+                                    storage_path('app/public/' . $rUrlPath),
+                                    public_path('storage/' . $rUrlPath),
+                                    public_path($rUrlPath),
                                 ];
                                 
                                 $localPath = null;
@@ -305,15 +310,15 @@ class ApplicantController extends Controller
                                 }
                                 
                                 // Fallback: Download file if it is a URL and not found locally
-                                if (!$localPath && filter_var($p->receipt_url, FILTER_VALIDATE_URL)) {
+                                if (!$localPath && filter_var($rUrl, FILTER_VALIDATE_URL)) {
                                     try {
-                                        $tempContent = @file_get_contents($p->receipt_url);
+                                        $tempContent = @file_get_contents($rUrl);
                                         if ($tempContent !== false) {
                                             $tempDir = storage_path('app/temp_attachments');
                                             if (!file_exists($tempDir)) {
                                                 @mkdir($tempDir, 0755, true);
                                             }
-                                            $ext = strtolower(pathinfo(parse_url($p->receipt_url, PHP_URL_PATH), PATHINFO_EXTENSION)) ?: 'jpg';
+                                            $ext = strtolower(pathinfo(parse_url($rUrl, PHP_URL_PATH), PATHINFO_EXTENSION)) ?: 'jpg';
                                             $tempFile = $tempDir . '/' . uniqid('proof_', true) . '.' . $ext;
                                             if (@file_put_contents($tempFile, $tempContent) !== false) {
                                                 $localPath = $tempFile;
@@ -321,7 +326,7 @@ class ApplicantController extends Controller
                                             }
                                         }
                                     } catch (\Throwable $e) {
-                                        \Log::warning('Failed to download receipt from URL: ' . $p->receipt_url . ' - ' . $e->getMessage());
+                                        \Log::warning('Failed to download receipt from URL: ' . $rUrl . ' - ' . $e->getMessage());
                                     }
                                 }
                                 
@@ -336,7 +341,7 @@ class ApplicantController extends Controller
                                         default => 'application/octet-stream'
                                     };
                                     $appNo = str_pad($family['family_no'], 4, '0', STR_PAD_LEFT);
-                                    $filename = 'payment-proof-' . $appNo . '.' . $ext;
+                                    $filename = 'payment-proof-' . $appNo . (count($receipts) > 1 ? '-' . ($idx + 1) : '') . '.' . $ext;
                                     
                                     $alreadyAdded = false;
                                     foreach ($attachments as $att) {
