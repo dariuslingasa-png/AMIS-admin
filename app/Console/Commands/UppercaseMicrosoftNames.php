@@ -68,17 +68,43 @@ class UppercaseMicrosoftNames extends Command
         $toUpdate = [];
 
         foreach ($users as $user) {
-            $displayName = $user['displayName'] ?? '';
+            $displayName = trim($user['displayName'] ?? '');
             $id = $user['id'];
             $upn = $user['userPrincipalName'] ?? '';
 
-            // Check if display name contains any lowercase characters
-            if (preg_match('/[a-z]/', $displayName)) {
+            if (empty($displayName)) {
+                continue;
+            }
+
+            // ONLY process users whose UPN prefix starts with '26' (e.g., 260181datumanong@amis.edu.ph)
+            $upnPrefix = explode('@', $upn)[0] ?? '';
+            if (!preg_match('/^26/', $upnPrefix)) {
+                continue;
+            }
+
+            // 1. If name contains a comma, rearrange from "Last, First Middle" to "First Middle Last"
+            $newName = $displayName;
+            if (str_contains($displayName, ',')) {
+                $parts = explode(',', $displayName);
+                if (count($parts) >= 2) {
+                    $lastName = trim($parts[0]);
+                    $rest = array_slice($parts, 1);
+                    $firstNameMiddleName = trim(implode(' ', $rest));
+                    $newName = $firstNameMiddleName . ' ' . $lastName;
+                }
+            }
+
+            // 2. Convert to uppercase and normalize whitespace
+            $newName = mb_strtoupper($newName, 'UTF-8');
+            $newName = trim(preg_replace('/\s+/', ' ', $newName));
+
+            // 3. Check if display name needs an update
+            if ($displayName !== $newName) {
                 $toUpdate[] = [
                     'id' => $id,
                     'upn' => $upn,
                     'old' => $displayName,
-                    'new' => mb_strtoupper($displayName, 'UTF-8'),
+                    'new' => $newName,
                 ];
             }
         }
