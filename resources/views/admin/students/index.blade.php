@@ -95,7 +95,6 @@
         }
         table th {
             background: #f8fafc !important;
-            border-bottom: 1.5px solid #cbd5e1 !important;
             color: #1e293b !important;
             font-family: Arial, sans-serif !important;
             font-weight: bold !important;
@@ -106,7 +105,6 @@
         }
         table td {
             border: none !important;
-            border-bottom: 1px solid #e2e8f0 !important;
             padding: 8px 10px !important;
             font-family: Arial, sans-serif !important;
             font-size: 9px !important;
@@ -210,8 +208,11 @@
             </div>
         </header>
 
-        <div class="mb-6">
-            <h2 class="uppercase tracking-wide text-slate-700 font-bold" style="font-family: Arial, sans-serif; font-size: 11px; margin: 5px 0 0 0;">
+        <div class="mb-6 text-center">
+            <h1 class="uppercase tracking-tight text-slate-900 font-bold" style="font-family: Arial, sans-serif; font-size: 14px; margin: 0; letter-spacing: 0.05em;">
+                OFFICIAL STUDENT LIST – SCHOOL YEAR 2026–2027
+            </h1>
+            <h2 class="uppercase tracking-wide text-slate-700 font-bold mt-1" style="font-family: Arial, sans-serif; font-size: 10px; margin: 4px 0 0 0; letter-spacing: 0.02em;">
                 @if(request('grade'))
                     Grade Level: {{ request('grade') }}
                 @else
@@ -272,18 +273,19 @@
                 });
             @endphp
             <div class="grade-print-section mb-10 {{ !$loop->last ? 'page-break-after' : '' }}">
-                <h2 class="text-sm font-bold text-slate-800 mb-3 border-b border-slate-300 pb-1.5 uppercase tracking-wider" style="font-family: Arial, sans-serif;">
+                <h2 class="text-sm font-bold text-slate-800 mb-3 pb-1.5 uppercase tracking-wider" style="font-family: Arial, sans-serif;">
                     {{ $gradeName }} <span class="text-slate-500 font-normal">({{ $gradeStudents->count() }} Students)</span>
                 </h2>
                 <table class="w-full text-left text-sm print-table mb-6">
                     <thead>
                         <tr>
+                            <th style="width: 5%; text-align: center;">#</th>
                             <th style="width: 25%">Student</th>
                             <th style="width: 12%">AMIS ID</th>
                             <th style="width: 10%">Gender</th>
                             <th style="width: 10%">Type</th>
-                            <th style="width: 23%">Mode</th>
-                            <th style="width: 20%">AMIS School Email</th>
+                            <th style="width: 20%">Mode</th>
+                            <th style="width: 18%">AMIS School Email</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -307,6 +309,7 @@
                                 }
                             @endphp
                             <tr>
+                                <td style="text-align: center; font-weight: bold; color: #64748b;">{{ $loop->iteration }}</td>
                                 <td class="font-bold text-slate-900">{{ $name }}</td>
                                 <td class="font-semibold">{{ $student->student_number ?? '-' }}</td>
                                 <td>{{ $genderLabel }}</td>
