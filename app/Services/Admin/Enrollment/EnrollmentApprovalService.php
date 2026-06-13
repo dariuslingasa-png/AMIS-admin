@@ -382,6 +382,11 @@ class EnrollmentApprovalService
                     ?? env('ENROLLMENT_STORAGE_URL')
                     ?? 'https://enrollment.amis.edu.ph/storage';
 
+                if (str_contains($storageUrl, '127.0.0.1') || str_contains($storageUrl, 'localhost')) {
+                    // Fallback to production URL if running on a live system
+                    $storageUrl = 'https://enrollment.amis.edu.ph/storage';
+                }
+
                 $url = rtrim($storageUrl, '/') . '/' . ltrim($urlOrPath, '/');
             }
 
@@ -486,6 +491,7 @@ class EnrollmentApprovalService
             base_path('../../public_html/storage'),
             storage_path('app/public'),
             public_path('storage'),
+            public_path(),
         ];
     }
 

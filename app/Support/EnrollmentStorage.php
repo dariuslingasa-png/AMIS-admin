@@ -106,6 +106,7 @@ class EnrollmentStorage
             base_path('../../public_html/storage'),
             storage_path('app/public'),
             public_path('storage'),
+            public_path(),
         ];
     }
 }
