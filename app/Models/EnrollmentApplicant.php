@@ -165,4 +165,19 @@ class EnrollmentApplicant extends Model
         $filled = count(array_filter($checks));
         return (int) round(($filled / count($checks)) * 100);
     }
+
+    public function setFirstNameAttribute($value)
+    {
+        $this->attributes['first_name'] = mb_strtoupper($value, 'UTF-8');
+    }
+
+    public function setMiddleNameAttribute($value)
+    {
+        $this->attributes['middle_name'] = mb_strtoupper($value, 'UTF-8');
+    }
+
+    public function setLastNameAttribute($value)
+    {
+        $this->attributes['last_name'] = mb_strtoupper($value, 'UTF-8');
+    }
 }
