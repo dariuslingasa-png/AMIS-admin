@@ -332,7 +332,7 @@ class AdminStudentController extends Controller
         // Generate new temp password
         $tempPassword = 'Amis@' . strtoupper(Str::random(5)) . rand(10, 99);
         $student->update([
-            'temp_password'       => Hash::make($tempPassword),
+            'temp_password'       => $tempPassword,
             'credentials_sent_at' => now(),
         ]);
 
