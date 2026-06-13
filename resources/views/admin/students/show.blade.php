@@ -399,25 +399,25 @@
                         <!-- Left: Payment details card -->
                         <x-card title="Payment Details" subtitle="Information submitted by the applicant">
                             <dl class="space-y-4 text-sm mt-2">
-                                <div class="flex justify-between py-2 border-b border-slate-100 dark:border-slate-800">
+                                <div class="flex justify-between py-3 border-b border-slate-100 dark:border-slate-800">
                                     <dt class="font-semibold text-slate-500">Amount Paid</dt>
                                     <dd class="font-extrabold text-slate-900 dark:text-white">₱{{ number_format($payment->amount, 2) }}</dd>
                                 </div>
-                                <div class="flex justify-between py-2 border-b border-slate-100 dark:border-slate-800">
+                                <div class="flex justify-between py-3 border-b border-slate-100 dark:border-slate-800">
                                     <dt class="font-semibold text-slate-500">Payment Method</dt>
                                     <dd class="font-bold text-slate-800 dark:text-slate-200 uppercase">{{ $payment->method_label ?? $payment->method }}</dd>
                                 </div>
-                                <div class="flex justify-between py-2 border-b border-slate-100 dark:border-slate-800">
+                                <div class="flex justify-between py-3 border-b border-slate-100 dark:border-slate-800">
                                     <dt class="font-semibold text-slate-500">Reference Number</dt>
                                     <dd class="font-mono text-slate-800 dark:text-slate-200 select-all">{{ $payment->reference_no ?: '-' }}</dd>
                                 </div>
-                                <div class="flex justify-between py-2 border-b border-slate-100 dark:border-slate-800">
+                                <div class="flex justify-between py-3 border-b border-slate-100 dark:border-slate-800">
                                     <dt class="font-semibold text-slate-500">Payment Date</dt>
                                     <dd class="font-semibold text-slate-700 dark:text-slate-300">
                                         {{ $payment->paid_at?->format('M d, Y') ?? ($payment->created_at?->format('M d, Y') ?? '-') }}
                                     </dd>
                                 </div>
-                                <div class="flex justify-between py-2 border-b border-slate-100 dark:border-slate-800">
+                                <div class="flex justify-between py-3 border-b border-slate-100 dark:border-slate-800">
                                     <dt class="font-semibold text-slate-500">Status</dt>
                                     <dd>
                                         @php
@@ -433,7 +433,7 @@
                                     </dd>
                                 </div>
                                 @if($payment->remarks)
-                                    <div class="py-2 border-b border-slate-100 dark:border-slate-800 pb-4">
+                                    <div class="py-3 border-b border-slate-100 dark:border-slate-800 pb-4">
                                         <dt class="font-semibold text-slate-500 mb-1">Remarks</dt>
                                         <dd class="text-xs bg-slate-50 dark:bg-slate-800 p-3 rounded-lg text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-800 select-text leading-relaxed">
                                             {{ $payment->remarks }}
@@ -444,9 +444,9 @@
                                 @if(isset($siblings) && $siblings->isNotEmpty())
                                     <div class="mt-6 border-t border-slate-100 pt-4 dark:border-slate-800">
                                         <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-2.5">Family Members (Siblings)</h4>
-                                        <div class="space-y-2">
+                                        <div class="space-y-3">
                                             <!-- Current student -->
-                                            <div class="flex items-center justify-between text-xs font-bold bg-emerald-50/70 text-emerald-800 px-3 py-2.5 rounded-xl border border-emerald-100/60 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/30">
+                                            <div class="flex items-center justify-between text-xs font-bold bg-emerald-50/70 text-emerald-800 px-3 py-3 rounded-xl border border-emerald-100/60 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/30">
                                                 <span>{{ strtoupper($displayName) }} (Current Student)</span>
                                                 <span class="bg-emerald-100 text-emerald-850 px-2 py-0.5 rounded-lg text-[10px] font-extrabold dark:bg-emerald-900 dark:text-emerald-200">{{ $student->grade_level }}</span>
                                             </div>
@@ -456,7 +456,7 @@
                                                     $siblingName = html_entity_decode(trim(($sibling->first_name ?? '').' '.($sibling->middle_name ?? '').' '.($sibling->last_name ?? '')), ENT_QUOTES, 'UTF-8');
                                                     $siblingUpper = \Illuminate\Support\Str::upper($siblingName);
                                                 @endphp
-                                                <div class="flex items-center justify-between text-xs font-bold text-slate-700 bg-slate-50 dark:bg-slate-850 px-3 py-2.5 rounded-xl border border-slate-150 dark:border-slate-800">
+                                                <div class="flex items-center justify-between text-xs font-bold text-slate-700 bg-slate-50 dark:bg-slate-850 px-3 py-3 rounded-xl border border-slate-150 dark:border-slate-800">
                                                     <span>{{ $siblingUpper }}</span>
                                                     <span class="bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded-lg text-[10px] font-extrabold">{{ $sibling->grade_level }}</span>
                                                 </div>
@@ -498,7 +498,7 @@
                                                             <span class="text-xs font-extrabold uppercase tracking-widest">PDF DOCUMENT</span>
                                                         </div>
                                                     @else
-                                                        <img src="{{ $rUrl }}" alt="{{ $cardLabel }}" class="w-full h-auto block" loading="lazy">
+                                                        <img src="{{ $rUrl }}" alt="{{ $cardLabel }}" class="w-full h-96 object-cover object-top block" loading="lazy">
                                                     @endif
                                                 </button>
                                             </div>

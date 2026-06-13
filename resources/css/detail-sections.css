@@ -1,15 +1,15 @@
-.applicant-page main > .amis-card {
+.applicant-page .amis-card {
     border-color: rgba(15, 23, 42, .08);
     border-radius: 1rem;
     background: #fff;
     box-shadow: 0 8px 22px rgba(15, 23, 42, .035);
 }
 
-.applicant-page main > .amis-card > div:first-child {
+.applicant-page .amis-card > div:first-child {
     padding: 1.25rem 1.5rem;
 }
 
-.applicant-page main > .amis-card > div:last-child {
+.applicant-page .amis-card > div:last-child {
     padding: 1.25rem 1.5rem 1.5rem;
 }
 
