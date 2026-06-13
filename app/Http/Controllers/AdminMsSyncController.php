@@ -526,6 +526,7 @@ class AdminMsSyncController extends Controller
         $successCount = 0;
         $failedCount = 0;
         $errors = [];
+        $enrollmentService = new MsTeamsEnrollmentService($graph);
         
         foreach ($students as $student) {
             try {
@@ -561,6 +562,13 @@ class AdminMsSyncController extends Controller
                 
                 // If status and license already match desired state, skip writing to Microsoft Graph
                 if (!$needsEnabledUpdate && !$needsLicenseUpdate) {
+                    // Check if we still need to enroll them in Teams (status not 'enrolled')
+                    if ($desiredEnabled) {
+                        $msStatus = $student->studentSection->ms_status ?? 'pending';
+                        if ($msStatus !== 'enrolled') {
+                            $enrollmentService->enrollStudent($student);
+                        }
+                    }
                     $successCount++;
                     continue;
                 }
@@ -587,6 +595,14 @@ class AdminMsSyncController extends Controller
                                 'ms_user_id' => $azUserId,
                             ]);
                         } catch (\Throwable $e) {}
+                    }
+                }
+                
+                // Enroll in Teams if verified and not yet fully enrolled
+                if ($desiredEnabled) {
+                    $msStatus = $student->studentSection->ms_status ?? 'pending';
+                    if ($msStatus !== 'enrolled') {
+                        $enrollmentService->enrollStudent($student);
                     }
                 }
                 
