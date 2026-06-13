@@ -544,31 +544,38 @@
                                     {{ $student->studentSection->section->official_name ?? $student->studentSection->section->name ?? 'No Section' }}
                                 </td>
 
-                                <!-- School Email / Temp Pass -->
-                                <td class="px-5 py-4 text-xs">
-                                    <div class="flex items-center gap-1.5 font-semibold text-slate-800 break-all select-all">
-                                        <span>{{ $student->school_email ?? '-' }}</span>
-                                        @if ($student->school_email)
-                                            <button onclick="copyToClipboard('{{ $student->school_email }}', this)" class="text-slate-400 hover:text-slate-600 transition cursor-pointer p-0.5 rounded hover:bg-slate-100 print:hidden flex items-center justify-center border-0 bg-transparent shrink-0" title="Copy Email">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-                                            </button>
-                                        @endif
-                                    </div>
-                                    <div class="mt-1 flex items-center gap-1.5 print:hidden">
-                                        <span class="text-slate-400 font-extrabold uppercase tracking-wider text-[10px]">Pass:</span>
-                                        @php
-                                            $isHashed = str_starts_with($student->temp_password ?? '', '$');
-                                        @endphp
-                                        @if ($isHashed || blank($student->temp_password))
-                                            <span class="text-slate-500 font-semibold text-[10px]">-</span>
-                                        @else
-                                            <span class="font-mono bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-[11px] text-slate-800 dark:text-slate-200 select-all font-semibold">{{ $student->temp_password }}</span>
-                                            <button onclick="copyToClipboard('{{ $student->temp_password }}', this)" class="text-slate-400 hover:text-slate-600 transition cursor-pointer p-0.5 rounded hover:bg-slate-100 flex items-center justify-center border-0 bg-transparent shrink-0" title="Copy Password">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-                                            </button>
-                                        @endif
-                                    </div>
-                                </td>
+                                 <!-- School Email / Temp Pass -->
+                                 <td class="px-5 py-4 text-xs">
+                                     <div class="flex items-start justify-between gap-1.5">
+                                         <div class="min-w-0 flex-1">
+                                             <div class="font-semibold text-slate-800 break-all select-all">{{ $student->school_email ?? '-' }}</div>
+                                             <div class="mt-1 flex items-center gap-1.5 print:hidden">
+                                                 <span class="text-slate-400 font-extrabold uppercase tracking-wider text-[10px]">Pass:</span>
+                                                 @php
+                                                     $isHashed = str_starts_with($student->temp_password ?? '', '$');
+                                                 @endphp
+                                                 @if ($isHashed || blank($student->temp_password))
+                                                     <span class="text-slate-500 font-semibold text-[10px]">-</span>
+                                                 @else
+                                                     <span class="font-mono bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-[11px] text-slate-800 dark:text-slate-200 select-all font-semibold">{{ $student->temp_password }}</span>
+                                                 @endif
+                                             </div>
+                                         </div>
+                                         @if ($student->school_email)
+                                             @php
+                                                 $emailVal = $student->school_email;
+                                                 $passVal = ($isHashed || blank($student->temp_password)) ? '' : $student->temp_password;
+                                                 $copyVal = $passVal ? "Email: {$emailVal}\nPassword: {$passVal}" : $emailVal;
+                                             @endphp
+                                             <button onclick="copyToClipboard(this.getAttribute('data-copy'), this)" 
+                                                     data-copy="{{ $copyVal }}" 
+                                                     class="text-slate-400 hover:text-slate-600 transition cursor-pointer p-1 rounded hover:bg-slate-100 print:hidden flex items-center justify-center border-0 bg-transparent shrink-0 mt-0.5" 
+                                                     title="Copy Email & Password">
+                                                 <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                                             </button>
+                                         @endif
+                                     </div>
+                                 </td>
 
                                 <!-- MS Sync status -->
                                 <td class="px-5 py-4 print:hidden">
