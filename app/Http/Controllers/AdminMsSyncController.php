@@ -499,7 +499,7 @@ class AdminMsSyncController extends Controller
         
         $studentsQuery = $this->bulkLicenseSyncQuery($request);
         $studentCount = (clone $studentsQuery)->count();
-        $maxBatchSize = 150; // Increased since batching is extremely efficient
+        $maxBatchSize = 250; // Increased limit since checking is fast and cheap
 
         if ($studentCount > $maxBatchSize && ! $request->boolean('force_all')) {
             return back()->with('warning', "Bulk sync found {$studentCount} students. Please filter the list first, or sync by smaller batches to avoid request timeouts.");
@@ -513,232 +513,96 @@ class AdminMsSyncController extends Controller
             return back()->withErrors(['error' => 'Student SKU ID is not configured.']);
         }
         
-        $batchRequests = [];
-        $studentOperations = [];
-        
-        foreach ($students as $student) {
-            $user = $student->user;
-            if (!$user) {
-                continue;
-            }
-            
-            $status = $user->account_status ?? 'verified';
-            $msUserId = $student->ms_user_id;
-            
-            $enabled = ($status === 'verified');
-            $enableReqId = "enable-" . $student->id;
-            
-            $batchRequests[] = [
-                'id' => $enableReqId,
-                'method' => 'PATCH',
-                'url' => "users/{$msUserId}",
-                'headers' => [
-                    'Content-Type' => 'application/json',
-                ],
-                'body' => [
-                    'accountEnabled' => $enabled,
-                ],
-            ];
-            
-            $licenseReqId = "license-" . $student->id;
-            $addLicenses = [];
-            $removeLicenses = [];
-            
-            if ($enabled) {
-                $addLicenses[] = [
-                    'disabledPlans' => [],
-                    'skuId' => $studentSkuId,
-                ];
-            } else {
-                $removeLicenses[] = $studentSkuId;
-            }
-            
-            $batchRequests[] = [
-                'id' => $licenseReqId,
-                'method' => 'POST',
-                'url' => "users/{$msUserId}/assignLicense",
-                'dependsOn' => [$enableReqId], // Force sequential order for this student within the batch
-                'headers' => [
-                    'Content-Type' => 'application/json',
-                ],
-                'body' => [
-                    'addLicenses' => $addLicenses,
-                    'removeLicenses' => $removeLicenses,
-                ],
-            ];
-            
-            $studentOperations[$student->id] = [
-                'student' => $student,
-                'status' => $status,
-                'enableReqId' => $enableReqId,
-                'licenseReqId' => $licenseReqId,
-            ];
+        // 1. Fetch all tenant students from Microsoft Graph to check status in one call
+        try {
+            $azureUsers = $graph->listTenantStudents();
+            $azureByEmail = collect($azureUsers)->keyBy(fn($u) => strtolower($u['userPrincipalName'] ?? ''));
+            $azureById = collect($azureUsers)->keyBy('id');
+        } catch (\Exception $e) {
+            Log::error("Failed to fetch tenant users for comparison: " . $e->getMessage());
+            return back()->withErrors(['error' => 'Failed to connect to Microsoft Graph: ' . $e->getMessage()]);
         }
         
         $successCount = 0;
         $failedCount = 0;
         $errors = [];
-        $retryQueue = [];
         
-        // Chunk into batches of 20 requests (each batch processes up to 10 students)
-        $chunks = array_chunk($batchRequests, 20);
-        
-        foreach ($chunks as $chunk) {
+        foreach ($students as $student) {
             try {
-                $responses = $graph->executeBatch($chunk);
-                $keyedResponses = collect($responses)->keyBy('id');
-                
-                // Identify which students were processed in this chunk
-                $chunkStudentIds = [];
-                foreach ($chunk as $req) {
-                    $parts = explode('-', $req['id']);
-                    $studentId = $parts[1] ?? null;
-                    if ($studentId) {
-                        $chunkStudentIds[$studentId] = true;
-                    }
+                $user = $student->user;
+                if (!$user) {
+                    continue;
                 }
                 
-                foreach (array_keys($chunkStudentIds) as $studentId) {
-                    $op = $studentOperations[$studentId] ?? null;
-                    if (!$op) {
-                        continue;
-                    }
-                    
-                    $student = $op['student'];
-                    $status = $op['status'];
-                    $enableRes = $keyedResponses->get($op['enableReqId']);
-                    $licenseRes = $keyedResponses->get($op['licenseReqId']);
-                    
-                    $enableStatus = $enableRes['status'] ?? 500;
-                    $licenseStatus = $licenseRes['status'] ?? 500;
-                    
-                    $enableOk = ($enableStatus >= 200 && $enableStatus < 300);
-                    $licenseOk = ($licenseStatus >= 200 && $licenseStatus < 300);
-                    
-                    $isConcurrencyError = false;
-                    
-                    if (!$enableOk) {
-                        $errBody = $enableRes['body'] ?? [];
-                        $code = $errBody['error']['code'] ?? '';
-                        if ($code === 'Directory_ConcurrencyViolation' || str_contains(json_encode($errBody), 'Directory_ConcurrencyViolation')) {
-                            $isConcurrencyError = true;
-                        }
-                    }
-                    if (!$licenseOk && $status === 'verified') {
-                        $errBody = $licenseRes['body'] ?? [];
-                        $code = $errBody['error']['code'] ?? '';
-                        if ($code === 'Directory_ConcurrencyViolation' || str_contains(json_encode($errBody), 'Directory_ConcurrencyViolation')) {
-                            $isConcurrencyError = true;
-                        }
-                    }
-                    
-                    if ($enableOk && ($licenseOk || $status !== 'verified')) {
-                        if ($status === 'verified') {
-                            \App\Models\AdminAuditLog::record('license_assigned', true, "Synchronized student license and enabled state for student {$student->school_email} via bulk sync (batched)", [
-                                'email' => $student->school_email,
-                                'sku_id' => $studentSkuId,
-                                'ms_user_id' => $student->ms_user_id,
-                            ]);
-                        } else {
-                            \App\Models\AdminAuditLog::record('license_revoked', true, "Synchronized student license revocation and disabled state for student {$student->school_email} via bulk sync (batched)", [
-                                'email' => $student->school_email,
-                                'sku_id' => $studentSkuId,
-                                'ms_user_id' => $student->ms_user_id,
-                            ]);
-                        }
-                        $successCount++;
-                    } elseif ($isConcurrencyError) {
-                        $retryQueue[] = $op;
-                    } else {
-                        $failedCount++;
-                        $errorMsg = "";
-                        if (!$enableOk) {
-                            $errBody = $enableRes['body'] ?? [];
-                            $msg = $errBody['error']['message'] ?? 'Unknown error';
-                            $errorMsg .= "Enable status update failed ({$enableStatus}): {$msg}. ";
-                        }
-                        if (!$licenseOk && $status === 'verified') {
-                            $errBody = $licenseRes['body'] ?? [];
-                            $msg = $errBody['error']['message'] ?? 'Unknown error';
-                            $errorMsg .= "License assignment failed ({$licenseStatus}): {$msg}.";
-                        }
-                        
-                        $errors[] = "{$student->school_email}: " . trim($errorMsg);
-                        Log::error("Bulk license assignment failed for {$student->school_email}: " . $errorMsg);
-                    }
-                }
-            } catch (\Exception $e) {
-                $chunkStudentIds = [];
-                foreach ($chunk as $req) {
-                    $parts = explode('-', $req['id']);
-                    $studentId = $parts[1] ?? null;
-                    if ($studentId) {
-                        $chunkStudentIds[$studentId] = true;
-                    }
-                }
-                
-                $hasConcurrencyMsg = str_contains($e->getMessage(), 'Directory_ConcurrencyViolation');
-                
-                foreach (array_keys($chunkStudentIds) as $studentId) {
-                    $op = $studentOperations[$studentId] ?? null;
-                    if (!$op) {
-                        continue;
-                    }
-                    if ($hasConcurrencyMsg) {
-                        $retryQueue[] = $op;
-                    } else {
-                        $failedCount++;
-                        $errors[] = "{$op['student']->school_email}: Batch error: {$e->getMessage()}";
-                    }
-                }
-                Log::error("Bulk license assignment batch failed: " . $e->getMessage());
-            }
-            
-            // Tiny delay between batch requests to respect API rate limits
-            usleep(100000); // 0.1 seconds
-        }
-        
-        // Process retries sequentially with a delay to cool down the tenant
-        if (!empty($retryQueue)) {
-            Log::info("Retrying " . count($retryQueue) . " students sequentially due to concurrency/batch issues...");
-            
-            foreach ($retryQueue as $op) {
-                sleep(1); // Wait 1 second before each retry to guarantee sequential execution without conflicts
-                
-                $student = $op['student'];
-                $status = $op['status'];
+                $status = $user->account_status ?? 'verified';
                 $msUserId = $student->ms_user_id;
+                $email = strtolower($student->school_email ?? '');
                 
-                try {
-                    $enabled = ($status === 'verified');
-                    
-                    // Enable/Disable
-                    $graph->setAccountEnabled($msUserId, $enabled);
-                    
-                    // Assign/Remove license
-                    if ($enabled) {
-                        $graph->assignLicense($msUserId, [$studentSkuId], []);
-                        \App\Models\AdminAuditLog::record('license_assigned', true, "Synchronized student license and enabled state for student {$student->school_email} via sequential retry", [
+                // Find matching user in Azure AD
+                $azUser = $azureByEmail->get($email) ?? $azureById->get($msUserId);
+                
+                if (!$azUser) {
+                    $failedCount++;
+                    $errors[] = "{$student->school_email}: Account does not exist in Microsoft 365.";
+                    continue;
+                }
+                
+                $azUserId = $azUser['id'];
+                $isAccountEnabled = $azUser['accountEnabled'] ?? false;
+                
+                // Check if user has the target license
+                $hasLicense = collect($azUser['assignedLicenses'] ?? [])
+                    ->contains(fn($lic) => strtolower($lic['skuId'] ?? '') === strtolower($studentSkuId));
+                
+                $desiredEnabled = ($status === 'verified');
+                
+                $needsEnabledUpdate = ($isAccountEnabled !== $desiredEnabled);
+                $needsLicenseUpdate = ($desiredEnabled ? !$hasLicense : $hasLicense);
+                
+                // If status and license already match desired state, skip writing to Microsoft Graph
+                if (!$needsEnabledUpdate && !$needsLicenseUpdate) {
+                    $successCount++;
+                    continue;
+                }
+                
+                // Perform updates sequentially
+                if ($needsEnabledUpdate) {
+                    $graph->setAccountEnabled($azUserId, $desiredEnabled);
+                }
+                
+                if ($needsLicenseUpdate) {
+                    if ($desiredEnabled) {
+                        $graph->assignLicense($azUserId, [$studentSkuId], []);
+                        \App\Models\AdminAuditLog::record('license_assigned', true, "Synchronized student license and enabled state for student {$student->school_email} (optimized sequential)", [
                             'email' => $student->school_email,
                             'sku_id' => $studentSkuId,
-                            'ms_user_id' => $msUserId,
+                            'ms_user_id' => $azUserId,
                         ]);
                     } else {
                         try {
-                            $graph->assignLicense($msUserId, [], [$studentSkuId]);
-                            \App\Models\AdminAuditLog::record('license_revoked', true, "Synchronized student license revocation and disabled state for student {$student->school_email} via sequential retry", [
+                            $graph->assignLicense($azUserId, [], [$studentSkuId]);
+                            \App\Models\AdminAuditLog::record('license_revoked', true, "Synchronized student license revocation and disabled state for student {$student->school_email} (optimized sequential)", [
                                 'email' => $student->school_email,
                                 'sku_id' => $studentSkuId,
-                                'ms_user_id' => $msUserId,
+                                'ms_user_id' => $azUserId,
                             ]);
                         } catch (\Throwable $e) {}
                     }
-                    
-                    $successCount++;
-                } catch (\Exception $e) {
-                    $failedCount++;
-                    $errors[] = "{$student->school_email}: {$e->getMessage()}";
-                    Log::error("Sequential retry failed for {$student->school_email}: " . $e->getMessage());
+                }
+                
+                $successCount++;
+                
+                // Delay briefly between sequential writes to respect tenant rate limits
+                usleep(300000); // 0.3 seconds
+                
+            } catch (\Exception $e) {
+                $failedCount++;
+                $errors[] = "{$student->school_email}: {$e->getMessage()}";
+                Log::error("Optimized sync failed for {$student->school_email}: " . $e->getMessage());
+                
+                // If it's a concurrency violation, wait 2 seconds to let it settle
+                if (str_contains($e->getMessage(), 'Directory_ConcurrencyViolation')) {
+                    sleep(2);
                 }
             }
         }
