@@ -274,6 +274,9 @@
 .review-panel {
     position: sticky;
     top: 5.5rem;
+    max-height: calc(100vh - 7rem);
+    overflow-y: auto;
+    padding-right: 0.25rem;
 }
 
 .review-panel .amis-card > div:last-child {
