@@ -241,7 +241,25 @@
                                 $genderLabel = $gender === 'male' ? 'MALE' : ($gender === 'female' ? 'FEMALE' : 'NOT SET');
                             @endphp
                             <tr>
-                                <td class="font-bold text-slate-900">{{ $name }}</td>
+                                <td class="font-bold text-slate-900">
+                                    <div>{{ $name }}</div>
+                                    @php
+                                        $sType = strtoupper((string) ($student->applicant->student_type ?? 'NEW'));
+                                        $lMode = $student->applicant->learning_mode ?? 'Face-to-Face';
+                                        if (str_contains(strtolower($lMode), '1st')) {
+                                            $lModeLabel = 'Flexible Online 1st Shift';
+                                        } elseif (str_contains(strtolower($lMode), '2nd')) {
+                                            $lModeLabel = 'Flexible Online 2nd Shift';
+                                        } elseif (str_contains(strtolower($lMode), 'face') || str_contains(strtolower($lMode), 'f2f')) {
+                                            $lModeLabel = 'Face-to-Face';
+                                        } else {
+                                            $lModeLabel = $lMode;
+                                        }
+                                    @endphp
+                                    <div class="text-[9px] text-slate-500 font-normal mt-0.5" style="text-transform: uppercase;">
+                                        {{ $sType }} • {{ $lModeLabel }}
+                                    </div>
+                                </td>
                                 <td class="font-semibold">{{ $student->student_number ?? '-' }}</td>
                                 <td>{{ $genderLabel }}</td>
                                 <td>{{ $student->school_email ?? '-' }}</td>
