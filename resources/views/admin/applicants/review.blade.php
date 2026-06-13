@@ -146,7 +146,7 @@
                                         @if ($canReviewApplications)
                                             <div class="flex items-center justify-end gap-2">
                                                 @if ($inboxNeedsResend($child))
-                                                    <form method="POST" action="{{ route('admin.applicants.resend-onboarding-inbox', $child) }}" onsubmit="return confirm('Resend inbox email and reset temporary password for this student?')">
+                                                    <form method="POST" action="{{ route('admin.applicants.send-welcome', $child) }}" onsubmit="return confirm('Resend inbox email and reset temporary password for this student?')">
                                                         @csrf
                                                         <button class="inline-flex h-8 items-center gap-1.5 rounded-lg border border-amber-100 bg-amber-50 px-3 text-xs font-bold text-amber-700 transition hover:bg-amber-100" title="Resend inbox email">
                                                             <i data-lucide="send" class="h-3.5 w-3.5"></i> Resend Inbox

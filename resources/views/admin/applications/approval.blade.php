@@ -141,7 +141,7 @@
                                 <td class="px-5 py-4 text-right">
                                     <div class="flex items-center justify-end gap-2">
                                         @if ($canReviewApplications && $applicant->status === 'approved' && data_get($applicant, 'onboarding_email_status') !== 'sent')
-                                            <form method="POST" action="{{ route('admin.applicants.resend-onboarding-inbox', $applicant) }}" onsubmit="return confirm('Resend inbox email and reset temporary password for this student?')">
+                                            <form method="POST" action="{{ route('admin.applicants.send-welcome', $applicant) }}" onsubmit="return confirm('Resend inbox email and reset temporary password for this student?')">
                                                 @csrf
                                                 <button class="inline-flex h-9 items-center gap-2 rounded-md border border-amber-100 bg-amber-50 px-3 text-xs font-bold text-amber-700 transition hover:bg-amber-100">
                                                     <i data-lucide="send" class="h-4 w-4"></i>
