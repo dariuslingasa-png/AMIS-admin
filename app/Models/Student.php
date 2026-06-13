@@ -23,6 +23,7 @@ class Student extends Model
         'ms_account_created_at',
         'ms_teams_enrolled_at',
         'mfa_enabled',
+        'ms_license_active',
     ];
 
     protected $casts = [
@@ -30,6 +31,7 @@ class Student extends Model
         'ms_account_created_at' => 'datetime',
         'ms_teams_enrolled_at'  => 'datetime',
         'mfa_enabled'           => 'boolean',
+        'ms_license_active'     => 'boolean',
     ];
 
     public function user(): BelongsTo

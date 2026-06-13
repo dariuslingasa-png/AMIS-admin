@@ -429,7 +429,7 @@
                 </select>
                 <select name="ms_status" class="{{ $inputClass }} col-span-6 lg:col-span-2 w-full" onchange="this.form.submit()">
                     <option value="">All sync states</option>
-                    <option value="no_license" @selected(request('ms_status') === 'no_license')>No License / Sync Failed</option>
+                    <option value="no_license" @selected(request('ms_status') === 'no_license')>No License</option>
                     <option value="enrolled" @selected(request('ms_status') === 'enrolled')>Synced (With License)</option>
                     <option value="failed" @selected(request('ms_status') === 'failed')>Sync Failed</option>
                     <option value="pending" @selected(request('ms_status') === 'pending')>Pending Teams</option>
@@ -562,15 +562,22 @@
 
                                 <!-- MS Sync status -->
                                 <td class="px-5 py-4 print:hidden">
-                                    <x-badge :color="$msSyncColor[$msStatus] ?? 'gray'">
-                                        {{ $msSyncLabel[$msStatus] ?? 'Pending' }}
-                                    </x-badge>
+                                    @if ($student->ms_user_id && $student->ms_license_active === false)
+                                        <span class="inline-flex items-center gap-1.5 rounded-md bg-rose-50 px-2.5 py-1 text-xs font-bold text-rose-700 ring-1 ring-rose-100">
+                                            <i data-lucide="shield-alert" class="h-3.5 w-3.5"></i>
+                                            No License
+                                        </span>
+                                    @else
+                                        <x-badge :color="$msSyncColor[$msStatus] ?? 'gray'">
+                                            {{ $msSyncLabel[$msStatus] ?? 'Pending' }}
+                                        </x-badge>
+                                    @endif
                                 </td>
 
                                 <!-- Action -->
                                  <td class="px-5 py-4 text-right print:hidden">
                                     <div class="flex items-center justify-end gap-1.5">
-                                        @if($student->ms_user_id && $msStatus !== 'enrolled')
+                                        @if($student->ms_user_id && ($msStatus !== 'enrolled' || $student->ms_license_active === false))
                                             <form method="POST" action="{{ route('admin.ms-sync.student', $student) }}" class="inline-block">
                                                 @csrf
                                                 <button type="submit" class="inline-flex h-9 items-center gap-1.5 rounded-md border border-violet-100 bg-violet-50 px-2.5 text-xs font-bold text-violet-700 transition hover:bg-violet-100 cursor-pointer" title="Sync Microsoft Account & License">

@@ -73,10 +73,8 @@ class AdminStudentController extends Controller
                 } elseif ($status === 'no_account') {
                     $query->whereNull('students.ms_user_id');
                 } elseif ($status === 'no_license') {
-                    $query->where(function($q) {
-                        $q->whereDoesntHave('studentSection', fn($sq) => $sq->where('ms_status', 'enrolled'))
-                          ->orWhereNull('students.ms_user_id');
-                    });
+                    $query->where('students.ms_license_active', false)
+                          ->whereNotNull('students.ms_user_id');
                 }
             }
 

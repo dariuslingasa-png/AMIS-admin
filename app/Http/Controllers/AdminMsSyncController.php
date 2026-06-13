@@ -457,6 +457,7 @@ class AdminMsSyncController extends Controller
                     $graph->setAccountEnabled($msUserId, true);
                     if ($studentSkuId) {
                         $graph->assignLicense($msUserId, [$studentSkuId], []);
+                        $student->update(['ms_license_active' => true]);
                         \App\Models\AdminAuditLog::record('license_assigned', true, "Synchronized student license and enabled state for student {$student->school_email}", [
                             'email' => $student->school_email,
                             'sku_id' => $studentSkuId,
@@ -469,6 +470,7 @@ class AdminMsSyncController extends Controller
                     if ($studentSkuId) {
                         try {
                             $graph->assignLicense($msUserId, [], [$studentSkuId]);
+                            $student->update(['ms_license_active' => false]);
                             \App\Models\AdminAuditLog::record('license_revoked', true, "Synchronized student license revocation and disabled state for student {$student->school_email}", [
                                 'email' => $student->school_email,
                                 'sku_id' => $studentSkuId,
@@ -562,6 +564,7 @@ class AdminMsSyncController extends Controller
                 
                 // If status and license already match desired state, skip writing to Microsoft Graph
                 if (!$needsEnabledUpdate && !$needsLicenseUpdate) {
+                    $student->update(['ms_license_active' => $hasLicense]);
                     // Check if we still need to enroll them in Teams (status not 'enrolled')
                     if ($desiredEnabled) {
                         $msStatus = $student->studentSection->ms_status ?? 'pending';
@@ -581,6 +584,7 @@ class AdminMsSyncController extends Controller
                 if ($needsLicenseUpdate) {
                     if ($desiredEnabled) {
                         $graph->assignLicense($azUserId, [$studentSkuId], []);
+                        $student->update(['ms_license_active' => true]);
                         \App\Models\AdminAuditLog::record('license_assigned', true, "Synchronized student license and enabled state for student {$student->school_email} (optimized sequential)", [
                             'email' => $student->school_email,
                             'sku_id' => $studentSkuId,
@@ -589,6 +593,7 @@ class AdminMsSyncController extends Controller
                     } else {
                         try {
                             $graph->assignLicense($azUserId, [], [$studentSkuId]);
+                            $student->update(['ms_license_active' => false]);
                             \App\Models\AdminAuditLog::record('license_revoked', true, "Synchronized student license revocation and disabled state for student {$student->school_email} (optimized sequential)", [
                                 'email' => $student->school_email,
                                 'sku_id' => $studentSkuId,
@@ -686,10 +691,8 @@ class AdminMsSyncController extends Controller
             } elseif ($status === 'pending') {
                 $query->whereHas('studentSection', fn (Builder $q) => $q->where('ms_status', 'pending'));
             } elseif ($status === 'no_license') {
-                $query->where(function (Builder $q) {
-                    $q->whereDoesntHave('studentSection', fn (Builder $sq) => $sq->where('ms_status', 'enrolled'))
-                        ->orWhereHas('studentSection', fn (Builder $sq) => $sq->where('ms_status', 'failed'));
-                });
+                $query->where('students.ms_license_active', false)
+                      ->whereNotNull('students.ms_user_id');
             }
         } else {
             $query->whereDoesntHave('studentSection', fn (Builder $q) => $q->where('ms_status', 'enrolled'));
