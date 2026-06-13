@@ -22,8 +22,8 @@ class AdminStudentController extends Controller
             if ($request->filled('search')) {
                 $s = $request->search;
                 $query->where(function ($q) use ($s) {
-                    $q->where('student_number', 'like', "%{$s}%")
-                      ->orWhere('school_email', 'like', "%{$s}%")
+                    $q->where('students.student_number', 'like', "%{$s}%")
+                      ->orWhere('students.school_email', 'like', "%{$s}%")
                       ->orWhereHas('applicant', fn($a) =>
                           $a->where('first_name', 'like', "%{$s}%")
                             ->orWhere('middle_name', 'like', "%{$s}%")
@@ -33,7 +33,7 @@ class AdminStudentController extends Controller
             }
 
             if ($request->filled('grade')) {
-                $query->where('grade_level', $request->grade);
+                $query->where('students.grade_level', $request->grade);
             }
 
             if ($request->filled('gender')) {
@@ -71,11 +71,11 @@ class AdminStudentController extends Controller
                 } elseif ($status === 'pending') {
                     $query->whereHas('studentSection', fn($q) => $q->where('ms_status', 'pending'));
                 } elseif ($status === 'no_account') {
-                    $query->whereNull('ms_user_id');
+                    $query->whereNull('students.ms_user_id');
                 } elseif ($status === 'no_license') {
                     $query->where(function($q) {
                         $q->whereDoesntHave('studentSection', fn($sq) => $sq->where('ms_status', 'enrolled'))
-                          ->orWhereNull('ms_user_id');
+                          ->orWhereNull('students.ms_user_id');
                     });
                 }
             }
