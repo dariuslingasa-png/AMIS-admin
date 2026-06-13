@@ -118,7 +118,14 @@
                                 $fillPercent = $applicant ? $applicant->completion_percentage : 0;
                                 
                                 // Step 2: Payment Proof (receipt url uploaded)
-                                $hasPayment = $applicant && $applicant->payment && filled($applicant->payment->receipt_url);
+                                $hasPayment = false;
+                                if ($applicant && $applicant->payment) {
+                                    $urls = $applicant->payment->receipt_urls;
+                                    $validUrls = array_filter($urls, fn($u) => filled($u) && $u !== '[]' && $u !== '[""]');
+                                    if (!empty($validUrls)) {
+                                        $hasPayment = true;
+                                    }
+                                }
                                 
                                 // Step 3: 2x2 Pic (photo url uploaded)
                                 $hasPic = $applicant && filled($applicant->photo_2x2_url);

@@ -18,11 +18,12 @@
                 <h3 class="mb-4 text-sm font-extrabold uppercase tracking-wider text-slate-600">Generation Features (Auto-create during Approval)</h3>
                 <p class="mb-4 text-xs text-slate-500">Uncheck to skip a generation step. At minimum, AMIS Student ID is required to approve.</p>
 
+                <input type="hidden" name="generate_soa" value="0">
+
                 <div class="grid gap-3">
                     @foreach ([
                         'generate_amis_id' => 'Generate AMIS Student ID (required)',
                         'generate_microsoft_account' => 'Auto-create Microsoft 365 account + school email',
-                        'generate_soa' => 'Generate Statement of Account',
                     ] as $field => $label)
                         <label class="flex items-center gap-3 text-sm font-medium text-gray-900 cursor-pointer">
                             <input type="hidden" name="{{ $field }}" value="0">

@@ -326,11 +326,12 @@ class AdminStudentController extends Controller
             $query->whereNotNull('ms_user_id')
                   ->whereNotNull('ms_teams_enrolled_at')
                   ->whereHas('applicant', function ($q) {
-                      $q->whereNotNull('photo_2x2_url')
+                      $q->where('completion_percentage', 100)
+                        ->whereNotNull('photo_2x2_url')
                         ->where('photo_2x2_url', '!=', '')
                         ->whereHas('payment', function ($pq) {
                             $pq->whereNotNull('receipt_url')
-                               ->where('receipt_url', '!=', '');
+                               ->whereNotIn('receipt_url', ['', '[]', '[""]']);
                         });
                   });
         } elseif ($statusFilter === 'pending') {
@@ -338,12 +339,13 @@ class AdminStudentController extends Controller
                 $q->whereNull('ms_user_id')
                   ->orWhereNull('ms_teams_enrolled_at')
                   ->orWhereHas('applicant', function ($aq) {
-                      $aq->whereNull('photo_2x2_url')
+                      $aq->where('completion_percentage', '<', 100)
+                         ->orWhereNull('photo_2x2_url')
                          ->orWhere('photo_2x2_url', '')
                          ->orWhereDoesntHave('payment')
                          ->orWhereHas('payment', function ($pq) {
                              $pq->whereNull('receipt_url')
-                                ->orWhere('receipt_url', '');
+                                ->orWhereIn('receipt_url', ['', '[]', '[""]']);
                          });
                   });
             });
@@ -357,11 +359,12 @@ class AdminStudentController extends Controller
         $completedCount = Student::whereNotNull('ms_user_id')
             ->whereNotNull('ms_teams_enrolled_at')
             ->whereHas('applicant', function ($q) {
-                $q->whereNotNull('photo_2x2_url')
+                $q->where('completion_percentage', 100)
+                  ->whereNotNull('photo_2x2_url')
                   ->where('photo_2x2_url', '!=', '')
                   ->whereHas('payment', function ($pq) {
                       $pq->whereNotNull('receipt_url')
-                         ->where('receipt_url', '!=', '');
+                         ->whereNotIn('receipt_url', ['', '[]', '[""]']);
                   });
             })->count();
 

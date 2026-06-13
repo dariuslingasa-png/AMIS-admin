@@ -235,12 +235,6 @@
                         <i data-lucide="graduation-cap" class="h-4 w-4"></i>
                         <span>Classroom & MS Teams</span>
                     </button>
-                    <button @click="activeTab = 'soa'" 
-                            :class="activeTab === 'soa' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-900/50'" 
-                            class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 focus:outline-none flex-1 sm:flex-initial cursor-pointer">
-                        <i data-lucide="credit-card" class="h-4 w-4"></i>
-                        <span>Tuition Ledger (SOA)</span>
-                    </button>
                     <button @click="activeTab = 'documents'" 
                             :class="activeTab === 'documents' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-900/50'" 
                             class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 focus:outline-none flex-1 sm:flex-initial cursor-pointer">
@@ -383,61 +377,7 @@
                 </x-card>
             </div>
 
-            <!-- Tab Content 3: Tuition Ledger (SOA) -->
-            <div x-show="activeTab === 'soa'" class="space-y-6" x-cloak>
-                @if($student->account)
-                    <div class="grid grid-cols-2 gap-3 md:grid-cols-5">
-                        @foreach ([
-                            ['Gross', '₱'.number_format($student->account->gross_total, 2)],
-                            ['Discount', '₱'.number_format($student->account->discount_amount, 2) . ' ('.$student->account->discount_percentage.'%)'],
-                            ['Downpayment', '₱'.number_format($student->account->enrollment_fee_paid, 2)],
-                            ['Paid Total', '₱'.number_format($student->account->amount_paid, 2)],
-                            ['Remaining', '₱'.number_format($student->account->remaining_balance, 2)]
-                        ] as [$label, $value])
-                            <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-                                <span class="text-xxs font-extrabold uppercase tracking-wider text-slate-400 block">{{ $label }}</span>
-                                <span class="text-sm font-extrabold text-slate-900 block mt-1">{{ $value }}</span>
-                            </div>
-                        @endforeach
-                    </div>
 
-                    <x-card title="Tuition Billing Schedule" subtitle="Chronological Statement of Account ledgers">
-                        <div class="overflow-hidden rounded-md border border-slate-200 mt-2">
-                            <table class="w-full text-left text-sm">
-                                <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                                    <tr>
-                                        <th class="px-5 py-4 font-bold">Month</th>
-                                        <th class="px-5 py-4 font-bold">Due Date</th>
-                                        <th class="px-5 py-4 font-bold">Amount Due</th>
-                                        <th class="px-5 py-4 font-bold">Description</th>
-                                        <th class="px-5 py-4 text-right font-bold">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-100 bg-white">
-                                    @foreach($student->account->monthlyBillings as $billing)
-                                        <tr class="transition hover:bg-slate-50">
-                                            <td class="px-5 py-4 font-extrabold text-slate-950">{{ $billing->month_name }}</td>
-                                            <td class="px-5 py-4 font-semibold text-slate-700">{{ $billing->due_date?->format('M d, Y') ?? '-' }}</td>
-                                            <td class="px-5 py-4 font-extrabold text-slate-950">₱{{ number_format($billing->amount_due, 2) }}</td>
-                                            <td class="px-5 py-4 font-medium text-slate-500 text-xs">{{ $billing->description }}</td>
-                                            <td class="px-5 py-4 text-right">
-                                                <x-badge color="{{ $billing->status === 'paid' ? 'green' : 'red' }}">
-                                                    {{ ucfirst($billing->status) }}
-                                                </x-badge>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    </x-card>
-                @else
-                    <div class="empty-state">
-                        <i data-lucide="receipt-text" class="h-8 w-8"></i>
-                        <p>No billing ledger initialized yet.</p>
-                    </div>
-                @endif
-            </div>
 
             <!-- Tab Content 4: Requirement Files -->
             <div x-show="activeTab === 'documents'" class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm" x-cloak>
@@ -610,11 +550,21 @@
                             {{ $student->ms_teams_enrolled_at ? 'Enrolled' : 'Pending' }}
                         </span>
                     </div>
+                    @php
+                        $hasPayment = false;
+                        if ($student->applicant && $student->applicant->payment) {
+                            $urls = $student->applicant->payment->receipt_urls;
+                            $validUrls = array_filter($urls, fn($u) => filled($u) && $u !== '[]' && $u !== '[""]');
+                            if (!empty($validUrls)) {
+                                $hasPayment = true;
+                            }
+                        }
+                    @endphp
                     <div class="flex justify-between items-center py-1 border-t border-slate-100 dark:border-slate-800 pt-2">
-                        <span class="text-slate-600 dark:text-slate-400 text-sm font-medium">SOA Initialized</span>
-                        <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold ring-1 ring-inset {{ $student->account ? 'bg-emerald-50 text-emerald-700 ring-emerald-600/20 dark:bg-emerald-950/20 dark:text-emerald-400 dark:ring-emerald-500/20' : 'bg-rose-50 text-rose-700 ring-rose-600/20 dark:bg-rose-950/20 dark:text-rose-400 dark:ring-rose-500/20' }}">
-                            <span class="h-1.5 w-1.5 rounded-full {{ $student->account ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500' }}"></span>
-                            {{ $student->account ? 'Initialized' : 'Missing' }}
+                        <span class="text-slate-600 dark:text-slate-400 text-sm font-medium">Payment Proof</span>
+                        <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold ring-1 ring-inset {{ $hasPayment ? 'bg-emerald-50 text-emerald-700 ring-emerald-600/20 dark:bg-emerald-950/20 dark:text-emerald-400 dark:ring-emerald-500/20' : 'bg-rose-50 text-rose-700 ring-rose-600/20 dark:bg-rose-950/20 dark:text-rose-400 dark:ring-rose-500/20' }}">
+                            <span class="h-1.5 w-1.5 rounded-full {{ $hasPayment ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500' }}"></span>
+                            {{ $hasPayment ? 'Uploaded' : 'Missing' }}
                         </span>
                     </div>
                 </div>
