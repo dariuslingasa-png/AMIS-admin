@@ -640,4 +640,44 @@
         </template>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <!-- Sync Loading Modal -->
+    <div id="sync-loading-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-md transition-all duration-300">
+        <div class="relative w-full max-w-md scale-95 transform rounded-2xl border border-slate-200/80 bg-white p-8 shadow-2xl transition-all duration-300 dark:border-slate-800 dark:bg-slate-900 text-center">
+            <!-- Spinner -->
+            <div class="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-violet-50 dark:bg-violet-950/30">
+                <svg class="h-8 w-8 animate-spin text-violet-600" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            </div>
+            
+            <!-- Text -->
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">Syncing Student Account</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">Updating status, teams enrollment, and Microsoft license for this student. Please wait...</p>
+            
+            <!-- Progress bar simulation (subtle animation) -->
+            <div class="h-1.5 w-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                <div class="h-full rounded-full bg-violet-600 animate-[loading-bar_2s_infinite_ease-in-out]" style="width: 30%"></div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+    @keyframes loading-bar {
+        0% { transform: translateX(-100%); width: 30%; }
+        50% { width: 60%; }
+        100% { transform: translateX(350%); width: 30%; }
+    }
+    </style>
+
+    <script>
+    document.querySelectorAll('form').forEach(form => {
+        if (form.action.includes('ms-sync/students')) {
+            form.addEventListener('submit', function() {
+                document.getElementById('sync-loading-modal').classList.remove('hidden');
+            });
+        }
+    });
+    </script>
 </x-admin-layout>
