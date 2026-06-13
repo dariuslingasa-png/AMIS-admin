@@ -226,10 +226,12 @@
                 <table class="w-full text-left text-sm print-table mb-6">
                     <thead>
                         <tr>
-                            <th style="width: 40%">Student</th>
-                            <th style="width: 20%">AMIS ID</th>
-                            <th style="width: 15%">Gender</th>
-                            <th style="width: 25%">AMIS School Email</th>
+                            <th style="width: 25%">Student</th>
+                            <th style="width: 12%">AMIS ID</th>
+                            <th style="width: 10%">Gender</th>
+                            <th style="width: 10%">Type</th>
+                            <th style="width: 23%">Mode</th>
+                            <th style="width: 20%">AMIS School Email</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -239,29 +241,25 @@
                                 $name = $fullName ? \Illuminate\Support\Str::upper($fullName) : 'STUDENT PROFILE';
                                 $gender = strtolower((string) ($student->applicant->gender ?? ''));
                                 $genderLabel = $gender === 'male' ? 'MALE' : ($gender === 'female' ? 'FEMALE' : 'NOT SET');
+                                
+                                $sType = strtoupper((string) ($student->applicant->student_type ?? 'NEW'));
+                                $lMode = $student->applicant->learning_mode ?? 'Face-to-Face';
+                                if (str_contains(strtolower($lMode), '1st')) {
+                                    $lModeLabel = 'Flexible Online 1st Shift';
+                                } elseif (str_contains(strtolower($lMode), '2nd')) {
+                                    $lModeLabel = 'Flexible Online 2nd Shift';
+                                } elseif (str_contains(strtolower($lMode), 'face') || str_contains(strtolower($lMode), 'f2f')) {
+                                    $lModeLabel = 'Face-to-Face';
+                                } else {
+                                    $lModeLabel = $lMode;
+                                }
                             @endphp
                             <tr>
-                                <td class="font-bold text-slate-900">
-                                    <div>{{ $name }}</div>
-                                    @php
-                                        $sType = strtoupper((string) ($student->applicant->student_type ?? 'NEW'));
-                                        $lMode = $student->applicant->learning_mode ?? 'Face-to-Face';
-                                        if (str_contains(strtolower($lMode), '1st')) {
-                                            $lModeLabel = 'Flexible Online 1st Shift';
-                                        } elseif (str_contains(strtolower($lMode), '2nd')) {
-                                            $lModeLabel = 'Flexible Online 2nd Shift';
-                                        } elseif (str_contains(strtolower($lMode), 'face') || str_contains(strtolower($lMode), 'f2f')) {
-                                            $lModeLabel = 'Face-to-Face';
-                                        } else {
-                                            $lModeLabel = $lMode;
-                                        }
-                                    @endphp
-                                    <div class="text-[9px] text-slate-500 font-normal mt-0.5" style="text-transform: uppercase;">
-                                        {{ $sType }} • {{ $lModeLabel }}
-                                    </div>
-                                </td>
+                                <td class="font-bold text-slate-900">{{ $name }}</td>
                                 <td class="font-semibold">{{ $student->student_number ?? '-' }}</td>
                                 <td>{{ $genderLabel }}</td>
+                                <td class="font-semibold text-slate-700">{{ $sType }}</td>
+                                <td class="text-slate-600">{{ $lModeLabel }}</td>
                                 <td>{{ $student->school_email ?? '-' }}</td>
                             </tr>
                         @endforeach
