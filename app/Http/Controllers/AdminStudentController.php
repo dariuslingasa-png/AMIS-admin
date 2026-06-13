@@ -329,9 +329,12 @@ class AdminStudentController extends Controller
                       $q->where('completion_percentage', 100)
                         ->whereNotNull('photo_2x2_url')
                         ->where('photo_2x2_url', '!=', '')
-                        ->whereHas('payment', function ($pq) {
-                            $pq->whereNotNull('receipt_url')
-                               ->whereNotIn('receipt_url', ['', '[]', '[""]']);
+                        ->whereExists(function ($subQuery) {
+                            $subQuery->select(\Illuminate\Support\Facades\DB::raw(1))
+                                     ->from('payments')
+                                     ->whereColumn('payments.user_id', 'enrollment_applicants.user_id')
+                                     ->whereNotNull('payments.receipt_url')
+                                     ->whereNotIn('payments.receipt_url', ['', '[]', '[""]']);
                         });
                   });
         } elseif ($statusFilter === 'pending') {
@@ -342,10 +345,12 @@ class AdminStudentController extends Controller
                       $aq->where('completion_percentage', '<', 100)
                          ->orWhereNull('photo_2x2_url')
                          ->orWhere('photo_2x2_url', '')
-                         ->orWhereDoesntHave('payment')
-                         ->orWhereHas('payment', function ($pq) {
-                             $pq->whereNull('receipt_url')
-                                ->orWhereIn('receipt_url', ['', '[]', '[""]']);
+                         ->orWhereNotExists(function ($subQuery) {
+                             $subQuery->select(\Illuminate\Support\Facades\DB::raw(1))
+                                      ->from('payments')
+                                      ->whereColumn('payments.user_id', 'enrollment_applicants.user_id')
+                                      ->whereNotNull('payments.receipt_url')
+                                      ->whereNotIn('payments.receipt_url', ['', '[]', '[""]']);
                          });
                   });
             });
@@ -362,9 +367,12 @@ class AdminStudentController extends Controller
                 $q->where('completion_percentage', 100)
                   ->whereNotNull('photo_2x2_url')
                   ->where('photo_2x2_url', '!=', '')
-                  ->whereHas('payment', function ($pq) {
-                      $pq->whereNotNull('receipt_url')
-                         ->whereNotIn('receipt_url', ['', '[]', '[""]']);
+                  ->whereExists(function ($subQuery) {
+                      $subQuery->select(\Illuminate\Support\Facades\DB::raw(1))
+                               ->from('payments')
+                               ->whereColumn('payments.user_id', 'enrollment_applicants.user_id')
+                               ->whereNotNull('payments.receipt_url')
+                               ->whereNotIn('payments.receipt_url', ['', '[]', '[""]']);
                   });
             })->count();
 

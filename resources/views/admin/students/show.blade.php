@@ -387,6 +387,12 @@
             <div x-show="activeTab === 'payment'" class="space-y-6" x-cloak>
                 @php
                     $payment = $student->applicant?->payment;
+                    if (!$payment && $student->applicant) {
+                        $payment = \App\Models\Payment::where('user_id', $student->applicant->user_id)
+                            ->whereNotNull('receipt_url')
+                            ->whereNotIn('receipt_url', ['', '[]', '[""]'])
+                            ->first();
+                    }
                 @endphp
                 @if($payment)
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -427,16 +433,40 @@
                                     </dd>
                                 </div>
                                 @if($payment->remarks)
-                                    <div class="py-2">
+                                    <div class="py-2 border-b border-slate-100 dark:border-slate-800 pb-4">
                                         <dt class="font-semibold text-slate-500 mb-1">Remarks</dt>
                                         <dd class="text-xs bg-slate-50 dark:bg-slate-800 p-3 rounded-lg text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-800 select-text leading-relaxed">
                                             {{ $payment->remarks }}
                                         </dd>
                                     </div>
                                 @endif
+                                
+                                @if(isset($siblings) && $siblings->isNotEmpty())
+                                    <div class="mt-6 border-t border-slate-100 pt-4 dark:border-slate-800">
+                                        <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-2.5">Family Members (Siblings)</h4>
+                                        <div class="space-y-2">
+                                            <!-- Current student -->
+                                            <div class="flex items-center justify-between text-xs font-bold bg-emerald-50/70 text-emerald-800 px-3 py-2.5 rounded-xl border border-emerald-100/60 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/30">
+                                                <span>{{ strtoupper($displayName) }} (Current Student)</span>
+                                                <span class="bg-emerald-100 text-emerald-850 px-2 py-0.5 rounded-lg text-[10px] font-extrabold dark:bg-emerald-900 dark:text-emerald-200">{{ $student->grade_level }}</span>
+                                            </div>
+                                            <!-- Siblings -->
+                                            @foreach($siblings as $sibling)
+                                                @php
+                                                    $siblingName = html_entity_decode(trim(($sibling->first_name ?? '').' '.($sibling->middle_name ?? '').' '.($sibling->last_name ?? '')), ENT_QUOTES, 'UTF-8');
+                                                    $siblingUpper = \Illuminate\Support\Str::upper($siblingName);
+                                                @endphp
+                                                <div class="flex items-center justify-between text-xs font-bold text-slate-700 bg-slate-50 dark:bg-slate-850 px-3 py-2.5 rounded-xl border border-slate-150 dark:border-slate-800">
+                                                    <span>{{ $siblingUpper }}</span>
+                                                    <span class="bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded-lg text-[10px] font-extrabold">{{ $sibling->grade_level }}</span>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
                             </dl>
                         </x-card>
-
+ 
                         <!-- Right: Receipts list -->
                         <x-card title="Payment Receipt Proofs" subtitle="Click receipt image to zoom or view full size">
                             <div class="space-y-4 mt-2">
@@ -452,23 +482,23 @@
                                                 $rIsPdf = $receiptPath && strtolower(pathinfo($receiptPath, PATHINFO_EXTENSION)) === 'pdf';
                                                 $cardLabel = count($validReceipts) > 1 ? 'Receipt Proof #' . ($index + 1) : 'Receipt Proof';
                                             @endphp
-                                            <div class="rounded-xl border border-slate-200 bg-slate-50/50 p-4 flex flex-col items-center justify-between gap-3 shadow-sm hover:border-emerald-250 transition-all duration-200">
-                                                <div class="w-full flex items-center justify-between">
+                                            <div class="rounded-xl border border-slate-200 bg-slate-50/50 p-4 flex flex-col gap-3 shadow-sm hover:border-emerald-250 transition-all duration-200">
+                                                <div class="flex items-center justify-between">
                                                     <span class="text-xs font-extrabold text-slate-700 uppercase tracking-wide">{{ $cardLabel }}</span>
-                                                    <button type="button" @click="openPreview('{{ $rUrl }}', '{{ $cardLabel }}', {{ $rIsPdf ? 'true' : 'false' }})" class="inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 shadow-sm transition hover:bg-slate-100">
+                                                    <button type="button" @click="openPreview('{{ $rUrl }}', '{{ $cardLabel }}', {{ $rIsPdf ? 'true' : 'false' }})" class="inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 shadow-sm transition hover:bg-slate-100 cursor-pointer">
                                                         <i data-lucide="eye" class="h-3.5 w-3.5"></i>
                                                         View Full Proof
                                                     </button>
                                                 </div>
                                                 
-                                                <button type="button" @click="openPreview('{{ $rUrl }}', '{{ $cardLabel }}', {{ $rIsPdf ? 'true' : 'false' }})" class="w-full h-44 overflow-hidden rounded-lg border border-slate-200 bg-white flex items-center justify-center cursor-zoom-in hover:opacity-95 transition-opacity">
+                                                <button type="button" @click="openPreview('{{ $rUrl }}', '{{ $cardLabel }}', {{ $rIsPdf ? 'true' : 'false' }})" class="w-full overflow-hidden rounded-lg border border-slate-200 bg-white hover:opacity-95 transition-opacity cursor-zoom-in">
                                                     @if($rIsPdf)
-                                                        <div class="flex flex-col items-center gap-2 text-slate-400">
+                                                        <div class="flex flex-col items-center justify-center py-10 gap-2 text-slate-400">
                                                             <i data-lucide="file-text" class="h-12 w-12 text-rose-500"></i>
                                                             <span class="text-xs font-extrabold uppercase tracking-widest">PDF DOCUMENT</span>
                                                         </div>
                                                     @else
-                                                        <img src="{{ $rUrl }}" alt="{{ $cardLabel }}" class="w-full h-full object-cover" loading="lazy">
+                                                        <img src="{{ $rUrl }}" alt="{{ $cardLabel }}" class="w-full h-auto block" loading="lazy">
                                                     @endif
                                                 </button>
                                             </div>
@@ -661,12 +691,11 @@
                     </div>
                     @php
                         $hasPayment = false;
-                        if ($student->applicant && $student->applicant->payment) {
-                            $urls = $student->applicant->payment->receipt_urls;
-                            $validUrls = array_filter($urls, fn($u) => filled($u) && $u !== '[]' && $u !== '[""]');
-                            if (!empty($validUrls)) {
-                                $hasPayment = true;
-                            }
+                        if ($student->applicant) {
+                            $hasPayment = \App\Models\Payment::where('user_id', $student->applicant->user_id)
+                                ->whereNotNull('receipt_url')
+                                ->whereNotIn('receipt_url', ['', '[]', '[""]'])
+                                ->exists();
                         }
                     @endphp
                     <div class="flex justify-between items-center py-1 border-t border-slate-100 dark:border-slate-800 pt-2">
