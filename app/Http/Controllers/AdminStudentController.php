@@ -321,70 +321,79 @@ class AdminStudentController extends Controller
             });
         }
 
-        // Onboarding status filter
+        // Fetch pre-evaluated payment status maps to optimize loops
+        $paymentUserIds = \App\Models\Payment::whereNotNull('receipt_url')
+            ->whereNotIn('receipt_url', ['', '[]', '[""]'])
+            ->pluck('user_id')
+            ->unique()
+            ->toArray();
+
+        // Get matching students
+        $allStudents = $query->latest('students.created_at')->get();
+
+        // Map and evaluate in PHP to support dynamic Eloquent accessors safely
+        $evaluatedStudents = $allStudents->map(function ($student) use ($paymentUserIds) {
+            $applicant = $student->applicant;
+            
+            $isFilled = $applicant && $applicant->completion_percentage === 100;
+            $hasPayment = $applicant && in_array($applicant->user_id, $paymentUserIds);
+            $hasPic = $applicant && filled($applicant->photo_2x2_url);
+            $hasMsAccount = filled($student->ms_user_id);
+            $isTeamsEnrolled = filled($student->ms_teams_enrolled_at);
+
+            $isCompleted = $isFilled && $hasPayment && $hasPic && $hasMsAccount && $isTeamsEnrolled;
+
+            return [
+                'student' => $student,
+                'is_completed' => $isCompleted,
+            ];
+        });
+
+        // Filter by status filter
         if ($statusFilter === 'completed') {
-            $query->whereNotNull('ms_user_id')
-                  ->whereNotNull('ms_teams_enrolled_at')
-                  ->whereHas('applicant', function ($q) {
-                      $q->where('completion_percentage', 100)
-                        ->whereNotNull('photo_2x2_url')
-                        ->where('photo_2x2_url', '!=', '')
-                        ->whereExists(function ($subQuery) {
-                            $subQuery->select(\Illuminate\Support\Facades\DB::raw(1))
-                                     ->from('payments')
-                                     ->whereColumn('payments.user_id', 'enrollment_applicants.user_id')
-                                     ->whereNotNull('payments.receipt_url')
-                                     ->whereNotIn('payments.receipt_url', ['', '[]', '[""]']);
-                        });
-                  });
+            $filtered = $evaluatedStudents->filter(fn($item) => $item['is_completed']);
         } elseif ($statusFilter === 'pending') {
-            $query->where(function ($q) {
-                $q->whereNull('ms_user_id')
-                  ->orWhereNull('ms_teams_enrolled_at')
-                  ->orWhereHas('applicant', function ($aq) {
-                      $aq->where('completion_percentage', '<', 100)
-                         ->orWhereNull('photo_2x2_url')
-                         ->orWhere('photo_2x2_url', '')
-                         ->orWhereNotExists(function ($subQuery) {
-                             $subQuery->select(\Illuminate\Support\Facades\DB::raw(1))
-                                      ->from('payments')
-                                      ->whereColumn('payments.user_id', 'enrollment_applicants.user_id')
-                                      ->whereNotNull('payments.receipt_url')
-                                      ->whereNotIn('payments.receipt_url', ['', '[]', '[""]']);
-                         });
-                  });
-            });
+            $filtered = $evaluatedStudents->filter(fn($item) => !$item['is_completed']);
+        } else {
+            $filtered = $evaluatedStudents;
         }
 
-        $students = $query->latest('students.created_at')->paginate(20)->withQueryString();
+        // Manually paginate the collection in PHP
+        $page = $request->input('page', 1);
+        $perPage = 20;
+        $sliced = $filtered->slice(($page - 1) * $perPage, $perPage)->map(fn($item) => $item['student']);
 
-        // Calculate totals for stats
+        $students = new \Illuminate\Pagination\LengthAwarePaginator(
+            $sliced,
+            $filtered->count(),
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
+        // System-wide totals calculation
         $totalCount = Student::count();
         
-        $completedCount = Student::whereNotNull('ms_user_id')
-            ->whereNotNull('ms_teams_enrolled_at')
-            ->whereHas('applicant', function ($q) {
-                $q->where('completion_percentage', 100)
-                  ->whereNotNull('photo_2x2_url')
-                  ->where('photo_2x2_url', '!=', '')
-                  ->whereExists(function ($subQuery) {
-                      $subQuery->select(\Illuminate\Support\Facades\DB::raw(1))
-                               ->from('payments')
-                               ->whereColumn('payments.user_id', 'enrollment_applicants.user_id')
-                               ->whereNotNull('payments.receipt_url')
-                               ->whereNotIn('payments.receipt_url', ['', '[]', '[""]']);
-                  });
-            })->count();
+        $allSystemStudents = Student::with('applicant')->get();
+        $completedCount = $allSystemStudents->filter(function ($student) use ($paymentUserIds) {
+            $applicant = $student->applicant;
+            
+            $isFilled = $applicant && $applicant->completion_percentage === 100;
+            $hasPayment = $applicant && in_array($applicant->user_id, $paymentUserIds);
+            $hasPic = $applicant && filled($applicant->photo_2x2_url);
+            $hasMsAccount = filled($student->ms_user_id);
+            $isTeamsEnrolled = filled($student->ms_teams_enrolled_at);
 
-        $pendingCount = $totalCount - $completedCount;
+            return $isFilled && $hasPayment && $hasPic && $hasMsAccount && $isTeamsEnrolled;
+        })->count();
 
         $stats = [
             'total' => $totalCount,
-            'pending' => $pendingCount,
+            'pending' => $totalCount - $completedCount,
             'completed' => $completedCount,
         ];
 
-        return view('admin.students.accounts', compact('students', 'stats', 'statusFilter'));
+        return view('admin.students.accounts', compact('students', 'stats', 'statusFilter', 'paymentUserIds'));
     }
 
     public function show(Student $student)

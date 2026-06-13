@@ -120,10 +120,12 @@
                                 // Step 2: Payment Proof (receipt url uploaded)
                                 $hasPayment = false;
                                 if ($applicant) {
-                                    $hasPayment = \App\Models\Payment::where('user_id', $applicant->user_id)
-                                        ->whereNotNull('receipt_url')
-                                        ->whereNotIn('receipt_url', ['', '[]', '[""]'])
-                                        ->exists();
+                                    $hasPayment = isset($paymentUserIds)
+                                        ? in_array($applicant->user_id, $paymentUserIds)
+                                        : \App\Models\Payment::where('user_id', $applicant->user_id)
+                                            ->whereNotNull('receipt_url')
+                                            ->whereNotIn('receipt_url', ['', '[]', '[""]'])
+                                            ->exists();
                                 }
                                 
                                 // Step 3: 2x2 Pic (photo url uploaded)
