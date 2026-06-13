@@ -301,6 +301,81 @@ class AdminStudentController extends Controller
         return view('admin.students.history', compact('logs'));
     }
 
+    public function accounts(Request $request)
+    {
+        $statusFilter = $request->input('status_filter', 'all');
+
+        $query = Student::with(['applicant.payment', 'studentSection.section']);
+
+        // Search filter
+        if ($request->filled('search')) {
+            $s = $request->search;
+            $query->where(function ($q) use ($s) {
+                $q->where('student_number', 'like', "%{$s}%")
+                  ->orWhere('school_email', 'like', "%{$s}%")
+                  ->orWhereHas('applicant', fn($a) =>
+                      $a->where('first_name', 'like', "%{$s}%")
+                        ->orWhere('middle_name', 'like', "%{$s}%")
+                        ->orWhere('last_name', 'like', "%{$s}%")
+                  );
+            });
+        }
+
+        // Onboarding status filter
+        if ($statusFilter === 'completed') {
+            $query->whereNotNull('ms_user_id')
+                  ->whereNotNull('ms_teams_enrolled_at')
+                  ->whereHas('applicant', function ($q) {
+                      $q->whereNotNull('photo_2x2_url')
+                        ->where('photo_2x2_url', '!=', '')
+                        ->whereHas('payment', function ($pq) {
+                            $pq->whereNotNull('receipt_url')
+                               ->where('receipt_url', '!=', '');
+                        });
+                  });
+        } elseif ($statusFilter === 'pending') {
+            $query->where(function ($q) {
+                $q->whereNull('ms_user_id')
+                  ->orWhereNull('ms_teams_enrolled_at')
+                  ->orWhereHas('applicant', function ($aq) {
+                      $aq->whereNull('photo_2x2_url')
+                         ->orWhere('photo_2x2_url', '')
+                         ->orWhereDoesntHave('payment')
+                         ->orWhereHas('payment', function ($pq) {
+                             $pq->whereNull('receipt_url')
+                                ->orWhere('receipt_url', '');
+                         });
+                  });
+            });
+        }
+
+        $students = $query->latest('students.created_at')->paginate(20)->withQueryString();
+
+        // Calculate totals for stats
+        $totalCount = Student::count();
+        
+        $completedCount = Student::whereNotNull('ms_user_id')
+            ->whereNotNull('ms_teams_enrolled_at')
+            ->whereHas('applicant', function ($q) {
+                $q->whereNotNull('photo_2x2_url')
+                  ->where('photo_2x2_url', '!=', '')
+                  ->whereHas('payment', function ($pq) {
+                      $pq->whereNotNull('receipt_url')
+                         ->where('receipt_url', '!=', '');
+                  });
+            })->count();
+
+        $pendingCount = $totalCount - $completedCount;
+
+        $stats = [
+            'total' => $totalCount,
+            'pending' => $pendingCount,
+            'completed' => $completedCount,
+        ];
+
+        return view('admin.students.accounts', compact('students', 'stats', 'statusFilter'));
+    }
+
     public function show(Student $student)
     {
         $student->load([

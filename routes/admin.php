@@ -97,6 +97,7 @@ Route::name('admin.')->group(function () {
         Route::get('/students/dashboard', [AdminStudentController::class, 'dashboard'])->name('students.dashboard');
         Route::get('/students/dashboard/sections/{section}/roster-print', [AdminStudentController::class, 'rosterPrint'])->name('students.roster-print');
         Route::get('/students/history', [AdminStudentController::class, 'history'])->name('students.history');
+        Route::get('/students/accounts', [AdminStudentController::class, 'accounts'])->name('students.accounts');
         Route::get('/students/{student}', [AdminStudentController::class, 'show'])->name('students.show');
         Route::post('/students/{student}/resend', [AdminStudentController::class, 'resendCredentials'])->name('students.resend');
         Route::post('/students/{student}/status', [AdminStudentController::class, 'updateStatus'])->name('students.update-status');
