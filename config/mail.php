@@ -49,6 +49,30 @@ return [
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
         ],
 
+        'smtp_backup' => [
+            'transport' => 'smtp',
+            'scheme' => env('MAIL_BACKUP_SCHEME', env('MAIL_SCHEME')),
+            'url' => env('MAIL_BACKUP_URL'),
+            'host' => env('MAIL_BACKUP_HOST', env('MAIL_HOST', '127.0.0.1')),
+            'port' => env('MAIL_BACKUP_PORT', env('MAIL_PORT', 2525)),
+            'username' => env('MAIL_BACKUP_USERNAME'),
+            'password' => env('MAIL_BACKUP_PASSWORD'),
+            'timeout' => null,
+            'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
+        ],
+
+        'smtp_backup_2' => [
+            'transport' => 'smtp',
+            'scheme' => env('MAIL_BACKUP_2_SCHEME', env('MAIL_SCHEME')),
+            'url' => env('MAIL_BACKUP_2_URL'),
+            'host' => env('MAIL_BACKUP_2_HOST', env('MAIL_HOST', '127.0.0.1')),
+            'port' => env('MAIL_BACKUP_2_PORT', env('MAIL_PORT', 2525)),
+            'username' => env('MAIL_BACKUP_2_USERNAME'),
+            'password' => env('MAIL_BACKUP_2_PASSWORD'),
+            'timeout' => null,
+            'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
+        ],
+
         'ses' => [
             'transport' => 'ses',
         ],
@@ -83,7 +107,9 @@ return [
             'transport' => 'failover',
             'mailers' => [
                 'smtp',
-                'log',
+                'smtp_backup',
+                'smtp_backup_2',
+                'sendmail',
             ],
             'retry_after' => 60,
         ],
