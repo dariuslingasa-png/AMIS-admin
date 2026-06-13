@@ -491,38 +491,9 @@ class EnrollmentApprovalService
         string $tempPassword,
         ?string $msError,
     ): string {
-        if (! ($settings->send_onboarding_email ?? false)) {
-            $this->markOnboardingEmail($applicant, 'disabled');
+        $this->markOnboardingEmail($applicant, 'disabled');
 
-            return 'disabled';
-        }
-
-        if (! $this->hasUploadedPaymentProof($applicant)) {
-            $this->markOnboardingEmail($applicant, 'missing_payment_proof');
-
-            return 'missing_payment_proof';
-        }
-
-        $recipients = $this->onboardingRecipients($applicant);
-
-        if ($recipients->isEmpty()) {
-            $this->markOnboardingEmail($applicant, 'missing_recipient');
-
-            return 'missing_recipient';
-        }
-
-        [$sent, $error] = $this->sendOnboardingEmail($applicant, $student, $tempPassword, $msError, $recipients->all());
-
-        if (! $sent) {
-            $this->markOnboardingEmail($applicant, 'failed', $error);
-
-            return 'failed';
-        }
-
-        $student->update(['credentials_sent_at' => now()]);
-        $this->markOnboardingEmail($applicant, 'sent', sentAt: now());
-
-        return 'sent';
+        return 'disabled';
     }
 
     public function resendOnboardingInbox(EnrollmentApplicant $applicant): string
