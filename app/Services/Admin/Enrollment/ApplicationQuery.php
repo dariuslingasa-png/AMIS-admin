@@ -9,6 +9,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator as Paginator;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Collection as SupportCollection;
 
 class ApplicationQuery
@@ -119,7 +120,7 @@ class ApplicationQuery
             $query->where('enrollment_applicants.grade_level', $request->grade);
         }
 
-        if ($request->filled('inbox_status')) {
+        if ($request->filled('inbox_status') && Schema::hasColumn('enrollment_applicants', 'onboarding_email_status')) {
             match ((string) $request->inbox_status) {
                 'sent' => $query->where('enrollment_applicants.onboarding_email_status', 'sent'),
                 'failed' => $query->where('enrollment_applicants.onboarding_email_status', 'failed'),

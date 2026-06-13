@@ -31,9 +31,13 @@
             default => 'bg-slate-100 text-slate-600',
         };
         $inboxState = function ($applicant) {
-            return match ($applicant->onboarding_email_status) {
-                'sent' => ['Sent', 'green', $applicant->onboarding_email_sent_at?->format('M d, g:i A')],
-                'failed' => ['Failed', 'red', $applicant->onboarding_email_error],
+            $status = data_get($applicant, 'onboarding_email_status');
+            $sentAt = data_get($applicant, 'onboarding_email_sent_at');
+            $sentLabel = $sentAt instanceof \Carbon\CarbonInterface ? $sentAt->format('M d, g:i A') : (string) $sentAt;
+
+            return match ($status) {
+                'sent' => ['Sent', 'green', $sentLabel],
+                'failed' => ['Failed', 'red', data_get($applicant, 'onboarding_email_error')],
                 'missing_recipient' => ['No Email', 'red', 'No valid parent or applicant email'],
                 'missing_payment_proof' => ['No Payment Proof', 'yellow', 'Waiting for payment proof'],
                 'disabled' => ['Disabled', 'gray', 'Auto-send disabled in settings'],
@@ -136,7 +140,7 @@
                                 <td class="px-5 py-4 font-medium text-slate-600">{{ $nextStep }}</td>
                                 <td class="px-5 py-4 text-right">
                                     <div class="flex items-center justify-end gap-2">
-                                        @if ($canReviewApplications && $applicant->status === 'approved' && $applicant->onboarding_email_status !== 'sent')
+                                        @if ($canReviewApplications && $applicant->status === 'approved' && data_get($applicant, 'onboarding_email_status') !== 'sent')
                                             <form method="POST" action="{{ route('admin.applicants.resend-onboarding-inbox', $applicant) }}" onsubmit="return confirm('Resend inbox email and reset temporary password for this student?')">
                                                 @csrf
                                                 <button class="inline-flex h-9 items-center gap-2 rounded-md border border-amber-100 bg-amber-50 px-3 text-xs font-bold text-amber-700 transition hover:bg-amber-100">

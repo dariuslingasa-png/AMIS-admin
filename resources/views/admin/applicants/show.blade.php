@@ -13,7 +13,7 @@
     $paymentIsPdf = $payment?->receipt_url && strtolower(pathinfo($payment->receipt_url, PATHINFO_EXTENSION)) === 'pdf';
     $canReviewPayments = auth()->user()?->canReviewEnrollmentPayments() ?? false;
     $canReviewApplications = auth()->user()?->canReviewEnrollmentApplications() ?? false;
-    $inboxNeedsResend = $applicant->status === 'approved' && $applicant->onboarding_email_status !== 'sent';
+    $inboxNeedsResend = $applicant->status === 'approved' && data_get($applicant, 'onboarding_email_status') !== 'sent';
     $financeReviewer = (string) config('services.school.finance_reviewer_name', 'Finance Office');
     $paymentReadinessLabel = match (true) {
         !$payment?->receipt_url => "Waiting for Verification ({$financeReviewer})",

@@ -7,7 +7,7 @@
     $canReviewApplications = auth()->user()?->canReviewEnrollmentApplications() ?? false;
     $currentStatus = $applicant->status ?? 'under_review';
     $docStatuses = $docStatuses ?? [];
-    $inboxNeedsResend = fn ($child) => $child->status === 'approved' && $child->onboarding_email_status !== 'sent';
+    $inboxNeedsResend = fn ($child) => $child->status === 'approved' && data_get($child, 'onboarding_email_status') !== 'sent';
 
     $allFamily = $familyChildren ?? collect([$applicant]);
     $childrenCount = $allFamily->count();
