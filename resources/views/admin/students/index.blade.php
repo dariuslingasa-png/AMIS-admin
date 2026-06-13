@@ -30,11 +30,16 @@
                 <p class="mt-1 text-sm text-slate-500">View enrolled student accounts, credentials, and synchronized teams channels. <span class="font-semibold text-slate-700">({{ number_format($analytics['filtered_total'] ?? $students->total()) }} of {{ number_format($stats['total_students'] ?? 0) }} total)</span></p>
             </div>
             <div class="flex items-center gap-2 print:hidden">
-                <form method="POST" action="{{ route('admin.ms-sync.sync-all-licenses') }}" onsubmit="return confirm('Sync and assign licenses for all students? This may take a few minutes.')" class="inline-block">
+                <form method="POST" action="{{ route('admin.ms-sync.sync-all-licenses') }}" onsubmit="return confirm('Sync and assign licenses for the currently filtered student list? This may take a few minutes.')" class="inline-block">
                     @csrf
+                    @foreach (request()->only(['search', 'grade', 'type', 'gender', 'mode', 'ms_status']) as $key => $value)
+                        @if (filled($value))
+                            <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                        @endif
+                    @endforeach
                     <button type="submit" class="inline-flex h-10 items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-4 text-sm font-bold text-violet-700 transition hover:bg-violet-100 cursor-pointer">
                         <i data-lucide="shield-check" class="h-4 w-4"></i>
-                        Sync All Licenses
+                        {{ request()->hasAny(['search', 'grade', 'type', 'gender', 'mode', 'ms_status']) ? 'Sync Filtered Licenses' : 'Sync Pending Licenses' }}
                     </button>
                 </form>
                 <a href="{{ route('admin.students.index', array_merge(request()->query(), ['print' => 1])) }}" target="_blank" class="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 transition hover:bg-slate-50">
@@ -422,7 +427,7 @@
                     modalText.textContent = "Updating status, teams enrollment, and Microsoft license for this student. Please wait...";
                 } else {
                     modalTitle.textContent = "Syncing Microsoft Licenses";
-                    modalText.textContent = "We are updating status and assigning licenses to all student accounts. This may take 1-3 minutes. Please do not close or refresh this page.";
+                    modalText.textContent = "We are updating Microsoft status and licenses for the current student filter. Please do not close or refresh this page.";
                 }
                 
                 modal.classList.remove('hidden');

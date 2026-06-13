@@ -6,6 +6,8 @@ use App\Models\Student;
 use App\Models\User;
 use App\Services\MicrosoftGraphService;
 use App\Services\MsTeamsEnrollmentService;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 
@@ -491,11 +493,19 @@ class AdminMsSyncController extends Controller
     /**
      * Sync Microsoft status and license for all students in the database.
      */
-    public function syncAllLicenses()
+    public function syncAllLicenses(Request $request)
     {
         @set_time_limit(300); // 5 minutes limit for bulk operation
         
-        $students = Student::whereNotNull('ms_user_id')->get();
+        $studentsQuery = $this->bulkLicenseSyncQuery($request);
+        $studentCount = (clone $studentsQuery)->count();
+        $maxBatchSize = 80;
+
+        if ($studentCount > $maxBatchSize && ! $request->boolean('force_all')) {
+            return back()->with('warning', "Bulk sync found {$studentCount} students. Please filter the list first, or sync by smaller batches to avoid request timeouts.");
+        }
+
+        $students = $studentsQuery->get();
         $graph = new MicrosoftGraphService();
         $studentSkuId = config('services.microsoft.student_sku_id');
         
@@ -556,5 +566,72 @@ class AdminMsSyncController extends Controller
         }
         
         return back()->with('success', $msg);
+    }
+
+    private function bulkLicenseSyncQuery(Request $request): Builder
+    {
+        $query = Student::query()
+            ->with(['user', 'studentSection', 'applicant'])
+            ->whereNotNull('ms_user_id');
+
+        if ($request->filled('search')) {
+            $search = $request->string('search')->toString();
+            $query->where(function (Builder $q) use ($search) {
+                $q->where('student_number', 'like', "%{$search}%")
+                    ->orWhere('school_email', 'like', "%{$search}%")
+                    ->orWhereHas('applicant', fn (Builder $a) => $a
+                        ->where('first_name', 'like', "%{$search}%")
+                        ->orWhere('middle_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%"));
+            });
+        }
+
+        if ($request->filled('grade')) {
+            $query->where('grade_level', $request->string('grade')->toString());
+        }
+
+        if ($request->filled('gender')) {
+            $gender = strtolower($request->string('gender')->toString());
+            if (in_array($gender, ['male', 'female'], true)) {
+                $query->whereHas('applicant', fn (Builder $q) => $q->whereRaw('LOWER(gender) = ?', [$gender]));
+            } elseif ($gender === 'not_set') {
+                $query->where(function (Builder $q) {
+                    $q->whereDoesntHave('applicant')
+                        ->orWhereHas('applicant', fn (Builder $a) => $a->whereNull('gender')->orWhere('gender', ''));
+                });
+            }
+        }
+
+        if ($request->filled('type')) {
+            $type = strtolower($request->string('type')->toString());
+            if (in_array($type, ['new', 'old', 'transferee'], true)) {
+                $query->whereHas('applicant', fn (Builder $q) => $q->whereRaw('LOWER(student_type) LIKE ?', ["%{$type}%"]));
+            }
+        }
+
+        if ($request->filled('mode')) {
+            $mode = $request->string('mode')->toString();
+            $query->whereHas('applicant', fn (Builder $q) => $q->where('learning_mode', 'like', "%{$mode}%"));
+        }
+
+        if ($request->filled('ms_status')) {
+            $status = $request->string('ms_status')->toString();
+            if ($status === 'enrolled') {
+                $query->whereHas('studentSection', fn (Builder $q) => $q->where('ms_status', 'enrolled'));
+            } elseif ($status === 'failed') {
+                $query->whereHas('studentSection', fn (Builder $q) => $q->where('ms_status', 'failed'));
+            } elseif ($status === 'pending') {
+                $query->whereHas('studentSection', fn (Builder $q) => $q->where('ms_status', 'pending'));
+            } elseif ($status === 'no_license') {
+                $query->where(function (Builder $q) {
+                    $q->whereDoesntHave('studentSection', fn (Builder $sq) => $sq->where('ms_status', 'enrolled'))
+                        ->orWhereHas('studentSection', fn (Builder $sq) => $sq->where('ms_status', 'failed'));
+                });
+            }
+        } else {
+            $query->whereDoesntHave('studentSection', fn (Builder $q) => $q->where('ms_status', 'enrolled'));
+        }
+
+        return $query->orderBy('student_number');
     }
 }
