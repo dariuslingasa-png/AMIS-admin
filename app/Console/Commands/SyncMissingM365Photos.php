@@ -88,7 +88,12 @@ class SyncMissingM365Photos extends Command
                 $this->line("[" . ($index + 1) . "/" . count($toSync) . "] Syncing photo for {$fullName} ({$item['student']->school_email})...");
 
                 if (!$dryRun) {
-                    $approvalService->backfillMicrosoftPhoto($item['applicant']);
+                    $success = $approvalService->backfillMicrosoftPhoto($item['applicant']);
+                    if ($success) {
+                        $this->info("    -> SUCCESS: Photo uploaded successfully.");
+                    } else {
+                        $this->error("    -> FAILED: File not found or upload error. (Check storage/logs/laravel.log)");
+                    }
                     
                     // Sleep 150ms to avoid throttling
                     usleep(150000);

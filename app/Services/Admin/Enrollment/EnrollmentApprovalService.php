@@ -299,21 +299,21 @@ class EnrollmentApprovalService
         }
     }
 
-    public function backfillMicrosoftPhoto(EnrollmentApplicant $applicant): void
+    public function backfillMicrosoftPhoto(EnrollmentApplicant $applicant): bool
     {
         $applicant->loadMissing('student');
 
         if (! $applicant->student) {
-            return;
+            return false;
         }
 
         $identifier = $applicant->student->ms_user_id ?: $applicant->student->school_email;
 
         if (blank($identifier)) {
-            return;
+            return false;
         }
 
-        $this->uploadApplicantPhotoToMicrosoft($applicant, $applicant->student, new MicrosoftGraphService, $identifier);
+        return $this->uploadApplicantPhotoToMicrosoft($applicant, $applicant->student, new MicrosoftGraphService, $identifier);
     }
 
     private function uploadApplicantPhotoToMicrosoft(
@@ -321,11 +321,11 @@ class EnrollmentApprovalService
         Student $student,
         MicrosoftGraphService $graph,
         string $msUserId,
-    ): void {
+    ): bool {
         $photo = $this->applicantPhotoForMicrosoft($applicant);
 
         if (! $photo) {
-            return;
+            return false;
         }
 
         try {
@@ -338,6 +338,8 @@ class EnrollmentApprovalService
                 'photo_path' => $photo['path'],
                 'content_type' => $photo['content_type'],
             ]);
+
+            return true;
         } catch (\Throwable $exception) {
             Log::error('Microsoft profile photo upload failed for '.$student->school_email.': '.$exception->getMessage());
 
@@ -348,6 +350,8 @@ class EnrollmentApprovalService
                 'photo_path' => $photo['path'],
                 'error' => $exception->getMessage(),
             ]);
+
+            return false;
         }
     }
 
@@ -361,6 +365,7 @@ class EnrollmentApprovalService
         $bytes = null;
         $contentType = null;
         $resolvedPathOrUrl = null;
+        $candidates = [];
 
         // 1. Try to resolve as a local file path
         $localPath = $this->resolveApplicantPhotoPath($urlOrPath);
@@ -373,26 +378,39 @@ class EnrollmentApprovalService
         }
 
         // 2. If local resolution failed or if it's a URL, try fetching via HTTP
+        $urlCandidates = [];
         if (!$bytes) {
-            $url = null;
             if (filter_var($urlOrPath, FILTER_VALIDATE_URL)) {
-                $url = $urlOrPath;
+                $urlCandidates[] = $urlOrPath;
             } else {
+                // Configured storage URL
                 $storageUrl = config('services.enrollment_storage_url')
                     ?? env('ENROLLMENT_STORAGE_URL')
                     ?? 'https://enrollment.amis.edu.ph/storage';
 
                 if (str_contains($storageUrl, '127.0.0.1') || str_contains($storageUrl, 'localhost')) {
-                    // Fallback to production URL if running on a live system
                     $storageUrl = 'https://enrollment.amis.edu.ph/storage';
                 }
+                $urlCandidates[] = rtrim($storageUrl, '/') . '/' . ltrim($urlOrPath, '/');
 
-                $url = rtrim($storageUrl, '/') . '/' . ltrim($urlOrPath, '/');
+                // Explicit production enrollment URL fallback
+                $urlCandidates[] = 'https://enrollment.amis.edu.ph/storage/' . ltrim($urlOrPath, '/');
+
+                // Admin site APP_URL fallback (in case of symlinks served directly)
+                $appUrl = config('app.url');
+                if ($appUrl && !str_contains($appUrl, '127.0.0.1') && !str_contains($appUrl, 'localhost')) {
+                    $urlCandidates[] = rtrim($appUrl, '/') . '/storage/' . ltrim($urlOrPath, '/');
+                }
+
+                // Explicit production admin URL fallback
+                $urlCandidates[] = 'https://admin.amis.edu.ph/storage/' . ltrim($urlOrPath, '/');
             }
 
-            if ($url) {
+            $urlCandidates = array_values(array_unique($urlCandidates));
+
+            foreach ($urlCandidates as $url) {
                 try {
-                    $response = \Illuminate\Support\Facades\Http::timeout(10)->get($url);
+                    $response = \Illuminate\Support\Facades\Http::timeout(10)->withoutVerifying()->get($url);
                     if ($response->successful()) {
                         $bytes = $response->body();
                         $contentType = $response->header('Content-Type');
@@ -408,6 +426,9 @@ class EnrollmentApprovalService
                         }
 
                         $resolvedPathOrUrl = $url;
+                        break; // Found and loaded
+                    } else {
+                        Log::warning("Failed to fetch photo from URL {$url}: Status Code " . $response->status());
                     }
                 } catch (\Throwable $e) {
                     Log::warning("Failed to fetch photo from URL {$url}: " . $e->getMessage());
@@ -416,6 +437,24 @@ class EnrollmentApprovalService
         }
 
         if (!$bytes) {
+            // Retrieve candidate local paths for logging
+            $optimizedPath = preg_replace('#thumbnails/(small|medium|large)/#', 'optimized/', $urlOrPath);
+            $variantPaths = collect([
+                str_replace('optimized/', 'thumbnails/large/', $optimizedPath),
+                str_replace('optimized/', 'thumbnails/medium/', $optimizedPath),
+                $optimizedPath,
+                $urlOrPath,
+            ])->unique();
+
+            foreach ($this->enrollmentStorageRoots() as $root) {
+                foreach ($variantPaths as $variantPath) {
+                    $candidates[] = rtrim($root, '/').'/'.ltrim($variantPath, '/');
+                }
+            }
+
+            $searchedCandidatesStr = implode(', ', $candidates);
+            $triedUrlsStr = implode(', ', $urlCandidates);
+            Log::error("Microsoft profile photo sync failed: 2x2 photo not found for applicant {$applicant->id}. Searched local candidates: [{$searchedCandidatesStr}]. Tried HTTP URLs: [{$triedUrlsStr}].");
             return null;
         }
 

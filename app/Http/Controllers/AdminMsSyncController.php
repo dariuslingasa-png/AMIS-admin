@@ -482,8 +482,12 @@ class AdminMsSyncController extends Controller
             }
 
             if ($student->applicant) {
-                app(\App\Services\Admin\Enrollment\EnrollmentApprovalService::class)->backfillMicrosoftPhoto($student->applicant);
-                $msg .= ' Microsoft profile photo sync retried.';
+                $photoUploaded = app(\App\Services\Admin\Enrollment\EnrollmentApprovalService::class)->backfillMicrosoftPhoto($student->applicant);
+                if ($photoUploaded) {
+                    $msg .= ' Microsoft profile photo updated successfully.';
+                } else {
+                    $msg .= ' Note: 2x2 photo not found or failed to sync to M365 (check laravel.log).';
+                }
             }
 
             return back()->with('success', $msg . " Status and licenses synchronized successfully.");
