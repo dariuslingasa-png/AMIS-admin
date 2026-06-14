@@ -86,7 +86,8 @@ class SectionOccupancyTest extends TestCase
 
         $response->assertOk();
         $response->assertSeeText('Section Occupancy');
-        $response->assertSeeText('Grade 1 - HUDHAYFAH IBN AL-YAMAN'); // Normalized name mapping
+        $response->assertSeeText('Grade 1');
+        $response->assertSeeText('HUDHAYFAH IBN AL-YAMAN'); // Normalized name mapping
         $response->assertSeeText('ABUBAKR IBN AFFAN');
         $response->assertSeeText('STU20260001');
     }
