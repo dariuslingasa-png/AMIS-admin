@@ -257,7 +257,7 @@ class AmisBackupCommand extends Command
         }
 
         $zipPath = $binDir . '/rclone.zip';
-        $url = 'https://downloads.rclone.org/rclone-current-linux-amd64.zip';
+        $url = 'https://downloads.rclone.org/rclone-current-linux-386.zip';
 
         // Download rclone zip
         $fileContent = @file_get_contents($url);
