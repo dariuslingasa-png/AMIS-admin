@@ -154,7 +154,7 @@
             </div>
             <div>
                 <x-card title="Local Disk Storage" subtitle="Server partition disk space tracker">
-                    <div class="space-y-4">
+                    <div class="p-6 space-y-4">
                         <div class="flex items-center justify-between text-xs font-bold text-slate-500">
                             <span>Used Space ({{ $diskUsagePercent }}%)</span>
                             <span>{{ $formattedFreeDisk }} Free of {{ $formattedTotalDisk }}</span>

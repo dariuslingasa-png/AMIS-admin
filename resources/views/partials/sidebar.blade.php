@@ -89,9 +89,7 @@
             'icon' => 'shield-check', 'iconClass' => 'text-violet-600', 'headerClass' => 'text-violet-700', 'activeClass' => 'sidebar-link-active-violet', 'title' => 'Security',
             'links' => [
                 ['Admin Accounts', 'user-cog', route('admin.admins.index'), request()->routeIs('admin.admins.index') || request()->routeIs('admin.admins.edit')],
-                ['Roles & Permissions', 'key-round', route('admin.admins.index'), false],
                 ['Audit Logs', 'logs', route('admin.admins.audit-logs'), request()->routeIs('admin.admins.audit-logs')],
-                ['Login Activity', 'activity', route('admin.admins.index'), false],
                 ['Backup', 'database-backup', route('admin.admins.backups'), request()->routeIs('admin.admins.backups')],
             ],
         ],
