@@ -49,23 +49,23 @@
     .timetable-grid .cell-hadith:hover {
         background-color: #fef3c7 !important;
     }
-    .timetable-grid .cell-recess {
+    .timetable-grid .cell-arabic {
         background-color: #fdf2f8 !important; /* bg-pink-50 */
         color: #be185d !important; /* text-pink-700 */
         border-right: 1px solid #fce7f3 !important;
         border-top: 1px solid #fce7f3 !important;
     }
-    .timetable-grid .cell-recess:hover {
+    .timetable-grid .cell-arabic:hover {
         background-color: #fce7f3 !important;
     }
-    .timetable-grid .cell-event {
-        background-color: #f5f3ff !important; /* bg-violet-50 */
-        color: #6d28d9 !important; /* text-violet-700 */
-        border-right: 1px solid #ede9fe !important;
-        border-top: 1px solid #ede9fe !important;
+    .timetable-grid .cell-recess {
+        background-color: #fff5f5 !important; /* bg-red-50 */
+        color: #c53030 !important; /* text-red-700 */
+        border-right: 1px solid #fed7d7 !important;
+        border-top: 1px solid #fed7d7 !important;
     }
-    .timetable-grid .cell-event:hover {
-        background-color: #ede9fe !important;
+    .timetable-grid .cell-recess:hover {
+        background-color: #fed7d7 !important;
     }
     .timetable-grid .cell-academic {
         background-color: #f0fdf4 !important; /* bg-emerald-50 */
@@ -78,6 +78,10 @@
     }
     .timetable-grid .cell-empty {
         background-color: #ffffff !important;
+        color: #1e293b !important;
+    }
+    .timetable-grid .cell-empty:hover {
+        background-color: #f8fafc !important;
     }
 </style>
 
@@ -333,12 +337,14 @@
                                                     $cellClass = 'cell-academic';
                                                     if (str_contains($subjectLower, 'qur')) {
                                                         $cellClass = 'cell-quran';
-                                                    } elseif (str_contains($subjectLower, 'hadith') || str_contains($subjectLower, 'arabic')) {
+                                                    } elseif (str_contains($subjectLower, 'hadith')) {
                                                         $cellClass = 'cell-hadith';
+                                                    } elseif (str_contains($subjectLower, 'arabic')) {
+                                                        $cellClass = 'cell-arabic';
                                                     } elseif (str_contains($subjectLower, 'recess')) {
                                                         $cellClass = 'cell-recess';
-                                                    } elseif (str_contains($subjectLower, 'assembly') || str_contains($subjectLower, 'meeting') || str_contains($subjectLower, 'circle') || str_contains($subjectLower, 'wrap') || str_contains($subjectLower, 'departure')) {
-                                                        $cellClass = 'cell-event';
+                                                    } elseif (str_contains($subjectLower, 'assembly') || str_contains($subjectLower, 'departure') || str_contains($subjectLower, 'meeting') || str_contains($subjectLower, 'circle') || str_contains($subjectLower, 'wrap')) {
+                                                        $cellClass = 'cell-empty';
                                                     }
                                                 @endphp
                                                 <td rowspan="{{ $cell['span'] }}" colspan="{{ $cell['colspan'] }}" class="{{ $cellClass }}">
