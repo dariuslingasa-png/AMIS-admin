@@ -22,6 +22,10 @@ use App\Http\Controllers\AdminMsTeamsController;
 use App\Http\Controllers\AdminPaymentController;
 use App\Http\Controllers\AdminSoaController;
 use App\Http\Controllers\AdminStudentController;
+use App\Http\Controllers\AdminStudentDashboardController;
+use App\Http\Controllers\AdminStudentProcessController;
+use App\Http\Controllers\AdminStudentAccountController;
+use App\Http\Controllers\AdminStudentFamilyController;
 use App\Http\Controllers\AdminUserController;
 use Illuminate\Support\Facades\Route;
 
@@ -98,19 +102,20 @@ Route::name('admin.')->group(function () {
         });
 
         Route::get('/students', [AdminStudentController::class, 'index'])->name('students.index');
-        Route::get('/students/dashboard', [AdminStudentController::class, 'dashboard'])->name('students.dashboard');
-        Route::get('/students/dashboard/sections/{section}/roster-print', [AdminStudentController::class, 'rosterPrint'])->name('students.roster-print');
-        Route::get('/students/history', [AdminStudentController::class, 'history'])->name('students.history');
-        Route::get('/students/accounts', [AdminStudentController::class, 'accounts'])->name('students.accounts');
-        Route::get('/students/documents', [AdminStudentController::class, 'documents'])->name('students.documents');
-        Route::get('/students/verification', [AdminStudentController::class, 'verification'])->name('students.verification');
-        Route::get('/students/promotions', [AdminStudentController::class, 'promotions'])->name('students.promotions');
-        Route::get('/students/occupancy', [AdminStudentController::class, 'occupancy'])->name('students.occupancy');
-        Route::get('/students/occupancy/grade/{grade}/roster-print', [AdminStudentController::class, 'gradeRosterPrint'])->name('students.grade-roster-print');
+        Route::get('/students/dashboard', [AdminStudentDashboardController::class, 'dashboard'])->name('students.dashboard');
+        Route::get('/students/dashboard/sections/{section}/roster-print', [AdminStudentDashboardController::class, 'rosterPrint'])->name('students.roster-print');
+        Route::get('/students/history', [AdminStudentProcessController::class, 'history'])->name('students.history');
+        Route::get('/students/accounts', [AdminStudentProcessController::class, 'accounts'])->name('students.accounts');
+        Route::get('/students/documents', [AdminStudentProcessController::class, 'documents'])->name('students.documents');
+        Route::get('/students/verification', [AdminStudentProcessController::class, 'verification'])->name('students.verification');
+        Route::get('/students/promotions', [AdminStudentProcessController::class, 'promotions'])->name('students.promotions');
+        Route::get('/students/occupancy', [AdminStudentDashboardController::class, 'occupancy'])->name('students.occupancy');
+        Route::get('/students/occupancy/grade/{grade}/roster-print', [AdminStudentDashboardController::class, 'gradeRosterPrint'])->name('students.grade-roster-print');
+        Route::get('/students/families', [AdminStudentFamilyController::class, 'families'])->name('students.families');
         Route::get('/students/{student}', [AdminStudentController::class, 'show'])->name('students.show');
-        Route::post('/students/{student}/resend', [AdminStudentController::class, 'resendCredentials'])->name('students.resend');
-        Route::post('/students/{student}/status', [AdminStudentController::class, 'updateStatus'])->name('students.update-status');
-        Route::post('/students/{student}/update-email', [AdminStudentController::class, 'updateEmail'])->name('students.update-email');
+        Route::post('/students/{student}/resend', [AdminStudentAccountController::class, 'resendCredentials'])->name('students.resend');
+        Route::post('/students/{student}/status', [AdminStudentAccountController::class, 'updateStatus'])->name('students.update-status');
+        Route::post('/students/{student}/update-email', [AdminStudentAccountController::class, 'updateEmail'])->name('students.update-email');
         Route::delete('/students/{student}', [AdminStudentController::class, 'destroy'])->name('students.destroy');
 
         Route::get('/soa', [AdminSoaController::class, 'index'])->name('soa.index');
