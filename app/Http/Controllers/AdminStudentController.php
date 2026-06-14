@@ -24,11 +24,13 @@ class AdminStudentController extends Controller
                 $query->where(function ($q) use ($s) {
                     $q->where('students.student_number', 'like', "%{$s}%")
                       ->orWhere('students.school_email', 'like', "%{$s}%")
-                      ->orWhereHas('applicant', fn($a) =>
+                      ->orWhereHas('applicant', function ($a) use ($s) {
                           $a->where('first_name', 'like', "%{$s}%")
                             ->orWhere('middle_name', 'like', "%{$s}%")
                             ->orWhere('last_name', 'like', "%{$s}%")
-                      );
+                            ->orWhere(DB::raw("CONCAT(first_name, ' ', last_name)"), 'like', "%{$s}%")
+                            ->orWhere(DB::raw("CONCAT(first_name, ' ', IFNULL(middle_name, ''), ' ', last_name)"), 'like', "%{$s}%");
+                      });
                 });
             }
 
