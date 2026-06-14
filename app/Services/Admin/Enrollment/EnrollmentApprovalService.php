@@ -45,13 +45,7 @@ class EnrollmentApprovalService
             return 'Student already onboarded. Microsoft profile photo sync was retried.';
         }
 
-        if ($settings->generate_soa ?? true) {
-            if ($this->shouldGenerateSoa($applicant) && ! SchoolFee::forGrade($applicant->grade_level, $applicant->school_year)) {
-                throw ValidationException::withMessages([
-                    'status' => "No school fees found for {$applicant->grade_level} SY {$applicant->school_year}. Add the fee first, then approve again.",
-                ]);
-            }
-        }
+
 
         return DB::transaction(function () use ($applicant, $settings) {
             $shouldGenerateMicrosoftAccount = $settings->generate_microsoft_account ?? true;
@@ -555,6 +549,12 @@ class EnrollmentApprovalService
             Log::info('SOA generation skipped for non-new student applicant '.$applicant->id, [
                 'student_type' => $applicant->student_type,
             ]);
+
+            return;
+        }
+
+        if (! SchoolFee::forGrade($applicant->grade_level, $applicant->school_year)) {
+            Log::warning("Skipped SOA generation for Student {$student->student_number}: No school fees found for {$applicant->grade_level} SY {$applicant->school_year}.");
 
             return;
         }
