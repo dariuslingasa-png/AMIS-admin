@@ -11,13 +11,7 @@ use Illuminate\Support\Facades\DB;
 
 class AdminBackupController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware(function ($request, $next) {
-            abort_unless(auth()->user()?->role === 'admin', 403);
-            return $next($request);
-        });
-    }
+    // Routes are protected via web/admin middleware group
 
     public function index()
     {
