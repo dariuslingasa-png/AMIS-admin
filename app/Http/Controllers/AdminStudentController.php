@@ -176,7 +176,7 @@ class AdminStudentController extends Controller
             'allocated_slots' => \App\Models\StudentSection::count(),
         ];
 
-        $isPrint = $request->filled('print');
+        $isPrint = $request->filled('print') || $request->filled('print_credentials');
         $students = $isPrint ? $query->get() : $query->paginate(20)->withQueryString();
 
         return view('admin.students.index', compact('students', 'stats', 'analytics', 'gradeOrder', 'isPrint'));
