@@ -1,6 +1,6 @@
 @php
     $firstSectionId = (int) ($sections->first()?->id ?? 0);
-    $activeWorkspace = session('schedule_workspace', $errors->any() ? 'schedule' : 'sections');
+    $activeWorkspace = request('tab', session('schedule_workspace', $errors->any() ? 'schedule' : 'sections'));
     $activeSectionId = (int) old('section_id', $firstSectionId);
     $failedForm = old('_schedule_form');
     $failedScheduleId = (int) old('schedule_id', 0);
