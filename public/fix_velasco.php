@@ -60,15 +60,14 @@ try {
         // 3. Update Azure AD UPN
         if ($occupyingStudent->ms_user_id) {
             echo "Updating Azure AD UPN for ID {$occupyingStudent->ms_user_id}...\n";
-            $response = $graph->graph()->patch("/users/{$occupyingStudent->ms_user_id}", [
-                'userPrincipalName' => $newEmail,
-                'mailNickname' => $newStudentNumber . $suffix
-            ]);
-            
-            if ($response->successful()) {
+            try {
+                $graph->updateAzureUser($occupyingStudent->ms_user_id, [
+                    'userPrincipalName' => $newEmail,
+                    'mailNickname' => $newStudentNumber . $suffix
+                ]);
                 echo "Azure AD UPN updated successfully to {$newEmail}.\n";
-            } else {
-                echo "WARNING: Failed to update Azure AD UPN: " . $response->body() . "\n";
+            } catch (\Throwable $azEx) {
+                echo "WARNING: Failed to update Azure AD UPN: " . $azEx->getMessage() . "\n";
             }
         } else {
             echo "No Azure AD User ID found for occupying student.\n";

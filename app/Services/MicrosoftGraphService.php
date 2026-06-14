@@ -437,6 +437,34 @@ class MicrosoftGraphService
         }
     }
 
+    public function updateAzureUser(string $upnOrId, array $payload): void
+    {
+        try {
+            $resolvedId = $this->resolveUserId($upnOrId);
+        } catch (\Exception $e) {
+            $resolvedId = $upnOrId;
+        }
+
+        $response = $this->graph()->patch("/users/{$resolvedId}", $payload);
+
+        if ($response->successful()) {
+            return;
+        }
+
+        Log::warning('Application token updateAzureUser failed; retrying with delegated token', [
+            'user' => $upnOrId,
+            'status' => $response->status(),
+            'body' => $response->body(),
+        ]);
+
+        $delegatedResponse = $this->graphDelegated()->patch("/users/{$resolvedId}", $payload);
+
+        if (! $delegatedResponse->successful()) {
+            throw new \Exception('Failed to update Azure user: '.$delegatedResponse->body());
+        }
+    }
+
+
     // ── Teams Management ──────────────────────────────────────────────
 
     /**
