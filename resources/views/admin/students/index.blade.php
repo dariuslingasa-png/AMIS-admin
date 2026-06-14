@@ -708,7 +708,7 @@
                             <input type="hidden" name="{{ $key }}" value="{{ $value }}">
                         @endif
                     @endforeach
-                    <button type="submit" class="inline-flex h-10 items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-4 text-sm font-bold text-violet-700 transition hover:bg-violet-100 cursor-pointer">
+                    <button type="submit" class="inline-flex h-10 items-center gap-2 rounded-lg border border-emerald-250 bg-emerald-50 px-4 text-sm font-bold text-emerald-700 transition hover:bg-emerald-100 cursor-pointer">
                         <i data-lucide="shield-check" class="h-4 w-4"></i>
                         {{ request()->hasAny(['search', 'grade', 'type', 'gender', 'mode', 'ms_status']) ? 'Sync Filtered Licenses' : 'Sync Pending Licenses' }}
                     </button>
@@ -966,7 +966,7 @@
                                         @if($student->ms_user_id && ($msStatus !== 'enrolled' || $student->ms_license_active === false))
                                             <form method="POST" action="{{ route('admin.ms-sync.student', $student) }}" class="inline-block">
                                                 @csrf
-                                                <button type="submit" class="inline-flex h-9 items-center gap-1.5 rounded-md border border-violet-100 bg-violet-50 px-2.5 text-xs font-bold text-violet-700 transition hover:bg-violet-100 cursor-pointer" title="Sync Microsoft Account & License">
+                                                <button type="submit" class="inline-flex h-9 items-center gap-1.5 rounded-md border border-emerald-100 bg-emerald-50 px-2.5 text-xs font-bold text-emerald-700 transition hover:bg-emerald-100 cursor-pointer" title="Sync Microsoft Account & License">
                                                     <i data-lucide="refresh-cw" class="h-3.5 w-3.5"></i>
                                                     <span>Sync License</span>
                                                 </button>
@@ -1152,8 +1152,8 @@
     <div id="sync-loading-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-md transition-all duration-300">
         <div class="relative w-full max-w-md scale-95 transform rounded-2xl border border-slate-200/80 bg-white p-8 shadow-2xl transition-all duration-300 dark:border-slate-800 dark:bg-slate-900 text-center">
             <!-- Spinner -->
-            <div class="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-violet-50 dark:bg-violet-950/30">
-                <svg class="h-8 w-8 animate-spin text-violet-600" fill="none" viewBox="0 0 24 24">
+            <div class="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-950/30">
+                <svg class="h-8 w-8 animate-spin text-emerald-600" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
@@ -1165,7 +1165,7 @@
             
             <!-- Progress bar simulation (subtle animation) -->
             <div class="h-1.5 w-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                <div class="h-full rounded-full bg-violet-600 animate-[loading-bar_2s_infinite_ease-in-out]" style="width: 30%"></div>
+                <div class="h-full rounded-full bg-emerald-600 animate-[loading-bar_2s_infinite_ease-in-out]" style="width: 30%"></div>
             </div>
         </div>
     </div>

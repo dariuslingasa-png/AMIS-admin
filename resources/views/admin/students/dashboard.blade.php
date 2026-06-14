@@ -14,24 +14,24 @@
 
     <div class="space-y-6">
         <!-- Dashboard Header / Banner -->
-        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-violet-900 via-indigo-900 to-slate-900 p-6 text-white shadow-md">
-            <div class="absolute right-0 top-0 -mr-6 -mt-6 h-48 w-48 rounded-full bg-violet-500/10 blur-3xl"></div>
-            <div class="absolute left-1/3 bottom-0 -mb-10 h-60 w-60 rounded-full bg-emerald-500/10 blur-3xl"></div>
+        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-800 via-emerald-900 to-teal-950 p-6 text-white shadow-md">
+            <div class="absolute right-0 top-0 -mr-6 -mt-6 h-48 w-48 rounded-full bg-emerald-500/15 blur-3xl"></div>
+            <div class="absolute left-1/3 bottom-0 -mb-10 h-60 w-60 rounded-full bg-teal-500/15 blur-3xl"></div>
             
             <div class="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold bg-white/10 text-violet-100 rounded-full border border-white/10 backdrop-blur-xs mb-3">
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold bg-white/10 text-emerald-100 rounded-full border border-white/10 backdrop-blur-xs mb-3">
                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                         Students Workspace
                     </span>
                     <h1 class="text-2xl md:text-3xl font-black tracking-tight text-white">Students Dashboard</h1>
-                    <p class="mt-2 text-sm md:text-base text-violet-100/90 max-w-2xl font-light">
+                    <p class="mt-2 text-sm md:text-base text-emerald-100 max-w-2xl font-light">
                         Monitor student admissions, active learning modes, classroom capacity allocations, and Microsoft 365 AD sync coverage.
                     </p>
                 </div>
                 <div class="flex flex-wrap gap-3">
                     <a href="{{ route('admin.students.index') }}" class="inline-flex items-center gap-2 bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-950 font-black text-sm px-5 py-2.5 rounded-xl transition-all duration-150 shadow-md hover:scale-[1.02] cursor-pointer">
-                        <i data-lucide="user-check" class="w-4 h-4 text-violet-750"></i>
+                        <i data-lucide="user-check" class="w-4 h-4 text-emerald-600"></i>
                         Student Records
                     </a>
                     <a href="{{ route('admin.students.history') }}" class="inline-flex items-center gap-2 border border-white/20 bg-white/10 px-5 py-2.5 rounded-xl text-white hover:bg-white/15 active:bg-white/20 transition-all duration-150 text-sm font-black hover:scale-[1.02] cursor-pointer shadow-sm shadow-indigo-950/10">
@@ -45,13 +45,13 @@
         <!-- Telemetry Statistics Grid -->
         <div class="grid gap-5 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
             <!-- 1. Enrolled Students -->
-            <div class="overflow-hidden rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm flex flex-col justify-between h-36 transition hover:shadow-md border-t-4 border-t-violet-600">
+            <div class="overflow-hidden rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm flex flex-col justify-between h-36 transition hover:shadow-md border-t-4 border-t-emerald-600">
                 <div class="flex items-start justify-between">
                     <div>
                         <span class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Total Enrolled</span>
                         <h3 class="mt-2 text-3xl font-black text-slate-950 tracking-tight">{{ number_format($stats['total_students']) }}</h3>
                     </div>
-                    <div class="rounded-2xl bg-violet-50 p-3 text-violet-600 ring-1 ring-violet-100">
+                    <div class="rounded-2xl bg-emerald-50 p-3 text-emerald-600 ring-1 ring-emerald-100">
                         <i data-lucide="users" class="h-6 w-6"></i>
                     </div>
                 </div>
@@ -650,15 +650,15 @@
     <div id="advisoryRosterModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 transition-all duration-300">
         <div class="bg-white rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden border border-slate-200/80 transform scale-95 transition-all duration-300 flex flex-col max-h-[85vh]">
             <!-- Header -->
-            <div class="bg-gradient-to-r from-violet-900 via-indigo-900 to-slate-900 p-6 text-white relative flex-shrink-0">
-                <div class="absolute right-0 top-0 -mr-6 -mt-6 h-32 w-32 rounded-full bg-violet-500/10 blur-2xl"></div>
+            <div class="bg-gradient-to-r from-emerald-800 via-emerald-900 to-teal-950 p-6 text-white relative flex-shrink-0">
+                <div class="absolute right-0 top-0 -mr-6 -mt-6 h-32 w-32 rounded-full bg-emerald-500/15 blur-2xl"></div>
                 <div class="flex items-start justify-between">
                     <div>
-                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider bg-white/10 text-violet-100 rounded-md border border-white/10 backdrop-blur-xs mb-2">
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider bg-white/10 text-emerald-100 rounded-md border border-white/10 backdrop-blur-xs mb-2">
                             Class Details
                         </span>
                         <h2 id="modalGradeLevel" class="text-2xl font-black tracking-tight">Grade Level</h2>
-                        <p id="modalAdvisoryName" class="text-sm text-violet-100/90 font-bold mt-1 uppercase tracking-wider"></p>
+                        <p id="modalAdvisoryName" class="text-sm text-emerald-100/90 font-bold mt-1 uppercase tracking-wider"></p>
                     </div>
                     <button onclick="closeAdvisoryModal()" class="rounded-xl bg-white/10 p-2 text-white/80 hover:bg-white/15 active:bg-white/20 transition-all cursor-pointer">
                         <i data-lucide="x" class="w-5 h-5"></i>

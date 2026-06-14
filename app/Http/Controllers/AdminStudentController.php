@@ -692,4 +692,55 @@ class AdminStudentController extends Controller
         return redirect()->route('admin.students.index')
             ->with('success', "Student {$name} deleted from portal and Microsoft 365.");
     }
+
+    public function documents(Request $request)
+    {
+        $query = Student::with('applicant');
+        if ($request->filled('search')) {
+            $s = $request->search;
+            $query->where(function ($q) use ($s) {
+                $q->where('student_number', 'like', "%{$s}%")
+                  ->orWhereHas('applicant', fn($a) =>
+                      $a->where('first_name', 'like', "%{$s}%")
+                        ->orWhere('last_name', 'like', "%{$s}%")
+                  );
+            });
+        }
+        $students = $query->paginate(20);
+        return view('admin.students.documents', compact('students'));
+    }
+
+    public function verification(Request $request)
+    {
+        $query = Student::with('applicant');
+        if ($request->filled('search')) {
+            $s = $request->search;
+            $query->where(function ($q) use ($s) {
+                $q->where('student_number', 'like', "%{$s}%")
+                  ->orWhereHas('applicant', fn($a) =>
+                      $a->where('first_name', 'like', "%{$s}%")
+                        ->orWhere('last_name', 'like', "%{$s}%")
+                  );
+            });
+        }
+        $students = $query->paginate(20);
+        return view('admin.students.verification', compact('students'));
+    }
+
+    public function promotions(Request $request)
+    {
+        $query = Student::with('applicant');
+        if ($request->filled('search')) {
+            $s = $request->search;
+            $query->where(function ($q) use ($s) {
+                $q->where('student_number', 'like', "%{$s}%")
+                  ->orWhereHas('applicant', fn($a) =>
+                      $a->where('first_name', 'like', "%{$s}%")
+                        ->orWhere('last_name', 'like', "%{$s}%")
+                  );
+            });
+        }
+        $students = $query->paginate(20);
+        return view('admin.students.promotions', compact('students'));
+    }
 }

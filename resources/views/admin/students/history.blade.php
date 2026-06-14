@@ -23,7 +23,7 @@
         <!-- Header Banner -->
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-100 px-6 py-6 bg-gradient-to-r from-slate-50 to-slate-100/50">
             <div>
-                <p class="text-xs font-black uppercase tracking-wider text-violet-700">Students Workspace</p>
+                <p class="text-xs font-black uppercase tracking-wider text-emerald-700">Students Workspace</p>
                 <h1 class="mt-1 text-xl font-extrabold text-slate-950">Enrollment & Onboarding History</h1>
                 <p class="mt-1 text-xs md:text-sm text-slate-500 font-medium">A chronological audit log of student registrations, auto-generated emails, OR numbers, and portal credentials.</p>
             </div>
@@ -32,7 +32,7 @@
                     <i data-lucide="layout-dashboard" class="h-4 w-4"></i>
                     Dashboard
                 </a>
-                <a href="{{ route('admin.students.index') }}" class="inline-flex h-10 items-center gap-2 rounded-xl bg-violet-700 px-4 text-xs font-bold text-white shadow-sm transition hover:bg-violet-800 active:scale-95">
+                <a href="{{ route('admin.students.index') }}" class="inline-flex h-10 items-center gap-2 rounded-xl bg-emerald-600 px-4 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700 active:scale-95">
                     <i data-lucide="user-check" class="h-4 w-4"></i>
                     Student Records
                 </a>
@@ -46,7 +46,7 @@
                     <i data-lucide="search" class="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-slate-400"></i>
                     <input name="search" value="{{ request('search') }}" placeholder="Search name, student number, or email" class="{{ $inputClass }} w-full pl-9">
                 </label>
-                <button class="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-violet-750 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-800 active:scale-[0.98]">
+                <button class="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-emerald-600 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 active:scale-[0.98]">
                     <i data-lucide="search-code" class="h-4 w-4"></i>
                     Search Logs
                 </button>
@@ -81,7 +81,7 @@
                                     <div class="flex items-center gap-3">
                                         <!-- Timeline point indicator -->
                                         <div class="relative flex flex-col items-center">
-                                            <div class="h-2 w-2 rounded-full bg-violet-600 ring-4 ring-violet-50"></div>
+                                            <div class="h-2 w-2 rounded-full bg-emerald-650 ring-4 ring-emerald-50"></div>
                                         </div>
                                         <x-smart-image
                                             :src="$photoUrl"
@@ -89,7 +89,7 @@
                                             :fallback-initials="$initials ?: 'ST'"
                                             size="40"
                                             rounded="rounded-xl"
-                                            containerClass="bg-violet-50 text-violet-700 ring-1 ring-violet-100 font-extrabold"
+                                            containerClass="bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100 font-extrabold"
                                             :eager="false"
                                         />
                                         <div>

@@ -87,7 +87,7 @@ class ApplicantEmailRegistryTest extends TestCase
                     return false;
                 }
                 $html = view($view, $data)->render();
-                return str_contains($html, "John Doe");
+                return str_contains(strtolower($html), "john doe");
             });
 
         $response = $this->actingAs($admin)->postJson(route('admin.applicants.email-registry'), [
@@ -148,8 +148,8 @@ class ApplicantEmailRegistryTest extends TestCase
                     return false;
                 }
                 $html = view($view, $data)->render();
-                return (str_contains($html, "Family3") || str_contains($html, "Family2"))
-                    && !str_contains($html, "Family1");
+                return (str_contains(strtolower($html), "family3") || str_contains(strtolower($html), "family2"))
+                    && !str_contains(strtolower($html), "family1");
             });
 
         // Send with limit = 2

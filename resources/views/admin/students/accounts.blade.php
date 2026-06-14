@@ -158,7 +158,7 @@
                                     <div class="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs font-semibold text-slate-500">
                                         <span>{{ $student->grade_level }}</span>
                                         <span class="text-slate-300">•</span>
-                                        <span class="text-violet-700 bg-violet-50 px-1.5 py-0.5 rounded">{{ strtoupper($studentType) }}</span>
+                                        <span class="text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">{{ strtoupper($studentType) }}</span>
                                         <span class="text-slate-300">•</span>
                                         <span class="text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded">{{ $modeAbbr }}</span>
                                     </div>

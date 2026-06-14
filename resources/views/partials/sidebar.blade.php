@@ -28,7 +28,10 @@
                 ['Dashboard', 'layout-dashboard', route('admin.students.dashboard'), request()->routeIs('admin.students.dashboard')],
                 ['Student Records', 'user-check', route('admin.students.index'), request()->routeIs('admin.students.index') || request()->routeIs('admin.students.show')],
                 ['Account Onboarding', 'user-cog', route('admin.students.accounts'), request()->routeIs('admin.students.accounts')],
+                ['Student Documents', 'file-text', route('admin.students.documents'), request()->routeIs('admin.students.documents')],
+                ['Document Verification', 'shield-check', route('admin.students.verification'), request()->routeIs('admin.students.verification')],
                 ['Enrollment History', 'history', route('admin.students.history'), request()->routeIs('admin.students.history')],
+                ['Promotions & Transfers', 'arrow-left-right', route('admin.students.promotions'), request()->routeIs('admin.students.promotions')],
             ],
         ],
         [
