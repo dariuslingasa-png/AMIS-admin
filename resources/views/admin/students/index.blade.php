@@ -24,7 +24,11 @@
     <title>AMIS Student Credentials Print</title>
     <style>
         @page { size: A4; margin: 10mm 8mm; }
-        * { box-sizing: border-box; }
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
         body {
             margin: 0;
             background: #fff;
@@ -360,7 +364,11 @@
     <title>AMIS Student Records List</title>
     <style>
         @page { size: A4; margin: 12mm; }
-        * { box-sizing: border-box; }
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
         body {
             margin: 0;
             background: #fff;
