@@ -173,15 +173,15 @@
                             <span>Used Space ({{ $diskUsagePercent }}%)</span>
                             <span class="font-extrabold text-slate-900">{{ $formattedFreeDisk }} Free of {{ $formattedTotalDisk }}</span>
                         </div>
-                        <div class="w-full h-3 bg-slate-200/50 rounded-full overflow-hidden p-0.5 border border-slate-300/20">
+                        <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden p-0.5" style="border: 1px solid rgba(226, 232, 240, 0.8);">
                             <div class="h-full bg-gradient-to-r from-purple-500 to-indigo-600 rounded-full transition-all duration-500" style="width: {{ $diskUsagePercent }}%"></div>
                         </div>
                         <div class="grid grid-cols-2 gap-4 pt-2">
-                            <div class="p-3 bg-white/60 rounded-2xl border border-white/40 shadow-3xs">
+                            <div class="p-3 bg-white/60 rounded-2xl shadow-3xs" style="border: 1px solid rgba(226, 232, 240, 0.8);">
                                 <span class="block text-[10px] font-black uppercase tracking-wider text-slate-400">Used Disk</span>
                                 <span class="text-sm font-black text-slate-900 mt-1 block">{{ $formattedUsedDisk }}</span>
                             </div>
-                            <div class="p-3 bg-white/60 rounded-2xl border border-white/40 shadow-3xs">
+                            <div class="p-3 bg-white/60 rounded-2xl shadow-3xs" style="border: 1px solid rgba(226, 232, 240, 0.8);">
                                 <span class="block text-[10px] font-black uppercase tracking-wider text-slate-400">Available</span>
                                 <span class="text-sm font-black text-purple-700 mt-1 block">{{ $formattedFreeDisk }}</span>
                             </div>
