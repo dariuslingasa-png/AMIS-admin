@@ -22,14 +22,14 @@
                         <form method="GET" action="{{ route('admin.security-workspace.audit-logs') }}" class="flex items-center gap-2">
                             <div class="relative w-full sm:w-[320px]">
                                 <i data-lucide="search" class="pointer-events-none absolute left-3.5 top-3.5 h-4 w-4 text-slate-400"></i>
-                                <input type="text" name="search" value="{{ $search }}" placeholder="Search audit logs..." class="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-10 text-xs font-semibold text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100">
+                                <input type="text" name="search" value="{{ $search }}" placeholder="Search audit logs..." class="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-10 text-xs font-semibold text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-rose-400 focus:ring-4 focus:ring-rose-100">
                                 @if(filled($search))
                                     <a href="{{ route('admin.security-workspace.audit-logs') }}" class="absolute right-3 top-3.5 text-slate-400 hover:text-slate-600 transition" title="Clear search">
                                         <i data-lucide="x" class="h-4 w-4"></i>
                                     </a>
                                 @endif
                             </div>
-                            <button type="submit" class="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-indigo-600 px-5 text-xs font-bold text-white shadow-sm transition hover:bg-indigo-700 cursor-pointer">
+                            <button type="submit" class="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-rose-600 px-5 text-xs font-bold text-white shadow-sm transition hover:bg-rose-700 cursor-pointer">
                                 Search
                             </button>
                         </form>

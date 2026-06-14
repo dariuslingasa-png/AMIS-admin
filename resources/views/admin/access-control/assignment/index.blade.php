@@ -73,7 +73,7 @@
                                 <td class="px-5 py-4">
                                     <div class="flex flex-wrap gap-1">
                                         @forelse($user->roles as $role)
-                                            <span class="inline-flex rounded-full bg-slate-900 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-white">
+                                            <span class="inline-flex rounded-full bg-indigo-600 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-white">
                                                 {{ $role->name }}
                                             </span>
                                         @empty
@@ -102,7 +102,7 @@
                                             @endforeach
                                         </div>
 
-                                        <button type="submit" class="inline-flex h-9 items-center justify-center rounded-xl bg-slate-900 px-4 text-xs font-black uppercase tracking-wider text-white hover:bg-slate-800 transition cursor-pointer">
+                                        <button type="submit" class="inline-flex h-9 items-center justify-center rounded-xl bg-indigo-600 px-4 text-xs font-black uppercase tracking-wider text-white hover:bg-indigo-700 transition cursor-pointer">
                                             Sync
                                         </button>
                                     </form>

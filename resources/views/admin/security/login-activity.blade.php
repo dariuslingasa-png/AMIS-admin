@@ -19,13 +19,13 @@
             <div class="px-4 py-4 sm:px-6 border-b border-slate-200/60 bg-slate-50/50">
                 <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                     <div class="flex flex-wrap items-center gap-2">
-                        <a href="{{ route('admin.security-workspace.login-activity', ['tab' => 'all', 'search' => $search]) }}" class="inline-flex h-9 items-center justify-center rounded-xl px-4 text-xs font-bold transition {{ $tab === 'all' ? 'bg-slate-900 text-white' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50' }}">
+                        <a href="{{ route('admin.security-workspace.login-activity', ['tab' => 'all', 'search' => $search]) }}" class="inline-flex h-9 items-center justify-center rounded-xl px-4 text-xs font-bold transition {{ $tab === 'all' ? 'bg-rose-600 text-white' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50' }}">
                             All Logins
                         </a>
-                        <a href="{{ route('admin.security-workspace.login-activity', ['tab' => 'success', 'search' => $search]) }}" class="inline-flex h-9 items-center justify-center rounded-xl px-4 text-xs font-bold transition {{ $tab === 'success' ? 'bg-slate-900 text-white' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50' }}">
+                        <a href="{{ route('admin.security-workspace.login-activity', ['tab' => 'success', 'search' => $search]) }}" class="inline-flex h-9 items-center justify-center rounded-xl px-4 text-xs font-bold transition {{ $tab === 'success' ? 'bg-rose-600 text-white' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50' }}">
                             Successful
                         </a>
-                        <a href="{{ route('admin.security-workspace.login-activity', ['tab' => 'failed', 'search' => $search]) }}" class="inline-flex h-9 items-center justify-center rounded-xl px-4 text-xs font-bold transition {{ $tab === 'failed' ? 'bg-slate-900 text-white' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50' }}">
+                        <a href="{{ route('admin.security-workspace.login-activity', ['tab' => 'failed', 'search' => $search]) }}" class="inline-flex h-9 items-center justify-center rounded-xl px-4 text-xs font-bold transition {{ $tab === 'failed' ? 'bg-rose-600 text-white' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50' }}">
                             Failed Attempts
                         </a>
                     </div>
@@ -34,14 +34,14 @@
                             <input type="hidden" name="tab" value="{{ $tab }}">
                             <div class="relative w-full sm:w-[260px]">
                                 <i data-lucide="search" class="pointer-events-none absolute left-3.5 top-3 h-4 w-4 text-slate-400"></i>
-                                <input type="text" name="search" value="{{ $search }}" placeholder="Search user or IP..." class="h-10 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-10 text-xs font-semibold text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100">
+                                <input type="text" name="search" value="{{ $search }}" placeholder="Search user or IP..." class="h-10 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-10 text-xs font-semibold text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-rose-400 focus:ring-4 focus:ring-rose-100">
                                 @if(filled($search))
                                     <a href="{{ route('admin.security-workspace.login-activity', ['tab' => $tab]) }}" class="absolute right-3 top-3 text-slate-400 hover:text-slate-600 transition" title="Clear search">
                                         <i data-lucide="x" class="h-4 w-4"></i>
                                     </a>
                                 @endif
                             </div>
-                            <button type="submit" class="inline-flex h-10 items-center justify-center rounded-xl bg-slate-900 px-4 text-xs font-bold text-white transition hover:bg-slate-800 cursor-pointer">
+                            <button type="submit" class="inline-flex h-10 items-center justify-center rounded-xl bg-rose-600 px-4 text-xs font-bold text-white transition hover:bg-rose-700 cursor-pointer">
                                 Search
                             </button>
                         </form>

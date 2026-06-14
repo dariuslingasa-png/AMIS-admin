@@ -30,16 +30,16 @@
 
                     <div>
                         <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-500">New Password</label>
-                        <input name="password" type="password" required placeholder="Minimum 8 characters" class="w-full rounded-xl border border-slate-200 bg-white p-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100">
+                        <input name="password" type="password" required placeholder="Minimum 8 characters" class="w-full rounded-xl border border-slate-200 bg-white p-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-fuchsia-400 focus:ring-4 focus:ring-fuchsia-100">
                     </div>
 
                     <div>
                         <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-500">Confirm New Password</label>
-                        <input name="password_confirmation" type="password" required placeholder="Retype password" class="w-full rounded-xl border border-slate-200 bg-white p-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100">
+                        <input name="password_confirmation" type="password" required placeholder="Retype password" class="w-full rounded-xl border border-slate-200 bg-white p-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-fuchsia-400 focus:ring-4 focus:ring-fuchsia-100">
                     </div>
 
                     <div class="pt-2">
-                        <button type="submit" class="w-full rounded-xl bg-indigo-600 px-4 py-3 text-sm font-black uppercase tracking-wider text-white shadow-lg shadow-indigo-600/20 transition hover:bg-indigo-700 cursor-pointer" onclick="return confirm('Confirm credential override for {{ addslashes($user->name) }}?')">
+                        <button type="submit" class="w-full rounded-xl bg-fuchsia-600 px-4 py-3 text-sm font-black uppercase tracking-wider text-white shadow-lg shadow-fuchsia-600/20 transition hover:bg-fuchsia-700 cursor-pointer" onclick="return confirm('Confirm credential override for {{ addslashes($user->name) }}?')">
                             Reset Password
                         </button>
                     </div>

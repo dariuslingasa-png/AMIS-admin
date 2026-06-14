@@ -69,18 +69,18 @@
                             @endif
                             <div class="relative w-full sm:w-[260px]">
                                 <i data-lucide="search" class="pointer-events-none absolute left-3.5 top-3 h-4 w-4 text-slate-400"></i>
-                                <input type="text" name="search" value="{{ $search }}" placeholder="Search user directory..." class="h-10 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-10 text-xs font-semibold text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100">
+                                <input type="text" name="search" value="{{ $search }}" placeholder="Search user directory..." class="h-10 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-10 text-xs font-semibold text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-fuchsia-400 focus:ring-4 focus:ring-fuchsia-100">
                                 @if(filled($search))
                                     <a href="{{ route('admin.administration.users.index', request()->only('status')) }}" class="absolute right-3 top-3 text-slate-400 hover:text-slate-600 transition" title="Clear search">
                                         <i data-lucide="x" class="h-4 w-4"></i>
                                     </a>
                                 @endif
                             </div>
-                            <button type="submit" class="inline-flex h-10 items-center justify-center rounded-xl bg-slate-900 px-4 text-xs font-bold text-white transition hover:bg-slate-800 cursor-pointer">
+                            <button type="submit" class="inline-flex h-10 items-center justify-center rounded-xl bg-fuchsia-600 px-4 text-xs font-bold text-white transition hover:bg-fuchsia-700 cursor-pointer">
                                 Search
                             </button>
                         </form>
-                        <a href="{{ route('admin.administration.users.create') }}" class="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-indigo-600 px-4 text-xs font-bold text-white shadow-sm transition hover:bg-indigo-700">
+                        <a href="{{ route('admin.administration.users.create') }}" class="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-fuchsia-600 px-4 text-xs font-bold text-white shadow-sm transition hover:bg-fuchsia-700">
                             <i data-lucide="plus" class="h-4 w-4"></i>
                             Create User
                         </a>
@@ -120,7 +120,7 @@
                                 <td class="px-5 py-4">
                                     <div class="flex flex-wrap gap-1.5">
                                         @forelse($user->roles as $role)
-                                            <span class="inline-flex rounded-full bg-slate-900 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-white">
+                                            <span class="inline-flex rounded-full bg-fuchsia-600 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-white">
                                                 {{ $role->name }}
                                             </span>
                                         @empty

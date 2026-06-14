@@ -49,8 +49,8 @@
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            <x-dashboard.module-card :href="route('admin.applications.dashboard')" icon="clipboard-check" name="Applications" owner="Registrar Office" summary="Enrollment, review, requirements, approvals ({{ $totalApplications }} applied)" accent="violet" shape="soft" />
             <x-dashboard.module-card :href="route('admin.students.dashboard')" icon="users" name="Students" owner="Records Office" summary="Dashboard, records, profiles, history, documents" accent="emerald" shape="arch" />
+            <x-dashboard.module-card :href="route('admin.applications.dashboard')" icon="clipboard-check" name="Applications" owner="Registrar Office" summary="Enrollment, review, requirements, approvals ({{ $totalApplications }} applied)" accent="violet" shape="soft" />
             <x-dashboard.module-card :href="route('admin.academic.dashboard')" icon="book-open-check" name="Academic" owner="Academic Office" summary="Subjects, curriculum, sections, schedules" accent="sky" shape="soft" />
             <x-dashboard.module-card :href="route('admin.ebook.index')" icon="book-open" name="eBook Library" owner="LMS" summary="Manage digital textbooks, uploads, grade assignment, and public catalog access" accent="teal" shape="soft" />
             <x-dashboard.module-card icon="calendar-check" name="Attendance" owner="Academic Office" summary="QR, manual attendance, reports" accent="cyan" shape="circle" status="Coming Soon" disabled />

@@ -22,12 +22,12 @@
                 
                 <div>
                     <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-500">Full Name</label>
-                    <input name="name" value="{{ old('name') }}" required placeholder="e.g. John Doe" class="w-full rounded-xl border border-slate-200 bg-white p-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100">
+                    <input name="name" value="{{ old('name') }}" required placeholder="e.g. John Doe" class="w-full rounded-xl border border-slate-200 bg-white p-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-fuchsia-400 focus:ring-4 focus:ring-fuchsia-100">
                 </div>
 
                 <div>
                     <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-500">Email Address</label>
-                    <input name="email" value="{{ old('email') }}" type="email" required placeholder="email@domain.com" class="w-full rounded-xl border border-slate-200 bg-white p-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100">
+                    <input name="email" value="{{ old('email') }}" type="email" required placeholder="email@domain.com" class="w-full rounded-xl border border-slate-200 bg-white p-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-fuchsia-400 focus:ring-4 focus:ring-fuchsia-100">
                 </div>
 
                 <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
@@ -39,8 +39,8 @@
                             @if ($role->slug === 'super_admin' && !auth()->user()->hasRole('super_admin'))
                                 @continue
                             @endif
-                            <label class="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 bg-white p-3 transition hover:border-indigo-200 hover:bg-indigo-50/40">
-                                <input type="radio" name="role_id" value="{{ $role->id }}" @checked(old('role_id') == $role->id || (old('role_id') === null && $role->slug === 'staff')) class="mt-1 border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                            <label class="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 bg-white p-3 transition hover:border-fuchsia-200 hover:bg-fuchsia-50/40">
+                                <input type="radio" name="role_id" value="{{ $role->id }}" @checked(old('role_id') == $role->id || (old('role_id') === null && $role->slug === 'staff')) class="mt-1 border-slate-300 text-fuchsia-600 focus:ring-fuchsia-500">
                                 <span>
                                     <span class="block text-xs font-black uppercase tracking-wider text-slate-900 flex items-center gap-1.5">
                                         {{ $role->name }}
@@ -56,16 +56,16 @@
                 <div class="grid gap-4 sm:grid-cols-2">
                     <div>
                         <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-500">Password</label>
-                        <input name="password" type="password" required placeholder="Minimum 8 characters" class="w-full rounded-xl border border-slate-200 bg-white p-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100">
+                        <input name="password" type="password" required placeholder="Minimum 8 characters" class="w-full rounded-xl border border-slate-200 bg-white p-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-fuchsia-400 focus:ring-4 focus:ring-fuchsia-100">
                     </div>
                     <div>
                         <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-500">Confirm Password</label>
-                        <input name="password_confirmation" type="password" required placeholder="Retype password" class="w-full rounded-xl border border-slate-200 bg-white p-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100">
+                        <input name="password_confirmation" type="password" required placeholder="Retype password" class="w-full rounded-xl border border-slate-200 bg-white p-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-fuchsia-400 focus:ring-4 focus:ring-fuchsia-100">
                     </div>
                 </div>
 
                 <div class="pt-2">
-                    <button class="w-full rounded-xl bg-indigo-600 px-4 py-3 text-sm font-black uppercase tracking-wider text-white shadow-lg shadow-indigo-600/20 transition hover:bg-indigo-700 cursor-pointer">
+                    <button class="w-full rounded-xl bg-fuchsia-600 px-4 py-3 text-sm font-black uppercase tracking-wider text-white shadow-lg shadow-fuchsia-600/20 transition hover:bg-fuchsia-700 cursor-pointer">
                         Create Account
                     </button>
                 </div>
