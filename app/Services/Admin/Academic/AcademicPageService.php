@@ -58,7 +58,15 @@ class AcademicPageService
             'subjects' => $this->academic->subjects(),
             'sections' => $sections,
             'schoolYears' => $this->schoolYearRows($sections),
-            'events' => [],
+            'events' => [
+                [ 'title' => 'First Day of Classes', 'date' => '2026-06-15', 'type' => 'Academic', 'desc' => 'Opening ceremony and orientation for new students.' ],
+                [ 'title' => 'PTA General Assembly', 'date' => '2026-06-18', 'type' => 'Co-curricular', 'desc' => 'General meeting for parents and teachers.' ],
+                [ 'title' => 'Qur\'an Memorization Competition', 'date' => '2026-06-25', 'type' => 'Co-curricular', 'desc' => 'Annual school-wide ISAL Qur\'an recital.' ],
+                [ 'title' => 'Eid al-Adha Celebration', 'date' => '2026-07-10', 'type' => 'Holiday', 'desc' => 'Public holiday observation.' ],
+                [ 'title' => 'Midterm Examination Week', 'date' => '2026-07-15', 'type' => 'Exam', 'desc' => 'First semester midterm exam series.' ],
+                [ 'title' => 'Islamic Hijri New Year', 'date' => '2026-08-05', 'type' => 'Holiday', 'desc' => 'Observation of Muharram 1st.' ],
+                [ 'title' => 'Buwan ng Wika Cultural Day', 'date' => '2026-08-20', 'type' => 'Co-curricular', 'desc' => 'Filipino language and cultural presentations.' ]
+            ],
         ];
     }
 
