@@ -279,6 +279,14 @@ class AdminStudentController extends Controller
     {
         $section->load(['students.student.applicant']);
 
+        $sortedStudents = $section->students->sortBy(function ($studentSection) {
+            $applicant = $studentSection->student?->applicant;
+            $lastName = strtoupper(trim($applicant?->last_name ?? ''));
+            $firstName = strtoupper(trim($applicant?->first_name ?? ''));
+            return $lastName . ' ' . $firstName;
+        });
+        $section->setRelation('students', $sortedStudents);
+
         $isF2f = str_contains(strtolower((string) $section->learning_mode), 'face') ||
                  str_contains(strtolower((string) $section->learning_mode), 'f2f') ||
                  strtoupper((string) $section->shift) === 'F2F';
@@ -303,6 +311,14 @@ class AdminStudentController extends Controller
             ->where('grade_level', $grade)
             ->get()
             ->map(function ($section) {
+                $sortedStudents = $section->students->sortBy(function ($studentSection) {
+                    $applicant = $studentSection->student?->applicant;
+                    $lastName = strtoupper(trim($applicant?->last_name ?? ''));
+                    $firstName = strtoupper(trim($applicant?->first_name ?? ''));
+                    return $lastName . ' ' . $firstName;
+                });
+                $section->setRelation('students', $sortedStudents);
+
                 $isF2f = str_contains(strtolower((string) $section->learning_mode), 'face') ||
                          str_contains(strtolower((string) $section->learning_mode), 'f2f') ||
                          strtoupper((string) $section->shift) === 'F2F';
@@ -781,6 +797,14 @@ class AdminStudentController extends Controller
             ->withCount('students')
             ->get()
             ->map(function ($section) {
+                $sortedStudents = $section->students->sortBy(function ($studentSection) {
+                    $applicant = $studentSection->student?->applicant;
+                    $lastName = strtoupper(trim($applicant?->last_name ?? ''));
+                    $firstName = strtoupper(trim($applicant?->first_name ?? ''));
+                    return $lastName . ' ' . $firstName;
+                });
+                $section->setRelation('students', $sortedStudents);
+
                 $isF2f = str_contains(strtolower((string) $section->learning_mode), 'face') ||
                          str_contains(strtolower((string) $section->learning_mode), 'f2f') ||
                          strtoupper((string) $section->shift) === 'F2F';
