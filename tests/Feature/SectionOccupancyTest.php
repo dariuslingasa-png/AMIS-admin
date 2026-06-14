@@ -104,4 +104,70 @@ class SectionOccupancyTest extends TestCase
         $response->assertSeeText('ABUBAKR IBN AFFAN');
         $response->assertSeeText('STU20260001');
     }
+
+    /** @test */
+    public function guests_and_non_admins_cannot_access_grade_roster_print()
+    {
+        $response = $this->get(route('admin.students.grade-roster-print', ['grade' => 'Grade 1']));
+        $response->assertRedirect(route('admin.login'));
+
+        $nonAdmin = User::factory()->create([
+            'role' => 'student',
+            'account_status' => 'verified',
+        ]);
+
+        $response = $this->actingAs($nonAdmin)->get(route('admin.students.grade-roster-print', ['grade' => 'Grade 1']));
+        $response->assertStatus(403);
+    }
+
+    /** @test */
+    public function admins_can_print_all_in_one_grade_roster()
+    {
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'account_status' => 'verified',
+        ]);
+
+        $f2fSection = Section::create([
+            'name' => 'A',
+            'grade_level' => 'Grade 1',
+            'learning_mode' => 'face-to-face',
+            'shift' => '1st Shift',
+            'gender' => 'male',
+        ]);
+
+        $parent = User::factory()->create(['role' => 'applicant']);
+        $applicant = EnrollmentApplicant::create([
+            'user_id' => $parent->id,
+            'first_name' => 'Abubakr',
+            'last_name' => 'Ibn Affan',
+            'student_type' => 'New',
+            'grade_level' => 'Grade 1',
+            'school_year' => '2026-2027',
+            'status' => 'approved',
+            'learning_mode' => 'face-to-face',
+        ]);
+
+        $studentUser = User::factory()->create(['role' => 'student']);
+        $student = Student::create([
+            'user_id' => $studentUser->id,
+            'enrollment_applicant_id' => $applicant->id,
+            'student_number' => 'STU20260001',
+            'school_email' => 'abubakr@amis.edu.ph',
+            'grade_level' => 'Grade 1',
+            'school_year' => '2026-2027',
+        ]);
+
+        StudentSection::create([
+            'student_id' => $student->id,
+            'section_id' => $f2fSection->id,
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('admin.students.grade-roster-print', ['grade' => 'Grade 1']));
+
+        $response->assertOk();
+        $response->assertSeeText('AMIS Official Grade Roster - Grade 1');
+        $response->assertSeeText('IBN AFFAN, ABUBAKR');
+        $response->assertSeeText('STU20260001');
+    }
 }

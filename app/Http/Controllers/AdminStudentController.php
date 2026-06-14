@@ -295,6 +295,37 @@ class AdminStudentController extends Controller
         ]);
     }
 
+    public function gradeRosterPrint(Request $request, $grade)
+    {
+        $grade = urldecode($grade);
+
+        $sections = \App\Models\Section::with(['students.student.applicant', 'activeAdvisory'])
+            ->where('grade_level', $grade)
+            ->get()
+            ->map(function ($section) {
+                $isF2f = str_contains(strtolower((string) $section->learning_mode), 'face') ||
+                         str_contains(strtolower((string) $section->learning_mode), 'f2f') ||
+                         strtoupper((string) $section->shift) === 'F2F';
+                $section->is_f2f = $isF2f;
+                $section->capacity_limit = $isF2f ? 30 : 45;
+                $section->occupied = $section->students->count();
+                $section->remaining = max(0, $section->capacity_limit - $section->occupied);
+                $section->fill_rate = $section->capacity_limit > 0 ? min(100, round(($section->occupied / $section->capacity_limit) * 100)) : 0;
+                
+                $advisor = $section->grade_advisor;
+                $section->advisor_name = $advisor ? ($advisor->teacher_name ?? $advisor->teacher?->name ?? 'No Advisor') : 'No Advisor';
+                $section->advisor_email = $advisor ? ($advisor->teacher_email ?? $advisor->teacher?->email ?? null) : null;
+                
+                return $section;
+            });
+
+        if ($sections->isEmpty()) {
+            abort(404, 'No sections found for this grade level.');
+        }
+
+        return view('admin.students.grade-roster-print', compact('sections', 'grade'));
+    }
+
     public function history(Request $request)
     {
         $query = Student::with(['applicant.payment', 'studentSection.section'])->latest();

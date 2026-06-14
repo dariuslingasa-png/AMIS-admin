@@ -143,10 +143,13 @@
                                     @endif
                                 </div>
                             </div>
-                            <div class="text-right">
+                            <div class="text-right flex items-center gap-2">
                                 <span class="inline-flex rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-wider {{ $gTheme['bg'] }}">
                                     {{ $gradeOccupied }} / {{ $gradeCapacity }} Seats Enrolled
                                 </span>
+                                <a href="{{ route('admin.students.grade-roster-print', $gradeLevel) }}" target="_blank" class="h-7 w-7 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 flex items-center justify-center transition active:scale-[0.95]" title="Print Grade PDF (All Sections)">
+                                    <i data-lucide="printer" class="h-3.5 w-3.5"></i>
+                                </a>
                             </div>
                         </div>
 
