@@ -376,7 +376,8 @@ class AdminPaymentController extends Controller
             }
         });
 
-        AdminAuditLog::record('payment_approved', true, 'Payment proof approved.', [
+        $applicantName = $payment->applicant?->full_name ?: 'Applicant';
+        AdminAuditLog::record('payment_approved', true, "Payment proof approved for {$applicantName}.", [
             'payment_id' => $payment->id,
             'applicant_id' => $payment->enrollment_applicant_id,
             'amount' => $amount,
@@ -454,7 +455,8 @@ class AdminPaymentController extends Controller
             ]);
         }
 
-        AdminAuditLog::record('payment_rejected', true, 'Payment proof rejected.', [
+        $applicantName = $payment->applicant?->full_name ?: 'Applicant';
+        AdminAuditLog::record('payment_rejected', true, "Payment proof rejected for {$applicantName}.", [
             'payment_id' => $payment->id,
             'applicant_id' => $payment->enrollment_applicant_id,
             'remarks' => $request->remarks,

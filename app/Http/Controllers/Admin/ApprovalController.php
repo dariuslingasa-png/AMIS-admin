@@ -26,7 +26,7 @@ class ApprovalController extends Controller
             }
 
             $message = $this->approvalService->approve($applicant);
-            AdminAuditLog::record('application_approved', true, 'Enrollment application approved.', [
+            AdminAuditLog::record('application_approved', true, "Enrollment application approved for {$applicant->full_name}.", [
                 'applicant_id' => $applicant->id,
             ]);
 
@@ -34,7 +34,7 @@ class ApprovalController extends Controller
         }
 
         $this->reviewService->updateStatus($request, $applicant);
-        AdminAuditLog::record('application_status_updated', true, 'Application review status updated.', [
+        AdminAuditLog::record('application_status_updated', true, "Application review status updated to '{$request->input('status')}' for {$applicant->full_name}.", [
             'applicant_id' => $applicant->id,
             'status' => $request->input('status'),
         ]);
@@ -47,7 +47,7 @@ class ApprovalController extends Controller
         $this->ensureApplicationReviewer();
 
         $message = $this->approvalService->approve($applicant);
-        AdminAuditLog::record('application_approved', true, 'Enrollment application approved.', [
+        AdminAuditLog::record('application_approved', true, "Enrollment application approved for {$applicant->full_name}.", [
             'applicant_id' => $applicant->id,
         ]);
 
@@ -89,7 +89,7 @@ class ApprovalController extends Controller
 
             try {
                 $msg = $this->approvalService->approve($child);
-                AdminAuditLog::record('application_approved', true, 'Enrollment application approved (family batch).', [
+                AdminAuditLog::record('application_approved', true, "Enrollment application approved (family batch): {$child->full_name}.", [
                     'applicant_id' => $child->id,
                 ]);
                 $messages[] = "{$child->full_name}: {$msg}";
@@ -126,7 +126,7 @@ class ApprovalController extends Controller
         $this->ensureApplicationReviewer();
 
         $message = $this->approvalService->resendOnboardingInbox($applicant);
-        AdminAuditLog::record('onboarding_email_resent', true, 'Enrollment onboarding inbox email resend requested.', [
+        AdminAuditLog::record('onboarding_email_resent', true, "Enrollment onboarding inbox email resend requested for {$applicant->full_name}.", [
             'applicant_id' => $applicant->id,
             'status' => $applicant->fresh()?->onboarding_email_status,
         ]);
@@ -149,7 +149,7 @@ class ApprovalController extends Controller
 
         $this->reviewService->verifySection($applicant, $validated['section'], $validated['action']);
 
-        AdminAuditLog::record('section_verified', true, "Section '{$validated['section']}' {$validated['action']}d.", [
+        AdminAuditLog::record('section_verified', true, "Section '{$validated['section']}' {$validated['action']}d for {$applicant->full_name}.", [
             'applicant_id' => $applicant->id,
             'section' => $validated['section'],
             'action' => $validated['action'],

@@ -91,7 +91,8 @@ class AdminFinanceController extends Controller
         $account->update(['monthly_tuition' => $monthlyAmount]);
         $account->monthlyBillings()->where('status', 'unpaid')->update(['amount_due' => $monthlyAmount]);
 
-        \App\Models\AdminAuditLog::record('fee_adjustment', true, 'Fee adjusted for student account.', [
+        $studentName = $account->student?->applicant?->full_name ?: ($account->applicant?->full_name ?: 'Student');
+        \App\Models\AdminAuditLog::record('fee_adjustment', true, "Fee adjusted for student account: {$studentName}.", [
             'account_id' => $account->id,
             'reason' => $validated['adjustment_reason'],
         ]);
@@ -262,7 +263,7 @@ class AdminFinanceController extends Controller
         try {
             \Illuminate\Support\Facades\Mail::html($html, fn ($m) => $m->to($parentEmail)->subject("AMIS — Payment Reminder for {$studentName}"));
 
-            \App\Models\AdminAuditLog::record('payment_reminder_sent', true, 'Payment reminder sent.', [
+            \App\Models\AdminAuditLog::record('payment_reminder_sent', true, "Payment reminder sent for {$studentName}.", [
                 'account_id' => $account->id,
                 'email' => $parentEmail,
             ]);

@@ -20,7 +20,7 @@ class RequirementController extends Controller
 
         if ($request->input('doc_key') === 'uploaded_documents') {
             $this->reviewService->updateUploadedDocumentsStatus($request, $applicant);
-            AdminAuditLog::record('documents_'.$request->input('status'), true, 'Uploaded documents status updated.', [
+            AdminAuditLog::record('documents_'.$request->input('status'), true, "Uploaded documents status updated to '{$request->input('status')}' for {$applicant->full_name}.", [
                 'applicant_id' => $applicant->id,
                 'doc_key' => 'uploaded_documents',
                 'status' => $request->input('status'),
@@ -30,7 +30,7 @@ class RequirementController extends Controller
         }
 
         $this->reviewService->updateDocumentStatus($request, $applicant);
-        AdminAuditLog::record('document_'.$request->input('status'), true, 'Document status updated.', [
+        AdminAuditLog::record('document_'.$request->input('status'), true, "Document '{$request->input('doc_key')}' status updated to '{$request->input('status')}' for {$applicant->full_name}.", [
             'applicant_id' => $applicant->id,
             'doc_key' => $request->input('doc_key'),
             'status' => $request->input('status'),
