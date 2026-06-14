@@ -34,9 +34,14 @@
         </section>
 
         <!-- Stats Grid -->
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-5">
-            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Official Students</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 lg:gap-5">
+            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm relative overflow-hidden">
+                <div class="flex items-center justify-between">
+                    <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Official Students</p>
+                    <div class="rounded-xl bg-emerald-50 p-1.5 text-emerald-600">
+                        <i data-lucide="users" class="h-4 w-4"></i>
+                    </div>
+                </div>
                 <div class="flex items-baseline gap-2 mt-1.5">
                     <span class="text-2xl font-black text-slate-900">{{ number_format($totalOfficial) }}</span>
                     <span class="text-xs font-bold text-emerald-600">Verified</span>
@@ -46,8 +51,13 @@
                 </div>
             </div>
 
-            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Total Enrolled</p>
+            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm relative overflow-hidden">
+                <div class="flex items-center justify-between">
+                    <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Total Enrolled</p>
+                    <div class="rounded-xl bg-blue-50 p-1.5 text-blue-600">
+                        <i data-lucide="graduation-cap" class="h-4 w-4"></i>
+                    </div>
+                </div>
                 <div class="flex items-baseline gap-2 mt-1.5">
                     <span class="text-2xl font-black text-slate-900">{{ number_format($totalOccupied) }}</span>
                     <span class="text-xs font-bold text-slate-500">/ {{ number_format($totalCapacity) }} Seats</span>
@@ -57,8 +67,13 @@
                 </div>
             </div>
             
-            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">F2F Occupancy</p>
+            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm relative overflow-hidden">
+                <div class="flex items-center justify-between">
+                    <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">F2F Occupancy</p>
+                    <div class="rounded-xl bg-sky-50 p-1.5 text-sky-600">
+                        <i data-lucide="school" class="h-4 w-4"></i>
+                    </div>
+                </div>
                 <div class="flex items-baseline gap-2 mt-1.5">
                     <span class="text-2xl font-black text-slate-900">{{ number_format($f2fOccupied) }}</span>
                     <span class="text-xs font-bold text-slate-500">/ {{ number_format($f2fCapacity) }} Seats</span>
@@ -68,8 +83,13 @@
                 </div>
             </div>
 
-            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Flexible Occupancy</p>
+            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm relative overflow-hidden">
+                <div class="flex items-center justify-between">
+                    <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Flexible Occupancy</p>
+                    <div class="rounded-xl bg-amber-50 p-1.5 text-amber-600">
+                        <i data-lucide="laptop" class="h-4 w-4"></i>
+                    </div>
+                </div>
                 <div class="flex items-baseline gap-2 mt-1.5">
                     <span class="text-2xl font-black text-slate-900">{{ number_format($flexOccupied) }}</span>
                     <span class="text-xs font-bold text-slate-500">/ {{ number_format($flexCapacity) }} Seats</span>
@@ -79,8 +99,13 @@
                 </div>
             </div>
 
-            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Total Sections</p>
+            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm relative overflow-hidden">
+                <div class="flex items-center justify-between">
+                    <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Total Sections</p>
+                    <div class="rounded-xl bg-indigo-50 p-1.5 text-indigo-600">
+                        <i data-lucide="grid" class="h-4 w-4"></i>
+                    </div>
+                </div>
                 <div class="flex items-baseline gap-2 mt-1.5">
                     <span class="text-2xl font-black text-slate-900">{{ $sections->count() }}</span>
                     <span class="text-xs font-bold text-emerald-600">Active</span>
@@ -180,7 +205,7 @@
                                         $secThemeMap = [
                                             'red' => ['bg' => 'bg-rose-50 text-rose-700', 'fill' => 'bg-rose-500', 'text' => 'text-rose-600'],
                                             'amber' => ['bg' => 'bg-amber-50 text-amber-700', 'fill' => 'bg-amber-500', 'text' => 'text-amber-600'],
-                                            'emerald' => ['bg' => 'bg-emerald-50 text-emerald-700', 'fill' => 'bg-emerald-600', 'text' => 'text-emerald-600'],
+                                            'emerald' => ['bg' => 'bg-emerald-50 text-emerald-700', 'fill' => $section->gender === 'male' ? 'bg-blue-600' : 'bg-pink-500', 'text' => 'text-emerald-600'],
                                         ];
                                         $sTheme = $secThemeMap[$secStatusColor];
                                         
