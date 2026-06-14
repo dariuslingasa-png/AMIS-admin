@@ -1,10 +1,10 @@
 <style>
     .timetable-spreadsheet {
         width: 100%;
-        border-collapse: separate;
-        border-spacing: 0;
+        border-collapse: collapse;
         font-family: 'Inter', sans-serif;
         font-size: 11px;
+        border: 1px solid #e5e7eb;
     }
     .timetable-spreadsheet th {
         position: sticky;
@@ -16,16 +16,13 @@
         text-transform: uppercase;
         letter-spacing: 0.5px;
         padding: 12px 16px;
-        border-bottom: 2px solid #e2e8f0;
+        border-bottom: 2px solid #e5e7eb;
         border-right: 1px solid #e5e7eb;
         z-index: 10;
         text-align: center;
     }
-    .timetable-spreadsheet th:last-child {
-        border-right: none;
-    }
     .timetable-spreadsheet td {
-        padding: 10px;
+        padding: 0;
         border-bottom: 1px solid #e5e7eb;
         border-right: 1px solid #e5e7eb;
         vertical-align: middle;
@@ -42,7 +39,7 @@
         letter-spacing: 1px;
         color: #0f172a;
         padding: 16px;
-        border-bottom: 2px solid #e2e8f0;
+        border-bottom: 2px solid #e5e7eb;
         text-align: left;
         border-right: none;
     }
@@ -52,6 +49,8 @@
         color: #1e293b;
         text-align: center;
         background-color: #f8fafc;
+        padding: 12px;
+        border-right: 1px solid #e5e7eb;
     }
     .timetable-spreadsheet .col-minutes {
         width: 80px;
@@ -59,44 +58,19 @@
         color: #64748b;
         text-align: center;
         background-color: #f8fafc;
+        padding: 12px;
+        border-right: 1px solid #e5e7eb;
     }
-    .timetable-card {
-        background-color: #f8fafc;
-        border: 1px solid #f1f5f9;
-        border-left: 4px solid #2563eb; /* Accent blue */
-        border-radius: 8px;
-        padding: 10px 14px;
-        text-align: left;
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        position: relative;
-        min-height: 55px;
+    .timetable-spreadsheet .cell-class {
+        background-color: #f8fafc !important;
+        border-left: 4px solid #2563eb !important; /* Notion/Linear blue accent */
     }
-    .timetable-card:hover {
-        background-color: #f1f5f9;
-        border-left-color: #1d4ed8;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
-    }
-    .timetable-card-event {
-        background-color: #f8fafc;
-        border: 1px solid #f1f5f9;
-        border-left: 4px solid #94a3b8; /* Slate neutral accent for events */
-        border-radius: 8px;
-        padding: 10px 14px;
-        text-align: left;
-        transition: all 0.2s ease;
-        position: relative;
-        min-height: 55px;
-    }
-    .timetable-card-event:hover {
-        background-color: #f1f5f9;
-        border-left-color: #64748b;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+    .timetable-spreadsheet .cell-event {
+        background-color: #f8fafc !important;
+        border-left: 4px solid #94a3b8 !important; /* Slate neutral accent for events */
     }
     .timetable-spreadsheet .cell-empty {
         background-color: #ffffff !important;
-        border: 1px solid #f1f5f9;
     }
 </style>
 
@@ -351,22 +325,19 @@
                                                         'destroy_url' => route('admin.academic.schedules.destroy', $cell['entry']['id']),
                                                     ]));
                                                     $subjectLower = strtolower($cell['entry']['subject_name']);
-                                                    // Classify events vs classes
                                                     $isEvent = str_contains($subjectLower, 'assembly') || str_contains($subjectLower, 'recess') || str_contains($subjectLower, 'departure');
-                                                    $cardClass = $isEvent ? 'timetable-card-event' : 'timetable-card';
+                                                    $cellClass = $isEvent ? 'cell-event' : 'cell-class';
                                                 @endphp
-                                                <td rowspan="{{ $cell['span'] }}" colspan="{{ $cell['colspan'] }}">
-                                                    <div class="{{ $cardClass }} group">
-                                                        <div class="flex flex-col justify-center">
-                                                            <span class="block font-bold text-[12px] text-slate-800 leading-tight">{{ $cell['entry']['subject_name'] }}</span>
-                                                            @if($cell['entry']['teacher_name'] && $cell['entry']['teacher_name'] !== 'Teacher pending')
-                                                                <span class="block text-[10px] font-medium text-slate-500 mt-1.5 flex items-center gap-1.5">
-                                                                    <i data-lucide="user" class="h-3 w-3 opacity-60"></i>
-                                                                    {{ $cell['entry']['teacher_name'] }}
-                                                                </span>
-                                                            @endif
-                                                        </div>
-                                                        <div class="absolute top-1.5 right-1.5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                                                <td rowspan="{{ $cell['span'] }}" colspan="{{ $cell['colspan'] }}" class="{{ $cellClass }}">
+                                                    <div class="relative w-full h-full p-4 flex flex-col justify-center text-left group min-h-[55px] hover:bg-slate-100/40 transition-colors duration-150">
+                                                        <span class="block font-bold text-[12px] text-slate-800 leading-tight">{{ $cell['entry']['subject_name'] }}</span>
+                                                        @if($cell['entry']['teacher_name'] && $cell['entry']['teacher_name'] !== 'Teacher pending')
+                                                            <span class="block text-[10px] font-medium text-slate-500 mt-1.5 flex items-center gap-1.5">
+                                                                <i data-lucide="user" class="h-3 w-3 opacity-60"></i>
+                                                                {{ $cell['entry']['teacher_name'] }}
+                                                            </span>
+                                                        @endif
+                                                        <div class="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
                                                             <button type="button" data-entry="{{ $payload }}" @click="openEdit(JSON.parse(atob($el.dataset.entry)))" class="inline-flex h-5 w-5 items-center justify-center rounded-md bg-white text-slate-700 border border-slate-200 hover:text-blue-600 hover:bg-blue-50 shadow-3xs cursor-pointer transition" title="Edit">
                                                                 <i data-lucide="pencil" class="h-2.5 w-2.5"></i>
                                                             </button>
@@ -378,7 +349,7 @@
                                                 </td>
                                             @endif
                                         @else
-                                            <td class="cell-empty"></td>
+                                            <td class="cell-empty bg-white"></td>
                                         @endif
                                     @endforeach
                                 </tr>
