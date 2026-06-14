@@ -384,6 +384,32 @@ class MicrosoftGraphService
         }
     }
 
+    public function getUserPhoto(string $upnOrId): ?array
+    {
+        try {
+            $resolvedId = $this->resolveUserId($upnOrId);
+            
+            $metaResponse = $this->graph()->get("/users/{$resolvedId}/photo");
+            if (!$metaResponse->successful()) {
+                return null;
+            }
+            $contentType = $metaResponse->json('@odata.mediaContentType') ?? 'image/jpeg';
+            
+            $photoResponse = $this->graph()->get("/users/{$resolvedId}/photo/\$value");
+            if (!$photoResponse->successful()) {
+                return null;
+            }
+            
+            return [
+                'bytes' => $photoResponse->body(),
+                'content_type' => $contentType
+            ];
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error("getUserPhoto failed for {$upnOrId}: " . $e->getMessage());
+            return null;
+        }
+    }
+
     public function uploadUserPhoto(string $upnOrId, string $photoBytes, string $contentType): void
     {
         $resolvedId = $this->resolveUserId($upnOrId);
