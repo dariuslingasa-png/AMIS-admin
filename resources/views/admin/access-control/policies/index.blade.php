@@ -1,7 +1,7 @@
 <x-admin-layout title="Access Policies">
     <div class="space-y-6">
         <!-- Banner -->
-        <section class="overflow-hidden rounded-3xl border border-slate-200 bg-slate-950 p-6 text-white shadow-xl shadow-slate-900/10">
+        <section class="overflow-hidden rounded-3xl border border-indigo-700/30 bg-gradient-to-br from-indigo-900 via-indigo-700 to-blue-600 p-6 text-white shadow-xl shadow-slate-900/10">
             <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                 <div>
                     <span class="inline-flex rounded-full bg-white/10 px-3 py-1 text-xs font-black uppercase tracking-[0.22em] text-slate-200">Access Control</span>
@@ -16,7 +16,7 @@
         <div class="grid gap-6 md:grid-cols-2">
             <!-- Hierarchy levels card -->
             <x-card title="Hierarchy Rules" subtitle="Administrative role authority levels">
-                <div class="space-y-4">
+                <div class="p-6 space-y-4">
                     <p class="text-xs font-semibold text-slate-500 leading-5">
                         The AMIS Portal utilizes a rank-based hierarchy system. Accounts with higher ranks can manage accounts and roles of equal or lower ranking, but cannot modify accounts with superior hierarchy levels.
                     </p>
@@ -56,7 +56,7 @@
 
             <!-- Super Admin protection card -->
             <x-card title="Super Admin Safeguards" subtitle="Built-in safeguards against privilege escalations">
-                <div class="space-y-4">
+                <div class="p-6 space-y-4">
                     <div class="rounded-xl border border-amber-200 bg-amber-50/50 p-4 text-xs font-bold text-amber-800 leading-5">
                         <div class="flex items-center gap-2 mb-2">
                             <i data-lucide="shield-alert" class="h-4 w-4"></i>

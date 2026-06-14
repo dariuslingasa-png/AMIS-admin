@@ -1,7 +1,7 @@
 <x-admin-layout title="API Integrations">
     <div class="space-y-6">
         <!-- Banner -->
-        <section class="overflow-hidden rounded-3xl border border-slate-200 bg-slate-950 p-6 text-white shadow-xl shadow-slate-900/10">
+        <section class="overflow-hidden rounded-3xl border border-slate-700/30 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 p-6 text-white shadow-xl shadow-slate-900/10">
             <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                 <div>
                     <span class="inline-flex rounded-full bg-white/10 px-3 py-1 text-xs font-black uppercase tracking-[0.22em] text-slate-200">System Management</span>
@@ -17,7 +17,7 @@
         <div class="grid gap-6 md:grid-cols-2">
             <!-- Microsoft Entra ID -->
             <x-card title="Microsoft Entra ID" subtitle="Single Sign-on identity configuration">
-                <div class="space-y-4">
+                <div class="p-6 space-y-4">
                     <p class="text-xs font-semibold text-slate-500 leading-normal">
                         {{ $integrations['microsoft_entra']['description'] }}
                     </p>
@@ -48,7 +48,7 @@
 
             <!-- Microsoft Graph API -->
             <x-card title="Microsoft Graph API" subtitle="Active directory and classroom provisioning">
-                <div class="space-y-4">
+                <div class="p-6 space-y-4">
                     <p class="text-xs font-semibold text-slate-500 leading-normal">
                         {{ $integrations['microsoft_graph']['description'] }}
                     </p>
@@ -73,7 +73,7 @@
 
             <!-- Google Drive API -->
             <x-card title="Google Drive Cloud Backups" subtitle="Stateless rclone credentials settings">
-                <div class="space-y-4">
+                <div class="p-6 space-y-4">
                     <p class="text-xs font-semibold text-slate-500 leading-normal">
                         {{ $integrations['google_drive']['description'] }}
                     </p>
@@ -96,7 +96,7 @@
 
             <!-- Email SMTP gateway -->
             <x-card title="SMTP Mail Gateway" subtitle="System notifications and alerts transport">
-                <div class="space-y-4">
+                <div class="p-6 space-y-4">
                     <p class="text-xs font-semibold text-slate-500 leading-normal">
                         {{ $integrations['email']['description'] }}
                     </p>

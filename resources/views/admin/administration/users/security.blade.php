@@ -24,7 +24,7 @@
         <div class="grid gap-6 lg:grid-cols-[380px_1fr]">
             <!-- Change Password Card -->
             <x-card title="Credentials Lock" subtitle="Manually reset user credentials">
-                <form method="POST" action="{{ route('admin.administration.users.security.update', $user) }}" class="space-y-4">
+                <form method="POST" action="{{ route('admin.administration.users.security.update', $user) }}" class="p-6 space-y-4">
                     @csrf
                     @method('PATCH')
 

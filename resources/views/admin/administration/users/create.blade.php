@@ -17,7 +17,7 @@
         @endif
 
         <x-card title="Account Identity" subtitle="Enter credentials and select user role">
-            <form method="POST" action="{{ route('admin.administration.users.store') }}" class="space-y-4">
+            <form method="POST" action="{{ route('admin.administration.users.store') }}" class="p-6 space-y-4">
                 @csrf
                 
                 <div>

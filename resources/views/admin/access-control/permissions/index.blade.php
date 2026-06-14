@@ -1,7 +1,7 @@
 <x-admin-layout title="Permissions Matrix">
     <div class="space-y-6">
         <!-- Banner -->
-        <section class="overflow-hidden rounded-3xl border border-slate-200 bg-slate-950 p-6 text-white shadow-xl shadow-slate-900/10">
+        <section class="overflow-hidden rounded-3xl border border-indigo-700/30 bg-gradient-to-br from-indigo-900 via-indigo-700 to-blue-600 p-6 text-white shadow-xl shadow-slate-900/10">
             <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                 <div>
                     <span class="inline-flex rounded-full bg-white/10 px-3 py-1 text-xs font-black uppercase tracking-[0.22em] text-slate-200">Access Control</span>

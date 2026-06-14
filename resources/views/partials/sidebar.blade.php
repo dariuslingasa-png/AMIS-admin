@@ -11,7 +11,7 @@
         ],
         [
             'active' => (request()->routeIs('admin.applications.*') || request()->routeIs('admin.applicants.*') || request()->routeIs('admin.enrollment.index') || request()->routeIs('admin.enrollment.masters-list')) && request('workspace') !== 'reports',
-            'icon' => 'clipboard-check', 'iconClass' => 'text-emerald-600', 'headerClass' => 'text-emerald-700', 'activeClass' => 'sidebar-link-active-emerald', 'title' => 'Applications',
+            'icon' => 'clipboard-check', 'iconClass' => 'text-violet-600', 'headerClass' => 'text-violet-700', 'activeClass' => 'sidebar-link-active-violet', 'title' => 'Applications',
             'links' => [
                 ['Dashboard', 'layout-dashboard', route('admin.applications.dashboard'), request()->routeIs('admin.applications.dashboard')],
                 ['Enrollment Applications', 'file-text', route('admin.applications.enrollment'), request()->routeIs('admin.applications.enrollment') || request()->routeIs('admin.applicants.index')],
@@ -23,7 +23,7 @@
         ],
         [
             'active' => request()->routeIs('admin.students.*'),
-            'icon' => 'users', 'iconClass' => 'text-violet-600', 'headerClass' => 'text-violet-700', 'activeClass' => 'sidebar-link-active-violet', 'title' => 'Students',
+            'icon' => 'users', 'iconClass' => 'text-emerald-600', 'headerClass' => 'text-emerald-700', 'activeClass' => 'sidebar-link-active-emerald', 'title' => 'Students',
             'links' => [
                 ['Dashboard', 'layout-dashboard', route('admin.students.dashboard'), request()->routeIs('admin.students.dashboard')],
                 ['Student Records', 'user-check', route('admin.students.index'), request()->routeIs('admin.students.index') || request()->routeIs('admin.students.show')],
@@ -47,7 +47,7 @@
         ],
         [
             'active' => request()->routeIs('admin.ebook.*'),
-            'icon' => 'book-open', 'iconClass' => 'text-emerald-600', 'headerClass' => 'text-emerald-700', 'activeClass' => 'sidebar-link-active-emerald', 'title' => 'eBook',
+            'icon' => 'book-open', 'iconClass' => 'text-teal-600', 'headerClass' => 'text-teal-700', 'activeClass' => 'sidebar-link-active-teal', 'title' => 'eBook',
             'links' => [
                 ['Library Dashboard', 'layout-dashboard', route('admin.ebook.index'), request()->routeIs('admin.ebook.index')],
                 ['Upload eBook', 'upload-cloud', route('admin.ebook.create'), request()->routeIs('admin.ebook.create')],
@@ -65,7 +65,7 @@
         ],
         [
             'active' => request()->routeIs('admin.enrollment.analytics'),
-            'icon' => 'chart-no-axes-combined', 'iconClass' => 'text-lime-600', 'headerClass' => 'text-lime-700', 'activeClass' => 'sidebar-link-active-lime', 'title' => 'Analytics',
+            'icon' => 'chart-no-axes-combined', 'iconClass' => 'text-orange-600', 'headerClass' => 'text-orange-700', 'activeClass' => 'sidebar-link-active-orange', 'title' => 'Analytics',
             'links' => [
                 ['Enrollment Analytics', 'chart-no-axes-combined', route('admin.enrollment.analytics'), true],
                 ['Performance Reports', 'activity', route('admin.enrollment.analytics'), false],
@@ -75,7 +75,7 @@
         ],
         [
             'active' => request()->routeIs('admin.enrollment.reports') || (request()->routeIs('admin.enrollment.masters-list') && request('workspace') === 'reports'),
-            'icon' => 'file-down', 'iconClass' => 'text-slate-600', 'headerClass' => 'text-slate-700', 'activeClass' => 'sidebar-link-active-slate', 'title' => 'Reports',
+            'icon' => 'file-down', 'iconClass' => 'text-pink-600', 'headerClass' => 'text-pink-700', 'activeClass' => 'sidebar-link-active-pink', 'title' => 'Reports',
             'links' => [
                 ['Enrollee Masters List', 'list', route('admin.enrollment.masters-list', ['workspace' => 'reports']), request()->routeIs('admin.enrollment.masters-list') && request('workspace') === 'reports'],
                 ['Export', 'download', route('admin.enrollment.reports'), request()->routeIs('admin.enrollment.reports')],
@@ -86,7 +86,7 @@
         ],
         [
             'active' => request()->routeIs('admin.administration.*'),
-            'icon' => 'users', 'iconClass' => 'text-violet-600', 'headerClass' => 'text-violet-700', 'activeClass' => 'sidebar-link-active-violet', 'title' => 'Administration',
+            'icon' => 'users', 'iconClass' => 'text-fuchsia-600', 'headerClass' => 'text-fuchsia-700', 'activeClass' => 'sidebar-link-active-fuchsia', 'title' => 'Administration',
             'links' => [
                 ['User Accounts', 'user-cog', route('admin.administration.users.index'), request()->routeIs('admin.administration.users.*')],
             ],

@@ -1,7 +1,7 @@
 <x-admin-layout title="System Health">
     <div class="space-y-6">
         <!-- Banner -->
-        <section class="overflow-hidden rounded-3xl border border-slate-200 bg-slate-950 p-6 text-white shadow-xl shadow-slate-900/10">
+        <section class="overflow-hidden rounded-3xl border border-slate-700/30 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 p-6 text-white shadow-xl shadow-slate-900/10">
             <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                 <div>
                     <span class="inline-flex rounded-full bg-white/10 px-3 py-1 text-xs font-black uppercase tracking-[0.22em] text-slate-200">System Management</span>
@@ -16,7 +16,7 @@
         <!-- Status Grid -->
         <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             @foreach ($healthStatus as $key => $status)
-                <div class="overflow-hidden rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div class="overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-black uppercase tracking-wider text-slate-400">Core Service Status</span>
                         @if ($status['connected'])

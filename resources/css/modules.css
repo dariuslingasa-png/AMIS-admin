@@ -161,6 +161,38 @@
     --module-surface: #fbfff2;
 }
 
+.module-accent-orange {
+    --module-bg: #fed7aa;
+    --module-bg-2: #fff7ed;
+    --module-fg: #c2410c;
+    --module-border: rgba(234, 88, 12, .28);
+    --module-surface: #fffbf7;
+}
+
+.module-accent-pink {
+    --module-bg: #fbcfe8;
+    --module-bg-2: #fdf2f8;
+    --module-fg: #be185d;
+    --module-border: rgba(219, 39, 119, .28);
+    --module-surface: #fdfafc;
+}
+
+.module-accent-fuchsia {
+    --module-bg: #f5d0fe;
+    --module-bg-2: #fdf4ff;
+    --module-fg: #a21caf;
+    --module-border: rgba(192, 38, 211, .28);
+    --module-surface: #fdfbfe;
+}
+
+.module-accent-slate {
+    --module-bg: #cbd5e1;
+    --module-bg-2: #f8fafc;
+    --module-fg: #334155;
+    --module-border: rgba(71, 85, 105, .28);
+    --module-surface: #fafbfc;
+}
+
 /* Premium Sidebar Custom Styling */
 .sidebar-section-container {
     display: flex;
@@ -281,6 +313,69 @@
 }
 .sidebar-link-active-slate i {
     color: #334155 !important;
+}
+
+.sidebar-link-active-orange {
+    background: #fff7ed !important;
+    color: #c2410c !important;
+    font-weight: 750;
+}
+.sidebar-link-active-orange i {
+    color: #c2410c !important;
+}
+
+.sidebar-link-active-pink {
+    background: #fdf2f8 !important;
+    color: #be185d !important;
+    font-weight: 750;
+}
+.sidebar-link-active-pink i {
+    color: #be185d !important;
+}
+
+.sidebar-link-active-fuchsia {
+    background: #fdf4ff !important;
+    color: #a21caf !important;
+    font-weight: 750;
+}
+.sidebar-link-active-fuchsia i {
+    color: #a21caf !important;
+}
+
+.sidebar-link-active-indigo {
+    background: #eef2ff !important;
+    color: #4338ca !important;
+    font-weight: 750;
+}
+.sidebar-link-active-indigo i {
+    color: #4338ca !important;
+}
+
+.sidebar-link-active-teal {
+    background: #f0fdfa !important;
+    color: #0f766e !important;
+    font-weight: 750;
+}
+.sidebar-link-active-teal i {
+    color: #0f766e !important;
+}
+
+.sidebar-link-active-rose {
+    background: #fff1f2 !important;
+    color: #be123c !important;
+    font-weight: 750;
+}
+.sidebar-link-active-rose i {
+    color: #be123c !important;
+}
+
+.sidebar-link-active-cyan {
+    background: #ecfeff !important;
+    color: #0e7490 !important;
+    font-weight: 750;
+}
+.sidebar-link-active-cyan i {
+    color: #0e7490 !important;
 }
 
 /* Premium Breadcrumbs Styling */

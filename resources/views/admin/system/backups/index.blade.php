@@ -1,7 +1,7 @@
 <x-admin-layout title="Backup Center">
     <div class="space-y-6">
         <!-- Banner -->
-        <section class="overflow-hidden rounded-3xl border border-slate-200 bg-slate-950 p-6 text-white shadow-xl shadow-slate-900/10">
+        <section class="overflow-hidden rounded-3xl border border-slate-700/30 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 p-6 text-white shadow-xl shadow-slate-900/10">
             <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                 <div>
                     <span class="inline-flex rounded-full bg-white/10 px-3 py-1 text-xs font-black uppercase tracking-[0.22em] text-slate-200">System Management</span>
@@ -118,7 +118,7 @@
 
                 <!-- Scheduling Card -->
                 <x-card title="Backup Scheduler" subtitle="Configure automated execution options">
-                    <form method="POST" action="{{ route('admin.system-management.backups.schedule') }}" class="space-y-4 p-2">
+                    <form method="POST" action="{{ route('admin.system-management.backups.schedule') }}" class="p-6 space-y-4">
                         @csrf
                         <div class="grid gap-4 sm:grid-cols-3">
                             <div>
@@ -183,7 +183,7 @@
                 </div>
 
                 <x-card title="System Database Info" subtitle="Primary connection metrics">
-                    <div class="space-y-3 text-xs font-semibold text-slate-500 p-1">
+                    <div class="p-6 space-y-3 text-xs font-semibold text-slate-500">
                         <div class="flex justify-between">
                             <span>Database Host:</span>
                             <span class="font-bold text-slate-800">{{ $dbHost }}</span>

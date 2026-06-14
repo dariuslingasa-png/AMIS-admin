@@ -31,27 +31,7 @@
                     Monitor admissions, payments, enrollment capacity, and student operations from one focused workspace for SY <span class="font-bold text-white bg-emerald-500/30 px-2.5 py-0.5 rounded-md">{{ $schoolYear ?? 'Current' }}</span>.
                 </p>
             </div>
-            <div class="flex items-center gap-3">
-                <a href="{{ route('admin.applications.review') }}" class="inline-flex items-center gap-2 bg-white hover:bg-emerald-50 active:bg-emerald-100 text-emerald-800 font-bold text-sm px-5 py-2.5 rounded-xl transition-all duration-150 shadow-sm hover:scale-[1.02] focus:ring-4 focus:ring-emerald-500/20">
-                    <i data-lucide="file-search" class="w-4 h-4"></i>
-                    Review Applications
-                </a>
-                <a href="{{ route('admin.payments.index') }}" class="inline-flex items-center gap-2 bg-amber-400 hover:bg-amber-300 active:bg-amber-500 text-amber-950 font-bold text-sm px-5 py-2.5 rounded-xl transition-all duration-150 shadow-sm hover:scale-[1.02] focus:ring-4 focus:ring-amber-500/20">
-                    <i data-lucide="credit-card" class="w-4 h-4"></i>
-                    Enrollment Payment Review
-                </a>
-                <a href="{{ route('admin.soa.index') }}" class="inline-flex items-center gap-2 bg-emerald-600/30 hover:bg-emerald-600/50 text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition-all duration-150 border border-emerald-500/30 hover:scale-[1.02] focus:ring-4 focus:ring-emerald-500/20">
-                    <i data-lucide="scroll-text" class="w-4 h-4"></i>
-                    SOA
-                </a>
-                {{-- Commented out for live production cleanup --}}
-                {{--
-                <a href="{{ route('admin.enrollment.reports') }}" class="inline-flex items-center gap-2 bg-emerald-600/30 hover:bg-emerald-600/50 text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition-all duration-150 border border-emerald-500/30 hover:scale-[1.02] focus:ring-4 focus:ring-emerald-500/20">
-                    <i data-lucide="download" class="w-4 h-4"></i>
-                    Export Reports
-                </a>
-                --}}
-            </div>
+
         </div>
     </div>
 
@@ -64,21 +44,21 @@
             </div>
             <div class="flex items-center gap-2">
                 <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">{{ $totalApplications }} Applications Applied</span>
-                <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">11 modules</span>
+                <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">14 modules</span>
             </div>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            <x-dashboard.module-card :href="route('admin.applications.dashboard')" icon="clipboard-check" name="Applications" owner="Registrar Office" summary="Enrollment, review, requirements, approvals ({{ $totalApplications }} applied)" accent="emerald" shape="soft" />
-            <x-dashboard.module-card :href="route('admin.students.dashboard')" icon="users" name="Students" owner="Records Office" summary="Dashboard, records, profiles, history, documents" accent="violet" shape="arch" />
+            <x-dashboard.module-card :href="route('admin.applications.dashboard')" icon="clipboard-check" name="Applications" owner="Registrar Office" summary="Enrollment, review, requirements, approvals ({{ $totalApplications }} applied)" accent="violet" shape="soft" />
+            <x-dashboard.module-card :href="route('admin.students.dashboard')" icon="users" name="Students" owner="Records Office" summary="Dashboard, records, profiles, history, documents" accent="emerald" shape="arch" />
             <x-dashboard.module-card :href="route('admin.academic.dashboard')" icon="book-open-check" name="Academic" owner="Academic Office" summary="Subjects, curriculum, sections, schedules" accent="sky" shape="soft" />
-            <x-dashboard.module-card :href="route('admin.ebook.index')" icon="book-open" name="eBook Library" owner="LMS" summary="Manage digital textbooks, uploads, grade assignment, and public catalog access" accent="emerald" shape="soft" />
-            <x-dashboard.module-card icon="calendar-check" name="Attendance" owner="Academic Office" summary="QR, manual attendance, reports" accent="teal" shape="circle" status="Coming Soon" disabled />
+            <x-dashboard.module-card :href="route('admin.ebook.index')" icon="book-open" name="eBook Library" owner="LMS" summary="Manage digital textbooks, uploads, grade assignment, and public catalog access" accent="teal" shape="soft" />
+            <x-dashboard.module-card icon="calendar-check" name="Attendance" owner="Academic Office" summary="QR, manual attendance, reports" accent="cyan" shape="circle" status="Coming Soon" disabled />
             <x-dashboard.module-card icon="graduation-cap" name="Grades" owner="Faculty Office" summary="Encoding, assessment, report cards" accent="blue" shape="arch" status="Coming Soon" disabled />
             <x-dashboard.module-card :href="route('admin.finance.dashboard')" icon="wallet" name="Finance Management" :owner="config('services.school.finance_reviewer_name', 'Finance Office')" summary="Enrollment payment review, SOA, fees, and receipts" accent="amber" shape="soft" />
-            <x-dashboard.module-card icon="chart-no-axes-combined" name="Analytics" owner="Admin Analytics" summary="Charts, insights, performance reports" accent="cyan" shape="circle" status="Coming Soon" disabled />
-            <x-dashboard.module-card icon="file-down" name="Reports" owner="Registrar / Finance" summary="PDF, Excel, registrar and finance exports" accent="indigo" shape="arch" status="Coming Soon" disabled />
-            <x-dashboard.module-card :href="route('admin.administration.users.index')" icon="users" name="Administration" owner="System Admin" summary="User directories, verification status, and credentials security" accent="violet" shape="soft" />
+            <x-dashboard.module-card icon="chart-no-axes-combined" name="Analytics" owner="Admin Analytics" summary="Charts, insights, performance reports" accent="orange" shape="circle" status="Coming Soon" disabled />
+            <x-dashboard.module-card icon="file-down" name="Reports" owner="Registrar / Finance" summary="PDF, Excel, registrar and finance exports" accent="pink" shape="arch" status="Coming Soon" disabled />
+            <x-dashboard.module-card :href="route('admin.administration.users.index')" icon="users" name="Administration" owner="System Admin" summary="User directories, verification status, and credentials security" accent="fuchsia" shape="soft" />
             <x-dashboard.module-card :href="route('admin.access-control.roles.index')" icon="key" name="Access Control" owner="Security Officer" summary="Roles, permissions matrix, and access policy definitions" accent="indigo" shape="soft" />
             <x-dashboard.module-card :href="route('admin.security-workspace.login-activity')" icon="shield-check" name="Security Workspace" owner="Security Auditing" summary="Session tracking, login attempts, force revokes, and alerts" accent="rose" shape="soft" />
             <x-dashboard.module-card :href="route('admin.system-management.backups.index')" icon="settings-2" name="System Management" owner="DevOps Admin" summary="Backup Center, restore dumps, health status, and API sync" accent="slate" shape="soft" />

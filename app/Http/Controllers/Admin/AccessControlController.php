@@ -102,7 +102,7 @@ class AccessControlController extends Controller
     public function permissionsIndex()
     {
         $this->ensureSuperAdmin();
-        $roles = Role::orderBy('hierarchy_level', 'desc')->get();
+        $roles = Role::with('permissions')->orderBy('hierarchy_level', 'desc')->get();
         $permissions = Permission::all()->groupBy('category');
         return view('admin.access-control.permissions.index', compact('roles', 'permissions'));
     }

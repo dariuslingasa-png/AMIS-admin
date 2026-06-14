@@ -1,7 +1,7 @@
 <x-admin-layout title="Roles Management">
     <div class="space-y-6">
         <!-- Banner -->
-        <section class="overflow-hidden rounded-3xl border border-slate-200 bg-slate-950 p-6 text-white shadow-xl shadow-slate-900/10">
+        <section class="overflow-hidden rounded-3xl border border-indigo-700/30 bg-gradient-to-br from-indigo-900 via-indigo-700 to-blue-600 p-6 text-white shadow-xl shadow-slate-900/10">
             <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                 <div>
                     <span class="inline-flex rounded-full bg-white/10 px-3 py-1 text-xs font-black uppercase tracking-[0.22em] text-slate-200">Access Control</span>
@@ -68,7 +68,7 @@
                                             <span class="text-xs font-bold text-slate-400">System Lock</span>
                                         @else
                                             <div class="flex items-center justify-end gap-2">
-                                                <!-- Inline Edit Trigger (Simulated for this implementation by standard confirm/actions) -->
+                                                <!-- Inline Edit Trigger -->
                                                 @if(!$role->isProtected())
                                                     <form method="POST" action="{{ route('admin.access-control.roles.destroy', $role) }}" class="inline-block" onsubmit="return confirm('Permanently delete the {{ $role->name }} role?')">
                                                         @csrf
@@ -92,7 +92,7 @@
 
             <!-- Create Role Form -->
             <x-card title="Define New Role" subtitle="Configure a custom access profile">
-                <form method="POST" action="{{ route('admin.access-control.roles.store') }}" class="space-y-4">
+                <form method="POST" action="{{ route('admin.access-control.roles.store') }}" class="p-6 space-y-4">
                     @csrf
                     <div>
                         <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-500">Role Name</label>
@@ -107,6 +107,16 @@
                         <input name="hierarchy_level" type="number" min="0" max="99" value="10" required class="w-full rounded-xl border border-slate-200 bg-white p-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100">
                         <span class="text-[10px] text-slate-400 font-semibold mt-1 block">Staff rank = 10, Finance = 50, Admin = 80. Hierarchy ranks control profile management priorities.</span>
                     </div>
+                    
+                    <!-- Hierarchy Explanation Note -->
+                    <div class="rounded-xl border border-blue-100 bg-blue-50/50 p-3 text-[11px] font-semibold text-blue-800 leading-normal">
+                        <div class="flex items-center gap-1.5 font-bold uppercase mb-1">
+                            <i data-lucide="info" class="h-3.5 w-3.5 shrink-0"></i>
+                            <span>Why Rank Level matters?</span>
+                        </div>
+                        Ranks prevent privilege escalation. Users can only assign/manage roles with hierarchy levels equal to or lower than their own.
+                    </div>
+
                     <button type="submit" class="w-full rounded-xl bg-indigo-600 px-4 py-3 text-sm font-black uppercase tracking-wider text-white shadow-lg shadow-indigo-600/20 transition hover:bg-indigo-700 cursor-pointer">
                         Create Role
                     </button>

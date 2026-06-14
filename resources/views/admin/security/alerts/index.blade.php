@@ -1,7 +1,7 @@
 <x-admin-layout title="Security Alerts">
     <div class="space-y-6">
         <!-- Banner -->
-        <section class="overflow-hidden rounded-3xl border border-slate-200 bg-slate-950 p-6 text-white shadow-xl shadow-slate-900/10">
+        <section class="overflow-hidden rounded-3xl border border-rose-700/30 bg-gradient-to-br from-rose-900 via-rose-700 to-pink-600 p-6 text-white shadow-xl shadow-slate-900/10">
             <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                 <div>
                     <span class="inline-flex rounded-full bg-white/10 px-3 py-1 text-xs font-black uppercase tracking-[0.22em] text-slate-200">Security Workspace</span>
@@ -15,7 +15,7 @@
 
         <!-- Alerts list -->
         <x-card title="System Security Alerts Feed" subtitle="Current alert logs and locked account listings">
-            <div class="space-y-4 p-4">
+            <div class="p-6 space-y-4">
                 @forelse ($alerts as $alert)
                     @if ($alert->type === 'critical')
                         <div class="rounded-2xl border border-rose-200 bg-rose-50/50 p-4 text-xs font-bold text-rose-800 leading-6 flex items-start gap-3">
