@@ -65,7 +65,7 @@
             <!-- 2. Microsoft AD Sync -->
             @php
                 $syncPercentage = $stats['total_students'] > 0 ? round(($stats['ms_synced'] / $stats['total_students']) * 100) : 0;
-                $syncProgressColor = $syncPercentage >= 90 ? 'bg-emerald-650' : ($syncPercentage >= 50 ? 'bg-amber-500' : 'bg-rose-500');
+                $syncProgressColor = $syncPercentage >= 90 ? 'bg-emerald-600' : ($syncPercentage >= 50 ? 'bg-amber-500' : 'bg-rose-500');
             @endphp
             <div class="overflow-hidden rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm flex flex-col justify-between h-36 transition hover:shadow-md border-t-4 border-t-blue-500">
                 <div class="flex items-start justify-between">
@@ -117,15 +117,15 @@
             <!-- 3. Face-to-Face Capacity -->
             @php
                 $f2fPercent = $f2fStats['capacity'] > 0 ? min(100, round(($f2fStats['occupied'] / $f2fStats['capacity']) * 100)) : 0;
-                $f2fColor = $f2fPercent >= 85 ? 'bg-rose-500' : ($f2fPercent >= 50 ? 'bg-amber-500' : 'bg-emerald-650');
+                $f2fColor = $f2fPercent >= 85 ? 'bg-rose-500' : ($f2fPercent >= 50 ? 'bg-amber-500' : 'bg-emerald-600');
             @endphp
-            <div class="overflow-hidden rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm flex flex-col justify-between h-36 transition hover:shadow-md border-t-4 border-t-emerald-650">
+            <div class="overflow-hidden rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm flex flex-col justify-between h-36 transition hover:shadow-md border-t-4 border-t-emerald-600">
                 <div class="flex items-start justify-between">
                     <div>
                         <span class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">F2F Capacity (30/sec)</span>
                         <h3 class="mt-2 text-3xl font-black text-slate-950 tracking-tight">{{ $f2fStats['occupied'] }}<span class="text-xs text-slate-400 font-bold"> / {{ $f2fStats['capacity'] }}</span></h3>
                     </div>
-                    <div class="rounded-2xl bg-emerald-50 p-3 text-emerald-655 ring-1 ring-emerald-100">
+                    <div class="rounded-2xl bg-emerald-50 p-3 text-emerald-600 ring-1 ring-emerald-100">
                         <i data-lucide="door-open" class="h-6 w-6"></i>
                     </div>
                 </div>
@@ -143,7 +143,7 @@
             <!-- 4. Flexible Capacity -->
             @php
                 $flexPercent = $flexibleStats['capacity'] > 0 ? min(100, round(($flexibleStats['occupied'] / $flexibleStats['capacity']) * 100)) : 0;
-                $flexColor = $flexPercent >= 85 ? 'bg-rose-500' : ($flexPercent >= 50 ? 'bg-amber-500' : 'bg-emerald-650');
+                $flexColor = $flexPercent >= 85 ? 'bg-rose-500' : ($flexPercent >= 50 ? 'bg-amber-500' : 'bg-emerald-600');
             @endphp
             <div class="overflow-hidden rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm flex flex-col justify-between h-36 transition hover:shadow-md border-t-4 border-t-amber-500">
                 <div class="flex items-start justify-between">
@@ -695,7 +695,7 @@
                         </div>
                     </div>
                     <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-100 flex items-center gap-3">
-                        <div class="rounded-xl bg-emerald-50 p-2 text-emerald-650">
+                        <div class="rounded-xl bg-emerald-50 p-2 text-emerald-600">
                             <i data-lucide="monitor" class="w-4 h-4"></i>
                         </div>
                         <div>

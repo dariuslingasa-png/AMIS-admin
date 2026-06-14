@@ -44,28 +44,28 @@
 
         <!-- Stats Grid -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
-            <div class="rounded-2xl border border-slate-200 bg-white p-4.5 shadow-sm">
+            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Active Students</p>
                 <div class="flex items-baseline gap-2 mt-1.5">
                     <span class="text-2xl font-black text-slate-900">{{ number_format($totalActive) }}</span>
                     <span class="text-xs font-bold text-emerald-600">Verified</span>
                 </div>
             </div>
-            <div class="rounded-2xl border border-slate-200 bg-white p-4.5 shadow-sm">
+            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Graduated</p>
                 <div class="flex items-baseline gap-2 mt-1.5">
                     <span class="text-2xl font-black text-slate-900">{{ number_format($totalGraduated) }}</span>
                     <span class="text-xs font-bold text-blue-600">Alumni</span>
                 </div>
             </div>
-            <div class="rounded-2xl border border-slate-200 bg-white p-4.5 shadow-sm">
+            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Transferred Out</p>
                 <div class="flex items-baseline gap-2 mt-1.5">
                     <span class="text-2xl font-black text-slate-900">{{ number_format($totalTransferred) }}</span>
                     <span class="text-xs font-bold text-amber-600">Other Schools</span>
                 </div>
             </div>
-            <div class="rounded-2xl border border-slate-200 bg-white p-4.5 shadow-sm">
+            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Withdrawn</p>
                 <div class="flex items-baseline gap-2 mt-1.5">
                     <span class="text-2xl font-black text-slate-900">{{ number_format($totalWithdrawn) }}</span>

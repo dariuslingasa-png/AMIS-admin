@@ -28,10 +28,6 @@
                 <p class="mt-1 text-xs md:text-sm text-slate-500 font-medium">A chronological audit log of student registrations, auto-generated emails, OR numbers, and portal credentials.</p>
             </div>
             <div class="flex gap-2">
-                <a href="{{ route('admin.students.dashboard') }}" class="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-bold text-slate-700 transition hover:bg-slate-50 active:bg-slate-100">
-                    <i data-lucide="layout-dashboard" class="h-4 w-4"></i>
-                    Dashboard
-                </a>
                 <a href="{{ route('admin.students.index') }}" class="inline-flex h-10 items-center gap-2 rounded-xl bg-emerald-600 px-4 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700 active:scale-95">
                     <i data-lucide="user-check" class="h-4 w-4"></i>
                     Student Records
@@ -81,7 +77,7 @@
                                     <div class="flex items-center gap-3">
                                         <!-- Timeline point indicator -->
                                         <div class="relative flex flex-col items-center">
-                                            <div class="h-2 w-2 rounded-full bg-emerald-650 ring-4 ring-emerald-50"></div>
+                                            <div class="h-2 w-2 rounded-full bg-emerald-600 ring-4 ring-emerald-50"></div>
                                         </div>
                                         <x-smart-image
                                             :src="$photoUrl"

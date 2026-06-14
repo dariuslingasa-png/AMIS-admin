@@ -32,6 +32,7 @@
                 ['Document Verification', 'shield-check', route('admin.students.verification'), request()->routeIs('admin.students.verification')],
                 ['Enrollment History', 'history', route('admin.students.history'), request()->routeIs('admin.students.history')],
                 ['Promotions & Transfers', 'arrow-left-right', route('admin.students.promotions'), request()->routeIs('admin.students.promotions')],
+                ['Section Occupancy', 'grid', route('admin.students.occupancy'), request()->routeIs('admin.students.occupancy')],
             ],
         ],
         [
