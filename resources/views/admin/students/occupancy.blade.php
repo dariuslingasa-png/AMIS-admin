@@ -107,16 +107,30 @@
                         ],
                     ];
                     $gTheme = $gradeThemeMap[$gradeStatusColor];
+                    
+                    // Retrieve grade level advisor once for the whole card
+                    $firstSection = $gradeSections->first();
+                    $advisor = $firstSection ? $firstSection->grade_advisor : null;
+                    $advisorName = $advisor ? ($advisor->teacher_name ?? $advisor->teacher?->name ?? 'No Advisor') : 'No Advisor';
+                    $advisorEmail = $advisor ? ($advisor->teacher_email ?? $advisor->teacher?->email ?? null) : null;
                 @endphp
                 <div class="rounded-3xl border border-slate-200/80 bg-white shadow-sm hover:shadow-md transition duration-300 border-t-4 {{ $gTheme['border'] }} p-5 flex flex-col justify-between">
                     <div>
                         <!-- Grade Card Header -->
-                        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                        <div class="flex items-center justify-between pb-3" style="border-bottom: 1px solid #f1f5f9;">
                             <div class="flex items-center gap-2">
                                 <div class="rounded-xl bg-emerald-50 p-1.5 text-emerald-600">
                                     <i data-lucide="graduation-cap" class="h-4.5 w-4.5"></i>
                                 </div>
-                                <h3 class="text-sm font-black text-slate-900 tracking-tight uppercase">{{ $gradeLevel }}</h3>
+                                <div>
+                                    <h3 class="text-sm font-black text-slate-900 tracking-tight uppercase">{{ $gradeLevel }}</h3>
+                                    @if($advisor)
+                                        <div class="text-[9px] text-slate-500 font-bold mt-0.5 flex items-center gap-1">
+                                            <i data-lucide="user" class="h-2.5 w-2.5 text-emerald-600"></i>
+                                            Advisor: <span class="font-extrabold text-slate-700 uppercase" title="{{ $advisorEmail }}">{{ str_ireplace('TEACHER ', '', $advisorName) }}</span>
+                                        </div>
+                                    @endif
+                                </div>
                             </div>
                             <div class="text-right">
                                 <span class="inline-flex rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-wider {{ $gTheme['bg'] }}">
@@ -140,9 +154,8 @@
                         <div class="mt-4 overflow-x-auto">
                             <table class="w-full text-left text-xs align-middle">
                                 <thead>
-                                    <tr class="border-b border-slate-100 text-[9px] font-black uppercase tracking-wider text-slate-400">
+                                    <tr class="text-[9px] font-black uppercase tracking-wider text-slate-400" style="border-bottom: 1px solid #e2e8f0;">
                                         <th class="pb-2 font-black">Section</th>
-                                        <th class="pb-2 font-black">Advisor</th>
                                         <th class="pb-2 font-black">Occupancy</th>
                                         <th class="pb-2 text-right font-black">Actions</th>
                                     </tr>
@@ -156,21 +169,26 @@
                                             'emerald' => ['bg' => 'bg-emerald-50 text-emerald-700', 'fill' => 'bg-emerald-600', 'text' => 'text-emerald-600'],
                                         ];
                                         $sTheme = $secThemeMap[$secStatusColor];
+                                        
+                                        // Section Display Name logic:
+                                        // F2F displays: F2F - Boys / Girls
+                                        // Flexible displays: Section Official Name
+                                        $genderLabel = $section->gender === 'male' ? 'Boys' : 'Girls';
+                                        if ($section->is_f2f) {
+                                            $sectionDisplayName = "F2F - " . $genderLabel;
+                                        } else {
+                                            $sectionDisplayName = $section->official_name ?: ($section->name ?: 'Flexible');
+                                        }
+                                        
                                         $secLearningModeLabel = $section->is_f2f ? 'F2F' : 'Flexible';
                                     @endphp
                                     <tbody x-data="{ showRoster: false }">
-                                        <tr class="border-b border-slate-100/50 last:border-b-0 hover:bg-slate-50/40 transition">
+                                        <tr class="hover:bg-slate-50/40 transition" style="border-bottom: {{ $loop->last ? 'none' : '1px solid #f1f5f9' }};">
                                             <!-- Section Name & Mode -->
                                             <td class="py-3 pr-2">
-                                                <div class="font-extrabold text-slate-800 uppercase leading-snug text-xs">{{ $section->official_name ?: ($section->name ?: 'General') }}</div>
+                                                <div class="font-extrabold text-slate-800 uppercase leading-snug text-xs">{{ $sectionDisplayName }}</div>
                                                 <div class="text-[9px] font-black text-slate-400 uppercase mt-0.5">
                                                     {{ $secLearningModeLabel }} &middot; {{ $section->shift ?: '1st Shift' }}
-                                                </div>
-                                            </td>
-                                            <!-- Advisor -->
-                                            <td class="py-3 pr-2">
-                                                <div class="font-bold text-slate-700 uppercase truncate max-w-[130px] text-[11px]" title="{{ $section->advisor_name }}">
-                                                    {{ str_ireplace('TEACHER ', '', $section->advisor_name) }}
                                                 </div>
                                             </td>
                                             <!-- Occupancy Bar -->
@@ -196,7 +214,7 @@
                                         </tr>
                                         <!-- Collapsible Roster Row -->
                                         <tr x-show="showRoster" x-cloak class="bg-slate-50/50">
-                                            <td colspan="4" class="p-3 border-b border-slate-100">
+                                            <td colspan="3" class="p-3" style="border-bottom: 1px solid #f1f5f9;">
                                                 <div class="space-y-2">
                                                     <h5 class="text-[9px] font-black uppercase tracking-wider text-slate-400">Class Roster ({{ $section->occupied }} Students)</h5>
                                                     @if($section->students->isEmpty())

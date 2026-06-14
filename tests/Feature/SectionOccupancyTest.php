@@ -47,10 +47,20 @@ class SectionOccupancyTest extends TestCase
             'account_status' => 'verified',
         ]);
 
-        $section = Section::create([
+        // 1. F2F Section
+        $f2fSection = Section::create([
             'name' => 'A',
             'grade_level' => 'Grade 1',
             'learning_mode' => 'face-to-face',
+            'shift' => '1st Shift',
+            'gender' => 'male',
+        ]);
+
+        // 2. Flexible Section
+        $flexibleSection = Section::create([
+            'name' => 'B',
+            'grade_level' => 'Grade 1',
+            'learning_mode' => 'flexible',
             'shift' => '1st Shift',
             'gender' => 'male',
         ]);
@@ -77,9 +87,10 @@ class SectionOccupancyTest extends TestCase
             'school_year' => '2026-2027',
         ]);
 
+        // Enroll in the F2F section
         StudentSection::create([
             'student_id' => $student->id,
-            'section_id' => $section->id,
+            'section_id' => $f2fSection->id,
         ]);
 
         $response = $this->actingAs($admin)->get(route('admin.students.occupancy'));
@@ -87,7 +98,8 @@ class SectionOccupancyTest extends TestCase
         $response->assertOk();
         $response->assertSeeText('Section Occupancy');
         $response->assertSeeText('Grade 1');
-        $response->assertSeeText('HUDHAYFAH IBN AL-YAMAN'); // Normalized name mapping
+        $response->assertSeeText('F2F - Boys'); // F2F section representation
+        $response->assertSeeText('HUDHAYFAH IBN AL-YAMAN'); // Flexible section official name representation
         $response->assertSeeText('ABUBAKR IBN AFFAN');
         $response->assertSeeText('STU20260001');
     }
