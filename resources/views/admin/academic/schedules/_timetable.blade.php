@@ -92,8 +92,8 @@
                 @foreach($sortedGradeLevels as $grade)
                     <button type="button" 
                         @click="activeGradeLevel = '{{ $grade }}'; activeSectionId = (gradeSections['{{ $grade }}'] && gradeSections['{{ $grade }}'][0]) ? gradeSections['{{ $grade }}'][0].id : 0"
-                        :class="activeGradeLevel === '{{ $grade }}' ? 'bg-indigo-700 text-white shadow-xs font-bold border-indigo-700' : 'bg-gray-50 text-slate-655 hover:bg-gray-100 hover:text-slate-900 border-slate-200'"
-                        class="px-3.5 py-2 text-xs rounded-xl border transition cursor-pointer shadow-3xs font-extrabold">
+                        :class="activeGradeLevel === '{{ $grade }}' ? 'bg-indigo-700 text-white shadow-xs font-bold' : 'bg-gray-50 text-slate-655 hover:bg-gray-100 hover:text-slate-900'"
+                        class="px-3.5 py-2 text-xs rounded-xl transition cursor-pointer shadow-3xs font-extrabold">
                         {{ $grade }}
                     </button>
                 @endforeach
@@ -107,8 +107,8 @@
                     <button type="button" 
                         x-show="activeGradeLevel === '{{ $section->grade_level }}'"
                         @click="activeSectionId = {{ $section->id }}"
-                        :class="activeSectionId === {{ $section->id }} ? 'bg-indigo-100 text-indigo-850 border-indigo-300 shadow-3xs font-extrabold' : 'bg-white text-slate-600 hover:bg-slate-50 border-slate-250'"
-                        class="px-4 py-2.5 text-xs rounded-xl border transition cursor-pointer shadow-3xs text-left">
+                        :class="activeSectionId === {{ $section->id }} ? 'bg-indigo-100 text-indigo-850 shadow-3xs font-extrabold' : 'bg-slate-50 text-slate-600 hover:bg-slate-100/80 shadow-3xs'"
+                        class="px-4 py-2.5 text-xs rounded-xl transition cursor-pointer text-left">
                         <span class="block font-black text-slate-950">{{ $section->official_name ?: $section->name ?: 'General' }}</span>
                         <span class="block text-[9px] opacity-80 font-semibold mt-0.5" :class="activeSectionId === {{ $section->id }} ? 'text-indigo-700' : 'text-slate-400'">
                             {{ $section->shift ?? 'F2F' }} · {{ ucfirst($section->gender === 'male' ? 'Boys' : 'Girls') }} · {{ $section->learning_mode }}
