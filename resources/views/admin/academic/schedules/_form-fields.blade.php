@@ -21,33 +21,24 @@
         <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Teacher</span>
         <input type="text" name="teacher_name" value="{{ old('teacher_name') }}" @if($isEdit) x-model="editForm.teacher_name" @endif list="schedule-teachers" placeholder="Teacher name" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl px-3 py-2 outline-none">
     </label>
-
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <label class="flex flex-col gap-1">
             <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Day *</span>
             <select name="day" @if($isEdit) x-model="editForm.day" @endif class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl px-3 py-2 outline-none">
                 @foreach($days as $day)
-                    <option value="{{ $day }}" @selected(old('day', 'Monday') === $day)>{{ $day }}</option>
+                    <option value="{{ $day }}" @selected(old('day', 'Sunday') === $day)>{{ $day }}</option>
                 @endforeach
             </select>
         </label>
 
         <label class="flex flex-col gap-1">
             <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Start *</span>
-            <select name="start_time" @if($isEdit) x-model="editForm.start_time" @endif class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl px-3 py-2 outline-none">
-                @foreach($timeOptions as $value => $label)
-                    <option value="{{ $value }}" @selected(old('start_time', '08:00') === $value)>{{ $label }}</option>
-                @endforeach
-            </select>
+            <input type="time" name="start_time" value="{{ old('start_time', '08:00') }}" @if($isEdit) x-model="editForm.start_time" @endif class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl px-3 py-2 outline-none">
         </label>
 
         <label class="flex flex-col gap-1">
             <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">End *</span>
-            <select name="end_time" @if($isEdit) x-model="editForm.end_time" @endif class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl px-3 py-2 outline-none">
-                @foreach($timeOptions as $value => $label)
-                    <option value="{{ $value }}" @selected(old('end_time', '09:00') === $value)>{{ $label }}</option>
-                @endforeach
-            </select>
+            <input type="time" name="end_time" value="{{ old('end_time', '09:00') }}" @if($isEdit) x-model="editForm.end_time" @endif class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl px-3 py-2 outline-none">
         </label>
     </div>
 </div>

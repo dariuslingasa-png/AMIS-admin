@@ -24,6 +24,9 @@ return [
         ['grade' => 'ISAL', 'grade_level' => "Qur'an / Arabic Language", 'teacher' => 'Ust. Raffy Lingasa', 'photo' => null],
         ['grade' => 'ISAL', 'grade_level' => 'SHAF / Islamic Studies', 'teacher' => 'Ust. Ahmad Al-Jamil', 'photo' => null],
         ['grade' => 'ISAL', 'grade_level' => 'Arabic Language', 'teacher' => 'Ust. Omar Mukhtar', 'photo' => null],
+        ['grade' => 'ISAL', 'grade_level' => "Qur'an / Islamic Studies", 'teacher' => 'Ustadh Jaisam', 'photo' => null],
+        ['grade' => 'ISAL', 'grade_level' => "Qur'an / Islamic Studies", 'teacher' => 'Ustadha Saliha', 'photo' => null],
+        ['grade' => 'ISAL', 'grade_level' => "Qur'an / Islamic Studies", 'teacher' => 'Ustadha Isal', 'photo' => null],
     ],
     'subject_teachers' => [
         ['grade' => 'ELEM', 'grade_level' => 'Science', 'teacher' => 'Mon Zhairel Lingasa', 'photo' => null],

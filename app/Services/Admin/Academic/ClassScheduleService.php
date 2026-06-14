@@ -75,7 +75,7 @@ class ClassScheduleService
 
     public function days(): array
     {
-        return ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+        return ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
     }
 
     public function timeOptions(): array
@@ -119,13 +119,13 @@ class ClassScheduleService
 
     public function parseSchedule(?string $schedule): array
     {
-        $fallback = ['day' => 'Monday', 'start_time' => '08:00', 'end_time' => '09:00'];
+        $fallback = ['day' => 'Sunday', 'start_time' => '08:00', 'end_time' => '09:00'];
         if (! $schedule || ! preg_match('/^([A-Za-z]+)\s+(\d{2}:\d{2})-(\d{2}:\d{2})$/', $schedule, $matches)) {
             return $fallback;
         }
 
         return [
-            'day' => in_array($matches[1], $this->days(), true) ? $matches[1] : 'Monday',
+            'day' => in_array($matches[1], $this->days(), true) ? $matches[1] : 'Sunday',
             'start_time' => $matches[2],
             'end_time' => $matches[3],
         ];

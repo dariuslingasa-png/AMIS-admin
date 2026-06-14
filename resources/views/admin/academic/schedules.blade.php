@@ -24,7 +24,7 @@
             'section_id' => $activeSectionId,
             'subject_name' => old('subject_name', ''),
             'teacher_name' => old('teacher_name', ''),
-            'day' => old('day', 'Monday'),
+            'day' => old('day', 'Sunday'),
             'start_time' => old('start_time', '08:00'),
             'end_time' => old('end_time', '09:00'),
         ]),
