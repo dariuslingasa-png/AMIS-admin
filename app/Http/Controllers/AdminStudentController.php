@@ -174,6 +174,7 @@ class AdminStudentController extends Controller
             'f2f_students' => Student::whereHas('applicant', fn($q) => $q->where('learning_mode', 'like', '%face-to-face%')->orWhere('learning_mode', 'like', '%f2f%')->orWhere('learning_mode', 'like', '%face_to_face%'))->count(),
             'flexible_students' => Student::whereHas('applicant', fn($q) => $q->where('learning_mode', 'like', '%flexible%')->orWhere('learning_mode', 'like', '%online%'))->count(),
             'ms_synced' => Student::whereNotNull('ms_user_id')->count(),
+            'passwords_changed' => Student::whereNotNull('password_changed_at')->count(),
             'total_sections' => \App\Models\Section::count(),
             'allocated_slots' => \App\Models\StudentSection::count(),
         ];
@@ -206,6 +207,7 @@ class AdminStudentController extends Controller
             'f2f_students' => $f2fStudents,
             'flexible_students' => $flexibleStudents,
             'ms_synced' => $msSynced,
+            'passwords_changed' => Student::whereNotNull('password_changed_at')->count(),
             'total_sections' => \App\Models\Section::count(),
             'allocated_slots' => \App\Models\StudentSection::count(),
         ];

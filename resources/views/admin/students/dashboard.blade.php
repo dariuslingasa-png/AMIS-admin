@@ -43,7 +43,7 @@
         </div>
 
         <!-- Telemetry Statistics Grid -->
-        <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="grid gap-5 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
             <!-- 1. Enrolled Students -->
             <div class="overflow-hidden rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm flex flex-col justify-between h-36 transition hover:shadow-md border-t-4 border-t-violet-600">
                 <div class="flex items-start justify-between">
@@ -84,6 +84,32 @@
                     </div>
                     <div class="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
                         <div class="h-full rounded-full {{ $syncProgressColor }} transition-all duration-500" style="width: {{ $syncPercentage }}%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Password Changes -->
+            @php
+                $changePercentage = $stats['total_students'] > 0 ? round(($stats['passwords_changed'] / $stats['total_students']) * 100) : 0;
+                $changeProgressColor = 'bg-emerald-600';
+            @endphp
+            <div class="overflow-hidden rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm flex flex-col justify-between h-36 transition hover:shadow-md border-t-4 border-t-emerald-600">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <span class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Passwords Changed</span>
+                        <h3 class="mt-2 text-3xl font-black text-slate-950 tracking-tight">{{ number_format($stats['passwords_changed']) }}</h3>
+                    </div>
+                    <div class="rounded-2xl bg-emerald-50 p-3 text-emerald-600 ring-1 ring-emerald-100">
+                        <i data-lucide="key-round" class="h-6 w-6"></i>
+                    </div>
+                </div>
+                <div class="mt-2 space-y-1">
+                    <div class="flex items-center justify-between text-xs font-semibold text-slate-500">
+                        <span>Change Ratio</span>
+                        <span class="font-bold text-slate-700">{{ $changePercentage }}%</span>
+                    </div>
+                    <div class="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
+                        <div class="h-full rounded-full {{ $changeProgressColor }} transition-all duration-500" style="width: {{ $changePercentage }}%;"></div>
                     </div>
                 </div>
             </div>
