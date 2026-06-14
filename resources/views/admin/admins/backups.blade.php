@@ -153,27 +153,41 @@
                 </x-card>
             </div>
             <div>
-                <x-card title="Local Disk Storage" subtitle="Server partition disk space tracker">
-                    <div class="p-6 space-y-4">
-                        <div class="flex items-center justify-between text-xs font-bold text-slate-500">
-                            <span>Used Space ({{ $diskUsagePercent }}%)</span>
-                            <span>{{ $formattedFreeDisk }} Free of {{ $formattedTotalDisk }}</span>
+                <div class="rounded-3xl p-6 relative overflow-hidden" style="background: rgba(255, 255, 255, 0.45); border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.08); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);">
+                    <!-- Abstract glowing background highlights -->
+                    <div class="absolute -right-10 -top-10 w-24 h-24 rounded-full bg-purple-500/10 blur-xl"></div>
+                    <div class="absolute -left-10 -bottom-10 w-24 h-24 rounded-full bg-indigo-500/10 blur-xl"></div>
+
+                    <div class="flex items-center gap-3 border-b border-slate-200/50 pb-4 mb-4">
+                        <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-purple-100 text-purple-700 ring-1 ring-purple-200/50">
+                            <i data-lucide="cloud" class="h-6 w-6"></i>
                         </div>
-                        <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
-                            <div class="h-full bg-violet-600 rounded-full transition-all duration-500" style="width: {{ $diskUsagePercent }}%"></div>
+                        <div>
+                            <h2 class="text-base font-black tracking-tight text-slate-900">Google Drive Storage</h2>
+                            <p class="text-xs font-semibold text-slate-500 mt-0.5">Cloud backup storage tracker</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between text-xs font-bold text-slate-600">
+                            <span>Used Space ({{ $diskUsagePercent }}%)</span>
+                            <span class="font-extrabold text-slate-900">{{ $formattedFreeDisk }} Free of {{ $formattedTotalDisk }}</span>
+                        </div>
+                        <div class="w-full h-3 bg-slate-200/50 rounded-full overflow-hidden p-0.5 border border-slate-300/20">
+                            <div class="h-full bg-gradient-to-r from-purple-500 to-indigo-600 rounded-full transition-all duration-500" style="width: {{ $diskUsagePercent }}%"></div>
                         </div>
                         <div class="grid grid-cols-2 gap-4 pt-2">
-                            <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                                <span class="block text-[10px] font-black uppercase text-slate-400">Used Disk</span>
+                            <div class="p-3 bg-white/60 rounded-2xl border border-white/40 shadow-3xs">
+                                <span class="block text-[10px] font-black uppercase tracking-wider text-slate-400">Used Disk</span>
                                 <span class="text-sm font-black text-slate-900 mt-1 block">{{ $formattedUsedDisk }}</span>
                             </div>
-                            <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                                <span class="block text-[10px] font-black uppercase text-slate-400">Available</span>
-                                <span class="text-sm font-black text-slate-950 mt-1 block">{{ $formattedFreeDisk }}</span>
+                            <div class="p-3 bg-white/60 rounded-2xl border border-white/40 shadow-3xs">
+                                <span class="block text-[10px] font-black uppercase tracking-wider text-slate-400">Available</span>
+                                <span class="text-sm font-black text-purple-700 mt-1 block">{{ $formattedFreeDisk }}</span>
                             </div>
                         </div>
                     </div>
-                </x-card>
+                </div>
             </div>
         </div>
     </div>

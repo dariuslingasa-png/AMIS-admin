@@ -92,4 +92,38 @@ class GoogleDriveService
 
         return $response->json('access_token');
     }
+
+    public function getStorageQuota(): ?array
+    {
+        if (!$this->isConfigured()) {
+            return null;
+        }
+
+        try {
+            $accessToken = $this->getAccessToken();
+            $response = Http::withHeaders([
+                'Authorization' => "Bearer {$accessToken}",
+            ])->get('https://www.googleapis.com/drive/v3/about?fields=storageQuota');
+
+            if ($response->successful()) {
+                $quota = $response->json('storageQuota');
+                if ($quota) {
+                    $limit = (float) ($quota['limit'] ?? 0);
+                    $usage = (float) ($quota['usage'] ?? 0);
+                    $free = max(0, $limit - $usage);
+                    
+                    return [
+                        'limit' => $limit,
+                        'usage' => $usage,
+                        'free' => $free,
+                        'usage_percent' => $limit > 0 ? round(($usage / $limit) * 100, 2) : 0,
+                    ];
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to fetch Google Drive storage quota: ' . $e->getMessage());
+        }
+
+        return null;
+    }
 }

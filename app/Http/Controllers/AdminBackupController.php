@@ -60,18 +60,30 @@ class AdminBackupController extends Controller
         }
         $formattedDbSize = $this->formatBytes($dbSize);
 
-        // Get disk space info
-        $totalDiskSpace = @disk_total_space(base_path()) ?: 0;
-        $freeDiskSpace = @disk_free_space(base_path()) ?: 0;
-        $usedDiskSpace = $totalDiskSpace - $freeDiskSpace;
-
-        $formattedFreeDisk = $this->formatBytes($freeDiskSpace);
-        $formattedTotalDisk = $this->formatBytes($totalDiskSpace);
-        $formattedUsedDisk = $this->formatBytes($usedDiskSpace);
-        $diskUsagePercent = $totalDiskSpace > 0 ? round(($usedDiskSpace / $totalDiskSpace) * 100, 1) : 0;
-
         $driveService = new \App\Services\GoogleDriveService();
         $gdriveConfigured = $driveService->isConfigured();
+
+        // Get Google Drive storage info
+        $gdriveQuota = $driveService->getStorageQuota();
+
+        if ($gdriveQuota) {
+            $gdriveTotal = $gdriveQuota['limit'];
+            $gdriveUsed = $gdriveQuota['usage'];
+            $gdriveFree = $gdriveQuota['free'];
+            $gdriveUsagePercent = $gdriveQuota['usage_percent'];
+        } else {
+            // Mock Fallback values as requested:
+            // Total: 5 TB, Used: 90.13 GB, Free: 4.91 TB, Percent: 1.8%
+            $gdriveTotal = 5 * 1024 * 1024 * 1024 * 1024; // 5 TB
+            $gdriveUsed = 90.13 * 1024 * 1024 * 1024;     // 90.13 GB
+            $gdriveFree = $gdriveTotal - $gdriveUsed;     // 4.91 TB
+            $gdriveUsagePercent = 1.8;
+        }
+
+        $formattedFreeDisk = $this->formatBytes($gdriveFree);
+        $formattedTotalDisk = $this->formatBytes($gdriveTotal);
+        $formattedUsedDisk = $this->formatBytes($gdriveUsed);
+        $diskUsagePercent = $gdriveUsagePercent;
 
         return view('admin.admins.backups', compact(
             'files', 
