@@ -145,7 +145,7 @@
                         <span>{{ $entries->count() }} scheduled classes</span>
                         @if($section->grade_advisor)
                             <span>•</span>
-                            <span class="text-indigo-650">Advisor: {{ $section->grade_advisor->teacher_name }}</span>
+                            <span class="text-indigo-650 uppercase">Advisor: {{ $section->grade_advisor->teacher_name }}</span>
                         @endif
                     </div>
                 </div>
@@ -347,7 +347,7 @@
                                                             {{ $cell['entry']['subject_name'] }}
                                                         </span>
                                                         @if($cell['entry']['teacher_name'] && $cell['entry']['teacher_name'] !== 'Teacher pending')
-                                                            <span class="block text-[10px] font-bold mt-1.5 flex items-center justify-center gap-1.5" style="color: inherit; opacity: 0.8;">
+                                                            <span class="block text-[10px] font-bold uppercase mt-1.5 flex items-center justify-center gap-1.5" style="color: inherit; opacity: 0.8;">
                                                                 <i data-lucide="user" class="h-3 w-3 opacity-60"></i>
                                                                 {{ $cell['entry']['teacher_name'] }}
                                                             </span>
