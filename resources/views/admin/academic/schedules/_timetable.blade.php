@@ -61,9 +61,9 @@
         border: 1px solid #fde68a;
     }
     .timetable-spreadsheet .cell-general {
-        background-color: #f5f3ff !important;
-        color: #5b21b6 !important;
-        border: 1px solid #ddd6fe;
+        background-color: #f8fafc !important;
+        color: #334155 !important;
+        border: 1px solid #e2e8f0;
     }
     .timetable-spreadsheet .cell-empty {
         background-color: #ffffff !important;
