@@ -26,13 +26,78 @@ class AdminUserController extends Controller
         return view('admin.admins.index', compact('admins', 'stats'));
     }
 
-    public function auditLogs()
+    public function auditLogs(Request $request)
     {
-        $logs = AdminAuditLog::with('user')
-            ->latest()
-            ->paginate(30);
+        $tab = $request->query('tab', 'login');
+        $search = $request->query('search');
 
-        return view('admin.admins.audit-logs', compact('logs'));
+        $query = AdminAuditLog::with('user');
+
+        // Apply Tab Filter
+        if ($tab === 'login') {
+            $query->where(function ($q) {
+                $q->whereIn('event', [
+                    'login_success',
+                    'login_failed',
+                    'login_denied',
+                    'microsoft_login_success',
+                    'microsoft_login_denied',
+                    'logout',
+                    'previous_session_revoked',
+                    'teacher_password_changed_onboarding'
+                ]);
+            });
+        } elseif ($tab === 'approve') {
+            $query->where(function ($q) {
+                $q->whereIn('event', [
+                    'application_approved',
+                    'application_status_updated',
+                    'onboarding_email_resent',
+                    'section_verified',
+                    'payment_approved',
+                    'payment_rejected',
+                    'payment_reminder_sent'
+                ])->orWhere('event', 'like', 'document%');
+            });
+        } else { // 'system' tab
+            $query->where(function ($q) {
+                $q->whereNotIn('event', [
+                    'login_success',
+                    'login_failed',
+                    'login_denied',
+                    'microsoft_login_success',
+                    'microsoft_login_denied',
+                    'logout',
+                    'previous_session_revoked',
+                    'teacher_password_changed_onboarding',
+                    'application_approved',
+                    'application_status_updated',
+                    'onboarding_email_resent',
+                    'section_verified',
+                    'payment_approved',
+                    'payment_rejected',
+                    'payment_reminder_sent'
+                ])->where('event', 'not like', 'document%');
+            });
+        }
+
+        // Apply Search
+        if (filled($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('event', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('message', 'like', "%{$search}%")
+                  ->orWhere('ip_address', 'like', "%{$search}%")
+                  ->orWhereHas('user', function ($u) use ($search) {
+                      $u->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $logs = $query->latest()->paginate(30)->withQueryString();
+
+        return view('admin.admins.audit-logs', compact('logs', 'tab', 'search'));
     }
 
     public function edit(User $user)

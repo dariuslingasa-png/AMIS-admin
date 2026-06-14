@@ -144,6 +144,11 @@ Route::name('admin.')->group(function () {
 
         Route::get('/admins', [AdminUserController::class, 'index'])->name('admins.index');
         Route::get('/admins/audit-logs', [AdminUserController::class, 'auditLogs'])->name('admins.audit-logs');
+        Route::get('/admins/backups', [\App\Http\Controllers\AdminBackupController::class, 'index'])->name('admins.backups');
+        Route::post('/admins/backups', [\App\Http\Controllers\AdminBackupController::class, 'create'])->name('admins.backups.create');
+        Route::get('/admins/backups/{filename}/download', [\App\Http\Controllers\AdminBackupController::class, 'download'])->name('admins.backups.download');
+        Route::delete('/admins/backups/{filename}', [\App\Http\Controllers\AdminBackupController::class, 'destroy'])->name('admins.backups.destroy');
+        Route::post('/admins/backups/{filename}/google-drive', [\App\Http\Controllers\AdminBackupController::class, 'uploadToDrive'])->name('admins.backups.google-drive');
         Route::post('/admins', [AdminUserController::class, 'store'])->name('admins.store');
         Route::get('/admins/{user}/edit', [AdminUserController::class, 'edit'])->name('admins.edit');
         Route::patch('/admins/{user}', [AdminUserController::class, 'update'])->name('admins.update');
