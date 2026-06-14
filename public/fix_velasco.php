@@ -175,7 +175,8 @@ try {
     
     echo "\n=== Fix Complete! Velasco has been successfully restored. ===\n";
     
-} catch (\Exception $e) {
-    echo "\nERROR: " . $e->getMessage() . "\n";
+} catch (\Throwable $e) {
+    echo "\nFATAL ERROR: " . $e->getMessage() . "\n";
+    echo "File: " . $e->getFile() . " on line " . $e->getLine() . "\n";
     echo $e->getTraceAsString() . "\n";
 }
