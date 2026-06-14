@@ -177,7 +177,7 @@
                                         if ($section->is_f2f) {
                                             $sectionDisplayName = "F2F - " . $genderLabel;
                                         } else {
-                                            $sectionDisplayName = $section->official_name ?: ($section->name ?: 'Flexible');
+                                            $sectionDisplayName = ($section->official_name ?: ($section->name ?: 'Flexible')) . " - " . $genderLabel;
                                         }
                                         
                                         $secLearningModeLabel = $section->is_f2f ? 'F2F' : 'Flexible';
