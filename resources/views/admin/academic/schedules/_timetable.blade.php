@@ -1,75 +1,38 @@
 <style>
-    .timetable-spreadsheet {
-        width: 100%;
-        border-collapse: collapse;
-        font-family: 'Inter', sans-serif;
-        font-size: 11px;
-        border: 1px solid #e5e7eb;
-    }
-    .timetable-spreadsheet th {
-        position: sticky;
-        top: 0;
-        background-color: #f8fafc;
-        color: #475569;
-        font-weight: 700;
-        font-size: 10px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        padding: 12px 16px;
-        border-bottom: 2px solid #e5e7eb;
-        border-right: 1px solid #e5e7eb;
-        z-index: 10;
-        text-align: center;
-    }
-    .timetable-spreadsheet td {
-        padding: 0;
-        border-bottom: 1px solid #e5e7eb;
-        border-right: 1px solid #e5e7eb;
+    /* Minimal overrides for the timetable grid using premium-table base */
+    .timetable-grid td {
+        border-top: 1px solid #f1f5f9;
+        border-right: 1px solid #f1f5f9;
         vertical-align: middle;
+        text-align: center;
+        padding: 0 !important; /* Remove cell padding to allow full-height hover styling */
         background-color: #ffffff;
     }
-    .timetable-spreadsheet td:last-child {
+    .timetable-grid td:last-child {
         border-right: none;
     }
-    .timetable-spreadsheet .header-title {
-        background-color: #ffffff !important;
-        font-size: 12px;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        color: #0f172a;
-        padding: 16px;
-        border-bottom: 2px solid #e5e7eb;
-        text-align: left;
-        border-right: none;
-    }
-    .timetable-spreadsheet .col-time {
-        width: 140px;
+    .timetable-grid .col-time {
+        width: 130px;
+        background-color: #f8fafc;
         font-weight: 700;
         color: #1e293b;
-        text-align: center;
-        background-color: #f8fafc;
-        padding: 12px;
-        border-right: 1px solid #e5e7eb;
+        padding: 12px !important;
     }
-    .timetable-spreadsheet .col-minutes {
-        width: 80px;
+    .timetable-grid .col-minutes {
+        width: 70px;
+        background-color: #f8fafc;
         font-weight: 600;
         color: #64748b;
-        text-align: center;
-        background-color: #f8fafc;
-        padding: 12px;
-        border-right: 1px solid #e5e7eb;
+        padding: 12px !important;
     }
-    .timetable-spreadsheet .cell-class {
-        background-color: #f8fafc !important;
-        border-left: 4px solid #2563eb !important; /* Notion/Linear blue accent */
+    .timetable-grid .cell-scheduled {
+        background-color: #f8fafc !important; /* Neutral gray background for scheduled classes */
+        color: #1e293b;
     }
-    .timetable-spreadsheet .cell-event {
-        background-color: #f8fafc !important;
-        border-left: 4px solid #94a3b8 !important; /* Slate neutral accent for events */
+    .timetable-grid .cell-scheduled:hover {
+        background-color: #f1f5f9 !important; /* Neutral highlight on hover */
     }
-    .timetable-spreadsheet .cell-empty {
+    .timetable-grid .cell-empty {
         background-color: #ffffff !important;
     }
 </style>
@@ -127,17 +90,18 @@
             $entries = $schedulesBySection->get($section->id, collect());
             $sectionLabel = trim($section->grade_level . ($section->name ? ' - ' . $section->name : ''));
         @endphp
-        <div class="bg-white border border-gray-150 rounded-2xl shadow-xs p-6 space-y-5" x-show="activeSectionId === {{ $section->id }}" x-transition>
-            <div class="border-b border-slate-100 pb-3.5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+        <div class="bg-white border border-gray-150 rounded-2xl shadow-xs overflow-hidden" x-show="activeSectionId === {{ $section->id }}" x-transition>
+            <!-- Title Bar matching Active Sections Catalog design -->
+            <div class="bg-slate-50/50 border-b border-gray-150 px-5 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                 <div>
-                    <span class="text-slate-900 font-extrabold text-base block">
+                    <span class="text-slate-900 font-extrabold text-sm tracking-wide uppercase block">
                         {{ $section->grade_level }} - {{ $section->official_name ?: $section->name ?: 'General' }} Timetable
                     </span>
-                    <div class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    <div class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[9px] font-bold uppercase tracking-wider text-slate-400">
                         <span>{{ $entries->count() }} scheduled classes</span>
                         @if($section->grade_advisor)
                             <span>•</span>
-                            <span class="text-indigo-600">Advisor: {{ $section->grade_advisor->teacher_name }}</span>
+                            <span class="text-indigo-650">Advisor: {{ $section->grade_advisor->teacher_name }}</span>
                         @endif
                     </div>
                 </div>
@@ -145,9 +109,11 @@
             </div>
 
             @if($entries->isEmpty())
-                <div class="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-10 text-center">
-                    <i data-lucide="calendar-plus" class="mx-auto h-6 w-6 text-slate-400"></i>
-                    <p class="mt-2 text-xs font-bold text-slate-500">No classes scheduled yet.</p>
+                <div class="p-6">
+                    <div class="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-10 text-center">
+                        <i data-lucide="calendar-plus" class="mx-auto h-6 w-6 text-slate-400"></i>
+                        <p class="mt-2 text-xs font-bold text-slate-500">No classes scheduled yet.</p>
+                    </div>
                 </div>
             @else
                 @php
@@ -288,19 +254,14 @@
                     }
                 @endphp
 
-                <div class="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-xs">
-                    <table class="timetable-spreadsheet">
+                <div class="premium-table-wrap">
+                    <table class="premium-table timetable-grid">
                         <thead>
                             <tr>
-                                <th colspan="7" class="header-title">
-                                    {{ strtoupper($section->grade_level) }} - {{ strtoupper($section->official_name ?: $section->name ?: 'General') }} CLASS SCHEDULE ({{ $section->learning_mode === 'Face-to-Face' ? 'F2F' : 'ODL' }})
-                                </th>
-                            </tr>
-                            <tr>
-                                <th class="col-time">Time</th>
-                                <th class="col-minutes">Minutes</th>
+                                <th class="col-time text-center uppercase tracking-wider font-extrabold text-[10px]" style="text-align: center;">Time</th>
+                                <th class="col-minutes text-center uppercase tracking-wider font-extrabold text-[10px]" style="text-align: center;">Minutes</th>
                                 @foreach($daysList as $day)
-                                    <th>{{ $day }}</th>
+                                    <th class="text-center uppercase tracking-wider font-extrabold text-[10px]" style="text-align: center;">{{ $day }}</th>
                                 @endforeach
                             </tr>
                         </thead>
@@ -324,15 +285,14 @@
                                                         'update_url' => route('admin.academic.schedules.update', $cell['entry']['id']),
                                                         'destroy_url' => route('admin.academic.schedules.destroy', $cell['entry']['id']),
                                                     ]));
-                                                    $subjectLower = strtolower($cell['entry']['subject_name']);
-                                                    $isEvent = str_contains($subjectLower, 'assembly') || str_contains($subjectLower, 'recess') || str_contains($subjectLower, 'departure');
-                                                    $cellClass = $isEvent ? 'cell-event' : 'cell-class';
                                                 @endphp
-                                                <td rowspan="{{ $cell['span'] }}" colspan="{{ $cell['colspan'] }}" class="{{ $cellClass }}">
-                                                    <div class="relative w-full h-full p-4 flex flex-col justify-center text-left group min-h-[55px] hover:bg-slate-100/40 transition-colors duration-150">
-                                                        <span class="block font-bold text-[12px] text-slate-800 leading-tight">{{ $cell['entry']['subject_name'] }}</span>
+                                                <td rowspan="{{ $cell['span'] }}" colspan="{{ $cell['colspan'] }}" class="cell-scheduled">
+                                                    <div class="relative w-full h-full p-4 flex flex-col justify-center text-center group min-h-[55px]">
+                                                        <span class="block font-extrabold text-[12px] text-slate-800 leading-tight uppercase tracking-wide">
+                                                            {{ $cell['entry']['subject_name'] }}
+                                                        </span>
                                                         @if($cell['entry']['teacher_name'] && $cell['entry']['teacher_name'] !== 'Teacher pending')
-                                                            <span class="block text-[10px] font-medium text-slate-500 mt-1.5 flex items-center gap-1.5">
+                                                            <span class="block text-[10px] font-bold text-slate-500 mt-1.5 flex items-center justify-center gap-1.5">
                                                                 <i data-lucide="user" class="h-3 w-3 opacity-60"></i>
                                                                 {{ $cell['entry']['teacher_name'] }}
                                                             </span>
@@ -349,7 +309,7 @@
                                                 </td>
                                             @endif
                                         @else
-                                            <td class="cell-empty bg-white"></td>
+                                            <td class="cell-empty"></td>
                                         @endif
                                     @endforeach
                                 </tr>
