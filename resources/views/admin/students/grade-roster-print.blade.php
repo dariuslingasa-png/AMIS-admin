@@ -208,7 +208,7 @@
                 <div class="brand-text">
                     <div style="font-size: 15px; font-weight: bold; color: #059669; font-family: 'Times New Roman', Times, serif; margin-bottom: 2px;">مدرسة المنورة الإسلامية</div>
                     <h1 style="font-size: 16px; font-weight: 900; letter-spacing: .02em; margin: 0; color: #0f172a;">AL MUNAWWARA ISLAMIC SCHOOL</h1>
-                    <div class="subtitle" style="margin-top: 4px; font-size: 9px; font-weight: 800; color: #059669; text-transform: uppercase;">OFFICIAL SCHOOL PORTAL - ENROLLMENT REGISTRAR</div>
+                    <div class="subtitle" style="margin-top: 4px; font-size: 9px; font-weight: 800; color: #059669; text-transform: uppercase;">ENABLING OUR STUDENTS TO LEARN FID DUNYA WAL AKHIRA</div>
                 </div>
             </header>
 
