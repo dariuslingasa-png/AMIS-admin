@@ -31,12 +31,50 @@
         color: #64748b;
         padding: 12px !important;
     }
-    .timetable-grid .cell-scheduled {
-        background-color: #ffffff !important; /* White background for all scheduled cells */
-        color: #1e293b;
+    .timetable-grid .cell-quran {
+        background-color: #f0f9ff !important; /* bg-sky-50 */
+        color: #0369a1 !important; /* text-sky-700 */
+        border-right: 1px solid #bae6fd !important;
+        border-top: 1px solid #bae6fd !important;
     }
-    .timetable-grid .cell-scheduled:hover {
-        background-color: #f8fafc !important; /* Soft gray highlight on hover */
+    .timetable-grid .cell-quran:hover {
+        background-color: #e0f2fe !important;
+    }
+    .timetable-grid .cell-hadith {
+        background-color: #fffbeb !important; /* bg-amber-50 */
+        color: #b45309 !important; /* text-amber-700 */
+        border-right: 1px solid #fde68a !important;
+        border-top: 1px solid #fde68a !important;
+    }
+    .timetable-grid .cell-hadith:hover {
+        background-color: #fef3c7 !important;
+    }
+    .timetable-grid .cell-recess {
+        background-color: #fdf2f8 !important; /* bg-pink-50 */
+        color: #be185d !important; /* text-pink-700 */
+        border-right: 1px solid #fce7f3 !important;
+        border-top: 1px solid #fce7f3 !important;
+    }
+    .timetable-grid .cell-recess:hover {
+        background-color: #fce7f3 !important;
+    }
+    .timetable-grid .cell-event {
+        background-color: #f5f3ff !important; /* bg-violet-50 */
+        color: #6d28d9 !important; /* text-violet-700 */
+        border-right: 1px solid #ede9fe !important;
+        border-top: 1px solid #ede9fe !important;
+    }
+    .timetable-grid .cell-event:hover {
+        background-color: #ede9fe !important;
+    }
+    .timetable-grid .cell-academic {
+        background-color: #f0fdf4 !important; /* bg-emerald-50 */
+        color: #15803d !important; /* text-emerald-700 */
+        border-right: 1px solid #dcfce7 !important;
+        border-top: 1px solid #dcfce7 !important;
+    }
+    .timetable-grid .cell-academic:hover {
+        background-color: #dcfce7 !important;
     }
     .timetable-grid .cell-empty {
         background-color: #ffffff !important;
@@ -291,14 +329,25 @@
                                                         'update_url' => route('admin.academic.schedules.update', $cell['entry']['id']),
                                                         'destroy_url' => route('admin.academic.schedules.destroy', $cell['entry']['id']),
                                                     ]));
+                                                    $subjectLower = strtolower($cell['entry']['subject_name']);
+                                                    $cellClass = 'cell-academic';
+                                                    if (str_contains($subjectLower, 'qur')) {
+                                                        $cellClass = 'cell-quran';
+                                                    } elseif (str_contains($subjectLower, 'hadith') || str_contains($subjectLower, 'arabic')) {
+                                                        $cellClass = 'cell-hadith';
+                                                    } elseif (str_contains($subjectLower, 'recess')) {
+                                                        $cellClass = 'cell-recess';
+                                                    } elseif (str_contains($subjectLower, 'assembly') || str_contains($subjectLower, 'meeting') || str_contains($subjectLower, 'circle') || str_contains($subjectLower, 'wrap') || str_contains($subjectLower, 'departure')) {
+                                                        $cellClass = 'cell-event';
+                                                    }
                                                 @endphp
-                                                <td rowspan="{{ $cell['span'] }}" colspan="{{ $cell['colspan'] }}" class="cell-scheduled">
+                                                <td rowspan="{{ $cell['span'] }}" colspan="{{ $cell['colspan'] }}" class="{{ $cellClass }}">
                                                     <div class="relative w-full h-full p-4 flex flex-col justify-center text-center group min-h-[55px]">
-                                                        <span class="block font-extrabold text-[12px] text-slate-800 leading-tight uppercase tracking-wide">
+                                                        <span class="block font-extrabold text-[12px] leading-tight uppercase tracking-wide" style="color: inherit;">
                                                             {{ $cell['entry']['subject_name'] }}
                                                         </span>
                                                         @if($cell['entry']['teacher_name'] && $cell['entry']['teacher_name'] !== 'Teacher pending')
-                                                            <span class="block text-[10px] font-bold text-slate-500 mt-1.5 flex items-center justify-center gap-1.5">
+                                                            <span class="block text-[10px] font-bold mt-1.5 flex items-center justify-center gap-1.5" style="color: inherit; opacity: 0.8;">
                                                                 <i data-lucide="user" class="h-3 w-3 opacity-60"></i>
                                                                 {{ $cell['entry']['teacher_name'] }}
                                                             </span>
