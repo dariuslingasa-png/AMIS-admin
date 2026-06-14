@@ -187,7 +187,8 @@
             </div>
             <div class="brand-text">
                 <h1>AL MUNAWWARA ISLAMIC SCHOOL</h1>
-                <div class="subtitle">Official School Portal - Enrollment Registrar</div>
+                <div style="font-size: 13px; font-weight: bold; color: #059669; font-family: 'Times New Roman', Times, serif; margin-top: 2px;">مدرسة المنورة الإسلامية</div>
+                <div class="subtitle" style="margin-top: 3px;">Official School Portal - Enrollment Registrar</div>
             </div>
             <div class="status"><span class="badge">OFFICIALLY ENROLLED</span></div>
         </header>
