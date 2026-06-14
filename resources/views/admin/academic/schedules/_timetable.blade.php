@@ -1,5 +1,11 @@
 <style>
     /* Minimal overrides for the timetable grid using premium-table base */
+    .timetable-grid-wrap {
+        max-height: none !important;
+        overflow: visible !important;
+        border: 1px solid #edf2f7;
+        border-radius: .875rem;
+    }
     .timetable-grid td {
         border-top: 1px solid #f1f5f9;
         border-right: 1px solid #f1f5f9;
@@ -26,11 +32,11 @@
         padding: 12px !important;
     }
     .timetable-grid .cell-scheduled {
-        background-color: #f8fafc !important; /* Neutral gray background for scheduled classes */
+        background-color: #ffffff !important; /* White background for all scheduled cells */
         color: #1e293b;
     }
     .timetable-grid .cell-scheduled:hover {
-        background-color: #f1f5f9 !important; /* Neutral highlight on hover */
+        background-color: #f8fafc !important; /* Soft gray highlight on hover */
     }
     .timetable-grid .cell-empty {
         background-color: #ffffff !important;
@@ -254,7 +260,7 @@
                     }
                 @endphp
 
-                <div class="premium-table-wrap">
+                <div class="premium-table-wrap timetable-grid-wrap">
                     <table class="premium-table timetable-grid">
                         <thead>
                             <tr>
