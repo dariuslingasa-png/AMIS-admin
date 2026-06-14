@@ -2,7 +2,7 @@
     $inputClass = 'h-11 rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100';
     $msSyncColor = ['enrolled' => 'green', 'failed' => 'red', 'pending' => 'yellow'];
     $msSyncLabel = ['enrolled' => 'Synced', 'failed' => 'Sync Failed', 'pending' => 'Pending Teams'];
-    $sort = request('sort', 'name');
+    $sort = request('sort', 'latest');
     $direction = request('direction', $sort === 'name' ? 'asc' : 'desc') === 'asc' ? 'asc' : 'desc';
     $sortUrl = fn ($key) => route('admin.students.index', array_merge(request()->except('page'), [
         'sort' => $key,
