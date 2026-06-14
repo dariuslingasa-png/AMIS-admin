@@ -76,6 +76,15 @@
     .timetable-grid .cell-academic:hover {
         background-color: #dcfce7 !important;
     }
+    .timetable-grid .cell-event {
+        background-color: #f5f3ff !important; /* bg-violet-50 */
+        color: #6d28d9 !important; /* text-violet-700 */
+        border-right: 1px solid #ede9fe !important;
+        border-top: 1px solid #ede9fe !important;
+    }
+    .timetable-grid .cell-event:hover {
+        background-color: #ede9fe !important;
+    }
     .timetable-grid .cell-empty {
         background-color: #ffffff !important;
         color: #1e293b !important;
@@ -343,7 +352,9 @@
                                                         $cellClass = 'cell-arabic';
                                                     } elseif (str_contains($subjectLower, 'recess')) {
                                                         $cellClass = 'cell-recess';
-                                                    } elseif (str_contains($subjectLower, 'assembly') || str_contains($subjectLower, 'departure') || str_contains($subjectLower, 'meeting') || str_contains($subjectLower, 'circle') || str_contains($subjectLower, 'wrap')) {
+                                                    } elseif (str_contains($subjectLower, 'meeting') || str_contains($subjectLower, 'circle') || str_contains($subjectLower, 'wrap')) {
+                                                        $cellClass = 'cell-event';
+                                                    } elseif (str_contains($subjectLower, 'assembly') || str_contains($subjectLower, 'departure')) {
                                                         $cellClass = 'cell-empty';
                                                     }
                                                 @endphp
