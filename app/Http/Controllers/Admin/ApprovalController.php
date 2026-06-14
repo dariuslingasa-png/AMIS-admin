@@ -80,7 +80,7 @@ class ApprovalController extends Controller
                 continue;
             }
 
-            if ($child->status === 'approved') {
+            if ($child->status === 'approved' && $child->student) {
                 $this->approvalService->backfillMicrosoftPhoto($child);
                 $photoRetryCount++;
 
