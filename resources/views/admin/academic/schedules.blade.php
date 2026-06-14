@@ -4,12 +4,16 @@
     $activeSectionId = (int) old('section_id', $firstSectionId);
     $failedForm = old('_schedule_form');
     $failedScheduleId = (int) old('schedule_id', 0);
+    $activeSection = $sections->firstWhere('id', $activeSectionId) ?? $sections->first();
+    $activeGradeLevel = $activeSection?->grade_level ?? '';
 @endphp
 
 <x-admin-layout title="Class Management Workspace">
     <div class="analytics-page flex flex-col gap-6" x-data="{
         activeWorkspace: @js($activeWorkspace),
         activeSectionId: @js($activeSectionId),
+        activeGradeLevel: @js($activeGradeLevel),
+        gradeSections: @js($sections->groupBy('grade_level')->map(fn($group) => $group->map(fn($s) => ['id' => $s->id])->values())),
         addModal: @js($errors->any() && $failedForm !== 'edit'),
         editModal: @js($errors->any() && $failedForm === 'edit'),
         deleteModal: false,

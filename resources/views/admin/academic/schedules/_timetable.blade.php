@@ -65,20 +65,51 @@
     }
 </style>
 
+@php
+    $sectionsByGrade = $sections->groupBy('grade_level');
+    $gradeOrder = [
+        'Kinder 1', 'Kinder 2', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 
+        'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 
+        'Grade 11', 'Grade 12'
+    ];
+    $sortedGradeLevels = $sectionsByGrade->keys()->sortBy(function ($grade) use ($gradeOrder) {
+        $idx = array_search($grade, $gradeOrder);
+        return $idx !== false ? $idx : 999;
+    });
+@endphp
+
 <div x-show="activeWorkspace === 'schedule'" x-transition class="space-y-6">
-    <div class="bg-white rounded-2xl border border-gray-150 p-4 shadow-xs">
-        <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-2">Select Class Group Schedule</label>
-        <div class="flex flex-wrap gap-2">
-            @foreach($sections as $section)
-                <button type="button" @click="activeSectionId = {{ $section->id }}"
-                    :class="activeSectionId === {{ $section->id }} ? 'bg-indigo-700 text-white border-indigo-700 shadow-xs font-bold' : 'bg-gray-50 text-slate-600 hover:bg-gray-100 border-slate-200'"
-                    class="px-4 py-2.5 text-xs rounded-xl border transition cursor-pointer shadow-3xs text-left">
-                    <span class="block font-bold">{{ $section->grade_level }} - {{ $section->official_name ?: $section->name ?: 'General' }}</span>
-                    <span class="block text-[9px] opacity-80 font-medium mt-0.5" :class="activeSectionId === {{ $section->id }} ? 'text-indigo-200' : 'text-slate-400'">
-                        {{ $section->shift ?? 'F2F' }} · {{ ucfirst($section->gender === 'male' ? 'Boys' : 'Girls') }} · {{ $section->learning_mode }}
-                    </span>
-                </button>
-            @endforeach
+    <div class="bg-white rounded-2xl border border-gray-150 p-5 shadow-xs space-y-4">
+        <div>
+            <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-2">Select Grade Level</label>
+            <div class="flex flex-wrap gap-1.5">
+                @foreach($sortedGradeLevels as $grade)
+                    <button type="button" 
+                        @click="activeGradeLevel = '{{ $grade }}'; activeSectionId = (gradeSections['{{ $grade }}'] && gradeSections['{{ $grade }}'][0]) ? gradeSections['{{ $grade }}'][0].id : 0"
+                        :class="activeGradeLevel === '{{ $grade }}' ? 'bg-indigo-700 text-white shadow-xs font-bold border-indigo-700' : 'bg-gray-50 text-slate-655 hover:bg-gray-100 hover:text-slate-900 border-slate-200'"
+                        class="px-3.5 py-2 text-xs rounded-xl border transition cursor-pointer shadow-3xs font-extrabold">
+                        {{ $grade }}
+                    </button>
+                @endforeach
+            </div>
+        </div>
+
+        <div class="border-t border-slate-100 pt-3">
+            <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-2">Select Section / Mode</label>
+            <div class="flex flex-wrap gap-2">
+                @foreach($sections as $section)
+                    <button type="button" 
+                        x-show="activeGradeLevel === '{{ $section->grade_level }}'"
+                        @click="activeSectionId = {{ $section->id }}"
+                        :class="activeSectionId === {{ $section->id }} ? 'bg-indigo-100 text-indigo-850 border-indigo-300 shadow-3xs font-extrabold' : 'bg-white text-slate-600 hover:bg-slate-50 border-slate-250'"
+                        class="px-4 py-2.5 text-xs rounded-xl border transition cursor-pointer shadow-3xs text-left">
+                        <span class="block font-black text-slate-950">{{ $section->official_name ?: $section->name ?: 'General' }}</span>
+                        <span class="block text-[9px] opacity-80 font-semibold mt-0.5" :class="activeSectionId === {{ $section->id }} ? 'text-indigo-700' : 'text-slate-400'">
+                            {{ $section->shift ?? 'F2F' }} · {{ ucfirst($section->gender === 'male' ? 'Boys' : 'Girls') }} · {{ $section->learning_mode }}
+                        </span>
+                    </button>
+                @endforeach
+            </div>
         </div>
     </div>
 
