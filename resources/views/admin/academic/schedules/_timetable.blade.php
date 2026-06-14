@@ -4,64 +4,70 @@
         border-collapse: collapse;
         font-family: 'Inter', sans-serif;
         font-size: 11px;
-        border: 2px solid #000000;
+        border: 1px solid #e2e8f0;
     }
     .timetable-spreadsheet th,
     .timetable-spreadsheet td {
-        border: 1.5px solid #000000;
-        padding: 8px 12px;
+        border: 1px solid #e2e8f0;
+        padding: 10px 14px;
         text-align: center;
         vertical-align: middle;
         font-weight: 700;
     }
     .timetable-spreadsheet thead th {
-        background-color: #f2f2f2;
-        color: #000000;
+        background-color: #f8fafc;
+        color: #475569;
         font-weight: 800;
-        border: 1.5px solid #000000;
-    }
-    .timetable-spreadsheet .header-title {
-        background-color: #d9d2e9 !important;
-        font-size: 13px;
-        font-weight: 900;
+        border: 1px solid #e2e8f0;
+        font-size: 10px;
         text-transform: uppercase;
         letter-spacing: 0.5px;
-        color: #000000;
-        padding: 10px;
-        border: 2px solid #000000;
+    }
+    .timetable-spreadsheet .header-title {
+        background-color: #f1f5f9 !important;
+        font-size: 12px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #1e293b;
+        padding: 12px;
+        border: 1px solid #e2e8f0;
+        border-bottom: 2px solid #e2e8f0;
     }
     .timetable-spreadsheet .col-time {
         width: 140px;
         background-color: #ffffff;
-        border: 1.5px solid #000000;
+        border: 1px solid #e2e8f0;
         font-weight: 700;
         text-align: center;
+        color: #334155;
     }
     .timetable-spreadsheet .col-minutes {
         width: 80px;
         background-color: #ffffff;
-        border: 1.5px solid #000000;
+        border: 1px solid #e2e8f0;
         font-weight: 700;
         text-align: center;
+        color: #475569;
     }
     .timetable-spreadsheet .cell-quran {
-        background-color: #c6efce !important;
-        color: #006100 !important;
-        border: 1.5px solid #000000;
+        background-color: #ecfdf5 !important;
+        color: #065f46 !important;
+        border: 1px solid #a7f3d0;
     }
     .timetable-spreadsheet .cell-hadith {
-        background-color: #ffd966 !important;
-        color: #7f6000 !important;
-        border: 1.5px solid #000000;
+        background-color: #fef3c7 !important;
+        color: #92400e !important;
+        border: 1px solid #fde68a;
     }
     .timetable-spreadsheet .cell-general {
-        background-color: #e2d5f3 !important;
-        color: #4b2c70 !important;
-        border: 1.5px solid #000000;
+        background-color: #f5f3ff !important;
+        color: #5b21b6 !important;
+        border: 1px solid #ddd6fe;
     }
     .timetable-spreadsheet .cell-empty {
         background-color: #ffffff !important;
-        border: 1.5px solid #a0a0a0;
+        border: 1px solid #f1f5f9;
     }
 </style>
 
@@ -279,7 +285,7 @@
                     }
                 @endphp
 
-                <div class="overflow-x-auto rounded-2xl border border-black shadow-xs">
+                <div class="overflow-x-auto rounded-2xl border border-gray-150 shadow-3xs">
                     <table class="timetable-spreadsheet">
                         <thead>
                             <tr>
