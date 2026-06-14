@@ -46,7 +46,15 @@ class AdminUserController extends Controller
                     'previous_session_revoked',
                     'teacher_password_changed_onboarding'
                 ]);
-            });
+            })->whereNotNull('user_id');
+        } elseif ($tab === 'unknown') {
+            $query->where(function ($q) {
+                $q->whereIn('event', [
+                    'login_failed',
+                    'login_denied',
+                    'microsoft_login_denied'
+                ]);
+            })->whereNull('user_id');
         } elseif ($tab === 'approve') {
             $query->where(function ($q) {
                 $q->whereIn('event', [

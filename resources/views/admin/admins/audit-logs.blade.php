@@ -26,6 +26,11 @@
                             <i data-lucide="log-in" class="w-3.5 h-3.5"></i>
                             Login Logs
                         </a>
+                        <a href="{{ route('admin.admins.audit-logs', ['tab' => 'unknown', 'search' => $search]) }}"
+                           class="px-4 py-2 text-xs rounded-xl transition duration-200 cursor-pointer flex items-center justify-center gap-1.5 uppercase tracking-wider {{ $tab === 'unknown' ? 'bg-white text-indigo-800 shadow-sm font-black' : 'text-slate-500 hover:text-slate-900 font-bold' }}">
+                            <i data-lucide="user-x" class="w-3.5 h-3.5"></i>
+                            Unknown Logins
+                        </a>
                         <a href="{{ route('admin.admins.audit-logs', ['tab' => 'approve', 'search' => $search]) }}"
                            class="px-4 py-2 text-xs rounded-xl transition duration-200 cursor-pointer flex items-center justify-center gap-1.5 uppercase tracking-wider {{ $tab === 'approve' ? 'bg-white text-indigo-800 shadow-sm font-black' : 'text-slate-500 hover:text-slate-900 font-bold' }}">
                             <i data-lucide="check-square" class="w-3.5 h-3.5"></i>
