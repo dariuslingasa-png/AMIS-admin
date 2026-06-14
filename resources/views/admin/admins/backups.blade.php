@@ -58,104 +58,123 @@
             </div>
         @endif
 
-        <x-card title="Backup Files Directory" subtitle="All generated database snapshots stored on disk">
-            <x-slot name="actions">
-                <div class="flex flex-wrap items-center gap-2">
-                    @if ($gdriveConfigured)
-                        <form method="POST" action="{{ route('admin.admins.backups.full') }}">
-                            @csrf
-                            <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2.5 text-xs font-black uppercase tracking-wider text-white shadow-lg transition hover:bg-violet-700 cursor-pointer" title="Backup database and all upload files to Google Drive">
-                                <i data-lucide="cloud-upload" class="h-4 w-4"></i>
-                                Backup Full System
-                            </button>
-                        </form>
-                    @endif
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <div class="lg:col-span-2">
+                <x-card title="Backup Files Directory" subtitle="All generated database snapshots stored on disk">
+                    <x-slot name="actions">
+                        <div class="flex flex-wrap items-center gap-2">
+                            @if ($gdriveConfigured)
+                                <form method="POST" action="{{ route('admin.admins.backups.full') }}">
+                                    @csrf
+                                    <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2.5 text-xs font-black uppercase tracking-wider text-white shadow-lg transition hover:bg-violet-700 cursor-pointer" title="Backup database and all upload files to Google Drive">
+                                        <i data-lucide="cloud-upload" class="h-4 w-4"></i>
+                                        Backup Full System
+                                    </button>
+                                </form>
+                            @endif
 
-                    <form method="POST" action="{{ route('admin.admins.backups.create') }}">
-                        @csrf
-                        <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-black uppercase tracking-wider text-white shadow-lg transition hover:bg-indigo-700 cursor-pointer">
-                            <i data-lucide="database" class="h-4 w-4"></i>
-                            Create DB Snapshot
-                        </button>
-                    </form>
-                </div>
-            </x-slot>
+                            <form method="POST" action="{{ route('admin.admins.backups.create') }}">
+                                @csrf
+                                <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-black uppercase tracking-wider text-white shadow-lg transition hover:bg-indigo-700 cursor-pointer">
+                                    <i data-lucide="database" class="h-4 w-4"></i>
+                                    Create DB Snapshot
+                                </button>
+                            </form>
+                        </div>
+                    </x-slot>
 
-            <div class="overflow-x-auto">
-                <table class="w-full min-w-[760px] text-left text-sm">
-                    <thead>
-                        <tr class="border-b border-slate-100 text-[11px] font-black uppercase tracking-widest text-slate-400">
-                            <th class="px-5 py-3">Filename</th>
-                            <th class="px-5 py-3">Date Created</th>
-                            <th class="px-5 py-3">Size</th>
-                            <th class="px-5 py-3 text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100">
-                        @forelse ($files as $file)
-                            <tr class="align-middle">
-                                <td class="px-5 py-4">
-                                    <div class="flex items-center gap-3">
-                                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700 ring-1 ring-indigo-100">
-                                            <i data-lucide="file-database" class="h-5 w-5"></i>
-                                        </div>
-                                        <div>
-                                            <span class="font-extrabold text-slate-900 block">{{ $file['name'] }}</span>
-                                            <span class="text-[10px] font-semibold text-slate-400">SQL Dump</span>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-5 py-4 text-xs font-bold text-slate-600">
-                                    {{ $file['created_at'] }}
-                                </td>
-                                <td class="px-5 py-4 text-xs font-bold text-slate-600">
-                                    {{ $file['size'] }}
-                                </td>
-                                <td class="px-5 py-4 text-right">
-                                    <div class="flex items-center justify-end gap-2">
-                                        @if ($gdriveConfigured)
-                                            <form method="POST" action="{{ route('admin.admins.backups.google-drive', $file['name']) }}">
-                                                @csrf
-                                                <button type="submit" class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-indigo-100 bg-white px-3 text-xs font-bold text-indigo-700 transition hover:border-indigo-200 hover:bg-indigo-50 cursor-pointer" title="Upload copy to Google Drive">
-                                                    <i data-lucide="cloud-upload" class="h-4 w-4"></i>
-                                                    Upload to Drive
-                                                </button>
-                                            </form>
-                                        @endif
-                                        <a href="{{ route('admin.admins.backups.download', $file['name']) }}" class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-indigo-100 bg-white px-3 text-xs font-bold text-indigo-700 transition hover:border-indigo-200 hover:bg-indigo-50">
-                                            <i data-lucide="download" class="h-4 w-4"></i>
-                                            Download
-                                        </a>
-                                        <form method="POST" action="{{ route('admin.admins.backups.destroy', $file['name']) }}" onsubmit="return confirm('Delete backup file {{ $file['name'] }} permanently?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-rose-100 bg-white px-3 text-xs font-bold text-rose-600 transition hover:border-rose-200 hover:bg-rose-50 cursor-pointer">
-                                                <i data-lucide="trash-2" class="h-4 w-4"></i>
-                                                Delete
-                                            </button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="4" class="px-5 py-12 text-center text-sm font-bold text-slate-400">
-                                    <div class="flex flex-col items-center justify-center gap-2">
-                                        <i data-lucide="folder-open" class="h-8 w-8 text-slate-300"></i>
-                                        No backup snapshots created yet.
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                    <div class="overflow-x-auto">
+                        <table class="w-full min-w-[760px] text-left text-sm">
+                            <thead>
+                                <tr class="border-b border-slate-100 text-[11px] font-black uppercase tracking-widest text-slate-400">
+                                    <th class="px-5 py-3">Filename</th>
+                                    <th class="px-5 py-3">Date Created</th>
+                                    <th class="px-5 py-3">Size</th>
+                                    <th class="px-5 py-3 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                @forelse ($files as $file)
+                                    <tr class="align-middle">
+                                        <td class="px-5 py-4">
+                                            <div class="flex items-center gap-3">
+                                                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700 ring-1 ring-indigo-100">
+                                                    <i data-lucide="file-database" class="h-5 w-5"></i>
+                                                </div>
+                                                <div>
+                                                    <span class="font-extrabold text-slate-900 block">{{ $file['name'] }}</span>
+                                                    <span class="text-[10px] font-semibold text-slate-400">SQL Dump</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-5 py-4 text-xs font-bold text-slate-600">
+                                            {{ $file['created_at'] }}
+                                        </td>
+                                        <td class="px-5 py-4 text-xs font-bold text-slate-600">
+                                            {{ $file['size'] }}
+                                        </td>
+                                        <td class="px-5 py-4 text-right">
+                                            <div class="flex items-center justify-end gap-2">
+                                                @if ($gdriveConfigured)
+                                                    <form method="POST" action="{{ route('admin.admins.backups.google-drive', $file['name']) }}">
+                                                        @csrf
+                                                        <button type="submit" class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-indigo-100 bg-white px-3 text-xs font-bold text-indigo-700 transition hover:border-indigo-200 hover:bg-indigo-50 cursor-pointer" title="Upload copy to Google Drive">
+                                                            <i data-lucide="cloud-upload" class="h-4 w-4"></i>
+                                                            Upload to Drive
+                                                        </button>
+                                                    </form>
+                                                @endif
+                                                <a href="{{ route('admin.admins.backups.download', $file['name']) }}" class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-indigo-100 bg-white px-3 text-xs font-bold text-indigo-700 transition hover:border-indigo-200 hover:bg-indigo-50">
+                                                    <i data-lucide="download" class="h-4 w-4"></i>
+                                                    Download
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="4" class="px-5 py-12 text-center text-sm font-bold text-slate-400">
+                                            <div class="flex flex-col items-center justify-center gap-2">
+                                                <i data-lucide="folder-open" class="h-8 w-8 text-slate-300"></i>
+                                                No backup snapshots created yet.
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="px-4 py-4 sm:px-6 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-slate-50/30">
+                        <p class="text-xs font-bold text-slate-500">
+                            Showing {{ count($files) }} snapshots stored locally
+                        </p>
+                    </div>
+                </x-card>
             </div>
-
-            <div class="px-4 py-4 sm:px-6 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-slate-50/30">
-                <p class="text-xs font-bold text-slate-500">
-                    Showing {{ count($files) }} snapshots stored locally
-                </p>
+            <div>
+                <x-card title="Local Disk Storage" subtitle="Server partition disk space tracker">
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between text-xs font-bold text-slate-500">
+                            <span>Used Space ({{ $diskUsagePercent }}%)</span>
+                            <span>{{ $formattedFreeDisk }} Free of {{ $formattedTotalDisk }}</span>
+                        </div>
+                        <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
+                            <div class="h-full bg-violet-600 rounded-full transition-all duration-500" style="width: {{ $diskUsagePercent }}%"></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 pt-2">
+                            <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                                <span class="block text-[10px] font-black uppercase text-slate-400">Used Disk</span>
+                                <span class="text-sm font-black text-slate-900 mt-1 block">{{ $formattedUsedDisk }}</span>
+                            </div>
+                            <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                                <span class="block text-[10px] font-black uppercase text-slate-400">Available</span>
+                                <span class="text-sm font-black text-slate-950 mt-1 block">{{ $formattedFreeDisk }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </x-card>
             </div>
-        </x-card>
+        </div>
     </div>
 </x-admin-layout>

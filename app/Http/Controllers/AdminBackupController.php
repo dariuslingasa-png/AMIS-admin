@@ -60,10 +60,31 @@ class AdminBackupController extends Controller
         }
         $formattedDbSize = $this->formatBytes($dbSize);
 
+        // Get disk space info
+        $totalDiskSpace = @disk_total_space(base_path()) ?: 0;
+        $freeDiskSpace = @disk_free_space(base_path()) ?: 0;
+        $usedDiskSpace = $totalDiskSpace - $freeDiskSpace;
+
+        $formattedFreeDisk = $this->formatBytes($freeDiskSpace);
+        $formattedTotalDisk = $this->formatBytes($totalDiskSpace);
+        $formattedUsedDisk = $this->formatBytes($usedDiskSpace);
+        $diskUsagePercent = $totalDiskSpace > 0 ? round(($usedDiskSpace / $totalDiskSpace) * 100, 1) : 0;
+
         $driveService = new \App\Services\GoogleDriveService();
         $gdriveConfigured = $driveService->isConfigured();
 
-        return view('admin.admins.backups', compact('files', 'dbHost', 'dbName', 'dbPort', 'formattedDbSize', 'gdriveConfigured'));
+        return view('admin.admins.backups', compact(
+            'files', 
+            'dbHost', 
+            'dbName', 
+            'dbPort', 
+            'formattedDbSize', 
+            'gdriveConfigured',
+            'formattedFreeDisk',
+            'formattedTotalDisk',
+            'formattedUsedDisk',
+            'diskUsagePercent'
+        ));
     }
 
     public function runFullBackup(Request $request)
