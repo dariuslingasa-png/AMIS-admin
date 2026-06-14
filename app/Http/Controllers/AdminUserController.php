@@ -108,6 +108,109 @@ class AdminUserController extends Controller
         return view('admin.admins.audit-logs', compact('logs', 'tab', 'search'));
     }
 
+    public function loginActivity(Request $request)
+    {
+        $search = $request->query('search');
+
+        $query = AdminAuditLog::with('user')
+            ->whereIn('event', [
+                'login_success',
+                'login_failed',
+                'login_denied',
+                'microsoft_login_success',
+                'microsoft_login_denied'
+            ]);
+
+        // Apply Search
+        if (filled($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('email', 'like', "%{$search}%")
+                  ->orWhere('ip_address', 'like', "%{$search}%")
+                  ->orWhereHas('user', function ($u) use ($search) {
+                      $u->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $logs = $query->latest()->paginate(30)->withQueryString();
+
+        // Map logs and transform details
+        $logs->getCollection()->transform(function ($log) {
+            // 1. User Agent Parsing
+            $uaInfo = $this->parseUserAgent($log->user_agent);
+            $log->browser = $uaInfo['browser'];
+            $log->device = $uaInfo['device'];
+
+            // 2. Pair Logout Time if login was successful
+            $log->logout_time = null;
+            if ($log->successful && in_array($log->event, ['login_success', 'microsoft_login_success'], true) && $log->user_id) {
+                // Find the next login for this user
+                $nextLogin = AdminAuditLog::where('user_id', $log->user_id)
+                    ->whereIn('event', ['login_success', 'microsoft_login_success'])
+                    ->where('created_at', '>', $log->created_at)
+                    ->oldest()
+                    ->first();
+
+                $logoutQuery = AdminAuditLog::where('user_id', $log->user_id)
+                    ->where('event', 'logout')
+                    ->where('created_at', '>', $log->created_at);
+
+                if ($nextLogin) {
+                    $logoutQuery->where('created_at', '<', $nextLogin->created_at);
+                }
+
+                $logoutLog = $logoutQuery->oldest()->first();
+                if ($logoutLog) {
+                    $log->logout_time = $logoutLog->created_at;
+                }
+            }
+
+            return $log;
+        });
+
+        return view('admin.admins.login-activity', compact('logs', 'search'));
+    }
+
+    private function parseUserAgent(?string $userAgent): array
+    {
+        if (blank($userAgent)) {
+            return ['browser' => 'Unknown', 'device' => 'Desktop'];
+        }
+
+        $ua = strtolower($userAgent);
+
+        // 1. Determine Device
+        $device = 'Desktop';
+        if (str_contains($ua, 'mobi') || str_contains($ua, 'iphone') || str_contains($ua, 'ipod') || str_contains($ua, 'android') && !str_contains($ua, 'tablet')) {
+            $device = 'Mobile';
+        } elseif (str_contains($ua, 'ipad') || str_contains($ua, 'playbook') || str_contains($ua, 'tablet')) {
+            $device = 'Tablet';
+        }
+
+        // 2. Determine Browser
+        $browser = 'Unknown';
+        if (str_contains($ua, 'edge') || str_contains($ua, 'edg/')) {
+            $browser = 'Microsoft Edge';
+        } elseif (str_contains($ua, 'chrome') || str_contains($ua, 'crios')) {
+            $browser = 'Google Chrome';
+        } elseif (str_contains($ua, 'safari') && !str_contains($ua, 'chrome') && !str_contains($ua, 'chromium')) {
+            $browser = 'Safari';
+        } elseif (str_contains($ua, 'firefox') || str_contains($ua, 'fxios')) {
+            $browser = 'Mozilla Firefox';
+        } elseif (str_contains($ua, 'opera') || str_contains($ua, 'opr/')) {
+            $browser = 'Opera';
+        } elseif (str_contains($ua, 'msie') || str_contains($ua, 'trident')) {
+            $browser = 'Internet Explorer';
+        } elseif (str_contains($ua, 'guzzle') || str_contains($ua, 'curl') || str_contains($ua, 'postman')) {
+            $browser = 'API Client';
+        } elseif (str_contains($ua, 'artisan') || str_contains($ua, 'cron')) {
+            $browser = 'System Console';
+        }
+
+        return ['browser' => $browser, 'device' => $device];
+    }
+
     public function edit(User $user)
     {
         $this->ensureSystemAdmin();

@@ -144,6 +144,7 @@ Route::name('admin.')->group(function () {
 
         Route::get('/admins', [AdminUserController::class, 'index'])->name('admins.index');
         Route::get('/admins/audit-logs', [AdminUserController::class, 'auditLogs'])->name('admins.audit-logs');
+        Route::get('/admins/login-activity', [AdminUserController::class, 'loginActivity'])->name('admins.login-activity');
         Route::get('/admins/backups', [\App\Http\Controllers\AdminBackupController::class, 'index'])->name('admins.backups');
         Route::post('/admins/backups', [\App\Http\Controllers\AdminBackupController::class, 'create'])->name('admins.backups.create');
         Route::post('/admins/backups/full', [\App\Http\Controllers\AdminBackupController::class, 'runFullBackup'])->name('admins.backups.full');
