@@ -26,71 +26,59 @@ class AdminStudentProcessController extends Controller
             });
         }
 
-        $paymentUserIds = \App\Models\Payment::whereNotNull('receipt_url')
+        $paymentUserIdsQuery = \App\Models\Payment::whereNotNull('receipt_url')
             ->whereNotIn('receipt_url', ['', '[]', '[""]'])
-            ->pluck('user_id')
-            ->unique()
-            ->toArray();
+            ->select('user_id');
 
-        $allStudents = $query->latest('students.created_at')->get();
+        $completedScope = function($q) use ($paymentUserIdsQuery) {
+            $q->whereNotNull('ms_user_id')
+              ->where('ms_user_id', '!=', '')
+              ->whereNotNull('ms_teams_enrolled_at')
+              ->whereHas('applicant', function($a) use ($paymentUserIdsQuery) {
+                  $a->where('completion_percentage', 100)
+                    ->whereNotNull('photo_2x2_url')
+                    ->where('photo_2x2_url', '!=', '')
+                    ->whereIn('user_id', $paymentUserIdsQuery);
+              });
+        };
 
-        $evaluatedStudents = $allStudents->map(function ($student) use ($paymentUserIds) {
-            $applicant = $student->applicant;
-            
-            $isFilled = $applicant && $applicant->completion_percentage === 100;
-            $hasPayment = $applicant && in_array($applicant->user_id, $paymentUserIds);
-            $hasPic = $applicant && filled($applicant->photo_2x2_url);
-            $hasMsAccount = filled($student->ms_user_id);
-            $isTeamsEnrolled = filled($student->ms_teams_enrolled_at);
-
-            $isCompleted = $isFilled && $hasPayment && $hasPic && $hasMsAccount && $isTeamsEnrolled;
-
-            return [
-                'student' => $student,
-                'is_completed' => $isCompleted,
-            ];
-        });
+        $pendingScope = function($q) use ($paymentUserIdsQuery) {
+            $q->where(function($sub) use ($paymentUserIdsQuery) {
+                $sub->whereNull('ms_user_id')
+                    ->orWhere('ms_user_id', '')
+                    ->orWhereNull('ms_teams_enrolled_at')
+                    ->orWhereDoesntHave('applicant', function($a) use ($paymentUserIdsQuery) {
+                        $a->where('completion_percentage', 100)
+                          ->whereNotNull('photo_2x2_url')
+                          ->where('photo_2x2_url', '!=', '')
+                          ->whereIn('user_id', $paymentUserIdsQuery);
+                    });
+            });
+        };
 
         if ($statusFilter === 'completed') {
-            $filtered = $evaluatedStudents->filter(fn($item) => $item['is_completed']);
+            $query->where($completedScope);
         } elseif ($statusFilter === 'pending') {
-            $filtered = $evaluatedStudents->filter(fn($item) => !$item['is_completed']);
-        } else {
-            $filtered = $evaluatedStudents;
+            $query->where($pendingScope);
         }
 
-        $page = $request->input('page', 1);
-        $perPage = 20;
-        $sliced = $filtered->slice(($page - 1) * $perPage, $perPage)->map(fn($item) => $item['student']);
-
-        $students = new \Illuminate\Pagination\LengthAwarePaginator(
-            $sliced,
-            $filtered->count(),
-            $perPage,
-            $page,
-            ['path' => $request->url(), 'query' => $request->query()]
-        );
+        $students = $query->latest('students.created_at')->paginate(20);
 
         $totalCount = Student::count();
-        
-        $allSystemStudents = Student::with('applicant')->get();
-        $completedCount = $allSystemStudents->filter(function ($student) use ($paymentUserIds) {
-            $applicant = $student->applicant;
-            
-            $isFilled = $applicant && $applicant->completion_percentage === 100;
-            $hasPayment = $applicant && in_array($applicant->user_id, $paymentUserIds);
-            $hasPic = $applicant && filled($applicant->photo_2x2_url);
-            $hasMsAccount = filled($student->ms_user_id);
-            $isTeamsEnrolled = filled($student->ms_teams_enrolled_at);
-
-            return $isFilled && $hasPayment && $hasPic && $hasMsAccount && $isTeamsEnrolled;
-        })->count();
+        $completedCount = Student::where($completedScope)->count();
 
         $stats = [
             'total' => $totalCount,
             'pending' => $totalCount - $completedCount,
             'completed' => $completedCount,
         ];
+
+        $paginatedUserIds = $students->pluck('applicant.user_id')->filter()->toArray();
+        $paymentUserIds = \App\Models\Payment::whereIn('user_id', $paginatedUserIds)
+            ->whereNotNull('receipt_url')
+            ->whereNotIn('receipt_url', ['', '[]', '[""]'])
+            ->pluck('user_id')
+            ->toArray();
 
         return view('admin.students.accounts', compact('students', 'stats', 'statusFilter', 'paymentUserIds'));
     }

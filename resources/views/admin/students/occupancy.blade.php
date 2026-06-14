@@ -33,267 +33,154 @@
             </div>
         </section>
 
-        <!-- Stats Grid -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 lg:gap-5">
-            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm relative overflow-hidden">
-                <div class="flex items-center justify-between">
-                    <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Official Students</p>
-                    <div class="rounded-xl bg-emerald-50 p-1.5 text-emerald-600">
-                        <i data-lucide="users" class="h-4 w-4"></i>
+        <!-- Skeleton Loading State -->
+        <div id="occupancySkeleton" class="hidden space-y-6">
+            <!-- Stats Grid Skeleton -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 lg:gap-5 animate-pulse">
+                @for($i = 0; $i < 5; $i++)
+                    <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm h-28 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="h-3.5 w-16 bg-slate-200 rounded"></div>
+                            <div class="h-6 w-6 bg-slate-100 rounded-lg"></div>
+                        </div>
+                        <div class="h-6 w-24 bg-slate-200 rounded"></div>
                     </div>
-                </div>
-                <div class="flex items-baseline gap-2 mt-1.5">
-                    <span class="text-2xl font-black text-slate-900">{{ number_format($totalOfficial) }}</span>
-                    <span class="text-xs font-bold text-emerald-600">Verified</span>
-                </div>
-                <div class="mt-2 text-[10px] font-semibold text-slate-500">
-                    Registered Active Accounts
-                </div>
+                @endfor
             </div>
 
-            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm relative overflow-hidden">
-                <div class="flex items-center justify-between">
-                    <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Total Enrolled</p>
-                    <div class="rounded-xl bg-blue-50 p-1.5 text-blue-600">
-                        <i data-lucide="graduation-cap" class="h-4 w-4"></i>
+            <!-- Grade Cards Grid Skeleton -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-pulse">
+                @for($i = 0; $i < 4; $i++)
+                    <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm h-64 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <div class="h-8 w-8 bg-slate-100 rounded-lg"></div>
+                                <div class="h-4 w-28 bg-slate-200 rounded"></div>
+                            </div>
+                            <div class="h-5 w-24 bg-slate-100 rounded-full"></div>
+                        </div>
+                        <div class="h-2 w-full bg-slate-100 rounded-full"></div>
+                        <div class="space-y-2 pt-2">
+                            <div class="h-8 bg-slate-50 rounded-xl"></div>
+                            <div class="h-8 bg-slate-50 rounded-xl"></div>
+                        </div>
                     </div>
-                </div>
-                <div class="flex items-baseline gap-2 mt-1.5">
-                    <span class="text-2xl font-black text-slate-900">{{ number_format($totalOccupied) }}</span>
-                    <span class="text-xs font-bold text-slate-500">/ {{ number_format($totalCapacity) }} Seats</span>
-                </div>
-                <div class="mt-2 text-[10px] font-semibold text-slate-500">
-                    Overall Fill Rate: <span class="font-extrabold text-emerald-600">{{ $overallFillRate }}%</span>
-                </div>
-            </div>
-            
-            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm relative overflow-hidden">
-                <div class="flex items-center justify-between">
-                    <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">F2F Occupancy</p>
-                    <div class="rounded-xl bg-sky-50 p-1.5 text-sky-600">
-                        <i data-lucide="school" class="h-4 w-4"></i>
-                    </div>
-                </div>
-                <div class="flex items-baseline gap-2 mt-1.5">
-                    <span class="text-2xl font-black text-slate-900">{{ number_format($f2fOccupied) }}</span>
-                    <span class="text-xs font-bold text-slate-500">/ {{ number_format($f2fCapacity) }} Seats</span>
-                </div>
-                <div class="mt-2 text-[10px] font-semibold text-slate-500">
-                    F2F Fill Rate: <span class="font-extrabold text-emerald-600">{{ $f2fFillRate }}%</span>
-                </div>
-            </div>
-
-            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm relative overflow-hidden">
-                <div class="flex items-center justify-between">
-                    <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Flexible Occupancy</p>
-                    <div class="rounded-xl bg-amber-50 p-1.5 text-amber-600">
-                        <i data-lucide="laptop" class="h-4 w-4"></i>
-                    </div>
-                </div>
-                <div class="flex items-baseline gap-2 mt-1.5">
-                    <span class="text-2xl font-black text-slate-900">{{ number_format($flexOccupied) }}</span>
-                    <span class="text-xs font-bold text-slate-500">/ {{ number_format($flexCapacity) }} Seats</span>
-                </div>
-                <div class="mt-2 text-[10px] font-semibold text-slate-500">
-                    Flexible Fill Rate: <span class="font-extrabold text-amber-600">{{ $flexFillRate }}%</span>
-                </div>
-            </div>
-
-            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm relative overflow-hidden">
-                <div class="flex items-center justify-between">
-                    <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Total Sections</p>
-                    <div class="rounded-xl bg-indigo-50 p-1.5 text-indigo-600">
-                        <i data-lucide="grid" class="h-4 w-4"></i>
-                    </div>
-                </div>
-                <div class="flex items-baseline gap-2 mt-1.5">
-                    <span class="text-2xl font-black text-slate-900">{{ $sections->count() }}</span>
-                    <span class="text-xs font-bold text-emerald-600">Active</span>
-                </div>
-                <div class="mt-2 text-[10px] font-semibold text-slate-500">
-                    Average: <span class="font-extrabold text-slate-700">{{ $sections->count() > 0 ? round($totalOccupied / $sections->count(), 1) : 0 }} / section</span>
-                </div>
+                @endfor
             </div>
         </div>
 
-        <!-- Grade Cards Grid -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            @forelse($sectionsGrouped as $gradeLevel => $gradeSections)
-                @php
-                    $gradeOccupied = $gradeSections->sum('occupied');
-                    $gradeCapacity = $gradeSections->sum('capacity_limit');
-                    $gradeFillRate = $gradeCapacity > 0 ? min(100, round(($gradeOccupied / $gradeCapacity) * 100)) : 0;
-                    
-                    $gradeStatusColor = $gradeFillRate >= 100 ? 'red' : ($gradeFillRate >= 85 ? 'amber' : 'emerald');
-                    $gradeThemeMap = [
-                        'red' => [
-                            'bg' => 'bg-rose-50 text-rose-700 border-rose-100',
-                            'fill' => 'bg-rose-500',
-                            'border' => 'border-t-rose-500'
-                        ],
-                        'amber' => [
-                            'bg' => 'bg-amber-50 text-amber-700 border-amber-100',
-                            'fill' => 'bg-amber-500',
-                            'border' => 'border-t-amber-500'
-                        ],
-                        'emerald' => [
-                            'bg' => 'bg-emerald-50 text-emerald-700 border-emerald-100',
-                            'fill' => 'bg-emerald-600',
-                            'border' => 'border-t-emerald-600'
-                        ],
-                    ];
-                    $gTheme = $gradeThemeMap[$gradeStatusColor];
-                    
-                    // Retrieve grade level advisor once for the whole card
-                    $firstSection = $gradeSections->first();
-                    $advisor = $firstSection ? $firstSection->grade_advisor : null;
-                    $advisorName = $advisor ? ($advisor->teacher_name ?? $advisor->teacher?->name ?? 'No Advisor') : 'No Advisor';
-                    $advisorEmail = $advisor ? ($advisor->teacher_email ?? $advisor->teacher?->email ?? null) : null;
-                @endphp
-                <div class="rounded-3xl border border-slate-200/80 bg-white shadow-sm hover:shadow-md transition duration-300 border-t-4 {{ $gTheme['border'] }} p-5 flex flex-col justify-between">
-                    <div>
-                        <!-- Grade Card Header -->
-                        <div class="flex items-center justify-between pb-3" style="border-bottom: 1px solid #f1f5f9;">
-                            <div class="flex items-center gap-2">
-                                <div class="rounded-xl bg-emerald-50 p-1.5 text-emerald-600">
-                                    <i data-lucide="graduation-cap" class="h-4.5 w-4.5"></i>
-                                </div>
-                                <div>
-                                    <h3 class="text-sm font-black text-slate-900 tracking-tight uppercase">{{ $gradeLevel }}</h3>
-                                    @if($advisor)
-                                        <div class="text-[9px] text-slate-500 font-bold mt-0.5 flex items-center gap-1">
-                                            <i data-lucide="user" class="h-2.5 w-2.5 text-emerald-600"></i>
-                                            Advisor: <span class="font-extrabold text-slate-700 uppercase" title="{{ $advisorEmail }}">{{ str_ireplace('TEACHER ', '', $advisorName) }}</span>
-                                        </div>
-                                    @endif
-                                </div>
-                            </div>
-                            <div class="text-right flex items-center gap-2">
-                                <span class="inline-flex rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-wider {{ $gTheme['bg'] }}">
-                                    {{ $gradeOccupied }} / {{ $gradeCapacity }} Seats Enrolled
-                                </span>
-                                <a href="{{ route('admin.students.grade-roster-print', $gradeLevel) }}" target="_blank" class="h-7 w-7 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 flex items-center justify-center transition active:scale-[0.95]" title="Print Grade PDF (All Sections)">
-                                    <i data-lucide="printer" class="h-3.5 w-3.5"></i>
-                                </a>
-                            </div>
-                        </div>
-
-                        <!-- Grade Card Overall Progress Bar -->
-                        <div class="mt-3 space-y-1">
-                            <div class="flex justify-between text-[9px] font-extrabold text-slate-500 uppercase tracking-wider">
-                                <span>Grade Load</span>
-                                <span>{{ $gradeFillRate }}% Capacity</span>
-                            </div>
-                            <div class="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
-                                <div class="h-full rounded-full {{ $gTheme['fill'] }} transition-all duration-500" style="width: {{ $gradeFillRate }}%;"></div>
-                            </div>
-                        </div>
-
-                        <!-- Nested Compact Sections Table -->
-                        <div class="mt-4 overflow-x-auto">
-                            <table class="w-full text-left text-xs align-middle">
-                                <thead>
-                                    <tr class="text-[9px] font-black uppercase tracking-wider text-slate-400" style="border-bottom: 1px solid #e2e8f0;">
-                                        <th class="pb-2 font-black">Section</th>
-                                        <th class="pb-2 font-black">Occupancy</th>
-                                        <th class="pb-2 text-right font-black">Actions</th>
-                                    </tr>
-                                </thead>
-                                @foreach($gradeSections as $section)
-                                    @php
-                                        $secStatusColor = $section->fill_rate >= 100 ? 'red' : ($section->fill_rate >= 85 ? 'amber' : 'emerald');
-                                        $secThemeMap = [
-                                            'red' => ['bg' => 'bg-rose-50 text-rose-700', 'fill' => 'bg-rose-500', 'text' => 'text-rose-600'],
-                                            'amber' => ['bg' => 'bg-amber-50 text-amber-700', 'fill' => 'bg-amber-500', 'text' => 'text-amber-600'],
-                                            'emerald' => ['bg' => 'bg-emerald-50 text-emerald-700', 'fill' => $section->gender === 'male' ? 'bg-blue-600' : 'bg-pink-500', 'text' => 'text-emerald-600'],
-                                        ];
-                                        $sTheme = $secThemeMap[$secStatusColor];
-                                        
-                                        // Section Display Name logic:
-                                        // F2F displays: F2F - Boys / Girls
-                                        // Flexible displays: Section Official Name
-                                        $genderLabel = $section->gender === 'male' ? 'Boys' : 'Girls';
-                                        if ($section->is_f2f) {
-                                            $sectionDisplayName = "F2F - " . $genderLabel;
-                                        } else {
-                                            $sectionDisplayName = ($section->official_name ?: ($section->name ?: 'Flexible')) . " - " . $genderLabel;
-                                        }
-                                        
-                                        $secLearningModeLabel = $section->is_f2f ? 'F2F' : 'Flexible';
-                                    @endphp
-                                    <tbody x-data="{ showRoster: false }">
-                                        <tr class="hover:bg-slate-50/40 transition" style="border-bottom: {{ $loop->last ? 'none' : '1px solid #f1f5f9' }};">
-                                            <!-- Section Name & Mode -->
-                                            <td class="py-3 pr-2">
-                                                <div class="font-extrabold text-slate-800 uppercase leading-snug text-xs">{{ $sectionDisplayName }}</div>
-                                                <div class="text-[9px] font-black text-slate-400 uppercase mt-0.5">
-                                                    {{ $secLearningModeLabel }} &middot; {{ $section->shift ?: '1st Shift' }}
-                                                </div>
-                                            </td>
-                                            <!-- Occupancy Bar -->
-                                            <td class="py-3 pr-2">
-                                                <div class="flex items-center gap-1.5">
-                                                    <span class="font-extrabold text-slate-800 text-[11px] min-w-[32px]">{{ $section->occupied }}/{{ $section->capacity_limit }}</span>
-                                                    <div class="h-1.5 w-12 rounded-full bg-slate-100 overflow-hidden shrink-0 hidden sm:block">
-                                                        <div class="h-full rounded-full {{ $sTheme['fill'] }} transition-all duration-300" style="width: {{ $section->fill_rate }}%;"></div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <!-- Actions -->
-                                            <td class="py-3 text-right">
-                                                <div class="flex items-center justify-end gap-1">
-                                                    <button type="button" @click="showRoster = !showRoster" class="h-7 w-7 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-slate-500 hover:bg-slate-50 active:scale-[0.95] transition cursor-pointer" title="View Roster">
-                                                        <i data-lucide="users" class="h-3.5 w-3.5"></i>
-                                                    </button>
-                                                    <a href="{{ route('admin.students.roster-print', $section) }}" target="_blank" class="h-7 w-7 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 flex items-center justify-center transition active:scale-[0.95]" title="Print Roster">
-                                                        <i data-lucide="printer" class="h-3.5 w-3.5"></i>
-                                                    </a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <!-- Collapsible Roster Row -->
-                                        <tr x-show="showRoster" x-cloak class="bg-slate-50/50">
-                                            <td colspan="3" class="p-3" style="border-bottom: 1px solid #f1f5f9;">
-                                                <div class="space-y-2">
-                                                    <h5 class="text-[9px] font-black uppercase tracking-wider text-slate-400">Class Roster ({{ $section->occupied }} Students)</h5>
-                                                    @if($section->students->isEmpty())
-                                                        <p class="text-[10px] font-semibold text-slate-400 italic">No students assigned to this section.</p>
-                                                    @else
-                                                        <div class="max-h-40 overflow-y-auto divide-y divide-slate-200/60 pr-1">
-                                                            @foreach($section->students as $studentSec)
-                                                                @php
-                                                                    $student = $studentSec->student;
-                                                                    $applicant = $student->applicant;
-                                                                    $fullName = $applicant ? html_entity_decode(implode(' ', array_filter([trim($applicant->first_name ?? ''), trim($applicant->middle_name ?? ''), trim($applicant->last_name ?? '')])), ENT_QUOTES, 'UTF-8') : 'Unknown Student';
-                                                                @endphp
-                                                                <div class="py-1 flex items-center justify-between gap-2 text-[10px]">
-                                                                    <div class="min-w-0">
-                                                                        <a href="{{ route('admin.students.show', $student) }}" class="font-extrabold text-slate-700 hover:text-emerald-700 transition uppercase block truncate leading-tight">
-                                                                            {{ $fullName }}
-                                                                        </a>
-                                                                        <span class="text-[8px] font-bold text-slate-400 mt-0.5 block">{{ $student->student_number }}</span>
-                                                                    </div>
-                                                                    <span class="rounded bg-white border border-slate-200 px-1 py-0.5 text-[8px] font-bold text-slate-400 uppercase shrink-0">
-                                                                        {{ $applicant->learning_mode ?? 'F2F' }}
-                                                                    </span>
-                                                                </div>
-                                                            @endforeach
-                                                        </div>
-                                                    @endif
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                @endforeach
-                            </table>
+        <!-- Occupancy Container -->
+        <div id="occupancyContainer" class="space-y-6">
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 lg:gap-5">
+                <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm relative overflow-hidden">
+                    <div class="flex items-center justify-between">
+                        <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Official Students</p>
+                        <div class="rounded-xl bg-emerald-50 p-1.5 text-emerald-600">
+                            <i data-lucide="users" class="h-4 w-4"></i>
                         </div>
                     </div>
+                    <div class="flex items-baseline gap-2 mt-1.5">
+                        <span class="text-2xl font-black text-slate-900">{{ number_format($totalOfficial) }}</span>
+                        <span class="text-xs font-bold text-emerald-600">Verified</span>
+                    </div>
+                    <div class="mt-2 text-[10px] font-semibold text-slate-500">
+                        Registered Active Accounts
+                    </div>
                 </div>
-            @empty
-                <div class="col-span-full rounded-2xl border border-dashed border-slate-300 p-12 text-center bg-white">
-                    <p class="text-sm font-bold text-slate-500">No school sections configured.</p>
+
+                <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm relative overflow-hidden">
+                    <div class="flex items-center justify-between">
+                        <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Total Enrolled</p>
+                        <div class="rounded-xl bg-blue-50 p-1.5 text-blue-600">
+                            <i data-lucide="graduation-cap" class="h-4 w-4"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-baseline gap-2 mt-1.5">
+                        <span class="text-2xl font-black text-slate-900">{{ number_format($totalOccupied) }}</span>
+                        <span class="text-xs font-bold text-slate-500">/ {{ number_format($totalCapacity) }} Seats</span>
+                    </div>
+                    <div class="mt-2 text-[10px] font-semibold text-slate-500">
+                        Overall Fill Rate: <span class="font-extrabold text-emerald-600">{{ $overallFillRate }}%</span>
+                    </div>
                 </div>
-            @endforelse
+                
+                <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm relative overflow-hidden">
+                    <div class="flex items-center justify-between">
+                        <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">F2F Occupancy</p>
+                        <div class="rounded-xl bg-sky-50 p-1.5 text-sky-600">
+                            <i data-lucide="school" class="h-4 w-4"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-baseline gap-2 mt-1.5">
+                        <span class="text-2xl font-black text-slate-900">{{ number_format($f2fOccupied) }}</span>
+                        <span class="text-xs font-bold text-slate-500">/ {{ number_format($f2fCapacity) }} Seats</span>
+                    </div>
+                    <div class="mt-2 text-[10px] font-semibold text-slate-500">
+                        F2F Fill Rate: <span class="font-extrabold text-emerald-600">{{ $f2fFillRate }}%</span>
+                    </div>
+                </div>
+
+                <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm relative overflow-hidden">
+                    <div class="flex items-center justify-between">
+                        <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Flexible Occupancy</p>
+                        <div class="rounded-xl bg-amber-50 p-1.5 text-amber-600">
+                            <i data-lucide="laptop" class="h-4 w-4"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-baseline gap-2 mt-1.5">
+                        <span class="text-2xl font-black text-slate-900">{{ number_format($flexOccupied) }}</span>
+                        <span class="text-xs font-bold text-slate-500">/ {{ number_format($flexCapacity) }} Seats</span>
+                    </div>
+                    <div class="mt-2 text-[10px] font-semibold text-slate-500">
+                        Flexible Fill Rate: <span class="font-extrabold text-amber-600">{{ $flexFillRate }}%</span>
+                    </div>
+                </div>
+
+                <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm relative overflow-hidden">
+                    <div class="flex items-center justify-between">
+                        <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Total Sections</p>
+                        <div class="rounded-xl bg-indigo-50 p-1.5 text-indigo-600">
+                            <i data-lucide="grid" class="h-4 w-4"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-baseline gap-2 mt-1.5">
+                        <span class="text-2xl font-black text-slate-900">{{ $sections->count() }}</span>
+                        <span class="text-xs font-bold text-emerald-600">Active</span>
+                    </div>
+                    <div class="mt-2 text-[10px] font-semibold text-slate-500">
+                        Average: <span class="font-extrabold text-slate-700">{{ $sections->count() > 0 ? round($totalOccupied / $sections->count(), 1) : 0 }} / sec</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grade Cards Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                @forelse($sectionsGrouped as $gradeLevel => $gradeSections)
+                    @include('admin.students.partials.occupancy.card', ['gradeLevel' => $gradeLevel, 'gradeSections' => $gradeSections])
+                @empty
+                    <div class="col-span-full rounded-2xl border border-dashed border-slate-300 p-12 text-center bg-white">
+                        <p class="text-sm font-bold text-slate-500">No school sections configured.</p>
+                    </div>
+                @endforelse
+            </div>
         </div>
     </div>
+
+    <script>
+        function showOccupancySkeleton() {
+            document.getElementById('occupancyContainer').classList.add('hidden');
+            document.getElementById('occupancySkeleton').classList.remove('hidden');
+        }
+
+        document.addEventListener('click', function(e) {
+            const link = e.target.closest('a');
+            if (link && !link.getAttribute('target') && !link.getAttribute('download')) {
+                const href = link.getAttribute('href');
+                if (href && href !== '#' && !href.startsWith('javascript:')) {
+                    showOccupancySkeleton();
+                }
+            }
+        });
+    </script>
 </x-admin-layout>

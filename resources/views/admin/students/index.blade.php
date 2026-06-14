@@ -122,6 +122,13 @@
         document.getElementById('tableSkeleton').classList.remove('hidden');
     }
 
+    document.addEventListener('click', function(e) {
+        const link = e.target.closest('#tableContainer a');
+        if (link && !link.getAttribute('target') && !link.getAttribute('download')) {
+            showTableSkeleton();
+        }
+    });
+
     function copyToClipboard(text, button) {
         navigator.clipboard.writeText(text).then(() => {
             const originalHtml = button.innerHTML;

@@ -37,7 +37,7 @@
 
         <div class="px-6 py-5">
             <!-- Filter Bar Form -->
-            <form method="GET" class="mb-5 flex gap-3 max-w-lg">
+            <form method="GET" class="mb-5 flex gap-3 max-w-lg" onsubmit="showTableSkeleton()">
                 <label class="relative flex-1">
                     <i data-lucide="search" class="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-slate-400"></i>
                     <input name="search" value="{{ request('search') }}" placeholder="Search name, student number, or email" class="{{ $inputClass }} w-full pl-9">
@@ -48,8 +48,28 @@
                 </button>
             </form>
 
+            <!-- Table Loading Skeleton -->
+            <div id="tableSkeleton" class="hidden">
+                <div class="animate-pulse space-y-4">
+                    @for ($i = 0; $i < 5; $i++)
+                        <div class="flex items-center justify-between py-4 border-b border-slate-100 px-5">
+                            <div class="flex items-center gap-3">
+                                <div class="h-10 w-10 rounded bg-slate-100"></div>
+                                <div class="space-y-2">
+                                    <div class="h-4 w-32 rounded bg-slate-100"></div>
+                                    <div class="h-3 w-20 rounded bg-slate-50"></div>
+                                </div>
+                            </div>
+                            <div class="h-4 w-24 rounded bg-slate-150"></div>
+                            <div class="h-4 w-20 rounded bg-slate-100"></div>
+                            <div class="h-8 w-16 rounded bg-slate-50"></div>
+                        </div>
+                    @endfor
+                </div>
+            </div>
+
             <!-- Audit Log Table -->
-            <div class="overflow-hidden rounded-2xl border border-slate-200">
+            <div id="tableContainer" class="overflow-hidden rounded-2xl border border-slate-200">
                 <table class="w-full text-left text-sm">
                     <thead class="bg-slate-50 text-xs uppercase tracking-wider text-slate-500 border-b border-slate-100">
                         <tr>
@@ -161,4 +181,18 @@
             <div class="mt-5">{{ $logs->links() }}</div>
         </div>
     </section>
+
+    <script>
+    function showTableSkeleton() {
+        document.getElementById('tableContainer').classList.add('hidden');
+        document.getElementById('tableSkeleton').classList.remove('hidden');
+    }
+
+    document.addEventListener('click', function(e) {
+        const link = e.target.closest('#tableContainer a');
+        if (link && !link.getAttribute('target') && !link.getAttribute('download')) {
+            showTableSkeleton();
+        }
+    });
+    </script>
 </x-admin-layout>

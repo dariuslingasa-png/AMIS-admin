@@ -185,5 +185,15 @@
             document.getElementById('familiesContainer').classList.add('hidden');
             document.getElementById('loadingSkeleton').classList.remove('hidden');
         }
+
+        document.addEventListener('click', function(e) {
+            const link = e.target.closest('a');
+            if (link && !link.getAttribute('target') && !link.getAttribute('download')) {
+                const href = link.getAttribute('href');
+                if (href && href !== '#' && !href.startsWith('javascript:')) {
+                    showSkeleton();
+                }
+            }
+        });
     </script>
 </x-admin-layout>

@@ -132,7 +132,7 @@
                 <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                     <div></div>
                     <div class="flex items-center gap-2">
-                        <form method="GET" action="{{ route('admin.students.documents') }}" class="flex items-center gap-2">
+                        <form method="GET" action="{{ route('admin.students.documents') }}" class="flex items-center gap-2" onsubmit="showTableSkeleton()">
                             <div class="relative w-full sm:w-[320px]">
                                 <i data-lucide="search" class="pointer-events-none absolute left-3.5 top-3.5 h-4 w-4 text-slate-400"></i>
                                 <input type="text" name="search" value="{{ request('search') }}" placeholder="Search student or ID..." class="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-10 text-xs font-semibold text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-emerald-450 focus:ring-4 focus:ring-emerald-100">
@@ -150,97 +150,120 @@
                 </div>
             </div>
 
-            <!-- Table -->
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm min-w-[850px]">
-                    <thead>
-                        <tr class="border-b border-slate-100 text-[11px] font-black uppercase tracking-widest text-slate-400">
-                            <th class="px-5 py-3">Student</th>
-                            <th class="px-5 py-3">Grade Level</th>
-                            <th class="px-5 py-3">Birth Certificate</th>
-                            <th class="px-5 py-3">Report Card (SF9)</th>
-                            <th class="px-5 py-3">Good Moral Certificate</th>
-                            <th class="px-5 py-3 text-right">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100">
-                        @forelse ($students as $student)
-                            @php
-                                $applicant = $student->applicant;
-                                $fullName = $applicant ? html_entity_decode(trim(($applicant->first_name ?? '').' '.($applicant->middle_name ?? '').' '.($applicant->last_name ?? '')), ENT_QUOTES, 'UTF-8') : 'Unknown Student';
-                            @endphp
-                            <tr class="align-middle">
-                                <td class="px-5 py-4">
-                                    <span class="font-extrabold text-slate-900 block uppercase">{{ $fullName }}</span>
-                                    <span class="text-xs font-bold text-slate-400 mt-1 block">{{ $student->student_number }}</span>
-                                </td>
-                                <td class="px-5 py-4 text-xs font-bold text-slate-600">
-                                    {{ $student->grade_level }}
-                                </td>
-                                <td class="px-5 py-4">
-                                    @if($applicant && $applicant->birth_cert_url)
-                                        @php
-                                            $birthCertUrl = \App\Support\EnrollmentStorage::url($applicant->birth_cert_url);
-                                            $isPdf = str_ends_with(strtolower($applicant->birth_cert_url), '.pdf');
-                                        @endphp
-                                        <a href="{{ $birthCertUrl }}" target="_blank" @click.prevent="openPreview('{{ $birthCertUrl }}', 'Birth Certificate - {{ addslashes($fullName) }}', {{ $isPdf ? 'true' : 'false' }})" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition cursor-zoom-in">
-                                            <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
-                                            View Birth Cert
-                                        </a>
-                                    @else
-                                        <span class="text-xs font-bold text-slate-450 italic">Not Uploaded</span>
-                                    @endif
-                                </td>
-                                <td class="px-5 py-4">
-                                    @if($applicant && $applicant->report_card_url)
-                                        @php
-                                            $reportCardUrl = \App\Support\EnrollmentStorage::url($applicant->report_card_url);
-                                            $isPdf = str_ends_with(strtolower($applicant->report_card_url), '.pdf');
-                                        @endphp
-                                        <a href="{{ $reportCardUrl }}" target="_blank" @click.prevent="openPreview('{{ $reportCardUrl }}', 'SF9/Report Card - {{ addslashes($fullName) }}', {{ $isPdf ? 'true' : 'false' }})" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition cursor-zoom-in">
-                                            <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
-                                            View SF9
-                                        </a>
-                                    @else
-                                        <span class="text-xs font-bold text-slate-450 italic">Not Uploaded</span>
-                                    @endif
-                                </td>
-                                <td class="px-5 py-4">
-                                    @if($applicant && $applicant->good_moral_url)
-                                        @php
-                                            $goodMoralUrl = \App\Support\EnrollmentStorage::url($applicant->good_moral_url);
-                                            $isPdf = str_ends_with(strtolower($applicant->good_moral_url), '.pdf');
-                                        @endphp
-                                        <a href="{{ $goodMoralUrl }}" target="_blank" @click.prevent="openPreview('{{ $goodMoralUrl }}', 'Good Moral Certificate - {{ addslashes($fullName) }}', {{ $isPdf ? 'true' : 'false' }})" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition cursor-zoom-in">
-                                            <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
-                                            View Certificate
-                                        </a>
-                                    @else
-                                        <span class="text-xs font-bold text-slate-450 italic">Not Uploaded</span>
-                                    @endif
-                                </td>
-                                <td class="px-5 py-4 text-right">
-                                    <a href="{{ route('admin.students.show', $student) }}" class="inline-flex h-9 items-center justify-center gap-1 rounded-xl bg-slate-50 border border-slate-200 px-3 text-xs font-bold text-slate-700 hover:bg-slate-100 transition">
-                                        <i data-lucide="folder-open" class="w-3.5 h-3.5"></i>
-                                        Verify Files
-                                    </a>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="6" class="px-5 py-10 text-center text-sm font-bold text-slate-400">No student documents found.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+            <!-- Table Loading Skeleton -->
+            <div id="tableSkeleton" class="hidden">
+                <div class="animate-pulse space-y-4">
+                    @for ($i = 0; $i < 5; $i++)
+                        <div class="flex items-center justify-between py-4 border-b border-slate-100 px-5">
+                            <div class="flex items-center gap-3">
+                                <div class="h-10 w-10 rounded bg-slate-100"></div>
+                                <div class="space-y-2">
+                                    <div class="h-4 w-32 rounded bg-slate-100"></div>
+                                    <div class="h-3 w-20 rounded bg-slate-50"></div>
+                                </div>
+                            </div>
+                            <div class="h-4 w-24 rounded bg-slate-150"></div>
+                            <div class="h-4 w-20 rounded bg-slate-100"></div>
+                            <div class="h-8 w-16 rounded bg-slate-50"></div>
+                        </div>
+                    @endfor
+                </div>
             </div>
 
-            <!-- Pagination -->
-            <div class="px-4 py-4 sm:px-6 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-slate-50/30">
-                <p class="text-xs font-bold text-slate-500">
-                    Showing {{ $students->firstItem() ?? 0 }}-{{ $students->lastItem() ?? 0 }} of {{ $students->total() }} students
-                </p>
-                <div class="w-full sm:w-auto">{{ $students->links() }}</div>
+            <!-- Table Container -->
+            <div id="tableContainer">
+                <!-- Table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm min-w-[850px]">
+                        <thead>
+                            <tr class="border-b border-slate-100 text-[11px] font-black uppercase tracking-widest text-slate-400">
+                                <th class="px-5 py-3">Student</th>
+                                <th class="px-5 py-3">Grade Level</th>
+                                <th class="px-5 py-3">Birth Certificate</th>
+                                <th class="px-5 py-3">Report Card (SF9)</th>
+                                <th class="px-5 py-3">Good Moral Certificate</th>
+                                <th class="px-5 py-3 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            @forelse ($students as $student)
+                                @php
+                                    $applicant = $student->applicant;
+                                    $fullName = $applicant ? html_entity_decode(trim(($applicant->first_name ?? '').' '.($applicant->middle_name ?? '').' '.($applicant->last_name ?? '')), ENT_QUOTES, 'UTF-8') : 'Unknown Student';
+                                @endphp
+                                <tr class="align-middle">
+                                    <td class="px-5 py-4">
+                                        <span class="font-extrabold text-slate-900 block uppercase">{{ $fullName }}</span>
+                                        <span class="text-xs font-bold text-slate-400 mt-1 block">{{ $student->student_number }}</span>
+                                    </td>
+                                    <td class="px-5 py-4 text-xs font-bold text-slate-600">
+                                        {{ $student->grade_level }}
+                                    </td>
+                                    <td class="px-5 py-4">
+                                        @if($applicant && $applicant->birth_cert_url)
+                                            @php
+                                                $birthCertUrl = \App\Support\EnrollmentStorage::url($applicant->birth_cert_url);
+                                                $isPdf = str_ends_with(strtolower($applicant->birth_cert_url), '.pdf');
+                                            @endphp
+                                            <a href="{{ $birthCertUrl }}" target="_blank" @click.prevent="openPreview('{{ $birthCertUrl }}', 'Birth Certificate - {{ addslashes($fullName) }}', {{ $isPdf ? 'true' : 'false' }})" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition cursor-zoom-in">
+                                                <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+                                                View Birth Cert
+                                            </a>
+                                        @else
+                                            <span class="text-xs font-bold text-slate-450 italic">Not Uploaded</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-5 py-4">
+                                        @if($applicant && $applicant->report_card_url)
+                                            @php
+                                                $reportCardUrl = \App\Support\EnrollmentStorage::url($applicant->report_card_url);
+                                                $isPdf = str_ends_with(strtolower($applicant->report_card_url), '.pdf');
+                                            @endphp
+                                            <a href="{{ $reportCardUrl }}" target="_blank" @click.prevent="openPreview('{{ $reportCardUrl }}', 'SF9/Report Card - {{ addslashes($fullName) }}', {{ $isPdf ? 'true' : 'false' }})" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition cursor-zoom-in">
+                                                <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+                                                View SF9
+                                            </a>
+                                        @else
+                                            <span class="text-xs font-bold text-slate-450 italic">Not Uploaded</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-5 py-4">
+                                        @if($applicant && $applicant->good_moral_url)
+                                            @php
+                                                $goodMoralUrl = \App\Support\EnrollmentStorage::url($applicant->good_moral_url);
+                                                $isPdf = str_ends_with(strtolower($applicant->good_moral_url), '.pdf');
+                                            @endphp
+                                            <a href="{{ $goodMoralUrl }}" target="_blank" @click.prevent="openPreview('{{ $goodMoralUrl }}', 'Good Moral Certificate - {{ addslashes($fullName) }}', {{ $isPdf ? 'true' : 'false' }})" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition cursor-zoom-in">
+                                                <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+                                                View Certificate
+                                            </a>
+                                        @else
+                                            <span class="text-xs font-bold text-slate-450 italic">Not Uploaded</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-5 py-4 text-right">
+                                        <a href="{{ route('admin.students.show', $student) }}" class="inline-flex h-9 items-center justify-center gap-1 rounded-xl bg-slate-50 border border-slate-200 px-3 text-xs font-bold text-slate-700 hover:bg-slate-100 transition">
+                                            <i data-lucide="folder-open" class="w-3.5 h-3.5"></i>
+                                            Verify Files
+                                        </a>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6" class="px-5 py-10 text-center text-sm font-bold text-slate-400">No student documents found.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="px-4 py-4 sm:px-6 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-slate-50/30">
+                    <p class="text-xs font-bold text-slate-500">
+                        Showing {{ $students->firstItem() ?? 0 }}-{{ $students->lastItem() ?? 0 }} of {{ $students->total() }} students
+                    </p>
+                    <div class="w-full sm:w-auto">{{ $students->links() }}</div>
+                </div>
             </div>
         </x-card>
         <!-- Preview Modal Portal (Identical to original modal previews for consistency) -->
@@ -279,4 +302,20 @@
         </template>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+        function showTableSkeleton() {
+            document.getElementById('tableContainer').classList.add('hidden');
+            document.getElementById('tableSkeleton').classList.remove('hidden');
+        }
+
+        document.addEventListener('click', function(e) {
+            const link = e.target.closest('a');
+            if (link && !link.getAttribute('target') && !link.getAttribute('download')) {
+                const href = link.getAttribute('href');
+                if (href && href !== '#' && !href.startsWith('javascript:')) {
+                    showTableSkeleton();
+                }
+            }
+        });
+    </script>
 </x-admin-layout>
