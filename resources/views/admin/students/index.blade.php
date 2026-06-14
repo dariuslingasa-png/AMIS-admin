@@ -281,7 +281,7 @@
                             <span class="slip-password-val">{{ $student->temp_password ?? 'N/A' }}</span>
                         </div>
                         <div class="slip-footer">
-                            Go to <strong>https://portal.office.com</strong> to sign in.<br>
+                            Go to <strong>Microsoft Login</strong> to sign in.<br>
                             Please change your temporary password immediately upon first login.
                         </div>
                     </div>
