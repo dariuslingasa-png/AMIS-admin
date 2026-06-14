@@ -1,69 +1,98 @@
 <style>
     .timetable-spreadsheet {
         width: 100%;
-        border-collapse: collapse;
+        border-collapse: separate;
+        border-spacing: 0;
         font-family: 'Inter', sans-serif;
         font-size: 11px;
-        border: 1px solid #e2e8f0;
     }
-    .timetable-spreadsheet th,
-    .timetable-spreadsheet td {
-        border: 1px solid #e2e8f0;
-        padding: 10px 14px;
-        text-align: center;
-        vertical-align: middle;
-        font-weight: 700;
-    }
-    .timetable-spreadsheet thead th {
+    .timetable-spreadsheet th {
+        position: sticky;
+        top: 0;
         background-color: #f8fafc;
         color: #475569;
-        font-weight: 800;
-        border: 1px solid #e2e8f0;
+        font-weight: 700;
         font-size: 10px;
         text-transform: uppercase;
         letter-spacing: 0.5px;
+        padding: 12px 16px;
+        border-bottom: 2px solid #e2e8f0;
+        border-right: 1px solid #e5e7eb;
+        z-index: 10;
+        text-align: center;
+    }
+    .timetable-spreadsheet th:last-child {
+        border-right: none;
+    }
+    .timetable-spreadsheet td {
+        padding: 10px;
+        border-bottom: 1px solid #e5e7eb;
+        border-right: 1px solid #e5e7eb;
+        vertical-align: middle;
+        background-color: #ffffff;
+    }
+    .timetable-spreadsheet td:last-child {
+        border-right: none;
     }
     .timetable-spreadsheet .header-title {
-        background-color: #f1f5f9 !important;
+        background-color: #ffffff !important;
         font-size: 12px;
-        font-weight: 900;
+        font-weight: 800;
         text-transform: uppercase;
         letter-spacing: 1px;
-        color: #1e293b;
-        padding: 12px;
-        border: 1px solid #e2e8f0;
+        color: #0f172a;
+        padding: 16px;
         border-bottom: 2px solid #e2e8f0;
+        text-align: left;
+        border-right: none;
     }
     .timetable-spreadsheet .col-time {
         width: 140px;
-        background-color: #ffffff;
-        border: 1px solid #e2e8f0;
         font-weight: 700;
+        color: #1e293b;
         text-align: center;
-        color: #334155;
+        background-color: #f8fafc;
     }
     .timetable-spreadsheet .col-minutes {
         width: 80px;
-        background-color: #ffffff;
-        border: 1px solid #e2e8f0;
-        font-weight: 700;
+        font-weight: 600;
+        color: #64748b;
         text-align: center;
-        color: #475569;
+        background-color: #f8fafc;
     }
-    .timetable-spreadsheet .cell-quran {
-        background-color: #ecfdf5 !important;
-        color: #065f46 !important;
-        border: 1px solid #a7f3d0;
+    .timetable-card {
+        background-color: #f8fafc;
+        border: 1px solid #f1f5f9;
+        border-left: 4px solid #2563eb; /* Accent blue */
+        border-radius: 8px;
+        padding: 10px 14px;
+        text-align: left;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        min-height: 55px;
     }
-    .timetable-spreadsheet .cell-hadith {
-        background-color: #fef3c7 !important;
-        color: #92400e !important;
-        border: 1px solid #fde68a;
+    .timetable-card:hover {
+        background-color: #f1f5f9;
+        border-left-color: #1d4ed8;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
     }
-    .timetable-spreadsheet .cell-general {
-        background-color: #f8fafc !important;
-        color: #334155 !important;
-        border: 1px solid #e2e8f0;
+    .timetable-card-event {
+        background-color: #f8fafc;
+        border: 1px solid #f1f5f9;
+        border-left: 4px solid #94a3b8; /* Slate neutral accent for events */
+        border-radius: 8px;
+        padding: 10px 14px;
+        text-align: left;
+        transition: all 0.2s ease;
+        position: relative;
+        min-height: 55px;
+    }
+    .timetable-card-event:hover {
+        background-color: #f1f5f9;
+        border-left-color: #64748b;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
     }
     .timetable-spreadsheet .cell-empty {
         background-color: #ffffff !important;
@@ -285,7 +314,7 @@
                     }
                 @endphp
 
-                <div class="overflow-x-auto rounded-2xl border border-gray-150 shadow-3xs">
+                <div class="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-xs">
                     <table class="timetable-spreadsheet">
                         <thead>
                             <tr>
@@ -307,7 +336,7 @@
                                     <td class="col-time font-bold text-slate-800">
                                         {{ formatTimetableTime($interval['start_time'], $interval['end_time']) }}
                                     </td>
-                                    <td class="col-minutes font-semibold text-slate-655">
+                                    <td class="col-minutes font-semibold text-slate-500">
                                         {{ $interval['minutes'] }}
                                     </td>
                                     @foreach($daysList as $day)
@@ -322,24 +351,26 @@
                                                         'destroy_url' => route('admin.academic.schedules.destroy', $cell['entry']['id']),
                                                     ]));
                                                     $subjectLower = strtolower($cell['entry']['subject_name']);
-                                                    $cellClass = 'cell-general';
-                                                    if (str_contains($subjectLower, 'qur')) {
-                                                        $cellClass = 'cell-quran';
-                                                    } elseif (str_contains($subjectLower, 'hadith') || str_contains($subjectLower, 'arabic') || str_contains($subjectLower, 'recess') || str_contains($subjectLower, 'studies')) {
-                                                        $cellClass = 'cell-hadith';
-                                                    }
+                                                    // Classify events vs classes
+                                                    $isEvent = str_contains($subjectLower, 'assembly') || str_contains($subjectLower, 'recess') || str_contains($subjectLower, 'departure');
+                                                    $cardClass = $isEvent ? 'timetable-card-event' : 'timetable-card';
                                                 @endphp
-                                                <td rowspan="{{ $cell['span'] }}" colspan="{{ $cell['colspan'] }}" class="{{ $cellClass }}">
-                                                    <div class="flex flex-col items-center justify-center p-3.5 relative group min-h-[55px]">
-                                                        <span class="block font-black text-xs leading-tight text-slate-900">{{ $cell['entry']['subject_name'] }}</span>
-                                                        @if($cell['entry']['teacher_name'] && $cell['entry']['teacher_name'] !== 'Teacher pending')
-                                                            <span class="block text-[9px] font-bold opacity-80 mt-1.5 text-slate-700">- {{ $cell['entry']['teacher_name'] }}</span>
-                                                        @endif
-                                                        <div class="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                                                            <button type="button" data-entry="{{ $payload }}" @click="openEdit(JSON.parse(atob($el.dataset.entry)))" class="inline-flex h-5 w-5 items-center justify-center rounded-md bg-white text-slate-700 border border-slate-200 hover:text-indigo-700 shadow-3xs cursor-pointer" title="Edit">
+                                                <td rowspan="{{ $cell['span'] }}" colspan="{{ $cell['colspan'] }}">
+                                                    <div class="{{ $cardClass }} group">
+                                                        <div class="flex flex-col justify-center">
+                                                            <span class="block font-bold text-[12px] text-slate-800 leading-tight">{{ $cell['entry']['subject_name'] }}</span>
+                                                            @if($cell['entry']['teacher_name'] && $cell['entry']['teacher_name'] !== 'Teacher pending')
+                                                                <span class="block text-[10px] font-medium text-slate-500 mt-1.5 flex items-center gap-1.5">
+                                                                    <i data-lucide="user" class="h-3 w-3 opacity-60"></i>
+                                                                    {{ $cell['entry']['teacher_name'] }}
+                                                                </span>
+                                                            @endif
+                                                        </div>
+                                                        <div class="absolute top-1.5 right-1.5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                                                            <button type="button" data-entry="{{ $payload }}" @click="openEdit(JSON.parse(atob($el.dataset.entry)))" class="inline-flex h-5 w-5 items-center justify-center rounded-md bg-white text-slate-700 border border-slate-200 hover:text-blue-600 hover:bg-blue-50 shadow-3xs cursor-pointer transition" title="Edit">
                                                                 <i data-lucide="pencil" class="h-2.5 w-2.5"></i>
                                                             </button>
-                                                            <button type="button" data-entry="{{ $payload }}" @click="openDelete(JSON.parse(atob($el.dataset.entry)))" class="inline-flex h-5 w-5 items-center justify-center rounded-md bg-white text-rose-600 border border-slate-200 hover:bg-rose-50 shadow-3xs cursor-pointer" title="Delete">
+                                                            <button type="button" data-entry="{{ $payload }}" @click="openDelete(JSON.parse(atob($el.dataset.entry)))" class="inline-flex h-5 w-5 items-center justify-center rounded-md bg-white text-rose-600 border border-slate-200 hover:bg-rose-50 shadow-3xs cursor-pointer transition" title="Delete">
                                                                 <i data-lucide="trash-2" class="h-2.5 w-2.5"></i>
                                                             </button>
                                                         </div>
