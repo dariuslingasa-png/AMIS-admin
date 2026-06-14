@@ -773,6 +773,8 @@ class AdminStudentController extends Controller
             return $index === false ? 999 : $index;
         });
 
-        return view('admin.students.occupancy', compact('sectionsGrouped', 'sections'));
+        $totalOfficial = \App\Models\Student::whereHas('user', fn($q) => $q->where('account_status', 'verified'))->count();
+
+        return view('admin.students.occupancy', compact('sectionsGrouped', 'sections', 'totalOfficial'));
     }
 }

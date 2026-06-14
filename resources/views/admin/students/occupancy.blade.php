@@ -34,7 +34,18 @@
         </section>
 
         <!-- Stats Grid -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-5">
+            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Official Students</p>
+                <div class="flex items-baseline gap-2 mt-1.5">
+                    <span class="text-2xl font-black text-slate-900">{{ number_format($totalOfficial) }}</span>
+                    <span class="text-xs font-bold text-emerald-600">Verified</span>
+                </div>
+                <div class="mt-2 text-[10px] font-semibold text-slate-500">
+                    Registered Active Accounts
+                </div>
+            </div>
+
             <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Total Enrolled</p>
                 <div class="flex items-baseline gap-2 mt-1.5">
