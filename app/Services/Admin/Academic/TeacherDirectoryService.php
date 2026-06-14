@@ -136,12 +136,28 @@ class TeacherDirectoryService
             ])
             ->all();
 
+        // Retrieve teacher schedules
+        $scheduleService = app(\App\Services\Admin\Academic\ClassScheduleService::class);
+        $rawSchedules = \App\Models\SectionSubject::with('section')
+            ->get()
+            ->filter(fn($ss) => strtolower(trim($ss->teacher_name)) === strtolower(trim($teacher['name'])));
+        
+        $schedules = $rawSchedules->map(function($ss) use ($scheduleService) {
+            $presented = $scheduleService->present($ss);
+            $presented['section_name'] = $ss->section ? ($ss->section->grade_level . ' - ' . ($ss->section->name ?? 'General')) : 'Unknown';
+            return $presented;
+        })
+        ->sortBy([['day_index', 'asc'], ['start_minutes', 'asc']])
+        ->values()
+        ->all();
+
         return [
             'teacher' => $teacher,
             'isHighSchool' => str_contains($teacher['dept'], 'High'),
             'isIslamicArabic' => str_contains($teacher['dept'], 'Islamic School'),
             'assignmentHistory' => $this->assignments->history($teacher['id']),
             'globalAssignments' => $globalAssignments,
+            'schedules' => $schedules,
         ];
     }
 

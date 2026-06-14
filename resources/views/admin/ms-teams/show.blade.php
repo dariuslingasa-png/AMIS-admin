@@ -12,18 +12,23 @@
 
         if (!function_exists('getSubjectStyle')) {
             function getSubjectStyle($name) {
-                $colors = [
-                    ['bg-emerald-50 text-emerald-700 border-emerald-100', 'bg-emerald-500'],
-                    ['bg-sky-50 text-sky-700 border-sky-100', 'bg-sky-500'],
-                    ['bg-amber-50 text-amber-700 border-amber-100', 'bg-amber-500'],
-                    ['bg-rose-50 text-rose-700 border-rose-100', 'bg-rose-500'],
-                    ['bg-violet-50 text-violet-700 border-violet-100', 'bg-violet-500'],
-                    ['bg-teal-50 text-teal-700 border-teal-100', 'bg-teal-500'],
-                    ['bg-indigo-50 text-indigo-700 border-indigo-100', 'bg-indigo-500'],
-                    ['bg-fuchsia-50 text-fuchsia-700 border-fuchsia-100', 'bg-fuchsia-500'],
-                ];
-                $hash = crc32($name);
-                return $colors[abs($hash) % count($colors)];
+                $lower = strtolower($name);
+                if (str_contains($lower, 'qur')) {
+                    return ['bg-sky-50 text-sky-700 border-sky-100', 'bg-sky-500'];
+                }
+                if (str_contains($lower, 'hadith')) {
+                    return ['bg-amber-50 text-amber-700 border-amber-100', 'bg-amber-500'];
+                }
+                if (str_contains($lower, 'arabic')) {
+                    return ['bg-pink-50 text-pink-700 border-pink-100', 'bg-pink-500'];
+                }
+                if (str_contains($lower, 'recess')) {
+                    return ['bg-rose-50 text-rose-700 border-rose-100', 'bg-rose-500'];
+                }
+                if (str_contains($lower, 'meeting') || str_contains($lower, 'circle') || str_contains($lower, 'wrap')) {
+                    return ['bg-violet-50 text-violet-700 border-violet-100', 'bg-violet-500'];
+                }
+                return ['bg-emerald-50 text-emerald-700 border-emerald-100', 'bg-emerald-500'];
             }
         }
 
@@ -89,7 +94,7 @@
                             @if($section->grade_advisor)
                                 <span class="{{ $chipClass }} bg-teal-500/20 text-teal-100 border-teal-500/30 flex items-center gap-1.5">
                                     <i data-lucide="shield-check" class="w-3.5 h-3.5 text-teal-300"></i>
-                                    Advisor: {{ $section->grade_advisor->teacher_name }}
+                                    Advisor: <span class="uppercase">{{ $section->grade_advisor->teacher_name }}</span>
                                     @if($section->ms_team_id)
                                         <button 
                                             @click="syncAdvisor()" 
@@ -218,7 +223,7 @@
                                                 data-name="{{ $teacher->name }}"
                                                 {{ ($subjectRecord && $subjectRecord->teacher_name === $teacher->name) ? 'selected' : '' }}
                                             >
-                                                {{ $teacher->name }} ({{ $teacher->load_count }}/8 loads)
+                                                {{ strtoupper($teacher->name) }} ({{ $teacher->load_count }}/8 loads)
                                             </option>
                                         @endforeach
                                     </select>

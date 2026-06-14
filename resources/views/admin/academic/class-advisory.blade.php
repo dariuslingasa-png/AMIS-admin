@@ -129,7 +129,7 @@
                                 </div>
 
                                 <div class="border-t border-slate-100 pt-3">
-                                    <span class="block text-lg font-black text-slate-950 group-hover:text-indigo-950 transition-colors">
+                                    <span class="block text-lg font-black text-slate-950 group-hover:text-indigo-950 transition-colors uppercase">
                                         {{ str_replace('TEACHER ', '', $assignment->teacher_name) }}
                                     </span>
                                     <span class="mt-1 block text-xs font-bold uppercase tracking-wider text-slate-400">
@@ -289,7 +289,7 @@
                                 </div>
 
                                 <div class="border-t border-slate-100 pt-3">
-                                    <span class="block text-lg font-black text-slate-950 group-hover:text-indigo-950 transition-colors">
+                                    <span class="block text-lg font-black text-slate-950 group-hover:text-indigo-950 transition-colors uppercase">
                                         {{ str_replace('TEACHER ', '', $row['teacher']) }}
                                     </span>
                                     <span class="mt-1 block text-xs font-bold uppercase tracking-wider text-slate-400">

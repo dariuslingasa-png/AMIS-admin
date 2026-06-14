@@ -17,6 +17,16 @@
             description: ''
         },
         
+        // View mode and filters
+        viewMode: 'events',
+        filterTeacher: '',
+        filterSection: '',
+        filterSubject: '',
+        schedules: @js($schedules),
+        teachers: @js($teachers),
+        sections: @js($sections),
+        subjects: @js($subjects),
+        
         // Events list
         events: [
             { title: 'First Day of Classes', date: '2026-06-15', type: 'Academic', desc: 'Opening ceremony and orientation for new students.' },
@@ -123,6 +133,70 @@
                 default: return 'border-l-slate-400';
             }
         },
+
+        getDayOfWeek(day) {
+            let date = new Date(this.year, this.month, day);
+            let days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            return days[date.getDay()];
+        },
+
+        getSchedulesForDay(day) {
+            let dayOfWeek = this.getDayOfWeek(day);
+            return this.schedules.filter(s => {
+                let parts = s.schedule.split(' ');
+                if (parts[0] !== dayOfWeek) return false;
+                
+                if (this.filterTeacher && s.teacher_name !== this.filterTeacher) return false;
+                if (this.filterSection && s.section_id != this.filterSection) return false;
+                if (this.filterSubject && s.subject_name !== this.filterSubject) return false;
+                
+                return true;
+            });
+        },
+
+        getSortedSchedulesForDay(day) {
+            let list = this.getSchedulesForDay(day);
+            return list.sort((a, b) => {
+                let timeA = a.schedule.split(' ')[1].split('-')[0];
+                let timeB = b.schedule.split(' ')[1].split('-')[0];
+                return timeA.localeCompare(timeB);
+            });
+        },
+
+        getSubjectColorClasses(subjectName) {
+            let lower = subjectName.toLowerCase();
+            if (lower.includes('qur')) {
+                return { border: 'border-l-sky-500', badge: 'bg-sky-50 text-sky-700 border-sky-100', dot: 'bg-sky-500' };
+            } else if (lower.includes('hadith')) {
+                return { border: 'border-l-amber-500', badge: 'bg-amber-50 text-amber-700 border-amber-100', dot: 'bg-amber-500' };
+            } else if (lower.includes('arabic')) {
+                return { border: 'border-l-pink-500', badge: 'bg-pink-50 text-pink-700 border-pink-100', dot: 'bg-pink-500' };
+            } else if (lower.includes('recess')) {
+                return { border: 'border-l-rose-500', badge: 'bg-rose-50 text-rose-700 border-rose-100', dot: 'bg-rose-500' };
+            } else if (lower.includes('meeting') || lower.includes('circle') || lower.includes('wrap')) {
+                return { border: 'border-l-violet-500', badge: 'bg-violet-50 text-violet-700 border-violet-100', dot: 'bg-violet-500' };
+            } else if (lower.includes('departure') || lower.includes('assembly')) {
+                return { border: 'border-l-slate-300', badge: 'bg-slate-50 text-slate-655 border-slate-100', dot: 'bg-slate-400' };
+            } else {
+                return { border: 'border-l-emerald-500', badge: 'bg-emerald-50 text-emerald-700 border-emerald-100', dot: 'bg-emerald-500' };
+            }
+        },
+
+        formatTime(timeStr) {
+            let parts = timeStr.split('-');
+            if (parts.length !== 2) return timeStr;
+            
+            let formatSingle = (t) => {
+                let [h, m] = t.split(':');
+                let hour = parseInt(h);
+                let ampm = hour >= 12 ? 'PM' : 'AM';
+                hour = hour % 12;
+                hour = hour ? hour : 12;
+                return String(hour).padStart(2, '0') + ':' + m + ' ' + ampm;
+            };
+            
+            return formatSingle(parts[0]) + ' - ' + formatSingle(parts[1]);
+        },
         
         addEvent() {
             if (!this.newEvent.title || !this.newEvent.date) return;
@@ -181,6 +255,80 @@
                     </div>
                 </div>
 
+        <!-- View Tabs and Filters -->
+        <div class="bg-white border border-gray-150 rounded-2xl p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <!-- Tabs -->
+            <div class="flex bg-slate-100 p-1 rounded-xl w-fit">
+                <button type="button" 
+                    @click="viewMode = 'events'"
+                    :class="viewMode === 'events' ? 'bg-white text-slate-900 shadow-3xs font-extrabold' : 'text-slate-500 hover:text-slate-800 font-semibold'"
+                    class="px-4 py-2 text-xs rounded-lg transition cursor-pointer">
+                    School Events
+                </button>
+                <button type="button" 
+                    @click="viewMode = 'timetable'"
+                    :class="viewMode === 'timetable' ? 'bg-white text-slate-900 shadow-3xs font-extrabold' : 'text-slate-500 hover:text-slate-800 font-semibold'"
+                    class="px-4 py-2 text-xs rounded-lg transition cursor-pointer">
+                    Class Timetables
+                </button>
+            </div>
+
+            <!-- Filters (only shown when viewMode is 'timetable') -->
+            <div class="flex flex-wrap items-center gap-3" x-show="viewMode === 'timetable'" x-cloak x-transition>
+                <!-- Teacher Filter -->
+                <div class="flex flex-col gap-1">
+                    <select x-model="filterTeacher" class="bg-slate-50 border border-gray-200 text-slate-700 text-xs rounded-xl px-3 py-2 outline-none focus:border-indigo-500 focus:bg-white transition">
+                        <option value="">All Teachers</option>
+                        <template x-for="t in teachers" :key="t">
+                            <option :value="t" x-text="t"></option>
+                        </template>
+                    </select>
+                </div>
+
+                <!-- Section Filter -->
+                <div class="flex flex-col gap-1">
+                    <select x-model="filterSection" class="bg-slate-50 border border-gray-200 text-slate-700 text-xs rounded-xl px-3 py-2 outline-none focus:border-indigo-500 focus:bg-white transition">
+                        <option value="">All Grade Sections</option>
+                        <template x-for="s in sections" :key="s.id">
+                            <option :value="s.id" x-text="s.display_name"></option>
+                        </template>
+                    </select>
+                </div>
+
+                <!-- Subject Filter -->
+                <div class="flex flex-col gap-1">
+                    <select x-model="filterSubject" class="bg-slate-50 border border-gray-200 text-slate-700 text-xs rounded-xl px-3 py-2 outline-none focus:border-indigo-500 focus:bg-white transition">
+                        <option value="">All Subjects</option>
+                        <template x-for="sub in subjects" :key="sub">
+                            <option :value="sub" x-text="sub"></option>
+                        </template>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Two Column Interactive Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            <!-- Left Side: Calendar Grid -->
+            <div class="lg:col-span-8 bg-white border border-gray-150 rounded-2xl shadow-xs overflow-hidden">
+                <!-- Calendar Control Header -->
+                <div class="bg-slate-50/50 border-b border-gray-150 px-6 py-5 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <h2 class="text-slate-900 font-extrabold text-sm tracking-wide uppercase" x-text="monthNames[month] + ' ' + year"></h2>
+                    </div>
+                    <div class="flex gap-1.5">
+                        <button type="button" @click="prevMonth()" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-655 hover:bg-slate-50 transition cursor-pointer">
+                            <i data-lucide="chevron-left" class="h-4 w-4"></i>
+                        </button>
+                        <button type="button" @click="month = new Date().getMonth(); year = new Date().getFullYear(); getCalendarDays();" class="inline-flex h-8 px-3 items-center justify-center rounded-lg border border-slate-200 bg-white text-xs font-bold text-slate-700 hover:bg-slate-50 transition cursor-pointer">
+                            Today
+                        </button>
+                        <button type="button" @click="nextMonth()" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-655 hover:bg-slate-50 transition cursor-pointer">
+                            <i data-lucide="chevron-right" class="h-4 w-4"></i>
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Monthly Grid -->
                 <div class="grid grid-cols-7 gap-1 p-4 bg-slate-50/45">
                     <!-- Weekday Labels -->
@@ -198,21 +346,46 @@
                         <button type="button" 
                             @click="selectDay(day)"
                             :class="[
-                                isSelected(day) ? 'bg-indigo-600 text-white shadow-xs font-black border-indigo-600' : 'bg-white hover:bg-slate-50 border-slate-150',
-                                isToday(day) && !isSelected(day) ? 'text-indigo-600 font-black ring-2 ring-indigo-600/20' : ''
+                                isSelected(day) ? 'bg-indigo-700 text-white shadow-xs font-black border-indigo-700' : 'bg-white hover:bg-slate-50 border-slate-150',
+                                isToday(day) && !isSelected(day) ? 'text-indigo-650 font-black ring-2 ring-indigo-650/20' : ''
                             ]"
                             class="aspect-square border rounded-xl flex flex-col items-center justify-between p-2 cursor-pointer transition relative group">
                             <span class="text-xs font-extrabold" x-text="day"></span>
                             
-                            <!-- Event indicator dots -->
-                            <div class="flex gap-0.5 justify-center mt-1 w-full overflow-hidden">
-                                <template x-for="event in getEventsForDay(day)">
-                                    <span :class="[
-                                        event.type === 'Holiday' ? 'bg-rose-500' : '',
-                                        event.type === 'Exam' ? 'bg-amber-500' : '',
-                                        event.type === 'Academic' ? 'bg-blue-500' : '',
-                                        event.type === 'Co-curricular' ? 'bg-purple-500' : ''
-                                    ]" class="w-1.5 h-1.5 rounded-full shrink-0"></span>
+                            <!-- Event indicator dots / badges -->
+                            <div class="flex flex-col items-center gap-1 mt-1 w-full overflow-hidden">
+                                <!-- General Events Dots -->
+                                <template x-if="viewMode === 'events'">
+                                    <div class="flex gap-0.5 justify-center w-full overflow-hidden">
+                                        <template x-for="event in getEventsForDay(day)">
+                                            <span :class="[
+                                                event.type === 'Holiday' ? 'bg-rose-500' : '',
+                                                event.type === 'Exam' ? 'bg-amber-500' : '',
+                                                event.type === 'Academic' ? 'bg-blue-500' : '',
+                                                event.type === 'Co-curricular' ? 'bg-purple-500' : ''
+                                            ]" class="w-1.5 h-1.5 rounded-full shrink-0"></span>
+                                        </template>
+                                    </div>
+                                </template>
+
+                                <!-- Timetable schedules -->
+                                <template x-if="viewMode === 'timetable'">
+                                    <div class="w-full flex flex-col items-center gap-0.5">
+                                        <!-- If a filter is selected, we show individual small dots or lines -->
+                                        <template x-if="filterTeacher || filterSection || filterSubject">
+                                            <div class="flex flex-wrap gap-0.5 justify-center w-full overflow-hidden">
+                                                <template x-for="s in getSortedSchedulesForDay(day)">
+                                                    <span :class="getSubjectColorClasses(s.subject_name).dot" class="w-1.5 h-1.5 rounded-full shrink-0" :title="s.subject_name"></span>
+                                                </template>
+                                            </div>
+                                        </template>
+                                        <!-- If no filter is selected, we show a count badge to avoid clutter -->
+                                        <template x-if="!(filterTeacher || filterSection || filterSubject) && getSchedulesForDay(day).length > 0">
+                                            <span :class="isSelected(day) ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'" class="inline-flex px-1.5 py-0.5 rounded-md text-[8px] font-bold">
+                                                <span x-text="getSchedulesForDay(day).length"></span> classes
+                                            </span>
+                                        </template>
+                                    </div>
                                 </template>
                             </div>
                         </button>
@@ -220,7 +393,7 @@
                 </div>
             </div>
 
-            <!-- Right Side: Agenda Agenda & Controls -->
+            <!-- Right Side: Agenda & Controls -->
             <div class="lg:col-span-4 space-y-6">
                 <!-- Active events Agenda panel -->
                 <div class="bg-white border border-gray-150 rounded-2xl shadow-xs p-6 space-y-5">
@@ -229,37 +402,90 @@
                             <span class="text-slate-900 font-extrabold text-sm tracking-wide uppercase block">Agenda</span>
                             <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-0.5" x-text="selectedDate ? 'Selected Day' : 'This Month'"></span>
                         </div>
-                        <button type="button" @click="showAddModal = true" class="inline-flex h-7 px-3 items-center gap-1.5 bg-indigo-700 hover:bg-indigo-600 text-white font-extrabold text-[10px] rounded-lg transition shadow-3xs cursor-pointer uppercase tracking-wider">
-                            <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
-                            Add Event
-                        </button>
+                        <template x-if="viewMode === 'events'">
+                            <button type="button" @click="showAddModal = true" class="inline-flex h-7 px-3 items-center gap-1.5 bg-indigo-700 hover:bg-indigo-600 text-white font-extrabold text-[10px] rounded-lg transition shadow-3xs cursor-pointer uppercase tracking-wider">
+                                <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+                                Add Event
+                            </button>
+                        </template>
+                        <template x-if="viewMode === 'timetable'">
+                            <a href="{{ route('admin.academic.schedules') }}" class="inline-flex h-7 px-3 items-center gap-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-750 border border-indigo-200 font-extrabold text-[10px] rounded-lg transition shadow-3xs cursor-pointer uppercase tracking-wider">
+                                <i data-lucide="calendar" class="w-3.5 h-3.5 text-indigo-600"></i>
+                                Manage
+                            </a>
+                        </template>
                     </div>
                     
                     <div class="space-y-3 max-h-[380px] overflow-y-auto pr-1">
-                        <template x-for="event in getFilteredEvents()">
-                            <div :class="getEventBorderColor(event.type)" class="group flex flex-col p-4 bg-white border border-gray-150 rounded-2xl hover:bg-slate-50/55 transition shadow-3xs border-l-4">
-                                <div class="flex items-start justify-between gap-3">
-                                    <div>
-                                        <span class="font-extrabold text-slate-900 text-xs block tracking-wide group-hover:text-indigo-850 transition-colors" x-text="event.title"></span>
-                                        <span class="text-[9px] text-gray-400 font-semibold mt-1 block" x-text="event.date"></span>
+                        <!-- School Events Agenda -->
+                        <template x-if="viewMode === 'events'">
+                            <div>
+                                <template x-for="event in getFilteredEvents()">
+                                    <div :class="getEventBorderColor(event.type)" class="group flex flex-col p-4 bg-white border border-gray-150 rounded-2xl hover:bg-slate-50/55 transition shadow-3xs border-l-4 mb-3">
+                                        <div class="flex items-start justify-between gap-3">
+                                            <div>
+                                                <span class="font-extrabold text-slate-900 text-xs block tracking-wide group-hover:text-indigo-850 transition-colors" x-text="event.title"></span>
+                                                <span class="text-[9px] text-gray-400 font-semibold mt-1 block" x-text="event.date"></span>
+                                            </div>
+                                            <span :class="getEventBadgeColor(event.type)" class="inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-extrabold border uppercase tracking-wider" x-text="event.type"></span>
+                                        </div>
+                                        <p class="mt-2 text-[10px] text-slate-500 font-medium leading-relaxed" x-text="event.desc"></p>
                                     </div>
-                                    <span :class="getEventBadgeColor(event.type)" class="inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-extrabold border uppercase tracking-wider" x-text="event.type"></span>
-                                </div>
-                                <p class="mt-2 text-[10px] text-slate-500 font-medium leading-relaxed" x-text="event.desc"></p>
+                                </template>
+                                
+                                <template x-if="getFilteredEvents().length === 0">
+                                    <div class="py-8 text-center text-slate-400 flex flex-col items-center justify-center gap-2">
+                                        <i data-lucide="info" class="w-6 h-6 text-slate-350"></i>
+                                        <p class="font-semibold text-xs">No events scheduled for this view.</p>
+                                    </div>
+                                </template>
                             </div>
                         </template>
-                        
-                        <template x-if="getFilteredEvents().length === 0">
-                            <div class="py-8 text-center text-slate-400 flex flex-col items-center justify-center gap-2">
-                                <i data-lucide="info" class="w-6 h-6 text-slate-350"></i>
-                                <p class="font-semibold text-xs">No events scheduled for this view.</p>
+
+                        <!-- Class Timetable Agenda -->
+                        <template x-if="viewMode === 'timetable'">
+                            <div>
+                                <template x-if="selectedDate">
+                                    <div>
+                                        <template x-for="s in getSortedSchedulesForDay(parseInt(selectedDate.split('-')[2]))">
+                                            <div :class="getSubjectColorClasses(s.subject_name).border" class="group flex flex-col p-4 bg-white border border-gray-150 rounded-2xl hover:bg-slate-50/55 transition shadow-3xs border-l-4 mb-3">
+                                                <div class="flex items-start justify-between gap-3">
+                                                    <div>
+                                                        <span class="font-extrabold text-slate-900 text-xs block tracking-wide" x-text="s.subject_name"></span>
+                                                        <span class="text-[10px] text-indigo-650 font-bold uppercase mt-1 block" x-text="formatTime(s.schedule.split(' ')[1])"></span>
+                                                    </div>
+                                                    <span :class="getSubjectColorClasses(s.subject_name).badge" class="inline-flex items-center px-2 py-0.5 rounded-md text-[8px] font-extrabold border uppercase tracking-wider" x-text="s.grade_level"></span>
+                                                </div>
+                                                <div class="mt-2.5 space-y-1 text-[10px] text-slate-500 font-medium">
+                                                    <div class="flex items-center gap-1.5">
+                                                        <i data-lucide="layers" class="w-3.5 h-3.5 text-slate-400"></i>
+                                                        <span class="text-slate-700 font-semibold" x-text="s.section_name"></span>
+                                                    </div>
+                                                    <template x-if="s.teacher_name">
+                                                        <div class="flex items-center gap-1.5">
+                                                            <i data-lucide="user" class="w-3.5 h-3.5 text-slate-400"></i>
+                                                            <span class="text-slate-750 font-bold uppercase" x-text="s.teacher_name"></span>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                            </div>
+                                        </template>
+
+                                        <template x-if="getSortedSchedulesForDay(parseInt(selectedDate.split('-')[2])).length === 0">
+                                            <div class="py-8 text-center text-slate-400 flex flex-col items-center justify-center gap-2">
+                                                <i data-lucide="info" class="w-6 h-6 text-slate-350"></i>
+                                                <p class="font-semibold text-xs">No classes scheduled on this day.</p>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
                             </div>
                         </template>
                     </div>
                 </div>
 
                 <!-- Legend Card -->
-                <div class="bg-white border border-gray-150 rounded-2xl shadow-xs p-6 space-y-4">
+                <div class="bg-white border border-gray-150 rounded-2xl shadow-xs p-6 space-y-4" x-show="viewMode === 'events'">
                     <div class="border-b border-slate-100 pb-3">
                         <span class="text-slate-900 font-extrabold text-xs tracking-wide uppercase">Category Legend</span>
                     </div>
@@ -279,6 +505,39 @@
                         <div class="flex items-center gap-2 px-3 py-2 bg-purple-50/40 border border-purple-100/50 rounded-xl">
                             <span class="w-2 h-2 rounded-full bg-purple-500"></span>
                             <span>Co-curricular</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Class Timetables Legend -->
+                <div class="bg-white border border-gray-150 rounded-2xl shadow-xs p-6 space-y-4" x-show="viewMode === 'timetable'" x-cloak x-transition>
+                    <div class="border-b border-slate-100 pb-3">
+                        <span class="text-slate-900 font-extrabold text-xs tracking-wide uppercase">Subject Color Legend</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-[10px] font-extrabold text-slate-700">
+                        <div class="flex items-center gap-2 px-3 py-2 bg-sky-50/40 border border-sky-100/50 rounded-xl">
+                            <span class="w-2 h-2 rounded-full bg-sky-500"></span>
+                            <span>Qur'an</span>
+                        </div>
+                        <div class="flex items-center gap-2 px-3 py-2 bg-amber-50/40 border border-amber-100/50 rounded-xl">
+                            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                            <span>Hadith</span>
+                        </div>
+                        <div class="flex items-center gap-2 px-3 py-2 bg-pink-50/40 border border-pink-100/50 rounded-xl">
+                            <span class="w-2 h-2 rounded-full bg-pink-500"></span>
+                            <span>Arabic</span>
+                        </div>
+                        <div class="flex items-center gap-2 px-3 py-2 bg-rose-50/40 border border-rose-100/50 rounded-xl">
+                            <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                            <span>Recess</span>
+                        </div>
+                        <div class="flex items-center gap-2 px-3 py-2 bg-violet-50/40 border border-violet-100/50 rounded-xl">
+                            <span class="w-2 h-2 rounded-full bg-violet-500"></span>
+                            <span>Routines</span>
+                        </div>
+                        <div class="flex items-center gap-2 px-3 py-2 bg-emerald-50/40 border border-emerald-100/50 rounded-xl">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                            <span>Academics</span>
                         </div>
                     </div>
                 </div>

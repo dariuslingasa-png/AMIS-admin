@@ -18,7 +18,7 @@
                         {{ $advisory['initials'] }}
                     </div>
                     <div>
-                        <span class="font-extrabold text-slate-900 text-xs block">{{ $advisory['teacher'] }}</span>
+                        <span class="font-extrabold text-slate-900 text-xs block uppercase">{{ $advisory['teacher'] }}</span>
                         <span class="text-[10px] text-slate-400 font-semibold mt-0.5 block uppercase tracking-wide">Advisor assigned</span>
                     </div>
                 </div>

@@ -64,7 +64,22 @@
 
                     <div class="grid gap-3">
                         @foreach($items as $subject)
-                            <article x-show="'{{ strtolower($subject->name.' '.$subject->code.' '.$subject->grade_level) }}'.includes(search.toLowerCase())" class="rounded-xl border border-slate-150 bg-slate-50/60 p-4">
+                            @php
+                                $subjectLower = strtolower($subject->name);
+                                $cardClasses = 'bg-emerald-50/20 border-emerald-150 border-l-4 border-l-emerald-500';
+                                if (str_contains($subjectLower, 'qur')) {
+                                    $cardClasses = 'bg-sky-50/20 border-sky-150 border-l-4 border-l-sky-500';
+                                } elseif (str_contains($subjectLower, 'hadith')) {
+                                    $cardClasses = 'bg-amber-50/20 border-amber-150 border-l-4 border-l-amber-500';
+                                } elseif (str_contains($subjectLower, 'arabic')) {
+                                    $cardClasses = 'bg-pink-50/20 border-pink-150 border-l-4 border-l-pink-500';
+                                } elseif (str_contains($subjectLower, 'recess')) {
+                                    $cardClasses = 'bg-rose-50/20 border-rose-150 border-l-4 border-l-rose-500';
+                                } elseif (str_contains($subjectLower, 'meeting') || str_contains($subjectLower, 'circle') || str_contains($subjectLower, 'wrap')) {
+                                    $cardClasses = 'bg-violet-50/20 border-violet-150 border-l-4 border-l-violet-500';
+                                }
+                            @endphp
+                            <article x-show="'{{ strtolower($subject->name.' '.$subject->code.' '.$subject->grade_level) }}'.includes(search.toLowerCase())" class="rounded-xl border p-4 transition-all duration-200 {{ $cardClasses }}">
                                 <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                                     <div class="min-w-0">
                                         <div class="flex flex-wrap items-center gap-2">

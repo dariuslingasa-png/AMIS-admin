@@ -20,6 +20,15 @@
         existModalConfirm: false,
         existModalAction: 'add',
         grades: @js(str_contains($teacher['dept'], 'Elementary') ? ['Kinder 1', 'Kinder 2', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6'] : (str_contains($teacher['dept'], 'High') ? ['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'] : ['Kinder 1', 'Kinder 2', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'])),
+        getSubjectClass(name) {
+            const lower = name.toLowerCase();
+            if (lower.includes('qur')) return { bg: 'bg-sky-50 text-sky-700 border-sky-100/50', hoverBg: 'group-hover:bg-sky-600 group-hover:text-white group-hover:border-sky-605', hoverBorder: 'hover:border-sky-300' };
+            if (lower.includes('hadith')) return { bg: 'bg-amber-50 text-amber-700 border-amber-100/50', hoverBg: 'group-hover:bg-amber-600 group-hover:text-white group-hover:border-amber-605', hoverBorder: 'hover:border-amber-300' };
+            if (lower.includes('arabic')) return { bg: 'bg-pink-50 text-pink-700 border-pink-100/50', hoverBg: 'group-hover:bg-pink-600 group-hover:text-white group-hover:border-pink-605', hoverBorder: 'hover:border-pink-300' };
+            if (lower.includes('recess')) return { bg: 'bg-rose-50 text-rose-700 border-rose-100/50', hoverBg: 'group-hover:bg-rose-600 group-hover:text-white group-hover:border-rose-605', hoverBorder: 'hover:border-rose-300' };
+            if (lower.includes('meeting') || lower.includes('circle') || lower.includes('wrap')) return { bg: 'bg-violet-50 text-violet-700 border-violet-100/50', hoverBg: 'group-hover:bg-violet-600 group-hover:text-white group-hover:border-violet-605', hoverBorder: 'hover:border-violet-300' };
+            return { bg: 'bg-emerald-50 text-emerald-700 border-emerald-100/50', hoverBg: 'group-hover:bg-emerald-600 group-hover:text-white group-hover:border-emerald-605', hoverBorder: 'hover:border-emerald-300' };
+        },
         get subjectCount() {
             return this.subjectIds.length;
         },
@@ -239,8 +248,7 @@
                     <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold bg-white/10 text-indigo-100 rounded-full border border-white/10 backdrop-blur-xs mb-3">
                         <span class="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse"></span>
                         Academic Workspace
-                    </span>
-                    <h1 class="text-2xl md:text-3xl font-black tracking-tight text-white">{{ $teacher['name'] }}</h1>
+                                      <h1 class="text-2xl md:text-3xl font-black tracking-tight text-white uppercase">{{ $teacher['name'] }}</h1>
                     <p class="mt-1 text-sm text-indigo-150 font-light">
                         {{ $teacher['dept'] ?? 'Faculty Member' }} &bull; {{ $teacher['sections'] ?? 'No sections assigned' }}
                     </p>
@@ -263,7 +271,7 @@
         @endif
 
         @if (session('temp_credentials'))
-            <div class="p-5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-950 space-y-3 shadow-sm">
+            <div class="p-5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-955 space-y-3 shadow-sm">
                 <div class="flex items-center gap-2 font-black text-xs uppercase tracking-wider text-amber-800">
                     <span class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
                     Newly Generated Microsoft Credentials
@@ -316,7 +324,7 @@
                     </div>
 
                     <div class="space-y-2 w-full">
-                        <h2 class="text-lg font-black text-slate-900 leading-tight">{{ $teacher['name'] }}</h2>
+                        <h2 class="text-lg font-black text-slate-900 leading-tight uppercase">{{ $teacher['name'] }}</h2>
                         <span class="text-xs text-slate-500 font-semibold block">{{ $teacher['email'] }}</span>
                     </div>
 
@@ -414,13 +422,15 @@
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3" x-show="subjects.length > 0">
                             <template x-for="subject in subjects" :key="subject.id">
-                                <div class="relative flex items-center justify-between p-3.5 rounded-xl border border-slate-200 bg-white hover:border-indigo-300 hover:shadow-2xs transition-all duration-150 group">
+                                <div class="relative flex items-center justify-between p-3.5 rounded-xl border border-slate-200 bg-white hover:shadow-2xs transition-all duration-150 group"
+                                     :class="getSubjectClass(subject.name).hoverBorder">
                                     <div class="flex items-center gap-2.5 min-w-0">
-                                        <div class="h-8 w-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 border border-indigo-100/50 group-hover:bg-indigo-600 group-hover:text-white group-hover:border-indigo-600 transition-colors duration-150">
+                                        <div class="h-8 w-8 rounded-lg flex items-center justify-center shrink-0 border transition-colors duration-150"
+                                             :class="[getSubjectClass(subject.name).bg, getSubjectClass(subject.name).hoverBg]">
                                             <i data-lucide="book-open" class="h-4 w-4"></i>
                                         </div>
                                         <div class="min-w-0">
-                                            <span class="block text-xs font-black text-slate-900 truncate" x-text="subject.name"></span>
+                                            <span class="block text-xs font-black text-slate-900 truncate uppercase" x-text="subject.name"></span>
                                             <span class="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wide mt-0.5" x-text="subject.grade_level"></span>
                                         </div>
                                     </div>
@@ -438,7 +448,337 @@
                         <div class="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-6 text-center text-xs font-bold text-slate-400" x-show="subjects.length === 0">
                             No subjects added yet.
                         </div>
-                    </div>                </form>
+                    </div>
+                </form>
+
+                <!-- Weekly Schedule Timetable Card -->
+                <div class="bg-white border border-slate-200 rounded-2xl shadow-xs p-6 space-y-6">
+                    <div class="border-b border-slate-100 pb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700 ring-1 ring-indigo-100">
+                                <i data-lucide="calendar-days" class="w-5 h-5"></i>
+                            </span>
+                            <div>
+                                <span class="text-slate-900 font-extrabold text-sm tracking-wide uppercase block">Weekly Schedule Timetable</span>
+                                <span class="block text-[11px] text-slate-400 font-medium">Weekly timetable grid of scheduled classes for this teacher</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2.5">
+                            <span class="inline-flex w-fit rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wider ring-1 bg-indigo-50 text-indigo-700 ring-indigo-100">
+                                {{ count($schedules) }} Classes
+                            </span>
+                            <a href="{{ route('admin.academic.schedules', ['tab' => 'schedule']) }}" class="inline-flex items-center gap-1 px-3 py-1 text-[10px] font-bold text-indigo-700 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition border border-indigo-200 cursor-pointer">
+                                Manage Schedules
+                            </a>
+                        </div>
+                    </div>
+
+                    @if(empty($schedules))
+                        <div class="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-xs font-bold text-slate-400 flex flex-col items-center justify-center gap-2">
+                            <i data-lucide="calendar" class="w-6 h-6 text-slate-350"></i>
+                            <span>No scheduled classes for this teacher yet.</span>
+                        </div>
+                    @else
+                        @php
+                            $daysList = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
+
+                            // Extract and sort unique time intervals
+                            $intervals = [];
+                            $timeBoundaries = [];
+                            foreach ($schedules as $entry) {
+                                $startMin = $entry['start_minutes'];
+                                [$endH, $endM] = explode(':', $entry['end_time']);
+                                $endMin = ($endH * 60) + $endM;
+                                $timeBoundaries[] = $startMin;
+                                $timeBoundaries[] = $endMin;
+                            }
+                            $timeBoundaries = array_unique($timeBoundaries);
+                            sort($timeBoundaries);
+
+                            for ($i = 0; $i < count($timeBoundaries) - 1; $i++) {
+                                $intervals[] = [
+                                    'start' => $timeBoundaries[$i],
+                                    'end' => $timeBoundaries[$i+1],
+                                    'start_time' => sprintf('%02d:%02d', intdiv($timeBoundaries[$i], 60), $timeBoundaries[$i] % 60),
+                                    'end_time' => sprintf('%02d:%02d', intdiv($timeBoundaries[$i+1], 60), $timeBoundaries[$i+1] % 60),
+                                    'minutes' => $timeBoundaries[$i+1] - $timeBoundaries[$i],
+                                ];
+                            }
+
+                            // Helper to format time label (e.g. 7:30-7:40 a.m.)
+                            if (!function_exists('formatTimetableTime')) {
+                                function formatTimetableTime($start, $end) {
+                                    $startAmPm = date('a', strtotime($start));
+                                    $endAmPm = date('a', strtotime($end));
+                                    
+                                    $startAmPm = str_replace(['am', 'pm'], ['a.m.', 'p.m.'], $startAmPm);
+                                    $endAmPm = str_replace(['am', 'pm'], ['a.m.', 'p.m.'], $endAmPm);
+                                    
+                                    if ($startAmPm === $endAmPm) {
+                                        return date('g:i', strtotime($start)) . '-' . date('g:i', strtotime($end)) . ' ' . $endAmPm;
+                                    }
+                                    return date('g:i', strtotime($start)) . ' ' . $startAmPm . ' - ' . date('g:i', strtotime($end)) . ' ' . $endAmPm;
+                                }
+                            }
+
+                            // Build 2D grid matrix
+                            $grid = [];
+                            foreach ($intervals as $iIdx => $interval) {
+                                $grid[$iIdx] = [];
+                                foreach ($daysList as $day) {
+                                    $grid[$iIdx][$day] = null;
+                                }
+                            }
+
+                            foreach ($daysList as $day) {
+                                foreach ($intervals as $iIdx => $interval) {
+                                    $matchingEntry = null;
+                                    foreach ($schedules as $entry) {
+                                        if ($entry['day'] !== $day) {
+                                            continue;
+                                        }
+                                        $entryStart = $entry['start_minutes'];
+                                        [$endH, $endM] = explode(':', $entry['end_time']);
+                                        $entryEnd = ($endH * 60) + $endM;
+
+                                        if ($entryStart <= $interval['start'] && $entryEnd >= $interval['end']) {
+                                            $matchingEntry = $entry;
+                                            break;
+                                        }
+                                    }
+
+                                    if ($matchingEntry) {
+                                        $isStart = ($matchingEntry['start_minutes'] === $interval['start']);
+                                        $span = 0;
+                                        if ($isStart) {
+                                            foreach ($intervals as $subInterval) {
+                                                if ($subInterval['start'] >= $matchingEntry['start_minutes']) {
+                                                    [$entryEndH, $entryEndM] = explode(':', $matchingEntry['end_time']);
+                                                    $entryEndMin = ($entryEndH * 60) + $entryEndM;
+                                                    if ($subInterval['end'] <= $entryEndMin) {
+                                                        $span++;
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        $grid[$iIdx][$day] = [
+                                            'entry' => $matchingEntry,
+                                            'is_start' => $isStart,
+                                            'span' => $span,
+                                        ];
+                                    }
+                                }
+                            }
+
+                            // Initialize horizontal merge tracking
+                            foreach ($intervals as $iIdx => $interval) {
+                                foreach ($daysList as $day) {
+                                    if ($grid[$iIdx][$day]) {
+                                        $grid[$iIdx][$day]['colspan'] = 1;
+                                        $grid[$iIdx][$day]['skip_horizontal'] = false;
+                                    }
+                                }
+                            }
+
+                            // Compute horizontal colspans
+                            foreach ($intervals as $iIdx => $interval) {
+                                for ($d = 0; $d < count($daysList); $d++) {
+                                    $day = $daysList[$d];
+                                    $cell = $grid[$iIdx][$day];
+                                    if (!$cell || !$cell['is_start'] || $cell['skip_horizontal']) {
+                                        continue;
+                                    }
+
+                                    $colspan = 1;
+                                    while ($d + $colspan < count($daysList)) {
+                                        $nextDay = $daysList[$d + $colspan];
+                                        $nextCell = $grid[$iIdx][$nextDay];
+                                        
+                                        if ($nextCell && $nextCell['is_start'] && !$nextCell['skip_horizontal'] && $nextCell['span'] === $cell['span'] && $nextCell['entry']['subject_name'] === $cell['entry']['subject_name'] && $nextCell['entry']['section_id'] === $cell['entry']['section_id']) {
+                                            $colspan++;
+                                        } else {
+                                            break;
+                                        }
+                                    }
+
+                                    if ($colspan > 1) {
+                                        $grid[$iIdx][$day]['colspan'] = $colspan;
+                                        for ($c = 1; $c < $colspan; $c++) {
+                                            $targetDay = $daysList[$d + $c];
+                                            for ($r = 0; $r < $cell['span']; $r++) {
+                                                if ($grid[$iIdx + $r][$targetDay]) {
+                                                    $grid[$iIdx + $r][$targetDay]['skip_horizontal'] = true;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        @endphp
+
+                        <style>
+                            /* Minimal overrides for the timetable grid using premium-table base */
+                            .timetable-grid-wrap {
+                                max-height: none !important;
+                                overflow: visible !important;
+                                border: 1px solid #edf2f7;
+                                border-radius: .875rem;
+                            }
+                            .timetable-grid td {
+                                border-top: 1px solid #f1f5f9;
+                                border-right: 1px solid #f1f5f9;
+                                vertical-align: middle;
+                                text-align: center;
+                                padding: 0 !important; /* Remove cell padding to allow full-height hover styling */
+                                background-color: #ffffff;
+                            }
+                            .timetable-grid td:last-child {
+                                border-right: none;
+                            }
+                            .timetable-grid .col-time {
+                                width: 130px;
+                                background-color: #f8fafc;
+                                font-weight: 700;
+                                color: #1e293b;
+                                padding: 12px !important;
+                            }
+                            .timetable-grid .col-minutes {
+                                width: 70px;
+                                background-color: #f8fafc;
+                                font-weight: 600;
+                                color: #64748b;
+                                padding: 12px !important;
+                            }
+                            .timetable-grid .cell-quran {
+                                background-color: #f0f9ff !important; /* bg-sky-50 */
+                                color: #0369a1 !important; /* text-sky-700 */
+                                border-right: 1px solid #bae6fd !important;
+                                border-top: 1px solid #bae6fd !important;
+                            }
+                            .timetable-grid .cell-quran:hover {
+                                background-color: #e0f2fe !important;
+                            }
+                            .timetable-grid .cell-hadith {
+                                background-color: #fffbeb !important; /* bg-amber-50 */
+                                color: #b45309 !important; /* text-amber-700 */
+                                border-right: 1px solid #fde68a !important;
+                                border-top: 1px solid #fde68a !important;
+                            }
+                            .timetable-grid .cell-hadith:hover {
+                                background-color: #fef3c7 !important;
+                            }
+                            .timetable-grid .cell-arabic {
+                                background-color: #fdf2f8 !important; /* bg-pink-50 */
+                                color: #be185d !important; /* text-pink-700 */
+                                border-right: 1px solid #fce7f3 !important;
+                                border-top: 1px solid #fce7f3 !important;
+                            }
+                            .timetable-grid .cell-arabic:hover {
+                                background-color: #fce7f3 !important;
+                            }
+                            .timetable-grid .cell-recess {
+                                background-color: #fff5f5 !important; /* bg-red-50 */
+                                color: #c53030 !important; /* text-red-700 */
+                                border-right: 1px solid #fed7d7 !important;
+                                border-top: 1px solid #fed7d7 !important;
+                            }
+                            .timetable-grid .cell-recess:hover {
+                                background-color: #fed7d7 !important;
+                            }
+                            .timetable-grid .cell-academic {
+                                background-color: #f0fdf4 !important; /* bg-emerald-50 */
+                                color: #15803d !important; /* text-emerald-700 */
+                                border-right: 1px solid #dcfce7 !important;
+                                border-top: 1px solid #dcfce7 !important;
+                            }
+                            .timetable-grid .cell-academic:hover {
+                                background-color: #dcfce7 !important;
+                            }
+                            .timetable-grid .cell-event {
+                                background-color: #f5f3ff !important; /* bg-violet-50 */
+                                color: #6d28d9 !important; /* text-violet-700 */
+                                border-right: 1px solid #ede9fe !important;
+                                border-top: 1px solid #ede9fe !important;
+                            }
+                            .timetable-grid .cell-event:hover {
+                                background-color: #ede9fe !important;
+                            }
+                            .timetable-grid .cell-empty {
+                                background-color: #ffffff !important;
+                                color: #1e293b !important;
+                            }
+                            .timetable-grid .cell-empty:hover {
+                                background-color: #f8fafc !important;
+                            }
+                        </style>
+
+                        <div class="premium-table-wrap timetable-grid-wrap">
+                            <table class="premium-table timetable-grid">
+                                <thead>
+                                    <tr>
+                                        <th class="col-time text-center uppercase tracking-wider font-extrabold text-[10px]" style="text-align: center;">Time</th>
+                                        <th class="col-minutes text-center uppercase tracking-wider font-extrabold text-[10px]" style="text-align: center;">Minutes</th>
+                                        @foreach($daysList as $day)
+                                            <th class="text-center uppercase tracking-wider font-extrabold text-[10px]" style="text-align: center;">{{ $day }}</th>
+                                        @endforeach
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($intervals as $iIdx => $interval)
+                                        <tr>
+                                            <td class="col-time font-bold text-slate-800">
+                                                {{ formatTimetableTime($interval['start_time'], $interval['end_time']) }}
+                                            </td>
+                                            <td class="col-minutes font-semibold text-slate-500">
+                                                {{ $interval['minutes'] }}
+                                            </td>
+                                            @foreach($daysList as $day)
+                                                @php
+                                                    $cell = $grid[$iIdx][$day];
+                                                @endphp
+                                                @if($cell)
+                                                    @if($cell['is_start'] && !$cell['skip_horizontal'])
+                                                        @php
+                                                            $subjectLower = strtolower($cell['entry']['subject_name']);
+                                                            $cellClass = 'cell-academic';
+                                                            if (str_contains($subjectLower, 'qur')) {
+                                                                $cellClass = 'cell-quran';
+                                                            } elseif (str_contains($subjectLower, 'hadith')) {
+                                                                $cellClass = 'cell-hadith';
+                                                            } elseif (str_contains($subjectLower, 'arabic')) {
+                                                                $cellClass = 'cell-arabic';
+                                                            } elseif (str_contains($subjectLower, 'recess')) {
+                                                                $cellClass = 'cell-recess';
+                                                            } elseif (str_contains($subjectLower, 'meeting') || str_contains($subjectLower, 'circle') || str_contains($subjectLower, 'wrap')) {
+                                                                $cellClass = 'cell-event';
+                                                            } elseif (str_contains($subjectLower, 'assembly') || str_contains($subjectLower, 'departure')) {
+                                                                $cellClass = 'cell-empty';
+                                                            }
+                                                        @endphp
+                                                        <td rowspan="{{ $cell['span'] }}" colspan="{{ $cell['colspan'] }}" class="{{ $cellClass }}">
+                                                            <div class="relative w-full h-full p-4 flex flex-col justify-center text-center group min-h-[55px]">
+                                                                <span class="block font-extrabold text-[12px] leading-tight uppercase tracking-wide" style="color: inherit;">
+                                                                    {{ $cell['entry']['subject_name'] }}
+                                                                </span>
+                                                                <span class="block text-[10px] font-bold uppercase mt-1.5 flex items-center justify-center gap-1.5" style="color: inherit; opacity: 0.8;">
+                                                                    <i data-lucide="users" class="h-3.5 w-3.5 opacity-60"></i>
+                                                                    {{ $cell['entry']['section_name'] }}
+                                                                </span>
+                                                            </div>
+                                                        </td>
+                                                    @endif
+                                                @else
+                                                    <td class="cell-empty"></td>
+                                                @endif
+                                            @endforeach
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
+                </div>
 
                 <!-- Account Credentials & Actions Card -->
                 <div class="bg-white border border-slate-200 rounded-2xl shadow-xs p-6 space-y-6">

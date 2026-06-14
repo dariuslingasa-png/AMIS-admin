@@ -28,7 +28,7 @@
                                     {{ $section->learning_mode }}
                                 </x-badge>
                             </td>
-                            <td class="font-bold text-indigo-700 text-xs">{{ $advisory['teacher'] ?? 'Advisor pending' }}</td>
+                            <td class="font-bold text-indigo-700 text-xs uppercase">{{ $advisory['teacher'] ?? 'Advisor pending' }}</td>
                             <td class="font-extrabold text-slate-800 text-xs">{{ $section->students_count }} students</td>
                             <td style="text-align: right;">
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-100/50 uppercase">

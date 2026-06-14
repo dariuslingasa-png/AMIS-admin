@@ -102,7 +102,49 @@ class AdminAcademicController extends Controller
     {
         Gate::authorize('manage-academic');
 
-        return view('admin.academic.calendar', ['events' => []]);
+        $schedules = \App\Models\SectionSubject::with('section')->get();
+
+        $teachers = $schedules->pluck('teacher_name')
+            ->filter(fn($name) => !empty($name) && strtolower($name) !== 'teacher pending')
+            ->map(fn($n) => strtoupper(trim($n)))
+            ->unique()
+            ->sort()
+            ->values();
+
+        $sections = \App\Models\Section::orderBy('grade_level')->get()->map(function($s) {
+            return [
+                'id' => $s->id,
+                'name' => strtoupper($s->official_name ?: $s->name ?: 'General'),
+                'grade_level' => $s->grade_level,
+                'display_name' => strtoupper($s->grade_level . ' - ' . ($s->official_name ?: $s->name ?: 'General')),
+            ];
+        });
+
+        $subjects = $schedules->pluck('subject_name')
+            ->filter()
+            ->map(fn($n) => strtoupper(trim($n)))
+            ->unique()
+            ->sort()
+            ->values();
+
+        $mappedSchedules = $schedules->map(function ($s) {
+            return [
+                'id' => $s->id,
+                'subject_name' => strtoupper(trim($s->subject_name)),
+                'teacher_name' => $s->teacher_name ? strtoupper(trim($s->teacher_name)) : null,
+                'section_id' => $s->section_id,
+                'section_name' => strtoupper($s->section->official_name ?: $s->section->name ?: 'General'),
+                'grade_level' => $s->section->grade_level,
+                'schedule' => $s->schedule,
+            ];
+        });
+
+        return view('admin.academic.calendar', [
+            'schedules' => $mappedSchedules,
+            'teachers' => $teachers,
+            'sections' => $sections,
+            'subjects' => $subjects,
+        ]);
     }
 
     public function operations()

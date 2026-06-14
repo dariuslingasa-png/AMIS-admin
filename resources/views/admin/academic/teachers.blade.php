@@ -352,7 +352,7 @@
                                             <div class="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 text-slate-655 font-black text-xxs flex items-center justify-center shrink-0 shadow-3xs">
                                                 {{ $initials }}
                                             </div>
-                                            <span class="font-extrabold text-slate-900 text-sm tracking-wide">{{ $t['name'] }}</span>
+                                            <span class="font-extrabold text-slate-900 text-sm tracking-wide uppercase">{{ $t['name'] }}</span>
                                         </div>
                                     </td>
                                     <td class="text-xs font-semibold font-mono text-slate-500">{{ $t['email'] }}</td>
@@ -461,7 +461,7 @@
                                     <div class="flex min-w-0 flex-1 flex-col justify-between p-4 pl-2 sm:p-5 sm:pl-3">
                                         <div class="flex items-start justify-between gap-3">
                                             <div class="min-w-0">
-                                                <h3 class="truncate text-sm font-extrabold text-slate-900 sm:text-base">{{ $t['name'] }}</h3>
+                                                <h3 class="truncate text-sm font-extrabold text-slate-900 sm:text-base uppercase">{{ $t['name'] }}</h3>
                                                 <p class="mt-1 truncate text-xs font-semibold text-slate-500">{{ $t['email'] }}</p>
                                             </div>
                                             <x-badge color="{{ $t['status'] === 'Active' ? 'green' : 'gray' }}">{{ Str::upper($t['status']) }}</x-badge>
@@ -505,7 +505,22 @@
                                             </div>
                                             <div class="mt-3 flex flex-wrap gap-1.5">
                                                 @foreach(array_slice($t['subjects'] ?? [], 0, 4) as $subjectName)
-                                                    <span class="rounded-lg bg-white px-2 py-1 text-[10px] font-bold text-slate-600 ring-1 ring-indigo-100">{{ $subjectName }}</span>
+                                                    @php
+                                                        $subjectLower = strtolower($subjectName);
+                                                        $badgeColor = 'bg-emerald-50 text-emerald-700 border-emerald-100 ring-emerald-100';
+                                                        if (str_contains($subjectLower, 'qur')) {
+                                                            $badgeColor = 'bg-sky-50 text-sky-700 border-sky-100 ring-sky-100';
+                                                        } elseif (str_contains($subjectLower, 'hadith')) {
+                                                            $badgeColor = 'bg-amber-50 text-amber-700 border-amber-100 ring-amber-100';
+                                                        } elseif (str_contains($subjectLower, 'arabic')) {
+                                                            $badgeColor = 'bg-pink-50 text-pink-700 border-pink-100 ring-pink-100';
+                                                        } elseif (str_contains($subjectLower, 'recess')) {
+                                                            $badgeColor = 'bg-rose-50 text-rose-700 border-rose-100 ring-rose-100';
+                                                        } elseif (str_contains($subjectLower, 'meeting') || str_contains($subjectLower, 'circle') || str_contains($subjectLower, 'wrap')) {
+                                                            $badgeColor = 'bg-violet-50 text-violet-700 border-violet-100 ring-violet-100';
+                                                        }
+                                                    @endphp
+                                                    <span class="rounded-lg px-2 py-1 text-[10px] font-bold ring-1 uppercase tracking-wide {{ $badgeColor }}">{{ $subjectName }}</span>
                                                 @endforeach
                                                 @if(($t['subject_count'] ?? 0) > 4)
                                                     <button type="button" data-teacher="{{ $editPayload }}" @click.prevent="openTeacherViewerPayload($el.dataset.teacher)" class="rounded-lg bg-indigo-100 px-2 py-1 text-[10px] font-black text-indigo-700 hover:bg-indigo-200 transition cursor-pointer select-none">+{{ ($t['subject_count'] ?? 0) - 4 }}</button>
