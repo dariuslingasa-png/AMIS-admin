@@ -59,8 +59,8 @@ class GoogleDriveService
 
         $response = Http::withHeaders([
             'Authorization' => "Bearer {$accessToken}",
-            'Content-Type' => "multipart/related; boundary={$boundary}",
-        ])->withBody($multipartBody)->post('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart');
+        ])->withBody($multipartBody, "multipart/related; boundary={$boundary}")
+          ->post('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart');
 
         if (!$response->successful()) {
             Log::error('Google Drive Upload Failed', [
