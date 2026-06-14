@@ -1,6 +1,6 @@
 <?php
 
-if (isset($_GET['secret']) && $_GET['secret'] === 'amis_fix_9988') {
+if (php_sapi_name() === 'cli' || (isset($_GET['secret']) && $_GET['secret'] === 'amis_fix_9988')) {
     // Continue
 } else {
     die("Access denied.");
