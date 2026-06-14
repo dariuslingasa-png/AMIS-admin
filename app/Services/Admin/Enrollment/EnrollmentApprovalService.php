@@ -36,6 +36,20 @@ class EnrollmentApprovalService
         if ($applicant->student) {
             $this->backfillMicrosoftPhoto($applicant);
 
+            if ($applicant->status !== 'approved') {
+                $applicant->update([
+                    'status' => 'approved',
+                    'review_remarks' => $this->reviewService->missingDocumentRemarks($applicant),
+                ]);
+            }
+
+            if ($applicant->student->grade_level !== $applicant->grade_level || $applicant->student->school_year !== $applicant->school_year) {
+                $applicant->student->update([
+                    'grade_level' => $applicant->grade_level,
+                    'school_year' => $applicant->school_year,
+                ]);
+            }
+
             if (! $applicant->student->account && $this->shouldGenerateSoa($applicant)) {
                 $this->generateSoa($applicant->student, $applicant);
 
