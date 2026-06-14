@@ -75,19 +75,61 @@ class User extends Authenticatable
         return $this->hasMany(EnrollmentApplicant::class);
     }
 
+    public function roles(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Role::class);
+    }
+
+    public function hasRole(string|array $role): bool
+    {
+        $roles = is_array($role) ? $role : [$role];
+
+        if ($this->relationLoaded('roles') || $this->roles()->exists()) {
+            return $this->roles->pluck('slug')->intersect($roles)->isNotEmpty();
+        }
+
+        return in_array($this->role, $roles, true);
+    }
+
+    public function hasPermission(string|array $permission): bool
+    {
+        $permissions = is_array($permission) ? $permission : [$permission];
+
+        if ($this->relationLoaded('roles') || $this->roles()->exists()) {
+            $userPermissions = $this->roles->flatMap(function ($role) {
+                return $role->permissions->pluck('slug');
+            })->unique();
+
+            if ($userPermissions->intersect($permissions)->isNotEmpty()) {
+                return true;
+            }
+        }
+
+        foreach ($permissions as $perm) {
+            if ($this->allowsAccess($perm)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function hasAdminPortalAccess(): bool
     {
+        if ($this->relationLoaded('roles') || $this->roles()->exists()) {
+            return $this->roles->pluck('slug')->intersect(['super_admin', 'admin', 'finance', 'staff'])->isNotEmpty();
+        }
         return in_array($this->role, self::ADMIN_PORTAL_ROLES, true);
     }
 
     public function canReviewEnrollmentPayments(): bool
     {
-        return $this->allowsAccess('payment_review', in_array($this->role, self::PAYMENT_REVIEW_ROLES, true));
+        return $this->hasPermission('payment_review');
     }
 
     public function canReviewEnrollmentApplications(): bool
     {
-        return $this->allowsAccess('document_review', $this->role === 'admin');
+        return $this->hasPermission('document_review');
     }
 
     public function isViewOnlyAccess(): bool

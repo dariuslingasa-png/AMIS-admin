@@ -78,7 +78,10 @@
             <x-dashboard.module-card :href="route('admin.finance.dashboard')" icon="wallet" name="Finance Management" :owner="config('services.school.finance_reviewer_name', 'Finance Office')" summary="Enrollment payment review, SOA, fees, and receipts" accent="amber" shape="soft" />
             <x-dashboard.module-card icon="chart-no-axes-combined" name="Analytics" owner="Admin Analytics" summary="Charts, insights, performance reports" accent="cyan" shape="circle" status="Coming Soon" disabled />
             <x-dashboard.module-card icon="file-down" name="Reports" owner="Registrar / Finance" summary="PDF, Excel, registrar and finance exports" accent="indigo" shape="arch" status="Coming Soon" disabled />
-            <x-dashboard.module-card :href="route('admin.admins.index')" icon="shield-check" name="Security" owner="System Admin" summary="Admin accounts, role access, and portal security" accent="rose" shape="soft" />
+            <x-dashboard.module-card :href="route('admin.administration.users.index')" icon="users" name="Administration" owner="System Admin" summary="User directories, verification status, and credentials security" accent="violet" shape="soft" />
+            <x-dashboard.module-card :href="route('admin.access-control.roles.index')" icon="key" name="Access Control" owner="Security Officer" summary="Roles, permissions matrix, and access policy definitions" accent="indigo" shape="soft" />
+            <x-dashboard.module-card :href="route('admin.security-workspace.login-activity')" icon="shield-check" name="Security Workspace" owner="Security Auditing" summary="Session tracking, login attempts, force revokes, and alerts" accent="rose" shape="soft" />
+            <x-dashboard.module-card :href="route('admin.system-management.backups.index')" icon="settings-2" name="System Management" owner="DevOps Admin" summary="Backup Center, restore dumps, health status, and API sync" accent="slate" shape="soft" />
             <x-dashboard.module-card :href="route('admin.settings.discounts')" icon="settings" name="Settings" owner="System Admin" summary="School profile, MS365 sync, integrations" accent="lime" shape="circle" />
         </div>
     </section>

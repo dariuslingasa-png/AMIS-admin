@@ -85,13 +85,40 @@
             ],
         ],
         [
-            'active' => request()->routeIs('admin.admins.*'),
-            'icon' => 'shield-check', 'iconClass' => 'text-violet-600', 'headerClass' => 'text-violet-700', 'activeClass' => 'sidebar-link-active-violet', 'title' => 'Security',
+            'active' => request()->routeIs('admin.administration.*'),
+            'icon' => 'users', 'iconClass' => 'text-violet-600', 'headerClass' => 'text-violet-700', 'activeClass' => 'sidebar-link-active-violet', 'title' => 'Administration',
             'links' => [
-                ['Admin Accounts', 'user-cog', route('admin.admins.index'), request()->routeIs('admin.admins.index') || request()->routeIs('admin.admins.edit')],
-                ['Login Activity', 'activity', route('admin.admins.login-activity'), request()->routeIs('admin.admins.login-activity')],
-                ['Audit Logs', 'logs', route('admin.admins.audit-logs'), request()->routeIs('admin.admins.audit-logs')],
-                ['Backup', 'database-backup', route('admin.admins.backups'), request()->routeIs('admin.admins.backups')],
+                ['User Accounts', 'user-cog', route('admin.administration.users.index'), request()->routeIs('admin.administration.users.*')],
+            ],
+        ],
+        [
+            'active' => request()->routeIs('admin.access-control.*'),
+            'icon' => 'key', 'iconClass' => 'text-indigo-600', 'headerClass' => 'text-indigo-700', 'activeClass' => 'sidebar-link-active-indigo', 'title' => 'Access Control',
+            'links' => [
+                ['Roles', 'shield', route('admin.access-control.roles.index'), request()->routeIs('admin.access-control.roles.*')],
+                ['Permissions Matrix', 'table', route('admin.access-control.permissions.index'), request()->routeIs('admin.access-control.permissions.*')],
+                ['Role Assignment', 'user-check', route('admin.access-control.assignment.index'), request()->routeIs('admin.access-control.assignment.*')],
+                ['Access Policies', 'book-open', route('admin.access-control.policies.index'), request()->routeIs('admin.access-control.policies.*')],
+            ],
+        ],
+        [
+            'active' => request()->routeIs('admin.security-workspace.*'),
+            'icon' => 'shield-check', 'iconClass' => 'text-rose-600', 'headerClass' => 'text-rose-700', 'activeClass' => 'sidebar-link-active-rose', 'title' => 'Security Workspace',
+            'links' => [
+                ['Login Activity', 'activity', route('admin.security-workspace.login-activity'), request()->routeIs('admin.security-workspace.login-activity')],
+                ['Active Sessions', 'laptop', route('admin.security-workspace.sessions.index'), request()->routeIs('admin.security-workspace.sessions.*')],
+                ['Security Events', 'fingerprint', route('admin.security-workspace.events.index'), request()->routeIs('admin.security-workspace.events.*')],
+                ['Audit Logs', 'logs', route('admin.security-workspace.audit-logs'), request()->routeIs('admin.security-workspace.audit-logs')],
+                ['Security Alerts', 'bell-ring', route('admin.security-workspace.alerts.index'), request()->routeIs('admin.security-workspace.alerts.*')],
+            ],
+        ],
+        [
+            'active' => request()->routeIs('admin.system-management.*'),
+            'icon' => 'settings-2', 'iconClass' => 'text-slate-600', 'headerClass' => 'text-slate-700', 'activeClass' => 'sidebar-link-active-slate', 'title' => 'System Management',
+            'links' => [
+                ['Backup Center', 'database', route('admin.system-management.backups.index'), request()->routeIs('admin.system-management.backups.*')],
+                ['System Health', 'heart-pulse', route('admin.system-management.health.index'), request()->routeIs('admin.system-management.health.*')],
+                ['Integrations', 'plug', route('admin.system-management.integrations.index'), request()->routeIs('admin.system-management.integrations.*')],
             ],
         ],
         [

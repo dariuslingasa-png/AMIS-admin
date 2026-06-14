@@ -6,6 +6,10 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EnrollmentAnalyticsController;
 use App\Http\Controllers\Admin\EnrollmentController;
 use App\Http\Controllers\Admin\RequirementController;
+use App\Http\Controllers\Admin\AdministrationController;
+use App\Http\Controllers\Admin\AccessControlController;
+use App\Http\Controllers\Admin\SecurityWorkspaceController;
+use App\Http\Controllers\Admin\SystemManagementController;
 use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\AdminClassScheduleController;
 use App\Http\Controllers\AdminDiscountSettingsController;
@@ -158,6 +162,45 @@ Route::name('admin.')->group(function () {
         Route::patch('/admins/{user}/access', [AdminUserController::class, 'updateAccess'])->name('admins.access');
         Route::patch('/admins/{user}/accept', [AdminUserController::class, 'accept'])->name('admins.accept');
         Route::delete('/admins/{user}', [AdminUserController::class, 'destroy'])->name('admins.destroy');
+
+        // Administration Workspace
+        Route::get('/administration/users', [AdministrationController::class, 'usersIndex'])->name('administration.users.index');
+        Route::get('/administration/users/create', [AdministrationController::class, 'usersCreate'])->name('administration.users.create');
+        Route::post('/administration/users', [AdministrationController::class, 'usersStore'])->name('administration.users.store');
+        Route::patch('/administration/users/{user}/status', [AdministrationController::class, 'usersStatus'])->name('administration.users.status');
+        Route::get('/administration/users/{user}/security', [AdministrationController::class, 'usersSecurity'])->name('administration.users.security');
+        Route::patch('/administration/users/{user}/security', [AdministrationController::class, 'usersSecurityUpdate'])->name('administration.users.security.update');
+
+        // Access Control Workspace
+        Route::get('/access-control/roles', [AccessControlController::class, 'rolesIndex'])->name('access-control.roles.index');
+        Route::post('/access-control/roles', [AccessControlController::class, 'rolesStore'])->name('access-control.roles.store');
+        Route::patch('/access-control/roles/{role}', [AccessControlController::class, 'rolesUpdate'])->name('access-control.roles.update');
+        Route::delete('/access-control/roles/{role}', [AccessControlController::class, 'rolesDestroy'])->name('access-control.roles.destroy');
+        Route::get('/access-control/permissions', [AccessControlController::class, 'permissionsIndex'])->name('access-control.permissions.index');
+        Route::post('/access-control/permissions', [AccessControlController::class, 'permissionsUpdate'])->name('access-control.permissions.update');
+        Route::get('/access-control/assignment', [AccessControlController::class, 'assignmentIndex'])->name('access-control.assignment.index');
+        Route::patch('/access-control/assignment/{user}', [AccessControlController::class, 'assignmentUpdate'])->name('access-control.assignment.update');
+        Route::get('/access-control/policies', [AccessControlController::class, 'policiesIndex'])->name('access-control.policies.index');
+
+        // Security Workspace
+        Route::get('/security-workspace/login-activity', [SecurityWorkspaceController::class, 'loginActivity'])->name('security-workspace.login-activity');
+        Route::get('/security-workspace/sessions', [SecurityWorkspaceController::class, 'activeSessions'])->name('security-workspace.sessions.index');
+        Route::post('/security-workspace/sessions/revoke', [SecurityWorkspaceController::class, 'revokeSession'])->name('security-workspace.sessions.revoke');
+        Route::get('/security-workspace/events', [SecurityWorkspaceController::class, 'securityEvents'])->name('security-workspace.events.index');
+        Route::get('/security-workspace/audit-logs', [SecurityWorkspaceController::class, 'auditLogs'])->name('security-workspace.audit-logs');
+        Route::get('/security-workspace/alerts', [SecurityWorkspaceController::class, 'securityAlerts'])->name('security-workspace.alerts.index');
+
+        // System Management Workspace
+        Route::get('/system-management/backups', [SystemManagementController::class, 'backupsIndex'])->name('system-management.backups.index');
+        Route::post('/system-management/backups/create', [SystemManagementController::class, 'backupsCreate'])->name('system-management.backups.create');
+        Route::post('/system-management/backups/trigger-full', [SystemManagementController::class, 'backupsTriggerFull'])->name('system-management.backups.trigger-full');
+        Route::get('/system-management/backups/{filename}/download', [SystemManagementController::class, 'backupsDownload'])->name('system-management.backups.download');
+        Route::post('/system-management/backups/{filename}/google-drive', [SystemManagementController::class, 'backupsUploadToDrive'])->name('system-management.backups.google-drive');
+        Route::delete('/system-management/backups/{filename}', [SystemManagementController::class, 'backupsDestroy'])->name('system-management.backups.destroy');
+        Route::post('/system-management/backups/restore', [SystemManagementController::class, 'backupsRestore'])->name('system-management.backups.restore');
+        Route::post('/system-management/backups/schedule', [SystemManagementController::class, 'backupsSaveSchedule'])->name('system-management.backups.schedule');
+        Route::get('/system-management/health', [SystemManagementController::class, 'systemHealth'])->name('system-management.health.index');
+        Route::get('/system-management/integrations', [SystemManagementController::class, 'integrationsIndex'])->name('system-management.integrations.index');
 
         Route::get('/settings/discounts', [AdminDiscountSettingsController::class, 'edit'])->name('settings.discounts');
         Route::patch('/settings/discounts', [AdminDiscountSettingsController::class, 'update'])->name('settings.discounts.update');
