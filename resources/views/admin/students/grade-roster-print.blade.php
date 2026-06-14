@@ -206,11 +206,10 @@
                     <img class="brand-logo" src="{{ asset('images/AMIS_Logo.png') }}" alt="AMIS Logo">
                 </div>
                 <div class="brand-text">
-                    <h1>AL MUNAWWARA ISLAMIC SCHOOL</h1>
-                    <div style="font-size: 13px; font-weight: bold; color: #059669; font-family: 'Times New Roman', Times, serif; margin-top: 2px;">مدرسة المنورة الإسلامية</div>
-                    <div class="subtitle" style="margin-top: 3px;">Official School Portal - Enrollment Registrar</div>
+                    <div style="font-size: 15px; font-weight: bold; color: #059669; font-family: 'Times New Roman', Times, serif; margin-bottom: 2px;">مدرسة المنورة الإسلامية</div>
+                    <h1 style="font-size: 16px; font-weight: 900; letter-spacing: .02em; margin: 0; color: #0f172a;">AL MUNAWWARA ISLAMIC SCHOOL</h1>
+                    <div class="subtitle" style="margin-top: 4px; font-size: 9px; font-weight: 800; color: #059669; text-transform: uppercase;">OFFICIAL SCHOOL PORTAL - ENROLLMENT REGISTRAR</div>
                 </div>
-                <div class="status"><span class="badge">OFFICIALLY ENROLLED</span></div>
             </header>
 
             <section>
