@@ -330,16 +330,16 @@
                                                     }
                                                 @endphp
                                                 <td rowspan="{{ $cell['span'] }}" colspan="{{ $cell['colspan'] }}" class="{{ $cellClass }}">
-                                                    <div class="flex flex-col items-center justify-center p-2 relative group min-h-[50px]">
+                                                    <div class="flex flex-col items-center justify-center p-3.5 relative group min-h-[55px]">
                                                         <span class="block font-black text-xs leading-tight text-slate-900">{{ $cell['entry']['subject_name'] }}</span>
-                                                        @if($cell['entry']['teacher_name'])
-                                                            <span class="block text-[9px] font-bold opacity-80 mt-1 text-slate-700">- {{ $cell['entry']['teacher_name'] }}</span>
+                                                        @if($cell['entry']['teacher_name'] && $cell['entry']['teacher_name'] !== 'Teacher pending')
+                                                            <span class="block text-[9px] font-bold opacity-80 mt-1.5 text-slate-700">- {{ $cell['entry']['teacher_name'] }}</span>
                                                         @endif
-                                                        <div class="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                                                            <button type="button" data-entry="{{ $payload }}" @click="openEdit(JSON.parse(atob($el.dataset.entry)))" class="inline-flex h-6 w-6 items-center justify-center rounded-md bg-white text-slate-700 border border-slate-200 hover:text-indigo-700 shadow-3xs cursor-pointer" title="Edit">
+                                                        <div class="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                                                            <button type="button" data-entry="{{ $payload }}" @click="openEdit(JSON.parse(atob($el.dataset.entry)))" class="inline-flex h-5 w-5 items-center justify-center rounded-md bg-white text-slate-700 border border-slate-200 hover:text-indigo-700 shadow-3xs cursor-pointer" title="Edit">
                                                                 <i data-lucide="pencil" class="h-2.5 w-2.5"></i>
                                                             </button>
-                                                            <button type="button" data-entry="{{ $payload }}" @click="openDelete(JSON.parse(atob($el.dataset.entry)))" class="inline-flex h-6 w-6 items-center justify-center rounded-md bg-white text-rose-600 border border-slate-200 hover:bg-rose-50 shadow-3xs cursor-pointer" title="Delete">
+                                                            <button type="button" data-entry="{{ $payload }}" @click="openDelete(JSON.parse(atob($el.dataset.entry)))" class="inline-flex h-5 w-5 items-center justify-center rounded-md bg-white text-rose-600 border border-slate-200 hover:bg-rose-50 shadow-3xs cursor-pointer" title="Delete">
                                                                 <i data-lucide="trash-2" class="h-2.5 w-2.5"></i>
                                                             </button>
                                                         </div>
