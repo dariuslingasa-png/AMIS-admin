@@ -66,6 +66,24 @@ class AdminBackupController extends Controller
         return view('admin.admins.backups', compact('files', 'dbHost', 'dbName', 'dbPort', 'formattedDbSize', 'gdriveConfigured'));
     }
 
+    public function runFullBackup(Request $request)
+    {
+        try {
+            $phpBinary = PHP_BINDIR.DIRECTORY_SEPARATOR.'php';
+            $php = escapeshellarg(is_executable($phpBinary) ? $phpBinary : 'php');
+            $artisan = escapeshellarg(base_path('artisan'));
+            
+            // Execute the automated backup command in the background
+            exec("nohup {$php} {$artisan} amis:backup > /dev/null 2>&1 &");
+            
+            $this->audit($request, 'database_full_backup_triggered', auth()->user(), true, "Triggered full automated backup (Database & Files) to Google Drive in the background.");
+            
+            return back()->with('success', 'Full system backup (Database & Files) has been triggered in the background. It will appear in your Google Drive shortly!');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Failed to trigger full backup: ' . $e->getMessage()]);
+        }
+    }
+
     public function create(Request $request)
     {
         $config = config('database.connections.mysql');

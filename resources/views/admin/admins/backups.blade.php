@@ -60,13 +60,25 @@
 
         <x-card title="Backup Files Directory" subtitle="All generated database snapshots stored on disk">
             <x-slot name="actions">
-                <form method="POST" action="{{ route('admin.admins.backups.create') }}">
-                    @csrf
-                    <button class="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-black uppercase tracking-wider text-white shadow-lg transition hover:bg-indigo-700 cursor-pointer">
-                        <i data-lucide="database" class="h-4 w-4"></i>
-                        Create Snapshot
-                    </button>
-                </form>
+                <div class="flex flex-wrap items-center gap-2">
+                    @if ($gdriveConfigured)
+                        <form method="POST" action="{{ route('admin.admins.backups.full') }}">
+                            @csrf
+                            <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2.5 text-xs font-black uppercase tracking-wider text-white shadow-lg transition hover:bg-violet-700 cursor-pointer" title="Backup database and all upload files to Google Drive">
+                                <i data-lucide="cloud-upload" class="h-4 w-4"></i>
+                                Backup Full System
+                            </button>
+                        </form>
+                    @endif
+
+                    <form method="POST" action="{{ route('admin.admins.backups.create') }}">
+                        @csrf
+                        <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-black uppercase tracking-wider text-white shadow-lg transition hover:bg-indigo-700 cursor-pointer">
+                            <i data-lucide="database" class="h-4 w-4"></i>
+                            Create DB Snapshot
+                        </button>
+                    </form>
+                </div>
             </x-slot>
 
             <div class="overflow-x-auto">
