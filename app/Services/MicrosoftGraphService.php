@@ -337,7 +337,7 @@ class MicrosoftGraphService
     public function listTenantStudents(): array
     {
         $users = [];
-        $url = '/users?$select=id,displayName,userPrincipalName,userType,accountEnabled,assignedLicenses,givenName,surname&$top=999';
+        $url = '/users?$select=id,displayName,userPrincipalName,userType,accountEnabled,assignedLicenses,givenName,surname,lastPasswordChangeDateTime,createdDateTime&$top=999';
 
         while ($url) {
             $response = $this->graph()->get($url);

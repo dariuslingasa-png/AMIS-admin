@@ -280,6 +280,7 @@ class EnrollmentApprovalService
                 'ms_user_id' => $msUserId,
                 'ms_account_created_at' => $msUserId ? now() : null,
                 'temp_password' => $tempPassword,
+                'temp_password_set_at' => now(),
                 'grade_level' => $applicant->grade_level,
                 'school_year' => $applicant->school_year,
             ]);
@@ -654,7 +655,11 @@ class EnrollmentApprovalService
             return 'Inbox email sent to '.$recipients->implode(', ').', but Microsoft password reset is still blocked. Fix Microsoft permissions before resending credentials.';
         }
 
-        $student->update(['temp_password' => $tempPassword]);
+        $student->update([
+            'temp_password' => $tempPassword,
+            'temp_password_set_at' => now(),
+            'password_changed_at' => null,
+        ]);
 
         [$sent, $error] = $this->sendOnboardingEmail($applicant, $student, $tempPassword, null, $recipients->all());
 

@@ -441,6 +441,35 @@ class AdminMsSyncController extends Controller
         $studentSkuId = config('services.microsoft.student_sku_id');
 
         try {
+            // Sync password status
+            try {
+                $azUser = $graph->graph()->get("/users/{$student->ms_user_id}?\$select=id,lastPasswordChangeDateTime,createdDateTime")->json();
+                $lastPwChangeStr = $azUser['lastPasswordChangeDateTime'] ?? null;
+                $createdStr = $azUser['createdDateTime'] ?? null;
+                if ($lastPwChangeStr) {
+                    $msPwChange = \Carbon\Carbon::parse($lastPwChangeStr);
+                    $msCreated = \Carbon\Carbon::parse($createdStr);
+                    
+                    if (empty($student->temp_password_set_at)) {
+                        $student->temp_password_set_at = $student->ms_account_created_at ?? $student->created_at ?? $msCreated;
+                    }
+                    
+                    $hasChanged = false;
+                    if ($msPwChange->gt($student->temp_password_set_at->copy()->addSeconds(10))) {
+                        $hasChanged = true;
+                    } elseif ($msPwChange->gt($msCreated->copy()->addSeconds(10)) && empty($student->password_changed_at)) {
+                        $hasChanged = true;
+                    }
+                    
+                    $student->update([
+                        'password_changed_at' => $hasChanged ? $msPwChange : null,
+                        'temp_password_set_at' => $student->temp_password_set_at,
+                    ]);
+                }
+            } catch (\Exception $pwEx) {
+                Log::warning("Failed to sync password status for student {$student->school_email}: " . $pwEx->getMessage());
+            }
+
             // 1. Sync Teams channels
             $result = $service->enrollStudent($student);
             $msg = "Synced {$student->student_number}: {$result['enrolled']} enrolled.";
@@ -556,6 +585,30 @@ class AdminMsSyncController extends Controller
                 
                 $azUserId = $azUser['id'];
                 $isAccountEnabled = $azUser['accountEnabled'] ?? false;
+                
+                // Sync password status
+                $lastPwChangeStr = $azUser['lastPasswordChangeDateTime'] ?? null;
+                $createdStr = $azUser['createdDateTime'] ?? null;
+                if ($lastPwChangeStr) {
+                    $msPwChange = \Carbon\Carbon::parse($lastPwChangeStr);
+                    $msCreated = \Carbon\Carbon::parse($createdStr);
+                    
+                    if (empty($student->temp_password_set_at)) {
+                        $student->temp_password_set_at = $student->ms_account_created_at ?? $student->created_at ?? $msCreated;
+                    }
+                    
+                    $hasChanged = false;
+                    if ($msPwChange->gt($student->temp_password_set_at->copy()->addSeconds(10))) {
+                        $hasChanged = true;
+                    } elseif ($msPwChange->gt($msCreated->copy()->addSeconds(10)) && empty($student->password_changed_at)) {
+                        $hasChanged = true;
+                    }
+                    
+                    $student->update([
+                        'password_changed_at' => $hasChanged ? $msPwChange : null,
+                        'temp_password_set_at' => $student->temp_password_set_at,
+                    ]);
+                }
                 
                 // Check if user has the target license
                 $hasLicense = collect($azUser['assignedLicenses'] ?? [])

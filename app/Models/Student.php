@@ -13,6 +13,8 @@ class Student extends Model
         'student_number',
         'school_email',
         'temp_password',
+        'password_changed_at',
+        'temp_password_set_at',
         'grade_level',
         'school_year',
         'section',
@@ -32,6 +34,8 @@ class Student extends Model
         'ms_teams_enrolled_at'  => 'datetime',
         'mfa_enabled'           => 'boolean',
         'ms_license_active'     => 'boolean',
+        'password_changed_at'   => 'datetime',
+        'temp_password_set_at'  => 'datetime',
     ];
 
     public function user(): BelongsTo

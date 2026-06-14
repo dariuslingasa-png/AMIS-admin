@@ -70,7 +70,11 @@ class RegenerateHashedPasswords extends Command
                 }
 
                 // Update database
-                $student->update(['temp_password' => $newTempPass]);
+                $student->update([
+                    'temp_password' => $newTempPass,
+                    'temp_password_set_at' => now(),
+                    'password_changed_at' => null,
+                ]);
             } else {
                 $syncStatus = 'DRY RUN';
             }

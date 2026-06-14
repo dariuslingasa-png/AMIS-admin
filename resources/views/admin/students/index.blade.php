@@ -318,7 +318,12 @@
                             <td style="font-weight: bold; color: #0f172a;">{{ $name }}</td>
                             <td class="font-mono">{{ $student->student_number }}</td>
                             <td class="font-mono">{{ $student->school_email ?? '-' }}</td>
-                            <td class="font-mono" style="color: #b45309;">{{ $student->temp_password ?? 'N/A' }}</td>
+                            <td class="font-mono" style="color: #b45309;">
+                                {{ $student->temp_password ?? 'N/A' }}
+                                @if ($student->password_changed_at)
+                                    <span style="font-size: 8px; color: #059669; font-weight: bold; margin-left: 5px; text-transform: uppercase;">(Changed)</span>
+                                @endif
+                            </td>
                         </tr>
                     @endforeach
                 </tbody>
@@ -903,7 +908,7 @@
                                      <div class="flex items-start justify-between gap-1.5">
                                          <div class="min-w-0 flex-1">
                                              <div class="font-semibold text-slate-800 break-all select-all">{{ $student->school_email ?? '-' }}</div>
-                                             <div class="mt-1 flex items-center gap-1.5 print:hidden">
+                                             <div class="mt-1 flex flex-wrap items-center gap-1.5 print:hidden">
                                                  <span class="text-slate-400 font-extrabold uppercase tracking-wider text-[10px]">Pass:</span>
                                                  @php
                                                      $isHashed = str_starts_with($student->temp_password ?? '', '$');
@@ -912,6 +917,16 @@
                                                      <span class="text-slate-500 font-semibold text-[10px]">-</span>
                                                  @else
                                                      <span class="font-mono bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-[11px] text-slate-800 dark:text-slate-200 select-all font-semibold">{{ $student->temp_password }}</span>
+                                                 @endif
+                                                 @if ($student->password_changed_at)
+                                                     <span class="inline-flex items-center gap-0.5 rounded bg-emerald-50 px-1.5 py-0.5 text-[9px] font-extrabold text-emerald-700 ring-1 ring-emerald-100 uppercase" title="Password changed on {{ $student->password_changed_at->format('M d, Y h:i A') }}">
+                                                         <svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check inline-block"><path d="M20 6 9 17l-5-5"/></svg>
+                                                         Changed
+                                                     </span>
+                                                 @else
+                                                     <span class="inline-flex items-center rounded bg-amber-50 px-1.5 py-0.5 text-[9px] font-extrabold text-amber-700 ring-1 ring-amber-100 uppercase">
+                                                         Temporary
+                                                     </span>
                                                  @endif
                                              </div>
                                          </div>

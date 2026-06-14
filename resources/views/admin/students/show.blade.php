@@ -601,6 +601,22 @@
                         </dd>
                     </div>
                     <div class="border-t border-slate-100 pt-3.5 dark:border-slate-800">
+                        <dt class="font-extrabold uppercase tracking-wider text-slate-400">Password Status</dt>
+                        <dd class="mt-1.5 flex flex-wrap items-center gap-1.5">
+                            @if ($student->password_changed_at)
+                                <span class="inline-flex items-center gap-1 rounded bg-emerald-50 px-2 py-0.5 text-[10px] font-extrabold text-emerald-700 ring-1 ring-emerald-100 uppercase">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check inline-block"><path d="M20 6 9 17l-5-5"/></svg>
+                                    Changed / Set by Student
+                                </span>
+                                <span class="text-[10px] text-slate-400 font-bold">on {{ $student->password_changed_at->format('M d, Y h:i A') }}</span>
+                            @else
+                                <span class="inline-flex items-center rounded bg-amber-50 px-2 py-0.5 text-[10px] font-extrabold text-amber-700 ring-1 ring-amber-100 uppercase">
+                                    Still Temporary
+                                </span>
+                            @endif
+                        </dd>
+                    </div>
+                    <div class="border-t border-slate-100 pt-3.5 dark:border-slate-800">
                         <dt class="font-extrabold uppercase tracking-wider text-slate-400">Classroom Section</dt>
                         <dd class="mt-1 font-semibold text-slate-800 dark:text-slate-200">{{ $student->studentSection->section->name ?? 'No Section' }}</dd>
                     </div>
