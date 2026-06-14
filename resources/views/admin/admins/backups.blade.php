@@ -1,6 +1,6 @@
 <x-admin-layout title="Database Backups">
     <div class="space-y-6">
-        <section class="overflow-hidden rounded-3xl border border-indigo-100 bg-gradient-to-br from-indigo-900 via-indigo-700 to-violet-600 p-6 text-white shadow-xl shadow-indigo-900/10">
+        <section class="overflow-hidden rounded-3xl border border-violet-100 bg-violet-600 p-6 text-white shadow-xl shadow-violet-900/10">
             <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
                 <div>
                     <span class="inline-flex rounded-full bg-white/15 px-3 py-1 text-xs font-black uppercase tracking-[0.22em] text-indigo-50">System Snapshots</span>
