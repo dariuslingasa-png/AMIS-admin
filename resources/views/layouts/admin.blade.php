@@ -1,4 +1,7 @@
 <x-app-layout :title="$title ?? 'Dashboard'">
+    <!-- Top Loading Progress Bar -->
+    <div id="topLoadingBar" class="fixed top-0 left-0 h-1 bg-emerald-600 dark:bg-emerald-500 z-150 transition-all duration-300 ease-out" style="width: 0%; display: none;"></div>
+
     @include('partials.topbar')
 
     <div class="admin-shell">
@@ -70,12 +73,70 @@
     </div>
 
     <script>
-        function showGlobalSkeleton() {
+        let topLoadingTimer = null;
+        let skeletonTimer = null;
+
+        function startLoadingTransition() {
+            // Reset any active timers
+            clearInterval(topLoadingTimer);
+            clearTimeout(skeletonTimer);
+
+            const topBar = document.getElementById('topLoadingBar');
+            if (topBar) {
+                topBar.style.display = 'block';
+                topBar.style.width = '0%';
+                topBar.style.transition = 'width 0.2s ease-out';
+                // Immediate tiny jump
+                setTimeout(() => { topBar.style.width = '15%'; }, 10);
+
+                // Asymptotically progress the top loading bar up to 90%
+                let width = 15;
+                topLoadingTimer = setInterval(() => {
+                    if (width < 90) {
+                        width += (90 - width) * 0.1;
+                        topBar.style.width = width + '%';
+                    }
+                }, 150);
+            }
+
+            // Delay the main content skeleton loader by 250ms to prevent flickering on fast loads
+            skeletonTimer = setTimeout(() => {
+                const mainContent = document.getElementById('adminMainContent');
+                const globalSkeleton = document.getElementById('globalSkeleton');
+                if (mainContent && globalSkeleton) {
+                    mainContent.style.opacity = '0.3';
+                    mainContent.style.transition = 'opacity 0.2s ease';
+                    
+                    globalSkeleton.style.display = 'block';
+                    globalSkeleton.style.opacity = '0';
+                    globalSkeleton.style.transition = 'opacity 0.2s ease';
+                    setTimeout(() => {
+                        mainContent.style.display = 'none';
+                        globalSkeleton.style.opacity = '1';
+                    }, 50);
+                }
+            }, 250);
+        }
+
+        function stopLoadingTransition() {
+            clearInterval(topLoadingTimer);
+            clearTimeout(skeletonTimer);
+
+            const topBar = document.getElementById('topLoadingBar');
+            if (topBar) {
+                topBar.style.width = '100%';
+                setTimeout(() => {
+                    topBar.style.display = 'none';
+                    topBar.style.width = '0%';
+                }, 200);
+            }
+
             const mainContent = document.getElementById('adminMainContent');
             const globalSkeleton = document.getElementById('globalSkeleton');
             if (mainContent && globalSkeleton) {
-                mainContent.style.display = 'none';
-                globalSkeleton.style.display = 'block';
+                mainContent.style.display = 'block';
+                mainContent.style.opacity = '1';
+                globalSkeleton.style.display = 'none';
             }
         }
 
@@ -154,9 +215,6 @@
             const link = e.target.closest('a');
             if (!link) return;
 
-            // Ignore links inside the sidebar or topbar
-            if (link.closest('.admin-sidebar') || link.closest('#default-sidebar') || link.closest('nav')) return;
-
             // Ignore links with target="_blank"
             if (link.getAttribute('target') === '_blank') return;
 
@@ -166,13 +224,16 @@
             const href = link.getAttribute('href');
             if (!href) return;
 
-            // Ignore empty/javascript/anchor links
-            if (href === '#' || href.startsWith('javascript:') || href.startsWith('#')) return;
+            // Ignore empty/javascript/anchor/telephony links
+            if (href === '#' || href.startsWith('javascript:') || href.startsWith('#') || href.startsWith('tel:') || href.startsWith('mailto:')) return;
+
+            // Ignore external links
+            if (href.startsWith('http') && !href.startsWith(window.location.origin)) return;
 
             // Ignore clicks with modifier keys (Ctrl, Cmd, Shift, Alt)
             if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
 
-            showGlobalSkeleton();
+            startLoadingTransition();
         });
 
         // Intercept search/filter form submissions & add action spinners
@@ -223,7 +284,7 @@
                 }
             });
 
-            showGlobalSkeleton();
+            startLoadingTransition();
         });
 
         // Restore focus to search input after reload if it was debounced
@@ -283,12 +344,7 @@
 
         // Reset skeleton & button state when navigating back/forward (handling bfcache)
         window.addEventListener('pageshow', function(event) {
-            const mainContent = document.getElementById('adminMainContent');
-            const globalSkeleton = document.getElementById('globalSkeleton');
-            if (mainContent && globalSkeleton) {
-                mainContent.style.display = 'block';
-                globalSkeleton.style.display = 'none';
-            }
+            stopLoadingTransition();
 
             // Reset submit buttons
             document.querySelectorAll('button[type="submit"], input[type="submit"]').forEach(button => {
