@@ -61,23 +61,23 @@
 
         <div class="px-6 py-5">
             <!-- Filter & Search Bar Form -->
-            <form method="GET" class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4" onsubmit="showTableSkeleton()">
+            <form method="GET" class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <!-- Three Radio Buttons Filter styled as Segmented Tabs -->
                 <div class="inline-flex rounded-lg bg-slate-100 p-1">
                     <label class="relative cursor-pointer">
-                        <input type="radio" name="status_filter" value="all" @checked($statusFilter === 'all') class="sr-only" onchange="showTableSkeleton(); this.form.submit()">
+                        <input type="radio" name="status_filter" value="all" @checked($statusFilter === 'all') class="sr-only" onchange="this.form.submit()">
                         <span class="inline-flex h-9 items-center justify-center rounded-md px-4 text-xs font-bold transition-all {{ $statusFilter === 'all' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-950' }}">
                             All Accounts ({{ $stats['total'] }})
                         </span>
                     </label>
                     <label class="relative cursor-pointer">
-                        <input type="radio" name="status_filter" value="pending" @checked($statusFilter === 'pending') class="sr-only" onchange="showTableSkeleton(); this.form.submit()">
+                        <input type="radio" name="status_filter" value="pending" @checked($statusFilter === 'pending') class="sr-only" onchange="this.form.submit()">
                         <span class="inline-flex h-9 items-center justify-center rounded-md px-4 text-xs font-bold transition-all {{ $statusFilter === 'pending' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-950' }}">
                             Pending ({{ $stats['pending'] }})
                         </span>
                     </label>
                     <label class="relative cursor-pointer">
-                        <input type="radio" name="status_filter" value="completed" @checked($statusFilter === 'completed') class="sr-only" onchange="showTableSkeleton(); this.form.submit()">
+                        <input type="radio" name="status_filter" value="completed" @checked($statusFilter === 'completed') class="sr-only" onchange="this.form.submit()">
                         <span class="inline-flex h-9 items-center justify-center rounded-md px-4 text-xs font-bold transition-all {{ $statusFilter === 'completed' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-950' }}">
                             Completed ({{ $stats['completed'] }})
                         </span>
@@ -91,25 +91,6 @@
                 </label>
             </form>
 
-            <!-- Table Loading Skeleton -->
-            <div id="tableSkeleton" class="hidden">
-                <div class="animate-pulse space-y-4">
-                    @for ($i = 0; $i < 5; $i++)
-                        <div class="flex items-center justify-between py-4 border-b border-slate-100 px-5">
-                            <div class="flex items-center gap-3">
-                                <div class="h-10 w-10 rounded bg-slate-100"></div>
-                                <div class="space-y-2">
-                                    <div class="h-4 w-32 rounded bg-slate-100"></div>
-                                    <div class="h-3 w-20 rounded bg-slate-50"></div>
-                                </div>
-                            </div>
-                            <div class="h-4 w-24 rounded bg-slate-150"></div>
-                            <div class="h-4 w-20 rounded bg-slate-100"></div>
-                            <div class="h-8 w-16 rounded bg-slate-50"></div>
-                        </div>
-                    @endfor
-                </div>
-            </div>
 
             <!-- Grid Checklist Table -->
             <div id="tableContainer" class="overflow-hidden rounded-md border border-slate-200">
@@ -272,18 +253,4 @@
             <div class="mt-5">{{ $students->links() }}</div>
         </div>
     </section>
-
-    <script>
-    function showTableSkeleton() {
-        document.getElementById('tableContainer').classList.add('hidden');
-        document.getElementById('tableSkeleton').classList.remove('hidden');
-    }
-
-    document.addEventListener('click', function(e) {
-        const link = e.target.closest('#tableContainer a');
-        if (link && !link.getAttribute('target') && !link.getAttribute('download')) {
-            showTableSkeleton();
-        }
-    });
-    </script>
 </x-admin-layout>

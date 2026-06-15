@@ -32,7 +32,7 @@
                 <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                     <div></div>
                     <div class="flex items-center gap-2">
-                        <form method="GET" action="{{ route('admin.students.verification') }}" class="flex items-center gap-2" onsubmit="showTableSkeleton()">
+                        <form method="GET" action="{{ route('admin.students.verification') }}" class="flex items-center gap-2">
                             <div class="relative w-full sm:w-[320px]">
                                 <i data-lucide="search" class="pointer-events-none absolute left-3.5 top-3.5 h-4 w-4 text-slate-400"></i>
                                 <input type="text" name="search" value="{{ request('search') }}" placeholder="Search student or ID..." class="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-10 text-xs font-semibold text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-emerald-450 focus:ring-4 focus:ring-emerald-100">
@@ -50,25 +50,6 @@
                 </div>
             </div>
 
-            <!-- Table Loading Skeleton -->
-            <div id="tableSkeleton" class="hidden">
-                <div class="animate-pulse space-y-4">
-                    @for ($i = 0; $i < 5; $i++)
-                        <div class="flex items-center justify-between py-4 border-b border-slate-100 px-5">
-                            <div class="flex items-center gap-3">
-                                <div class="h-10 w-10 rounded bg-slate-100"></div>
-                                <div class="space-y-2">
-                                    <div class="h-4 w-32 rounded bg-slate-100"></div>
-                                    <div class="h-3 w-20 rounded bg-slate-50"></div>
-                                </div>
-                            </div>
-                            <div class="h-4 w-24 rounded bg-slate-150"></div>
-                            <div class="h-4 w-20 rounded bg-slate-100"></div>
-                            <div class="h-8 w-16 rounded bg-slate-50"></div>
-                        </div>
-                    @endfor
-                </div>
-            </div>
 
             <!-- Table Container -->
             <div id="tableContainer">
@@ -153,20 +134,4 @@
             </div>
         </x-card>
     </div>
-    <script>
-        function showTableSkeleton() {
-            document.getElementById('tableContainer').classList.add('hidden');
-            document.getElementById('tableSkeleton').classList.remove('hidden');
-        }
-
-        document.addEventListener('click', function(e) {
-            const link = e.target.closest('a');
-            if (link && !link.getAttribute('target') && !link.getAttribute('download')) {
-                const href = link.getAttribute('href');
-                if (href && href !== '#' && !href.startsWith('javascript:')) {
-                    showTableSkeleton();
-                }
-            }
-        });
-    </script>
 </x-admin-layout>

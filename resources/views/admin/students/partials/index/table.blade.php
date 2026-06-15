@@ -3,26 +3,6 @@
     $msSyncLabel = ['enrolled' => 'Synced', 'failed' => 'Sync Failed', 'pending' => 'Pending Teams'];
 @endphp
 
-<!-- Table Loading Skeleton -->
-<div id="tableSkeleton" class="hidden">
-    <div class="animate-pulse space-y-4">
-        @for ($i = 0; $i < 5; $i++)
-            <div class="flex items-center justify-between py-4 border-b border-slate-100 px-5">
-                <div class="flex items-center gap-3">
-                    <div class="h-10 w-10 rounded bg-slate-100"></div>
-                    <div class="space-y-2">
-                        <div class="h-4 w-32 rounded bg-slate-100"></div>
-                        <div class="h-3 w-20 rounded bg-slate-50"></div>
-                    </div>
-                </div>
-                <div class="h-4 w-24 rounded bg-slate-150"></div>
-                <div class="h-4 w-20 rounded bg-slate-100"></div>
-                <div class="h-8 w-16 rounded bg-slate-50"></div>
-            </div>
-        @endfor
-    </div>
-</div>
-
 <!-- Main Table Container -->
 <div id="tableContainer">
     <div class="overflow-x-auto">
