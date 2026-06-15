@@ -60,64 +60,48 @@
                 <table class="w-full border-collapse text-left text-sm text-slate-500">
                     <thead class="bg-slate-50 text-xs font-extrabold uppercase tracking-wider text-slate-700 border-b border-slate-200">
                         <tr>
-                            <th class="px-6 py-4">Parent Name / Email</th>
-                            <th class="px-6 py-4">Linked Students</th>
-                            <th class="px-6 py-4 text-right">Gross</th>
-                            <th class="px-6 py-4 text-right">Paid</th>
-                            <th class="px-6 py-4 text-right">Balance</th>
-                            <th class="px-6 py-4 text-center">Status</th>
+                            <th class="px-6 py-4">Family Representative</th>
+                            <th class="px-6 py-4">Linked Children</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
                         @forelse($families as $family)
                             @php
                                 $children = $family->students;
-                                $totalTuition = $children->sum(fn($st) => $st->account->tuition_fee ?? 0);
-                                $totalPaid = $children->sum(fn($st) => $st->account->amount_paid ?? 0);
-                                $remainingBalance = $children->sum(fn($st) => $st->account->remaining_balance ?? 0);
-                                
-                                $hasUnpaid = $children->contains(fn($st) => ($st->account->remaining_balance ?? 0) > 0);
-                                $hasPartial = $children->contains(fn($st) => ($st->account->amount_paid ?? 0) > 0 && ($st->account->remaining_balance ?? 0) > 0);
-                                $isFullyPaid = !$hasUnpaid;
-
-                                $statusClass = $isFullyPaid ? 'bg-emerald-50 text-emerald-700 ring-emerald-100' : ($hasPartial ? 'bg-amber-50 text-amber-700 ring-amber-100' : 'bg-rose-50 text-rose-700 ring-rose-100');
-                                $statusLabel = $isFullyPaid ? 'Fully Paid' : ($hasPartial ? 'Partial' : 'Unpaid');
                             @endphp
                             <tr class="hover:bg-slate-50/50 transition">
                                 <td class="px-6 py-4">
-                                    <div class="font-extrabold text-slate-900 uppercase">{{ $family->name }}</div>
-                                    <div class="text-xs text-slate-400 mt-0.5">{{ $family->email }}</div>
+                                    <div class="flex items-center gap-3">
+                                        <div class="h-9 w-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-100 dark:border-emerald-900/50">
+                                            <i data-lucide="home" class="h-4.5 w-4.5"></i>
+                                        </div>
+                                        <div>
+                                            <div class="font-extrabold text-slate-900 uppercase tracking-wide">{{ $family->name }}</div>
+                                            <div class="text-xs text-slate-400 mt-0.5">{{ $family->email }}</div>
+                                        </div>
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <div class="flex flex-wrap gap-1.5">
+                                    <div class="space-y-2.5">
                                         @foreach($children as $child)
                                             @php
                                                 $studentName = $child->applicant ? strtoupper($child->applicant->first_name . ' ' . $child->applicant->last_name) : 'Student';
                                                 $secName = $child->studentSection->section->name ?? 'No Section';
                                             @endphp
-                                            <a href="{{ route('admin.students.show', $child) }}" class="inline-flex items-center gap-1 rounded-md bg-slate-50 px-2 py-0.5 text-xs font-bold text-slate-700 ring-1 ring-slate-200/60 hover:bg-slate-100 transition">
-                                                <span>{{ $studentName }}</span>
-                                                <span class="text-[10px] text-slate-400 font-medium">({{ $child->grade_level }} · {{ $secName }})</span>
-                                            </a>
+                                            <div class="flex items-center gap-2">
+                                                <i data-lucide="circle-user" class="h-4 w-4 text-emerald-500 shrink-0"></i>
+                                                <a href="{{ route('admin.students.show', $child) }}" class="font-bold text-slate-800 hover:text-emerald-700 hover:underline transition">
+                                                    {{ $studentName }}
+                                                </a>
+                                                <span class="text-xs text-slate-400 font-medium">— {{ $child->grade_level }} · {{ $secName }}</span>
+                                            </div>
                                         @endforeach
                                     </div>
-                                </td>
-                                <td class="px-6 py-4 text-right font-extrabold text-slate-700">
-                                    ₱{{ number_format($totalTuition, 2) }}
-                                </td>
-                                <td class="px-6 py-4 text-right font-extrabold text-emerald-600">
-                                    ₱{{ number_format($totalPaid, 2) }}
-                                </td>
-                                <td class="px-6 py-4 text-right font-extrabold text-rose-600">
-                                    ₱{{ number_format($remainingBalance, 2) }}
-                                </td>
-                                <td class="px-6 py-4 text-center">
-                                    <span class="inline-flex rounded-md px-2 py-0.5 text-[10px] font-extrabold ring-1 {{ $statusClass }}">{{ $statusLabel }}</span>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="py-16 text-center">
+                                <td colspan="2" class="py-16 text-center">
                                     <div class="flex flex-col items-center justify-center space-y-4">
                                         <div class="rounded-full bg-slate-50 p-4 text-slate-400 ring-8 ring-slate-50/50">
                                             <i data-lucide="users-2" class="h-10 w-10"></i>

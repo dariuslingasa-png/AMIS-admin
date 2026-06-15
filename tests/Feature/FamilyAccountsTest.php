@@ -132,14 +132,6 @@ class FamilyAccountsTest extends TestCase
         // Assert student links are rendered
         $response->assertSeeText('FATIMA LINGASA');
         $response->assertSeeText('AHMAD LINGASA');
-        
-        // Assert consolidated ledger calculations
-        // Gross: 12000 + 15000 = 27000
-        // Paid: 4000 + 15000 = 19000
-        // Balance: 8000 + 0 = 8000
-        $response->assertSeeText('₱27,000.00');
-        $response->assertSeeText('₱19,000.00');
-        $response->assertSeeText('₱8,000.00');
     }
 
     /** @test */
