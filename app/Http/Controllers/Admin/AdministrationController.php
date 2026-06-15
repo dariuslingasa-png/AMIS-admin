@@ -32,9 +32,9 @@ class AdministrationController extends Controller
         $query = User::with('roles')
             ->where(function($q) {
                 // Only load admin/portal roles or users that have admin/portal roles
-                $q->whereIn('role', ['admin', 'finance', 'staff'])
+                $q->whereIn('role', User::ADMIN_PORTAL_ROLES)
                   ->orWhereHas('roles', function($r) {
-                      $r->whereIn('slug', ['super_admin', 'admin', 'finance', 'staff']);
+                      $r->whereIn('slug', User::ADMIN_PORTAL_ROLE_SLUGS);
                   });
             });
 
@@ -54,10 +54,10 @@ class AdministrationController extends Controller
 
         // Calculate stats
         $stats = [
-            'total' => User::whereIn('role', ['admin', 'finance', 'staff'])->count(),
-            'verified' => User::whereIn('role', ['admin', 'finance', 'staff'])->where('account_status', 'verified')->count(),
-            'pending' => User::whereIn('role', ['admin', 'finance', 'staff'])->where('account_status', 'pending')->count(),
-            'disabled' => User::whereIn('role', ['admin', 'finance', 'staff'])->where('account_status', 'disabled')->count(),
+            'total' => User::whereIn('role', User::ADMIN_PORTAL_ROLES)->count(),
+            'verified' => User::whereIn('role', User::ADMIN_PORTAL_ROLES)->where('account_status', 'verified')->count(),
+            'pending' => User::whereIn('role', User::ADMIN_PORTAL_ROLES)->where('account_status', 'pending')->count(),
+            'disabled' => User::whereIn('role', User::ADMIN_PORTAL_ROLES)->where('account_status', 'disabled')->count(),
         ];
 
         return view('admin.administration.users.index', compact('users', 'search', 'status', 'stats'));

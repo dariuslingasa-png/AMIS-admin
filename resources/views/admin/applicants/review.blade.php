@@ -5,6 +5,7 @@
     $accentClasses = ['accent-green', 'accent-blue', 'accent-amber', 'accent-violet', 'accent-rose'];
     $accentClass = $accentClasses[$familyNo % 5];
     $canReviewApplications = auth()->user()?->canReviewEnrollmentApplications() ?? false;
+    $isTeacherAdminViewer = auth()->user()?->isTeacherAdminViewer() ?? false;
     $currentStatus = $applicant->status ?? 'under_review';
     $docStatuses = $docStatuses ?? [];
     $inboxNeedsResend = fn ($child) => $child->status === 'approved' && data_get($child, 'onboarding_email_status') !== 'sent';
@@ -166,83 +167,85 @@
                     </div>
                 </section>
 
-                {{-- PAYMENT --}}
-                <section class="rounded-xl border border-slate-200 bg-white shadow-sm">
-                    <div class="border-b border-slate-100 px-6 py-4">
-                        <h2 class="text-sm font-extrabold uppercase tracking-wider text-slate-700">Payment Proof</h2>
-                    </div>
-                    <div class="p-6 space-y-4">
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="rounded-xl border border-slate-100 bg-slate-50 p-4">
-                                <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Amount</p>
-                                <p class="text-2xl font-black text-slate-900 mt-1">
-                                    {{ $payment?->amount ? '₱'.number_format((float) $payment->amount, 2) : '₱0.00' }}
-                                </p>
-                                @if ($payment?->reference_no)
-                                    <p class="text-xs text-slate-500 mt-1">Ref: {{ $payment->reference_no }}</p>
-                                @endif
-                            </div>
-                            <div class="rounded-xl border border-slate-100 bg-slate-50 p-4">
-                                <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Status</p>
-                                <p class="text-lg font-black mt-1 {{ ($payment?->status ?? '') === 'verified' ? 'text-emerald-600' : (($payment?->status ?? '') === 'rejected' ? 'text-rose-600' : 'text-amber-600') }}">
-                                    {{ $pmLabels[$payment?->status] ?? ($payment ? 'Pending' : 'No Payment') }}
-                                </p>
-                            </div>
+                @unless ($isTeacherAdminViewer)
+                    {{-- PAYMENT --}}
+                    <section class="rounded-xl border border-slate-200 bg-white shadow-sm">
+                        <div class="border-b border-slate-100 px-6 py-4">
+                            <h2 class="text-sm font-extrabold uppercase tracking-wider text-slate-700">Payment Proof</h2>
                         </div>
+                        <div class="p-6 space-y-4">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="rounded-xl border border-slate-100 bg-slate-50 p-4">
+                                    <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Amount</p>
+                                    <p class="text-2xl font-black text-slate-900 mt-1">
+                                        {{ $payment?->amount ? '₱'.number_format((float) $payment->amount, 2) : '₱0.00' }}
+                                    </p>
+                                    @if ($payment?->reference_no)
+                                        <p class="text-xs text-slate-500 mt-1">Ref: {{ $payment->reference_no }}</p>
+                                    @endif
+                                </div>
+                                <div class="rounded-xl border border-slate-100 bg-slate-50 p-4">
+                                    <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Status</p>
+                                    <p class="text-lg font-black mt-1 {{ ($payment?->status ?? '') === 'verified' ? 'text-emerald-600' : (($payment?->status ?? '') === 'rejected' ? 'text-rose-600' : 'text-amber-600') }}">
+                                        {{ $pmLabels[$payment?->status] ?? ($payment ? 'Pending' : 'No Payment') }}
+                                    </p>
+                                </div>
+                            </div>
 
-                        @php
-                            $receipts = $payment?->receipt_urls ?? [];
-                        @endphp
-                        @if (count($receipts) > 0)
-                            <div class="space-y-3">
-                                @foreach ($receipts as $index => $receiptPath)
-                                    @php
-                                        $url = \App\Support\EnrollmentStorage::url($receiptPath);
-                                        $isPdf = $receiptPath && strtolower(pathinfo($receiptPath, PATHINFO_EXTENSION)) === 'pdf';
-                                    @endphp
-                                    <div class="rounded-xl border border-slate-100 overflow-hidden">
-                                        <div class="bg-slate-50 px-4 py-1.5 text-[11px] font-extrabold text-slate-500 border-b border-slate-100 flex items-center justify-between">
-                                            <span>RECEIPT #{{ $index + 1 }}</span>
-                                            <a href="{{ $url }}" target="_blank" class="text-emerald-600 hover:text-emerald-700 hover:underline">Open in new tab</a>
+                            @php
+                                $receipts = $payment?->receipt_urls ?? [];
+                            @endphp
+                            @if (count($receipts) > 0)
+                                <div class="space-y-3">
+                                    @foreach ($receipts as $index => $receiptPath)
+                                        @php
+                                            $url = \App\Support\EnrollmentStorage::url($receiptPath);
+                                            $isPdf = $receiptPath && strtolower(pathinfo($receiptPath, PATHINFO_EXTENSION)) === 'pdf';
+                                        @endphp
+                                        <div class="rounded-xl border border-slate-100 overflow-hidden">
+                                            <div class="bg-slate-50 px-4 py-1.5 text-[11px] font-extrabold text-slate-500 border-b border-slate-100 flex items-center justify-between">
+                                                <span>RECEIPT #{{ $index + 1 }}</span>
+                                                <a href="{{ $url }}" target="_blank" class="text-emerald-600 hover:text-emerald-700 hover:underline">Open in new tab</a>
+                                            </div>
+                                            <a href="#" @click.prevent="openPreview('{{ $url }}', 'Payment Proof #{{ $index + 1 }}', {{ $isPdf ? 'true' : 'false' }})" class="block">
+                                                @if ($isPdf)
+                                                    <span class="upload-pdf"><i data-lucide="file-text" class="h-9 w-9"></i>PDF Receipt</span>
+                                                @else
+                                                    <x-smart-preview-image :src="$url" alt="Payment Proof #{{ $index + 1 }}" />
+                                                @endif
+                                            </a>
                                         </div>
-                                        <a href="#" @click.prevent="openPreview('{{ $url }}', 'Payment Proof #{{ $index + 1 }}', {{ $isPdf ? 'true' : 'false' }})" class="block">
-                                            @if ($isPdf)
-                                                <span class="upload-pdf"><i data-lucide="file-text" class="h-9 w-9"></i>PDF Receipt</span>
-                                            @else
-                                                <x-smart-preview-image :src="$url" alt="Payment Proof #{{ $index + 1 }}" />
-                                            @endif
-                                        </a>
-                                    </div>
-                                @endforeach
-                            </div>
-                        @else
-                            <div class="rounded-xl border border-dashed border-slate-200 p-6 text-center">
-                                <i data-lucide="receipt-text" class="mx-auto h-8 w-8 text-slate-300"></i>
-                                <p class="mt-2 text-sm text-slate-500">No payment proof uploaded yet.</p>
-                            </div>
-                        @endif
+                                    @endforeach
+                                </div>
+                            @else
+                                <div class="rounded-xl border border-dashed border-slate-200 p-6 text-center">
+                                    <i data-lucide="receipt-text" class="mx-auto h-8 w-8 text-slate-300"></i>
+                                    <p class="mt-2 text-sm text-slate-500">No payment proof uploaded yet.</p>
+                                </div>
+                            @endif
 
-                        @if ($totalFamilyChildren > 1)
-                            <div class="rounded-xl border border-amber-100 bg-amber-50 p-4">
-                                <p class="text-xs font-extrabold uppercase tracking-wider text-amber-800 mb-2">
-                                    Family Payment Summary
-                                </p>
-                                <p class="text-sm text-amber-700">
-                                    <strong>{{ $totalFamilyChildren }}</strong> children in this family.
-                                    Expected: <strong>₱{{ number_format($expectedPayment, 2) }}</strong>
-                                    (₱{{ number_format($enrollmentFee, 2) }} × {{ $totalFamilyChildren }})
-                                </p>
-                                @if ($paymentInsufficient)
-                                    <div class="mt-3 rounded-lg border border-amber-200 bg-white p-3 text-xs font-bold text-amber-800">
-                                        Payment proof amount is ₱{{ number_format((float) $payment->amount, 2) }} only.
-                                        Please verify if this payment is intended for:
-                                        {{ $allFamily->pluck('full_name')->implode(', ') }}.
-                                    </div>
-                                @endif
-                            </div>
-                        @endif
-                    </div>
-                </section>
+                            @if ($totalFamilyChildren > 1)
+                                <div class="rounded-xl border border-amber-100 bg-amber-50 p-4">
+                                    <p class="text-xs font-extrabold uppercase tracking-wider text-amber-800 mb-2">
+                                        Family Payment Summary
+                                    </p>
+                                    <p class="text-sm text-amber-700">
+                                        <strong>{{ $totalFamilyChildren }}</strong> children in this family.
+                                        Expected: <strong>₱{{ number_format($expectedPayment, 2) }}</strong>
+                                        (₱{{ number_format($enrollmentFee, 2) }} × {{ $totalFamilyChildren }})
+                                    </p>
+                                    @if ($paymentInsufficient)
+                                        <div class="mt-3 rounded-lg border border-amber-200 bg-white p-3 text-xs font-bold text-amber-800">
+                                            Payment proof amount is ₱{{ number_format((float) $payment->amount, 2) }} only.
+                                            Please verify if this payment is intended for:
+                                            {{ $allFamily->pluck('full_name')->implode(', ') }}.
+                                        </div>
+                                    @endif
+                                </div>
+                            @endif
+                        </div>
+                    </section>
+                @endunless
 
                 {{-- REVIEW DECISION --}}
                 <section class="rounded-xl border border-slate-200 bg-white shadow-sm">

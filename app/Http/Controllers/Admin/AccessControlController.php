@@ -123,6 +123,12 @@ class AccessControlController extends Controller
                     continue;
                 }
 
+                if ($role->slug === 'teacher') {
+                    $viewOnlyPermissionId = Permission::where('slug', 'view_only')->value('id');
+                    $role->permissions()->sync($viewOnlyPermissionId ? [$viewOnlyPermissionId] : []);
+                    continue;
+                }
+
                 $selectedPermissionIds = isset($matrix[$role->id]) ? array_keys($matrix[$role->id]) : [];
                 $role->permissions()->sync($selectedPermissionIds);
             }
@@ -144,7 +150,7 @@ class AccessControlController extends Controller
             ->where(function($q) {
                 $q->whereIn('role', ['admin', 'finance', 'staff'])
                   ->orWhereHas('roles', function($r) {
-                      $r->whereIn('slug', ['super_admin', 'admin', 'finance', 'staff']);
+                      $r->whereIn('slug', User::ADMIN_PORTAL_ROLE_SLUGS);
                   });
             });
 
@@ -185,7 +191,11 @@ class AccessControlController extends Controller
 
             if ($highestRole) {
                 // Map super_admin back to admin for legacy role compatibility
-                $legacySlug = in_array($highestRole->slug, ['admin', 'finance', 'staff'], true) ? $highestRole->slug : 'admin';
+                $legacySlug = match ($highestRole->slug) {
+                    'super_admin' => 'admin',
+                    'admin', 'finance', 'staff' => $highestRole->slug,
+                    default => 'staff',
+                };
                 $user->update(['role' => $legacySlug]);
             }
         });

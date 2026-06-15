@@ -13,6 +13,7 @@
     $paymentIsPdf = $payment?->receipt_url && strtolower(pathinfo($payment->receipt_url, PATHINFO_EXTENSION)) === 'pdf';
     $canReviewPayments = auth()->user()?->canReviewEnrollmentPayments() ?? false;
     $canReviewApplications = auth()->user()?->canReviewEnrollmentApplications() ?? false;
+    $isTeacherAdminViewer = auth()->user()?->isTeacherAdminViewer() ?? false;
     $inboxNeedsResend = $applicant->status === 'approved' && data_get($applicant, 'onboarding_email_status') !== 'sent';
     $financeReviewer = (string) config('services.school.finance_reviewer_name', 'Finance Office');
     $paymentReadinessLabel = match (true) {
@@ -282,21 +283,23 @@
                     </div>
                 </x-card>
 
-                <x-card title="Address & Contact" subtitle="Student residence from enrollment form">
-                    <div class="detail-section-stack">
-                        @foreach ($addressSections as $section)
-                            <x-applicant.detail-section :title="$section['title']" :icon="$section['icon']" :fields="$section['fields']" />
-                        @endforeach
-                    </div>
-                </x-card>
+                @unless ($isTeacherAdminViewer)
+                    <x-card title="Address & Contact" subtitle="Student residence from enrollment form">
+                        <div class="detail-section-stack">
+                            @foreach ($addressSections as $section)
+                                <x-applicant.detail-section :title="$section['title']" :icon="$section['icon']" :fields="$section['fields']" />
+                            @endforeach
+                        </div>
+                    </x-card>
 
-                <x-card title="Parent / Guardian" subtitle="Organized parent and home details">
-                    <div class="detail-section-stack">
-                        @foreach ($guardianSections as $section)
-                            <x-applicant.detail-section :title="$section['title']" :icon="$section['icon']" :fields="$section['fields']" />
-                        @endforeach
-                    </div>
-                </x-card>
+                    <x-card title="Parent / Guardian" subtitle="Organized parent and home details">
+                        <div class="detail-section-stack">
+                            @foreach ($guardianSections as $section)
+                                <x-applicant.detail-section :title="$section['title']" :icon="$section['icon']" :fields="$section['fields']" />
+                            @endforeach
+                        </div>
+                    </x-card>
+                @endunless
 
                 @if(isset($siblings) && $siblings->isNotEmpty())
                 <x-card title="Family & Siblings" subtitle="Other children enrolled under the same parent account">
@@ -336,32 +339,37 @@
                 @endif
 
 
-                <x-card title="Medical & Emergency" subtitle="Health details submitted by parent">
-                    <div class="detail-section-stack">
-                        @foreach ($medicalSections as $section)
-                            <x-applicant.detail-section :title="$section['title']" :icon="$section['icon']" :fields="$section['fields']" />
-                        @endforeach
-                    </div>
-                </x-card>
+                @unless ($isTeacherAdminViewer)
+                    <x-card title="Medical & Emergency" subtitle="Health details submitted by parent">
+                        <div class="detail-section-stack">
+                            @foreach ($medicalSections as $section)
+                                <x-applicant.detail-section :title="$section['title']" :icon="$section['icon']" :fields="$section['fields']" />
+                            @endforeach
+                        </div>
+                    </x-card>
+                @endunless
 
-                <x-card title="Enrollment Metadata" subtitle="Discount, progress, and review state">
-                    <dl class="detail-grid">
-                        @foreach ($discountInfo as [$label, $value])
-                            <x-applicant.field :label="$label" :value="$value" />
-                        @endforeach
-                    </dl>
-                </x-card>
-
-                @if (filled($applicant->affidavit_data))
-                    <x-card title="Affidavit Details" subtitle="Temporary proof information">
+                @unless ($isTeacherAdminViewer)
+                    <x-card title="Enrollment Metadata" subtitle="Discount, progress, and review state">
                         <dl class="detail-grid">
-                            @foreach ($applicant->affidavit_data as $label => $value)
-                                <x-applicant.field :label="Str::headline($label)" :value="is_array($value) ? implode(', ', $value) : $value" />
+                            @foreach ($discountInfo as [$label, $value])
+                                <x-applicant.field :label="$label" :value="$value" />
                             @endforeach
                         </dl>
                     </x-card>
-                @endif
 
+                    @if (filled($applicant->affidavit_data))
+                        <x-card title="Affidavit Details" subtitle="Temporary proof information">
+                            <dl class="detail-grid">
+                                @foreach ($applicant->affidavit_data as $label => $value)
+                                    <x-applicant.field :label="Str::headline($label)" :value="is_array($value) ? implode(', ', $value) : $value" />
+                                @endforeach
+                            </dl>
+                        </x-card>
+                    @endif
+                @endunless
+
+                @unless ($isTeacherAdminViewer)
                 <x-card title="Uploaded Documents" subtitle="Review submitted files and mark each document status">
                     @if ($canReviewApplications)
                         <x-slot:actions>
@@ -387,6 +395,7 @@
                         @endforeach
                     </div>
                 </x-card>
+                @endunless
 
                 @if ($canReviewApplications)
                 <x-card title="System Verification" subtitle="Approve or reject per section. Rejections auto-generate remarks.">
@@ -457,10 +466,12 @@
                             <span class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Application ID #</span>
                             <span class="text-base font-black text-slate-950">{{ str_pad($applicant->id, 4, '0', STR_PAD_LEFT) }}</span>
                         </div>
+                        @unless ($isTeacherAdminViewer)
                         <div>
                             <span class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Family</span>
                             <span class="text-sm font-bold text-slate-700">FAMILY #{{ str_pad($familyNo, 4, '0', STR_PAD_LEFT) }}</span>
                         </div>
+                        @endunless
                         <div class="col-span-2">
                             <span class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Full Name</span>
                             <span class="text-sm font-black text-slate-950">{{ $displayName }}</span>
@@ -468,6 +479,7 @@
                     </div>
                 </x-card>
 
+                @unless ($isTeacherAdminViewer)
                 <x-card title="Status">
                     <div class="space-y-3 text-sm">
                         <div class="review-readiness-row"><span>Documents</span><span class="readiness-pill {{ $allDocsOk ? 'readiness-emerald' : 'readiness-amber' }}">{{ $allDocsOk ? 'Approved' : 'Pending' }}</span></div>
@@ -475,6 +487,7 @@
                         <div class="review-readiness-row"><span>Approval</span><span class="readiness-pill {{ $applicant->status === 'approved' ? 'readiness-emerald' : 'readiness-amber' }}">{{ $statusLabels[$applicant->status] ?? Str::headline($applicant->status) }}</span></div>
                     </div>
                 </x-card>
+                @endunless
 
                 @if ($canReviewApplications)
                 <a href="{{ route('admin.applicants.review', $applicant) }}" class="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700 transition hover:bg-emerald-100">

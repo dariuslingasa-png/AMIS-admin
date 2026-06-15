@@ -14,11 +14,13 @@ class AdminOnly
             return redirect()->route('admin.login');
         }
 
-        if (! Auth::user()->hasAdminPortalAccess()) {
+        $user = Auth::user();
+
+        if (! $user->hasAdminPortalAccess()) {
             abort(403);
         }
 
-        if ((Auth::user()->account_status ?? 'verified') !== 'verified') {
+        if (($user->account_status ?? 'verified') !== 'verified') {
             Auth::logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
@@ -28,8 +30,8 @@ class AdminOnly
         }
 
         if (
-            Auth::user()->active_admin_session_id
-            && Auth::user()->active_admin_session_id !== $request->session()->getId()
+            $user->active_admin_session_id
+            && $user->active_admin_session_id !== $request->session()->getId()
         ) {
             Auth::logout();
             $request->session()->invalidate();
@@ -37,6 +39,14 @@ class AdminOnly
 
             return redirect()->route('admin.login')
                 ->withErrors(['email' => 'This account was signed in from another device. Please log in again.']);
+        }
+
+        if ($user->isViewOnlyAccess() && ! $request->isMethodSafe()) {
+            abort(403, 'This account is view-only.');
+        }
+
+        if (! $user->canAccessAdminRoute($request->route()?->getName())) {
+            abort(403);
         }
 
         return $next($request);

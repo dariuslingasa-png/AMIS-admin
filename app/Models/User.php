@@ -7,6 +7,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Schema;
 
 class User extends Authenticatable
 {
@@ -14,6 +15,8 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     public const ADMIN_PORTAL_ROLES = ['admin', 'finance', 'staff'];
+
+    public const ADMIN_PORTAL_ROLE_SLUGS = ['super_admin', 'admin', 'finance', 'staff', 'teacher'];
 
     public const PAYMENT_REVIEW_ROLES = ['admin', 'finance'];
 
@@ -122,7 +125,7 @@ class User extends Authenticatable
     public function hasAdminPortalAccess(): bool
     {
         if ($this->relationLoaded('roles') || $this->roles()->exists()) {
-            return $this->roles->pluck('slug')->intersect(['super_admin', 'admin', 'finance', 'staff'])->isNotEmpty();
+            return $this->roles->pluck('slug')->intersect(self::ADMIN_PORTAL_ROLE_SLUGS)->isNotEmpty();
         }
         return in_array($this->role, self::ADMIN_PORTAL_ROLES, true);
     }
@@ -139,7 +142,130 @@ class User extends Authenticatable
 
     public function isViewOnlyAccess(): bool
     {
+        if ($this->relationLoaded('roles') || $this->roles()->exists()) {
+            $rolePermissions = $this->roles->flatMap(function ($role) {
+                return $role->permissions->pluck('slug');
+            });
+
+            if ($rolePermissions->contains('view_only')) {
+                return true;
+            }
+        }
+
         return (bool) ($this->access_permissions['view_only'] ?? ($this->role === 'staff'));
+    }
+
+    public function isTeacherAdminViewer(): bool
+    {
+        return $this->hasRole('teacher') && ! $this->hasRole(['super_admin', 'admin', 'finance']);
+    }
+
+    public function adminHomeRouteName(): string
+    {
+        return $this->isTeacherAdminViewer()
+            ? 'admin.applications.enrollment'
+            : 'admin.dashboard';
+    }
+
+    public function adminVisibleGradeLevels(): array
+    {
+        if (! $this->isTeacherAdminViewer()) {
+            return [];
+        }
+
+        $email = strtolower((string) $this->email);
+        $username = strtolower((string) $this->username);
+        $grades = collect();
+
+        if (Schema::hasTable('class_advisory_assignments') && Schema::hasTable('sections')) {
+            $grades = $grades->merge(
+                ClassAdvisoryAssignment::query()
+                    ->with('section:id,grade_level')
+                    ->where('status', 'active')
+                    ->where(function ($query) use ($email, $username) {
+                        $email !== ''
+                            ? $query->whereRaw('LOWER(teacher_email) = ?', [$email])
+                            : $query->whereRaw('1 = 0');
+
+                        if ($username !== '') {
+                            $query->orWhereRaw('LOWER(teacher_key) = ?', [$username]);
+                        }
+                    })
+                    ->get()
+                    ->pluck('section.grade_level')
+            );
+        }
+
+        if (Schema::hasTable('teacher_subject_assignments') && Schema::hasTable('subjects')) {
+            $grades = $grades->merge(
+                TeacherSubjectAssignment::query()
+                    ->with('subject:id,grade_level')
+                    ->where('status', 'active')
+                    ->where(function ($query) use ($email, $username) {
+                        $email !== ''
+                            ? $query->whereRaw('LOWER(teacher_email) = ?', [$email])
+                            : $query->whereRaw('1 = 0');
+
+                        if ($username !== '') {
+                            $query->orWhereRaw('LOWER(teacher_key) = ?', [$username]);
+                        }
+                    })
+                    ->get()
+                    ->pluck('subject.grade_level')
+            );
+        }
+
+        $gradeOrder = [
+            'Kinder 1',
+            'Kinder 2',
+            'Grade 1',
+            'Grade 2',
+            'Grade 3',
+            'Grade 4',
+            'Grade 5',
+            'Grade 6',
+            'Grade 7',
+            'Grade 8',
+            'Grade 9',
+            'Grade 10',
+            'Grade 11',
+            'Grade 12',
+        ];
+
+        return $grades
+            ->filter()
+            ->map(fn ($grade) => trim((string) $grade))
+            ->unique()
+            ->sortBy(fn ($grade) => array_search($grade, $gradeOrder, true) === false ? 999 : array_search($grade, $gradeOrder, true))
+            ->values()
+            ->all();
+    }
+
+    public function canViewAdminGrade(?string $gradeLevel): bool
+    {
+        if (! $this->isTeacherAdminViewer()) {
+            return true;
+        }
+
+        return in_array((string) $gradeLevel, $this->adminVisibleGradeLevels(), true);
+    }
+
+    public function canAccessAdminRoute(?string $routeName): bool
+    {
+        if (! $this->isTeacherAdminViewer()) {
+            return true;
+        }
+
+        if (! $routeName) {
+            return false;
+        }
+
+        return $routeName === 'admin.applications.index'
+            || $routeName === 'admin.applications.enrollment'
+            || $routeName === 'admin.applicants.index'
+            || $routeName === 'admin.applicants.show'
+            || $routeName === 'admin.students.index'
+            || $routeName === 'admin.students.show';
     }
 
     public function defaultAccessPermissions(): array

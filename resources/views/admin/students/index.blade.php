@@ -8,6 +8,7 @@
     ]));
     $sortIcon = fn ($key) => $sort !== $key ? 'arrow-up-down' : ($direction === 'asc' ? 'arrow-up' : 'arrow-down');
     $gradeOrder = ['Kinder 1', 'Kinder 2', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'];
+    $isTeacherAdminViewer = auth()->user()?->isTeacherAdminViewer() ?? false;
 @endphp
 
 @if ($isPrint)
@@ -45,14 +46,16 @@
                     <i data-lucide="printer" class="h-4 w-4"></i>
                     Print List
                 </a>
-                <a href="{{ route('admin.students.index', array_merge(request()->query(), ['print_credentials' => 1])) }}" target="_blank" class="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 transition hover:bg-slate-50">
-                    <i data-lucide="key" class="h-4 w-4"></i>
-                    Print Credentials
-                </a>
-                <a href="{{ route('admin.students.dashboard') }}" class="inline-flex h-10 items-center gap-2 rounded-lg border border-emerald-100 bg-emerald-50 px-4 text-sm font-bold text-emerald-700 transition hover:bg-emerald-100">
-                    <i data-lucide="layout-dashboard" class="h-4 w-4"></i>
-                    Dashboard
-                </a>
+                @unless ($isTeacherAdminViewer)
+                    <a href="{{ route('admin.students.index', array_merge(request()->query(), ['print_credentials' => 1])) }}" target="_blank" class="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 transition hover:bg-slate-50">
+                        <i data-lucide="key" class="h-4 w-4"></i>
+                        Print Credentials
+                    </a>
+                    <a href="{{ route('admin.students.dashboard') }}" class="inline-flex h-10 items-center gap-2 rounded-lg border border-emerald-100 bg-emerald-50 px-4 text-sm font-bold text-emerald-700 transition hover:bg-emerald-100">
+                        <i data-lucide="layout-dashboard" class="h-4 w-4"></i>
+                        Dashboard
+                    </a>
+                @endunless
             </div>
         </div>
 

@@ -12,9 +12,38 @@ class AdminStudentController extends Controller
 {
     public function index(Request $request)
     {
-        $gradeOrder = ['Kinder 1', 'Kinder 2', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'];
+        if (auth()->user()?->isTeacherAdminViewer() && $request->filled('print_credentials')) {
+            abort(403);
+        }
 
-        $applyFilters = function ($query) use ($request) {
+        $gradeOrder = ['Kinder 1', 'Kinder 2', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'];
+        $isTeacherAdminViewer = $request->user()?->isTeacherAdminViewer() ?? false;
+        $visibleGrades = $isTeacherAdminViewer
+            ? $request->user()->adminVisibleGradeLevels()
+            : [];
+        $teacherGradeScope = null;
+
+        if ($isTeacherAdminViewer) {
+            $gradeOrder = $visibleGrades;
+
+            if (! empty($visibleGrades)) {
+                $teacherGradeScope = $visibleGrades[0];
+
+                if ($request->filled('grade') && in_array((string) $request->input('grade'), $visibleGrades, true)) {
+                    $teacherGradeScope = (string) $request->input('grade');
+                } elseif ($request->filled('grade')) {
+                    $teacherGradeScope = null;
+                }
+            }
+        }
+
+        $applyFilters = function ($query) use ($request, $isTeacherAdminViewer, $teacherGradeScope) {
+            if ($isTeacherAdminViewer) {
+                $teacherGradeScope === null
+                    ? $query->whereRaw('1 = 0')
+                    : $query->where('students.grade_level', $teacherGradeScope);
+            }
+
             if ($request->filled('search')) {
                 $s = $request->search;
                 $query->where(function ($q) use ($s) {
@@ -165,14 +194,29 @@ class AdminStudentController extends Controller
             ],
         ];
 
+        $sectionStatsQuery = \App\Models\Section::query()
+            ->when($isTeacherAdminViewer, function ($query) use ($teacherGradeScope) {
+                $teacherGradeScope === null
+                    ? $query->whereRaw('1 = 0')
+                    : $query->where('grade_level', $teacherGradeScope);
+            });
+        $studentSectionStatsQuery = \App\Models\StudentSection::query()
+            ->when($isTeacherAdminViewer, function ($query) use ($teacherGradeScope) {
+                $query->whereHas('section', function ($section) use ($teacherGradeScope) {
+                    $teacherGradeScope === null
+                        ? $section->whereRaw('1 = 0')
+                        : $section->where('grade_level', $teacherGradeScope);
+                });
+            });
+
         $stats = [
-            'total_students' => Student::count(),
-            'f2f_students' => Student::whereHas('applicant', fn($q) => $q->where('learning_mode', 'like', '%face-to-face%')->orWhere('learning_mode', 'like', '%f2f%')->orWhere('learning_mode', 'like', '%face_to_face%'))->count(),
-            'flexible_students' => Student::whereHas('applicant', fn($q) => $q->where('learning_mode', 'like', '%flexible%')->orWhere('learning_mode', 'like', '%online%'))->count(),
-            'ms_synced' => Student::whereNotNull('ms_user_id')->count(),
-            'passwords_changed' => Student::whereNotNull('password_changed_at')->count(),
-            'total_sections' => \App\Models\Section::count(),
-            'allocated_slots' => \App\Models\StudentSection::count(),
+            'total_students' => (clone $analyticsBase)->count(),
+            'f2f_students' => (clone $analyticsBase)->whereHas('applicant', fn($q) => $q->where('learning_mode', 'like', '%face-to-face%')->orWhere('learning_mode', 'like', '%f2f%')->orWhere('learning_mode', 'like', '%face_to_face%'))->count(),
+            'flexible_students' => (clone $analyticsBase)->whereHas('applicant', fn($q) => $q->where('learning_mode', 'like', '%flexible%')->orWhere('learning_mode', 'like', '%online%'))->count(),
+            'ms_synced' => (clone $analyticsBase)->whereNotNull('ms_user_id')->count(),
+            'passwords_changed' => (clone $analyticsBase)->whereNotNull('password_changed_at')->count(),
+            'total_sections' => $sectionStatsQuery->count(),
+            'allocated_slots' => $studentSectionStatsQuery->count(),
         ];
 
         $isPrint = $request->filled('print') || $request->filled('print_credentials');
@@ -183,6 +227,8 @@ class AdminStudentController extends Controller
 
     public function show(Student $student)
     {
+        abort_unless(auth()->user()?->canViewAdminGrade($student->grade_level), 403);
+
         $student->load([
             'applicant.user',
             'applicant.payment',
@@ -193,6 +239,7 @@ class AdminStudentController extends Controller
 
         $siblings = \App\Models\EnrollmentApplicant::where('user_id', $student->applicant->user_id)
             ->where('id', '!=', $student->enrollment_applicant_id)
+            ->when(auth()->user()?->isTeacherAdminViewer(), fn ($query) => $query->whereIn('grade_level', auth()->user()->adminVisibleGradeLevels()))
             ->whereNotIn('status', ['draft'])
             ->get();
 

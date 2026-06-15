@@ -7,7 +7,9 @@
         <input name="search" value="{{ request('search') }}" placeholder="Search name, ID, or email" class="{{ $inputClass }} w-full pl-9">
     </label>
     <select name="grade" class="{{ $inputClass }} col-span-6 lg:col-span-2 w-full" onchange="this.form.submit()">
-        <option value="">All grades</option>
+        @unless ($isTeacherAdminViewer)
+            <option value="">All grades</option>
+        @endunless
         @foreach($gradeOrder as $g)
             <option value="{{ $g }}" @selected(request('grade') === $g)>{{ $g }}</option>
         @endforeach

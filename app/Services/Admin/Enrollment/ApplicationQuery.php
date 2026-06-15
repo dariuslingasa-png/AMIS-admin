@@ -58,6 +58,8 @@ class ApplicationQuery
         $query = EnrollmentApplicant::with('user', 'payment', 'student')
             ->whereNotIn('enrollment_applicants.status', ['draft']);
 
+        $this->applyTeacherGradeScope($query, 'enrollment_applicants.grade_level', $request);
+
         if ($request->filled('search')) {
             $search = trim((string) $request->search);
             $cleanSearch = preg_replace('/\s+/', ' ', $search);
@@ -201,6 +203,8 @@ class ApplicationQuery
         $query = EnrollmentApplicant::with('user', 'payment')
             ->whereNotIn('status', ['draft']);
 
+        $this->applyTeacherGradeScope($query, 'grade_level', $request);
+
         if ($request->filled('search')) {
             $search = trim((string) $request->search);
             $cleanSearch = preg_replace('/\s+/', ' ', $search);
@@ -275,6 +279,36 @@ class ApplicationQuery
         }
 
         return $query->orderByDesc('id');
+    }
+
+    private function applyTeacherGradeScope($query, string $column, Request $request): void
+    {
+        $user = $request->user();
+
+        if (! $user?->isTeacherAdminViewer()) {
+            return;
+        }
+
+        $visibleGrades = $user->adminVisibleGradeLevels();
+
+        if (empty($visibleGrades)) {
+            $query->whereRaw('1 = 0');
+            return;
+        }
+
+        if ($request->filled('grade')) {
+            $requestedGrade = (string) $request->input('grade');
+
+            if (! in_array($requestedGrade, $visibleGrades, true)) {
+                $query->whereRaw('1 = 0');
+                return;
+            }
+
+            $query->where($column, $requestedGrade);
+            return;
+        }
+
+        $query->where($column, $visibleGrades[0]);
     }
 
     private function familyRow(SupportCollection $children): array

@@ -8,6 +8,7 @@
 
     $name = html_entity_decode(trim(($student->applicant->first_name ?? '').' '.($student->applicant->middle_name ?? '').' '.($student->applicant->last_name ?? '')), ENT_QUOTES, 'UTF-8');
     $displayName = $name ? Str::upper($name) : 'STUDENT PROFILE';
+    $isTeacherAdminViewer = auth()->user()?->isTeacherAdminViewer() ?? false;
     
     $photoUrl = \App\Support\EnrollmentStorage::url($student->applicant->photo_2x2_url);
     $studentAddress = implode(', ', array_filter([$student->applicant->street_address, $student->applicant->city, $student->applicant->state_province, $student->applicant->country]));
@@ -222,7 +223,7 @@
                             @endphp
                             <span class="applicant-pill bg-amber-500/20 text-amber-200 border border-amber-500/30 font-extrabold cursor-help" title="Missing: {{ $missingList }}">INCOMPLETE</span>
                         @endif
-                        @if ($student->applicant && $student->applicant->user)
+                        @if (!$isTeacherAdminViewer && $student->applicant && $student->applicant->user)
                             <a href="{{ route('admin.students.families', ['search' => $student->applicant->user->email]) }}" class="applicant-pill bg-emerald-500/20 text-emerald-200 border border-emerald-500/30 font-extrabold flex items-center gap-1 hover:bg-emerald-500/30 transition" title="View Family Group">
                                 <i data-lucide="home" class="h-3 w-3"></i>
                                 FAMILY GROUP
@@ -247,7 +248,8 @@
                         <i data-lucide="graduation-cap" class="h-4 w-4"></i>
                         <span>Classroom & MS Teams</span>
                     </button>
-                    <button @click="activeTab = 'payment'" 
+                    @unless ($isTeacherAdminViewer)
+                    <button @click="activeTab = 'payment'"
                             :class="activeTab === 'payment' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-900/50'" 
                             class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 focus:outline-none flex-1 sm:flex-initial cursor-pointer">
                         <i data-lucide="receipt" class="h-4 w-4"></i>
@@ -259,18 +261,23 @@
                         <i data-lucide="folder-open" class="h-4 w-4"></i>
                         <span>Requirement Files</span>
                     </button>
+                    @endunless
                 </nav>
             </div>
 
             <!-- Tab Contents -->
             @include('admin.students.partials.show.overview')
             @include('admin.students.partials.show.academic')
-            @include('admin.students.partials.show.payment')
-            @include('admin.students.partials.show.documents')
+            @unless ($isTeacherAdminViewer)
+                @include('admin.students.partials.show.payment')
+                @include('admin.students.partials.show.documents')
+            @endunless
         </main>
 
         <!-- Right Sidebar -->
-        @include('admin.students.partials.show.sidebar')
+        @unless ($isTeacherAdminViewer)
+            @include('admin.students.partials.show.sidebar')
+        @endunless
 
         <!-- Preview Modal -->
         @include('admin.students.partials.show.modal')

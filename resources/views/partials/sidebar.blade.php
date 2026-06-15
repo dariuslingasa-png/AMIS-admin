@@ -141,6 +141,23 @@
         ],
     ];
 
+    $isTeacherAdminViewer = Auth::user()?->isTeacherAdminViewer() ?? false;
+
+    if ($isTeacherAdminViewer) {
+        $workspaceSections = array_values(array_filter($workspaceSections, function ($section) {
+            return in_array($section['title'], ['Applications', 'Students'], true);
+        }));
+
+        $workspaceSections = array_map(function ($section) {
+            $section['links'] = array_values(array_filter($section['links'], function ($link) use ($section) {
+                return ($section['title'] === 'Applications' && $link[0] === 'Enrollment Applications')
+                    || ($section['title'] === 'Students' && $link[0] === 'Student Records');
+            }));
+
+            return $section;
+        }, $workspaceSections);
+    }
+
     $workspaceSections = array_filter($workspaceSections, function($section) {
         return !($section['hidden'] ?? false);
     });
@@ -152,7 +169,7 @@
        class="admin-sidebar fixed left-0 z-40 w-64 border-r border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
        aria-label="Sidebar">
     <div class="flex h-full flex-col px-3 py-4">
-        @unless (request()->routeIs('admin.dashboard'))
+        @unless ($isTeacherAdminViewer || request()->routeIs('admin.dashboard'))
             <a href="{{ route('admin.dashboard') }}" class="module-dashboard-link mb-3">
                 <i data-lucide="arrow-left" class="h-4 w-4"></i>
                 <span>Main Dashboard</span>
@@ -181,7 +198,7 @@
                     {{ Auth::user()->name ?? 'Administrator' }}
                 </span>
             </div>
-            <form method="POST" action="{{ route('admin.logout') }}">
+            <form method="POST" action="{{ route('admin.logout') }}" class="view-only-allowed">
                 @csrf
                 <button type="submit" class="sidebar-logout-btn">
                     <i data-lucide="log-out" class="h-4 w-4"></i>

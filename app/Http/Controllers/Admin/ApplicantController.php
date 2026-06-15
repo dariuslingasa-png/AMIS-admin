@@ -84,16 +84,27 @@ class ApplicantController extends Controller
 
     private function registryData(Request $request): array
     {
+        $gradeLevels = $this->visibleGradeLevels($request);
+        $teacherGradeScope = $this->teacherCurrentGradeScope($request, $gradeLevels);
+        $countQuery = fn () => EnrollmentApplicant::query()
+            ->when($request->user()?->isTeacherAdminViewer(), function ($query) use ($teacherGradeScope) {
+                if ($teacherGradeScope === null) {
+                    $query->whereRaw('1 = 0');
+                } else {
+                    $query->where('grade_level', $teacherGradeScope);
+                }
+            });
+
         return [
             'families' => $this->applications->paginateFamilies($request),
-            'gradeLevels' => ApplicationQuery::GRADE_LEVELS,
+            'gradeLevels' => $gradeLevels,
             'statusLabels' => EnrollmentReviewService::STATUS_LABELS,
             'statusBadges' => EnrollmentReviewService::STATUS_BADGES,
             'pmLabels' => EnrollmentReviewService::PAYMENT_LABELS,
             'pmBadges' => EnrollmentReviewService::PAYMENT_BADGES,
-            'approvedCount' => EnrollmentApplicant::where('status', 'approved')->count(),
-            'reviewQueueCount' => EnrollmentApplicant::whereIn('status', ['ready_for_submission', 'pending', 'submitted', 'under_review'])->count(),
-            'rejectedCount' => EnrollmentApplicant::where('status', 'rejected')->count(),
+            'approvedCount' => $countQuery()->where('status', 'approved')->count(),
+            'reviewQueueCount' => $countQuery()->whereIn('status', ['ready_for_submission', 'pending', 'submitted', 'under_review'])->count(),
+            'rejectedCount' => $countQuery()->where('status', 'rejected')->count(),
         ];
     }
 
@@ -101,11 +112,37 @@ class ApplicantController extends Controller
     {
         return [
             'applicants' => $this->applications->paginateApplicants($request, 15),
-            'gradeLevels' => ApplicationQuery::GRADE_LEVELS,
+            'gradeLevels' => $this->visibleGradeLevels($request),
             'statusLabels' => EnrollmentReviewService::STATUS_LABELS,
             'statusBadges' => EnrollmentReviewService::STATUS_BADGES,
             'reviewService' => $this->reviewService,
         ];
+    }
+
+    private function visibleGradeLevels(Request $request): array
+    {
+        return $request->user()?->isTeacherAdminViewer()
+            ? $request->user()->adminVisibleGradeLevels()
+            : ApplicationQuery::GRADE_LEVELS;
+    }
+
+    private function teacherCurrentGradeScope(Request $request, array $gradeLevels): ?string
+    {
+        if (! $request->user()?->isTeacherAdminViewer()) {
+            return null;
+        }
+
+        if (empty($gradeLevels)) {
+            return null;
+        }
+
+        if ($request->filled('grade')) {
+            $requestedGrade = (string) $request->input('grade');
+
+            return in_array($requestedGrade, $gradeLevels, true) ? $requestedGrade : null;
+        }
+
+        return $gradeLevels[0];
     }
 
     private function applicationCharts($gradeSlots): array
@@ -146,13 +183,15 @@ class ApplicantController extends Controller
 
     public function show(EnrollmentApplicant $applicant)
     {
-        if ($applicant->status === 'submitted') {
+        abort_unless(auth()->user()?->canViewAdminGrade($applicant->grade_level), 403);
+
+        if (! auth()->user()?->isViewOnlyAccess() && $applicant->status === 'submitted') {
             $applicant->update(['status' => 'under_review']);
         }
 
         $applicant->load('user', 'payment', 'student');
 
-        $siblings = EnrollmentApplicant::where('user_id', $applicant->user_id)
+        $siblings = $this->scopedSiblingQuery($applicant)
             ->where('id', '!=', $applicant->id)
             ->whereNotIn('status', ['draft'])
             ->get();
@@ -167,13 +206,15 @@ class ApplicantController extends Controller
 
     public function reviewApplicant(EnrollmentApplicant $applicant)
     {
-        if ($applicant->status === 'submitted') {
+        abort_unless(auth()->user()?->canViewAdminGrade($applicant->grade_level), 403);
+
+        if (! auth()->user()?->isViewOnlyAccess() && $applicant->status === 'submitted') {
             $applicant->update(['status' => 'under_review']);
         }
 
         $applicant->load('user', 'payment', 'student');
 
-        $siblings = EnrollmentApplicant::where('user_id', $applicant->user_id)
+        $siblings = $this->scopedSiblingQuery($applicant)
             ->where('id', '!=', $applicant->id)
             ->whereNotIn('status', ['draft'])
             ->get();
@@ -184,6 +225,17 @@ class ApplicantController extends Controller
             'enrollmentSetting' => EnrollmentSetting::current(),
             ...$this->reviewService->detailData($applicant),
         ]);
+    }
+
+    private function scopedSiblingQuery(EnrollmentApplicant $applicant)
+    {
+        $query = EnrollmentApplicant::where('user_id', $applicant->user_id);
+
+        if (auth()->user()?->isTeacherAdminViewer()) {
+            $query->whereIn('grade_level', auth()->user()->adminVisibleGradeLevels());
+        }
+
+        return $query;
     }
 
     public function emailRegistry(Request $request)

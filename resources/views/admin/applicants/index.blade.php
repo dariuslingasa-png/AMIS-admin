@@ -8,6 +8,7 @@
     @php
         $currentSort = request('sort', 'number');
         $currentDir = request('dir', 'desc');
+        $isTeacherAdminViewer = auth()->user()?->isTeacherAdminViewer() ?? false;
         $inputClass = 'h-11 rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100';
         $childStatusColor = ['approved' => 'green', 'rejected' => 'red', 'under_review' => 'blue', 'ready_for_submission' => 'yellow', 'pending' => 'yellow', 'submitted' => 'yellow'];
         $familyPaymentChip = fn ($label) => match ($label) {
@@ -201,10 +202,12 @@
                     <p class="mt-1 text-sm text-slate-500">Family enrollment registry grouped by child applicants</p>
                 </div>
                 <div class="flex items-center gap-3">
+                    @unless ($isTeacherAdminViewer)
                     <button type="button" @click="emailModalOpen = true; familiesList = []; emailSuccess = null; emailError = null; isSendingEmail = false;" class="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs px-4 py-2 transition shadow-3xs cursor-pointer select-none">
                         <i data-lucide="mail" class="h-4 w-4"></i>
                         Email Families Registry
                     </button>
+                    @endunless
                     <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700" data-total-count="{{ $families->total() }}">
                         {{ number_format($families->total()) }} families
                     </span>
@@ -270,7 +273,9 @@
                     @endforeach
                 </select>
                 <select name="grade" class="{{ $inputClass }} col-span-2 w-full" onchange="this.form.submit()">
-                    <option value="">All grades</option>
+                    @unless ($isTeacherAdminViewer)
+                        <option value="">All grades</option>
+                    @endunless
                     @foreach ($gradeLevels ?? [] as $grade)
                         <option value="{{ $grade }}" @selected(request('grade') === $grade)>{{ $grade }}</option>
                     @endforeach
@@ -312,8 +317,8 @@
                             @php
                                 $representative = $family['representative'];
                                 [$familyLastName, $familyFirstName] = array_pad(explode(', ', \Illuminate\Support\Str::upper(html_entity_decode($family['family_label'], ENT_QUOTES, 'UTF-8')), 2), 2, 'GUARDIAN');
-                                $familyHeader = 'FAMILY OF '.$familyLastName.', '.$familyFirstName;
-                                $initials = collect([$familyLastName, $familyFirstName])->filter()->map(fn ($part) => \Illuminate\Support\Str::substr($part, 0, 1))->join('');
+                                $familyHeader = $isTeacherAdminViewer ? 'CHILDREN IN FAMILY' : 'FAMILY OF '.$familyLastName.', '.$familyFirstName;
+                                $initials = $isTeacherAdminViewer ? 'CH' : collect([$familyLastName, $familyFirstName])->filter()->map(fn ($part) => \Illuminate\Support\Str::substr($part, 0, 1))->join('');
                                 $accent = $familyAccents[$family['family_no'] % count($familyAccents)];
                                 $maxDiscount = $family['children']->max(fn ($child) => (float) ($child->discount_percentage ?? 0));
                                 $discountLabel = $maxDiscount > 0 ? 'SIBLINGS DISCOUNT '.rtrim(rtrim(number_format($maxDiscount, 2), '0'), '.').'%' : 'SIBLINGS DISCOUNT';
@@ -330,6 +335,7 @@
                                                 </div>
                                             </div>
                                             <div class="flex flex-wrap items-center justify-end gap-2">
+                                                @unless ($isTeacherAdminViewer)
                                                 @if ($family['children_count'] > 1)
                                                     <span class="inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-white/80 px-3 py-1.5 text-xs font-black uppercase tracking-wide shadow-sm {{ $accent['text'] }}">
                                                         <i data-lucide="check-circle-2" class="h-3.5 w-3.5"></i>
@@ -355,6 +361,7 @@
                                                         Emailed
                                                     </span>
                                                 @endif
+                                                @endunless
                                                 <span class="inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-white/80 px-3 py-1.5 text-xs font-black uppercase tracking-wide shadow-sm {{ $accent['text'] }}">
                                                     <i data-lucide="users" class="h-3.5 w-3.5"></i>
                                                     {{ $family['children_count'] }} {{ \Illuminate\Support\Str::plural('Child', $family['children_count']) }}
@@ -422,6 +429,7 @@
         </div>
     </section>
 
+        @unless ($isTeacherAdminViewer)
         <!-- Email Families Registry Modal -->
         <div class="admin-modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-xs"
              x-show="emailModalOpen" x-cloak x-transition>
@@ -528,6 +536,7 @@
                 </div>
             </div>
         </div>
+        @endunless
     </div>
 
     <!-- New applicant polling notification -->

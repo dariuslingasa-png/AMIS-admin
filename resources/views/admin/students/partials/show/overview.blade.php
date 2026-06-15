@@ -22,29 +22,31 @@
         </div>
     </x-card>
 
-    <x-card title="Residential Info" subtitle="Residence details from enrollment form">
-        <div class="detail-section-stack">
-            @foreach ($addressSections as $section)
-                <x-applicant.detail-section :title="$section['title']" :icon="$section['icon']" :fields="$section['fields']" />
-            @endforeach
-        </div>
-    </x-card>
-
-    <x-card title="Parent / Guardian Details" subtitle="Grouped parent contacts and home addresses">
-        <div class="detail-section-stack">
-            @foreach ($guardianSections as $section)
-                <x-applicant.detail-section :title="$section['title']" :icon="$section['icon']" :fields="$section['fields']" />
-            @endforeach
-        </div>
-        @if($student->applicant && $student->applicant->user)
-            <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end">
-                <a href="{{ route('admin.students.families', ['search' => $student->applicant->user->email]) }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/20 dark:hover:bg-emerald-900/30 border border-emerald-100 dark:border-emerald-900/50 text-xs font-bold text-emerald-700 dark:text-emerald-400 transition" title="View Family Account">
-                    <i data-lucide="home" class="h-3.5 w-3.5"></i>
-                    View Family Account
-                </a>
+    @unless ($isTeacherAdminViewer)
+        <x-card title="Residential Info" subtitle="Residence details from enrollment form">
+            <div class="detail-section-stack">
+                @foreach ($addressSections as $section)
+                    <x-applicant.detail-section :title="$section['title']" :icon="$section['icon']" :fields="$section['fields']" />
+                @endforeach
             </div>
-        @endif
-    </x-card>
+        </x-card>
+
+        <x-card title="Parent / Guardian Details" subtitle="Grouped parent contacts and home addresses">
+            <div class="detail-section-stack">
+                @foreach ($guardianSections as $section)
+                    <x-applicant.detail-section :title="$section['title']" :icon="$section['icon']" :fields="$section['fields']" />
+                @endforeach
+            </div>
+            @if($student->applicant && $student->applicant->user)
+                <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+                    <a href="{{ route('admin.students.families', ['search' => $student->applicant->user->email]) }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/20 dark:hover:bg-emerald-900/30 border border-emerald-100 dark:border-emerald-900/50 text-xs font-bold text-emerald-700 dark:text-emerald-400 transition" title="View Family Account">
+                        <i data-lucide="home" class="h-3.5 w-3.5"></i>
+                        View Family Account
+                    </a>
+                </div>
+            @endif
+        </x-card>
+    @endunless
 
     @if(isset($siblings) && $siblings->isNotEmpty())
     <x-card title="Family & Siblings" subtitle="Other children enrolled under the same parent account">
@@ -86,7 +88,7 @@
                 </tbody>
             </table>
         </div>
-        @if($student->applicant && $student->applicant->user)
+        @if(!$isTeacherAdminViewer && $student->applicant && $student->applicant->user)
             <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end">
                 <a href="{{ route('admin.students.families', ['search' => $student->applicant->user->email]) }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/20 dark:hover:bg-emerald-900/30 border border-emerald-100 dark:border-emerald-900/50 text-xs font-bold text-emerald-700 dark:text-emerald-400 transition" title="View Family Group">
                     <i data-lucide="users" class="h-3.5 w-3.5"></i>
@@ -97,11 +99,13 @@
     </x-card>
     @endif
 
-    <x-card title="Medical Background" subtitle="Health info and emergency response contacts">
-        <div class="detail-section-stack">
-            @foreach ($medicalSections as $section)
-                <x-applicant.detail-section :title="$section['title']" :icon="$section['icon']" :fields="$section['fields']" />
-            @endforeach
-        </div>
-    </x-card>
+    @unless ($isTeacherAdminViewer)
+        <x-card title="Medical Background" subtitle="Health info and emergency response contacts">
+            <div class="detail-section-stack">
+                @foreach ($medicalSections as $section)
+                    <x-applicant.detail-section :title="$section['title']" :icon="$section['icon']" :fields="$section['fields']" />
+                @endforeach
+            </div>
+        </x-card>
+    @endunless
 </div>

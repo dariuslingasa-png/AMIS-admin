@@ -1,4 +1,13 @@
 <x-app-layout :title="$title ?? 'Dashboard'">
+    @if (auth()->user()?->isViewOnlyAccess())
+        <style>
+            form[method="POST"]:not(.view-only-allowed),
+            form[method="post"]:not(.view-only-allowed) {
+                display: none !important;
+            }
+        </style>
+    @endif
+
     <!-- Top Loading Progress Bar -->
     <div id="topLoadingBar" class="fixed top-0 left-0 h-1 bg-emerald-600 dark:bg-emerald-500 z-150 transition-all duration-300 ease-out" style="width: 0%; display: none;"></div>
 

@@ -1,6 +1,7 @@
 @php
     $msSyncColor = ['enrolled' => 'green', 'failed' => 'red', 'pending' => 'yellow'];
     $msSyncLabel = ['enrolled' => 'Synced', 'failed' => 'Sync Failed', 'pending' => 'Pending Teams'];
+    $isTeacherAdminViewer = auth()->user()?->isTeacherAdminViewer() ?? false;
 @endphp
 
 <!-- Main Table Container -->
@@ -38,7 +39,7 @@
                         <span class="hidden print:inline">Grade</span>
                     </th>
                     <th class="w-40 px-5 py-4 font-bold print:hidden">Section</th>
-                    <th class="w-48 px-5 py-4 font-bold">School Email / Temp Pass</th>
+                    <th class="w-48 px-5 py-4 font-bold">{{ $isTeacherAdminViewer ? 'School Email' : 'School Email / Temp Pass' }}</th>
                     <th class="w-40 px-5 py-4 font-bold print:hidden">MS Sync State</th>
                     <th class="w-36 px-5 py-4 text-right font-bold print:hidden">Action</th>
                 </tr>
@@ -62,6 +63,7 @@
                         if (str_contains($lmLower, 'online') || str_contains($lmLower, 'flexible') || str_contains($lmLower, 'odl') || str_contains($lmLower, 'shift')) {
                             $modeAbbr = 'ODL';
                         }
+                        $isHashed = str_starts_with($student->temp_password ?? '', '$');
                     @endphp
                     <tr class="transition hover:bg-slate-50">
                         <!-- Student Photo & Name -->
@@ -91,7 +93,7 @@
                                              @endphp
                                              <span class="inline-flex items-center rounded bg-amber-50 px-1.5 py-0.5 font-bold text-amber-700 ring-1 ring-amber-100 uppercase cursor-help" title="Missing: {{ $missingList }}">Incomplete</span>
                                          @endif
-                                         @if ($student->applicant && $student->applicant->user)
+                                         @if (!$isTeacherAdminViewer && $student->applicant && $student->applicant->user)
                                              <span class="text-slate-350">•</span>
                                              <a href="{{ route('admin.students.families', ['search' => $student->applicant->user->email]) }}" class="inline-flex items-center gap-0.5 text-emerald-600 hover:text-emerald-700 font-extrabold uppercase transition" title="View Family Account">
                                                  <i data-lucide="home" class="h-2.5 w-2.5"></i>
@@ -128,11 +130,9 @@
                              <div class="flex items-start justify-between gap-1.5">
                                  <div class="min-w-0 flex-1">
                                      <div class="font-semibold text-slate-800 break-all select-all">{{ $student->school_email ?? '-' }}</div>
+                                     @unless ($isTeacherAdminViewer)
                                      <div class="mt-1 flex flex-wrap items-center gap-1.5 print:hidden">
                                          <span class="text-slate-400 font-extrabold uppercase tracking-wider text-[10px]">Pass:</span>
-                                         @php
-                                             $isHashed = str_starts_with($student->temp_password ?? '', '$');
-                                         @endphp
                                          @if ($isHashed || blank($student->temp_password))
                                              <span class="text-slate-550 font-semibold text-[10px]">-</span>
                                          @else
@@ -149,17 +149,18 @@
                                              </span>
                                          @endif
                                      </div>
+                                     @endunless
                                  </div>
                                  @if ($student->school_email)
                                      @php
                                          $emailVal = $student->school_email;
                                          $passVal = ($isHashed || blank($student->temp_password)) ? '' : $student->temp_password;
-                                         $copyVal = $passVal ? "Email: {$emailVal}\nPassword: {$passVal}" : $emailVal;
+                                         $copyVal = (!$isTeacherAdminViewer && $passVal) ? "Email: {$emailVal}\nPassword: {$passVal}" : $emailVal;
                                      @endphp
                                      <button onclick="copyToClipboard(this.getAttribute('data-copy'), this)" 
                                              data-copy="{{ $copyVal }}" 
                                              class="text-slate-400 hover:text-slate-655 transition cursor-pointer p-1 rounded hover:bg-slate-100 print:hidden flex items-center justify-center border-0 bg-transparent shrink-0 mt-0.5" 
-                                             title="Copy Email & Password">
+                                             title="{{ $isTeacherAdminViewer ? 'Copy Email' : 'Copy Email & Password' }}">
                                          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
                                      </button>
                                  @endif
@@ -194,7 +195,7 @@
                                 @endif
                                 <a href="{{ route('admin.students.show', $student) }}" class="inline-flex h-9 items-center gap-2 rounded-md border border-emerald-100 bg-white px-3 text-xs font-bold text-emerald-700 transition hover:bg-emerald-50">
                                     <i data-lucide="file-search" class="h-4 w-4"></i>
-                                    Manage
+                                    {{ $isTeacherAdminViewer ? 'View' : 'Manage' }}
                                 </a>
                                 <form method="POST" action="{{ route('admin.students.destroy', $student) }}"
                                       onsubmit="return confirm('Delete {{ $student->student_number }} ({{ $student->school_email }})?\n\nThis will permanently delete the student from the portal and Microsoft 365. This action cannot be undone.')">

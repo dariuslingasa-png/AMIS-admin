@@ -15,7 +15,7 @@ class AdminAuthController extends Controller
     public function showLogin()
     {
         if (Auth::check() && Auth::user()->hasAdminPortalAccess()) {
-            return redirect()->route('admin.dashboard');
+            return redirect()->route(Auth::user()->adminHomeRouteName());
         }
 
         return view('auth.login');
@@ -52,7 +52,7 @@ class AdminAuthController extends Controller
             $this->activateSingleSession($request, $user);
             $this->audit($request, 'login_success', $user, true, 'Admin portal login successful.');
 
-            return redirect()->route('admin.dashboard');
+            return redirect()->route($user->adminHomeRouteName());
         }
 
         $this->audit($request, 'login_failed', $userForAudit, false, 'Invalid login credentials.', ['email' => $email]);
@@ -157,7 +157,7 @@ class AdminAuthController extends Controller
         $this->activateSingleSession($request, $user);
         $this->audit($request, 'microsoft_login_success', $user, true, 'Microsoft login successful.');
 
-        return redirect()->route('admin.dashboard');
+        return redirect()->route($user->adminHomeRouteName());
     }
 
     public function logout(Request $request)
