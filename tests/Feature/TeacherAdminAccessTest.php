@@ -27,6 +27,24 @@ class TeacherAdminAccessTest extends TestCase
     }
 
     #[Test]
+    public function elevated_admin_roles_are_not_treated_as_view_only(): void
+    {
+        $superAdmin = User::factory()->create([
+            'role' => 'admin',
+            'account_status' => 'verified',
+        ]);
+
+        $superAdmin->roles()->sync([Role::where('slug', 'super_admin')->value('id')]);
+
+        $this->assertFalse($superAdmin->fresh('roles.permissions')->isViewOnlyAccess());
+
+        $this->actingAs($superAdmin)
+            ->get(route('admin.administration.users.create'))
+            ->assertOk()
+            ->assertSeeText('Create Account');
+    }
+
+    #[Test]
     public function teacher_admin_role_can_only_view_enrollment_and_student_modules(): void
     {
         $teacher = User::factory()->create([

@@ -142,6 +142,10 @@ class User extends Authenticatable
 
     public function isViewOnlyAccess(): bool
     {
+        if ($this->hasRole(['super_admin', 'admin', 'finance'])) {
+            return false;
+        }
+
         if ($this->relationLoaded('roles') || $this->roles()->exists()) {
             $rolePermissions = $this->roles->flatMap(function ($role) {
                 return $role->permissions->pluck('slug');
