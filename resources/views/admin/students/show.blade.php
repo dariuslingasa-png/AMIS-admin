@@ -217,7 +217,10 @@
                         <span class="applicant-pill applicant-pill-mode">{{ Str::upper($student->applicant->learning_mode ?: 'Learning mode pending') }}</span>
                         <span class="applicant-pill applicant-pill-year">SY {{ $student->school_year ?? '-' }}</span>
                         @if (!$student->applicant || $student->applicant->completion_percentage < 100)
-                            <span class="applicant-pill bg-amber-500/20 text-amber-200 border border-amber-500/30 font-extrabold">INCOMPLETE</span>
+                            @php
+                                $missingList = $student->applicant ? implode(', ', $student->applicant->incomplete_fields) : 'No profile';
+                            @endphp
+                            <span class="applicant-pill bg-amber-500/20 text-amber-200 border border-amber-500/30 font-extrabold cursor-help" title="Missing: {{ $missingList }}">INCOMPLETE</span>
                         @endif
                         @if ($student->applicant && $student->applicant->user)
                             <a href="{{ route('admin.students.families', ['search' => $student->applicant->user->email]) }}" class="applicant-pill bg-emerald-500/20 text-emerald-200 border border-emerald-500/30 font-extrabold flex items-center gap-1 hover:bg-emerald-500/30 transition" title="View Family Group">

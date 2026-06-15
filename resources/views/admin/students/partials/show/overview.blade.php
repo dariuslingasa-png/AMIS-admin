@@ -1,4 +1,19 @@
 <div x-show="activeTab === 'overview'" class="space-y-6" x-cloak>
+    @if ($student->applicant && $student->applicant->completion_percentage < 100)
+        <div class="rounded-2xl border border-amber-200 bg-amber-50/50 p-4 text-amber-900 shadow-xs flex items-start gap-3">
+            <i data-lucide="alert-triangle" class="h-5 w-5 shrink-0 text-amber-600 mt-0.5 animate-pulse"></i>
+            <div>
+                <h4 class="font-extrabold text-sm text-amber-850">Incomplete Registration Profile</h4>
+                <p class="text-xs text-amber-700 mt-1">The following mandatory fields or documents are still missing for this student:</p>
+                <ul class="list-disc list-inside text-xs mt-2 space-y-1 font-semibold text-amber-800">
+                    @foreach ($student->applicant->incomplete_fields as $field)
+                        <li>{{ $field }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        </div>
+    @endif
+
     <x-card title="Student Profile" subtitle="Core demographics and contact info">
         <div class="detail-section-stack">
             @foreach ($studentSections as $section)

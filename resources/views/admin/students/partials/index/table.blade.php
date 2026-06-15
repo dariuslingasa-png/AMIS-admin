@@ -86,7 +86,10 @@
                                          <span class="inline-flex items-center rounded bg-slate-100 px-1.5 py-0.5 font-bold text-slate-600 uppercase">{{ $modeAbbr }}</span>
                                          @if (!$student->applicant || $student->applicant->completion_percentage < 100)
                                              <span class="text-slate-355">•</span>
-                                             <span class="inline-flex items-center rounded bg-amber-50 px-1.5 py-0.5 font-bold text-amber-700 ring-1 ring-amber-100 uppercase">Incomplete</span>
+                                             @php
+                                                 $missingList = $student->applicant ? implode(', ', $student->applicant->incomplete_fields) : 'No profile';
+                                             @endphp
+                                             <span class="inline-flex items-center rounded bg-amber-50 px-1.5 py-0.5 font-bold text-amber-700 ring-1 ring-amber-100 uppercase cursor-help" title="Missing: {{ $missingList }}">Incomplete</span>
                                          @endif
                                          @if ($student->applicant && $student->applicant->user)
                                              <span class="text-slate-350">•</span>

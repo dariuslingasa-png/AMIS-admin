@@ -166,6 +166,48 @@ class EnrollmentApplicant extends Model
         return (int) round(($filled / count($checks)) * 100);
     }
 
+    /**
+     * Get a list of incomplete/missing mandatory fields or documents.
+     */
+    public function getIncompleteFieldsAttribute(): array
+    {
+        $missing = [];
+        $labels = [
+            'student_type' => 'Student Type',
+            'grade_level' => 'Grade Level',
+            'first_name' => 'First Name',
+            'last_name' => 'Last Name',
+            'gender' => 'Gender',
+            'date_of_birth' => 'Date of Birth',
+            'place_of_birth' => 'Place of Birth',
+            'religion' => 'Religion',
+            'country' => 'Country',
+            'street_address' => 'Street Address',
+            'mobile_number' => 'Student Mobile Number',
+            'parent_mobile' => 'Parent Mobile Number',
+            'emergency_name' => 'Emergency Contact Name',
+            'emergency_relationship' => 'Emergency Contact Relationship',
+            'emergency_phone' => 'Emergency Contact Phone',
+            'photo_2x2_url' => '2x2 Photo',
+        ];
+
+        foreach ($labels as $field => $label) {
+            if (empty($this->$field)) {
+                $missing[] = $label;
+            }
+        }
+
+        $hasAcademicProof = $this->student_type === 'Old'
+            || !empty($this->report_card_url)
+            || !empty($this->affidavit_url);
+
+        if (!$hasAcademicProof) {
+            $missing[] = 'Academic Proof (SF9 / Report Card or Affidavit)';
+        }
+
+        return $missing;
+    }
+
     public function setFirstNameAttribute($value)
     {
         $this->attributes['first_name'] = mb_strtoupper($value, 'UTF-8');
