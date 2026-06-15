@@ -7,6 +7,30 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class EnrollmentApplicant extends Model
 {
+    protected static function booted()
+    {
+        static::updated(function ($applicant) {
+            // 1. Sync grade_level to associated Student
+            if ($applicant->wasChanged('grade_level') && $applicant->student) {
+                $student = $applicant->student;
+                $student->grade_level = $applicant->grade_level;
+                $student->saveQuietly();
+            }
+            // 2. Sync grade_level to associated StudentAccount (SOA)
+            if ($applicant->wasChanged('grade_level') && $applicant->student && $applicant->student->account) {
+                $account = $applicant->student->account;
+                $account->grade_level = $applicant->grade_level;
+                $account->saveQuietly();
+            }
+            // 3. Sync name changes to student's User account name
+            if (($applicant->wasChanged('first_name') || $applicant->wasChanged('middle_name') || $applicant->wasChanged('last_name') || $applicant->wasChanged('suffix')) && $applicant->student && $applicant->student->user) {
+                $user = $applicant->student->user;
+                $user->name = trim($applicant->first_name . ' ' . ($applicant->middle_name ?? '') . ' ' . $applicant->last_name . ($applicant->suffix ? ' ' . $applicant->suffix : ''));
+                $user->saveQuietly();
+            }
+        });
+    }
+
     protected $fillable = [
         'user_id',
         'family_application_id',

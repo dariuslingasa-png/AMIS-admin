@@ -7,6 +7,22 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Student extends Model
 {
+    protected static function booted()
+    {
+        static::updated(function ($student) {
+            if ($student->wasChanged('grade_level') && $student->applicant) {
+                $applicant = $student->applicant;
+                $applicant->grade_level = $student->grade_level;
+                $applicant->saveQuietly();
+            }
+            if ($student->wasChanged('grade_level') && $student->account) {
+                $account = $student->account;
+                $account->grade_level = $student->grade_level;
+                $account->saveQuietly();
+            }
+        });
+    }
+
     protected $fillable = [
         'user_id',
         'enrollment_applicant_id',
