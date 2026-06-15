@@ -373,7 +373,7 @@
                             </tr>
                             @foreach ($family['children'] as $index => $child)
                                 @php
-                                    $childName = \Illuminate\Support\Str::upper(html_entity_decode(trim(($child->first_name ?? '').' '.($child->middle_name ?? '').' '.($child->last_name ?? '')), ENT_QUOTES, 'UTF-8') ?: 'Student');
+                                    $childName = \Illuminate\Support\Str::upper(html_entity_decode(implode(' ', array_filter([trim($child->first_name ?? ''), trim($child->middle_name ?? ''), trim($child->last_name ?? '')])), ENT_QUOTES, 'UTF-8') ?: 'STUDENT');
                                     $childInitials = collect(explode(' ', $childName))->filter()->take(2)->map(fn ($part) => \Illuminate\Support\Str::substr($part, 0, 1))->join('');
                                     $photoUrl = \App\Support\EnrollmentStorage::url($child->photo_2x2_url, 'medium');
                                     $statusLabel = $statusLabels[$child->status] ?? \Illuminate\Support\Str::headline($child->status ?? 'under_review');

@@ -45,7 +45,12 @@ class AdminOnly
             abort(403, 'This account is view-only.');
         }
 
-        if (! $user->canAccessAdminRoute($request->route()?->getName())) {
+        $routeName = $request->route()?->getName();
+        if ($routeName === 'admin.dashboard' && $user->isTeacherAdminViewer()) {
+            return redirect()->route($user->adminHomeRouteName());
+        }
+
+        if (! $user->canAccessAdminRoute($routeName)) {
             abort(403);
         }
 

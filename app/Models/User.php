@@ -127,7 +127,7 @@ class User extends Authenticatable
         if ($this->relationLoaded('roles') || $this->roles()->exists()) {
             return $this->roles->pluck('slug')->intersect(self::ADMIN_PORTAL_ROLE_SLUGS)->isNotEmpty();
         }
-        return in_array($this->role, self::ADMIN_PORTAL_ROLES, true);
+        return in_array($this->role, self::ADMIN_PORTAL_ROLE_SLUGS, true);
     }
 
     public function canReviewEnrollmentPayments(): bool

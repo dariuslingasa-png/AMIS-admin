@@ -10,7 +10,7 @@
                     <span class="sr-only">Open sidebar</span>
                     <i data-lucide="menu" class="h-6 w-6"></i>
                 </button>
-                <a href="{{ route('admin.dashboard') }}" class="ms-2 flex items-center md:me-24">
+                <a href="{{ route(Auth::user()->adminHomeRouteName()) }}" class="ms-2 flex items-center md:me-24">
                     <img src="{{ asset('images/AMIS_Logo.svg') }}" class="me-3 h-8 w-8 object-contain" alt="AMIS Logo">
                     <span class="self-center whitespace-nowrap text-xl font-semibold dark:text-white">AMIS Admin Portal</span>
                 </a>
@@ -35,7 +35,7 @@
                         <p class="truncate text-sm font-medium text-gray-500 dark:text-gray-300">{{ Auth::user()->email ?? '' }}</p>
                     </div>
                     <ul class="py-1">
-                        <li><a href="{{ route('admin.dashboard') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600">Dashboard</a></li>
+                        <li><a href="{{ route(Auth::user()->adminHomeRouteName()) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600">Dashboard</a></li>
                         <li>
                             <form method="POST" action="{{ route('admin.logout') }}">
                                 @csrf
