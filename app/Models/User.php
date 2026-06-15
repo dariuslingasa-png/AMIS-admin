@@ -168,6 +168,6 @@ class User extends Authenticatable
 
     public function setNameAttribute($value)
     {
-        $this->attributes['name'] = mb_strtoupper($value, 'UTF-8');
+        $this->attributes['name'] = $value !== null ? mb_strtoupper($value, 'UTF-8') : null;
     }
 }

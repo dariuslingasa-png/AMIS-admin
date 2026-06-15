@@ -234,16 +234,16 @@ class EnrollmentApplicant extends Model
 
     public function setFirstNameAttribute($value)
     {
-        $this->attributes['first_name'] = mb_strtoupper($value, 'UTF-8');
+        $this->attributes['first_name'] = $value !== null ? mb_strtoupper($value, 'UTF-8') : null;
     }
 
     public function setMiddleNameAttribute($value)
     {
-        $this->attributes['middle_name'] = mb_strtoupper($value, 'UTF-8');
+        $this->attributes['middle_name'] = $value !== null ? mb_strtoupper($value, 'UTF-8') : null;
     }
 
     public function setLastNameAttribute($value)
     {
-        $this->attributes['last_name'] = mb_strtoupper($value, 'UTF-8');
+        $this->attributes['last_name'] = $value !== null ? mb_strtoupper($value, 'UTF-8') : null;
     }
 }
