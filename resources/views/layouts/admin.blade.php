@@ -84,6 +84,9 @@
             const link = e.target.closest('a');
             if (!link) return;
 
+            // Ignore links inside the sidebar or topbar
+            if (link.closest('.admin-sidebar') || link.closest('#default-sidebar') || link.closest('nav')) return;
+
             // Ignore links with target="_blank"
             if (link.getAttribute('target') === '_blank') return;
 
