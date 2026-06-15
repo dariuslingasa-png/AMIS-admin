@@ -80,7 +80,16 @@
                                 <tr class="align-middle transition hover:bg-slate-50/30">
                                     <td class="px-5 py-4">
                                         <span class="font-extrabold text-slate-900 block uppercase">{{ $fullName }}</span>
-                                        <span class="text-xs font-bold text-slate-450 mt-1 block">{{ $student->student_number }}</span>
+                                        <div class="mt-1 flex items-center gap-1.5 text-xs font-bold text-slate-400">
+                                            <span>{{ $student->student_number }}</span>
+                                            @if ($student->applicant && $student->applicant->user)
+                                                <span class="text-slate-300">•</span>
+                                                <a href="{{ route('admin.students.families', ['search' => $student->applicant->user->email]) }}" class="inline-flex items-center gap-0.5 text-emerald-600 hover:text-emerald-700 font-extrabold transition" title="View Family Account">
+                                                    <i data-lucide="home" class="h-3 w-3"></i>
+                                                    Family
+                                                </a>
+                                            @endif
+                                        </div>
                                     </td>
                                     <td class="px-5 py-4 text-xs font-bold text-slate-600">
                                         {{ $student->grade_level }}

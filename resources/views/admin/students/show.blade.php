@@ -219,6 +219,12 @@
                         @if (!$student->applicant || $student->applicant->completion_percentage < 100)
                             <span class="applicant-pill bg-amber-500/20 text-amber-200 border border-amber-500/30 font-extrabold">INCOMPLETE</span>
                         @endif
+                        @if ($student->applicant && $student->applicant->user)
+                            <a href="{{ route('admin.students.families', ['search' => $student->applicant->user->email]) }}" class="applicant-pill bg-emerald-500/20 text-emerald-200 border border-emerald-500/30 font-extrabold flex items-center gap-1 hover:bg-emerald-500/30 transition" title="View Family Group">
+                                <i data-lucide="home" class="h-3 w-3"></i>
+                                FAMILY GROUP
+                            </a>
+                        @endif
                     </div>
                 </div>
             </section>

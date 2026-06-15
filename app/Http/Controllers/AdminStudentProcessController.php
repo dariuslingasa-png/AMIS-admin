@@ -11,7 +11,7 @@ class AdminStudentProcessController extends Controller
     {
         $statusFilter = $request->input('status_filter', 'all');
 
-        $query = Student::with(['applicant.payment', 'studentSection.section']);
+        $query = Student::with(['applicant.payment', 'studentSection.section', 'applicant.user']);
 
         if ($request->filled('search')) {
             $s = $request->search;
@@ -100,7 +100,7 @@ class AdminStudentProcessController extends Controller
 
     public function documents(Request $request)
     {
-        $query = Student::with('applicant');
+        $query = Student::with(['applicant', 'applicant.user']);
         if ($request->filled('search')) {
             $s = $request->search;
             $query->where(function ($q) use ($s) {
@@ -117,7 +117,7 @@ class AdminStudentProcessController extends Controller
 
     public function verification(Request $request)
     {
-        $query = Student::with('applicant');
+        $query = Student::with(['applicant', 'applicant.user']);
         if ($request->filled('search')) {
             $s = $request->search;
             $query->where(function ($q) use ($s) {
@@ -134,7 +134,7 @@ class AdminStudentProcessController extends Controller
 
     public function promotions(Request $request)
     {
-        $query = Student::with('applicant');
+        $query = Student::with(['applicant', 'applicant.user']);
         if ($request->filled('search')) {
             $s = $request->search;
             $query->where(function ($q) use ($s) {
@@ -151,7 +151,7 @@ class AdminStudentProcessController extends Controller
 
     public function history(Request $request)
     {
-        $query = Student::with(['applicant.payment', 'studentSection.section'])->latest();
+        $query = Student::with(['applicant.payment', 'studentSection.section', 'applicant.user'])->latest();
 
         if ($request->filled('search')) {
             $s = $request->search;

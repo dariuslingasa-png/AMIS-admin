@@ -88,6 +88,13 @@
                                              <span class="text-slate-355">•</span>
                                              <span class="inline-flex items-center rounded bg-amber-50 px-1.5 py-0.5 font-bold text-amber-700 ring-1 ring-amber-100 uppercase">Incomplete</span>
                                          @endif
+                                         @if ($student->applicant && $student->applicant->user)
+                                             <span class="text-slate-350">•</span>
+                                             <a href="{{ route('admin.students.families', ['search' => $student->applicant->user->email]) }}" class="inline-flex items-center gap-0.5 text-emerald-600 hover:text-emerald-700 font-extrabold uppercase transition" title="View Family Account">
+                                                 <i data-lucide="home" class="h-2.5 w-2.5"></i>
+                                                 Family
+                                             </a>
+                                         @endif
                                      </div>
                                 </div>
                             </div>

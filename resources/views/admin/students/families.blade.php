@@ -90,10 +90,25 @@
                                             @endphp
                                             <div class="flex items-center gap-2">
                                                 <i data-lucide="circle-user" class="h-4 w-4 text-emerald-500 shrink-0"></i>
-                                                <a href="{{ route('admin.students.show', $child) }}" class="font-bold text-slate-800 hover:text-emerald-700 hover:underline transition">
+                                                <a href="{{ route('admin.students.show', $child) }}" class="font-bold text-slate-800 hover:text-emerald-700 hover:underline transition" title="View Student Profile">
                                                     {{ $studentName }}
                                                 </a>
                                                 <span class="text-xs text-slate-400 font-medium">— {{ $child->grade_level }} · {{ $secName }}</span>
+                                                
+                                                <div class="flex items-center gap-1.5 ml-2">
+                                                    @if($child->applicant)
+                                                        <a href="{{ route('admin.applicants.show', $child->applicant) }}" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-violet-50 hover:bg-violet-100 border border-violet-100 text-[10px] font-bold text-violet-700 transition" title="View Admissions Application">
+                                                            <i data-lucide="file-text" class="h-3 w-3"></i>
+                                                            Admissions
+                                                        </a>
+                                                    @endif
+                                                    @if($child->account)
+                                                        <a href="{{ route('admin.soa.show', $child->account) }}" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-100 text-[10px] font-bold text-amber-700 transition" title="View Statement of Account (SOA)">
+                                                            <i data-lucide="receipt" class="h-3 w-3"></i>
+                                                            SOA
+                                                        </a>
+                                                    @endif
+                                                </div>
                                             </div>
                                         @endforeach
                                     </div>
