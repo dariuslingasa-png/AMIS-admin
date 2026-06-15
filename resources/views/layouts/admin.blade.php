@@ -15,7 +15,7 @@
                     </div>
 
                     <!-- Global Skeleton Loader (hidden by default) -->
-                    <div id="globalSkeleton" class="hidden space-y-6">
+                    <div id="globalSkeleton" class="space-y-6" style="display: none;">
                         <!-- Banner Header Skeleton -->
                         <div class="animate-pulse rounded-3xl bg-slate-200 p-6 h-28">
                             <div class="h-4 w-32 bg-slate-350 rounded mb-3"></div>
@@ -74,8 +74,8 @@
             const mainContent = document.getElementById('adminMainContent');
             const globalSkeleton = document.getElementById('globalSkeleton');
             if (mainContent && globalSkeleton) {
-                mainContent.classList.add('hidden');
-                globalSkeleton.classList.remove('hidden');
+                mainContent.style.display = 'none';
+                globalSkeleton.style.display = 'block';
             }
         }
 
@@ -114,8 +114,8 @@
             const mainContent = document.getElementById('adminMainContent');
             const globalSkeleton = document.getElementById('globalSkeleton');
             if (mainContent && globalSkeleton) {
-                mainContent.classList.remove('hidden');
-                globalSkeleton.classList.add('hidden');
+                mainContent.style.display = 'block';
+                globalSkeleton.style.display = 'none';
             }
         });
     </script>
