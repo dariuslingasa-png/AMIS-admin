@@ -30,29 +30,44 @@ class AdminStudentProcessController extends Controller
             ->whereNotIn('receipt_url', ['', '[]', '[""]'])
             ->select('user_id');
 
-        $completedScope = function($q) use ($paymentUserIdsQuery) {
+        $isCompletedApplicant = function($a) use ($paymentUserIdsQuery) {
+            $a->whereNotNull('student_type')->where('student_type', '!=', '')
+              ->whereNotNull('grade_level')->where('grade_level', '!=', '')
+              ->whereNotNull('first_name')->where('first_name', '!=', '')
+              ->whereNotNull('last_name')->where('last_name', '!=', '')
+              ->whereNotNull('gender')->where('gender', '!=', '')
+              ->whereNotNull('date_of_birth')
+              ->whereNotNull('place_of_birth')->where('place_of_birth', '!=', '')
+              ->whereNotNull('religion')->where('religion', '!=', '')
+              ->whereNotNull('country')->where('country', '!=', '')
+              ->whereNotNull('street_address')->where('street_address', '!=', '')
+              ->whereNotNull('mobile_number')->where('mobile_number', '!=', '')
+              ->whereNotNull('parent_mobile')->where('parent_mobile', '!=', '')
+              ->whereNotNull('emergency_name')->where('emergency_name', '!=', '')
+              ->whereNotNull('emergency_relationship')->where('emergency_relationship', '!=', '')
+              ->whereNotNull('emergency_phone')->where('emergency_phone', '!=', '')
+              ->whereNotNull('photo_2x2_url')->where('photo_2x2_url', '!=', '')
+              ->where(function ($sub) {
+                  $sub->where('student_type', 'Old')
+                      ->orWhere(fn($s) => $s->whereNotNull('report_card_url')->where('report_card_url', '!=', ''))
+                      ->orWhere(fn($s) => $s->whereNotNull('affidavit_url')->where('affidavit_url', '!=', ''));
+              })
+              ->whereIn('user_id', $paymentUserIdsQuery);
+        };
+
+        $completedScope = function($q) use ($isCompletedApplicant) {
             $q->whereNotNull('ms_user_id')
               ->where('ms_user_id', '!=', '')
               ->whereNotNull('ms_teams_enrolled_at')
-              ->whereHas('applicant', function($a) use ($paymentUserIdsQuery) {
-                  $a->where('completion_percentage', 100)
-                    ->whereNotNull('photo_2x2_url')
-                    ->where('photo_2x2_url', '!=', '')
-                    ->whereIn('user_id', $paymentUserIdsQuery);
-              });
+              ->whereHas('applicant', $isCompletedApplicant);
         };
 
-        $pendingScope = function($q) use ($paymentUserIdsQuery) {
-            $q->where(function($sub) use ($paymentUserIdsQuery) {
+        $pendingScope = function($q) use ($isCompletedApplicant) {
+            $q->where(function($sub) use ($isCompletedApplicant) {
                 $sub->whereNull('ms_user_id')
                     ->orWhere('ms_user_id', '')
                     ->orWhereNull('ms_teams_enrolled_at')
-                    ->orWhereDoesntHave('applicant', function($a) use ($paymentUserIdsQuery) {
-                        $a->where('completion_percentage', 100)
-                          ->whereNotNull('photo_2x2_url')
-                          ->where('photo_2x2_url', '!=', '')
-                          ->whereIn('user_id', $paymentUserIdsQuery);
-                    });
+                    ->orWhereDoesntHave('applicant', $isCompletedApplicant);
             });
         };
 
