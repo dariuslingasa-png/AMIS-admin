@@ -287,60 +287,7 @@
             startLoadingTransition();
         });
 
-        // Restore focus to search input after reload if it was debounced
-        document.addEventListener('DOMContentLoaded', function() {
-            if (sessionStorage.getItem('restoreSearchFocus') === 'true') {
-                const searchInput = document.querySelector('input[name="search"]');
-                if (searchInput) {
-                    searchInput.focus();
-                    const start = parseInt(sessionStorage.getItem('restoreSearchCursorStart') || searchInput.value.length);
-                    const end = parseInt(sessionStorage.getItem('restoreSearchCursorEnd') || searchInput.value.length);
-                    try {
-                        searchInput.setSelectionRange(start, end);
-                    } catch(e) {}
-                }
-                sessionStorage.removeItem('restoreSearchFocus');
-                sessionStorage.removeItem('restoreSearchCursorStart');
-                sessionStorage.removeItem('restoreSearchCursorEnd');
-            }
 
-            // Debounce search inputs globally
-            document.querySelectorAll('input[name="search"]').forEach(searchInput => {
-                const form = searchInput.form;
-                if (!form) return;
-
-                let debounceTimer = null;
-                const originalValue = searchInput.value;
-
-                searchInput.addEventListener('input', function() {
-                    if (searchInput.value === originalValue) return;
-
-                    clearTimeout(debounceTimer);
-                    debounceTimer = setTimeout(() => {
-                        sessionStorage.setItem('restoreSearchFocus', 'true');
-                        sessionStorage.setItem('restoreSearchCursorStart', searchInput.selectionStart);
-                        sessionStorage.setItem('restoreSearchCursorEnd', searchInput.selectionEnd);
-
-                        if (typeof form.requestSubmit === 'function') {
-                            form.requestSubmit();
-                        } else {
-                            const submitBtn = form.querySelector('button[type="submit"]') || form.querySelector('input[type="submit"]');
-                            if (submitBtn) {
-                                submitBtn.click();
-                            } else {
-                                form.submit();
-                            }
-                        }
-                    }, 400);
-                });
-
-                searchInput.addEventListener('keydown', function(e) {
-                    if (e.key === 'Enter') {
-                        clearTimeout(debounceTimer);
-                    }
-                });
-            });
-        });
 
         // Reset skeleton & button state when navigating back/forward (handling bfcache)
         window.addEventListener('pageshow', function(event) {
