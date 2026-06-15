@@ -1,4 +1,4 @@
-<div class="fixed bottom-5 right-5 z-100 flex flex-col gap-3 max-w-md w-full sm:w-96 pointer-events-none">
+<div id="toastContainer" class="fixed bottom-5 right-5 z-100 flex flex-col gap-3 max-w-md w-full sm:w-96 pointer-events-none">
     <!-- Success Toast -->
     @if (session('success'))
         <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)"
