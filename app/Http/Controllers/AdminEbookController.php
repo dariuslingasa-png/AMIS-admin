@@ -559,38 +559,36 @@ BASH;
     {
         $search = $request->string('search')->trim();
 
-        $totalBooksCount = Ebook::count();
-        $publishedCount = Ebook::where('status', 'published')->count();
-
-        // Get all users who have uploaded at least one eBook
-        $uploaders = User::query()
-            ->whereHas('ebooks')
+        // Get all published eBooks, optionally filtered by search
+        $ebooks = Ebook::query()
+            ->where('status', 'published')
             ->when($search->isNotEmpty(), function ($query) use ($search) {
                 $query->where(function ($inner) use ($search) {
-                    $inner->where('name', 'like', "%{$search}%")
-                        ->orWhere('email', 'like', "%{$search}%");
+                    $inner->where('title', 'like', "%{$search}%")
+                        ->orWhere('author', 'like', "%{$search}%")
+                        ->orWhere('grade_level', 'like', "%{$search}%");
                 });
             })
-            ->withCount(['ebooks', 'ebooks as published_ebooks_count' => function ($q) {
-                $q->where('status', 'published');
-            }, 'ebooks as draft_ebooks_count' => function ($q) {
-                $q->where('status', 'draft');
-            }])
-            ->with(['ebooks' => function ($q) {
-                $q->latest()->select('id', 'title', 'author', 'grade_level', 'status', 'created_by', 'created_at');
-            }])
-            ->orderByDesc('ebooks_count')
-            ->paginate(15)
-            ->withQueryString();
+            ->with('creator:id,name,email')
+            ->orderByRaw("FIELD(grade_level, " . collect(self::GRADE_LEVELS)->map(fn($g) => "'" . addslashes($g) . "'")->implode(',') . ")")
+            ->get();
 
-        // Distinct uploaders count
-        $totalUploaders = User::whereHas('ebooks')->count();
+        // Group by grade level
+        $gradeGroups = collect(self::GRADE_LEVELS)->mapWithKeys(function ($grade) use ($ebooks) {
+            $books = $ebooks->where('grade_level', $grade)->values();
+            return [$grade => $books];
+        })->filter(fn ($books) => $books->isNotEmpty() || true); // show all grades
+
+        $totalBooksCount = Ebook::count();
+        $publishedCount = Ebook::where('status', 'published')->count();
+        $gradesWithBooks = $ebooks->pluck('grade_level')->unique()->count();
 
         return view('admin.ebook.tracking', [
-            'uploaders' => $uploaders,
+            'gradeGroups' => $gradeGroups,
+            'gradeLevels' => self::GRADE_LEVELS,
             'totalBooksCount' => $totalBooksCount,
             'publishedCount' => $publishedCount,
-            'totalUploaders' => $totalUploaders,
+            'gradesWithBooks' => $gradesWithBooks,
         ]);
     }
 }
