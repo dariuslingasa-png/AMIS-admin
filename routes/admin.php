@@ -193,6 +193,7 @@ Route::name('admin.')->group(function () {
         Route::get('/access-control/policies', [AccessControlController::class, 'policiesIndex'])->name('access-control.policies.index');
 
         // Security Workspace
+        Route::get('/security-workspace/metrics', [SecurityWorkspaceController::class, 'securityMetrics'])->name('security-workspace.metrics');
         Route::get('/security-workspace/login-activity', [SecurityWorkspaceController::class, 'loginActivity'])->name('security-workspace.login-activity');
         Route::get('/security-workspace/sessions', [SecurityWorkspaceController::class, 'activeSessions'])->name('security-workspace.sessions.index');
         Route::post('/security-workspace/sessions/revoke', [SecurityWorkspaceController::class, 'revokeSession'])->name('security-workspace.sessions.revoke');

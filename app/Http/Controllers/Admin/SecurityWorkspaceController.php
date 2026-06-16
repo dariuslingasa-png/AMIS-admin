@@ -217,6 +217,56 @@ class SecurityWorkspaceController extends Controller
         return view('admin.security.audit-logs', compact('logs', 'search'));
     }
 
+    // Security Dashboard Metrics
+    public function securityMetrics(Request $request)
+    {
+        $this->ensureSecurityAuthorized();
+
+        $total429 = DB::table('admin_audit_logs')
+            ->where('event', 'rate_limit_exceeded')
+            ->count();
+
+        $topOffendingIps = DB::table('admin_audit_logs')
+            ->where('event', 'rate_limit_exceeded')
+            ->select('ip_address', DB::raw('count(*) as count'))
+            ->groupBy('ip_address')
+            ->orderByDesc('count')
+            ->limit(10)
+            ->get();
+
+        $totalFailedLogins = DB::table('admin_audit_logs')
+            ->whereIn('event', ['login_failed', 'login_denied', 'microsoft_login_denied'])
+            ->count();
+
+        $mostTargetedEndpoints = DB::table('admin_audit_logs')
+            ->where('event', 'rate_limit_exceeded')
+            ->select(DB::raw('SUBSTRING_INDEX(message, ": ", -1) as endpoint_path'), DB::raw('count(*) as count'))
+            ->groupBy('endpoint_path')
+            ->orderByDesc('count')
+            ->limit(10)
+            ->get();
+
+        $recentEvents = DB::table('admin_audit_logs')
+            ->whereIn('event', ['rate_limit_exceeded', 'login_failed', 'login_denied', 'microsoft_login_denied'])
+            ->orderByDesc('created_at')
+            ->limit(20)
+            ->get()
+            ->map(function ($event) {
+                $uaInfo = $this->parseUserAgent($event->user_agent);
+                $event->browser = $uaInfo['browser'];
+                $event->device = $uaInfo['device'];
+                return $event;
+            });
+
+        return view('admin.security.metrics', compact(
+            'total429',
+            'topOffendingIps',
+            'totalFailedLogins',
+            'mostTargetedEndpoints',
+            'recentEvents'
+        ));
+    }
+
     // 5. Security Alerts
     public function securityAlerts()
     {

@@ -110,6 +110,7 @@
             'active' => request()->routeIs('admin.security-workspace.*'),
             'icon' => 'shield-check', 'iconClass' => 'text-rose-600', 'headerClass' => 'text-rose-700', 'activeClass' => 'sidebar-link-active-rose', 'title' => 'Security Workspace',
             'links' => [
+                ['Security Metrics', 'bar-chart-3', route('admin.security-workspace.metrics'), request()->routeIs('admin.security-workspace.metrics')],
                 ['Login Activity', 'activity', route('admin.security-workspace.login-activity'), request()->routeIs('admin.security-workspace.login-activity')],
                 ['Active Sessions', 'laptop', route('admin.security-workspace.sessions.index'), request()->routeIs('admin.security-workspace.sessions.*')],
                 ['Security Events', 'fingerprint', route('admin.security-workspace.events.index'), request()->routeIs('admin.security-workspace.events.*')],
