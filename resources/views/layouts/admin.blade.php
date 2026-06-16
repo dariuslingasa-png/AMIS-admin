@@ -221,6 +221,7 @@
 
         // Intercept clicks on links for page transitions
         document.addEventListener('click', function(e) {
+            if (e.defaultPrevented) return;
             const link = e.target.closest('a');
             if (!link) return;
 
@@ -247,6 +248,7 @@
 
         // Intercept search/filter form submissions & add action spinners
         document.addEventListener('submit', function(e) {
+            if (e.defaultPrevented) return;
             const form = e.target;
             if (form.getAttribute('target') === '_blank') return;
 
