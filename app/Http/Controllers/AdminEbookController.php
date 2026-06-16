@@ -627,6 +627,16 @@ BASH;
         $publishedCount = Ebook::where('status', 'published')->count();
         $gradesWithBooks = $gradeGroups->filter(fn ($books) => $books->isNotEmpty())->count();
 
+        if ($request->boolean('print')) {
+            return view('admin.ebook.print', [
+                'gradeGroups' => $gradeGroups,
+                'gradeLevels' => $displayGrades,
+                'totalBooksCount' => $totalBooksCount,
+                'publishedCount' => $publishedCount,
+                'gradesWithBooks' => $gradesWithBooks,
+            ]);
+        }
+
         return view('admin.ebook.tracking', [
             'gradeGroups' => $gradeGroups,
             'gradeLevels' => $displayGrades,

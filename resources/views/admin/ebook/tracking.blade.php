@@ -16,6 +16,10 @@
                 </p>
             </div>
             <div class="flex flex-wrap gap-3">
+                <a href="{{ route('admin.ebook.tracking', array_merge(request()->query(), ['print' => 1])) }}" target="_blank" class="inline-flex h-11 items-center gap-2 rounded-xl bg-emerald-600 border border-emerald-500 px-4 text-sm font-black text-white shadow-sm transition hover:bg-emerald-550">
+                    <i data-lucide="printer" class="h-4 w-4"></i>
+                    Generate Report
+                </a>
                 <a href="{{ route('admin.ebook.index') }}" class="inline-flex h-11 items-center gap-2 rounded-xl bg-white/10 border border-white/20 px-4 text-sm font-black text-white shadow-sm transition hover:bg-white/15">
                     <i data-lucide="book-open" class="h-4 w-4"></i>
                     Back to Library
