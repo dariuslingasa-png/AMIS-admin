@@ -20,6 +20,7 @@
         table td { border: none !important; padding: 8px 10px !important; font-family: Arial, sans-serif !important; font-size: 9px !important; color: #334155 !important; background: transparent !important; border-bottom: 1px solid #f1f5f9 !important; }
         tr { page-break-inside: avoid !important; }
         .page-break-after { page-break-after: always !important; break-after: page !important; }
+        .grade-print-section { page-break-inside: avoid !important; break-inside: avoid !important; }
         .text-center { text-align: center; }
         .font-bold { font-weight: bold; }
         .mb-6 { margin-bottom: 1.5rem; }
@@ -112,12 +113,18 @@
                         </thead>
                         <tbody>
                             @foreach ($gradeBooks as $book)
+                                @php
+                                    $uploaderName = $book->creator?->name ?? 'Unknown';
+                                    if (in_array(strtoupper($uploaderName), ['ADMIN', 'AMIS ADMIN'])) {
+                                        $uploaderName = 'IT STAFF MON';
+                                    }
+                                @endphp
                                 <tr>
                                     <td style="text-align: center; font-weight: bold; color: #64748b;">{{ $loop->iteration }}</td>
                                     <td class="font-bold text-slate-900">{{ $book->title }}</td>
                                     <td class="font-semibold text-emerald-800">by {{ $book->author ?? $book->creator?->name ?? 'Unknown' }}</td>
                                     <td>{{ $book->created_at?->format('M d, Y') }}</td>
-                                    <td>{{ $book->creator?->name ?? 'Unknown' }}</td>
+                                    <td>{{ $uploaderName }}</td>
                                 </tr>
                             @endforeach
                         </tbody>

@@ -148,9 +148,9 @@
                                         <i data-lucide="calendar" class="h-3.5 w-3.5 text-slate-400"></i>
                                         {{ $book->created_at?->format('M d, Y') }}
                                     </span>
-                                    <span class="flex items-center gap-1 max-w-[130px] truncate" title="Uploaded by {{ $book->creator?->name ?? 'Unknown' }}">
+                                    <span class="flex items-center gap-1 max-w-[130px] truncate" title="Uploaded by {{ in_array(strtoupper($book->creator?->name ?? ''), ['ADMIN', 'AMIS ADMIN']) ? 'IT STAFF MON' : ($book->creator?->name ?? 'Unknown') }}">
                                         <i data-lucide="user" class="h-3.5 w-3.5 text-slate-400"></i>
-                                        {{ $book->creator?->name ?? 'Unknown' }}
+                                        {{ in_array(strtoupper($book->creator?->name ?? ''), ['ADMIN', 'AMIS ADMIN']) ? 'IT STAFF MON' : ($book->creator?->name ?? 'Unknown') }}
                                     </span>
                                 </div>
                             </div>
