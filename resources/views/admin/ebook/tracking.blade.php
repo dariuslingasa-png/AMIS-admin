@@ -112,26 +112,36 @@
 
                 {{-- Book List --}}
                 @if($books->isNotEmpty())
-                    <div class="divide-y divide-slate-50">
+                    <div class="grid grid-cols-1 gap-4 p-5 bg-slate-50/30 border-t border-slate-100 sm:grid-cols-2 lg:grid-cols-3">
                         @foreach ($books as $book)
-                            <div class="flex items-center justify-between px-5 py-3 hover:bg-slate-50/50 transition">
-                                <div class="flex items-center gap-3 min-w-0">
-                                    <span class="inline-flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
-                                        <i data-lucide="file-text" class="h-4 w-4"></i>
+                            <div class="group relative flex flex-col justify-between overflow-hidden rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md">
+                                {{-- Card Content: Icon and Title --}}
+                                <div class="flex items-start gap-3">
+                                    <span class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 ring-4 ring-emerald-50/50 transition-colors group-hover:bg-emerald-100">
+                                        <i data-lucide="check" class="h-4 w-4 stroke-[3]"></i>
                                     </span>
-                                    <div class="min-w-0">
-                                        <p class="text-sm font-bold text-slate-900 truncate">{{ $book->title }}</p>
-                                        <p class="text-xs font-semibold text-emerald-600 mt-0.5">
+                                    <div class="min-w-0 flex-1">
+                                        <h4 class="text-sm font-bold text-slate-900 group-hover:text-emerald-950 transition-colors line-clamp-2 leading-tight" title="{{ $book->title }}">
+                                            {{ $book->title }}
+                                        </h4>
+                                        <p class="mt-1 text-xs font-semibold text-emerald-600 truncate">
                                             by {{ $book->author ?? $book->creator?->name ?? 'Unknown' }}
                                         </p>
                                     </div>
                                 </div>
-                                <div class="flex items-center gap-3 flex-shrink-0 ml-4">
-                                    <span class="text-[10px] font-semibold text-slate-400">
+
+                                {{-- Divider --}}
+                                <div class="my-3 border-t border-slate-100"></div>
+
+                                {{-- Card Footer: Date and Uploader Metadata --}}
+                                <div class="flex items-center justify-between text-[10px] font-semibold text-slate-400">
+                                    <span class="flex items-center gap-1">
+                                        <i data-lucide="calendar" class="h-3.5 w-3.5 text-slate-400"></i>
                                         {{ $book->created_at?->format('M d, Y') }}
                                     </span>
-                                    <span class="text-[10px] font-bold text-slate-400 hidden sm:block">
-                                        Uploaded by {{ $book->creator?->name ?? 'Unknown' }}
+                                    <span class="flex items-center gap-1 max-w-[130px] truncate" title="Uploaded by {{ $book->creator?->name ?? 'Unknown' }}">
+                                        <i data-lucide="user" class="h-3.5 w-3.5 text-slate-400"></i>
+                                        {{ $book->creator?->name ?? 'Unknown' }}
                                     </span>
                                 </div>
                             </div>
