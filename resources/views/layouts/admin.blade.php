@@ -317,5 +317,122 @@
                 }
             });
         });
+
+        // Global Session Inactivity & Auto-Logout System
+        (function() {
+            // Only initialize if there is an active logged-in session (check for logout form)
+            const logoutForm = document.querySelector('form[action*="logout"]') || document.querySelector('form[action*="admin/logout"]');
+            if (!logoutForm) return;
+
+            // Inactivity threshold (15 minutes total: 14.5 minutes idle + 30 seconds warning countdown)
+            const idleTimeLimit = 14.5 * 60 * 1000; 
+            const warningCountdownLimit = 30; // seconds
+            
+            let idleTimer = null;
+            let countdownInterval = null;
+            let countdownVal = warningCountdownLimit;
+            let warningModalNode = null;
+
+            function initIdleTimer() {
+                resetIdleTimer();
+                
+                // Track activity events
+                const events = ['mousemove', 'mousedown', 'keypress', 'scroll', 'click', 'touchstart'];
+                events.forEach(event => {
+                    document.addEventListener(event, handleUserActivity, { passive: true });
+                });
+            }
+
+            function handleUserActivity() {
+                if (warningModalNode) return; // Don't reset timer while warning is open
+                resetIdleTimer();
+            }
+
+            function resetIdleTimer() {
+                clearTimeout(idleTimer);
+                idleTimer = setTimeout(showInactivityWarning, idleTimeLimit);
+            }
+
+            function showInactivityWarning() {
+                countdownVal = warningCountdownLimit;
+                
+                // Create warning modal if not present
+                if (!warningModalNode) {
+                    warningModalNode = document.createElement('div');
+                    warningModalNode.className = 'fixed inset-0 z-[10000] flex items-center justify-center bg-slate-900/60 backdrop-blur-md transition-all duration-300';
+                    warningModalNode.innerHTML = `
+                        <div class="relative w-full max-w-sm scale-95 transform rounded-2xl border border-slate-200/80 bg-white p-6 shadow-2xl transition-all duration-300 dark:border-slate-800 dark:bg-slate-900 text-center">
+                            <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-50 dark:bg-amber-950/30">
+                                <svg class="h-6 w-6 text-amber-600 dark:text-amber-500 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                </svg>
+                            </div>
+                            <h3 class="text-base font-black text-slate-900 dark:text-white mb-2">Inactivity Warning</h3>
+                            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-6">
+                                You have been inactive for a while. You will be logged out in <span id="idle-countdown" class="font-extrabold text-amber-600 dark:text-amber-500 text-sm">30</span> seconds.
+                            </p>
+                            <button id="btn-stay-signed-in" type="button" class="w-full inline-flex h-11 items-center justify-center rounded-xl bg-emerald-600 px-5 text-sm font-black text-white shadow-sm transition hover:bg-emerald-700 cursor-pointer">
+                                Stay Signed In
+                            </button>
+                        </div>
+                    `;
+                    document.body.appendChild(warningModalNode);
+
+                    document.getElementById('btn-stay-signed-in').addEventListener('click', () => {
+                        keepSessionAlive();
+                    });
+                } else {
+                    warningModalNode.classList.remove('hidden');
+                }
+
+                // Start countdown
+                updateCountdownDisplay();
+                countdownInterval = setInterval(() => {
+                    countdownVal--;
+                    updateCountdownDisplay();
+                    
+                    if (countdownVal <= 0) {
+                        clearInterval(countdownInterval);
+                        logoutUser();
+                    }
+                }, 1000);
+            }
+
+            function updateCountdownDisplay() {
+                const countdownSpan = document.getElementById('idle-countdown');
+                if (countdownSpan) {
+                    countdownSpan.textContent = countdownVal;
+                }
+            }
+
+            function keepSessionAlive() {
+                if (warningModalNode) {
+                    warningModalNode.remove();
+                    warningModalNode = null;
+                }
+                
+                clearInterval(countdownInterval);
+                
+                // Ping the server to refresh Laravel session lifetime
+                fetch(window.location.href, { method: 'GET', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                    .then(() => {
+                        resetIdleTimer();
+                    })
+                    .catch(() => {
+                        resetIdleTimer();
+                    });
+            }
+
+            function logoutUser() {
+                const form = document.querySelector('form[action*="logout"]') || document.querySelector('form[action*="admin/logout"]');
+                if (form) {
+                    form.submit();
+                } else {
+                    window.location.href = '/admin/logout';
+                }
+            }
+
+            window.addEventListener('load', initIdleTimer);
+        })();
     </script>
 </x-app-layout>
