@@ -81,6 +81,7 @@
                             <th class="px-5 py-4 font-black">Book</th>
                             <th class="px-5 py-4 font-black">Grade</th>
                             <th class="px-5 py-4 font-black">Status</th>
+                            <th class="px-5 py-4 font-black">Readers</th>
                             <th class="px-5 py-4 font-black">Size</th>
                             <th class="px-5 py-4 font-black">Downloads</th>
                             <th class="px-5 py-4 font-black">Uploaded</th>
@@ -92,6 +93,9 @@
                             <tr class="transition hover:bg-slate-50">
                                 <td class="px-5 py-4">
                                     <p class="font-black text-slate-950">{{ $book->title }}</p>
+                                    @if($book->author)
+                                        <p class="text-xs font-bold text-emerald-600 mt-0.5">by {{ $book->author }}</p>
+                                    @endif
                                     <p class="mt-1 max-w-xl truncate text-xs font-semibold text-slate-500">{{ $book->description ?: 'No description provided.' }}</p>
                                 </td>
                                 <td class="px-5 py-4">
@@ -101,6 +105,16 @@
                                     <span class="rounded-full px-3 py-1 text-xs font-black {{ $book->status === 'published' ? 'bg-teal-50 text-teal-700' : 'bg-amber-50 text-amber-700' }}">
                                         {{ ucfirst($book->status) }}
                                     </span>
+                                </td>
+                                <td class="px-5 py-4">
+                                    @if($book->readers_count > 0)
+                                        <button @click="$dispatch('open-readers-modal', { id: {{ $book->id }}, title: '{{ addslashes($book->title) }}' })" class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-black text-emerald-700 hover:bg-emerald-100 transition">
+                                            <i data-lucide="users" class="h-3 w-3"></i>
+                                            {{ $book->readers_count }} Readers
+                                        </button>
+                                    @else
+                                        <span class="text-xs font-semibold text-slate-400">0 Readers</span>
+                                    @endif
                                 </td>
                                 <td class="px-5 py-4 text-xs font-extrabold text-slate-700">{{ $book->pdf_size }}</td>
                                 <td class="px-5 py-4 text-xs font-bold text-slate-600">{{ $book->is_downloadable ? 'Enabled' : 'Disabled' }}</td>
@@ -255,4 +269,103 @@
             });
         </script>
     @endif
+
+    <!-- Readers Completion Modal -->
+    <div x-data="{
+            open: false,
+            bookId: null,
+            bookTitle: '',
+            readers: [],
+            loading: false,
+            init() {
+                window.addEventListener('open-readers-modal', (e) => {
+                    this.bookId = e.detail.id;
+                    this.bookTitle = e.detail.title;
+                    this.open = true;
+                    this.fetchReaders();
+                });
+            },
+            async fetchReaders() {
+                this.loading = true;
+                this.readers = [];
+                try {
+                    const response = await fetch(`/admin/ebook/${this.bookId}/readers`);
+                    if (response.ok) {
+                        this.readers = await response.json();
+                    }
+                } catch (error) {
+                    console.error('Error fetching readers:', error);
+                } finally {
+                    this.loading = false;
+                    this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
+                }
+            }
+         }"
+         x-show="open"
+         x-cloak
+         class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/55 backdrop-blur-sm"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+    >
+        <div class="mx-4 w-full max-w-xl rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl" @click.outside="open = false">
+            {{-- Header --}}
+            <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div>
+                    <h3 class="text-base font-black text-slate-900" x-text="bookTitle"></h3>
+                    <p class="text-xs font-semibold text-slate-500">Users who have completed/accessed this eBook</p>
+                </div>
+                <button @click="open = false" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition">
+                    <i data-lucide="x" class="h-5 w-5"></i>
+                </button>
+            </div>
+
+            {{-- Body --}}
+            <div class="mt-4 max-h-[360px] overflow-y-auto">
+                <div x-show="loading" class="flex flex-col items-center justify-center py-12">
+                    <i data-lucide="loader-2" class="h-8 w-8 animate-spin text-emerald-600"></i>
+                    <p class="mt-2 text-xs font-bold text-slate-500">Loading readers data...</p>
+                </div>
+
+                <div x-show="!loading && readers.length === 0" class="flex flex-col items-center justify-center py-12 text-center">
+                    <i data-lucide="inbox" class="h-8 w-8 text-slate-300"></i>
+                    <p class="mt-3 text-sm font-bold text-slate-500">No readers found for this eBook yet.</p>
+                </div>
+
+                <div x-show="!loading && readers.length > 0" class="space-y-2">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-50 text-[10px] uppercase tracking-wide text-slate-500">
+                            <tr>
+                                <th class="px-4 py-3 font-black">Reader</th>
+                                <th class="px-4 py-3 font-black text-center">Reads</th>
+                                <th class="px-4 py-3 text-right font-black">Last Accessed</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 bg-white text-slate-700">
+                            <template x-for="(reader, idx) in readers" :key="idx">
+                                <tr class="hover:bg-slate-50 transition">
+                                    <td class="px-4 py-3">
+                                        <p class="font-bold text-slate-900" x-text="reader.name"></p>
+                                        <p class="text-[10px] font-semibold text-slate-400" x-text="reader.email"></p>
+                                    </td>
+                                    <td class="px-4 py-3 text-center font-bold text-emerald-600" x-text="reader.actions_count"></td>
+                                    <td class="px-4 py-3 text-right font-semibold text-slate-500" x-text="reader.last_access"></td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {{-- Footer --}}
+            <div class="mt-5 flex justify-end border-t border-slate-100 pt-4">
+                <button @click="open = false" class="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-xs font-black text-slate-700 transition hover:bg-slate-50">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
 </x-admin-layout>

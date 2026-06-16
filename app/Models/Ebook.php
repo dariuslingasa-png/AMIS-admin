@@ -12,6 +12,7 @@ class Ebook extends Model
     protected $fillable = [
         'title',
         'description',
+        'author',
         'grade_level',
         'file_path',
         'cover_image_path',
@@ -48,5 +49,11 @@ class Ebook extends Model
     public function logs()
     {
         return $this->hasMany(EbookAccessLog::class, 'ebook_id');
+    }
+
+    public function readers()
+    {
+        return $this->belongsToMany(User::class, 'ebook_access_logs', 'ebook_id', 'user_id')
+            ->distinct();
     }
 }

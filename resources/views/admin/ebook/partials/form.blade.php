@@ -30,6 +30,11 @@
                 <input type="text" name="title" value="{{ old('title', $book?->title) }}" required class="mt-2 h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-950 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100" placeholder="e.g. Islamic Studies Grade 4">
             </label>
 
+            <label class="block lg:col-span-2">
+                <span class="text-xs font-black uppercase tracking-wider text-slate-500">Author / Teacher <span class="text-slate-400 font-bold normal-case">(Optional)</span></span>
+                <input type="text" name="author" value="{{ old('author', $book?->author) }}" class="mt-2 h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-950 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100" placeholder="e.g. Ustadz John Doe">
+            </label>
+
             <label class="block">
                 <span class="text-xs font-black uppercase tracking-wider text-slate-500">Grade Level</span>
                 <select name="grade_level" required class="mt-2 h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-950 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100">

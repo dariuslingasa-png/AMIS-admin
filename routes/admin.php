@@ -66,6 +66,7 @@ Route::name('admin.')->group(function () {
             Route::get('/{ebook}/edit', [AdminEbookController::class, 'edit'])->name('edit');
             Route::put('/{ebook}', [AdminEbookController::class, 'update'])->name('update');
             Route::delete('/{ebook}', [AdminEbookController::class, 'destroy'])->name('destroy');
+            Route::get('/{ebook}/readers', [AdminEbookController::class, 'getReaders'])->name('readers');
         });
 
         Route::prefix('enrollment')->name('enrollment.')->group(function () {

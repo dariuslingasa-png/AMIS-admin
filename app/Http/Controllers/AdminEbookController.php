@@ -40,6 +40,7 @@ class AdminEbookController extends Controller
     {
         $books = Ebook::query()
             ->with('creator')
+            ->withCount('readers')
             ->when($request->filled('grade'), fn ($query) => $query->where('grade_level', (string) $request->string('grade')))
             ->when($request->filled('status'), fn ($query) => $query->where('status', (string) $request->string('status')))
             ->when($request->filled('search'), function ($query) use ($request) {
@@ -190,6 +191,7 @@ class AdminEbookController extends Controller
         $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
+            'author' => ['nullable', 'string', 'max:255'],
             'grade_level' => ['required', 'string', Rule::in(self::GRADE_LEVELS)],
             'pdf_file' => [$requirePdf ? 'required' : 'nullable', 'file', 'mimes:pdf', 'max:1048576'],
             'cover_image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
@@ -200,6 +202,7 @@ class AdminEbookController extends Controller
         return [
             'title' => (string) $request->string('title')->trim(),
             'description' => $request->filled('description') ? (string) $request->string('description')->trim() : null,
+            'author' => $request->filled('author') ? (string) $request->string('author')->trim() : null,
             'grade_level' => (string) $request->string('grade_level')->trim(),
             'status' => (string) $request->string('status'),
             'is_downloadable' => $request->boolean('is_downloadable'),
@@ -527,5 +530,27 @@ BASH;
         exec(sprintf('nohup bash %s > /dev/null 2>&1 &', escapeshellarg($scriptPath)));
 
         Log::info("PDF optimization started in background: " . basename($pdfAbsolutePath));
+    }
+
+    public function getReaders(Ebook $ebook)
+    {
+        $readers = $ebook->readers()
+            ->select('users.id', 'users.name', 'users.email')
+            ->get()
+            ->map(function ($user) use ($ebook) {
+                // Fetch user access logs for this specific ebook
+                $logs = EbookAccessLog::where('ebook_id', $ebook->id)
+                    ->where('user_id', $user->id)
+                    ->orderBy('created_at', 'desc')
+                    ->get();
+                return [
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'last_access' => $logs->first()?->created_at?->diffForHumans() ?? 'N/A',
+                    'actions_count' => $logs->count(),
+                ];
+            });
+
+        return response()->json($readers);
     }
 }
