@@ -73,6 +73,11 @@ class User extends Authenticatable
         return $this->hasMany(LinkedIdentity::class);
     }
 
+    public function logs(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(EbookAccessLog::class, 'user_id');
+    }
+
     public function enrollmentApplicants(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(EnrollmentApplicant::class);

@@ -63,6 +63,7 @@ Route::name('admin.')->group(function () {
             Route::get('/', [AdminEbookController::class, 'index'])->name('index');
             Route::get('/create', [AdminEbookController::class, 'create'])->name('create');
             Route::post('/', [AdminEbookController::class, 'store'])->name('store');
+            Route::get('/tracking', [AdminEbookController::class, 'tracking'])->name('tracking');
             Route::get('/{ebook}/edit', [AdminEbookController::class, 'edit'])->name('edit');
             Route::put('/{ebook}', [AdminEbookController::class, 'update'])->name('update');
             Route::delete('/{ebook}', [AdminEbookController::class, 'destroy'])->name('destroy');

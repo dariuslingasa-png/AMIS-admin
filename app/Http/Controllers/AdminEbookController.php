@@ -553,4 +553,63 @@ BASH;
 
         return response()->json($readers);
     }
+
+    public function tracking(Request $request): View
+    {
+        $search = $request->string('search')->trim();
+
+        // Get total published eBooks count
+        $totalBooksCount = Ebook::where('status', 'published')->count();
+
+        // Fetch users who have at least one access log entry
+        $users = User::query()
+            ->whereHas('logs')
+            ->when($search->isNotEmpty(), function ($query) use ($search) {
+                $query->where(function ($inner) use ($search) {
+                    $inner->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                });
+            })
+            ->with(['logs' => function ($query) {
+                $query->with('ebook')->orderBy('created_at', 'desc');
+            }])
+            ->paginate(15)
+            ->withQueryString();
+
+        // Map progress data for each user
+        $users->getCollection()->transform(function ($user) use ($totalBooksCount) {
+            $uniqueBooksCount = EbookAccessLog::where('user_id', $user->id)
+                ->distinct('ebook_id')
+                ->count('ebook_id');
+
+            $user->unique_books_count = $uniqueBooksCount;
+            $user->completion_percentage = $totalBooksCount > 0 
+                ? (int) round(($uniqueBooksCount / $totalBooksCount) * 100)
+                : 0;
+
+            // Get last active log details
+            $lastLog = $user->logs->first();
+            $user->last_active_ebook = $lastLog?->ebook?->title ?? 'N/A';
+            $user->last_active_time = $lastLog?->created_at?->diffForHumans() ?? 'N/A';
+
+            // Group user's logs by ebook
+            $user->grouped_logs = $user->logs->groupBy('ebook_id')->map(function ($logs) {
+                $firstLog = $logs->first();
+                return [
+                    'title' => $firstLog?->ebook?->title ?? 'Deleted eBook',
+                    'author' => $firstLog?->ebook?->author,
+                    'grade' => $firstLog?->ebook?->grade_level,
+                    'actions_count' => $logs->count(),
+                    'last_access' => $firstLog?->created_at?->diffForHumans() ?? 'N/A',
+                ];
+            });
+
+            return $user;
+        });
+
+        return view('admin.ebook.tracking', [
+            'users' => $users,
+            'totalBooksCount' => $totalBooksCount,
+        ]);
+    }
 }
