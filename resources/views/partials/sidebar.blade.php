@@ -56,7 +56,7 @@
             'links' => [
                 ['Library Dashboard', 'layout-dashboard', route('admin.ebook.index'), request()->routeIs('admin.ebook.index')],
                 ['Upload eBook', 'upload-cloud', route('admin.ebook.create'), request()->routeIs('admin.ebook.create')],
-                ['Reader Tracking', 'users', route('admin.ebook.tracking'), request()->routeIs('admin.ebook.tracking')],
+                ['Upload Tracking', 'users', route('admin.ebook.tracking'), request()->routeIs('admin.ebook.tracking')],
             ],
         ],
         [

@@ -78,6 +78,11 @@ class User extends Authenticatable
         return $this->hasMany(EbookAccessLog::class, 'user_id');
     }
 
+    public function ebooks(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Ebook::class, 'created_by');
+    }
+
     public function enrollmentApplicants(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(EnrollmentApplicant::class);
