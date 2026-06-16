@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Ebook;
 use App\Models\EbookAccessLog;
 use App\Models\User;
+use App\Models\Student;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -555,61 +556,94 @@ BASH;
         return response()->json($readers);
     }
 
+    private function getEbookGradeLevel(string $studentGrade): string
+    {
+        if ($studentGrade === 'Grade 11') {
+            return 'K11';
+        }
+        if ($studentGrade === 'Grade 12') {
+            return 'K12';
+        }
+        return $studentGrade;
+    }
+
     public function tracking(Request $request): View
     {
         $search = $request->string('search')->trim();
 
-        // Get total published eBooks count
-        $totalBooksCount = Ebook::where('status', 'published')->count();
-
-        // Fetch users who have at least one access log entry
-        $users = User::query()
-            ->whereHas('logs')
+        // 1. Fetch students
+        $students = Student::query()
             ->when($search->isNotEmpty(), function ($query) use ($search) {
                 $query->where(function ($inner) use ($search) {
-                    $inner->where('name', 'like', "%{$search}%")
-                        ->orWhere('email', 'like', "%{$search}%");
+                    $inner->where('student_number', 'like', "%{$search}%")
+                        ->orWhere('school_email', 'like', "%{$search}%")
+                        ->orWhereHas('user', function ($uq) use ($search) {
+                            $uq->where('name', 'like', "%{$search}%");
+                        });
                 });
             })
-            ->with(['logs' => function ($query) {
-                $query->with('ebook')->orderBy('created_at', 'desc');
-            }])
+            ->with(['user'])
             ->paginate(15)
             ->withQueryString();
 
-        // Map progress data for each user
-        $users->getCollection()->transform(function ($user) use ($totalBooksCount) {
-            $uniqueBooksCount = EbookAccessLog::where('user_id', $user->id)
-                ->distinct('ebook_id')
-                ->count('ebook_id');
+        $totalBooksCount = Ebook::where('status', 'published')->count();
 
-            $user->unique_books_count = $uniqueBooksCount;
-            $user->completion_percentage = $totalBooksCount > 0 
-                ? (int) round(($uniqueBooksCount / $totalBooksCount) * 100)
-                : 0;
+        // 2. Map progress data for each student based on their grade level
+        $students->getCollection()->transform(function ($student) {
+            $studentGrade = $student->grade_level;
+            $ebookGrade = $this->getEbookGradeLevel($studentGrade);
 
-            // Get last active log details
-            $lastLog = $user->logs->first();
-            $user->last_active_ebook = $lastLog?->ebook?->title ?? 'N/A';
-            $user->last_active_time = $lastLog?->created_at?->diffForHumans() ?? 'N/A';
+            // Get all published eBooks for this grade level
+            $ebooks = Ebook::where('grade_level', $ebookGrade)
+                ->where('status', 'published')
+                ->get();
 
-            // Group user's logs by ebook
-            $user->grouped_logs = $user->logs->groupBy('ebook_id')->map(function ($logs) {
-                $firstLog = $logs->first();
+            $totalGradeBooks = $ebooks->count();
+
+            // Find which eBooks the student has read
+            $accessedBookIds = [];
+            if ($student->user_id) {
+                $accessedBookIds = EbookAccessLog::where('user_id', $student->user_id)
+                    ->whereIn('ebook_id', $ebooks->pluck('id'))
+                    ->distinct('ebook_id')
+                    ->pluck('ebook_id')
+                    ->toArray();
+            }
+
+            $readCount = count($accessedBookIds);
+
+            // Map the eBooks list with read/unread status
+            $student->books_list = $ebooks->map(function ($book) use ($accessedBookIds, $student) {
+                $isRead = in_array($book->id, $accessedBookIds);
+                
+                $lastAccess = 'Never';
+                if ($isRead) {
+                    $log = EbookAccessLog::where('user_id', $student->user_id)
+                        ->where('ebook_id', $book->id)
+                        ->orderBy('created_at', 'desc')
+                        ->first();
+                    $lastAccess = $log?->created_at?->diffForHumans() ?? 'N/A';
+                }
+
                 return [
-                    'title' => $firstLog?->ebook?->title ?? 'Deleted eBook',
-                    'author' => $firstLog?->ebook?->author,
-                    'grade' => $firstLog?->ebook?->grade_level,
-                    'actions_count' => $logs->count(),
-                    'last_access' => $firstLog?->created_at?->diffForHumans() ?? 'N/A',
+                    'title' => $book->title,
+                    'author' => $book->author,
+                    'is_read' => $isRead,
+                    'last_access' => $lastAccess,
                 ];
             });
 
-            return $user;
+            $student->read_count = $readCount;
+            $student->total_count = $totalGradeBooks;
+            $student->completion_percentage = $totalGradeBooks > 0 
+                ? (int) round(($readCount / $totalGradeBooks) * 100)
+                : 0;
+
+            return $student;
         });
 
         return view('admin.ebook.tracking', [
-            'users' => $users,
+            'students' => $students,
             'totalBooksCount' => $totalBooksCount,
         ]);
     }

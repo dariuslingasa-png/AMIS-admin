@@ -33,8 +33,8 @@
                 </span>
                 <span class="rounded-full bg-slate-50 px-2.5 py-1 text-xs font-bold text-slate-500">Live</span>
             </div>
-            <p class="mt-5 text-sm font-semibold text-slate-500">Active Readers</p>
-            <p class="mt-1 text-3xl font-extrabold text-slate-950">{{ number_format($users->total()) }}</p>
+            <p class="mt-5 text-sm font-semibold text-slate-500">Total Enrolled Students</p>
+            <p class="mt-1 text-3xl font-extrabold text-slate-950">{{ number_format($students->total()) }}</p>
         </div>
 
         <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -53,7 +53,7 @@
                 <span class="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-sky-50 text-sky-700">
                     <i data-lucide="award" class="h-5 w-5"></i>
                 </span>
-                <span class="rounded-full bg-slate-50 px-2.5 py-1 text-xs font-bold text-slate-500">Status</span>
+                <span class="rounded-full bg-slate-50 px-2.5 py-1 text-xs font-bold text-slate-500">LMS logs</span>
             </div>
             <p class="mt-5 text-sm font-semibold text-slate-500">Global Read Logs</p>
             <p class="mt-1 text-3xl font-extrabold text-slate-950">
@@ -66,12 +66,12 @@
     <section class="mt-6">
         <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
             <div class="border-b border-slate-100 p-5">
-                <form method="GET" action="{{ route('admin.ebook.tracking') }}" class="grid gap-3 lg:grid-cols-[1fr_auto]">
-                    <label class="relative">
+                <form method="GET" action="{{ route('admin.ebook.tracking') }}" class="flex gap-2 max-w-lg">
+                    <div class="relative flex-1">
                         <i data-lucide="search" class="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-slate-400"></i>
                         <input type="search" name="search" value="{{ request('search') }}" placeholder="Search students by name or email" class="h-11 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-4 text-sm font-semibold text-slate-800 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100">
-                    </label>
-                    <button type="submit" class="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-slate-950 px-6 text-sm font-black text-white transition hover:bg-slate-800">
+                    </div>
+                    <button type="submit" class="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 text-sm font-black text-white transition hover:bg-slate-800">
                         <i data-lucide="search" class="h-4 w-4"></i>
                         Search
                     </button>
@@ -83,97 +83,111 @@
                     <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                         <tr>
                             <th class="px-5 py-4 font-black">Student Name</th>
-                            <th class="px-5 py-4 font-black">Library Progress</th>
-                            <th class="px-5 py-4 font-black">Last Read Material</th>
+                            <th class="px-5 py-4 font-black">Grade Level</th>
+                            <th class="px-5 py-4 font-black">Required Grade eBooks</th>
+                            <th class="px-5 py-4 font-black">Completion Progress</th>
                             <th class="px-5 py-4 text-right font-black">Details</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 bg-white" x-data="{ expandedRow: null }">
-                        @forelse ($users as $user)
+                        @forelse ($students as $student)
                             {{-- Main Reader Row --}}
-                            <tr @click="expandedRow = expandedRow === {{ $user->id }} ? null : {{ $user->id }}" 
+                            <tr @click="expandedRow = expandedRow === {{ $student->id }} ? null : {{ $student->id }}" 
                                 class="cursor-pointer transition hover:bg-slate-50">
                                 <td class="px-5 py-4">
                                     <div class="flex items-center gap-3">
                                         <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 font-extrabold text-sm uppercase shadow-sm">
-                                            {{ substr($user->name, 0, 2) }}
+                                            {{ substr($student->user->name ?? $student->school_email, 0, 2) }}
                                         </div>
                                         <div>
-                                            <p class="font-black text-slate-950">{{ $user->name }}</p>
-                                            <p class="text-xs font-semibold text-slate-400 mt-0.5">{{ $user->email }}</p>
+                                            <p class="font-black text-slate-950">{{ $student->user->name ?? 'N/A' }}</p>
+                                            <p class="text-xs font-semibold text-slate-400 mt-0.5">{{ $student->school_email }}</p>
                                         </div>
                                     </div>
+                                </td>
+                                <td class="px-5 py-4">
+                                    <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-700">{{ $student->grade_level }}</span>
+                                </td>
+                                <td class="px-5 py-4">
+                                    <span class="text-xs font-black text-slate-800">{{ $student->read_count }} / {{ $student->total_count }} Books</span>
                                 </td>
                                 <td class="px-5 py-4">
                                     <div class="flex items-center gap-2">
-                                        <span class="text-xs font-black text-slate-800">{{ $user->unique_books_count }} / {{ $totalBooksCount }}</span>
                                         <div class="h-2 w-28 overflow-hidden rounded-full bg-slate-100">
-                                            <div class="h-full bg-emerald-500 transition-all duration-300" style="width: {{ $user->completion_percentage }}%"></div>
+                                            <div class="h-full bg-emerald-500 transition-all duration-300" style="width: {{ $student->completion_percentage }}%"></div>
                                         </div>
-                                        <span class="text-[10px] font-extrabold text-slate-500">{{ $user->completion_percentage }}%</span>
+                                        <span class="text-[10px] font-extrabold text-slate-500">{{ $student->completion_percentage }}%</span>
+                                        @if($student->total_count > 0 && $student->read_count === $student->total_count)
+                                            <span class="rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-black text-emerald-700">Complete</span>
+                                        @endif
                                     </div>
-                                </td>
-                                <td class="px-5 py-4">
-                                    <p class="text-xs font-bold text-slate-800">{{ $user->last_active_ebook }}</p>
-                                    <p class="text-[10px] font-semibold text-slate-400 mt-0.5">Last active: {{ $user->last_active_time }}</p>
                                 </td>
                                 <td class="px-5 py-4 text-right">
                                     <button class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 hover:text-slate-600 transition shadow-sm">
-                                        <i data-lucide="chevron-down" class="h-4 w-4 transition duration-200" :class="expandedRow === {{ $user->id }} ? 'rotate-180' : ''"></i>
+                                        <i data-lucide="chevron-down" class="h-4 w-4 transition duration-200" :class="expandedRow === {{ $student->id }} ? 'rotate-180' : ''"></i>
                                     </button>
                                 </td>
                             </tr>
 
                             {{-- Accordion Details Row --}}
-                            <tr x-show="expandedRow === {{ $user->id }}" x-cloak class="bg-slate-50/50">
-                                <td colspan="4" class="px-8 py-5">
+                            <tr x-show="expandedRow === {{ $student->id }}" x-cloak class="bg-slate-50/50">
+                                <td colspan="5" class="px-8 py-5">
                                     <div class="rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm">
                                         <h4 class="text-xs font-black uppercase tracking-wider text-slate-500 mb-4 flex items-center gap-1.5">
                                             <i data-lucide="book-open" class="h-4 w-4 text-emerald-600"></i>
-                                            Detailed Reading History for {{ $user->name }}
+                                            Grade Ebooks for {{ $student->user->name ?? 'Student' }} ({{ $student->grade_level }})
                                         </h4>
-                                        <div class="overflow-hidden rounded-xl border border-slate-200/50">
-                                            <table class="w-full text-left text-xs">
-                                                <thead class="bg-slate-50 text-[10px] uppercase tracking-wide text-slate-400">
-                                                    <tr>
-                                                        <th class="px-4 py-3 font-bold">eBook Title</th>
-                                                        <th class="px-4 py-3 font-bold">Grade Level</th>
-                                                        <th class="px-4 py-3 font-bold text-center">Reading Opens</th>
-                                                        <th class="px-4 py-3 text-right font-bold">Last Accessed</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody class="divide-y divide-slate-100 text-slate-700">
-                                                    @forelse ($user->grouped_logs as $log)
-                                                        <tr class="hover:bg-slate-50/50 transition">
-                                                            <td class="px-4 py-3 font-bold text-slate-900">
-                                                                {{ $log['title'] }}
-                                                                @if($log['author'])
-                                                                    <span class="text-[10px] font-semibold text-emerald-600 block mt-0.5">by {{ $log['author'] }}</span>
-                                                                @endif
-                                                            </td>
-                                                            <td class="px-4 py-3">
-                                                                <span class="rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-extrabold text-slate-600">{{ $log['grade'] }}</span>
-                                                            </td>
-                                                            <td class="px-4 py-3 text-center font-bold text-emerald-600">{{ $log['actions_count'] }}</td>
-                                                            <td class="px-4 py-3 text-right font-medium text-slate-500">{{ $log['last_access'] }}</td>
-                                                        </tr>
-                                                    @empty
+                                        
+                                        @if(count($student->books_list) === 0)
+                                            <div class="flex flex-col items-center justify-center py-6 text-center">
+                                                <i data-lucide="inbox" class="h-8 w-8 text-slate-300"></i>
+                                                <p class="mt-2 text-xs font-bold text-slate-400">No published eBooks found for {{ $student->grade_level }}.</p>
+                                            </div>
+                                        @else
+                                            <div class="overflow-hidden rounded-xl border border-slate-200/50">
+                                                <table class="w-full text-left text-xs">
+                                                    <thead class="bg-slate-50 text-[10px] uppercase tracking-wide text-slate-400">
                                                         <tr>
-                                                            <td colspan="4" class="px-4 py-6 text-center text-slate-400">
-                                                                <i data-lucide="inbox" class="h-6 w-6 mx-auto text-slate-300"></i>
-                                                                <p class="mt-2 font-bold text-xs">No logs registered.</p>
-                                                            </td>
+                                                            <th class="px-4 py-3 font-bold">eBook Title</th>
+                                                            <th class="px-4 py-3 font-bold">Status</th>
+                                                            <th class="px-4 py-3 text-right font-bold">Last Read</th>
                                                         </tr>
-                                                    @endforelse
-                                                </tbody>
-                                            </table>
-                                        </div>
+                                                    </thead>
+                                                    <tbody class="divide-y divide-slate-100 text-slate-700">
+                                                        @foreach ($student->books_list as $book)
+                                                            <tr class="hover:bg-slate-50/50 transition">
+                                                                <td class="px-4 py-3 font-bold text-slate-900">
+                                                                    {{ $book['title'] }}
+                                                                    @if($book['author'])
+                                                                        <span class="text-[10px] font-semibold text-emerald-600 block mt-0.5">by {{ $book['author'] }}</span>
+                                                                    @endif
+                                                                </td>
+                                                                <td class="px-4 py-3">
+                                                                    @if($book['is_read'])
+                                                                        <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-extrabold text-emerald-700">
+                                                                            <i data-lucide="check-circle" class="h-3 w-3"></i> Completed
+                                                                        </span>
+                                                                    @else
+                                                                        <span class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-extrabold text-slate-500">
+                                                                            Incomplete
+                                                                        </span>
+                                                                    @endif
+                                                                </td>
+                                                                <td class="px-4 py-3 text-right font-medium text-slate-500">
+                                                                    {{ $book['last_access'] }}
+                                                                </td>
+                                                            </tr>
+                                                        @endforeach
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="px-5 py-12 text-center">
+                                <td colspan="5" class="px-5 py-12 text-center">
                                     <div class="mx-auto flex max-w-sm flex-col items-center">
                                         <span class="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
                                             <i data-lucide="users" class="h-7 w-7"></i>
@@ -187,9 +201,9 @@
                 </table>
             </div>
 
-            @if ($users->hasPages())
+            @if ($students->hasPages())
                 <div class="border-t border-slate-100 p-5">
-                    {{ $users->links() }}
+                    {{ $students->links() }}
                 </div>
             @endif
         </div>
