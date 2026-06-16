@@ -570,22 +570,66 @@ BASH;
                 });
             })
             ->with('creator:id,name,email')
-            ->orderByRaw("FIELD(grade_level, " . collect(self::GRADE_LEVELS)->map(fn($g) => "'" . addslashes($g) . "'")->implode(',') . ")")
             ->get();
 
-        // Group by grade level
-        $gradeGroups = collect(self::GRADE_LEVELS)->mapWithKeys(function ($grade) use ($ebooks) {
-            $books = $ebooks->where('grade_level', $grade)->values();
+        // Mappings from db grade_level to display groups
+        $getDisplayGrades = function ($grade) {
+            $grade = strtolower(trim($grade));
+            $grade = str_replace('-', ' ', $grade);
+
+            if ($grade === 'kindergarten') {
+                return ['Kinder 1', 'Kinder 2'];
+            }
+            if ($grade === 'kinder 1') {
+                return ['Kinder 1'];
+            }
+            if ($grade === 'kinder 2') {
+                return ['Kinder 2'];
+            }
+            if ($grade === 'k11' || $grade === 'grade 11') {
+                return ['Grade 11'];
+            }
+            if ($grade === 'k12' || $grade === 'grade 12') {
+                return ['Grade 12'];
+            }
+            // Mappings for Grade 1 to 10
+            if (preg_match('/^(?:grade\s*)?([1-9]|10)$/', $grade, $match)) {
+                return ['Grade ' . $match[1]];
+            }
+            // fallback
+            return [ucwords($grade)];
+        };
+
+        // Group ebooks by display grade level matching the student tabs
+        $displayGrades = [
+            'Kinder 1',
+            'Kinder 2',
+            'Grade 1',
+            'Grade 2',
+            'Grade 3',
+            'Grade 4',
+            'Grade 5',
+            'Grade 6',
+            'Grade 7',
+            'Grade 8',
+            'Grade 9',
+            'Grade 10',
+            'Grade 11',
+            'Grade 12',
+        ];
+
+        $gradeGroups = collect($displayGrades)->mapWithKeys(function ($grade) use ($ebooks, $getDisplayGrades) {
+            $books = $ebooks->filter(fn ($book) => in_array($grade, $getDisplayGrades($book->grade_level), true))->values();
             return [$grade => $books];
-        })->filter(fn ($books) => $books->isNotEmpty() || true); // show all grades
+        });
 
         $totalBooksCount = Ebook::count();
         $publishedCount = Ebook::where('status', 'published')->count();
-        $gradesWithBooks = $ebooks->pluck('grade_level')->unique()->count();
+        $gradesWithBooks = $gradeGroups->filter(fn ($books) => $books->isNotEmpty())->count();
 
         return view('admin.ebook.tracking', [
             'gradeGroups' => $gradeGroups,
-            'gradeLevels' => self::GRADE_LEVELS,
+            'gradeLevels' => $displayGrades,
             'totalBooksCount' => $totalBooksCount,
             'publishedCount' => $publishedCount,
             'gradesWithBooks' => $gradesWithBooks,

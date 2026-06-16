@@ -124,9 +124,14 @@
                                         <h4 class="text-sm font-bold text-slate-900 group-hover:text-emerald-950 transition-colors line-clamp-2 leading-tight" title="{{ $book->title }}">
                                             {{ $book->title }}
                                         </h4>
-                                        <p class="mt-1 text-xs font-semibold text-emerald-600 truncate">
-                                            by {{ $book->author ?? $book->creator?->name ?? 'Unknown' }}
-                                        </p>
+                                        <div class="mt-1 flex flex-wrap items-center gap-1.5">
+                                            <span class="text-xs font-semibold text-emerald-600 truncate">
+                                                by {{ $book->author ?? $book->creator?->name ?? 'Unknown' }}
+                                            </span>
+                                            <span class="inline-flex items-center rounded-md bg-slate-50 border border-slate-200 px-1.5 py-0.5 text-[9px] font-black text-slate-400">
+                                                {{ $book->grade_level }}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
 
