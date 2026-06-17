@@ -367,7 +367,95 @@ class SystemManagementController extends Controller
             ]
         ];
 
-        return view('admin.system.health.index', compact('healthStatus'));
+        // Email Tracking Stats
+        $emailStats = $this->buildEmailStats();
+
+        return view('admin.system.health.index', compact('healthStatus', 'emailStats'));
+    }
+
+    private function buildEmailStats(): array
+    {
+        $hasTable = Schema::hasTable('email_logs');
+
+        if (!$hasTable) {
+            return [
+                'available' => false,
+                'today' => 0,
+                'this_week' => 0,
+                'this_month' => 0,
+                'failed_today' => 0,
+                'mailer_breakdown' => [],
+                'recent' => collect(),
+                'daily_chart' => [],
+                'smtp_config' => $this->smtpConfigDetails(),
+            ];
+        }
+
+        $today = \App\Models\EmailLog::today()->sent()->count();
+        $thisWeek = \App\Models\EmailLog::thisWeek()->sent()->count();
+        $thisMonth = \App\Models\EmailLog::thisMonth()->sent()->count();
+        $failedToday = \App\Models\EmailLog::today()->failed()->count();
+
+        // Per-mailer breakdown (this month)
+        $mailerBreakdown = \App\Models\EmailLog::thisMonth()
+            ->select('mailer', DB::raw('COUNT(*) as total'), DB::raw('SUM(CASE WHEN status = "sent" THEN 1 ELSE 0 END) as sent_count'), DB::raw('SUM(CASE WHEN status = "failed" THEN 1 ELSE 0 END) as failed_count'))
+            ->groupBy('mailer')
+            ->orderByDesc('total')
+            ->get();
+
+        // Recent 10 emails
+        $recent = \App\Models\EmailLog::orderByDesc('sent_at')->limit(10)->get();
+
+        // Daily send counts for last 7 days
+        $dailyChart = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i);
+            $count = \App\Models\EmailLog::whereDate('sent_at', $date->toDateString())->sent()->count();
+            $dailyChart[] = [
+                'label' => $date->format('M d'),
+                'day' => $date->format('D'),
+                'count' => $count,
+            ];
+        }
+
+        return [
+            'available' => true,
+            'today' => $today,
+            'this_week' => $thisWeek,
+            'this_month' => $thisMonth,
+            'failed_today' => $failedToday,
+            'mailer_breakdown' => $mailerBreakdown,
+            'recent' => $recent,
+            'daily_chart' => $dailyChart,
+            'smtp_config' => $this->smtpConfigDetails(),
+        ];
+    }
+
+    private function smtpConfigDetails(): array
+    {
+        $defaultMailer = config('mail.default', 'smtp');
+        $mailers = [];
+
+        foreach (['smtp', 'smtp_backup', 'smtp_backup_2', 'sendmail', 'failover'] as $name) {
+            $config = config("mail.mailers.{$name}");
+            if (!$config) continue;
+
+            $mailers[$name] = [
+                'transport' => $config['transport'] ?? $name,
+                'host' => $config['host'] ?? '—',
+                'port' => $config['port'] ?? '—',
+                'encryption' => $config['encryption'] ?? $config['scheme'] ?? 'none',
+                'username' => $config['username'] ? Str::mask($config['username'], '*', 3) : '—',
+                'is_default' => ($name === $defaultMailer),
+            ];
+        }
+
+        return [
+            'default_mailer' => $defaultMailer,
+            'from_address' => config('mail.from.address', '—'),
+            'from_name' => config('mail.from.name', '—'),
+            'mailers' => $mailers,
+        ];
     }
 
     // 3. Integrations
