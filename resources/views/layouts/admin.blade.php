@@ -318,79 +318,71 @@
             });
         });
 
-        // Global Session Inactivity & Auto-Logout System
+        // Global Session Inactivity & Auto-Logout System (30-minute idle timeout)
         (function() {
-            // Only initialize if there is an active logged-in session (check for logout form)
-            const logoutForm = document.querySelector('form[action*="logout"]') || document.querySelector('form[action*="admin/logout"]');
+            // Only initialize if there is an active logged-in session
+            var logoutForm = document.querySelector('form[action*="logout"]') || document.querySelector('form[action*="admin/logout"]');
             if (!logoutForm) return;
 
-            // Inactivity threshold (15 minutes total: 14.5 minutes idle + 30 seconds warning countdown)
-            const idleTimeLimit = 14.5 * 60 * 1000; 
-            const warningCountdownLimit = 30; // seconds
-            
-            let idleTimer = null;
-            let countdownInterval = null;
-            let countdownVal = warningCountdownLimit;
-            let warningModalNode = null;
+            var IDLE_MINUTES = {{ (int) config('session.idle_timeout', 30) }};
+            var WARNING_SECONDS = 120; // 2 minute warning before logout
+            var IDLE_MS = (IDLE_MINUTES * 60 - WARNING_SECONDS) * 1000;
+            var STORAGE_KEY = 'amis_admin_last_active';
 
-            function initIdleTimer() {
-                resetIdleTimer();
-                
-                // Track activity events
-                const events = ['mousemove', 'mousedown', 'keypress', 'scroll', 'click', 'touchstart'];
-                events.forEach(event => {
-                    document.addEventListener(event, handleUserActivity, { passive: true });
-                });
-            }
-
-            function handleUserActivity() {
-                if (warningModalNode) return; // Don't reset timer while warning is open
-                resetIdleTimer();
-            }
+            var idleTimer = null;
+            var countdownInterval = null;
+            var countdownVal = WARNING_SECONDS;
+            var warningModalNode = null;
 
             function resetIdleTimer() {
                 clearTimeout(idleTimer);
-                idleTimer = setTimeout(showInactivityWarning, idleTimeLimit);
+                clearInterval(countdownInterval);
+                dismissWarning();
+
+                try { localStorage.setItem(STORAGE_KEY, String(Date.now())); } catch (_) {}
+
+                idleTimer = setTimeout(showInactivityWarning, IDLE_MS);
+            }
+
+            function dismissWarning() {
+                if (warningModalNode) {
+                    warningModalNode.remove();
+                    warningModalNode = null;
+                }
             }
 
             function showInactivityWarning() {
-                countdownVal = warningCountdownLimit;
-                
-                // Create warning modal if not present
+                countdownVal = WARNING_SECONDS;
+
                 if (!warningModalNode) {
                     warningModalNode = document.createElement('div');
                     warningModalNode.className = 'fixed inset-0 z-[10000] flex items-center justify-center bg-slate-900/60 backdrop-blur-md transition-all duration-300';
-                    warningModalNode.innerHTML = `
-                        <div class="relative w-full max-w-sm scale-95 transform rounded-2xl border border-slate-200/80 bg-white p-6 shadow-2xl transition-all duration-300 dark:border-slate-800 dark:bg-slate-900 text-center">
-                            <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-50 dark:bg-amber-950/30">
-                                <svg class="h-6 w-6 text-amber-600 dark:text-amber-500 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                                </svg>
-                            </div>
-                            <h3 class="text-base font-black text-slate-900 dark:text-white mb-2">Inactivity Warning</h3>
-                            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-6">
-                                You have been inactive for a while. You will be logged out in <span id="idle-countdown" class="font-extrabold text-amber-600 dark:text-amber-500 text-sm">30</span> seconds.
-                            </p>
-                            <button id="btn-stay-signed-in" type="button" class="w-full inline-flex h-11 items-center justify-center rounded-xl bg-emerald-600 px-5 text-sm font-black text-white shadow-sm transition hover:bg-emerald-700 cursor-pointer">
-                                Stay Signed In
-                            </button>
-                        </div>
-                    `;
+                    warningModalNode.innerHTML =
+                        '<div class="relative w-full max-w-sm scale-95 transform rounded-2xl border border-slate-200/80 bg-white p-6 shadow-2xl transition-all duration-300 dark:border-slate-800 dark:bg-slate-900 text-center">' +
+                            '<div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-50 dark:bg-amber-950/30">' +
+                                '<svg class="h-6 w-6 text-amber-600 dark:text-amber-500 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">' +
+                                    '<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>' +
+                                '</svg>' +
+                            '</div>' +
+                            '<h3 class="text-base font-black text-slate-900 dark:text-white mb-2">Session Expiring</h3>' +
+                            '<p class="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-6">' +
+                                'You have been inactive for a while. You will be logged out in <span id="idle-countdown" class="font-extrabold text-amber-600 dark:text-amber-500 text-sm">' + formatTime(WARNING_SECONDS) + '</span>.' +
+                            '</p>' +
+                            '<button id="btn-stay-signed-in" type="button" class="w-full inline-flex h-11 items-center justify-center rounded-xl bg-emerald-600 px-5 text-sm font-black text-white shadow-sm transition hover:bg-emerald-700 cursor-pointer">' +
+                                'Stay Signed In' +
+                            '</button>' +
+                        '</div>';
                     document.body.appendChild(warningModalNode);
 
-                    document.getElementById('btn-stay-signed-in').addEventListener('click', () => {
+                    document.getElementById('btn-stay-signed-in').addEventListener('click', function () {
                         keepSessionAlive();
                     });
-                } else {
-                    warningModalNode.classList.remove('hidden');
                 }
 
-                // Start countdown
                 updateCountdownDisplay();
-                countdownInterval = setInterval(() => {
+                countdownInterval = setInterval(function () {
                     countdownVal--;
                     updateCountdownDisplay();
-                    
                     if (countdownVal <= 0) {
                         clearInterval(countdownInterval);
                         logoutUser();
@@ -398,41 +390,60 @@
                 }, 1000);
             }
 
+            function formatTime(secs) {
+                var m = Math.floor(secs / 60);
+                var s = secs % 60;
+                return m + ':' + String(s).padStart(2, '0');
+            }
+
             function updateCountdownDisplay() {
-                const countdownSpan = document.getElementById('idle-countdown');
-                if (countdownSpan) {
-                    countdownSpan.textContent = countdownVal;
-                }
+                var el = document.getElementById('idle-countdown');
+                if (el) el.textContent = formatTime(countdownVal);
             }
 
             function keepSessionAlive() {
-                if (warningModalNode) {
-                    warningModalNode.remove();
-                    warningModalNode = null;
-                }
-                
+                dismissWarning();
                 clearInterval(countdownInterval);
-                
-                // Ping the server to refresh Laravel session lifetime
+
+                // Ping server to refresh Laravel session lifetime
                 fetch(window.location.href, { method: 'GET', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-                    .then(() => {
-                        resetIdleTimer();
-                    })
-                    .catch(() => {
-                        resetIdleTimer();
-                    });
+                    .finally(function () { resetIdleTimer(); });
             }
 
             function logoutUser() {
-                const form = document.querySelector('form[action*="logout"]') || document.querySelector('form[action*="admin/logout"]');
-                if (form) {
-                    form.submit();
-                } else {
-                    window.location.href = '/admin/logout';
-                }
+                clearTimeout(idleTimer);
+                clearInterval(countdownInterval);
+                try { localStorage.removeItem(STORAGE_KEY); } catch (_) {}
+                var form = document.querySelector('form[action*="logout"]') || document.querySelector('form[action*="admin/logout"]');
+                if (form) { form.submit(); } else { window.location.href = '/admin/logout'; }
             }
 
-            window.addEventListener('load', initIdleTimer);
+            // Track user activity (throttled)
+            var events = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
+            var throttled = false;
+            function onActivity() {
+                if (throttled || warningModalNode) return;
+                throttled = true;
+                setTimeout(function () { throttled = false; }, 5000);
+                resetIdleTimer();
+            }
+            events.forEach(function (ev) {
+                document.addEventListener(ev, onActivity, { passive: true });
+            });
+
+            // Sync across tabs via localStorage
+            window.addEventListener('storage', function (e) {
+                if (e.key === STORAGE_KEY) {
+                    if (e.newValue === null) {
+                        logoutUser();
+                    } else {
+                        resetIdleTimer();
+                    }
+                }
+            });
+
+            // Start
+            resetIdleTimer();
         })();
     </script>
 </x-app-layout>
