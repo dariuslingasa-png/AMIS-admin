@@ -40,8 +40,8 @@
             </ul>
         </div>
         <div style="background:#f0f5ff;border:1px solid #bfdbfe;border-radius:12px;padding:18px 22px;margin-bottom:20px;">
-            <p style="font-size:13px;font-weight:700;color:#1e40af;margin:0 0 10px;">📥 Download Microsoft Teams</p>
-            <p style="font-size:12px;color:#374151;margin:0 0 12px;line-height:1.6;">Use your school email to sign in to Microsoft Teams for online classes.</p>
+            <p style="font-size:14px;font-weight:800;color:#1e40af;margin:0 0 4px;text-transform:uppercase;letter-spacing:0.04em;">📚 For Online Class</p>
+            <p style="font-size:12px;color:#374151;margin:0 0 14px;line-height:1.6;">Download Microsoft Teams and sign in with your school email to join online classes.</p>
             <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
                 <tr>
                     <td style="padding:0 0 8px;">
@@ -57,7 +57,7 @@
                     </td>
                 </tr>
                 <tr>
-                    <td style="padding:0;">
+                    <td style="padding:0 0 12px;">
                         <table role="presentation" cellspacing="0" cellpadding="0" border="0">
                             <tr>
                                 <td align="center" valign="middle" style="background:#111827;border-radius:8px;">
@@ -76,6 +76,12 @@
                     </td>
                 </tr>
             </table>
+            <div style="border-top:1px solid #dbeafe;padding-top:12px;">
+                <p style="font-size:12px;color:#6b7280;margin:0;line-height:1.6;">
+                    Or sign in directly from your browser without downloading an app:<br>
+                    <a href="https://portal.office.com" target="_blank" style="color:#2563eb;font-weight:700;font-size:13px;text-decoration:underline;">portal.office.com</a>
+                </p>
+            </div>
         </div>
         @if ($msError)
             <p style="color:#dc2626;font-size:12px;background:#fff1f2;padding:10px 14px;border-radius:8px;margin-top:12px;">Note: Microsoft account setup is still in progress. The school will notify you once it is ready.</p>
