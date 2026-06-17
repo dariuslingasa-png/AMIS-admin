@@ -39,7 +39,44 @@
                 <li>Keep these credentials safe and do not share them.</li>
             </ul>
         </div>
-        <p style="font-size:13px;color:#6b7280;margin:0 0 6px;">Sign in at: <a href="https://portal.office.com" style="color:#059669;font-weight:600;">portal.office.com</a></p>
+        <div style="background:#f0f5ff;border:1px solid #bfdbfe;border-radius:12px;padding:18px 22px;margin-bottom:20px;">
+            <p style="font-size:13px;font-weight:700;color:#1e40af;margin:0 0 10px;">📥 Download Microsoft Teams</p>
+            <p style="font-size:12px;color:#374151;margin:0 0 12px;line-height:1.6;">Use your school email to sign in to Microsoft Teams for online classes.</p>
+            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                <tr>
+                    <td style="padding:0 0 8px;">
+                        <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                            <tr>
+                                <td align="center" valign="middle" style="background:#2563eb;border-radius:8px;">
+                                    <a href="https://www.microsoft.com/en-us/microsoft-teams/download-app" target="_blank" style="display:block;background:#2563eb;color:#ffffff;text-decoration:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;font-family:Arial,Helvetica,sans-serif;border:1px solid #2563eb;">
+                                        💻 Download for Desktop
+                                    </a>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:0;">
+                        <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                            <tr>
+                                <td align="center" valign="middle" style="background:#111827;border-radius:8px;">
+                                    <a href="https://apps.apple.com/app/microsoft-teams/id1113153706" target="_blank" style="display:block;background:#111827;color:#ffffff;text-decoration:none;border-radius:8px;padding:10px 16px;font-size:12px;font-weight:700;font-family:Arial,Helvetica,sans-serif;border:1px solid #111827;">
+                                        🍎 App Store (iPhone/iPad)
+                                    </a>
+                                </td>
+                                <td style="width:8px;"></td>
+                                <td align="center" valign="middle" style="background:#16a34a;border-radius:8px;">
+                                    <a href="https://play.google.com/store/apps/details?id=com.microsoft.teams" target="_blank" style="display:block;background:#16a34a;color:#ffffff;text-decoration:none;border-radius:8px;padding:10px 16px;font-size:12px;font-weight:700;font-family:Arial,Helvetica,sans-serif;border:1px solid #16a34a;">
+                                        ▶️ Google Play (Android)
+                                    </a>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </div>
         @if ($msError)
             <p style="color:#dc2626;font-size:12px;background:#fff1f2;padding:10px 14px;border-radius:8px;margin-top:12px;">Note: Microsoft account setup is still in progress. The school will notify you once it is ready.</p>
         @endif
