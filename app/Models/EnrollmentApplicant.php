@@ -25,7 +25,8 @@ class EnrollmentApplicant extends Model
             // 3. Sync name changes to student's User account name
             if (($applicant->wasChanged('first_name') || $applicant->wasChanged('middle_name') || $applicant->wasChanged('last_name') || $applicant->wasChanged('suffix')) && $applicant->student && $applicant->student->user) {
                 $user = $applicant->student->user;
-                $user->name = trim($applicant->first_name . ' ' . ($applicant->middle_name ?? '') . ' ' . $applicant->last_name . ($applicant->suffix ? ' ' . $applicant->suffix : ''));
+                $middleInitial = $applicant->middle_name ? mb_substr(trim($applicant->middle_name), 0, 1, 'UTF-8') . '.' : '';
+                $user->name = preg_replace('/\s+/', ' ', trim($applicant->first_name . ' ' . $middleInitial . ' ' . $applicant->last_name . ($applicant->suffix ? ' ' . $applicant->suffix : '')));
                 $user->saveQuietly();
             }
         });
@@ -150,7 +151,8 @@ class EnrollmentApplicant extends Model
 
     public function getFullNameAttribute(): string
     {
-        return preg_replace('/\s+/', ' ', trim($this->first_name . ' ' . ($this->middle_name ?? '') . ' ' . $this->last_name));
+        $middleInitial = $this->middle_name ? mb_substr(trim($this->middle_name), 0, 1, 'UTF-8') . '.' : '';
+        return preg_replace('/\s+/', ' ', trim($this->first_name . ' ' . $middleInitial . ' ' . $this->last_name));
     }
 
     /**

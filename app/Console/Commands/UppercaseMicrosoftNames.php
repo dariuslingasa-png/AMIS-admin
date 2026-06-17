@@ -112,8 +112,8 @@ class UppercaseMicrosoftNames extends Command
             $newSurname = mb_strtoupper($surname, 'UTF-8');
 
             if ($student && $student->applicant) {
-                // Use middle initial for display name (e.g. BADIL → B.)
-                $newName = FixDisplayNames::buildDisplayName(
+                // M365 display name = FIRST + LAST only (no middle name)
+                $newName = FixDisplayNames::buildM365DisplayName(
                     $student->applicant->first_name,
                     $student->applicant->middle_name,
                     $student->applicant->last_name

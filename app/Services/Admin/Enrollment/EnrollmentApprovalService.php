@@ -219,7 +219,7 @@ class EnrollmentApprovalService
         string $tempPassword,
     ): array {
         try {
-            $displayName = \App\Console\Commands\FixDisplayNames::buildDisplayName(
+            $displayName = \App\Console\Commands\FixDisplayNames::buildM365DisplayName(
                 $applicant->first_name,
                 $applicant->middle_name,
                 $applicant->last_name

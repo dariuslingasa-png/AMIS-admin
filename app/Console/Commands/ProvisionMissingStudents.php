@@ -88,7 +88,7 @@ class ProvisionMissingStudents extends Command
             $mailNick = explode('@', $email)[0];
             $applicant = $student->applicant;
             if ($applicant) {
-                $displayName = FixDisplayNames::buildDisplayName(
+                $displayName = FixDisplayNames::buildM365DisplayName(
                     $applicant->first_name,
                     $applicant->middle_name,
                     $applicant->last_name
