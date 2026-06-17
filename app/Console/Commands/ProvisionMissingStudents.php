@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Student;
+use App\Console\Commands\FixDisplayNames;
 use App\Services\MicrosoftGraphService;
 use App\Services\MsTeamsEnrollmentService;
 use App\Services\Admin\Enrollment\EnrollmentApprovalService;
@@ -87,8 +88,11 @@ class ProvisionMissingStudents extends Command
             $mailNick = explode('@', $email)[0];
             $applicant = $student->applicant;
             if ($applicant) {
-                $middlePart = $applicant->middle_name ? trim($applicant->middle_name) . ' ' : '';
-                $displayName = mb_strtoupper(trim($applicant->first_name . ' ' . $middlePart . $applicant->last_name), 'UTF-8');
+                $displayName = FixDisplayNames::buildDisplayName(
+                    $applicant->first_name,
+                    $applicant->middle_name,
+                    $applicant->last_name
+                );
             } else {
                 $displayName = mb_strtoupper($name, 'UTF-8');
             }

@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\EnrollmentApplicant;
+use App\Console\Commands\FixDisplayNames;
 use App\Services\MicrosoftGraphService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
@@ -111,7 +112,13 @@ class UppercaseMicrosoftNames extends Command
             $newSurname = mb_strtoupper($surname, 'UTF-8');
 
             if ($student && $student->applicant) {
-                $newGivenName = mb_strtoupper(trim($student->applicant->first_name . ' ' . ($student->applicant->middle_name ? trim($student->applicant->middle_name) : '')), 'UTF-8');
+                // Use middle initial for display name (e.g. BADIL → B.)
+                $newName = FixDisplayNames::buildDisplayName(
+                    $student->applicant->first_name,
+                    $student->applicant->middle_name,
+                    $student->applicant->last_name
+                );
+                $newGivenName = mb_strtoupper(trim($student->applicant->first_name), 'UTF-8');
                 $newSurname = mb_strtoupper(trim($student->applicant->last_name), 'UTF-8');
             } else {
                 // Guess from display name

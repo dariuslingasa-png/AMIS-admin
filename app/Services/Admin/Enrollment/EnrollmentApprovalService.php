@@ -219,8 +219,11 @@ class EnrollmentApprovalService
         string $tempPassword,
     ): array {
         try {
-            $middlePart = $applicant->middle_name ? trim($applicant->middle_name) . ' ' : '';
-            $displayName = mb_strtoupper(trim($applicant->first_name . ' ' . $middlePart . $applicant->last_name), 'UTF-8');
+            $displayName = \App\Console\Commands\FixDisplayNames::buildDisplayName(
+                $applicant->first_name,
+                $applicant->middle_name,
+                $applicant->last_name
+            );
 
             if ($graph->userExistsOrFail($schoolEmail)) {
                 throw ValidationException::withMessages([
