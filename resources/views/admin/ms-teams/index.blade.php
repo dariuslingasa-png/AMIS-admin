@@ -214,9 +214,9 @@
                         <div class="space-y-3">
                             @foreach($gradeSections as $section)
                                 @php
-                                    $isFlex = str_contains($section->learning_mode ?? '', 'Flexible');
+                                    $isFlex = str_contains($section->formatted_learning_mode, 'Flexible');
                                     $modeBadgeColor = $isFlex ? 'bg-purple-100/60 text-purple-700' : 'bg-blue-100/60 text-blue-700';
-                                    $modeLabel = $isFlex ? 'Flex • ' . ($section->shift ?? '') : 'Face-to-Face';
+                                    $modeLabel = $section->formatted_learning_mode;
                                     $genderBadgeColor = $section->gender === 'male' ? 'bg-indigo-100/60 text-indigo-700' : 'bg-rose-100/60 text-rose-700';
                                     $genderLabel = $section->gender === 'male' ? 'Boys' : 'Girls';
                                 @endphp

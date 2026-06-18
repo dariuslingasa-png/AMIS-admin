@@ -24,8 +24,8 @@
                             </td>
                             <td class="font-semibold text-slate-500 text-xs">{{ $section->grade_level }}</td>
                             <td>
-                                <x-badge color="{{ $section->learning_mode === 'Face-to-Face' ? 'blue' : 'purple' }}">
-                                    {{ $section->learning_mode }}
+                                <x-badge color="{{ str_contains($section->formatted_learning_mode, 'Face-to-Face') ? 'blue' : 'purple' }}">
+                                    {{ $section->formatted_learning_mode }}
                                 </x-badge>
                             </td>
                             <td class="font-bold text-indigo-700 text-xs uppercase">{{ $advisory['teacher'] ?? 'Advisor pending' }}</td>

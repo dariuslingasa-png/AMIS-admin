@@ -76,8 +76,7 @@
                         </h1>
                         
                         @php
-                            $isFlex = str_contains($section->learning_mode ?? '', 'Flexible');
-                            $learningLabel = $isFlex ? 'Flexible Learning - ' . ($section->shift ?? '1st Shift') : 'Face-to-Face';
+                            $learningLabel = $section->formatted_learning_mode;
                             $genderLabel = $section->gender === 'male' ? 'Boys Room' : 'Girls Room';
                             
                             $chipClass = 'inline-flex items-center px-3.5 py-1 text-xs font-semibold bg-white/10 text-emerald-100 rounded-full border border-white/10 backdrop-blur-xs';

@@ -217,4 +217,16 @@ class Section extends Model
         $year   = $this->school_year;
         return "{$grade} - {$name} {$shift} {$gender} {$year}";
     }
+
+    public function getFormattedLearningModeAttribute(): string
+    {
+        $mode = $this->learning_mode;
+        $shift = $this->shift;
+
+        if ($shift && str_contains(strtolower((string) $mode), 'flexible')) {
+            return "{$mode} - {$shift}";
+        }
+
+        return $mode ?? 'Face-to-Face';
+    }
 }

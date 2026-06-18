@@ -134,7 +134,7 @@
                         class="px-4 py-2.5 text-xs rounded-xl transition cursor-pointer text-left">
                         <span class="block font-black text-slate-950">{{ $section->official_name ?: $section->name ?: 'General' }}</span>
                         <span class="block text-[9px] opacity-80 font-semibold mt-0.5" :class="activeSectionId === {{ $section->id }} ? 'text-indigo-700' : 'text-slate-400'">
-                            {{ $section->shift ?? 'F2F' }} · {{ ucfirst($section->gender === 'male' ? 'Boys' : 'Girls') }} · {{ $section->learning_mode }}
+                            {{ ucfirst($section->gender === 'male' ? 'Boys' : 'Girls') }} · {{ $section->formatted_learning_mode }}
                         </span>
                     </button>
                 @endforeach
@@ -162,7 +162,7 @@
                         @endif
                     </div>
                 </div>
-                <x-badge color="indigo">{{ $section->learning_mode }}</x-badge>
+                <x-badge color="indigo">{{ $section->formatted_learning_mode }}</x-badge>
             </div>
 
             @if($entries->isEmpty())
