@@ -36,6 +36,7 @@ class User extends Authenticatable
         'last_admin_login_at',
         'account_status',
         'email_verified_at',
+        'last_active_at',
     ];
 
     /**
@@ -57,6 +58,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'last_active_at' => 'datetime',
             'last_admin_login_at' => 'datetime',
             'password' => 'hashed',
             'access_permissions' => 'array',
@@ -309,5 +311,10 @@ class User extends Authenticatable
     public function setNameAttribute($value)
     {
         $this->attributes['name'] = $value !== null ? mb_strtoupper($value, 'UTF-8') : null;
+    }
+
+    public function isActive(): bool
+    {
+        return $this->last_active_at && $this->last_active_at->gt(now()->subMinutes(5));
     }
 }

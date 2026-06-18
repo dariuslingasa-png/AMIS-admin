@@ -96,6 +96,7 @@
                             <th class="px-5 py-3">Account</th>
                             <th class="px-5 py-3">Active Roles</th>
                             <th class="px-5 py-3">User Status</th>
+                            <th class="px-5 py-3">Portal Activity</th>
                             <th class="px-5 py-3">Created</th>
                             <th class="px-5 py-3 text-right">Account Options</th>
                         </tr>
@@ -145,6 +146,28 @@
                                         {{ $status === 'disabled' ? 'SUSPENDED' : strtoupper($status) }}
                                     </span>
                                 </td>
+                                <td class="px-5 py-4">
+                                    @if($user->isActive())
+                                        <div class="flex items-center gap-1.5">
+                                            <span class="relative flex h-2 w-2">
+                                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                                <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                            </span>
+                                            <span class="text-xs font-bold text-emerald-700">Active</span>
+                                            <span class="text-[10px] font-semibold text-slate-400">({{ $user->last_active_at ? $user->last_active_at->diffForHumans() : 'now' }})</span>
+                                        </div>
+                                    @else
+                                        <div class="flex items-center gap-1.5">
+                                            <span class="inline-flex rounded-full h-2 w-2 bg-slate-300"></span>
+                                            <span class="text-xs font-semibold text-slate-500">Inactive</span>
+                                            @if($user->last_active_at)
+                                                <span class="text-[10px] font-medium text-slate-400">({{ $user->last_active_at->diffForHumans() }})</span>
+                                            @else
+                                                <span class="text-[10px] font-medium text-slate-400">(Never)</span>
+                                            @endif
+                                        </div>
+                                    @endif
+                                </td>
                                 <td class="px-5 py-4 text-xs font-bold text-slate-500">
                                     {{ $user->created_at?->format('M d, Y h:i A') }}
                                 </td>
@@ -176,7 +199,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="px-5 py-10 text-center text-sm font-bold text-slate-400">No administrative accounts found.</td>
+                                <td colspan="6" class="px-5 py-10 text-center text-sm font-bold text-slate-400">No administrative accounts found.</td>
                             </tr>
                         @endforelse
                     </tbody>

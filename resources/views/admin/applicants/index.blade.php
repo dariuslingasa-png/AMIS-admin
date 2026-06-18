@@ -330,7 +330,25 @@
                                             <div class="flex items-center gap-3">
                                                 <span class="inline-flex h-9 w-9 items-center justify-center rounded-md text-xs font-extrabold {{ $accent['icon'] }}">{{ $initials ?: 'FA' }}</span>
                                                 <div>
-                                                    <h3 class="text-sm font-extrabold tracking-wide {{ $accent['text'] }}">{{ $familyHeader }}</h3>
+                                                    <div class="flex flex-wrap items-center gap-2">
+                                                        <h3 class="text-sm font-extrabold tracking-wide {{ $accent['text'] }}">{{ $familyHeader }}</h3>
+                                                        @if ($representative->user)
+                                                            @if ($representative->user->isActive())
+                                                                <span class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-emerald-800 ring-1 ring-emerald-250" title="Active on Portal: {{ $representative->user->last_active_at ? $representative->user->last_active_at->diffForHumans() : 'now' }}">
+                                                                    <span class="relative flex h-1.5 w-1.5">
+                                                                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                                                        <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                                                                    </span>
+                                                                    Active
+                                                                </span>
+                                                            @else
+                                                                <span class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-slate-600 ring-1 ring-slate-200" title="Inactive: {{ $representative->user->last_active_at ? $representative->user->last_active_at->diffForHumans() : 'never' }}">
+                                                                    <span class="h-1.5 w-1.5 rounded-full bg-slate-400"></span>
+                                                                    Inactive
+                                                                </span>
+                                                            @endif
+                                                        @endif
+                                                    </div>
                                                     <p class="mt-1 text-xs font-bold uppercase tracking-wide text-slate-500">FAMILY APPLICATION #{{ str_pad($family['family_no'], 4, '0', STR_PAD_LEFT) }}</p>
                                                 </div>
                                             </div>
