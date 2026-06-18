@@ -111,7 +111,10 @@
             $groupedStudents = $students->groupBy('grade_level')->sortBy(function ($group, $gradeName) use ($gradeOrder) {
                 $pos = array_search($gradeName, $gradeOrder);
                 return $pos === false ? 999 : $pos;
-              @foreach ($groupedStudents as $gradeName => $gradeStudents)
+            });
+        @endphp
+
+        @foreach ($groupedStudents as $gradeName => $gradeStudents)
             @php
                 $sortedGradeStudents = $gradeStudents->sort(function ($a, $b) {
                     $lmA = strtolower($a->applicant->learning_mode ?? 'face-to-face');
