@@ -3,7 +3,10 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>AMIS Student Records List</title>
+    @php
+        $titleGrade = request('grade') ? ' - ' . request('grade') : '';
+    @endphp
+    <title>AMIS Student List{{ $titleGrade }}</title>
     <style>
         @page { size: A4; margin: 12mm; }
         * { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
