@@ -102,10 +102,12 @@
                 @endif
             </h2>
             <div class="text-slate-500 font-normal" style="font-family: Arial, sans-serif; font-size: 9px; margin-top: 4px;">
-                Total Filtered: {{ $students->count() }} Students | 
-                Changed Password: {{ $students->whereNotNull('password_changed_at')->count() }} | 
-                Temporary Password: {{ $students->whereNull('password_changed_at')->whereNotNull('ms_user_id')->count() }} | 
-                No Microsoft Account: {{ $students->whereNull('ms_user_id')->count() }}
+                Total Filtered: {{ $students->count() }} Students
+                @if (request('show_passwords'))
+                    | Changed Password: {{ $students->whereNotNull('password_changed_at')->count() }} | 
+                    Temporary Password: {{ $students->whereNull('password_changed_at')->whereNotNull('ms_user_id')->count() }} | 
+                    No Microsoft Account: {{ $students->whereNull('ms_user_id')->count() }}
+                @endif
             </div>
         </div>
 
@@ -160,117 +162,165 @@
                 $noAccountStudents = $sortedGradeStudents->filter(fn($student) => $student->ms_user_id === null);
             @endphp
             <div class="grade-print-section mb-10 {{ !$loop->last ? 'page-break-after' : '' }}">
-                <h2 class="text-sm font-bold text-slate-800 mb-2 pb-1.5 uppercase tracking-wider" style="font-family: Arial, sans-serif; border-bottom: 2px solid #e2e8f0;">
-                    {{ $gradeName }} 
-                    <span class="text-slate-500 font-normal" style="font-size: 10px; text-transform: none; margin-left: 6px;">
-                        ({{ $gradeStudents->count() }} Students | {{ $gradeChanged }} Changed, {{ $gradeTemp }} Temporary, {{ $gradeNoAcc }} No Account)
-                    </span>
-                </h2>
+                @if (request('show_passwords'))
+                    <h2 class="text-sm font-bold text-slate-800 mb-2 pb-1.5 uppercase tracking-wider" style="font-family: Arial, sans-serif; border-bottom: 2px solid #e2e8f0;">
+                        {{ $gradeName }} 
+                        <span class="text-slate-500 font-normal" style="font-size: 10px; text-transform: none; margin-left: 6px;">
+                            ({{ $gradeStudents->count() }} Students | {{ $gradeChanged }} Changed, {{ $gradeTemp }} Temporary, {{ $gradeNoAcc }} No Account)
+                        </span>
+                    </h2>
 
-                <!-- 1. Changed Password List -->
-                @if ($changedStudents->isNotEmpty())
-                    <h3 class="text-xs font-bold text-emerald-700 mb-2 uppercase tracking-wide" style="font-family: Arial, sans-serif; margin-top: 15px; letter-spacing: 0.02em;">
-                        ● Changed Password List ({{ $changedStudents->count() }} Students)
-                    </h3>
-                    <table class="w-full text-left text-sm print-table mb-6">
-                        <thead>
-                            <tr>
-                                <th style="width: 5%; text-align: center;">#</th>
-                                <th style="width: 55%">Student</th>
-                                <th style="width: 15%">AMIS ID</th>
-                                <th style="width: 25%">Mode</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($changedStudents as $index => $student)
-                                @php
-                                    $fullName = html_entity_decode(trim(($student->applicant->first_name ?? '').' '.($student->applicant->middle_name ?? '').' '.($student->applicant->last_name ?? '')), ENT_QUOTES, 'UTF-8');
-                                    $name = $fullName ? \Illuminate\Support\Str::upper($fullName) : 'STUDENT PROFILE';
-                                    
-                                    $lMode = $student->applicant->learning_mode ?? 'Face-to-Face';
-                                    if (str_contains(strtolower($lMode), '1st')) {
-                                        $lModeLabel = 'Flexible Online 1st Shift';
-                                    } elseif (str_contains(strtolower($lMode), '2nd')) {
-                                        $lModeLabel = 'Flexible Online 2nd Shift';
-                                    } elseif (str_contains(strtolower($lMode), 'face') || str_contains(strtolower($lMode), 'f2f')) {
-                                        $lModeLabel = 'Face-to-Face';
-                                    } else {
-                                        $lModeLabel = $lMode;
-                                    }
-                                @endphp
+                    <!-- 1. Changed Password List -->
+                    @if ($changedStudents->isNotEmpty())
+                        <h3 class="text-xs font-bold text-emerald-700 mb-2 uppercase tracking-wide" style="font-family: Arial, sans-serif; margin-top: 15px; letter-spacing: 0.02em;">
+                            ● Changed Password List ({{ $changedStudents->count() }} Students)
+                        </h3>
+                        <table class="w-full text-left text-sm print-table mb-6">
+                            <thead>
                                 <tr>
-                                    <td style="text-align: center; font-weight: bold; color: #64748b;">{{ $loop->iteration }}</td>
-                                    <td class="font-bold text-slate-900">{{ $name }}</td>
-                                    <td class="font-semibold">{{ $student->student_number ?? '-' }}</td>
-                                    <td class="text-slate-600">{{ $lModeLabel }}</td>
+                                    <th style="width: 5%; text-align: center;">#</th>
+                                    <th style="width: 55%">Student</th>
+                                    <th style="width: 15%">AMIS ID</th>
+                                    <th style="width: 25%">Mode</th>
                                 </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                @endif
+                            </thead>
+                            <tbody>
+                                @foreach ($changedStudents as $student)
+                                    @php
+                                        $fullName = html_entity_decode(trim(($student->applicant->first_name ?? '').' '.($student->applicant->middle_name ?? '').' '.($student->applicant->last_name ?? '')), ENT_QUOTES, 'UTF-8');
+                                        $name = $fullName ? \Illuminate\Support\Str::upper($fullName) : 'STUDENT PROFILE';
+                                        
+                                        $lMode = $student->applicant->learning_mode ?? 'Face-to-Face';
+                                        if (str_contains(strtolower($lMode), '1st')) {
+                                            $lModeLabel = 'Flexible Online 1st Shift';
+                                        } elseif (str_contains(strtolower($lMode), '2nd')) {
+                                            $lModeLabel = 'Flexible Online 2nd Shift';
+                                        } elseif (str_contains(strtolower($lMode), 'face') || str_contains(strtolower($lMode), 'f2f')) {
+                                            $lModeLabel = 'Face-to-Face';
+                                        } else {
+                                            $lModeLabel = $lMode;
+                                        }
+                                    @endphp
+                                    <tr>
+                                        <td style="text-align: center; font-weight: bold; color: #64748b;">{{ $loop->iteration }}</td>
+                                        <td class="font-bold text-slate-900">{{ $name }}</td>
+                                        <td class="font-semibold">{{ $student->student_number ?? '-' }}</td>
+                                        <td class="text-slate-600">{{ $lModeLabel }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    @endif
 
-                <!-- 2. Temporary Password List -->
-                @if ($tempStudents->isNotEmpty())
-                    <h3 class="text-xs font-bold text-amber-700 mb-2 uppercase tracking-wide" style="font-family: Arial, sans-serif; margin-top: 15px; letter-spacing: 0.02em;">
-                        ● Temporary Password List - Still Not Logged In / Changed ({{ $tempStudents->count() }} Students)
-                    </h3>
-                    <table class="w-full text-left text-sm print-table mb-6">
-                        <thead>
-                            <tr>
-                                <th style="width: 5%; text-align: center;">#</th>
-                                <th style="width: 55%">Student</th>
-                                <th style="width: 15%">AMIS ID</th>
-                                <th style="width: 25%">Mode</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($tempStudents as $student)
-                                @php
-                                    $fullName = html_entity_decode(trim(($student->applicant->first_name ?? '').' '.($student->applicant->middle_name ?? '').' '.($student->applicant->last_name ?? '')), ENT_QUOTES, 'UTF-8');
-                                    $name = $fullName ? \Illuminate\Support\Str::upper($fullName) : 'STUDENT PROFILE';
-                                    
-                                    $lMode = $student->applicant->learning_mode ?? 'Face-to-Face';
-                                    if (str_contains(strtolower($lMode), '1st')) {
-                                        $lModeLabel = 'Flexible Online 1st Shift';
-                                    } elseif (str_contains(strtolower($lMode), '2nd')) {
-                                        $lModeLabel = 'Flexible Online 2nd Shift';
-                                    } elseif (str_contains(strtolower($lMode), 'face') || str_contains(strtolower($lMode), 'f2f')) {
-                                        $lModeLabel = 'Face-to-Face';
-                                    } else {
-                                        $lModeLabel = $lMode;
-                                    }
-                                @endphp
+                    <!-- 2. Temporary Password List -->
+                    @if ($tempStudents->isNotEmpty())
+                        <h3 class="text-xs font-bold text-amber-700 mb-2 uppercase tracking-wide" style="font-family: Arial, sans-serif; margin-top: 15px; letter-spacing: 0.02em;">
+                            ● Temporary Password List - Still Not Logged In / Changed ({{ $tempStudents->count() }} Students)
+                        </h3>
+                        <table class="w-full text-left text-sm print-table mb-6">
+                            <thead>
                                 <tr>
-                                    <td style="text-align: center; font-weight: bold; color: #64748b;">{{ $loop->iteration }}</td>
-                                    <td class="font-bold text-slate-900">{{ $name }}</td>
-                                    <td class="font-semibold">{{ $student->student_number ?? '-' }}</td>
-                                    <td class="text-slate-600">{{ $lModeLabel }}</td>
+                                    <th style="width: 5%; text-align: center;">#</th>
+                                    <th style="width: 55%">Student</th>
+                                    <th style="width: 15%">AMIS ID</th>
+                                    <th style="width: 25%">Mode</th>
                                 </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                @endif
+                            </thead>
+                            <tbody>
+                                @foreach ($tempStudents as $student)
+                                    @php
+                                        $fullName = html_entity_decode(trim(($student->applicant->first_name ?? '').' '.($student->applicant->middle_name ?? '').' '.($student->applicant->last_name ?? '')), ENT_QUOTES, 'UTF-8');
+                                        $name = $fullName ? \Illuminate\Support\Str::upper($fullName) : 'STUDENT PROFILE';
+                                        
+                                        $lMode = $student->applicant->learning_mode ?? 'Face-to-Face';
+                                        if (str_contains(strtolower($lMode), '1st')) {
+                                            $lModeLabel = 'Flexible Online 1st Shift';
+                                        } elseif (str_contains(strtolower($lMode), '2nd')) {
+                                            $lModeLabel = 'Flexible Online 2nd Shift';
+                                        } elseif (str_contains(strtolower($lMode), 'face') || str_contains(strtolower($lMode), 'f2f')) {
+                                            $lModeLabel = 'Face-to-Face';
+                                        } else {
+                                            $lModeLabel = $lMode;
+                                        }
+                                    @endphp
+                                    <tr>
+                                        <td style="text-align: center; font-weight: bold; color: #64748b;">{{ $loop->iteration }}</td>
+                                        <td class="font-bold text-slate-900">{{ $name }}</td>
+                                        <td class="font-semibold">{{ $student->student_number ?? '-' }}</td>
+                                        <td class="text-slate-600">{{ $lModeLabel }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    @endif
 
-                <!-- 3. No Microsoft Account List -->
-                @if ($noAccountStudents->isNotEmpty())
-                    <h3 class="text-xs font-bold text-slate-600 mb-2 uppercase tracking-wide" style="font-family: Arial, sans-serif; margin-top: 15px; letter-spacing: 0.02em;">
-                        ● No Microsoft Account List ({{ $noAccountStudents->count() }} Students)
-                    </h3>
+                    <!-- 3. No Microsoft Account List -->
+                    @if ($noAccountStudents->isNotEmpty())
+                        <h3 class="text-xs font-bold text-slate-600 mb-2 uppercase tracking-wide" style="font-family: Arial, sans-serif; margin-top: 15px; letter-spacing: 0.02em;">
+                            ● No Microsoft Account List ({{ $noAccountStudents->count() }} Students)
+                        </h3>
+                        <table class="w-full text-left text-sm print-table mb-6">
+                            <thead>
+                                <tr>
+                                    <th style="width: 5%; text-align: center;">#</th>
+                                    <th style="width: 55%">Student</th>
+                                    <th style="width: 15%">AMIS ID</th>
+                                    <th style="width: 25%">Mode</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($noAccountStudents as $student)
+                                    @php
+                                        $fullName = html_entity_decode(trim(($student->applicant->first_name ?? '').' '.($student->applicant->middle_name ?? '').' '.($student->applicant->last_name ?? '')), ENT_QUOTES, 'UTF-8');
+                                        $name = $fullName ? \Illuminate\Support\Str::upper($fullName) : 'STUDENT PROFILE';
+                                        
+                                        $lMode = $student->applicant->learning_mode ?? 'Face-to-Face';
+                                        if (str_contains(strtolower($lMode), '1st')) {
+                                            $lModeLabel = 'Flexible Online 1st Shift';
+                                        } elseif (str_contains(strtolower($lMode), '2nd')) {
+                                            $lModeLabel = 'Flexible Online 2nd Shift';
+                                        } elseif (str_contains(strtolower($lMode), 'face') || str_contains(strtolower($lMode), 'f2f')) {
+                                            $lModeLabel = 'Face-to-Face';
+                                        } else {
+                                            $lModeLabel = $lMode;
+                                        }
+                                    @endphp
+                                    <tr>
+                                        <td style="text-align: center; font-weight: bold; color: #64748b;">{{ $loop->iteration }}</td>
+                                        <td class="font-bold text-slate-900">{{ $name }}</td>
+                                        <td class="font-semibold">{{ $student->student_number ?? '-' }}</td>
+                                        <td class="text-slate-600">{{ $lModeLabel }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    @endif
+                @else
+                    <!-- STANDARD MASTER LIST (No passwords or status splitting, normal columns) -->
+                    <h2 class="text-sm font-bold text-slate-800 mb-3 pb-1.5 uppercase tracking-wider" style="font-family: Arial, sans-serif;">
+                        {{ $gradeName }} <span class="text-slate-500 font-normal">({{ $gradeStudents->count() }} Students)</span>
+                    </h2>
                     <table class="w-full text-left text-sm print-table mb-6">
                         <thead>
                             <tr>
                                 <th style="width: 5%; text-align: center;">#</th>
-                                <th style="width: 55%">Student</th>
-                                <th style="width: 15%">AMIS ID</th>
-                                <th style="width: 25%">Mode</th>
+                                <th style="width: 25%">Student</th>
+                                <th style="width: 12%">AMIS ID</th>
+                                <th style="width: 10%">Gender</th>
+                                <th style="width: 10%">Type</th>
+                                <th style="width: 20%">Mode</th>
+                                <th style="width: 18%">AMIS School Email</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach ($noAccountStudents as $student)
+                            @foreach ($sortedGradeStudents as $student)
                                 @php
                                     $fullName = html_entity_decode(trim(($student->applicant->first_name ?? '').' '.($student->applicant->middle_name ?? '').' '.($student->applicant->last_name ?? '')), ENT_QUOTES, 'UTF-8');
                                     $name = $fullName ? \Illuminate\Support\Str::upper($fullName) : 'STUDENT PROFILE';
+                                    $gender = strtolower((string) ($student->applicant->gender ?? ''));
+                                    $genderLabel = $gender === 'male' ? 'MALE' : ($gender === 'female' ? 'FEMALE' : 'NOT SET');
                                     
+                                    $sType = strtoupper((string) ($student->applicant->student_type ?? 'NEW'));
                                     $lMode = $student->applicant->learning_mode ?? 'Face-to-Face';
                                     if (str_contains(strtolower($lMode), '1st')) {
                                         $lModeLabel = 'Flexible Online 1st Shift';
@@ -286,7 +336,10 @@
                                     <td style="text-align: center; font-weight: bold; color: #64748b;">{{ $loop->iteration }}</td>
                                     <td class="font-bold text-slate-900">{{ $name }}</td>
                                     <td class="font-semibold">{{ $student->student_number ?? '-' }}</td>
+                                    <td>{{ $genderLabel }}</td>
+                                    <td class="font-semibold text-slate-700">{{ $sType }}</td>
                                     <td class="text-slate-600">{{ $lModeLabel }}</td>
+                                    <td>{{ $student->school_email ?? '-' }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
