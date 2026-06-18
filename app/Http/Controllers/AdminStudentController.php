@@ -45,16 +45,20 @@ class AdminStudentController extends Controller
             }
 
             if ($request->filled('search')) {
-                $s = $request->search;
-                $query->where(function ($q) use ($s) {
+                $s = trim($request->search);
+                $sl = mb_strtolower($s);
+                $query->where(function ($q) use ($s, $sl) {
                     $q->where('students.student_number', 'like', "%{$s}%")
                       ->orWhere('students.school_email', 'like', "%{$s}%")
-                      ->orWhereHas('applicant', function ($a) use ($s) {
-                          $a->where('first_name', 'like', "%{$s}%")
-                            ->orWhere('middle_name', 'like', "%{$s}%")
-                            ->orWhere('last_name', 'like', "%{$s}%")
-                            ->orWhere(DB::raw("CONCAT(first_name, ' ', last_name)"), 'like', "%{$s}%")
-                            ->orWhere(DB::raw("CONCAT(first_name, ' ', IFNULL(middle_name, ''), ' ', last_name)"), 'like', "%{$s}%");
+                      ->orWhereHas('applicant', function ($a) use ($s, $sl) {
+                          $a->whereRaw('LOWER(first_name) LIKE ?', ["%{$sl}%"])
+                            ->orWhereRaw('LOWER(middle_name) LIKE ?', ["%{$sl}%"])
+                            ->orWhereRaw('LOWER(last_name) LIKE ?', ["%{$sl}%"])
+                            ->orWhereRaw("LOWER(CONCAT(first_name, ' ', last_name)) LIKE ?", ["%{$sl}%"])
+                            ->orWhereRaw("LOWER(CONCAT(first_name, ' ', IFNULL(middle_name, ''), ' ', last_name)) LIKE ?", ["%{$sl}%"])
+                            ->orWhereRaw("LOWER(CONCAT(first_name, ' ', LEFT(IFNULL(middle_name, ''), 1), '. ', last_name)) LIKE ?", ["%{$sl}%"])
+                            ->orWhereRaw("LOWER(CONCAT(last_name, ', ', first_name)) LIKE ?", ["%{$sl}%"])
+                            ->orWhereRaw("LOWER(CONCAT(last_name, ', ', first_name, ' ', LEFT(IFNULL(middle_name, ''), 1), '.')) LIKE ?", ["%{$sl}%"]);
                       });
                 });
             }

@@ -700,14 +700,18 @@ class AdminMsSyncController extends Controller
             ->whereNotNull('ms_user_id');
 
         if ($request->filled('search')) {
-            $search = $request->string('search')->toString();
-            $query->where(function (Builder $q) use ($search) {
+            $search = trim($request->string('search')->toString());
+            $sl = mb_strtolower($search);
+            $query->where(function (Builder $q) use ($search, $sl) {
                 $q->where('student_number', 'like', "%{$search}%")
                     ->orWhere('school_email', 'like', "%{$search}%")
                     ->orWhereHas('applicant', fn (Builder $a) => $a
-                        ->where('first_name', 'like', "%{$search}%")
-                        ->orWhere('middle_name', 'like', "%{$search}%")
-                        ->orWhere('last_name', 'like', "%{$search}%"));
+                        ->whereRaw('LOWER(first_name) LIKE ?', ["%{$sl}%"])
+                        ->orWhereRaw('LOWER(middle_name) LIKE ?', ["%{$sl}%"])
+                        ->orWhereRaw('LOWER(last_name) LIKE ?', ["%{$sl}%"])
+                        ->orWhereRaw("LOWER(CONCAT(first_name, ' ', last_name)) LIKE ?", ["%{$sl}%"])
+                        ->orWhereRaw("LOWER(CONCAT(first_name, ' ', IFNULL(middle_name, ''), ' ', last_name)) LIKE ?", ["%{$sl}%"])
+                        ->orWhereRaw("LOWER(CONCAT(first_name, ' ', LEFT(IFNULL(middle_name, ''), 1), '. ', last_name)) LIKE ?", ["%{$sl}%"]));
             });
         }
 

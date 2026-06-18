@@ -24,17 +24,24 @@ class AdminSoaController extends Controller
             $query->where('grade_level', $request->grade);
         }
         if ($request->filled('search')) {
-            $s = $request->search;
-            $query->where(function ($q) use ($s) {
+            $s = trim($request->search);
+            $sl = mb_strtolower($s);
+            $query->where(function ($q) use ($s, $sl) {
                 $q->whereHas('student', fn($sq) =>
                     $sq->where('student_number', 'like', "%{$s}%")
                       ->orWhereHas('applicant', fn($a) =>
-                          $a->where('first_name', 'like', "%{$s}%")
-                            ->orWhere('last_name', 'like', "%{$s}%")
+                          $a->whereRaw('LOWER(first_name) LIKE ?', ["%{$sl}%"])
+                            ->orWhereRaw('LOWER(middle_name) LIKE ?', ["%{$sl}%"])
+                            ->orWhereRaw('LOWER(last_name) LIKE ?', ["%{$sl}%"])
+                            ->orWhereRaw("LOWER(CONCAT(first_name, ' ', last_name)) LIKE ?", ["%{$sl}%"])
+                            ->orWhereRaw("LOWER(CONCAT(first_name, ' ', IFNULL(middle_name, ''), ' ', last_name)) LIKE ?", ["%{$sl}%"])
+                            ->orWhereRaw("LOWER(CONCAT(first_name, ' ', LEFT(IFNULL(middle_name, ''), 1), '. ', last_name)) LIKE ?", ["%{$sl}%"])
                       )
                 )->orWhereHas('applicant', fn($a) =>
-                    $a->where('first_name', 'like', "%{$s}%")
-                      ->orWhere('last_name', 'like', "%{$s}%")
+                    $a->whereRaw('LOWER(first_name) LIKE ?', ["%{$sl}%"])
+                      ->orWhereRaw('LOWER(last_name) LIKE ?', ["%{$sl}%"])
+                      ->orWhereRaw("LOWER(CONCAT(first_name, ' ', last_name)) LIKE ?", ["%{$sl}%"])
+                      ->orWhereRaw("LOWER(CONCAT(first_name, ' ', LEFT(IFNULL(middle_name, ''), 1), '. ', last_name)) LIKE ?", ["%{$sl}%"])
                 );
             });
         }

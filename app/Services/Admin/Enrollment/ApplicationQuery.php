@@ -80,8 +80,10 @@ class ApplicationQuery
                     ->orWhereRaw("CONCAT(enrollment_applicants.last_name, ' ', enrollment_applicants.first_name) LIKE ?", ["%{$searchWithoutCommaClean}%"])
                     ->orWhereRaw("CONCAT(enrollment_applicants.last_name, ', ', enrollment_applicants.first_name) LIKE ?", ["%{$cleanSearch}%"])
                     ->orWhereRaw("CONCAT(enrollment_applicants.first_name, ' ', COALESCE(enrollment_applicants.middle_name, ''), ' ', enrollment_applicants.last_name) LIKE ?", ["%{$searchWithoutCommaClean}%"])
+                    ->orWhereRaw("CONCAT(enrollment_applicants.first_name, ' ', LEFT(COALESCE(enrollment_applicants.middle_name, ''), 1), '. ', enrollment_applicants.last_name) LIKE ?", ["%{$searchWithoutCommaClean}%"])
                     ->orWhereRaw("CONCAT(enrollment_applicants.last_name, ' ', enrollment_applicants.first_name, ' ', COALESCE(enrollment_applicants.middle_name, '')) LIKE ?", ["%{$searchWithoutCommaClean}%"])
-                    ->orWhereRaw("CONCAT(enrollment_applicants.last_name, ', ', enrollment_applicants.first_name, ' ', COALESCE(enrollment_applicants.middle_name, '')) LIKE ?", ["%{$cleanSearch}%"]);
+                    ->orWhereRaw("CONCAT(enrollment_applicants.last_name, ', ', enrollment_applicants.first_name, ' ', COALESCE(enrollment_applicants.middle_name, '')) LIKE ?", ["%{$cleanSearch}%"])
+                    ->orWhereRaw("CONCAT(enrollment_applicants.last_name, ', ', enrollment_applicants.first_name, ' ', LEFT(COALESCE(enrollment_applicants.middle_name, ''), 1), '.') LIKE ?", ["%{$cleanSearch}%"]);
 
                 $tokens = explode(' ', $searchWithoutCommaClean);
                 if (count($tokens) > 1) {
@@ -225,8 +227,10 @@ class ApplicationQuery
                     ->orWhereRaw("CONCAT(last_name, ' ', first_name) LIKE ?", ["%{$searchWithoutCommaClean}%"])
                     ->orWhereRaw("CONCAT(last_name, ', ', first_name) LIKE ?", ["%{$cleanSearch}%"])
                     ->orWhereRaw("CONCAT(first_name, ' ', COALESCE(middle_name, ''), ' ', last_name) LIKE ?", ["%{$searchWithoutCommaClean}%"])
+                    ->orWhereRaw("CONCAT(first_name, ' ', LEFT(COALESCE(middle_name, ''), 1), '. ', last_name) LIKE ?", ["%{$searchWithoutCommaClean}%"])
                     ->orWhereRaw("CONCAT(last_name, ' ', first_name, ' ', COALESCE(middle_name, '')) LIKE ?", ["%{$searchWithoutCommaClean}%"])
-                    ->orWhereRaw("CONCAT(last_name, ', ', first_name, ' ', COALESCE(middle_name, '')) LIKE ?", ["%{$cleanSearch}%"]);
+                    ->orWhereRaw("CONCAT(last_name, ', ', first_name, ' ', COALESCE(middle_name, '')) LIKE ?", ["%{$cleanSearch}%"])
+                    ->orWhereRaw("CONCAT(last_name, ', ', first_name, ' ', LEFT(COALESCE(middle_name, ''), 1), '.') LIKE ?", ["%{$cleanSearch}%"]);
 
                 $tokens = explode(' ', $searchWithoutCommaClean);
                 if (count($tokens) > 1) {
