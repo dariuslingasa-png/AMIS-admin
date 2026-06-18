@@ -88,8 +88,13 @@
                     
                     <div>
                         <div class="slip-password-box">
-                            <span class="slip-password-label">Temporary Password:</span>
-                            <span class="slip-password-val">{{ $student->temp_password ?? 'N/A' }}</span>
+                            @if ($student->password_changed_at)
+                                <span class="slip-password-label" style="color: #059669;">Password Status:</span>
+                                <span class="slip-password-val" style="color: #059669; font-size: 11px; text-transform: uppercase;">Changed by Student</span>
+                            @else
+                                <span class="slip-password-label">Temporary Password:</span>
+                                <span class="slip-password-val">{{ $student->temp_password ?? 'N/A' }}</span>
+                            @endif
                         </div>
                         <div class="slip-footer">
                             Go to <strong>Microsoft Login</strong> to sign in.<br>
@@ -129,10 +134,11 @@
                             <td style="font-weight: bold; color: #0f172a;">{{ $name }}</td>
                             <td class="font-mono">{{ $student->student_number }}</td>
                             <td class="font-mono">{{ $student->school_email ?? '-' }}</td>
-                            <td class="font-mono" style="color: #b45309;">
-                                {{ $student->temp_password ?? 'N/A' }}
+                            <td class="font-mono">
                                 @if ($student->password_changed_at)
-                                    <span style="font-size: 8px; color: #059669; font-weight: bold; margin-left: 5px; text-transform: uppercase;">(Changed)</span>
+                                    <span style="color: #059669; font-weight: bold; text-transform: uppercase;">Changed</span>
+                                @else
+                                    <span style="color: #b45309;">{{ $student->temp_password ?? 'N/A' }}</span>
                                 @endif
                             </td>
                         </tr>
