@@ -39,9 +39,13 @@
                             Changed / Set by Student
                         </span>
                         <span class="text-[10px] text-slate-400 font-bold">on {{ $student->password_changed_at->format('M d, Y h:i A') }}</span>
-                    @else
+                    @elseif ($student->ms_user_id)
                         <span class="inline-flex items-center rounded bg-amber-50 px-2 py-0.5 text-[10px] font-extrabold text-amber-700 ring-1 ring-amber-100 uppercase">
                             Still Temporary
+                        </span>
+                    @else
+                        <span class="inline-flex items-center rounded bg-slate-100 px-2 py-0.5 text-[10px] font-extrabold text-slate-500 ring-1 ring-slate-200 uppercase">
+                            No Account
                         </span>
                     @endif
                 </dd>

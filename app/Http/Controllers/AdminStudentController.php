@@ -109,6 +109,18 @@ class AdminStudentController extends Controller
                 }
             }
 
+            if ($request->filled('password_status')) {
+                $pStatus = $request->password_status;
+                if ($pStatus === 'changed') {
+                    $query->whereNotNull('students.password_changed_at');
+                } elseif ($pStatus === 'temp') {
+                    $query->whereNull('students.password_changed_at')
+                          ->whereNotNull('students.ms_user_id');
+                } elseif ($pStatus === 'no_account') {
+                    $query->whereNull('students.ms_user_id');
+                }
+            }
+
             return $query;
         };
 
@@ -152,6 +164,19 @@ class AdminStudentController extends Controller
             ->orderByRaw($gradeField)
             ->get();
 
+        $passwordStatusByGrade = (clone $analyticsBase)
+            ->select(
+                'students.grade_level',
+                DB::raw('COUNT(*) as total'),
+                DB::raw('SUM(CASE WHEN students.password_changed_at IS NOT NULL THEN 1 ELSE 0 END) as changed'),
+                DB::raw('SUM(CASE WHEN students.password_changed_at IS NULL AND students.ms_user_id IS NOT NULL THEN 1 ELSE 0 END) as temp'),
+                DB::raw('SUM(CASE WHEN students.ms_user_id IS NULL THEN 1 ELSE 0 END) as no_account')
+            )
+            ->groupBy('students.grade_level')
+            ->orderByRaw("CASE WHEN {$gradeField} = 0 THEN 1 ELSE 0 END ASC")
+            ->orderByRaw($gradeField)
+            ->get();
+
         $genderCounts = (clone $analyticsBase)
             ->leftJoin('enrollment_applicants', 'enrollment_applicants.id', '=', 'students.enrollment_applicant_id')
             ->selectRaw("LOWER(COALESCE(NULLIF(enrollment_applicants.gender, ''), 'not_set')) as gender_key, COUNT(*) as total")
@@ -181,6 +206,7 @@ class AdminStudentController extends Controller
         $analytics = [
             'filtered_total' => (clone $analyticsBase)->count(),
             'grades' => $gradeAnalytics,
+            'password_by_grade' => $passwordStatusByGrade,
             'gender' => [
                 'male' => (int) ($genderCounts['male'] ?? 0),
                 'female' => (int) ($genderCounts['female'] ?? 0),
@@ -219,6 +245,8 @@ class AdminStudentController extends Controller
             'flexible_students' => (clone $analyticsBase)->whereHas('applicant', fn($q) => $q->where('learning_mode', 'like', '%flexible%')->orWhere('learning_mode', 'like', '%online%'))->count(),
             'ms_synced' => (clone $analyticsBase)->whereNotNull('ms_user_id')->count(),
             'passwords_changed' => (clone $analyticsBase)->whereNotNull('password_changed_at')->count(),
+            'passwords_temp' => (clone $analyticsBase)->whereNull('password_changed_at')->whereNotNull('ms_user_id')->count(),
+            'no_ms_accounts' => (clone $analyticsBase)->whereNull('ms_user_id')->count(),
             'total_sections' => $sectionStatsQuery->count(),
             'allocated_slots' => $studentSectionStatsQuery->count(),
         ];

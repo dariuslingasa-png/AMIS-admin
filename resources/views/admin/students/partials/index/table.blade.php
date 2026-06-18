@@ -143,9 +143,13 @@
                                                  <svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check inline-block"><path d="M20 6 9 17l-5-5"/></svg>
                                                  Changed
                                              </span>
-                                         @else
+                                         @elseif ($student->ms_user_id)
                                              <span class="inline-flex items-center rounded bg-amber-50 px-1.5 py-0.5 text-[9px] font-extrabold text-amber-700 ring-1 ring-amber-100 uppercase">
                                                  Temporary
+                                             </span>
+                                         @else
+                                             <span class="inline-flex items-center rounded bg-slate-100 px-1.5 py-0.5 text-[9px] font-extrabold text-slate-500 ring-1 ring-slate-200 uppercase">
+                                                 No Account
                                              </span>
                                          @endif
                                      </div>

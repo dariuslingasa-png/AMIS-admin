@@ -81,6 +81,9 @@
         </div>
 
         <div class="px-6 py-5">
+            <!-- Telemetry Summary -->
+            @include('admin.students.partials.index.telemetry')
+
             <!-- Filter Bar Form -->
             @include('admin.students.partials.index.filters')
 
