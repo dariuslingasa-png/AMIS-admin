@@ -99,7 +99,10 @@
                 @endif
             </h2>
             <div class="text-slate-500 font-normal" style="font-family: Arial, sans-serif; font-size: 9px; margin-top: 4px;">
-                Total Filtered: {{ $students->count() }} Students
+                Total Filtered: {{ $students->count() }} Students | 
+                Changed Password: {{ $students->whereNotNull('password_changed_at')->count() }} | 
+                Temporary Password: {{ $students->whereNull('password_changed_at')->whereNotNull('ms_user_id')->count() }} | 
+                No Microsoft Account: {{ $students->whereNull('ms_user_id')->count() }}
             </div>
         </div>
 
@@ -144,21 +147,26 @@
                     
                     return strcasecmp($nameA, $nameB);
                 });
+
+                $gradeChanged = $gradeStudents->whereNotNull('password_changed_at')->count();
+                $gradeTemp = $gradeStudents->whereNull('password_changed_at')->whereNotNull('ms_user_id')->count();
+                $gradeNoAcc = $gradeStudents->whereNull('ms_user_id')->count();
             @endphp
             <div class="grade-print-section mb-10 {{ !$loop->last ? 'page-break-after' : '' }}">
                 <h2 class="text-sm font-bold text-slate-800 mb-3 pb-1.5 uppercase tracking-wider" style="font-family: Arial, sans-serif;">
-                    {{ $gradeName }} <span class="text-slate-500 font-normal">({{ $gradeStudents->count() }} Students)</span>
+                    {{ $gradeName }} 
+                    <span class="text-slate-550 text-slate-500 font-normal" style="font-size: 10px; text-transform: none;">
+                        ({{ $gradeStudents->count() }} Students | Password Status: {{ $gradeChanged }} Changed, {{ $gradeTemp }} Temporary, {{ $gradeNoAcc }} No Account)
+                    </span>
                 </h2>
                 <table class="w-full text-left text-sm print-table mb-6">
                     <thead>
                         <tr>
                             <th style="width: 5%; text-align: center;">#</th>
-                            <th style="width: 25%">Student</th>
-                            <th style="width: 12%">AMIS ID</th>
-                            <th style="width: 10%">Gender</th>
-                            <th style="width: 10%">Type</th>
+                            <th style="width: 40%">Student</th>
+                            <th style="width: 15%">AMIS ID</th>
                             <th style="width: 20%">Mode</th>
-                            <th style="width: 18%">AMIS School Email</th>
+                            <th style="width: 20%">Password Status</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -166,10 +174,7 @@
                             @php
                                 $fullName = html_entity_decode(trim(($student->applicant->first_name ?? '').' '.($student->applicant->middle_name ?? '').' '.($student->applicant->last_name ?? '')), ENT_QUOTES, 'UTF-8');
                                 $name = $fullName ? \Illuminate\Support\Str::upper($fullName) : 'STUDENT PROFILE';
-                                $gender = strtolower((string) ($student->applicant->gender ?? ''));
-                                $genderLabel = $gender === 'male' ? 'MALE' : ($gender === 'female' ? 'FEMALE' : 'NOT SET');
                                 
-                                $sType = strtoupper((string) ($student->applicant->student_type ?? 'NEW'));
                                 $lMode = $student->applicant->learning_mode ?? 'Face-to-Face';
                                 if (str_contains(strtolower($lMode), '1st')) {
                                     $lModeLabel = 'Flexible Online 1st Shift';
@@ -180,15 +185,24 @@
                                 } else {
                                     $lModeLabel = $lMode;
                                 }
+
+                                if ($student->password_changed_at) {
+                                    $pStatusLabel = 'CHANGED';
+                                    $pStatusStyle = 'color: #059669; font-weight: bold;';
+                                } elseif ($student->ms_user_id) {
+                                    $pStatusLabel = 'TEMPORARY';
+                                    $pStatusStyle = 'color: #b45309; font-weight: bold;';
+                                } else {
+                                    $pStatusLabel = 'NO ACCOUNT';
+                                    $pStatusStyle = 'color: #64748b; font-weight: bold;';
+                                }
                             @endphp
                             <tr>
                                 <td style="text-align: center; font-weight: bold; color: #64748b;">{{ $loop->iteration }}</td>
                                 <td class="font-bold text-slate-900">{{ $name }}</td>
                                 <td class="font-semibold">{{ $student->student_number ?? '-' }}</td>
-                                <td>{{ $genderLabel }}</td>
-                                <td class="font-semibold text-slate-700">{{ $sType }}</td>
                                 <td class="text-slate-600">{{ $lModeLabel }}</td>
-                                <td>{{ $student->school_email ?? '-' }}</td>
+                                <td style="{{ $pStatusStyle }}">{{ $pStatusLabel }}</td>
                             </tr>
                         @endforeach
                     </tbody>
