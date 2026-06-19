@@ -119,8 +119,13 @@ class TeacherDirectorySeeder extends Seeder
 
     private function teacherEmail(string $name): string
     {
+        $normalized = strtolower(trim($name));
+        if ($normalized === 'ust. ahmad al-jamil' || $normalized === 'ust. ahmad al jamil') {
+            return 'tr.ajamil@amis.edu.ph';
+        }
+
         $cleanName = Str::of($name)
-            ->replaceMatches('/^(teacher|ust\.|ustadz\.?|ustadh\.?|sir\.?|ma\'am\.?|maam\.?|ms\.?|mrs\.?|mr\.?)\s+/i', '')
+            ->replaceMatches('/^(teacher|ust\.|ustadz\.?|ustadh\.?|ustadha\.?|sir\.?|ma\'am\.?|maam\.?|ms\.?|mrs\.?|mr\.?)\s+/i', '')
             ->ascii()
             ->lower()
             ->replaceMatches('/[^a-z\s]/', '')

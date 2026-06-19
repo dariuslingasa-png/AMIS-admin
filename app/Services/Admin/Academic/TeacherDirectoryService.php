@@ -286,7 +286,12 @@ class TeacherDirectoryService
 
     private function teacherEmail(string $name): string
     {
-        $cleanName = Str::of($name)->replaceMatches('/^(teacher|ust\.|ustadz\.?|ustadh\.?|sir\.?|ma\'am\.?|maam\.?|ms\.?|mrs\.?|mr\.?)\s+/i', '')->ascii()->lower()->replaceMatches('/[^a-z\s]/', '')->squish();
+        $normalized = strtolower(trim($name));
+        if ($normalized === 'ust. ahmad al-jamil' || $normalized === 'ust. ahmad al jamil') {
+            return 'tr.ajamil@amis.edu.ph';
+        }
+
+        $cleanName = Str::of($name)->replaceMatches('/^(teacher|ust\.|ustadz\.?|ustadh\.?|ustadha\.?|sir\.?|ma\'am\.?|maam\.?|ms\.?|mrs\.?|mr\.?)\s+/i', '')->ascii()->lower()->replaceMatches('/[^a-z\s]/', '')->squish();
         $parts = explode(' ', (string) $cleanName);
 
         return count($parts) >= 2 ? 'tr.' . substr($parts[0], 0, 1) . end($parts) . '@amis.edu.ph' : 'tr.' . $cleanName . '@amis.edu.ph';

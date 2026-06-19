@@ -6,7 +6,7 @@
         <select name="section_id" @if($isEdit) x-model="editForm.section_id" @else x-model="activeSectionId" @endif class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl px-3 py-2 outline-none">
             @foreach($sections as $section)
                 <option value="{{ $section->id }}" @selected((int) old('section_id', $activeSectionId ?? 0) === $section->id)>
-                    {{ $section->grade_level }} @if($section->name) — {{ $section->name }} @endif
+                    {{ $section->grade_level }} - {{ $section->official_name ?: ($section->name ?: 'General') }} ({{ $section->formatted_learning_mode }} - {{ ucfirst($section->gender === 'male' ? 'Boys' : 'Girls') }})
                 </option>
             @endforeach
         </select>
