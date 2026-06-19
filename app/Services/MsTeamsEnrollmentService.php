@@ -28,11 +28,17 @@ class MsTeamsEnrollmentService
         $learningMode = $applicant->learning_mode ?? 'Face-to-Face';
         $results      = ['enrolled' => 0, 'failed' => 0, 'errors' => []];
 
+        $isFlexible = str_contains(strtolower($learningMode), 'flexible') || str_contains(strtolower($learningMode), 'online');
         $shift = null;
-        if (str_contains($learningMode, '1st Shift')) $shift = '1st Shift';
-        elseif (str_contains($learningMode, '2nd Shift')) $shift = '2nd Shift';
+        if (str_contains($learningMode, '1st Shift')) {
+            $shift = '1st Shift';
+        } elseif (str_contains($learningMode, '2nd Shift')) {
+            $shift = '2nd Shift';
+        } elseif ($isFlexible) {
+            $shift = '1st Shift';
+        }
 
-        $modeBase = $shift ? 'Flexible Online Learning' : 'Face-to-Face';
+        $modeBase = $isFlexible ? 'Flexible Online Learning' : 'Face-to-Face';
 
         // Find or auto-create section — DB lock prevents duplicate creation
         $section = DB::transaction(function () use ($student, $modeBase, $shift, $gender, &$results) {

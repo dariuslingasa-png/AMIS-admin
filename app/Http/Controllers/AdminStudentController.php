@@ -195,6 +195,7 @@ class AdminStudentController extends Controller
                 CASE 
                     WHEN LOWER(ma.learning_mode) LIKE '%1st shift%' THEN 'flexible_1st'
                     WHEN LOWER(ma.learning_mode) LIKE '%2nd shift%' THEN 'flexible_2nd'
+                    WHEN LOWER(ma.learning_mode) LIKE '%flexible%' OR LOWER(ma.learning_mode) LIKE '%online%' THEN 'flexible_1st'
                     WHEN LOWER(ma.learning_mode) LIKE '%face%' OR LOWER(ma.learning_mode) LIKE '%f2f%' THEN 'f2f'
                     ELSE 'f2f'
                 END as mode_key, 

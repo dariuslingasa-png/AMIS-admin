@@ -104,10 +104,16 @@ class ApproveTestApplicantsSeeder extends Seeder
                 // G. Match and link the student to a classroom section group
                 $gender = strtolower($applicant->gender ?? 'male');
                 $learningMode = $applicant->learning_mode ?? 'Face-to-Face';
+                $isFlexible = str_contains(strtolower($learningMode), 'flexible') || str_contains(strtolower($learningMode), 'online');
                 $shift = null;
-                if (str_contains($learningMode, '1st Shift')) $shift = '1st Shift';
-                elseif (str_contains($learningMode, '2nd Shift')) $shift = '2nd Shift';
-                $modeBase = $shift ? 'Flexible Online Learning' : 'Face-to-Face';
+                if (str_contains($learningMode, '1st Shift')) {
+                    $shift = '1st Shift';
+                } elseif (str_contains($learningMode, '2nd Shift')) {
+                    $shift = '2nd Shift';
+                } elseif ($isFlexible) {
+                    $shift = '1st Shift';
+                }
+                $modeBase = $isFlexible ? 'Flexible Online Learning' : 'Face-to-Face';
 
                 // Find or create test section
                 $section = Section::where('grade_level', $student->grade_level)
