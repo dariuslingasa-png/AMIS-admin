@@ -1,4 +1,23 @@
 @php
+    if (!function_exists('getTeacherPhoto')) {
+        function getTeacherPhoto($teacherKey) {
+            $possiblePaths = [
+                "images/teachers/{$teacherKey}.jpg",
+                "images/teachers/teacher-{$teacherKey}.jpg",
+                "images/teachers/{$teacherKey}.png",
+                "images/teachers/teacher-{$teacherKey}.png",
+                "images/teachers/{$teacherKey}.jpeg",
+                "images/teachers/teacher-{$teacherKey}.jpeg",
+            ];
+            foreach ($possiblePaths as $path) {
+                if (file_exists(public_path($path))) {
+                    return $path;
+                }
+            }
+            return null;
+        }
+    }
+
     $teacherEditorPayload = function (array $teacher) {
         $initials = collect(explode(' ', str_replace(['Ust. ', 'Tchr. ', 'TEACHER '], '', $teacher['name'])))
             ->filter()
@@ -6,6 +25,10 @@
             ->take(2)
             ->implode('');
         $photoPath = $teacher['photo'] ?? null;
+        if (empty($photoPath)) {
+            $cleanName = str_replace(['Ust. ', 'Tchr. ', 'TEACHER '], '', $teacher['name']);
+            $photoPath = getTeacherPhoto(Str::slug($cleanName));
+        }
         $hasPhoto = !empty($photoPath);
 
         return [
@@ -31,7 +54,7 @@
             'load_percent' => $teacher['load_percent'] ?? 0,
             'load_status' => $teacher['load_status'] ?? 'Needs Load',
             'initials' => $initials,
-            'photoUrl' => $hasPhoto ? asset($photoPath) : null,
+            'photoUrl' => $hasPhoto ? (str_contains($photoPath, 'images/teachers/') ? asset($photoPath) : asset(\App\Support\ImageHelper::thumb($photoPath, 'medium'))) : null,
         ];
     };
 
@@ -308,6 +331,10 @@
                                     $isHighSchool = str_contains($t['dept'], 'High');
                                     $isIslamicArabic = str_contains($t['dept'], 'Islamic School');
                                     $photoPath = $t['photo'] ?? null;
+                                    if (empty($photoPath)) {
+                                        $cleanName = str_replace(['Ust. ', 'Tchr. ', 'TEACHER '], '', $t['name']);
+                                        $photoPath = getTeacherPhoto(Str::slug($cleanName));
+                                    }
                                     $hasPhoto = !empty($photoPath);
                                     $editPayload = $teacherEditorPayloadAttribute($t);
                                 @endphp
@@ -325,7 +352,7 @@
                                             <div x-show="!imgLoaded && !imgError" class="absolute inset-0 animate-pulse bg-slate-200"></div>
                                             <div x-show="!imgError" class="h-full w-full">
                                                 <img
-                                                    src="{{ asset(\App\Support\ImageHelper::thumb($photoPath, 'medium')) }}"
+                                                    src="{{ str_contains($photoPath, 'images/teachers/') ? asset($photoPath) : asset(\App\Support\ImageHelper::thumb($photoPath, 'medium')) }}"
                                                     alt="{{ $t['name'] }}"
                                                     class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                                                     :class="imgLoaded ? 'opacity-100' : 'opacity-0'"
