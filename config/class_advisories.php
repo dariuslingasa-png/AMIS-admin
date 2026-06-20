@@ -19,5 +19,5 @@ return [
         ['grade' => 'G10', 'grade_level' => 'Grade 10', 'teacher' => 'TEACHER NADZRA AININ', 'photo' => 'images/teachers/nadzra-ainin.png'],
         ['grade' => 'G11', 'grade_level' => 'Grade 11', 'teacher' => 'TEACHER JHELYN NIÑA MONTES', 'photo' => 'images/teachers/jhelyn-montes.png'],
         ['grade' => 'G12', 'grade_level' => 'Grade 12', 'teacher' => 'TEACHER ETHEL LORRAINE', 'photo' => 'images/teachers/ethel-lorraine.png'],
+    ],
 ];
-
