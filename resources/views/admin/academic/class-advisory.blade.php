@@ -203,8 +203,6 @@
         @foreach([
             'ELEMENTARY DEPARTMENT' => $elementaryAdvisories,
             'HIGH SCHOOL DEPARTMENT' => $highSchoolAdvisories,
-            'ISAL DEPARTMENT' => $isalAdvisories,
-            'SUBJECT TEACHERS' => $subjectAdvisories,
         ] as $departmentTitle => $departmentRows)
             <div class="bg-white border border-gray-150 rounded-2xl shadow-xs overflow-hidden">
                 <div class="bg-slate-50/50 border-b border-gray-150 px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">

@@ -312,7 +312,6 @@
                                 <th>Teacher Name</th>
                                 <th>School Email</th>
                                 <th>Department</th>
-                                <th>Assigned Class Section</th>
                                 <th>Status</th>
                                 <th>MS365 Sync</th>
                                 <th style="text-align: right;">Actions</th>
@@ -357,9 +356,7 @@
                                     </td>
                                     <td class="text-xs font-semibold font-mono text-slate-500">{{ $t['email'] }}</td>
                                     <td class="text-xs font-semibold text-slate-500">{{ $t['dept'] }}</td>
-                                    <td>
-                                        <span class="inline-flex rounded bg-slate-50 border border-slate-150 px-2 py-0.5 text-xs font-bold text-slate-700 shadow-3xs">{{ $t['sections'] }}</span>
-                                    </td>
+
                                     <td>
                                         <x-badge color="{{ $t['status'] === 'Active' ? 'green' : 'gray' }}">{{ Str::upper($t['status']) }}</x-badge>
                                     </td>
@@ -467,14 +464,10 @@
                                             <x-badge color="{{ $t['status'] === 'Active' ? 'green' : 'gray' }}">{{ Str::upper($t['status']) }}</x-badge>
                                         </div>
 
-                                        <div class="mt-4 grid grid-cols-1 gap-3 border-t border-slate-100 pt-4 sm:grid-cols-3">
+                                        <div class="mt-4 grid grid-cols-1 gap-3 border-t border-slate-100 pt-4 sm:grid-cols-2">
                                             <div class="min-w-0">
                                                 <span class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Department</span>
                                                 <span class="mt-1 block truncate text-xs font-bold text-slate-800">{{ $t['dept'] }}</span>
-                                            </div>
-                                            <div class="min-w-0">
-                                                <span class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Assignment</span>
-                                                <span class="mt-1 inline-flex max-w-full rounded bg-slate-50 border border-slate-150 px-2 py-0.5 text-xs font-bold text-slate-700 shadow-3xs">{{ $t['sections'] }}</span>
                                             </div>
                                             <div class="min-w-0">
                                                 <span class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">MS365 Sync</span>
@@ -641,10 +634,7 @@
                             </select>
                         </label>
 
-                        <label class="block">
-                            <span class="mb-1 block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Assignment</span>
-                            <input type="text" name="sections" value="{{ old('sections', $selectedTeacherPayload['sections'] ?? '') }}" x-model="editTeacher.sections" class="w-full rounded-xl border border-gray-300 bg-gray-50 px-3 py-2 text-sm font-bold text-gray-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20">
-                        </label>
+
 
                         <div class="grid gap-4 sm:grid-cols-2 items-center">
                             <label class="block">
@@ -761,10 +751,7 @@
                             </select>
                         </label>
 
-                        <label class="block">
-                            <span class="mb-1 block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Assignment</span>
-                            <input type="text" name="sections" value="{{ old('form') === 'create' ? old('sections') : '' }}" placeholder="Subject / Section" class="w-full rounded-xl border border-gray-300 bg-gray-50 px-3 py-2 text-sm font-bold text-gray-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20">
-                        </label>
+
 
                         <div class="grid gap-4 sm:grid-cols-2 items-center">
                             <label class="block">
@@ -827,14 +814,10 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4 text-xs font-semibold text-slate-500">
+                <div class="text-xs font-semibold text-slate-500">
                     <div>
                         <span class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Department</span>
                         <span class="mt-1 block font-bold text-slate-800" x-text="viewTeacher.dept || 'N/A'"></span>
-                    </div>
-                    <div>
-                        <span class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Advisory Assignment</span>
-                        <span class="mt-1 inline-flex rounded bg-slate-50 border border-slate-150 px-2 py-0.5 text-xs font-bold text-slate-700 shadow-3xs" x-text="viewTeacher.sections || 'None'"></span>
                     </div>
                 </div>
 

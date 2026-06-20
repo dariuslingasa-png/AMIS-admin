@@ -199,19 +199,26 @@ class TeacherDirectoryService
             'name' => $row['teacher'],
             'email' => $this->teacherEmail($row['teacher']),
             'dept' => $row['department'],
-            'sections' => $row['grade'].' / '.$row['grade_level'],
+            'sections' => '',
             'status' => 'Active',
             'photo' => $row['photo'] ?? null,
         ]);
 
         $advisoryIds = $advisory->pluck('id')->all();
         $baseIsal = collect([
-            ['id' => 'ust-raffy-lingasa', 'name' => 'Ust. Raffy Lingasa', 'email' => 'tr.rlingasa@amis.edu.ph', 'dept' => 'Islamic School and Arabic Language Department', 'sections' => 'Qur\'an / Arabic Language', 'status' => 'Active', 'photo' => null],
-            ['id' => 'ust-ahmad-al-jamil', 'name' => 'Ust. Ahmad Al-Jamil', 'email' => 'tr.ajamil@amis.edu.ph', 'dept' => 'Islamic School and Arabic Language Department', 'sections' => 'SHAF / Islamic Studies', 'status' => 'Active', 'photo' => null],
-            ['id' => 'ust-omar-mukhtar', 'name' => 'Ust. Omar Mukhtar', 'email' => 'tr.omukhtar@amis.edu.ph', 'dept' => 'Islamic School and Arabic Language Department', 'sections' => 'Arabic Language', 'status' => 'Inactive', 'photo' => null],
+            ['id' => 'ust-raffy-lingasa', 'name' => 'Ust. Raffy Lingasa', 'email' => 'tr.rlingasa@amis.edu.ph', 'sections' => '', 'dept' => 'Islamic School and Arabic Language Department', 'status' => 'Active', 'photo' => null],
+            ['id' => 'ust-ahmad-al-jamil', 'name' => 'Ust. Ahmad Al-Jamil', 'email' => 'tr.ajamil@amis.edu.ph', 'sections' => '', 'dept' => 'Islamic School and Arabic Language Department', 'status' => 'Active', 'photo' => null],
+            ['id' => 'ust-omar-mukhtar', 'name' => 'Ust. Omar Mukhtar', 'email' => 'tr.omukhtar@amis.edu.ph', 'sections' => '', 'dept' => 'Islamic School and Arabic Language Department', 'status' => 'Inactive', 'photo' => null],
+            ['id' => 'ustadh-jaisam', 'name' => 'Ustadh Jaisam', 'email' => 'tr.jaisam@amis.edu.ph', 'sections' => '', 'dept' => 'Islamic School and Arabic Language Department', 'status' => 'Active', 'photo' => null],
+            ['id' => 'ustadha-saliha', 'name' => 'Ustadha Saliha', 'email' => 'tr.saliha@amis.edu.ph', 'sections' => '', 'dept' => 'Islamic School and Arabic Language Department', 'status' => 'Active', 'photo' => null],
+            ['id' => 'ustadha-isal', 'name' => 'Ustadha Isal', 'email' => 'tr.isal@amis.edu.ph', 'sections' => '', 'dept' => 'Islamic School and Arabic Language Department', 'status' => 'Active', 'photo' => null],
         ])->reject(fn ($item) => in_array($item['id'], $advisoryIds, true));
 
-        return $advisory->merge($baseIsal);
+        $baseSubjectTeachers = collect([
+            ['id' => 'mon-zhairel-lingasa', 'name' => 'Mon Zhairel Lingasa', 'email' => 'tr.mlingasa@amis.edu.ph', 'sections' => '', 'dept' => 'Elementary Department', 'status' => 'Active', 'photo' => null],
+        ])->reject(fn ($item) => in_array($item['id'], $advisoryIds, true));
+
+        return $advisory->merge($baseIsal)->merge($baseSubjectTeachers);
     }
 
     private function normalize(array $data): array

@@ -250,7 +250,7 @@
                         Academic Workspace
                                       <h1 class="text-2xl md:text-3xl font-black tracking-tight text-white uppercase">{{ $teacher['name'] }}</h1>
                     <p class="mt-1 text-sm text-indigo-150 font-light">
-                        {{ $teacher['dept'] ?? 'Faculty Member' }} &bull; {{ $teacher['sections'] ?? 'No sections assigned' }}
+                        {{ $teacher['dept'] ?? 'Faculty Member' }}
                     </p>
                 </div>
                 <div>
@@ -344,10 +344,6 @@
                         <div>
                             <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">Department</span>
                             <span class="text-xs font-bold text-slate-800">{{ $teacher['dept'] ?? 'N/A' }}</span>
-                        </div>
-                        <div>
-                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">Current Assignment</span>
-                            <span class="text-xs font-bold text-slate-800">{{ $teacher['sections'] ?? 'N/A' }}</span>
                         </div>
                     </div>
 

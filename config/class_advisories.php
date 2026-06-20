@@ -19,16 +19,5 @@ return [
         ['grade' => 'G10', 'grade_level' => 'Grade 10', 'teacher' => 'TEACHER NADZRA AININ', 'photo' => 'images/teachers/nadzra-ainin.png'],
         ['grade' => 'G11', 'grade_level' => 'Grade 11', 'teacher' => 'TEACHER JHELYN NIÑA MONTES', 'photo' => 'images/teachers/jhelyn-montes.png'],
         ['grade' => 'G12', 'grade_level' => 'Grade 12', 'teacher' => 'TEACHER ETHEL LORRAINE', 'photo' => 'images/teachers/ethel-lorraine.png'],
-    ],
-    'isal' => [
-        ['grade' => 'ISAL', 'grade_level' => "Qur'an / Arabic Language", 'teacher' => 'Ust. Raffy Lingasa', 'photo' => null],
-        ['grade' => 'ISAL', 'grade_level' => 'SHAF / Islamic Studies', 'teacher' => 'Ust. Ahmad Al-Jamil', 'photo' => null],
-        ['grade' => 'ISAL', 'grade_level' => 'Arabic Language', 'teacher' => 'Ust. Omar Mukhtar', 'photo' => null],
-        ['grade' => 'ISAL', 'grade_level' => "Qur'an / Islamic Studies", 'teacher' => 'Ustadh Jaisam', 'photo' => null],
-        ['grade' => 'ISAL', 'grade_level' => "Qur'an / Islamic Studies", 'teacher' => 'Ustadha Saliha', 'photo' => null],
-        ['grade' => 'ISAL', 'grade_level' => "Qur'an / Islamic Studies", 'teacher' => 'Ustadha Isal', 'photo' => null],
-    ],
-    'subject_teachers' => [
-        ['grade' => 'ELEM', 'grade_level' => 'Science', 'teacher' => 'Mon Zhairel Lingasa', 'photo' => null],
-    ],
 ];
+
