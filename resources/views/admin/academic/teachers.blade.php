@@ -282,108 +282,9 @@
                     </span>
                     <input type="search" x-model="search" @input="triggerSearch($event.target.value)" placeholder="Search teacher by name..." class="w-full bg-gray-50 border border-gray-200 text-slate-900 text-sm rounded-xl pl-10 pr-4 py-2 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all duration-150">
                 </div>
-                <div class="inline-flex w-full md:w-auto gap-1.5 rounded-2xl border border-slate-200 bg-slate-100 p-1 shadow-3xs">
-                    <button type="button"
-                        @click="viewMode = 'list'"
-                        :class="viewMode === 'list' ? 'bg-white text-indigo-800 shadow-sm font-black' : 'text-slate-500 hover:text-slate-900 font-bold'"
-                        class="flex-1 md:flex-none inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-2 text-xs uppercase tracking-wider transition">
-                        <i data-lucide="list" class="w-3.5 h-3.5"></i>
-                        List
-                    </button>
-                    <button type="button"
-                        @click="viewMode = 'card'"
-                        :class="viewMode === 'card' ? 'bg-white text-indigo-800 shadow-sm font-black' : 'text-slate-500 hover:text-slate-900 font-bold'"
-                        class="flex-1 md:flex-none inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-2 text-xs uppercase tracking-wider transition">
-                        <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i>
-                        Card
-                    </button>
-                </div>
             </div>
 
-            <div x-show="viewMode === 'list'" x-transition.opacity class="bg-white border border-gray-150 rounded-2xl shadow-xs overflow-hidden">
-                <div class="bg-slate-50/50 border-b border-gray-150 px-5 py-4 flex items-center justify-between">
-                    <span class="text-slate-900 font-extrabold text-sm tracking-wide uppercase">Staff Roster</span>
-                    <x-badge color="purple">{{ count($teachers) }} Registered</x-badge>
-                </div>
-                <div class="premium-table-wrap">
-                    <table class="premium-table">
-                        <thead>
-                            <tr>
-                                <th>Teacher Name</th>
-                                <th>School Email</th>
-                                <th>Department</th>
-                                <th>Status</th>
-                                <th>MS365 Sync</th>
-                                <th style="text-align: right;">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Skeletons -->
-                            <template x-if="showSkeleton">
-                                <tr>
-                                    <td class="px-6 py-4">
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-8 h-8 rounded-full skeleton-box shrink-0"></div>
-                                            <div class="h-4 w-32 skeleton-box"></div>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4"><div class="h-3.5 w-44 skeleton-box"></div></td>
-                                    <td class="px-6 py-4"><div class="h-3.5 w-28 skeleton-box"></div></td>
-                                    <td class="px-6 py-4"><div class="h-5 w-24 skeleton-box"></div></td>
-                                    <td class="px-6 py-4"><div class="h-5 w-16 skeleton-box"></div></td>
-                                    <td class="px-6 py-4"><div class="h-5 w-24 skeleton-box"></div></td>
-                                    <td class="px-6 py-4 text-right"><div class="inline-block h-8 w-24 skeleton-box"></div></td>
-                                </tr>
-                            </template>
-                            <!-- Real Data -->
-                            @foreach ($teachers as $t)
-                                @php
-                                    $initials = collect(explode(' ', str_replace(['Ust. ', 'Tchr. ', 'TEACHER '], '', $t['name'])))
-                                        ->filter()
-                                        ->map(fn($part) => substr($part, 0, 1))
-                                        ->take(2)
-                                        ->implode('');
-                                    $editPayload = $teacherEditorPayloadAttribute($t);
-                                @endphp
-                                <tr x-show="!showSkeleton && (search === '' || '{{ strtolower($t['name']) }}'.includes(search.toLowerCase()))">
-                                    <td>
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 text-slate-655 font-black text-xxs flex items-center justify-center shrink-0 shadow-3xs">
-                                                {{ $initials }}
-                                            </div>
-                                            <span class="font-extrabold text-slate-900 text-sm tracking-wide uppercase">{{ $t['name'] }}</span>
-                                        </div>
-                                    </td>
-                                    <td class="text-xs font-semibold font-mono text-slate-500">{{ $t['email'] }}</td>
-                                    <td class="text-xs font-semibold text-slate-500">{{ $t['dept'] }}</td>
-
-                                    <td>
-                                        <x-badge color="{{ $t['status'] === 'Active' ? 'green' : 'gray' }}">{{ Str::upper($t['status']) }}</x-badge>
-                                    </td>
-                                    <td>
-                                        @if ($t['microsoft_sync'] ?? true)
-                                            <x-badge color="green">Sync Active</x-badge>
-                                        @else
-                                            <x-badge color="gray">Disabled</x-badge>
-                                        @endif
-                                    </td>
-                                    <td style="text-align: right;" class="space-x-1.5">
-                                        <button type="button" data-teacher="{{ $editPayload }}" @click.prevent="openTeacherViewerPayload($el.dataset.teacher)" class="inline-flex px-3 py-1.5 text-xxs font-bold text-indigo-700 hover:bg-indigo-50 rounded-lg border border-indigo-150 transition cursor-pointer shadow-3xs">View</button>
-                                        <a href="{{ route('admin.academic.teachers', ['edit' => $t['id']]) }}" data-teacher="{{ $editPayload }}" @click.prevent="openTeacherEditorPayload($el.dataset.teacher)" class="inline-flex px-3 py-1.5 text-xxs font-bold text-slate-700 hover:bg-slate-100 rounded-lg border border-slate-200 transition cursor-pointer shadow-3xs">Edit</a>
-                                        <form method="POST" action="{{ route('admin.academic.teachers.destroy', $t['id']) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this teacher? This will permanently delete their account, subject assignments, and portal access.')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="inline-flex px-3 py-1.5 text-xxs font-bold text-rose-700 hover:bg-rose-50 rounded-lg border border-rose-150 transition cursor-pointer shadow-3xs">Delete</button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div x-show="viewMode === 'card'" x-transition.opacity class="space-y-5">
+            <div class="space-y-5">
                 @foreach ($teacherGroups as $group)
                     <section class="rounded-2xl border border-slate-150 bg-white p-4 shadow-3xs">
                         <div class="mb-4 flex items-center justify-between gap-3 border-b border-slate-100 pb-3">
@@ -396,7 +297,7 @@
                             </span>
                         </div>
 
-                        <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                             @forelse ($group['teachers'] as $t)
                                 @php
                                     $initials = collect(explode(' ', str_replace(['Ust. ', 'Tchr. ', 'TEACHER '], '', $t['name'])))
@@ -413,19 +314,20 @@
                                 <article
                                     x-show="!showSkeleton && (search === '' || '{{ strtolower($t['name']) }}'.includes(search.toLowerCase()))"
                                     @class([
-                                        'group flex min-h-[168px] overflow-hidden rounded-2xl border border-slate-150 bg-white shadow-3xs transition-colors hover:shadow-sm',
-                                        'hover:border-indigo-200' => $isHighSchool,
-                                        'hover:border-amber-200' => $isIslamicArabic,
-                                        'hover:border-emerald-200' => ! $isHighSchool && ! $isIslamicArabic,
+                                        'group relative flex flex-row overflow-hidden rounded-2xl border border-slate-150 bg-white shadow-3xs transition-all duration-200 hover:-translate-y-1 hover:shadow-md min-h-[250px]',
+                                        'hover:border-indigo-300' => $isHighSchool,
+                                        'hover:border-amber-300' => $isIslamicArabic,
+                                        'hover:border-emerald-300' => ! $isHighSchool && ! $isIslamicArabic,
                                     ])>
-                                    <div class="relative w-32 shrink-0 overflow-hidden bg-slate-100 sm:w-40" x-data="{ imgLoaded: false, imgError: false }">
+                                    <!-- Left Photo Container -->
+                                    <div class="relative w-48 shrink-0 overflow-hidden bg-slate-50" x-data="{ imgLoaded: false, imgError: false }">
                                         @if ($hasPhoto)
                                             <div x-show="!imgLoaded && !imgError" class="absolute inset-0 animate-pulse bg-slate-200"></div>
                                             <div x-show="!imgError" class="h-full w-full">
                                                 <img
                                                     src="{{ asset(\App\Support\ImageHelper::thumb($photoPath, 'medium')) }}"
                                                     alt="{{ $t['name'] }}"
-                                                    class="h-full w-full object-cover object-center transition-opacity duration-300"
+                                                    class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                                                     :class="imgLoaded ? 'opacity-100' : 'opacity-0'"
                                                     @load="imgLoaded = true"
                                                     x-on:error="imgError = true"
@@ -434,7 +336,7 @@
                                             </div>
                                             <div x-show="imgError" class="absolute inset-0">
                                                 <div @class([
-                                                    'flex h-full w-full items-center justify-center text-3xl font-black',
+                                                    'flex h-full w-full items-center justify-center text-4xl font-black tracking-wider transition-all duration-300 group-hover:scale-110',
                                                     'bg-indigo-50 text-indigo-700' => $isHighSchool,
                                                     'bg-amber-50 text-amber-700' => $isIslamicArabic,
                                                     'bg-emerald-50 text-emerald-700' => ! $isHighSchool && ! $isIslamicArabic,
@@ -444,84 +346,113 @@
                                             </div>
                                         @else
                                             <div @class([
-                                                'flex h-full w-full items-center justify-center text-3xl font-black',
-                                                'bg-indigo-50 text-indigo-700' => $isHighSchool,
-                                                'bg-amber-50 text-amber-700' => $isIslamicArabic,
-                                                'bg-emerald-50 text-emerald-700' => ! $isHighSchool && ! $isIslamicArabic,
+                                                'relative w-full h-full flex items-center justify-center bg-gradient-to-br transition-all duration-300 text-4xl font-black tracking-wider group-hover:scale-110',
+                                                'from-indigo-50 to-indigo-100/40 text-indigo-700' => $isHighSchool,
+                                                'from-amber-50 to-amber-100/40 text-amber-700' => $isIslamicArabic,
+                                                'from-emerald-50 to-emerald-100/40 text-emerald-700' => ! $isHighSchool && ! $isIslamicArabic,
                                             ])>
                                                 {{ $initials }}
                                             </div>
                                         @endif
-                                        <div class="absolute inset-y-0 right-0 w-12 bg-gradient-to-r from-transparent to-white"></div>
                                     </div>
 
-                                    <div class="flex min-w-0 flex-1 flex-col justify-between p-4 pl-2 sm:p-5 sm:pl-3">
-                                        <div class="flex items-start justify-between gap-3">
-                                            <div class="min-w-0">
-                                                <h3 class="truncate text-sm font-extrabold text-slate-900 sm:text-base uppercase">{{ $t['name'] }}</h3>
-                                                <p class="mt-1 truncate text-xs font-semibold text-slate-500">{{ $t['email'] }}</p>
-                                            </div>
-                                            <x-badge color="{{ $t['status'] === 'Active' ? 'green' : 'gray' }}">{{ Str::upper($t['status']) }}</x-badge>
-                                        </div>
+                                    <!-- Right Details Area -->
+                                    <div class="flex-1 p-6 flex flex-col justify-between min-w-0">
+                                        <div class="space-y-3">
+                                            <!-- Badges & Status -->
+                                            <div class="flex items-center justify-between gap-2">
+                                                <span @class([
+                                                    'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-extrabold border shadow-3xs',
+                                                    'bg-emerald-50 text-emerald-750 border-emerald-100' => $t['status'] === 'Active',
+                                                    'bg-slate-50 text-slate-500 border-slate-150' => $t['status'] !== 'Active',
+                                                ])>
+                                                    <span @class([
+                                                        'w-1.5 h-1.5 rounded-full',
+                                                        'bg-emerald-500 animate-pulse' => $t['status'] === 'Active',
+                                                        'bg-slate-400' => $t['status'] !== 'Active',
+                                                    ])></span>
+                                                    {{ Str::upper($t['status']) }}
+                                                </span>
 
-                                        <div class="mt-4 grid grid-cols-1 gap-3 border-t border-slate-100 pt-4 sm:grid-cols-2">
+                                                @if ($t['microsoft_sync'] ?? true)
+                                                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-extrabold border shadow-3xs bg-emerald-50 text-emerald-750 border-emerald-100">
+                                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                                        MS365 SYNCED
+                                                    </span>
+                                                @else
+                                                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-extrabold border shadow-3xs bg-slate-50 text-slate-500 border-slate-150">
+                                                        <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                                                        SYNC DISABLED
+                                                    </span>
+                                                @endif
+                                            </div>
+
+                                            <!-- Teacher Name & Email -->
                                             <div class="min-w-0">
+                                                <h3 class="text-sm font-black text-slate-950 tracking-tight leading-tight line-clamp-2 uppercase">
+                                                    TEACHER {{ str_replace(['Ust. ', 'Tchr. ', 'TEACHER '], '', $t['name']) }}
+                                                </h3>
+                                                <p class="mt-1 truncate text-xs font-semibold text-slate-500 font-mono">{{ $t['email'] }}</p>
+                                            </div>
+
+                                            <!-- Department Info -->
+                                            <div class="border-t border-slate-100 pt-2 min-w-0">
                                                 <span class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Department</span>
-                                                <span class="mt-1 block truncate text-xs font-bold text-slate-800">{{ $t['dept'] }}</span>
+                                                <span class="mt-0.5 block truncate text-xs font-bold text-slate-850">{{ $t['dept'] }}</span>
                                             </div>
-                                            <div class="min-w-0">
-                                                <span class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">MS365 Sync</span>
-                                                <span class="mt-1 block">
-                                                    @if ($t['microsoft_sync'] ?? true)
-                                                        <x-badge color="green">Sync Active</x-badge>
-                                                    @else
-                                                        <x-badge color="gray">Disabled</x-badge>
-                                                    @endif
-                                                </span>
-                                            </div>
-                                        </div>
 
-                                        <div class="mt-4 rounded-2xl border border-indigo-100 bg-indigo-50/40 p-3">
-                                            <div class="flex items-center justify-between gap-3">
-                                                <div>
-                                                    <span class="block text-[10px] font-extrabold uppercase tracking-wider text-indigo-400">Subject Load</span>
-                                                    <strong class="mt-1 block text-sm font-black text-indigo-950">
-                                                        {{ $t['subject_count'] ?? 0 }} / {{ $t['load_target'] ?? 8 }} subjects
-                                                    </strong>
+                                            <!-- Subject Load Progress Section -->
+                                            <div class="rounded-xl border border-indigo-100 bg-indigo-50/40 p-3 mt-2">
+                                                <div class="flex items-center justify-between gap-3">
+                                                    <div>
+                                                        <span class="block text-[10px] font-extrabold uppercase tracking-wider text-indigo-400">Subject Load</span>
+                                                        <strong class="mt-0.5 block text-xs font-black text-indigo-950">
+                                                            {{ $t['subject_count'] ?? 0 }} / {{ $t['load_target'] ?? 8 }} subjects
+                                                        </strong>
+                                                    </div>
+                                                    <span @class([
+                                                        'inline-flex rounded-full border px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider',
+                                                        'border-indigo-100 bg-white text-indigo-750' => ($t['load_status'] ?? '') === 'Needs Load',
+                                                        'border-emerald-100 bg-white text-emerald-700' => ($t['load_status'] ?? '') === 'Loaded',
+                                                        'border-amber-100 bg-white text-amber-700' => ($t['load_status'] ?? '') !== 'Needs Load' && ($t['load_status'] ?? '') !== 'Loaded',
+                                                    ])>
+                                                        {{ $t['load_status'] ?? 'Needs Load' }}
+                                                    </span>
                                                 </div>
-                                                <span class="inline-flex rounded-full border border-indigo-100 bg-white px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-indigo-700">
-                                                    {{ $t['load_status'] ?? 'Needs Load' }}
-                                                </span>
-                                            </div>
-                                            <div class="mt-3 h-2 overflow-hidden rounded-full bg-white ring-1 ring-indigo-100">
-                                                <div class="h-full rounded-full bg-indigo-600" style="width: {{ $t['load_percent'] ?? 0 }}%"></div>
-                                            </div>
-                                            <div class="mt-3 flex flex-wrap gap-1.5">
-                                                @foreach(array_slice($t['subjects'] ?? [], 0, 4) as $subjectName)
-                                                    @php
-                                                        $subjectLower = strtolower($subjectName);
-                                                        $badgeColor = 'bg-emerald-50 text-emerald-700 border-emerald-100 ring-emerald-100';
-                                                        if (str_contains($subjectLower, 'qur')) {
-                                                            $badgeColor = 'bg-sky-50 text-sky-700 border-sky-100 ring-sky-100';
-                                                        } elseif (str_contains($subjectLower, 'hadith')) {
-                                                            $badgeColor = 'bg-amber-50 text-amber-700 border-amber-100 ring-amber-100';
-                                                        } elseif (str_contains($subjectLower, 'arabic')) {
-                                                            $badgeColor = 'bg-pink-50 text-pink-700 border-pink-100 ring-pink-100';
-                                                        } elseif (str_contains($subjectLower, 'recess')) {
-                                                            $badgeColor = 'bg-rose-50 text-rose-700 border-rose-100 ring-rose-100';
-                                                        } elseif (str_contains($subjectLower, 'meeting') || str_contains($subjectLower, 'circle') || str_contains($subjectLower, 'wrap')) {
-                                                            $badgeColor = 'bg-violet-50 text-violet-700 border-violet-100 ring-violet-100';
-                                                        }
-                                                    @endphp
-                                                    <span class="rounded-lg px-2 py-1 text-[10px] font-bold ring-1 uppercase tracking-wide {{ $badgeColor }}">{{ $subjectName }}</span>
-                                                @endforeach
-                                                @if(($t['subject_count'] ?? 0) > 4)
-                                                    <button type="button" data-teacher="{{ $editPayload }}" @click.prevent="openTeacherViewerPayload($el.dataset.teacher)" class="rounded-lg bg-indigo-100 px-2 py-1 text-[10px] font-black text-indigo-700 hover:bg-indigo-200 transition cursor-pointer select-none">+{{ ($t['subject_count'] ?? 0) - 4 }}</button>
+                                                <div class="mt-2.5 h-1.5 overflow-hidden rounded-full bg-white ring-1 ring-indigo-100">
+                                                    <div class="h-full rounded-full bg-indigo-600" style="width: {{ $t['load_percent'] ?? 0 }}%"></div>
+                                                </div>
+
+                                                @if(!empty($t['subjects']))
+                                                    <div class="mt-2.5 flex flex-wrap gap-1">
+                                                        @foreach(array_slice($t['subjects'] ?? [], 0, 3) as $subjectName)
+                                                            @php
+                                                                $subjectLower = strtolower($subjectName);
+                                                                $badgeColor = 'bg-emerald-50 text-emerald-750 border-emerald-100 ring-emerald-100';
+                                                                if (str_contains($subjectLower, 'qur')) {
+                                                                    $badgeColor = 'bg-sky-50 text-sky-750 border-sky-100 ring-sky-100';
+                                                                } elseif (str_contains($subjectLower, 'hadith')) {
+                                                                    $badgeColor = 'bg-amber-50 text-amber-750 border-amber-100 ring-amber-100';
+                                                                } elseif (str_contains($subjectLower, 'arabic')) {
+                                                                    $badgeColor = 'bg-pink-50 text-pink-750 border-pink-100 ring-pink-100';
+                                                                } elseif (str_contains($subjectLower, 'recess')) {
+                                                                    $badgeColor = 'bg-rose-50 text-rose-750 border-rose-100 ring-rose-100';
+                                                                } elseif (str_contains($subjectLower, 'meeting') || str_contains($subjectLower, 'circle') || str_contains($subjectLower, 'wrap')) {
+                                                                    $badgeColor = 'bg-violet-50 text-violet-750 border-violet-100 ring-violet-100';
+                                                                }
+                                                            @endphp
+                                                            <span class="rounded-md px-1.5 py-0.5 text-[9px] font-extrabold ring-1 uppercase tracking-wide {{ $badgeColor }}">{{ $subjectName }}</span>
+                                                        @endforeach
+                                                        @if(($t['subject_count'] ?? 0) > 3)
+                                                            <button type="button" data-teacher="{{ $editPayload }}" @click.prevent="openTeacherViewerPayload($el.dataset.teacher)" class="rounded-md bg-indigo-100 px-1.5 py-0.5 text-[9px] font-black text-indigo-700 hover:bg-indigo-200 transition cursor-pointer select-none">+{{ ($t['subject_count'] ?? 0) - 3 }}</button>
+                                                        @endif
+                                                    </div>
                                                 @endif
                                             </div>
                                         </div>
 
-                                        <div class="mt-4 flex justify-end gap-1.5">
+                                        <!-- Action Buttons -->
+                                        <div class="mt-4 flex flex-wrap items-center justify-end gap-1.5 border-t border-slate-100 pt-3">
                                             <a href="{{ route('admin.academic.teachers.view', $t['id']) }}#subject-load" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xxs font-bold text-emerald-700 hover:bg-emerald-50 rounded-lg border border-emerald-150 transition cursor-pointer shadow-3xs">
                                                 <i data-lucide="activity" class="h-3.5 w-3.5"></i>
                                                 Subject Load
