@@ -41,7 +41,7 @@
             'icon' => 'book-open-check', 'iconClass' => 'text-sky-600', 'headerClass' => 'text-sky-700', 'activeClass' => 'sidebar-link-active-sky', 'title' => 'Academic',
             'links' => [
                 ['Dashboard', 'layout-dashboard', route('admin.academic.dashboard'), request()->routeIs('admin.academic.dashboard') || request()->routeIs('admin.academic.dashboard.index')],
-                ['Class Schedule', 'calendar-days', route('admin.academic.schedules', ['tab' => 'schedule']), request()->routeIs('admin.academic.schedules') && request('tab') === 'schedule'],
+                ['Class Schedule', 'calendar-days', route('admin.academic.schedules'), request()->routeIs('admin.academic.schedules')],
                 ['Class Advisory', 'contact-2', route('admin.academic.class-advisory'), request()->routeIs('admin.academic.class-advisory')],
                 ['Teachers', 'contact-2', route('admin.academic.teachers'), request()->routeIs('admin.academic.teachers')],
                 ['Operations', 'activity', route('admin.academic.operations'), request()->routeIs('admin.academic.operations')],

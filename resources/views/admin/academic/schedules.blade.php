@@ -1,6 +1,6 @@
 @php
     $firstSectionId = (int) ($sections->first()?->id ?? 0);
-    $activeWorkspace = request('tab', session('schedule_workspace', $errors->any() ? 'schedule' : 'sections'));
+    $activeWorkspace = 'schedule';
     $activeSectionId = (int) old('section_id', $firstSectionId);
     $failedForm = old('_schedule_form');
     $failedScheduleId = (int) old('schedule_id', 0);
@@ -88,9 +88,6 @@
             </div>
         @endif
 
-        @include('admin.academic.schedules._tabs')
-        @include('admin.academic.schedules._sections')
-        @include('admin.academic.schedules._advisory')
         @include('admin.academic.schedules._timetable')
         @include('admin.academic.schedules._modals')
     </div>
