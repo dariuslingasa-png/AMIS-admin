@@ -1,4 +1,4 @@
-<x-admin-layout title="Class Advisory">
+<x-admin-layout title="Adviser">
     @php
         if (!function_exists('getTeacherPhoto')) {
             function getTeacherPhoto($teacherKey) {
@@ -27,7 +27,7 @@
                         <span class="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse"></span>
                         Academic Workspace
                     </span>
-                    <h1 class="text-2xl md:text-3xl font-black tracking-tight text-white">Class Advisory</h1>
+                    <h1 class="text-2xl md:text-3xl font-black tracking-tight text-white">Adviser</h1>
                     <p class="mt-2 text-sm md:text-base text-indigo-100 max-w-2xl font-light">
                         Official advisory assignment list for Elementary and High School departments.
                     </p>
