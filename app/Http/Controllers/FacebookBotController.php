@@ -73,12 +73,18 @@ class FacebookBotController extends Controller
         $sessionKey = "fb_bot_session_{$senderPsid}";
         $session = Cache::get($sessionKey, ['step' => 0, 'data' => []]);
 
+        $normalizedText = strtolower(trim($messageText));
+        if ($normalizedText === 'inquiries_coming_soon' || $normalizedText === 'inquiries') {
+            $this->sendMessage($senderPsid, "The Inquiries feature is coming soon! 🚀\n\nFor now, please choose 'Enrollment Status' to check student enrollment status.");
+            return;
+        }
+
         $triggerWords = [
             'hi', 'hello', 'enrollment status', 'check status', 'amis', 
             'info', 'start', 'status', 'check_enrollment_status', 'get_started'
         ];
 
-        if (in_array(strtolower($messageText), $triggerWords) || $session['step'] === 0) {
+        if (in_array($normalizedText, $triggerWords) || $session['step'] === 0) {
             $session = [
                 'step' => 1,
                 'data' => []
@@ -263,8 +269,12 @@ class FacebookBotController extends Controller
             ],
             'ice_breakers' => [
                 [
-                    'question' => 'Check Enrollment Status',
+                    'question' => 'Enrollment Status',
                     'payload' => 'CHECK_ENROLLMENT_STATUS'
+                ],
+                [
+                    'question' => 'Inquiries (COMING SOON)',
+                    'payload' => 'INQUIRIES_COMING_SOON'
                 ]
             ]
         ]);
