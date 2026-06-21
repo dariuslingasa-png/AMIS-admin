@@ -72,7 +72,7 @@
                             <!-- Left Photo Container -->
                             @if($teacherPhoto)
                                 <div class="relative w-48 shrink-0 overflow-hidden bg-slate-50">
-                                    <img src="{{ asset($teacherPhoto) }}" alt="{{ $row['teacher'] }}" class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
+                                    <img src="{{ asset($teacherPhoto) . '?v=2' }}" alt="{{ $row['teacher'] }}" class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
                                 </div>
                             @else
                                 <div @class([

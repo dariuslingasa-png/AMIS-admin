@@ -350,7 +350,7 @@
                                     @if ($hasPhoto)
                                         <div class="relative w-48 shrink-0 overflow-hidden bg-slate-50">
                                             <img
-                                                src="{{ str_contains($photoPath, 'images/teachers/') ? asset($photoPath) : asset(\App\Support\ImageHelper::thumb($photoPath, 'medium')) }}"
+                                                src="{{ (str_contains($photoPath, 'images/teachers/') ? asset($photoPath) : asset(\App\Support\ImageHelper::thumb($photoPath, 'medium'))) . '?v=2' }}"
                                                 alt="{{ $t['name'] }}"
                                                 class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                                                 loading="lazy"
@@ -516,7 +516,7 @@
                     <div class="space-y-3">
                         <div class="relative h-56 overflow-hidden rounded-2xl border border-slate-150 bg-slate-50">
                             <template x-if="photoPreview || editTeacher.photoUrl">
-                                <img :src="photoPreview || editTeacher.photoUrl" alt="" class="h-full w-full object-cover object-center">
+                                <img :src="photoPreview || (editTeacher.photoUrl ? editTeacher.photoUrl + '?v=2' : '')" alt="" class="h-full w-full object-cover object-center">
                             </template>
                             <template x-if="!photoPreview && !editTeacher.photoUrl">
                                 <div class="flex h-full w-full items-center justify-center bg-emerald-50 text-4xl font-black text-emerald-700" x-text="editTeacher.initials"></div>
@@ -738,7 +738,7 @@
                 <div class="flex items-center gap-4 p-4 rounded-xl bg-slate-50 border border-slate-200/60">
                     <div class="h-16 w-16 rounded-full overflow-hidden border-2 border-indigo-100 bg-white flex items-center justify-center font-black text-indigo-700 text-lg shrink-0">
                         <template x-if="viewTeacher.photoUrl">
-                            <img :src="viewTeacher.photoUrl" class="h-full w-full object-cover object-center">
+                            <img :src="viewTeacher.photoUrl + '?v=2'" class="h-full w-full object-cover object-center">
                         </template>
                         <template x-if="!viewTeacher.photoUrl">
                             <span x-text="viewTeacher.initials"></span>
