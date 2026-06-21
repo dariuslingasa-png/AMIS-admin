@@ -113,17 +113,15 @@ class FacebookBotController extends Controller
         $enrollmentTriggers = ['check_enrollment_status', 'enrollment status', 'check status', 'enrollment', 'status'];
         if (in_array($normalizedText, $enrollmentTriggers)) {
             $session = [
-                'step' => 100,
+                'step' => 1,
                 'data' => []
             ];
             Cache::put($sessionKey, $session, now()->addMinutes(15));
 
             $quickReplies = [
-                ['content_type' => 'text', 'title' => 'Search by Name', 'payload' => 'ENROLLMENT_SEARCH_NAME'],
-                ['content_type' => 'text', 'title' => 'Search by ID', 'payload' => 'ENROLLMENT_SEARCH_ID'],
                 ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
             ];
-            $this->sendMessageWithQuickReplies($senderPsid, "📝 Enrollment Status\n\nHow would you like to check the enrollment status?", $quickReplies);
+            $this->sendMessageWithQuickReplies($senderPsid, "📝 Enrollment Status\n\nPlease reply with the student's FULL NAME or Student ID/AMIS ID:", $quickReplies);
             return;
         }
 
@@ -131,70 +129,15 @@ class FacebookBotController extends Controller
         $resendTriggers = ['resend_credentials', 'resend credentials', 'forgot credentials', 'get credentials', 'resend password', 'reset_password', 'reset password'];
         if (in_array($normalizedText, $resendTriggers)) {
             $session = [
-                'step' => 200,
+                'step' => 10,
                 'data' => []
             ];
             Cache::put($sessionKey, $session, now()->addMinutes(15));
 
             $quickReplies = [
-                ['content_type' => 'text', 'title' => 'Search by Name', 'payload' => 'RESEND_SEARCH_NAME'],
-                ['content_type' => 'text', 'title' => 'Search by ID', 'payload' => 'RESEND_SEARCH_ID'],
                 ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
             ];
-            $this->sendMessageWithQuickReplies($senderPsid, "🔐 Resend Credentials\nNote: use your only official AMIS email @amis.edu.ph\n\nHow would you like to search for the student?", $quickReplies);
-            return;
-        }
-
-        // Handle search method selections (both payload postbacks and raw text)
-        if ($normalizedText === 'enrollment_search_name' || ($session['step'] === 100 && $normalizedText === 'search by name')) {
-            $session = [
-                'step' => 1,
-                'data' => []
-            ];
-            Cache::put($sessionKey, $session, now()->addMinutes(15));
-            $quickReplies = [
-                ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
-            ];
-            $this->sendMessageWithQuickReplies($senderPsid, "Please provide the student's FULL NAME (First Name and Last Name):", $quickReplies);
-            return;
-        }
-
-        if ($normalizedText === 'enrollment_search_id' || ($session['step'] === 100 && $normalizedText === 'search by id')) {
-            $session = [
-                'step' => 20,
-                'data' => []
-            ];
-            Cache::put($sessionKey, $session, now()->addMinutes(15));
-            $quickReplies = [
-                ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
-            ];
-            $this->sendMessageWithQuickReplies($senderPsid, "Please provide the AMIS Student ID / Student Number:", $quickReplies);
-            return;
-        }
-
-        if ($normalizedText === 'resend_search_name' || ($session['step'] === 200 && $normalizedText === 'search by name')) {
-            $session = [
-                'step' => 30,
-                'data' => []
-            ];
-            Cache::put($sessionKey, $session, now()->addMinutes(15));
-            $quickReplies = [
-                ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
-            ];
-            $this->sendMessageWithQuickReplies($senderPsid, "Please provide the student's FULL NAME (First Name and Last Name):", $quickReplies);
-            return;
-        }
-
-        if ($normalizedText === 'resend_search_id' || ($session['step'] === 200 && $normalizedText === 'search by id')) {
-            $session = [
-                'step' => 40,
-                'data' => []
-            ];
-            Cache::put($sessionKey, $session, now()->addMinutes(15));
-            $quickReplies = [
-                ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
-            ];
-            $this->sendMessageWithQuickReplies($senderPsid, "Please provide the AMIS ID or Student ID:", $quickReplies);
+            $this->sendMessageWithQuickReplies($senderPsid, "🔐 Resend Credentials\nNote: use your only official AMIS email @amis.edu.ph\n\nPlease reply with the student's FULL NAME, AMIS ID, or School Email:", $quickReplies);
             return;
         }
 
@@ -203,9 +146,17 @@ class FacebookBotController extends Controller
                 $this->sendMainMenu($senderPsid);
                 break;
 
-            // --- ENROLLMENT STATUS BY NAME FLOW ---
+            // --- ENROLLMENT FLOW ---
             case 1:
-                $session['data']['name'] = $messageText;
+                // Auto-detect if input is ID or Name
+                $isId = preg_match('/^\d{4,8}$/', $cleanMessageText) || preg_match('/^amis-\d+/i', $cleanMessageText) || preg_match('/^amis\d+/i', $cleanMessageText);
+                if ($isId) {
+                    $session['data']['type'] = 'id';
+                    $session['data']['student_id'] = $cleanMessageText;
+                } else {
+                    $session['data']['type'] = 'name';
+                    $session['data']['name'] = $cleanMessageText;
+                }
                 $session['step'] = 2;
                 Cache::put($sessionKey, $session, now()->addMinutes(15));
 
@@ -228,55 +179,40 @@ class FacebookBotController extends Controller
 
             case 3:
                 $birthdate = trim($messageText);
-                $name = $session['data']['name'];
                 $grade = $session['data']['grade'];
+                $type = $session['data']['type'] ?? 'name';
 
                 Cache::forget($sessionKey);
-                $this->sendMessage($senderPsid, "Checking {$name}...");
-                $statusResult = $this->lookupEnrollmentStatus($name, $grade, $birthdate);
+
+                if ($type === 'id') {
+                    $studentId = $session['data']['student_id'];
+                    $this->sendMessage($senderPsid, "Checking status for ID {$studentId}...");
+                    $statusResult = $this->lookupEnrollmentStatusByIDGradeBirthdate($studentId, $grade, $birthdate);
+                } else {
+                    $name = $session['data']['name'];
+                    $this->sendMessage($senderPsid, "Checking status for {$name}...");
+                    $statusResult = $this->lookupEnrollmentStatus($name, $grade, $birthdate);
+                }
+
                 $this->sendMessage($senderPsid, $statusResult);
                 $this->sendMainMenu($senderPsid);
                 break;
 
-            // --- ENROLLMENT STATUS BY ID FLOW ---
-            case 20:
-                $session['data']['student_id'] = $messageText;
-                $session['step'] = 21;
-                Cache::put($sessionKey, $session, now()->addMinutes(15));
-
-                $quickReplies = [
-                    ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
-                ];
-                $this->sendMessageWithQuickReplies($senderPsid, "What is the GRADE LEVEL applied for? (e.g., Grade 1, Grade 5, Kinder)", $quickReplies);
-                break;
-
-            case 21:
-                $session['data']['grade'] = $messageText;
-                $session['step'] = 22;
-                Cache::put($sessionKey, $session, now()->addMinutes(15));
-
-                $quickReplies = [
-                    ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
-                ];
-                $this->sendMessageWithQuickReplies($senderPsid, "What is the student's BIRTHDATE? (Format: MM-DD-YYYY, e.g. 04-30-2020)", $quickReplies);
-                break;
-
-            case 22:
-                $birthdate = trim($messageText);
-                $studentId = $session['data']['student_id'];
-                $grade = $session['data']['grade'];
-
-                Cache::forget($sessionKey);
-                $this->sendMessage($senderPsid, "Checking ID {$studentId}...");
-                $statusResult = $this->lookupEnrollmentStatusByIDGradeBirthdate($studentId, $grade, $birthdate);
-                $this->sendMessage($senderPsid, $statusResult);
-                $this->sendMainMenu($senderPsid);
-                break;
-
-            // --- RESEND CREDENTIALS BY NAME FLOW ---
-            case 30:
-                $session['data']['name'] = $messageText;
-                $session['step'] = 31;
+            // --- RESEND CREDENTIALS FLOW ---
+            case 10:
+                // Auto-detect if input is ID/Email or Name
+                $isIdOrEmail = preg_match('/^\d{4,8}$/', $cleanMessageText) || 
+                               preg_match('/^amis-\d+/i', $cleanMessageText) || 
+                               preg_match('/^amis\d+/i', $cleanMessageText) || 
+                               str_contains($cleanMessageText, '@');
+                if ($isIdOrEmail) {
+                    $session['data']['type'] = 'id';
+                    $session['data']['student_id'] = $cleanMessageText;
+                } else {
+                    $session['data']['type'] = 'name';
+                    $session['data']['name'] = $cleanMessageText;
+                }
+                $session['step'] = 11;
                 Cache::put($sessionKey, $session, now()->addMinutes(15));
 
                 $quickReplies = [
@@ -285,9 +221,9 @@ class FacebookBotController extends Controller
                 $this->sendMessageWithQuickReplies($senderPsid, "What is the GRADE LEVEL? (e.g., Grade 1, Grade 5, Kinder)", $quickReplies);
                 break;
 
-            case 31:
+            case 11:
                 $session['data']['grade'] = $messageText;
-                $session['step'] = 32;
+                $session['step'] = 12;
                 Cache::put($sessionKey, $session, now()->addMinutes(15));
 
                 $quickReplies = [
@@ -296,106 +232,25 @@ class FacebookBotController extends Controller
                 $this->sendMessageWithQuickReplies($senderPsid, "To verify your identity, what is the student's BIRTHDATE? (Format: MM-DD-YYYY, e.g. 04-30-2010)", $quickReplies);
                 break;
 
-            case 32:
+            case 12:
                 $birthdate = trim($messageText);
-                $name = $session['data']['name'];
                 $grade = $session['data']['grade'];
+                $type = $session['data']['type'] ?? 'name';
 
                 Cache::forget($sessionKey);
-                $this->sendMessage($senderPsid, "Verifying details for {$name}...");
-                $result = $this->handleBotResendCredentialsByName($name, $grade, $birthdate);
+
+                if ($type === 'id') {
+                    $studentId = $session['data']['student_id'];
+                    $this->sendMessage($senderPsid, "Verifying details for ID/Email {$studentId}...");
+                    $result = $this->handleBotResendCredentialsById($studentId, $grade, $birthdate);
+                } else {
+                    $name = $session['data']['name'];
+                    $this->sendMessage($senderPsid, "Verifying details for {$name}...");
+                    $result = $this->handleBotResendCredentialsByName($name, $grade, $birthdate);
+                }
+
                 $this->sendMessage($senderPsid, $result);
                 $this->sendMainMenu($senderPsid);
-                break;
-
-            // --- RESEND CREDENTIALS BY ID FLOW ---
-            case 40:
-                $session['data']['student_id'] = $messageText;
-                $session['step'] = 41;
-                Cache::put($sessionKey, $session, now()->addMinutes(15));
-
-                $quickReplies = [
-                    ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
-                ];
-                $this->sendMessageWithQuickReplies($senderPsid, "What is the GRADE LEVEL? (e.g., Grade 1, Grade 5, Kinder)", $quickReplies);
-                break;
-
-            case 41:
-                $session['data']['grade'] = $messageText;
-                $session['step'] = 42;
-                Cache::put($sessionKey, $session, now()->addMinutes(15));
-
-                $quickReplies = [
-                    ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
-                ];
-                $this->sendMessageWithQuickReplies($senderPsid, "To verify your identity, what is the student's BIRTHDATE? (Format: MM-DD-YYYY, e.g. 04-30-2010)", $quickReplies);
-                break;
-
-            case 42:
-                $birthdate = trim($messageText);
-                $studentId = $session['data']['student_id'];
-                $grade = $session['data']['grade'];
-
-                Cache::forget($sessionKey);
-                $this->sendMessage($senderPsid, "Verifying details for ID {$studentId}...");
-                $result = $this->handleBotResendCredentialsById($studentId, $grade, $birthdate);
-                $this->sendMessage($senderPsid, $result);
-                $this->sendMainMenu($senderPsid);
-                break;
-
-            // --- SELECT METHOD FALLBACKS ---
-            case 100:
-                if ($normalizedText === 'enrollment_search_name' || $normalizedText === '1' || $normalizedText === 'one' || str_contains($normalizedText, 'name')) {
-                    $session = ['step' => 1, 'data' => []];
-                    Cache::put($sessionKey, $session, now()->addMinutes(15));
-                    $quickReplies = [['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']];
-                    $this->sendMessageWithQuickReplies($senderPsid, "Please provide the student's FULL NAME (First Name and Last Name):", $quickReplies);
-                } elseif ($normalizedText === 'enrollment_search_id' || $normalizedText === '2' || $normalizedText === 'two' || str_contains($normalizedText, 'id')) {
-                    $session = ['step' => 20, 'data' => []];
-                    Cache::put($sessionKey, $session, now()->addMinutes(15));
-                    $quickReplies = [['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']];
-                    $this->sendMessageWithQuickReplies($senderPsid, "Please provide the AMIS Student ID / Student Number:", $quickReplies);
-                } else {
-                    // Smart detection: user typed Name or ID directly
-                    if ($isAmisId) {
-                        $session = ['step' => 21, 'data' => ['student_id' => $cleanMessageText]];
-                        Cache::put($sessionKey, $session, now()->addMinutes(15));
-                        $quickReplies = [['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']];
-                        $this->sendMessageWithQuickReplies($senderPsid, "🔍 Smart Lookup: Detected AMIS ID: {$cleanMessageText}.\n\nWhat is the GRADE LEVEL applied for? (e.g., Grade 1, Grade 5, Kinder)", $quickReplies);
-                    } else {
-                        $session = ['step' => 2, 'data' => ['name' => $cleanMessageText]];
-                        Cache::put($sessionKey, $session, now()->addMinutes(15));
-                        $quickReplies = [['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']];
-                        $this->sendMessageWithQuickReplies($senderPsid, "🔍 Smart Lookup: Detected Student Name: {$cleanMessageText}.\n\nWhat is the GRADE LEVEL applied for? (e.g., Grade 1, Grade 5, Kinder)", $quickReplies);
-                    }
-                }
-                break;
-
-            case 200:
-                if ($normalizedText === 'resend_search_name' || $normalizedText === '1' || $normalizedText === 'one' || str_contains($normalizedText, 'name')) {
-                    $session = ['step' => 30, 'data' => []];
-                    Cache::put($sessionKey, $session, now()->addMinutes(15));
-                    $quickReplies = [['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']];
-                    $this->sendMessageWithQuickReplies($senderPsid, "Please provide the student's FULL NAME (First Name and Last Name):", $quickReplies);
-                } elseif ($normalizedText === 'resend_search_id' || $normalizedText === '2' || $normalizedText === 'two' || str_contains($normalizedText, 'id')) {
-                    $session = ['step' => 40, 'data' => []];
-                    Cache::put($sessionKey, $session, now()->addMinutes(15));
-                    $quickReplies = [['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']];
-                    $this->sendMessageWithQuickReplies($senderPsid, "Please provide the AMIS ID or Student ID:", $quickReplies);
-                } else {
-                    // Smart detection: user typed Name or ID directly
-                    if ($isAmisId) {
-                        $session = ['step' => 41, 'data' => ['student_id' => $cleanMessageText]];
-                        Cache::put($sessionKey, $session, now()->addMinutes(15));
-                        $quickReplies = [['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']];
-                        $this->sendMessageWithQuickReplies($senderPsid, "🔍 Smart Lookup: Detected AMIS ID: {$cleanMessageText}.\n\nWhat is the GRADE LEVEL? (e.g., Grade 1, Grade 5, Kinder)", $quickReplies);
-                    } else {
-                        $session = ['step' => 31, 'data' => ['name' => $cleanMessageText]];
-                        Cache::put($sessionKey, $session, now()->addMinutes(15));
-                        $quickReplies = [['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']];
-                        $this->sendMessageWithQuickReplies($senderPsid, "🔍 Smart Lookup: Detected Student Name: {$cleanMessageText}.\n\nWhat is the GRADE LEVEL? (e.g., Grade 1, Grade 5, Kinder)", $quickReplies);
-                    }
-                }
                 break;
         }
     }
