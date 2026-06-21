@@ -348,11 +348,12 @@
                                     ])>
                                     <!-- Left Photo Container -->
                                     @if ($hasPhoto)
-                                        <div class="relative w-48 shrink-0 overflow-hidden bg-slate-50">
+                                        <div class="relative w-48 shrink-0 overflow-hidden bg-slate-150 animate-pulse">
                                             <img
                                                 src="{{ (str_contains($photoPath, 'images/teachers/') ? asset($photoPath) : asset(\App\Support\ImageHelper::thumb($photoPath, 'medium'))) . '?v=2' }}"
                                                 alt="{{ $t['name'] }}"
-                                                class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                                class="absolute inset-0 w-full h-full object-cover opacity-0 transition-all duration-300 group-hover:scale-105"
+                                                onload="this.classList.remove('opacity-0'); this.parentElement.classList.remove('animate-pulse', 'bg-slate-150');"
                                                 loading="lazy"
                                             >
                                         </div>

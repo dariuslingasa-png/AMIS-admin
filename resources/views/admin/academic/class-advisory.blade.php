@@ -71,8 +71,13 @@
                         ])>
                             <!-- Left Photo Container -->
                             @if($teacherPhoto)
-                                <div class="relative w-48 shrink-0 overflow-hidden bg-slate-50">
-                                    <img src="{{ asset($teacherPhoto) . '?v=2' }}" alt="{{ $row['teacher'] }}" class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
+                                <div class="relative w-48 shrink-0 overflow-hidden bg-slate-150 animate-pulse">
+                                    <img
+                                        src="{{ asset($teacherPhoto) . '?v=2' }}"
+                                        alt="{{ $row['teacher'] }}"
+                                        class="absolute inset-0 w-full h-full object-cover opacity-0 transition-all duration-300 group-hover:scale-105"
+                                        onload="this.classList.remove('opacity-0'); this.parentElement.classList.remove('animate-pulse', 'bg-slate-150');"
+                                    >
                                 </div>
                             @else
                                 <div @class([
