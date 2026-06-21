@@ -63,7 +63,7 @@ class FacebookBotController extends Controller
         $sessionKey = "fb_bot_session_{$senderPsid}";
         $session = Cache::get($sessionKey, ['step' => 0, 'data' => []]);
 
-        $triggerWords = ['hi', 'hello', 'enrollment status', 'check status', 'amis', 'info'];
+        $triggerWords = ['hi', 'hello', 'enrollment status', 'check status', 'amis', 'info', 'start', 'status'];
         if (in_array(strtolower($messageText), $triggerWords) || $session['step'] === 0) {
             $session = [
                 'step' => 1,
@@ -71,7 +71,7 @@ class FacebookBotController extends Controller
             ];
             Cache::put($sessionKey, $session, now()->addMinutes(15));
             
-            $this->sendMessage($senderPsid, "Assalamu Alaikum! Ako ang AMIS Virtual Assistant. 🤖\n\nPara ma-check ang iyong enrollment status, pakisagot ang mga sumusunod.\n\nAno ang BUONG PANGALAN (First Name at Last Name) ng Student?");
+            $this->sendMessage($senderPsid, "Assalamu Alaikum! I am the AMIS Virtual Assistant. 🤖\n\nTo check the student's enrollment status, please answer the following questions.\n\nWhat is the student's FULL NAME (First Name and Last Name)?");
             return;
         }
 
@@ -81,7 +81,7 @@ class FacebookBotController extends Controller
                 $session['step'] = 2;
                 Cache::put($sessionKey, $session, now()->addMinutes(15));
 
-                $this->sendMessage($senderPsid, "Salamat. Ano ang GRADE LEVEL na in-enrollan? (Halimbawa: Grade 1, Grade 5, Kinder)");
+                $this->sendMessage($senderPsid, "Thank you. What is the GRADE LEVEL applied for? (e.g. Grade 1, Grade 5, Kinder)");
                 break;
 
             case 2:
@@ -89,7 +89,7 @@ class FacebookBotController extends Controller
                 $session['step'] = 3;
                 Cache::put($sessionKey, $session, now()->addMinutes(15));
 
-                $this->sendMessage($senderPsid, "Huling hakbang, kailan ang BIRTHDATE ng student? (Format: YYYY-MM-DD, Halimbawa: 2018-05-30)");
+                $this->sendMessage($senderPsid, "Last step, what is the student's BIRTHDATE? (Format: YYYY-MM-DD, e.g. 2018-05-30)");
                 break;
 
             case 3:
@@ -99,7 +99,7 @@ class FacebookBotController extends Controller
 
                 Cache::forget($sessionKey);
 
-                $this->sendMessage($senderPsid, "Salamat! Chine-check ko na ang record ni {$name} sa aming system. Sandali lamang...");
+                $this->sendMessage($senderPsid, "Thank you! Checking the record of {$name} in our system. Please wait a moment...");
 
                 $statusResult = $this->lookupEnrollmentStatus($name, $grade, $birthdate);
 
@@ -134,21 +134,21 @@ class FacebookBotController extends Controller
         $applicant = $query->first();
 
         if (!$applicant) {
-            return "❌ No Record Found\n\nPaumanhin, hindi namin nahanap ang record para sa student na ito sa aming 2026-2027 Enrollment list. Siguraduhing tama ang spelling at birthdate.";
+            return "❌ No Record Found\n\nWe couldn't find any enrollment record for this student. Please make sure the spelling and birthdate are correct.";
         }
 
         switch (strtolower($applicant->status)) {
             case 'approved':
             case 'registered':
-                return "✅ Account Created\n\nMagandang balita! Approved na ang enrollment ni {$applicant->first_name} {$applicant->last_name} at may account na sa system. Maaari niyo na ring ma-access ang Microsoft 365.";
+                return "✅ Account Created\n\nGreat news! The enrollment for {$applicant->first_name} {$applicant->last_name} has been approved, and the account is created in the system. You can now access Microsoft 365.";
             
             case 'submitted':
             case 'pending':
             case 'under_review':
-                return "⏳ Pending Enrollment\n\nNahanap namin ang record ni {$applicant->first_name} {$applicant->last_name}. Ang status nito ay kasalukuyang PENDING o pinoproseso pa ng admin. Mag-antay ng email o text notification para sa susunod na hakbang.";
+                return "⏳ Pending Enrollment\n\nWe found the record for {$applicant->first_name} {$applicant->last_name}. The status is currently PENDING or under review by the admin. Please wait for an email or SMS notification for the next steps.";
             
             default:
-                return "❌ No Record Found / Draft Application\n\nHindi pa kumpleto ang pagsusumite ng form para kay {$applicant->first_name}. Mangyaring tapusin ang form sa portal.";
+                return "❌ No Record Found / Draft Application\n\nThe application form for {$applicant->first_name} is not yet fully submitted. Please complete the form on the enrollment portal.";
         }
     }
 
