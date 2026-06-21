@@ -43,9 +43,18 @@ class FacebookBotController extends Controller
                     foreach ($entry['messaging'] as $event) {
                         $senderPsid = $event['sender']['id'];
 
-                        if (isset($event['message']) && !isset($event['message']['is_echo'])) {
-                            $messageText = trim($event['message']['text'] ?? '');
-                            $this->processMessage($senderPsid, $messageText);
+                        // 1. Handle Postback (like Get Started or Ice Breakers)
+                        if (isset($event['postback'])) {
+                            $postbackPayload = $event['postback']['payload'] ?? '';
+                            $this->processMessage($senderPsid, $postbackPayload);
+                        }
+                        // 2. Handle normal messages
+                        elseif (isset($event['message']) && !isset($event['message']['is_echo'])) {
+                            // Check if it's a quick reply payload or standard text
+                            $messageText = $event['message']['quick_reply']['payload'] 
+                                           ?? $event['message']['text'] 
+                                           ?? '';
+                            $this->processMessage($senderPsid, trim($messageText));
                         }
                     }
                 }
@@ -64,7 +73,11 @@ class FacebookBotController extends Controller
         $sessionKey = "fb_bot_session_{$senderPsid}";
         $session = Cache::get($sessionKey, ['step' => 0, 'data' => []]);
 
-        $triggerWords = ['hi', 'hello', 'enrollment status', 'check status', 'amis', 'info', 'start', 'status'];
+        $triggerWords = [
+            'hi', 'hello', 'enrollment status', 'check status', 'amis', 
+            'info', 'start', 'status', 'check_enrollment_status', 'get_started'
+        ];
+
         if (in_array(strtolower($messageText), $triggerWords) || $session['step'] === 0) {
             $session = [
                 'step' => 1,
@@ -177,5 +190,34 @@ class FacebookBotController extends Controller
         ]);
 
         Log::info("Facebook Send Response Status: " . $response->status() . " Body: " . $response->body());
+    }
+
+    /**
+     * Setup Messenger Profile (Get Started button & Ice Breakers)
+     */
+    public function setupMessengerProfile()
+    {
+        $accessToken = env('MESSENGER_PAGE_ACCESS_TOKEN');
+
+        if (!$accessToken) {
+            return response()->json(['error' => 'Messenger token not set'], 500);
+        }
+
+        $response = Http::post("https://graph.facebook.com/v19.0/me/messenger_profile?access_token={$accessToken}", [
+            'get_started' => [
+                'payload' => 'GET_STARTED'
+            ],
+            'ice_breakers' => [
+                [
+                    'question' => 'Check Enrollment Status',
+                    'payload' => 'CHECK_ENROLLMENT_STATUS'
+                ]
+            ]
+        ]);
+
+        return response()->json([
+            'status' => $response->status(),
+            'response' => $response->json(),
+        ]);
     }
 }

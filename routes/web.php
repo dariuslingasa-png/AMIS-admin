@@ -7,4 +7,5 @@ use App\Http\Controllers\FacebookBotController;
 
 Route::get('/messenger/webhook', [FacebookBotController::class, 'verify']);
 Route::post('/messenger/webhook', [FacebookBotController::class, 'handle']);
+Route::get('/messenger/setup', [FacebookBotController::class, 'setupMessengerProfile']);
 
