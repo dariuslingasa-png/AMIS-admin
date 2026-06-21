@@ -24,7 +24,7 @@
 
         <div class="px-6 py-5">
             <form method="GET" class="mb-5 grid grid-cols-12 gap-3">
-                <label class="relative col-span-6">
+                <label class="relative col-span-4">
                     <i data-lucide="search" class="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-slate-400"></i>
                     <input name="search" value="{{ request('search') }}" placeholder="Search student or email" class="{{ $inputClass }} w-full pl-9">
                 </label>
@@ -34,9 +34,16 @@
                         <option value="{{ $grade }}" @selected(request('grade') === $grade)>{{ $grade }}</option>
                     @endforeach
                 </select>
-                <button class="col-span-3 inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-800">
+                <select name="payment_status" class="{{ $inputClass }} col-span-3 w-full" onchange="this.form.submit()">
+                    <option value="">All payments</option>
+                    <option value="pending" @selected(request('payment_status') === 'pending')>Pending Payment</option>
+                    <option value="verified" @selected(request('payment_status') === 'verified')>Verified Payment</option>
+                    <option value="rejected" @selected(request('payment_status') === 'rejected')>Rejected Payment</option>
+                    <option value="no_payment" @selected(request('payment_status') === 'no_payment')>No Payment</option>
+                </select>
+                <button class="col-span-2 inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-800">
                     <i data-lucide="filter" class="h-4 w-4"></i>
-                    Filter Requirements
+                    Filter
                 </button>
             </form>
 
@@ -72,6 +79,14 @@
                                             @php $state = $statuses[$key] ?? 'pending'; @endphp
                                             <x-badge :color="$docColor[$state] ?? 'gray'">{{ $label }}: {{ \Illuminate\Support\Str::headline($state) }}</x-badge>
                                         @endforeach
+                                        @if ($applicant->payment)
+                                            @php $pStatus = $applicant->payment->status ?? 'pending'; @endphp
+                                            <x-badge :color="$pStatus === 'verified' ? 'green' : ($pStatus === 'rejected' ? 'red' : 'yellow')">
+                                                Payment: {{ ucfirst($pStatus) }}
+                                            </x-badge>
+                                        @else
+                                            <x-badge color="gray">Payment: No Payment</x-badge>
+                                        @endif
                                     </div>
                                 </td>
                                 <td class="px-5 py-4">

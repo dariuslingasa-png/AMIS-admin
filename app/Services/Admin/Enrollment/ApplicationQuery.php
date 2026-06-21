@@ -124,6 +124,17 @@ class ApplicationQuery
             $query->where('enrollment_applicants.grade_level', $request->grade);
         }
 
+        if ($request->filled('payment_status')) {
+            $paymentStatus = (string) $request->payment_status;
+            if ($paymentStatus === 'no_payment') {
+                $query->whereDoesntHave('payment');
+            } else {
+                $query->whereHas('payment', function ($q) use ($paymentStatus) {
+                    $q->where('status', $paymentStatus);
+                });
+            }
+        }
+
         if ($request->filled('inbox_status') && Schema::hasColumn('enrollment_applicants', 'onboarding_email_status')) {
             match ((string) $request->inbox_status) {
                 'sent' => $query->where('enrollment_applicants.onboarding_email_status', 'sent'),

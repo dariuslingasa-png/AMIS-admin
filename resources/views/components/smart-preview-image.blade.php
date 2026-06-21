@@ -11,7 +11,7 @@
         <img
             src="{{ $src }}"
             alt="{{ $alt }}"
-            class="w-full h-full object-cover block {{ $class }}"
+            class="w-full h-full block {{ $class ?: 'object-cover' }}"
             loading="{{ $eager ? 'eager' : 'lazy' }}"
             decoding="{{ $eager ? 'async' : 'auto' }}"
             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"

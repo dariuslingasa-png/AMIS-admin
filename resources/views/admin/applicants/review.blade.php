@@ -5,6 +5,7 @@
     $accentClasses = ['accent-green', 'accent-blue', 'accent-amber', 'accent-violet', 'accent-rose'];
     $accentClass = $accentClasses[$familyNo % 5];
     $canReviewApplications = auth()->user()?->canReviewEnrollmentApplications() ?? false;
+    $canReviewPayments = auth()->user()?->canReviewEnrollmentPayments() ?? false;
     $isTeacherAdminViewer = auth()->user()?->isTeacherAdminViewer() ?? false;
     $currentStatus = $applicant->status ?? 'under_review';
     $docStatuses = $docStatuses ?? [];
@@ -64,6 +65,7 @@
              },
              stopPan() { if (this.panEl) this.panEl.classList.remove('cursor-grabbing'); this.panning = false; this.panEl = null; },
              chooseStatus(value, label) { this.statusValue = value; this.statusLabel = label; this.statusOpen = false; },
+             showPaymentReject: false,
          }"
          x-effect="document.body.classList.toggle('overflow-hidden', preview)"
          @keydown.escape.window="closePreview(); statusOpen = false"
@@ -192,26 +194,60 @@
                                 </div>
                             </div>
 
+                            @if ($payment && $payment->status === 'pending' && $canReviewPayments)
+                                <div class="mt-4 border-t border-slate-100 pt-4 space-y-3">
+                                    <p class="text-xs font-bold text-slate-500 uppercase tracking-wide">Review Payment Proof</p>
+                                    <div class="flex gap-2">
+                                        <form method="POST" action="{{ route('admin.payments.verify', $payment) }}" class="inline-block" onsubmit="return confirm('Verify this payment proof of ₱{{ number_format($payment->amount, 2) }}?')">
+                                            @csrf
+                                            @method('PATCH')
+                                            <button type="submit" class="inline-flex h-9 items-center gap-1.5 rounded-lg bg-emerald-600 px-4 text-xs font-extrabold text-white transition hover:bg-emerald-700 shadow-sm cursor-pointer">
+                                                <i data-lucide="check" class="h-3.5 w-3.5"></i> Verify Payment
+                                            </button>
+                                        </form>
+                                        <button type="button" @click="showPaymentReject = !showPaymentReject" class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-rose-200 bg-white px-4 text-xs font-extrabold text-rose-700 transition hover:bg-rose-50 shadow-sm cursor-pointer">
+                                            <i data-lucide="x" class="h-3.5 w-3.5"></i> Reject Payment
+                                        </button>
+                                    </div>
+                                    <div x-show="showPaymentReject" x-cloak class="mt-3 p-3 bg-rose-50/50 rounded-xl border border-rose-100">
+                                        <form method="POST" action="{{ route('admin.payments.reject', $payment) }}">
+                                            @csrf
+                                            @method('PATCH')
+                                            <label class="block text-xs font-bold text-rose-800 mb-1">Reason for Rejection</label>
+                                            <textarea name="remarks" required rows="2" class="w-full rounded-lg border border-rose-200 bg-white p-2 text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500" placeholder="Please specify why the payment is rejected..."></textarea>
+                                            <div class="mt-2 flex justify-end">
+                                                <button type="submit" class="inline-flex h-8 items-center justify-center rounded-lg bg-rose-600 px-3 text-xs font-bold text-white transition hover:bg-rose-700 cursor-pointer">
+                                                    Submit Rejection
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            @endif
+
                             @php
                                 $receipts = $payment?->receipt_urls ?? [];
                             @endphp
                             @if (count($receipts) > 0)
-                                <div class="space-y-3">
+                                <div class="space-y-4">
                                     @foreach ($receipts as $index => $receiptPath)
                                         @php
                                             $url = \App\Support\EnrollmentStorage::url($receiptPath);
                                             $isPdf = $receiptPath && strtolower(pathinfo($receiptPath, PATHINFO_EXTENSION)) === 'pdf';
                                         @endphp
-                                        <div class="rounded-xl border border-slate-100 overflow-hidden">
+                                        <div class="max-w-sm mx-auto rounded-xl border border-slate-100 overflow-hidden shadow-sm">
                                             <div class="bg-slate-50 px-4 py-1.5 text-[11px] font-extrabold text-slate-500 border-b border-slate-100 flex items-center justify-between">
                                                 <span>RECEIPT #{{ $index + 1 }}</span>
                                                 <a href="{{ $url }}" target="_blank" class="text-emerald-600 hover:text-emerald-700 hover:underline">Open in new tab</a>
                                             </div>
-                                            <a href="#" @click.prevent="openPreview('{{ $url }}', 'Payment Proof #{{ $index + 1 }}', {{ $isPdf ? 'true' : 'false' }})" class="block">
+                                            <a href="#" @click.prevent="openPreview('{{ $url }}', 'Payment Proof #{{ $index + 1 }}', {{ $isPdf ? 'true' : 'false' }})" class="block h-96 overflow-hidden bg-slate-50 relative rounded-b-xl">
                                                 @if ($isPdf)
-                                                    <span class="upload-pdf"><i data-lucide="file-text" class="h-9 w-9"></i>PDF Receipt</span>
+                                                    <span class="upload-pdf h-full flex flex-col items-center justify-center gap-2 text-slate-400 bg-slate-50">
+                                                        <i data-lucide="file-text" class="h-9 w-9 text-rose-500"></i>
+                                                        PDF Receipt
+                                                    </span>
                                                 @else
-                                                    <x-smart-preview-image :src="$url" alt="Payment Proof #{{ $index + 1 }}" />
+                                                    <x-smart-preview-image :src="$url" alt="Payment Proof #{{ $index + 1 }}" class="object-contain" />
                                                 @endif
                                             </a>
                                         </div>
