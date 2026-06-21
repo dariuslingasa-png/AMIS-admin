@@ -34,6 +34,7 @@ class FacebookBotController extends Controller
     public function handle(Request $request)
     {
         $payload = $request->all();
+        Log::info("Facebook Webhook Received:", $payload);
 
         // Ensure message comes from a page subscription
         if (isset($payload['object']) && $payload['object'] === 'page') {
@@ -164,7 +165,9 @@ class FacebookBotController extends Controller
             return;
         }
 
-        Http::post("https://graph.facebook.com/v19.0/me/messages?access_token={$accessToken}", [
+        Log::info("Facebook Bot sending message to PSID {$recipientPsid}: {$messageText}");
+
+        $response = Http::post("https://graph.facebook.com/v19.0/me/messages?access_token={$accessToken}", [
             'recipient' => [
                 'id' => $recipientPsid
             ],
@@ -172,5 +175,7 @@ class FacebookBotController extends Controller
                 'text' => $messageText
             ]
         ]);
+
+        Log::info("Facebook Send Response Status: " . $response->status() . " Body: " . $response->body());
     }
 }
