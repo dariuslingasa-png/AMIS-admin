@@ -347,41 +347,25 @@
                                         'hover:border-emerald-300' => ! $isHighSchool && ! $isIslamicArabic,
                                     ])>
                                     <!-- Left Photo Container -->
-                                    <div class="relative w-48 shrink-0 overflow-hidden bg-slate-50" x-data="{ imgLoaded: false, imgError: false }">
-                                        @if ($hasPhoto)
-                                            <div x-show="!imgLoaded && !imgError" class="absolute inset-0 animate-pulse bg-slate-200"></div>
-                                            <div x-show="!imgError" class="h-full w-full">
-                                                <img
-                                                    src="{{ str_contains($photoPath, 'images/teachers/') ? asset($photoPath) : asset(\App\Support\ImageHelper::thumb($photoPath, 'medium')) }}"
-                                                    alt="{{ $t['name'] }}"
-                                                    class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                                                    :class="imgLoaded ? 'opacity-100' : 'opacity-0'"
-                                                    @load="imgLoaded = true"
-                                                    x-on:error="imgError = true"
-                                                    loading="lazy"
-                                                >
-                                            </div>
-                                            <div x-show="imgError" class="absolute inset-0">
-                                                <div @class([
-                                                    'flex h-full w-full items-center justify-center text-4xl font-black tracking-wider transition-all duration-300 group-hover:scale-110',
-                                                    'bg-indigo-50 text-indigo-700' => $isHighSchool,
-                                                    'bg-amber-50 text-amber-700' => $isIslamicArabic,
-                                                    'bg-emerald-50 text-emerald-700' => ! $isHighSchool && ! $isIslamicArabic,
-                                                ])>
-                                                    {{ $initials }}
-                                                </div>
-                                            </div>
-                                        @else
-                                            <div @class([
-                                                'relative w-full h-full flex items-center justify-center bg-gradient-to-br transition-all duration-300 text-4xl font-black tracking-wider group-hover:scale-110',
-                                                'from-indigo-50 to-indigo-100/40 text-indigo-700' => $isHighSchool,
-                                                'from-amber-50 to-amber-100/40 text-amber-700' => $isIslamicArabic,
-                                                'from-emerald-50 to-emerald-100/40 text-emerald-700' => ! $isHighSchool && ! $isIslamicArabic,
-                                            ])>
-                                                {{ $initials }}
-                                            </div>
-                                        @endif
-                                    </div>
+                                    @if ($hasPhoto)
+                                        <div class="relative w-48 shrink-0 overflow-hidden bg-slate-50">
+                                            <img
+                                                src="{{ str_contains($photoPath, 'images/teachers/') ? asset($photoPath) : asset(\App\Support\ImageHelper::thumb($photoPath, 'medium')) }}"
+                                                alt="{{ $t['name'] }}"
+                                                class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                                loading="lazy"
+                                            >
+                                        </div>
+                                    @else
+                                        <div @class([
+                                            'relative w-48 shrink-0 overflow-hidden flex items-center justify-center bg-gradient-to-br transition-all duration-300 text-4xl font-black tracking-wider group-hover:scale-110',
+                                            'from-indigo-50 to-indigo-100/40 text-indigo-700' => $isHighSchool,
+                                            'from-amber-50 to-amber-100/40 text-amber-700' => $isIslamicArabic,
+                                            'from-emerald-50 to-emerald-100/40 text-emerald-700' => ! $isHighSchool && ! $isIslamicArabic,
+                                        ])>
+                                            {{ $initials }}
+                                        </div>
+                                    @endif
 
                                     <!-- Right Details Area -->
                                     <div class="flex-1 p-6 flex flex-col justify-between min-w-0">
