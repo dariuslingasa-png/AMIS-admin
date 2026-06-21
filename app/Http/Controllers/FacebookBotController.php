@@ -79,10 +79,10 @@ class FacebookBotController extends Controller
 
         $normalizedText = strtolower(trim($messageText));
 
-        // Direct AMIS ID / Student ID lookup check (runs at any time)
+        // Direct AMIS ID / Student ID lookup check (runs at any time when not in a flow)
         $cleanMessageText = trim($messageText);
         $isAmisId = preg_match('/^\d{4,8}$/', $cleanMessageText) || preg_match('/^amis-\d+/i', $cleanMessageText) || preg_match('/^amis\d+/i', $cleanMessageText);
-        if ($isAmisId) {
+        if ($isAmisId && $session['step'] === 0) {
             Cache::forget($sessionKey);
             $this->sendMessage($senderPsid, "Checking ID: {$cleanMessageText}...");
             $statusResult = $this->lookupEnrollmentStatusById($cleanMessageText);
@@ -113,24 +113,17 @@ class FacebookBotController extends Controller
         $enrollmentTriggers = ['check_enrollment_status', 'enrollment status', 'check status', 'enrollment', 'status'];
         if (in_array($normalizedText, $enrollmentTriggers)) {
             $session = [
-                'step' => 1,
+                'step' => 100,
                 'data' => []
             ];
             Cache::put($sessionKey, $session, now()->addMinutes(15));
-            
-            $infoMsg = "To check status, please provide:\n" .
-                        "• Full Name\n" .
-                        "• Grade Level\n" .
-                        "• Birthdate\n\n" .
-                        "💡 Or reply with your Student ID/AMIS ID to check immediately!";
-            
-            $this->sendMessage($senderPsid, $infoMsg);
-            
-            // Ask the first question with a back to menu quick reply
+
             $quickReplies = [
+                ['content_type' => 'text', 'title' => 'Search by Name', 'payload' => 'ENROLLMENT_SEARCH_NAME'],
+                ['content_type' => 'text', 'title' => 'Search by ID', 'payload' => 'ENROLLMENT_SEARCH_ID'],
                 ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
             ];
-            $this->sendMessageWithQuickReplies($senderPsid, "What is the student's FULL NAME (First Name and Last Name)?", $quickReplies);
+            $this->sendMessageWithQuickReplies($senderPsid, "📝 Enrollment Status\n\nHow would you like to check the enrollment status?", $quickReplies);
             return;
         }
 
@@ -138,15 +131,70 @@ class FacebookBotController extends Controller
         $resendTriggers = ['resend_credentials', 'resend credentials', 'forgot credentials', 'get credentials', 'resend password', 'reset_password', 'reset password'];
         if (in_array($normalizedText, $resendTriggers)) {
             $session = [
-                'step' => 10,
+                'step' => 200,
                 'data' => []
             ];
             Cache::put($sessionKey, $session, now()->addMinutes(15));
-            
+
+            $quickReplies = [
+                ['content_type' => 'text', 'title' => 'Search by Name', 'payload' => 'RESEND_SEARCH_NAME'],
+                ['content_type' => 'text', 'title' => 'Search by ID', 'payload' => 'RESEND_SEARCH_ID'],
+                ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+            ];
+            $this->sendMessageWithQuickReplies($senderPsid, "🔐 Resend Credentials\nNote: use your only official AMIS email @amis.edu.ph\n\nHow would you like to search for the student?", $quickReplies);
+            return;
+        }
+
+        // Handle search method selections (both payload postbacks and raw text)
+        if ($normalizedText === 'enrollment_search_name' || ($session['step'] === 100 && $normalizedText === 'search by name')) {
+            $session = [
+                'step' => 1,
+                'data' => []
+            ];
+            Cache::put($sessionKey, $session, now()->addMinutes(15));
             $quickReplies = [
                 ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
             ];
-            $this->sendMessageWithQuickReplies($senderPsid, "🔐 Resend Credentials\n\nTo begin, please reply with your Student ID or School Email.", $quickReplies);
+            $this->sendMessageWithQuickReplies($senderPsid, "Please provide the student's FULL NAME (First Name and Last Name):", $quickReplies);
+            return;
+        }
+
+        if ($normalizedText === 'enrollment_search_id' || ($session['step'] === 100 && $normalizedText === 'search by id')) {
+            $session = [
+                'step' => 20,
+                'data' => []
+            ];
+            Cache::put($sessionKey, $session, now()->addMinutes(15));
+            $quickReplies = [
+                ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+            ];
+            $this->sendMessageWithQuickReplies($senderPsid, "Please provide the AMIS Student ID / Student Number:", $quickReplies);
+            return;
+        }
+
+        if ($normalizedText === 'resend_search_name' || ($session['step'] === 200 && $normalizedText === 'search by name')) {
+            $session = [
+                'step' => 30,
+                'data' => []
+            ];
+            Cache::put($sessionKey, $session, now()->addMinutes(15));
+            $quickReplies = [
+                ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+            ];
+            $this->sendMessageWithQuickReplies($senderPsid, "Please provide the student's FULL NAME (First Name and Last Name):", $quickReplies);
+            return;
+        }
+
+        if ($normalizedText === 'resend_search_id' || ($session['step'] === 200 && $normalizedText === 'search by id')) {
+            $session = [
+                'step' => 40,
+                'data' => []
+            ];
+            Cache::put($sessionKey, $session, now()->addMinutes(15));
+            $quickReplies = [
+                ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+            ];
+            $this->sendMessageWithQuickReplies($senderPsid, "Please provide the AMIS ID or Student ID:", $quickReplies);
             return;
         }
 
@@ -155,12 +203,12 @@ class FacebookBotController extends Controller
                 $this->sendMainMenu($senderPsid);
                 break;
 
+            // --- ENROLLMENT STATUS BY NAME FLOW ---
             case 1:
                 $session['data']['name'] = $messageText;
                 $session['step'] = 2;
                 Cache::put($sessionKey, $session, now()->addMinutes(15));
 
-                // Ask the grade level (with a Back to Menu quick reply)
                 $quickReplies = [
                     ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
                 ];
@@ -172,7 +220,6 @@ class FacebookBotController extends Controller
                 $session['step'] = 3;
                 Cache::put($sessionKey, $session, now()->addMinutes(15));
 
-                // Ask the birthdate with a back to menu quick reply
                 $quickReplies = [
                     ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
                 ];
@@ -185,42 +232,134 @@ class FacebookBotController extends Controller
                 $grade = $session['data']['grade'];
 
                 Cache::forget($sessionKey);
-
                 $this->sendMessage($senderPsid, "Checking {$name}...");
-
                 $statusResult = $this->lookupEnrollmentStatus($name, $grade, $birthdate);
-
                 $this->sendMessage($senderPsid, $statusResult);
-
-                // Show the main menu options again
                 $this->sendMainMenu($senderPsid);
                 break;
 
-            case 10:
-                // Store student ID / email
+            // --- ENROLLMENT STATUS BY ID FLOW ---
+            case 20:
                 $session['data']['student_id'] = $messageText;
-                $session['step'] = 11;
+                $session['step'] = 21;
                 Cache::put($sessionKey, $session, now()->addMinutes(15));
-                
+
+                $quickReplies = [
+                    ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+                ];
+                $this->sendMessageWithQuickReplies($senderPsid, "What is the GRADE LEVEL applied for? (e.g., Grade 1, Grade 5, Kinder)", $quickReplies);
+                break;
+
+            case 21:
+                $session['data']['grade'] = $messageText;
+                $session['step'] = 22;
+                Cache::put($sessionKey, $session, now()->addMinutes(15));
+
+                $quickReplies = [
+                    ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+                ];
+                $this->sendMessageWithQuickReplies($senderPsid, "What is the student's BIRTHDATE? (Format: MM-DD-YYYY, e.g. 04-30-2020)", $quickReplies);
+                break;
+
+            case 22:
+                $birthdate = trim($messageText);
+                $studentId = $session['data']['student_id'];
+                $grade = $session['data']['grade'];
+
+                Cache::forget($sessionKey);
+                $this->sendMessage($senderPsid, "Checking ID {$studentId}...");
+                $statusResult = $this->lookupEnrollmentStatusByIDGradeBirthdate($studentId, $grade, $birthdate);
+                $this->sendMessage($senderPsid, $statusResult);
+                $this->sendMainMenu($senderPsid);
+                break;
+
+            // --- RESEND CREDENTIALS BY NAME FLOW ---
+            case 30:
+                $session['data']['name'] = $messageText;
+                $session['step'] = 31;
+                Cache::put($sessionKey, $session, now()->addMinutes(15));
+
+                $quickReplies = [
+                    ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+                ];
+                $this->sendMessageWithQuickReplies($senderPsid, "What is the GRADE LEVEL? (e.g., Grade 1, Grade 5, Kinder)", $quickReplies);
+                break;
+
+            case 31:
+                $session['data']['grade'] = $messageText;
+                $session['step'] = 32;
+                Cache::put($sessionKey, $session, now()->addMinutes(15));
+
                 $quickReplies = [
                     ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
                 ];
                 $this->sendMessageWithQuickReplies($senderPsid, "To verify your identity, what is the student's BIRTHDATE? (Format: MM-DD-YYYY, e.g. 04-30-2010)", $quickReplies);
                 break;
-                
-            case 11:
+
+            case 32:
+                $birthdate = trim($messageText);
+                $name = $session['data']['name'];
+                $grade = $session['data']['grade'];
+
+                Cache::forget($sessionKey);
+                $this->sendMessage($senderPsid, "Verifying details for {$name}...");
+                $result = $this->handleBotResendCredentialsByName($name, $grade, $birthdate);
+                $this->sendMessage($senderPsid, $result);
+                $this->sendMainMenu($senderPsid);
+                break;
+
+            // --- RESEND CREDENTIALS BY ID FLOW ---
+            case 40:
+                $session['data']['student_id'] = $messageText;
+                $session['step'] = 41;
+                Cache::put($sessionKey, $session, now()->addMinutes(15));
+
+                $quickReplies = [
+                    ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+                ];
+                $this->sendMessageWithQuickReplies($senderPsid, "What is the GRADE LEVEL? (e.g., Grade 1, Grade 5, Kinder)", $quickReplies);
+                break;
+
+            case 41:
+                $session['data']['grade'] = $messageText;
+                $session['step'] = 42;
+                Cache::put($sessionKey, $session, now()->addMinutes(15));
+
+                $quickReplies = [
+                    ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+                ];
+                $this->sendMessageWithQuickReplies($senderPsid, "To verify your identity, what is the student's BIRTHDATE? (Format: MM-DD-YYYY, e.g. 04-30-2010)", $quickReplies);
+                break;
+
+            case 42:
                 $birthdate = trim($messageText);
                 $studentId = $session['data']['student_id'];
-                
+                $grade = $session['data']['grade'];
+
                 Cache::forget($sessionKey);
-                
-                $this->sendMessage($senderPsid, "Verifying your details...");
-                
-                $result = $this->handleBotResendCredentials($studentId, $birthdate);
+                $this->sendMessage($senderPsid, "Verifying details for ID {$studentId}...");
+                $result = $this->handleBotResendCredentialsById($studentId, $grade, $birthdate);
                 $this->sendMessage($senderPsid, $result);
-                
-                // Show main menu options
                 $this->sendMainMenu($senderPsid);
+                break;
+
+            // --- SELECT METHOD FALLBACKS ---
+            case 100:
+                $quickReplies = [
+                    ['content_type' => 'text', 'title' => 'Search by Name', 'payload' => 'ENROLLMENT_SEARCH_NAME'],
+                    ['content_type' => 'text', 'title' => 'Search by ID', 'payload' => 'ENROLLMENT_SEARCH_ID'],
+                    ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+                ];
+                $this->sendMessageWithQuickReplies($senderPsid, "Please choose an option:\n\n1️⃣ Search by Name\n2️⃣ Search by ID", $quickReplies);
+                break;
+
+            case 200:
+                $quickReplies = [
+                    ['content_type' => 'text', 'title' => 'Search by Name', 'payload' => 'RESEND_SEARCH_NAME'],
+                    ['content_type' => 'text', 'title' => 'Search by ID', 'payload' => 'RESEND_SEARCH_ID'],
+                    ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+                ];
+                $this->sendMessageWithQuickReplies($senderPsid, "Please choose an option:\n\n1️⃣ Search by Name\n2️⃣ Search by ID", $quickReplies);
                 break;
         }
     }
@@ -603,52 +742,66 @@ class FacebookBotController extends Controller
     }
 
     /**
-     * Handle resending/resetting credentials requested via Facebook Bot
+     * Database Lookup Logic by ID/Grade/Birthdate
      */
-    private function handleBotResendCredentials($studentId, $birthdate)
+    private function lookupEnrollmentStatusByIDGradeBirthdate($id, $grade, $birthdate)
     {
-        $studentId = trim($studentId);
+        $id = trim($id);
+        $normalizedGrade = $this->normalizeGradeLevel($grade);
         $formattedBirthdate = $this->parseBirthdate($birthdate);
 
         if (!$formattedBirthdate) {
             return "❌ Invalid birthdate format.\n\nPlease try again with a valid format (e.g. MM-DD-YYYY or Month DD, YYYY).";
         }
 
-        // Lookup Student
-        $student = Student::where('student_number', $studentId)
-            ->orWhere('school_email', $studentId)
-            ->orWhere('ms_email', $studentId)
-            ->first();
+        $query = EnrollmentApplicant::where(function($q) use ($id) {
+            $q->where('amis_student_id', $id)
+              ->orWhere('id', $id);
+        });
 
-        if (!$student) {
-            // Check if applicant is found instead
-            $applicant = EnrollmentApplicant::where('amis_student_id', $studentId)
-                ->orWhere('id', $studentId)
+        if ($normalizedGrade) {
+            $query->where('grade_level', $normalizedGrade);
+        }
+
+        $query->whereDate('date_of_birth', $formattedBirthdate);
+        $applicant = $query->first();
+
+        if (!$applicant) {
+            // Also try looking up via Student's student_number / email
+            $student = Student::where('student_number', $id)
+                ->orWhere('school_email', $id)
+                ->orWhere('ms_email', $id)
                 ->first();
-            if ($applicant) {
-                $student = $applicant->student;
+            if ($student && $student->applicant) {
+                $applicant = $student->applicant;
+                // Double check grade and birthdate for this applicant
+                $appGrade = $this->normalizeGradeLevel($applicant->grade_level);
+                $appBirthdate = $applicant->date_of_birth;
+                if ($appBirthdate && $appBirthdate instanceof \Carbon\Carbon) {
+                    $appBirthdate = $appBirthdate->format('Y-m-d');
+                } else if ($appBirthdate) {
+                    $appBirthdate = date('Y-m-d', strtotime((string)$appBirthdate));
+                }
+                
+                if (($normalizedGrade && $appGrade !== $normalizedGrade) || 
+                    ($appBirthdate !== $formattedBirthdate)) {
+                    $applicant = null; // Mismatch
+                }
             }
         }
 
-        if (!$student || !$student->applicant) {
-            return "❌ Student Account Not Found\n\nWe couldn't find any student account with ID/Email: {$studentId}. Please verify and try again.";
+        if (!$applicant) {
+            return "❌ No Record Found\n\nWe couldn't find any enrollment record with ID: {$id}, Grade: {$grade}, and Birthdate: {$birthdate}. Please verify your details.";
         }
 
-        $applicant = $student->applicant;
-        $dbBirthdate = $applicant->date_of_birth;
+        return $this->formatStatusResponse($applicant);
+    }
 
-        if ($dbBirthdate) {
-            if ($dbBirthdate instanceof \Carbon\Carbon) {
-                $dbBirthdate = $dbBirthdate->format('Y-m-d');
-            } else {
-                $dbBirthdate = date('Y-m-d', strtotime((string)$dbBirthdate));
-            }
-        }
-
-        if ($dbBirthdate !== $formattedBirthdate) {
-            return "❌ Verification Failed\n\nThe birthdate you provided does not match our records. Please make sure the student ID and birthdate are correct.";
-        }
-
+    /**
+     * Helper to perform password reset in MS Graph and database, then email parent
+     */
+    private function resetMicrosoftPasswordAndEmail(Student $student, EnrollmentApplicant $applicant)
+    {
         // Generate temporary password
         $tempPassword = 'Amis@' . strtoupper(Str::random(5)) . rand(10, 99);
 
@@ -684,7 +837,10 @@ class FacebookBotController extends Controller
         }
 
         if (!$msSuccess) {
-            return "⚠️ Connection Error\n\nWe verified your account, but failed to sync the password change with Microsoft 365: " . ($msError ?? 'Unknown error') . "\n\nPlease try again later or contact the school administrator.";
+            return [
+                'success' => false,
+                'error' => "⚠️ Connection Error\n\nWe verified the account, but failed to sync the password change with Microsoft 365: " . ($msError ?? 'Unknown error') . "\n\nPlease try again later or contact the school administrator."
+            ];
         }
 
         // Try to email the parent
@@ -715,6 +871,118 @@ class FacebookBotController extends Controller
             }
         }
 
-        return "✅ Credentials Sent Successfully!\n\nHere are your updated M365 details:\n📧 School Email: {$student->school_email}\n🔑 Temp Password: {$tempPassword}\n\nPlease login to portal.office.com and change your password on first login.";
+        return [
+            'success' => true,
+            'temp_password' => $tempPassword
+        ];
+    }
+
+    /**
+     * Resend/Reset credentials requested by student/parent by providing Name, Grade, Birthdate
+     */
+    private function handleBotResendCredentialsByName($name, $grade, $birthdate)
+    {
+        $parts = explode(' ', $name);
+        $firstName = $parts[0] ?? '';
+        $lastName = count($parts) > 1 ? end($parts) : '';
+
+        $normalizedGrade = $this->normalizeGradeLevel($grade);
+        $formattedBirthdate = $this->parseBirthdate($birthdate);
+
+        if (!$formattedBirthdate) {
+            return "❌ Invalid birthdate format.\n\nPlease try again with a valid format (e.g. MM-DD-YYYY or Month DD, YYYY).";
+        }
+
+        $query = EnrollmentApplicant::where(function($q) use ($firstName, $lastName) {
+            $q->where('first_name', 'like', "%{$firstName}%")
+              ->where('last_name', 'like', "%{$lastName}%");
+        });
+
+        if ($normalizedGrade) {
+            $query->where('grade_level', $normalizedGrade);
+        }
+
+        $query->whereDate('date_of_birth', $formattedBirthdate);
+        $applicant = $query->first();
+
+        if (!$applicant || !$applicant->student) {
+            return "❌ Student Account Not Found\n\nWe couldn't find any student account for {$name} with Grade: {$grade} and Birthdate: {$birthdate}. Please verify and try again.";
+        }
+
+        $student = $applicant->student;
+
+        // Perform credentials reset
+        $resetResult = $this->resetMicrosoftPasswordAndEmail($student, $applicant);
+
+        if (!$resetResult['success']) {
+            return $resetResult['error'];
+        }
+
+        $tempPassword = $resetResult['temp_password'];
+
+        // Option A: Show only AMIS email and password
+        return "✅ Credentials Sent Successfully!\n\nHere are the M365 details:\n📧 School Email: {$student->school_email}\n🔑 Temp Password: {$tempPassword}\n\nPlease login to portal.office.com and change your password on first login.";
+    }
+
+    /**
+     * Resend/Reset credentials requested by student/parent by providing Student ID, Grade, Birthdate
+     */
+    private function handleBotResendCredentialsById($studentId, $grade, $birthdate)
+    {
+        $id = trim($studentId);
+        $normalizedGrade = $this->normalizeGradeLevel($grade);
+        $formattedBirthdate = $this->parseBirthdate($birthdate);
+
+        if (!$formattedBirthdate) {
+            return "❌ Invalid birthdate format.\n\nPlease try again with a valid format (e.g. MM-DD-YYYY or Month DD, YYYY).";
+        }
+
+        // Search by ID/Email first
+        $student = Student::where('student_number', $id)
+            ->orWhere('school_email', $id)
+            ->orWhere('ms_email', $id)
+            ->first();
+
+        if (!$student) {
+            $applicant = EnrollmentApplicant::where('amis_student_id', $id)
+                ->orWhere('id', $id)
+                ->first();
+            if ($applicant) {
+                $student = $applicant->student;
+            }
+        }
+
+        if (!$student || !$student->applicant) {
+            return "❌ Student Account Not Found\n\nWe couldn't find any student account with ID: {$id}. Please verify and try again.";
+        }
+
+        $applicant = $student->applicant;
+        
+        // Verify grade and birthdate
+        $appGrade = $this->normalizeGradeLevel($applicant->grade_level);
+        $appBirthdate = $applicant->date_of_birth;
+        if ($appBirthdate && $appBirthdate instanceof \Carbon\Carbon) {
+            $appBirthdate = $appBirthdate->format('Y-m-d');
+        } else if ($appBirthdate) {
+            $appBirthdate = date('Y-m-d', strtotime((string)$appBirthdate));
+        }
+
+        if (($normalizedGrade && $appGrade !== $normalizedGrade) || 
+            ($appBirthdate !== $formattedBirthdate)) {
+            return "❌ Verification Failed\n\nThe grade level or birthdate you provided does not match our records. Please make sure the student ID, grade level, and birthdate are correct.";
+        }
+
+        // Perform credentials reset
+        $resetResult = $this->resetMicrosoftPasswordAndEmail($student, $applicant);
+
+        if (!$resetResult['success']) {
+            return $resetResult['error'];
+        }
+
+        $tempPassword = $resetResult['temp_password'];
+
+        // Option B: Show full name, email, password
+        return "✅ Credentials Sent Successfully!\n\nHere are the student's M365 details:\n👤 Full Name: {$applicant->first_name} {$applicant->last_name}\n📧 School Email: {$student->school_email}\n🔑 Temp Password: {$tempPassword}\n\nPlease login to portal.office.com and change your password on first login.";
     }
 }
+
