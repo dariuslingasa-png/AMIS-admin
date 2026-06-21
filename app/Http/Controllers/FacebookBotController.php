@@ -154,7 +154,27 @@ class FacebookBotController extends Controller
         switch (strtolower($applicant->status)) {
             case 'approved':
             case 'registered':
-                return "✅ Account Created\n\nGreat news! The enrollment for {$applicant->first_name} {$applicant->last_name} has been approved, and the account is created in the system. You can now access Microsoft 365.";
+                $student = $applicant->student;
+                $msg = "✅ Account Created\n\nGreat news! The enrollment for {$applicant->first_name} {$applicant->last_name} has been approved, and the account is created in the system.";
+                
+                $amisId = $student->student_number ?? $applicant->amis_student_id ?? null;
+                if ($amisId) {
+                    $msg .= "\n\nAMIS Student ID: {$amisId}";
+                }
+
+                $email = $student->school_email ?? $student->ms_email ?? null;
+                $password = $student->temp_password ?? null;
+
+                if ($email) {
+                    $msg .= "\n\nMicrosoft 365 Account:\n📧 Username: {$email}";
+                    if ($password) {
+                        $msg .= "\n🔑 Temp Password: {$password}";
+                    }
+                } else {
+                    $msg .= "\n\nYou can now access Microsoft 365.";
+                }
+
+                return $msg;
             
             case 'submitted':
             case 'pending':
