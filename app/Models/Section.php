@@ -61,10 +61,10 @@ class Section extends Model
         $grade = preg_replace('/^Grade\s+([1-9])$/i', 'Grade $1', $grade);
 
         $gender = strtolower($this->gender ?? 'male');
-        if (str_contains($gender, 'boy') || str_contains($gender, 'male')) {
-            $gender = 'male';
-        } elseif (str_contains($gender, 'girl') || str_contains($gender, 'female')) {
+        if (str_contains($gender, 'girl') || str_contains($gender, 'female')) {
             $gender = 'female';
+        } elseif (str_contains($gender, 'boy') || str_contains($gender, 'male')) {
+            $gender = 'male';
         }
 
         $key = implode('|', [
