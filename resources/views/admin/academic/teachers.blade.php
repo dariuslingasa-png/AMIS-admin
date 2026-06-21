@@ -18,15 +18,57 @@
         }
     }
 
+    if (!function_exists('cleanTeacherPrefixes')) {
+        function cleanTeacherPrefixes($name) {
+            $baseName = trim($name);
+            while (preg_match('/^(TEACHER|TCHR\.?|UST\.?|USTADZ|USTADH|USTADHA|ALIM|SIR|MA\'AM|MAAM)\s+/i', $baseName, $matches)) {
+                $baseName = trim(substr($baseName, strlen($matches[0])));
+            }
+            return $baseName;
+        }
+    }
+
+    if (!function_exists('formatTeacherDisplayName')) {
+        function formatTeacherDisplayName($name, $isIslamicArabic) {
+            $baseName = cleanTeacherPrefixes($name);
+            if ($isIslamicArabic) {
+                $lower = strtolower(trim($name));
+                if (str_contains($lower, 'ustadha')) {
+                    return 'USTADHA ' . strtoupper($baseName);
+                } elseif (str_contains($lower, 'ustadz') || str_contains($lower, 'ustadh') || str_contains($lower, 'ust.')) {
+                    $femaleNames = ['silfah', 'raslina', 'saliha'];
+                    $isFemale = false;
+                    foreach ($femaleNames as $fn) {
+                        if (str_contains($lower, $fn)) {
+                            $isFemale = true;
+                            break;
+                        }
+                    }
+                    if ($isFemale) {
+                        return 'USTADHA ' . strtoupper($baseName);
+                    } else {
+                        return 'USTADZ ' . strtoupper($baseName);
+                    }
+                } elseif (str_contains($lower, 'alim')) {
+                    return 'ALIM ' . strtoupper($baseName);
+                } else {
+                    return strtoupper(trim($name));
+                }
+            } else {
+                return 'TEACHER ' . strtoupper($baseName);
+            }
+        }
+    }
+
     $teacherEditorPayload = function (array $teacher) {
-        $initials = collect(explode(' ', str_replace(['Ust. ', 'Tchr. ', 'TEACHER '], '', $teacher['name'])))
+        $cleanName = cleanTeacherPrefixes($teacher['name']);
+        $initials = collect(explode(' ', $cleanName))
             ->filter()
             ->map(fn ($part) => substr($part, 0, 1))
             ->take(2)
             ->implode('');
         $photoPath = $teacher['photo'] ?? null;
         if (empty($photoPath)) {
-            $cleanName = str_replace(['Ust. ', 'Tchr. ', 'TEACHER '], '', $teacher['name']);
             $photoPath = getTeacherPhoto(Str::slug($cleanName));
         }
         $hasPhoto = !empty($photoPath);
@@ -323,16 +365,16 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                             @forelse ($group['teachers'] as $t)
                                 @php
-                                    $initials = collect(explode(' ', str_replace(['Ust. ', 'Tchr. ', 'TEACHER '], '', $t['name'])))
+                                    $isHighSchool = str_contains($t['dept'], 'High');
+                                    $isIslamicArabic = str_contains($t['dept'], 'Islamic School');
+                                    $cleanName = cleanTeacherPrefixes($t['name']);
+                                    $initials = collect(explode(' ', $cleanName))
                                         ->filter()
                                         ->map(fn($part) => substr($part, 0, 1))
                                         ->take(2)
                                         ->implode('');
-                                    $isHighSchool = str_contains($t['dept'], 'High');
-                                    $isIslamicArabic = str_contains($t['dept'], 'Islamic School');
                                     $photoPath = $t['photo'] ?? null;
                                     if (empty($photoPath)) {
-                                        $cleanName = str_replace(['Ust. ', 'Tchr. ', 'TEACHER '], '', $t['name']);
                                         $photoPath = getTeacherPhoto(Str::slug($cleanName));
                                     }
                                     $hasPhoto = !empty($photoPath);
@@ -402,7 +444,7 @@
                                             <!-- Teacher Name & Email -->
                                             <div class="min-w-0">
                                                 <h3 class="text-sm font-black text-slate-950 tracking-tight leading-tight line-clamp-2 uppercase">
-                                                    TEACHER {{ str_replace(['Ust. ', 'Tchr. ', 'TEACHER '], '', $t['name']) }}
+                                                    {{ formatTeacherDisplayName($t['name'], $isIslamicArabic) }}
                                                 </h3>
                                                 <p class="mt-1 truncate text-xs font-semibold text-slate-500 font-mono">{{ $t['email'] }}</p>
                                             </div>
