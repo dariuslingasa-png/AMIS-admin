@@ -24,7 +24,7 @@ class FacebookBotController extends Controller
         $challenge = $request->query('hub_challenge');
 
         if ($mode && $token) {
-            if ($mode === 'subscribe' && $token === env('MESSENGER_VERIFY_TOKEN')) {
+            if ($mode === 'subscribe' && $token === config('services.facebook.verify_token')) {
                 return response($challenge, 200)->header('Content-Type', 'text/plain');
             }
         }
@@ -408,10 +408,10 @@ class FacebookBotController extends Controller
      */
     private function sendMessage($recipientPsid, $messageText)
     {
-        $accessToken = env('MESSENGER_PAGE_ACCESS_TOKEN');
+        $accessToken = config('services.facebook.page_access_token');
 
         if (!$accessToken) {
-            Log::error("Messenger page access token is not set in .env");
+            Log::error("Messenger page access token is not set in config/services.php");
             return;
         }
 
@@ -478,10 +478,10 @@ class FacebookBotController extends Controller
      */
     private function sendButtonMessage($recipientPsid, $text, $buttons)
     {
-        $accessToken = env('MESSENGER_PAGE_ACCESS_TOKEN');
+        $accessToken = config('services.facebook.page_access_token');
 
         if (!$accessToken) {
-            Log::error("Messenger page access token is not set in .env");
+            Log::error("Messenger page access token is not set in config/services.php");
             return;
         }
 
@@ -511,10 +511,10 @@ class FacebookBotController extends Controller
      */
     private function sendCarouselMessage($recipientPsid, $elements)
     {
-        $accessToken = env('MESSENGER_PAGE_ACCESS_TOKEN');
+        $accessToken = config('services.facebook.page_access_token');
 
         if (!$accessToken) {
-            Log::error("Messenger page access token is not set in .env");
+            Log::error("Messenger page access token is not set in config/services.php");
             return;
         }
 
@@ -543,10 +543,10 @@ class FacebookBotController extends Controller
      */
     private function sendMessageWithQuickReplies($recipientPsid, $text, $quickReplies)
     {
-        $accessToken = env('MESSENGER_PAGE_ACCESS_TOKEN');
+        $accessToken = config('services.facebook.page_access_token');
 
         if (!$accessToken) {
-            Log::error("Messenger page access token is not set in .env");
+            Log::error("Messenger page access token is not set in config/services.php");
             return;
         }
 
@@ -570,10 +570,10 @@ class FacebookBotController extends Controller
      */
     public function setupMessengerProfile()
     {
-        $accessToken = env('MESSENGER_PAGE_ACCESS_TOKEN');
+        $accessToken = config('services.facebook.page_access_token');
 
         if (!$accessToken) {
-            return response()->json(['error' => 'Messenger token not set'], 500);
+            return response()->json(['error' => 'Messenger token not set in config/services.php'], 500);
         }
 
         $response = Http::post("https://graph.facebook.com/v19.0/me/messenger_profile?access_token={$accessToken}", [

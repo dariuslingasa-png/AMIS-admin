@@ -70,4 +70,9 @@ return [
         'or_excess_suffix'      => env('SCHOOL_OR_EXCESS_SUFFIX', 'OR-EXCESS'),
     ],
 
+    'facebook' => [
+        'page_access_token' => env('MESSENGER_PAGE_ACCESS_TOKEN'),
+        'verify_token'      => env('MESSENGER_VERIFY_TOKEN'),
+    ],
+
 ];
