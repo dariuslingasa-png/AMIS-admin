@@ -91,7 +91,18 @@ class FacebookBotController extends Controller
             ];
             Cache::put($sessionKey, $session, now()->addMinutes(15));
             
-            $this->sendMessage($senderPsid, "Assalamualaikum! I am the AMIS IT Staff.\n\nTo check the student's enrollment status, please answer the following questions.\n\nWhat is the student's FULL NAME (First Name and Last Name)?");
+            $greeting = "Assalamualaikum! I am the AMIS IT Staff.\n\n" .
+                        "This is an automated chatbot developed by the AMIS Information Technology Department.\n\n" .
+                        "To check your enrollment status, please provide the following:\n\n" .
+                        "• Full Name\n" .
+                        "• Grade Level\n" .
+                        "• Birthdate\n\n" .
+                        "We will verify your information and check whether your enrollment is approved, pending, or if an account has already been created.";
+            
+            $this->sendMessage($senderPsid, $greeting);
+            
+            // Ask the first question
+            $this->sendMessage($senderPsid, "What is the student's FULL NAME (First Name and Last Name)?");
             return;
         }
 
