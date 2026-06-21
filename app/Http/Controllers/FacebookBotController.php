@@ -79,6 +79,17 @@ class FacebookBotController extends Controller
             return;
         }
 
+        // Direct AMIS ID / Student ID lookup check
+        $cleanMessageText = trim($messageText);
+        $isAmisId = preg_match('/^\d{4,8}$/', $cleanMessageText) || preg_match('/^amis-\d+/i', $cleanMessageText) || preg_match('/^amis\d+/i', $cleanMessageText);
+        if ($isAmisId) {
+            Cache::forget($sessionKey);
+            $this->sendMessage($senderPsid, "Checking the record for ID: {$cleanMessageText}. Please wait a moment...");
+            $statusResult = $this->lookupEnrollmentStatusById($cleanMessageText);
+            $this->sendMessage($senderPsid, $statusResult);
+            return;
+        }
+
         $triggerWords = [
             'hi', 'hello', 'enrollment status', 'check status', 'amis', 
             'info', 'start', 'status', 'check_enrollment_status', 'get_started'
@@ -97,7 +108,8 @@ class FacebookBotController extends Controller
                         "• Full Name\n" .
                         "• Grade Level\n" .
                         "• Birthdate\n\n" .
-                        "We will verify your information and check whether your enrollment is approved, pending, or if an account has already been created.";
+                        "We will verify your information and check whether your enrollment is approved, pending, or if an account has already been created.\n\n" .
+                        "💡 Tip: If you already have a Student ID or AMIS ID, you can just reply with that ID (e.g. 260000) at any time to check status immediately!";
             
             $this->sendMessage($senderPsid, $greeting);
             
@@ -140,7 +152,35 @@ class FacebookBotController extends Controller
     }
 
     /**
-     * Database Lookup Logic
+     * Direct Database Lookup by ID/Number Logic
+     */
+    private function lookupEnrollmentStatusById($id)
+    {
+        $id = trim($id);
+
+        $applicant = EnrollmentApplicant::where('amis_student_id', $id)
+            ->orWhere('id', $id)
+            ->first();
+
+        if (!$applicant) {
+            $student = \App\Models\Student::where('student_number', $id)
+                ->orWhere('school_email', $id)
+                ->orWhere('ms_email', $id)
+                ->first();
+            if ($student) {
+                $applicant = $student->applicant;
+            }
+        }
+
+        if (!$applicant) {
+            return "❌ No Record Found\n\nWe couldn't find any enrollment record with ID/Number: {$id}. Please make sure the ID/Number is correct.";
+        }
+
+        return $this->formatStatusResponse($applicant);
+    }
+
+    /**
+     * Database Lookup Logic by Name/Grade/Birthdate
      */
     private function lookupEnrollmentStatus($name, $grade, $birthdate)
     {
@@ -148,12 +188,16 @@ class FacebookBotController extends Controller
         $firstName = $parts[0] ?? '';
         $lastName = count($parts) > 1 ? end($parts) : '';
 
-        $cleanGrade = preg_replace('/[^0-9]/', '', $grade);
+        $normalizedGrade = $this->normalizeGradeLevel($grade);
         
         $query = EnrollmentApplicant::where(function($q) use ($firstName, $lastName) {
             $q->where('first_name', 'like', "%{$firstName}%")
               ->where('last_name', 'like', "%{$lastName}%");
         });
+
+        if ($normalizedGrade) {
+            $query->where('grade_level', $normalizedGrade);
+        }
 
         $formattedBirthdate = $this->parseBirthdate($birthdate);
         if ($formattedBirthdate) {
@@ -166,6 +210,14 @@ class FacebookBotController extends Controller
             return "❌ No Record Found\n\nWe couldn't find any enrollment record for this student. Please make sure the spelling and birthdate are correct.";
         }
 
+        return $this->formatStatusResponse($applicant);
+    }
+
+    /**
+     * Format status response string for an applicant
+     */
+    private function formatStatusResponse($applicant)
+    {
         switch (strtolower($applicant->status)) {
             case 'approved':
             case 'registered':
@@ -235,6 +287,46 @@ class FacebookBotController extends Controller
         }
 
         return null;
+    }
+
+    /**
+     * Normalize various human-entered grade levels to database format
+     */
+    private function normalizeGradeLevel($input)
+    {
+        $input = strtolower(trim($input));
+
+        // Extract any number from the input
+        if (preg_match('/(\d+)/', $input, $matches)) {
+            $num = (int)$matches[1];
+            
+            // If the number is 11 or 12, it is definitely a Grade (Grade 11/12)
+            if ($num >= 11 && $num <= 12) {
+                return "Grade {$num}";
+            }
+            
+            // If the input contains "kinder" or "k" (but not G or grade)
+            if (str_contains($input, 'kinder') || str_contains($input, 'kind') || preg_match('/\bk\s*[12]\b/', $input) || preg_match('/^k\s*[12]$/', $input)) {
+                if ($num === 1 || $num === 2) {
+                    return "Kinder {$num}";
+                }
+            }
+
+            // Otherwise, check for normal grade levels G1-G10
+            if ($num >= 1 && $num <= 12) {
+                return "Grade {$num}";
+            }
+        }
+
+        // Fallbacks if no number is present
+        if (str_contains($input, 'kinder') || str_contains($input, 'kind')) {
+            if (str_contains($input, '2')) {
+                return 'Kinder 2';
+            }
+            return 'Kinder 1';
+        }
+
+        return $input;
     }
 
     /**
