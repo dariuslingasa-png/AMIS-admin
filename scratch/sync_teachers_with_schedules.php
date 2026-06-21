@@ -53,6 +53,8 @@ function findTeacher($scheduleTeacherName, $teachers) {
         $name = 'Alim Abdulkarim';
     } elseif ($nameLower === 'tchr. joana' || $nameLower === 'tchr. joanna' || $nameLower === 'joana' || $nameLower === 'joanna') {
         $name = 'TEACHER JOANNA LAFUENTE';
+    } elseif (str_contains($nameLower, 'normayla') || str_contains($nameLower, 'normylah')) {
+        $name = 'TEACHER NORMYLAH BANGON';
     }
 
     $cleanSched = strtolower(trim(str_replace(['Ust. ', 'Tchr. ', 'TEACHER ', 'Alim ', 'Ustadz ', 'Ustadha '], '', $name)));
