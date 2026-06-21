@@ -85,7 +85,7 @@ class FacebookBotController extends Controller
             ];
             Cache::put($sessionKey, $session, now()->addMinutes(15));
             
-            $this->sendMessage($senderPsid, "Assalamu Alaikum! I am the AMIS Virtual Assistant. 🤖\n\nTo check the student's enrollment status, please answer the following questions.\n\nWhat is the student's FULL NAME (First Name and Last Name)?");
+            $this->sendMessage($senderPsid, "Assalamualaikum! I am the AMIS IT Staff.\n\nTo check the student's enrollment status, please answer the following questions.\n\nWhat is the student's FULL NAME (First Name and Last Name)?");
             return;
         }
 
@@ -103,7 +103,7 @@ class FacebookBotController extends Controller
                 $session['step'] = 3;
                 Cache::put($sessionKey, $session, now()->addMinutes(15));
 
-                $this->sendMessage($senderPsid, "Last step, what is the student's BIRTHDATE? (Format: YYYY-MM-DD, e.g. 2018-05-30)");
+                $this->sendMessage($senderPsid, "Last step, what is the student's BIRTHDATE? (Format: MM-DD-YYYY, e.g. 04-30-2020)");
                 break;
 
             case 3:
@@ -138,11 +138,9 @@ class FacebookBotController extends Controller
               ->where('last_name', 'like', "%{$lastName}%");
         });
 
-        try {
-            $formattedBirthdate = date('Y-m-d', strtotime($birthdate));
+        $formattedBirthdate = $this->parseBirthdate($birthdate);
+        if ($formattedBirthdate) {
             $query->whereDate('date_of_birth', $formattedBirthdate);
-        } catch (\Exception $e) {
-            // Bypass date filter if parse error
         }
 
         $applicant = $query->first();
@@ -184,6 +182,42 @@ class FacebookBotController extends Controller
             default:
                 return "❌ No Record Found / Draft Application\n\nThe application form for {$applicant->first_name} is not yet fully submitted. Please complete the form on the enrollment portal.";
         }
+    }
+
+    /**
+     * Parse various human birthdate formats to standard YYYY-MM-DD
+     */
+    private function parseBirthdate($input)
+    {
+        $input = trim($input);
+
+        // 1. Try MM-DD-YYYY / MM/DD/YYYY / MM DD YYYY
+        if (preg_match('/^(\d{1,2})[-\/\s](\d{1,2})[-\/\s](\d{4})$/', $input, $matches)) {
+            $month = (int)$matches[1];
+            $day = (int)$matches[2];
+            $year = (int)$matches[3];
+            if (checkdate($month, $day, $year)) {
+                return sprintf('%04d-%02d-%02d', $year, $month, $day);
+            }
+        }
+
+        // 2. Try YYYY-MM-DD / YYYY/MM/DD / YYYY MM DD
+        if (preg_match('/^(\d{4})[-\/\s](\d{1,2})[-\/\s](\d{1,2})$/', $input, $matches)) {
+            $year = (int)$matches[1];
+            $month = (int)$matches[2];
+            $day = (int)$matches[3];
+            if (checkdate($month, $day, $year)) {
+                return sprintf('%04d-%02d-%02d', $year, $month, $day);
+            }
+        }
+
+        // 3. Fallback to standard strtotime (for April 30, 2020 etc.)
+        $timestamp = strtotime($input);
+        if ($timestamp !== false) {
+            return date('Y-m-d', $timestamp);
+        }
+
+        return null;
     }
 
     /**
