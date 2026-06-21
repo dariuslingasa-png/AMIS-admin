@@ -338,16 +338,17 @@
 
 .preview-body {
     display: flex;
-    align-items: center;
-    justify-content: center;
     min-height: 26rem;
+    max-height: 72vh;
+    overflow: auto;
     background: #f8fafc;
 }
 
 .preview-body img,
 .preview-body iframe {
+    margin: auto;
     width: 100%;
-    height: 72vh;
+    height: auto;
     border: 0;
     object-fit: contain;
 }
