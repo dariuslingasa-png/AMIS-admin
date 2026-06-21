@@ -86,6 +86,7 @@ Route::name('admin.')->group(function () {
             Route::get('/review', [ApplicantController::class, 'review'])->name('review');
             Route::get('/requirements', [ApplicantController::class, 'requirements'])->name('requirements');
             Route::get('/approval-workflow', [ApplicantController::class, 'approval'])->name('approval');
+            Route::get('/print-no-payment', [ApplicantController::class, 'printNoPayment'])->name('print-no-payment');
         });
 
         Route::prefix('applicants')->name('applicants.')->group(function () {

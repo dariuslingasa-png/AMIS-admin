@@ -208,6 +208,10 @@
                         Email Families Registry
                     </button>
                     @endunless
+                    <a href="{{ route('admin.applications.print-no-payment', request()->query()) }}" target="_blank" class="inline-flex items-center gap-1.5 rounded-lg bg-slate-800 hover:bg-slate-900 text-white font-semibold text-xs px-4 py-2 transition shadow-3xs cursor-pointer select-none">
+                        <i data-lucide="printer" class="h-4 w-4"></i>
+                        Print No Payment List
+                    </a>
                     <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700" data-total-count="{{ $families->total() }}">
                         {{ number_format($families->total()) }} families
                     </span>

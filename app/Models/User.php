@@ -278,6 +278,7 @@ class User extends Authenticatable
 
         return $routeName === 'admin.applications.index'
             || $routeName === 'admin.applications.enrollment'
+            || $routeName === 'admin.applications.print-no-payment'
             || $routeName === 'admin.applicants.index'
             || $routeName === 'admin.applicants.show'
             || $routeName === 'admin.students.index'

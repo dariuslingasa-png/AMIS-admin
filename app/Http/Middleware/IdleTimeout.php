@@ -17,7 +17,7 @@ class IdleTimeout
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (Auth::check()) {
+        if (Auth::check() && $request->hasSession()) {
             $idleMinutes = (int) config('session.idle_timeout', 30);
             $lastActivity = $request->session()->get('last_activity');
 

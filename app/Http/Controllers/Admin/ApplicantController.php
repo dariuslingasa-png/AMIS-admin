@@ -67,6 +67,20 @@ class ApplicantController extends Controller
         return view('admin.applications.enrollment', $this->registryData($request));
     }
 
+    public function printNoPayment(Request $request)
+    {
+        $familiesPaginator = $this->applications->paginateFamilies($request, 999999);
+        $families = collect($familiesPaginator->items());
+
+        $families = $families->filter(function ($family) {
+            return $family['payment_status'] === 'No Payment';
+        })->values();
+
+        return view('admin.applications.print-no-payment', [
+            'families' => $families,
+        ]);
+    }
+
     public function review(Request $request)
     {
         return view('admin.applications.review', $this->applicantData($request));

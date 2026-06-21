@@ -223,4 +223,20 @@ class TeacherAdminAccessTest extends TestCase
             ->get(route('admin.students.show', $gradeOneStudent))
             ->assertOk();
     }
+
+    #[Test]
+    public function teacher_admin_role_can_access_print_no_payment_route(): void
+    {
+        $teacher = User::factory()->create([
+            'role' => 'staff',
+            'account_status' => 'verified',
+        ]);
+
+        $teacher->roles()->sync([Role::where('slug', 'teacher')->value('id')]);
+
+        $this->actingAs($teacher)
+            ->get(route('admin.applications.print-no-payment'))
+            ->assertOk()
+            ->assertSeeText('Families with No Payment Proof Registry');
+    }
 }
