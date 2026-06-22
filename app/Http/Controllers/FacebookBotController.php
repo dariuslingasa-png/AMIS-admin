@@ -119,9 +119,11 @@ class FacebookBotController extends Controller
             Cache::put($sessionKey, $session, now()->addMinutes(15));
 
             $quickReplies = [
+                ['content_type' => 'text', 'title' => 'NEW', 'payload' => 'ENROLLMENT_STUDENT_NEW'],
+                ['content_type' => 'text', 'title' => 'OLD', 'payload' => 'ENROLLMENT_STUDENT_OLD'],
                 ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
             ];
-            $this->sendMessageWithQuickReplies($senderPsid, "📝 Enrollment Status\n\nPlease reply with the student's FULL NAME or Student ID/AMIS ID:", $quickReplies);
+            $this->sendMessageWithQuickReplies($senderPsid, "Are you an Old or New student?", $quickReplies);
             return;
         }
 
@@ -148,16 +150,55 @@ class FacebookBotController extends Controller
 
             // --- ENROLLMENT FLOW ---
             case 1:
-                // Auto-detect if input is ID or Name
-                $isId = preg_match('/^\d{4,8}$/', $cleanMessageText) || preg_match('/^amis-\d+/i', $cleanMessageText) || preg_match('/^amis\d+/i', $cleanMessageText);
-                if ($isId) {
-                    $session['data']['type'] = 'id';
-                    $session['data']['student_id'] = $cleanMessageText;
+                $selection = strtolower(trim($messageText));
+                if ($selection === 'new' || $selection === 'new student' || str_contains($selection, 'new')) {
+                    $session['data']['student_class'] = 'new';
+                    $session['step'] = 2;
+                    Cache::put($sessionKey, $session, now()->addMinutes(15));
+
+                    $quickReplies = [
+                        ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+                    ];
+                    $this->sendMessageWithQuickReplies($senderPsid, "Please reply with the student's FULL NAME:", $quickReplies);
+                } elseif ($selection === 'old' || $selection === 'old student' || str_contains($selection, 'old')) {
+                    $session['data']['student_class'] = 'old';
+                    $session['step'] = 2;
+                    Cache::put($sessionKey, $session, now()->addMinutes(15));
+
+                    $quickReplies = [
+                        ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+                    ];
+                    $this->sendMessageWithQuickReplies($senderPsid, "Please reply with the student's FULL NAME or Student ID/AMIS ID:", $quickReplies);
                 } else {
+                    $quickReplies = [
+                        ['content_type' => 'text', 'title' => 'NEW', 'payload' => 'ENROLLMENT_STUDENT_NEW'],
+                        ['content_type' => 'text', 'title' => 'OLD', 'payload' => 'ENROLLMENT_STUDENT_OLD'],
+                        ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+                    ];
+                    $this->sendMessageWithQuickReplies($senderPsid, "⚠️ Invalid selection. Please choose:\n\nAre you an Old or New student?", $quickReplies);
+                }
+                break;
+
+            case 2:
+                $studentClass = $session['data']['student_class'] ?? 'old';
+
+                if ($studentClass === 'new') {
                     $session['data']['type'] = 'name';
                     $session['data']['name'] = $cleanMessageText;
+                } else {
+                    $isId = preg_match('/^\d{4,8}$/', $cleanMessageText) || 
+                            preg_match('/^amis-\d+/i', $cleanMessageText) || 
+                            preg_match('/^amis\d+/i', $cleanMessageText);
+                    if ($isId) {
+                        $session['data']['type'] = 'id';
+                        $session['data']['student_id'] = $cleanMessageText;
+                    } else {
+                        $session['data']['type'] = 'name';
+                        $session['data']['name'] = $cleanMessageText;
+                    }
                 }
-                $session['step'] = 2;
+
+                $session['step'] = 3;
                 Cache::put($sessionKey, $session, now()->addMinutes(15));
 
                 $quickReplies = [
@@ -166,18 +207,18 @@ class FacebookBotController extends Controller
                 $this->sendMessageWithQuickReplies($senderPsid, "What is the GRADE LEVEL applied for? (e.g., Grade 1, Grade 5, Kinder)", $quickReplies);
                 break;
 
-            case 2:
+            case 3:
                 $session['data']['grade'] = $messageText;
-                $session['step'] = 3;
+                $session['step'] = 4;
                 Cache::put($sessionKey, $session, now()->addMinutes(15));
 
                 $quickReplies = [
                     ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
                 ];
-                $this->sendMessageWithQuickReplies($senderPsid, "What is the student's BIRTHDATE? (Format: MM-DD-YYYY, e.g. 04-30-2020)", $quickReplies);
+                $this->sendMessageWithQuickReplies($senderPsid, "What is the student's BIRTHDATE? (Format: MM-DD-YYYY, e.g. 04-30-2020, April 30 2020 or any po)", $quickReplies);
                 break;
 
-            case 3:
+            case 4:
                 $birthdate = trim($messageText);
                 $grade = $session['data']['grade'];
                 $type = $session['data']['type'] ?? 'name';
@@ -322,11 +363,13 @@ class FacebookBotController extends Controller
      */
     private function formatStatusResponse($applicant)
     {
+        $fullName = strtoupper(trim($applicant->first_name . ' ' . $applicant->last_name));
+
         switch (strtolower($applicant->status)) {
             case 'approved':
             case 'registered':
                 $student = $applicant->student;
-                $msg = "✅ Account Created\n\nGreat news! The enrollment for {$applicant->first_name} {$applicant->last_name} has been approved, and the account is created in the system.";
+                $msg = "✅ Account Created\n\nGreat news! The enrollment for {$fullName} has been approved, and the account is created in the system.";
                 
                 $amisId = $student->student_number ?? $applicant->amis_student_id ?? null;
                 if ($amisId) {
@@ -350,10 +393,10 @@ class FacebookBotController extends Controller
             case 'submitted':
             case 'pending':
             case 'under_review':
-                return "⏳ Pending Enrollment\n\nWe found the record for {$applicant->first_name} {$applicant->last_name}. The status is currently PENDING or under review by the admin. Please wait for an email or SMS notification for the next steps.";
+                return "⏳ Pending Enrollment\n\nWe found the record for {$fullName}. The status is currently PENDING or under review by the admin. Please wait for an email or SMS notification for the next steps.";
             
             default:
-                return "❌ No Record Found / Draft Application\n\nThe application form for {$applicant->first_name} is not yet fully submitted. Please complete the form on the enrollment portal.";
+                return "❌ No Record Found / Draft Application\n\nThe application form for {$fullName} is not yet fully submitted. Please complete the form on the enrollment portal.";
         }
     }
 
