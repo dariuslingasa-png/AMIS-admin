@@ -328,8 +328,8 @@ class FacebookBotController extends Controller
                     $this->sendNoRecordFoundButtons($senderPsid, $statusResult, 'RETRY_ENROLLMENT_STATUS');
                 } else {
                     $this->sendMessage($senderPsid, $statusResult);
+                    $this->sendMainMenu($senderPsid);
                 }
-                $this->sendMainMenu($senderPsid);
                 break;
 
             // --- RESEND CREDENTIALS FLOW ---
@@ -476,8 +476,8 @@ class FacebookBotController extends Controller
                     $this->sendNoRecordFoundButtons($senderPsid, $result, 'RETRY_RESEND_CREDENTIALS');
                 } else {
                     $this->sendMessage($senderPsid, $result);
+                    $this->sendMainMenu($senderPsid);
                 }
-                $this->sendMainMenu($senderPsid);
                 break;
         }
     }
