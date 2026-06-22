@@ -122,12 +122,12 @@ class FacebookBotController extends Controller
             ];
             Cache::put($sessionKey, $session, now()->addMinutes(15));
 
-            $quickReplies = [
-                ['content_type' => 'text', 'title' => 'NEW', 'payload' => 'ENROLLMENT_STUDENT_NEW'],
-                ['content_type' => 'text', 'title' => 'OLD', 'payload' => 'ENROLLMENT_STUDENT_OLD'],
-                ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+            $buttons = [
+                ['type' => 'postback', 'title' => 'NEW', 'payload' => 'ENROLLMENT_STUDENT_NEW'],
+                ['type' => 'postback', 'title' => 'OLD', 'payload' => 'ENROLLMENT_STUDENT_OLD'],
+                ['type' => 'postback', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
             ];
-            $this->sendMessageWithQuickReplies($senderPsid, "Are you an Old or New student?", $quickReplies);
+            $this->sendButtonMessage($senderPsid, "Are you an Old or New student?", $buttons);
             return;
         }
 
@@ -139,12 +139,12 @@ class FacebookBotController extends Controller
             ];
             Cache::put($sessionKey, $session, now()->addMinutes(15));
 
-            $quickReplies = [
-                ['content_type' => 'text', 'title' => 'NEW', 'payload' => 'CREDENTIALS_STUDENT_NEW'],
-                ['content_type' => 'text', 'title' => 'OLD', 'payload' => 'CREDENTIALS_STUDENT_OLD'],
-                ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+            $buttons = [
+                ['type' => 'postback', 'title' => 'NEW', 'payload' => 'CREDENTIALS_STUDENT_NEW'],
+                ['type' => 'postback', 'title' => 'OLD', 'payload' => 'CREDENTIALS_STUDENT_OLD'],
+                ['type' => 'postback', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
             ];
-            $this->sendMessageWithQuickReplies($senderPsid, "🔐 Resend Credentials\nNote: use your only official AMIS email @amis.edu.ph\n\nAre you an Old or New student?", $quickReplies);
+            $this->sendButtonMessage($senderPsid, "🔐 Resend Credentials\nNote: use your only official AMIS email @amis.edu.ph\n\nAre you an Old or New student?", $buttons);
             return;
         }
 
@@ -157,12 +157,12 @@ class FacebookBotController extends Controller
             ];
             Cache::put($sessionKey, $session, now()->addMinutes(15));
 
-            $quickReplies = [
-                ['content_type' => 'text', 'title' => 'NEW', 'payload' => 'ENROLLMENT_STUDENT_NEW'],
-                ['content_type' => 'text', 'title' => 'OLD', 'payload' => 'ENROLLMENT_STUDENT_OLD'],
-                ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+            $buttons = [
+                ['type' => 'postback', 'title' => 'NEW', 'payload' => 'ENROLLMENT_STUDENT_NEW'],
+                ['type' => 'postback', 'title' => 'OLD', 'payload' => 'ENROLLMENT_STUDENT_OLD'],
+                ['type' => 'postback', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
             ];
-            $this->sendMessageWithQuickReplies($senderPsid, "Are you an Old or New student?", $quickReplies);
+            $this->sendButtonMessage($senderPsid, "Are you an Old or New student?", $buttons);
             return;
         }
 
@@ -175,12 +175,12 @@ class FacebookBotController extends Controller
             ];
             Cache::put($sessionKey, $session, now()->addMinutes(15));
 
-            $quickReplies = [
-                ['content_type' => 'text', 'title' => 'NEW', 'payload' => 'CREDENTIALS_STUDENT_NEW'],
-                ['content_type' => 'text', 'title' => 'OLD', 'payload' => 'CREDENTIALS_STUDENT_OLD'],
-                ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+            $buttons = [
+                ['type' => 'postback', 'title' => 'NEW', 'payload' => 'CREDENTIALS_STUDENT_NEW'],
+                ['type' => 'postback', 'title' => 'OLD', 'payload' => 'CREDENTIALS_STUDENT_OLD'],
+                ['type' => 'postback', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
             ];
-            $this->sendMessageWithQuickReplies($senderPsid, "🔐 Resend Credentials\nNote: use your only official AMIS email @amis.edu.ph\n\nAre you an Old or New student?", $quickReplies);
+            $this->sendButtonMessage($senderPsid, "🔐 Resend Credentials\nNote: use your only official AMIS email @amis.edu.ph\n\nAre you an Old or New student?", $buttons);
             return;
         }
 
@@ -211,12 +211,12 @@ class FacebookBotController extends Controller
                     ];
                     $this->sendMessageWithQuickReplies($senderPsid, "Please reply with the student's FULL NAME or Student ID/AMIS ID:", $quickReplies);
                 } else {
-                    $quickReplies = [
-                        ['content_type' => 'text', 'title' => 'NEW', 'payload' => 'ENROLLMENT_STUDENT_NEW'],
-                        ['content_type' => 'text', 'title' => 'OLD', 'payload' => 'ENROLLMENT_STUDENT_OLD'],
-                        ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+                    $buttons = [
+                        ['type' => 'postback', 'title' => 'NEW', 'payload' => 'ENROLLMENT_STUDENT_NEW'],
+                        ['type' => 'postback', 'title' => 'OLD', 'payload' => 'ENROLLMENT_STUDENT_OLD'],
+                        ['type' => 'postback', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
                     ];
-                    $this->sendMessageWithQuickReplies($senderPsid, "⚠️ Invalid selection. Please choose:\n\nAre you an Old or New student?", $quickReplies);
+                    $this->sendButtonMessage($senderPsid, "⚠️ Invalid selection. Please choose:\n\nAre you an Old or New student?", $buttons);
                 }
                 break;
 
@@ -306,12 +306,12 @@ class FacebookBotController extends Controller
                     ];
                     $this->sendMessageWithQuickReplies($senderPsid, "Please reply with the student's FULL NAME, AMIS ID, or School Email:", $quickReplies);
                 } else {
-                    $quickReplies = [
-                        ['content_type' => 'text', 'title' => 'NEW', 'payload' => 'CREDENTIALS_STUDENT_NEW'],
-                        ['content_type' => 'text', 'title' => 'OLD', 'payload' => 'CREDENTIALS_STUDENT_OLD'],
-                        ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+                    $buttons = [
+                        ['type' => 'postback', 'title' => 'NEW', 'payload' => 'CREDENTIALS_STUDENT_NEW'],
+                        ['type' => 'postback', 'title' => 'OLD', 'payload' => 'CREDENTIALS_STUDENT_OLD'],
+                        ['type' => 'postback', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
                     ];
-                    $this->sendMessageWithQuickReplies($senderPsid, "⚠️ Invalid selection. Please choose:\n\nAre you an Old or New student?", $quickReplies);
+                    $this->sendButtonMessage($senderPsid, "⚠️ Invalid selection. Please choose:\n\nAre you an Old or New student?", $buttons);
                 }
                 break;
 
