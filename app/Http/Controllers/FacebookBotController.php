@@ -233,7 +233,7 @@ class FacebookBotController extends Controller
                     $statusResult = $this->lookupEnrollmentStatusByIDGradeBirthdate($studentId, $grade, $birthdate);
                 } else {
                     $name = $session['data']['name'];
-                    $this->sendMessage($senderPsid, "Checking status for {$name}...");
+                    $this->sendMessage($senderPsid, "Checking status for " . strtoupper($name) . "...");
                     $statusResult = $this->lookupEnrollmentStatus($name, $grade, $birthdate);
                 }
 
@@ -325,7 +325,7 @@ class FacebookBotController extends Controller
                     $result = $this->handleBotResendCredentialsById($studentId, $grade, $birthdate);
                 } else {
                     $name = $session['data']['name'];
-                    $this->sendMessage($senderPsid, "Verifying details for {$name}...");
+                    $this->sendMessage($senderPsid, "Verifying details for " . strtoupper($name) . "...");
                     $result = $this->handleBotResendCredentialsByName($name, $grade, $birthdate);
                 }
 
@@ -887,7 +887,7 @@ class FacebookBotController extends Controller
         }
 
         if (!$applicant) {
-            return "❌ Student Account Not Found\n\nWe couldn't find any student account for {$name} with Grade: {$grade} and Birthdate: {$birthdate}. Please verify and try again.";
+            return "❌ Student Account Not Found\n\nWe couldn't find any student account for " . strtoupper($name) . " with Grade: {$grade} and Birthdate: {$birthdate}. Please verify and try again.";
         }
 
         $student = $applicant->student;
