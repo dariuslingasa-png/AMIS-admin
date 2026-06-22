@@ -1,0 +1,187 @@
+{
+  "student_lookup": {
+    "name": {
+      "required": true,
+      "auto_uppercase": true,
+      "trim_spaces": true,
+      "remove_double_spaces": true,
+      "min_length": 3,
+      "max_length": 100,
+      "allow_special_characters": [
+        ".",
+        "-",
+        "'",
+        "Ñ",
+        "ñ"
+      ],
+      "examples": [
+        "Juan Dela Cruz",
+        "Juan B. Dela Cruz",
+        "Mary Ann O'Connor",
+        "Nur-Ainah M. Abdullah",
+        "Peña"
+      ],
+      "message": "Please enter the student's full name as registered during enrollment."
+    },
+    "grade_level": {
+      "required": true,
+      "accepted_formats": [
+        "K1",
+        "K 1",
+        "KINDER1",
+        "KINDER 1",
+        "KINDERGARTEN1",
+        "KINDERGARTEN 1",
+        "K2",
+        "K 2",
+        "KINDER2",
+        "KINDER 2",
+        "KINDERGARTEN2",
+        "KINDERGARTEN 2",
+        "G1",
+        "G 1",
+        "GRADE1",
+        "GRADE 1",
+        "G2",
+        "G 2",
+        "GRADE2",
+        "GRADE 2",
+        "G3",
+        "G 3",
+        "GRADE3",
+        "GRADE 3",
+        "G4",
+        "G 4",
+        "GRADE4",
+        "GRADE 4",
+        "G5",
+        "G 5",
+        "GRADE5",
+        "GRADE 5",
+        "G6",
+        "G 6",
+        "GRADE6",
+        "GRADE 6",
+        "G7",
+        "G 7",
+        "GRADE7",
+        "GRADE 7",
+        "G8",
+        "G 8",
+        "GRADE8",
+        "GRADE 8",
+        "G9",
+        "G 9",
+        "GRADE9",
+        "GRADE 9",
+        "G10",
+        "G 10",
+        "GRADE10",
+        "GRADE 10",
+        "G11",
+        "G 11",
+        "GRADE11",
+        "GRADE 11",
+        "G12",
+        "G 12",
+        "GRADE12",
+        "GRADE 12"
+      ],
+      "normalize_to": {
+        "K1": [
+          "K1",
+          "K 1",
+          "KINDER1",
+          "KINDER 1",
+          "KINDERGARTEN1",
+          "KINDERGARTEN 1"
+        ],
+        "K2": [
+          "K2",
+          "K 2",
+          "KINDER2",
+          "KINDER 2",
+          "KINDERGARTEN2",
+          "KINDERGARTEN 2"
+        ],
+        "G1": ["G1", "G 1", "GRADE1", "GRADE 1"],
+        "G2": ["G2", "G 2", "GRADE2", "GRADE 2"],
+        "G3": ["G3", "G 3", "GRADE3", "GRADE 3"],
+        "G4": ["G4", "G 4", "GRADE4", "GRADE 4"],
+        "G5": ["G5", "G 5", "GRADE5", "GRADE 5"],
+        "G6": ["G6", "G 6", "GRADE6", "GRADE 6"],
+        "G7": ["G7", "G 7", "GRADE7", "GRADE 7"],
+        "G8": ["G8", "G 8", "GRADE8", "GRADE 8"],
+        "G9": ["G9", "G 9", "GRADE9", "GRADE 9"],
+        "G10": ["G10", "G 10", "GRADE10", "GRADE 10"],
+        "G11": ["G11", "G 11", "GRADE11", "GRADE 11"],
+        "G12": ["G12", "G 12", "GRADE12", "GRADE 12"]
+      },
+      "message": "Please enter a valid grade level."
+    },
+    "birthdate": {
+      "required": true,
+      "normalize_to": "YYYY-MM-DD",
+      "accepted_formats": [
+        "MM-DD-YYYY",
+        "MM/DD/YYYY",
+        "YYYY-MM-DD",
+        "August 29 1997",
+        "August 29, 1997",
+        "Aug 29 1997",
+        "Aug 29, 1997"
+      ],
+      "examples": [
+        "08-29-1997",
+        "08/29/1997",
+        "1997-08-29",
+        "August 29 1997",
+        "August 29, 1997",
+        "Aug 29 1997",
+        "Aug 29, 1997"
+      ],
+      "reject_examples": [
+        "aug",
+        "august",
+        "1997",
+        "08-29",
+        "29"
+      ],
+      "message": "Please enter the student's complete birthdate."
+    },
+    "amis_id": {
+      "required": false,
+      "type": "numeric",
+      "length": 6,
+      "pattern": "^[0-9]{6}$",
+      "examples": [
+        "100001",
+        "123456",
+        "999999"
+      ],
+      "message": "Please enter a valid 6-digit AMIS ID."
+    },
+    "lookup_fields": [
+      "name",
+      "grade_level",
+      "birthdate"
+    ],
+    "normalization": {
+      "name": {
+        "juan dela cruz": "JUAN DELA CRUZ",
+        "Juan B. Dela Cruz": "JUAN B. DELA CRUZ",
+        "mary ann o'connor": "MARY ANN O'CONNOR",
+        "nur-ainah m. abdullah": "NUR-AINAH M. ABDULLAH",
+        "peña": "PEÑA"
+      },
+      "birthdate": {
+        "08-29-1997": "1997-08-29",
+        "08/29/1997": "1997-08-29",
+        "August 29 1997": "1997-08-29",
+        "August 29, 1997": "1997-08-29",
+        "Aug 29 1997": "1997-08-29",
+        "Aug 29, 1997": "1997-08-29"
+      }
+    }
+  }
+}

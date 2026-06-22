@@ -224,18 +224,48 @@ class FacebookBotController extends Controller
                 $studentClass = $session['data']['student_class'] ?? 'old';
 
                 if ($studentClass === 'new') {
+                    $errorMsg = null;
+                    $cleanedName = $this->validateAndCleanName($cleanMessageText, $errorMsg);
+                    if (!$cleanedName) {
+                        $quickReplies = [
+                            ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+                        ];
+                        $this->sendMessageWithQuickReplies($senderPsid, "⚠️ " . ($errorMsg ?? "Please enter the student's full name."), $quickReplies);
+                        return;
+                    }
                     $session['data']['type'] = 'name';
-                    $session['data']['name'] = $cleanMessageText;
+                    $session['data']['name'] = $cleanedName;
                 } else {
                     $isId = preg_match('/^\d{4,8}$/', $cleanMessageText) || 
                             preg_match('/^amis-\d+/i', $cleanMessageText) || 
                             preg_match('/^amis\d+/i', $cleanMessageText);
                     if ($isId) {
+                        $config = $this->getValidationConfig();
+                        $idConfig = $config['student_lookup']['amis_id'] ?? null;
+                        if ($idConfig && isset($idConfig['pattern'])) {
+                            $numericPart = preg_replace('/\D/', '', $cleanMessageText);
+                            if (!preg_match('/' . $idConfig['pattern'] . '/', $numericPart)) {
+                                $quickReplies = [
+                                    ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+                                ];
+                                $this->sendMessageWithQuickReplies($senderPsid, "⚠️ " . ($idConfig['message'] ?? "Please enter a valid 6-digit AMIS ID."), $quickReplies);
+                                return;
+                            }
+                        }
                         $session['data']['type'] = 'id';
                         $session['data']['student_id'] = $cleanMessageText;
                     } else {
+                        $errorMsg = null;
+                        $cleanedName = $this->validateAndCleanName($cleanMessageText, $errorMsg);
+                        if (!$cleanedName) {
+                            $quickReplies = [
+                                ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+                            ];
+                            $this->sendMessageWithQuickReplies($senderPsid, "⚠️ " . ($errorMsg ?? "Please enter the student's full name."), $quickReplies);
+                            return;
+                        }
                         $session['data']['type'] = 'name';
-                        $session['data']['name'] = $cleanMessageText;
+                        $session['data']['name'] = $cleanedName;
                     }
                 }
 
@@ -249,14 +279,16 @@ class FacebookBotController extends Controller
                 break;
 
             case 3:
-                if (!$this->isValidGradeLevel($messageText)) {
+                $errorMsg = null;
+                $normalizedGrade = $this->validateAndNormalizeGradeLevel($messageText, $errorMsg);
+                if (!$normalizedGrade) {
                     $quickReplies = [
                         ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
                     ];
-                    $this->sendMessageWithQuickReplies($senderPsid, "⚠️ Invalid Grade Level.\n\nPlease enter a valid grade level (e.g. Grade 1, Grade 5, Kinder):", $quickReplies);
+                    $this->sendMessageWithQuickReplies($senderPsid, "⚠️ " . ($errorMsg ?? "Please enter a valid grade level."), $quickReplies);
                     return;
                 }
-                $session['data']['grade'] = $messageText;
+                $session['data']['grade'] = $normalizedGrade;
                 $session['step'] = 4;
                 Cache::put($sessionKey, $session, now()->addMinutes(15));
 
@@ -268,12 +300,13 @@ class FacebookBotController extends Controller
 
             case 4:
                 $birthdate = trim($messageText);
-                $formattedBirthdate = $this->parseBirthdate($birthdate);
+                $errorMsg = null;
+                $formattedBirthdate = $this->validateAndNormalizeBirthdate($birthdate, $errorMsg);
                 if (!$formattedBirthdate) {
                     $quickReplies = [
                         ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
                     ];
-                    $this->sendMessageWithQuickReplies($senderPsid, "⚠️ Invalid birthdate format.\n\nPlease enter a valid birthdate (Format: MM-DD-YYYY, e.g. 04-30-2020):", $quickReplies);
+                    $this->sendMessageWithQuickReplies($senderPsid, "⚠️ " . ($errorMsg ?? "Please enter the student's complete birthdate."), $quickReplies);
                     return;
                 }
                 $grade = $session['data']['grade'];
@@ -284,11 +317,11 @@ class FacebookBotController extends Controller
                 if ($type === 'id') {
                     $studentId = $session['data']['student_id'];
                     $this->sendMessage($senderPsid, "Checking status for ID {$studentId}...");
-                    $statusResult = $this->lookupEnrollmentStatusByIDGradeBirthdate($studentId, $grade, $birthdate);
+                    $statusResult = $this->lookupEnrollmentStatusByIDGradeBirthdate($studentId, $grade, $formattedBirthdate);
                 } else {
                     $name = $session['data']['name'];
                     $this->sendMessage($senderPsid, "Checking status for " . strtoupper($name) . "...");
-                    $statusResult = $this->lookupEnrollmentStatus($name, $grade, $birthdate);
+                    $statusResult = $this->lookupEnrollmentStatus($name, $grade, $formattedBirthdate);
                 }
 
                 if (str_contains($statusResult, '❌')) {
@@ -334,19 +367,52 @@ class FacebookBotController extends Controller
                 $studentClass = $session['data']['student_class'] ?? 'old';
 
                 if ($studentClass === 'new') {
+                    $errorMsg = null;
+                    $cleanedName = $this->validateAndCleanName($cleanMessageText, $errorMsg);
+                    if (!$cleanedName) {
+                        $quickReplies = [
+                            ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+                        ];
+                        $this->sendMessageWithQuickReplies($senderPsid, "⚠️ " . ($errorMsg ?? "Please enter the student's full name."), $quickReplies);
+                        return;
+                    }
                     $session['data']['type'] = 'name';
-                    $session['data']['name'] = $cleanMessageText;
+                    $session['data']['name'] = $cleanedName;
                 } else {
                     $isIdOrEmail = preg_match('/^\d{4,8}$/', $cleanMessageText) || 
                                    preg_match('/^amis-\d+/i', $cleanMessageText) || 
                                    preg_match('/^amis\d+/i', $cleanMessageText) || 
                                    str_contains($cleanMessageText, '@');
                     if ($isIdOrEmail) {
+                        $isEmail = str_contains($cleanMessageText, '@');
+                        if (!$isEmail) {
+                            $config = $this->getValidationConfig();
+                            $idConfig = $config['student_lookup']['amis_id'] ?? null;
+                            if ($idConfig && isset($idConfig['pattern'])) {
+                                $numericPart = preg_replace('/\D/', '', $cleanMessageText);
+                                if (!preg_match('/' . $idConfig['pattern'] . '/', $numericPart)) {
+                                    $quickReplies = [
+                                        ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+                                    ];
+                                    $this->sendMessageWithQuickReplies($senderPsid, "⚠️ " . ($idConfig['message'] ?? "Please enter a valid 6-digit AMIS ID."), $quickReplies);
+                                    return;
+                                }
+                            }
+                        }
                         $session['data']['type'] = 'id';
                         $session['data']['student_id'] = $cleanMessageText;
                     } else {
+                        $errorMsg = null;
+                        $cleanedName = $this->validateAndCleanName($cleanMessageText, $errorMsg);
+                        if (!$cleanedName) {
+                            $quickReplies = [
+                                ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+                            ];
+                            $this->sendMessageWithQuickReplies($senderPsid, "⚠️ " . ($errorMsg ?? "Please enter the student's full name."), $quickReplies);
+                            return;
+                        }
                         $session['data']['type'] = 'name';
-                        $session['data']['name'] = $cleanMessageText;
+                        $session['data']['name'] = $cleanedName;
                     }
                 }
                 
@@ -361,15 +427,16 @@ class FacebookBotController extends Controller
 
             case 12:
                 $birthdate = trim($messageText);
-                $formattedBirthdate = $this->parseBirthdate($birthdate);
+                $errorMsg = null;
+                $formattedBirthdate = $this->validateAndNormalizeBirthdate($birthdate, $errorMsg);
                 if (!$formattedBirthdate) {
                     $quickReplies = [
                         ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
                     ];
-                    $this->sendMessageWithQuickReplies($senderPsid, "⚠️ Invalid birthdate format.\n\nPlease enter a valid birthdate (Format: MM-DD-YYYY, e.g. 04-30-2010):", $quickReplies);
+                    $this->sendMessageWithQuickReplies($senderPsid, "⚠️ " . ($errorMsg ?? "Please enter the student's complete birthdate."), $quickReplies);
                     return;
                 }
-                $session['data']['birthdate'] = $messageText;
+                $session['data']['birthdate'] = $formattedBirthdate;
                 $session['step'] = 13;
                 Cache::put($sessionKey, $session, now()->addMinutes(15));
 
@@ -381,11 +448,13 @@ class FacebookBotController extends Controller
 
             case 13:
                 $grade = trim($messageText);
-                if (!$this->isValidGradeLevel($grade)) {
+                $errorMsg = null;
+                $normalizedGrade = $this->validateAndNormalizeGradeLevel($grade, $errorMsg);
+                if (!$normalizedGrade) {
                     $quickReplies = [
                         ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
                     ];
-                    $this->sendMessageWithQuickReplies($senderPsid, "⚠️ Invalid Grade Level.\n\nPlease enter a valid grade level (e.g. Grade 1, Grade 5, Kinder):", $quickReplies);
+                    $this->sendMessageWithQuickReplies($senderPsid, "⚠️ " . ($errorMsg ?? "Please enter a valid grade level."), $quickReplies);
                     return;
                 }
                 $birthdate = $session['data']['birthdate'];
@@ -396,11 +465,11 @@ class FacebookBotController extends Controller
                 if ($type === 'id') {
                     $studentId = $session['data']['student_id'];
                     $this->sendMessage($senderPsid, "Verifying details for ID/Email {$studentId}...");
-                    $result = $this->handleBotResendCredentialsById($studentId, $grade, $birthdate);
+                    $result = $this->handleBotResendCredentialsById($studentId, $normalizedGrade, $birthdate);
                 } else {
                     $name = $session['data']['name'];
                     $this->sendMessage($senderPsid, "Verifying details for " . strtoupper($name) . "...");
-                    $result = $this->handleBotResendCredentialsByName($name, $grade, $birthdate);
+                    $result = $this->handleBotResendCredentialsByName($name, $normalizedGrade, $birthdate);
                 }
 
                 if (str_contains($result, '❌')) {
@@ -518,39 +587,245 @@ class FacebookBotController extends Controller
     }
 
     /**
-     * Parse various human birthdate formats to standard YYYY-MM-DD
+     * Load the chatbot validation config JSON
      */
-    private function parseBirthdate($input)
+    private function getValidationConfig()
     {
+        $path = config_path('amis_chatbot_validation.json');
+        if (file_exists($path)) {
+            return json_decode(file_get_contents($path), true);
+        }
+        return null;
+    }
+
+    /**
+     * Clean and validate name input based on JSON config
+     */
+    private function validateAndCleanName($name, &$errorMsg)
+    {
+        $config = $this->getValidationConfig();
+        $nameConfig = $config['student_lookup']['name'] ?? null;
+        $defaultMsg = "Please enter the student's full name as registered during enrollment.";
+        $msg = $nameConfig['message'] ?? $defaultMsg;
+
+        if ($nameConfig && ($nameConfig['trim_spaces'] ?? true)) {
+            $name = trim($name);
+        } else {
+            $name = trim($name);
+        }
+
+        if ($nameConfig && ($nameConfig['remove_double_spaces'] ?? true)) {
+            $name = preg_replace('/\s+/', ' ', $name);
+        }
+
+        // Special characters / numbers check
+        $allowedSpecials = $nameConfig['allow_special_characters'] ?? ['.', '-', "'", 'Ñ', 'ñ'];
+        $escapedSpecials = array_map(function($char) {
+            return preg_quote($char, '/');
+        }, $allowedSpecials);
+        
+        $pattern = '/^[\p{L}\s' . implode('', $escapedSpecials) . ']+$/u';
+        if (!preg_match($pattern, $name)) {
+            $errorMsg = $msg;
+            return null;
+        }
+
+        // Split and verify there are at least two words (full name check)
+        $parts = explode(' ', $name);
+        if (count($parts) < 2) {
+            $errorMsg = $msg;
+            return null;
+        }
+
+        // Min/Max length check
+        $len = mb_strlen($name, 'UTF-8');
+        if ($nameConfig) {
+            if (isset($nameConfig['min_length']) && $len < $nameConfig['min_length']) {
+                $errorMsg = $msg;
+                return null;
+            }
+            if (isset($nameConfig['max_length']) && $len > $nameConfig['max_length']) {
+                $errorMsg = $msg;
+                return null;
+            }
+        }
+
+        // Auto uppercase
+        if ($nameConfig && ($nameConfig['auto_uppercase'] ?? true)) {
+            $name = mb_strtoupper($name, 'UTF-8');
+        }
+
+        return $name;
+    }
+
+    /**
+     * Validate and normalize Grade Level based on JSON config
+     */
+    private function validateAndNormalizeGradeLevel($input, &$errorMsg)
+    {
+        $config = $this->getValidationConfig();
+        $gradeConfig = $config['student_lookup']['grade_level'] ?? null;
+        $msg = $gradeConfig['message'] ?? "Please enter a valid grade level.";
+
+        $cleanInput = strtoupper(preg_replace('/\s+/', ' ', trim($input)));
+
+        $normalizedKey = null;
+        if ($gradeConfig && isset($gradeConfig['normalize_to'])) {
+            foreach ($gradeConfig['normalize_to'] as $key => $formats) {
+                foreach ($formats as $format) {
+                    if (strtoupper(trim($format)) === $cleanInput) {
+                        $normalizedKey = $key;
+                        break 2;
+                    }
+                }
+            }
+        }
+
+        if (!$normalizedKey && $gradeConfig && isset($gradeConfig['accepted_formats'])) {
+            foreach ($gradeConfig['accepted_formats'] as $format) {
+                if (strtoupper(trim($format)) === $cleanInput) {
+                    break;
+                }
+            }
+        }
+
+        if (!$normalizedKey) {
+            $cleanedForFuzzy = preg_replace('/[^A-Z0-9]/', '', $cleanInput);
+            if (str_starts_with($cleanedForFuzzy, 'KINDER') || str_starts_with($cleanedForFuzzy, 'KINDERGARTEN')) {
+                $cleanedForFuzzy = str_replace(['KINDERGARTEN', 'KINDER'], 'K', $cleanedForFuzzy);
+            } elseif (str_starts_with($cleanedForFuzzy, 'GRADE')) {
+                $cleanedForFuzzy = str_replace('GRADE', 'G', $cleanedForFuzzy);
+            }
+
+            if ($gradeConfig && isset($gradeConfig['normalize_to'][$cleanedForFuzzy])) {
+                $normalizedKey = $cleanedForFuzzy;
+            }
+        }
+
+        if (!$normalizedKey) {
+            $errorMsg = $msg;
+            return null;
+        }
+
+        if (str_starts_with($normalizedKey, 'K')) {
+            $num = substr($normalizedKey, 1);
+            return "Kinder {$num}";
+        } elseif (str_starts_with($normalizedKey, 'G')) {
+            $num = substr($normalizedKey, 1);
+            return "Grade {$num}";
+        }
+
+        return $normalizedKey;
+    }
+
+    /**
+     * Validate and normalize Birthdate based on JSON config
+     */
+    private function validateAndNormalizeBirthdate($input, &$errorMsg)
+    {
+        $config = $this->getValidationConfig();
+        $birthConfig = $config['student_lookup']['birthdate'] ?? null;
+        $msg = $birthConfig['message'] ?? "Please enter the student's complete birthdate.";
+
         $input = trim($input);
+
+        // A complete birthdate must contain a 4-digit year (e.g. 1900-2099)
+        if (!preg_match('/\b(19\d{2}|20\d{2})\b/', $input, $yearMatches)) {
+            $errorMsg = $msg;
+            return null;
+        }
+        $year = (int)$yearMatches[1];
 
         // 1. Try MM-DD-YYYY / MM/DD/YYYY / MM DD YYYY
         if (preg_match('/^(\d{1,2})[-\/\s](\d{1,2})[-\/\s](\d{4})$/', $input, $matches)) {
             $month = (int)$matches[1];
             $day = (int)$matches[2];
-            $year = (int)$matches[3];
-            if (checkdate($month, $day, $year)) {
-                return sprintf('%04d-%02d-%02d', $year, $month, $day);
+            $yearVal = (int)$matches[3];
+            if (checkdate($month, $day, $yearVal)) {
+                return sprintf('%04d-%02d-%02d', $yearVal, $month, $day);
             }
         }
 
         // 2. Try YYYY-MM-DD / YYYY/MM/DD / YYYY MM DD
         if (preg_match('/^(\d{4})[-\/\s](\d{1,2})[-\/\s](\d{1,2})$/', $input, $matches)) {
-            $year = (int)$matches[1];
+            $yearVal = (int)$matches[1];
             $month = (int)$matches[2];
             $day = (int)$matches[3];
-            if (checkdate($month, $day, $year)) {
+            if (checkdate($month, $day, $yearVal)) {
+                return sprintf('%04d-%02d-%02d', $yearVal, $month, $day);
+            }
+        }
+
+        // 3. Match month text name formats
+        $monthPattern = '(jan|january|feb|february|mar|march|apr|april|may|jun|june|jul|july|aug|august|sep|september|oct|october|nov|november|dec|december)';
+        
+        // Month Day Year: e.g., "August 29 1997" or "August 29, 1997"
+        if (preg_match('/^' . $monthPattern . '\s+(\d{1,2})[,\s]+\d{4}$/i', $input, $matches)) {
+            $monthStr = strtolower($matches[1]);
+            $day = (int)$matches[2];
+            $month = $this->monthNameToNumber($monthStr);
+            if ($month && checkdate($month, $day, $year)) {
                 return sprintf('%04d-%02d-%02d', $year, $month, $day);
             }
         }
 
-        // 3. Fallback to standard strtotime (for April 30, 2020 etc.)
-        $timestamp = strtotime($input);
-        if ($timestamp !== false) {
-            return date('Y-m-d', $timestamp);
+        // Day Month Year: e.g., "29 August 1997" or "29 Aug, 1997"
+        if (preg_match('/^(\d{1,2})\s+' . $monthPattern . '[,\s]+\d{4}$/i', $input, $matches)) {
+            $day = (int)$matches[1];
+            $monthStr = strtolower($matches[2]);
+            $month = $this->monthNameToNumber($monthStr);
+            if ($month && checkdate($month, $day, $year)) {
+                return sprintf('%04d-%02d-%02d', $year, $month, $day);
+            }
         }
 
+        // Fallback using strtotime if it matches standard date with month, day and year
+        $hasMonthName = preg_match('/' . $monthPattern . '/i', $input);
+        $hasDigits = preg_match_all('/\b\d{1,2}\b/', $input, $digitMatches);
+        
+        if ($hasMonthName && count($digitMatches[0]) >= 1) {
+            $timestamp = strtotime($input);
+            if ($timestamp !== false) {
+                $parsedYear = (int)date('Y', $timestamp);
+                if ($parsedYear === $year) {
+                    return date('Y-m-d', $timestamp);
+                }
+            }
+        }
+
+        $errorMsg = $msg;
         return null;
+    }
+
+    /**
+     * Map month name to numeric value
+     */
+    private function monthNameToNumber($name)
+    {
+        $months = [
+            'jan' => 1, 'january' => 1,
+            'feb' => 2, 'february' => 2,
+            'mar' => 3, 'march' => 3,
+            'apr' => 4, 'april' => 4,
+            'may' => 5,
+            'jun' => 6, 'june' => 6,
+            'jul' => 7, 'july' => 7,
+            'aug' => 8, 'august' => 8,
+            'sep' => 9, 'september' => 9,
+            'oct' => 10, 'october' => 10,
+            'nov' => 11, 'november' => 11,
+            'dec' => 12, 'december' => 12
+        ];
+        return $months[strtolower($name)] ?? null;
+    }
+
+    /**
+     * Parse various human birthdate formats to standard YYYY-MM-DD
+     */
+    private function parseBirthdate($input)
+    {
+        $errorMsg = null;
+        return $this->validateAndNormalizeBirthdate($input, $errorMsg);
     }
 
     /**
@@ -558,39 +833,9 @@ class FacebookBotController extends Controller
      */
     private function normalizeGradeLevel($input)
     {
-        $input = strtolower(trim($input));
-
-        // Extract any number from the input
-        if (preg_match('/(\d+)/', $input, $matches)) {
-            $num = (int)$matches[1];
-            
-            // If the number is 11 or 12, it is definitely a Grade (Grade 11/12)
-            if ($num >= 11 && $num <= 12) {
-                return "Grade {$num}";
-            }
-            
-            // If the input contains "kinder" or "k" (but not G or grade)
-            if (str_contains($input, 'kinder') || str_contains($input, 'kind') || preg_match('/\bk\s*[12]\b/', $input) || preg_match('/^k\s*[12]$/', $input)) {
-                if ($num === 1 || $num === 2) {
-                    return "Kinder {$num}";
-                }
-            }
-
-            // Otherwise, check for normal grade levels G1-G10
-            if ($num >= 1 && $num <= 12) {
-                return "Grade {$num}";
-            }
-        }
-
-        // Fallbacks if no number is present
-        if (str_contains($input, 'kinder') || str_contains($input, 'kind')) {
-            if (str_contains($input, '2')) {
-                return 'Kinder 2';
-            }
-            return 'Kinder 1';
-        }
-
-        return $input;
+        $errorMsg = null;
+        $norm = $this->validateAndNormalizeGradeLevel($input, $errorMsg);
+        return $norm ?: $input;
     }
 
     /**
@@ -598,19 +843,8 @@ class FacebookBotController extends Controller
      */
     private function isValidGradeLevel($input)
     {
-        $normalized = $this->normalizeGradeLevel($input);
-        
-        // Check if it is Grade 1-12
-        if (preg_match('/^Grade\s+(1[0-2]|[1-9])$/i', $normalized)) {
-            return true;
-        }
-        
-        // Check if it is Kinder 1-2
-        if (preg_match('/^Kinder\s+[1-2]$/i', $normalized)) {
-            return true;
-        }
-        
-        return false;
+        $errorMsg = null;
+        return $this->validateAndNormalizeGradeLevel($input, $errorMsg) !== null;
     }
 
     /**
