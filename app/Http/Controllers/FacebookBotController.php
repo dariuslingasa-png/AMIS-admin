@@ -542,47 +542,29 @@ class FacebookBotController extends Controller
     }
 
     /**
-     * Send Main Menu with Carousel (Generic Template)
+     * Send Main Menu with Buttons (Button Template)
      */
     private function sendMainMenu($recipientPsid)
     {
-        $elements = [
+        $buttons = [
             [
-                'title' => 'Enrollment Status',
-                'subtitle' => 'Check your child\'s enrollment status in our system.',
-                'buttons' => [
-                    [
-                        'type' => 'postback',
-                        'title' => 'Check Status',
-                        'payload' => 'CHECK_ENROLLMENT_STATUS'
-                    ]
-                ]
+                'type' => 'postback',
+                'title' => 'Check Status',
+                'payload' => 'CHECK_ENROLLMENT_STATUS'
             ],
             [
+                'type' => 'postback',
                 'title' => 'Resend Credentials',
-                'subtitle' => 'Resend or reset your student Microsoft 365 login details.',
-                'buttons' => [
-                    [
-                        'type' => 'postback',
-                        'title' => 'Resend Credentials',
-                        'payload' => 'RESEND_CREDENTIALS'
-                    ]
-                ]
+                'payload' => 'RESEND_CREDENTIALS'
             ],
             [
+                'type' => 'postback',
                 'title' => 'Inquiries',
-                'subtitle' => 'General inquiries and support (coming soon).',
-                'buttons' => [
-                    [
-                        'type' => 'postback',
-                        'title' => 'Inquiries',
-                        'payload' => 'INQUIRIES_COMING_SOON'
-                    ]
-                ]
+                'payload' => 'INQUIRIES_COMING_SOON'
             ]
         ];
 
-        $this->sendCarouselMessage($recipientPsid, $elements);
+        $this->sendButtonMessage($recipientPsid, "Assalamualaikum, AMIS-ian! 👋\n\nHow may we help you today?", $buttons);
     }
 
     /**
