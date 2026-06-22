@@ -611,7 +611,7 @@ class FacebookBotController extends Controller
             ]
         ];
 
-        $this->sendButtonMessage($recipientPsid, "Assalamu Alaikum wa Rahmatullahi wa Barakatuh. 👋\n\nHow may we help you today?", $buttons);
+        $this->sendButtonMessage($recipientPsid, "Assalamualaikum AMIS-ian! 👋\n\nHow may I help you today? 😊", $buttons);
     }
 
     /**
