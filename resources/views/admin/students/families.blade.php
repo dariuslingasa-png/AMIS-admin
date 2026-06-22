@@ -22,25 +22,59 @@
             </div>
         </div>
 
-        <!-- Search Form -->
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-3xl border border-slate-200/80 bg-white p-5 shadow-xs">
-            <form method="GET" action="{{ route('admin.students.families') }}" class="relative w-full max-w-md" id="searchForm">
-                <input
-                    type="text"
-                    name="search"
-                    value="{{ request('search') }}"
-                    placeholder="Search by parent name, parent email, child name..."
-                    class="h-11 w-full rounded-xl border border-slate-200 bg-white pl-11 pr-4 text-sm font-medium text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
-                />
-                <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
-                    <i data-lucide="search" class="h-4 w-4"></i>
+        <!-- Search & Filter Form -->
+        <div class="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-xs">
+            <form method="GET" action="{{ route('admin.students.families') }}" class="flex flex-col md:flex-row items-center gap-3 w-full" id="filterForm">
+                <!-- Search Input -->
+                <div class="relative w-full md:flex-1">
+                    <input
+                        type="text"
+                        name="search"
+                        value="{{ request('search') }}"
+                        placeholder="Search by parent name, parent email, child name..."
+                        class="h-11 w-full rounded-xl border border-slate-200 bg-white pl-11 pr-4 text-sm font-medium text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
+                    />
+                    <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                        <i data-lucide="search" class="h-4 w-4"></i>
+                    </div>
                 </div>
+
+                <!-- Children Count Filter -->
+                <select 
+                    name="children_filter" 
+                    class="h-11 w-full md:w-48 rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
+                    onchange="this.form.submit()"
+                >
+                    <option value="">Any Children Count</option>
+                    <option value="1" @selected(request('children_filter') === '1')>1 Child</option>
+                    <option value="2" @selected(request('children_filter') === '2')>2 Children</option>
+                    <option value="3+" @selected(request('children_filter') === '3+')>3+ Children</option>
+                </select>
+
+                <!-- Sort Dropdown -->
+                <select 
+                    name="sort" 
+                    class="h-11 w-full md:w-48 rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
+                    onchange="this.form.submit()"
+                >
+                    <option value="latest" @selected(request('sort') === 'latest' || !request('sort'))>Sort: Latest</option>
+                    <option value="children_desc" @selected(request('sort') === 'children_desc')>Sort: Most Children</option>
+                    <option value="children_asc" @selected(request('sort') === 'children_asc')>Sort: Least Children</option>
+                    <option value="name_asc" @selected(request('sort') === 'name_asc')>Sort: Name (A-Z)</option>
+                </select>
+
+                <!-- Action Button -->
+                <button type="submit" class="h-11 w-full md:w-28 inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-700 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-800 focus:ring-4 focus:ring-emerald-100">
+                    <i data-lucide="filter" class="h-4 w-4"></i>
+                    Filter
+                </button>
+
+                @if(request()->filled('search') || request()->filled('children_filter') || request()->filled('sort'))
+                    <a href="{{ route('admin.students.families') }}" class="inline-flex items-center gap-1.5 text-xs font-bold text-rose-600 hover:text-rose-700 transition px-2 py-2">
+                        <i data-lucide="x" class="h-3.5 w-3.5"></i> Reset
+                    </a>
+                @endif
             </form>
-            @if(request()->filled('search'))
-                <a href="{{ route('admin.students.families') }}" class="inline-flex items-center gap-1.5 text-xs font-bold text-rose-600 hover:text-rose-700 transition">
-                    <i data-lucide="x" class="h-3.5 w-3.5"></i> Clear Search
-                </a>
-            @endif
         </div>
 
         <!-- Error Alert -->
@@ -76,7 +110,12 @@
                                             <i data-lucide="home" class="h-4.5 w-4.5"></i>
                                         </div>
                                         <div>
-                                            <div class="font-extrabold text-slate-900 uppercase tracking-wide">{{ $family->name }}</div>
+                                            <div class="flex items-center gap-2">
+                                                <span class="font-extrabold text-slate-900 uppercase tracking-wide">{{ $family->name }}</span>
+                                                <span class="inline-flex items-center rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/10">
+                                                    {{ count($children) }} {{ Str::plural('child', count($children)) }}
+                                                </span>
+                                            </div>
                                             <div class="text-xs text-slate-400 mt-0.5">{{ $family->email }}</div>
                                         </div>
                                     </div>

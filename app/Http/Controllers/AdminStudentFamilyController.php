@@ -32,8 +32,31 @@ class AdminStudentFamilyController extends Controller
             });
         }
 
+        // Filter by number of children
+        if ($request->filled('children_filter')) {
+            $filter = $request->children_filter;
+            if ($filter === '1') {
+                $query->has('students', '=', 1);
+            } elseif ($filter === '2') {
+                $query->has('students', '=', 2);
+            } elseif ($filter === '3+') {
+                $query->has('students', '>=', 3);
+            }
+        }
+
+        // Sorting
+        $sort = $request->input('sort', 'latest');
+        if ($sort === 'children_desc') {
+            $query->withCount('students')->orderBy('students_count', 'desc');
+        } elseif ($sort === 'children_asc') {
+            $query->withCount('students')->orderBy('students_count', 'asc');
+        } elseif ($sort === 'name_asc') {
+            $query->orderBy('name', 'asc');
+        } else {
+            $query->latest();
+        }
+
         $families = $query->with(['students.applicant', 'students.account', 'students.studentSection.section'])
-            ->latest()
             ->paginate(15)
             ->withQueryString();
 
