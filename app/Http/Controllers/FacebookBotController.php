@@ -86,7 +86,12 @@ class FacebookBotController extends Controller
             Cache::forget($sessionKey);
             $this->sendMessage($senderPsid, "Checking ID: {$cleanMessageText}...");
             $statusResult = $this->lookupEnrollmentStatusById($cleanMessageText);
-            $this->sendMessage($senderPsid, $statusResult);
+            
+            if (str_contains($statusResult, '❌')) {
+                $this->sendNoRecordFoundButtons($senderPsid, $statusResult, 'RETRY_ENROLLMENT_STATUS');
+            } else {
+                $this->sendMessage($senderPsid, $statusResult);
+            }
             return;
         }
 
@@ -106,6 +111,40 @@ class FacebookBotController extends Controller
             ];
             Cache::put($sessionKey, $session, now()->addMinutes(15));
             $this->sendMainMenu($senderPsid);
+            return;
+        }
+
+        // Handle retry enrollment status payload
+        if ($normalizedText === 'retry_enrollment_status') {
+            $session = [
+                'step' => 1,
+                'data' => []
+            ];
+            Cache::put($sessionKey, $session, now()->addMinutes(15));
+
+            $quickReplies = [
+                ['content_type' => 'text', 'title' => 'NEW', 'payload' => 'ENROLLMENT_STUDENT_NEW'],
+                ['content_type' => 'text', 'title' => 'OLD', 'payload' => 'ENROLLMENT_STUDENT_OLD'],
+                ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+            ];
+            $this->sendMessageWithQuickReplies($senderPsid, "Are you an Old or New student?", $quickReplies);
+            return;
+        }
+
+        // Handle retry resend credentials payload
+        if ($normalizedText === 'retry_resend_credentials') {
+            $session = [
+                'step' => 10,
+                'data' => []
+            ];
+            Cache::put($sessionKey, $session, now()->addMinutes(15));
+
+            $quickReplies = [
+                ['content_type' => 'text', 'title' => 'NEW', 'payload' => 'CREDENTIALS_STUDENT_NEW'],
+                ['content_type' => 'text', 'title' => 'OLD', 'payload' => 'CREDENTIALS_STUDENT_OLD'],
+                ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+            ];
+            $this->sendMessageWithQuickReplies($senderPsid, "🔐 Resend Credentials\nNote: use your only official AMIS email @amis.edu.ph\n\nAre you an Old or New student?", $quickReplies);
             return;
         }
 
@@ -237,7 +276,11 @@ class FacebookBotController extends Controller
                     $statusResult = $this->lookupEnrollmentStatus($name, $grade, $birthdate);
                 }
 
-                $this->sendMessage($senderPsid, $statusResult);
+                if (str_contains($statusResult, '❌')) {
+                    $this->sendNoRecordFoundButtons($senderPsid, $statusResult, 'RETRY_ENROLLMENT_STATUS');
+                } else {
+                    $this->sendMessage($senderPsid, $statusResult);
+                }
                 $this->sendMainMenu($senderPsid);
                 break;
 
@@ -329,7 +372,11 @@ class FacebookBotController extends Controller
                     $result = $this->handleBotResendCredentialsByName($name, $grade, $birthdate);
                 }
 
-                $this->sendMessage($senderPsid, $result);
+                if (str_contains($result, '❌')) {
+                    $this->sendNoRecordFoundButtons($senderPsid, $result, 'RETRY_RESEND_CREDENTIALS');
+                } else {
+                    $this->sendMessage($senderPsid, $result);
+                }
                 $this->sendMainMenu($senderPsid);
                 break;
         }
@@ -564,7 +611,33 @@ class FacebookBotController extends Controller
             ]
         ];
 
-        $this->sendButtonMessage($recipientPsid, "Assalamualaikum, AMIS-ian! 👋\n\nHow may we help you today?", $buttons);
+        $this->sendButtonMessage($recipientPsid, "Assalamu Alaikum wa Rahmatullahi wa Barakatuh. 👋\n\nHow may we help you today?", $buttons);
+    }
+
+    /**
+     * Send No Record Found message with buttons
+     */
+    private function sendNoRecordFoundButtons($recipientPsid, $text, $retryPayload)
+    {
+        $buttons = [
+            [
+                'type' => 'postback',
+                'title' => '🔄 Try Again',
+                'payload' => $retryPayload
+            ],
+            [
+                'type' => 'web_url',
+                'title' => '💬 Contact IT Support',
+                'url' => 'https://amis.edu.ph'
+            ],
+            [
+                'type' => 'web_url',
+                'title' => '📝 Online Enrollment',
+                'url' => 'https://enrollment.amis.edu.ph'
+            ]
+        ];
+
+        $this->sendButtonMessage($recipientPsid, $text, $buttons);
     }
 
     /**
