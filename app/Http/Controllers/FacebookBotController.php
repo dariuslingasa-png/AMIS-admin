@@ -596,17 +596,17 @@ class FacebookBotController extends Controller
         $buttons = [
             [
                 'type' => 'postback',
-                'title' => 'Enrollment Status',
+                'title' => '📝 Enrollment Status',
                 'payload' => 'CHECK_ENROLLMENT_STATUS'
             ],
             [
                 'type' => 'postback',
-                'title' => 'Resend Credentials',
+                'title' => '🔐 Resend Credentials',
                 'payload' => 'RESEND_CREDENTIALS'
             ],
             [
                 'type' => 'postback',
-                'title' => 'Inquiries',
+                'title' => '💬 Inquiries',
                 'payload' => 'INQUIRIES_COMING_SOON'
             ]
         ];
