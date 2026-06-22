@@ -137,9 +137,11 @@ class FacebookBotController extends Controller
             Cache::put($sessionKey, $session, now()->addMinutes(15));
 
             $quickReplies = [
+                ['content_type' => 'text', 'title' => 'NEW', 'payload' => 'CREDENTIALS_STUDENT_NEW'],
+                ['content_type' => 'text', 'title' => 'OLD', 'payload' => 'CREDENTIALS_STUDENT_OLD'],
                 ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
             ];
-            $this->sendMessageWithQuickReplies($senderPsid, "🔐 Resend Credentials\nNote: use your only official AMIS email @amis.edu.ph\n\nPlease reply with the student's FULL NAME, AMIS ID, or School Email:", $quickReplies);
+            $this->sendMessageWithQuickReplies($senderPsid, "🔐 Resend Credentials\nNote: use your only official AMIS email @amis.edu.ph\n\nAre you an Old or New student?", $quickReplies);
             return;
         }
 
@@ -241,19 +243,56 @@ class FacebookBotController extends Controller
 
             // --- RESEND CREDENTIALS FLOW ---
             case 10:
-                // Auto-detect if input is ID/Email or Name
-                $isIdOrEmail = preg_match('/^\d{4,8}$/', $cleanMessageText) || 
-                               preg_match('/^amis-\d+/i', $cleanMessageText) || 
-                               preg_match('/^amis\d+/i', $cleanMessageText) || 
-                               str_contains($cleanMessageText, '@');
-                if ($isIdOrEmail) {
-                    $session['data']['type'] = 'id';
-                    $session['data']['student_id'] = $cleanMessageText;
+                $selection = strtolower(trim($messageText));
+                if ($selection === 'new' || $selection === 'new student' || str_contains($selection, 'new')) {
+                    $session['data']['student_class'] = 'new';
+                    $session['step'] = 11;
+                    Cache::put($sessionKey, $session, now()->addMinutes(15));
+
+                    $quickReplies = [
+                        ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+                    ];
+                    $this->sendMessageWithQuickReplies($senderPsid, "Please reply with the student's FULL NAME:", $quickReplies);
+                } elseif ($selection === 'old' || $selection === 'old student' || str_contains($selection, 'old')) {
+                    $session['data']['student_class'] = 'old';
+                    $session['step'] = 11;
+                    Cache::put($sessionKey, $session, now()->addMinutes(15));
+
+                    $quickReplies = [
+                        ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+                    ];
+                    $this->sendMessageWithQuickReplies($senderPsid, "Please reply with the student's FULL NAME, AMIS ID, or School Email:", $quickReplies);
                 } else {
+                    $quickReplies = [
+                        ['content_type' => 'text', 'title' => 'NEW', 'payload' => 'CREDENTIALS_STUDENT_NEW'],
+                        ['content_type' => 'text', 'title' => 'OLD', 'payload' => 'CREDENTIALS_STUDENT_OLD'],
+                        ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+                    ];
+                    $this->sendMessageWithQuickReplies($senderPsid, "⚠️ Invalid selection. Please choose:\n\nAre you an Old or New student?", $quickReplies);
+                }
+                break;
+
+            case 11:
+                $studentClass = $session['data']['student_class'] ?? 'old';
+
+                if ($studentClass === 'new') {
                     $session['data']['type'] = 'name';
                     $session['data']['name'] = $cleanMessageText;
+                } else {
+                    $isIdOrEmail = preg_match('/^\d{4,8}$/', $cleanMessageText) || 
+                                   preg_match('/^amis-\d+/i', $cleanMessageText) || 
+                                   preg_match('/^amis\d+/i', $cleanMessageText) || 
+                                   str_contains($cleanMessageText, '@');
+                    if ($isIdOrEmail) {
+                        $session['data']['type'] = 'id';
+                        $session['data']['student_id'] = $cleanMessageText;
+                    } else {
+                        $session['data']['type'] = 'name';
+                        $session['data']['name'] = $cleanMessageText;
+                    }
                 }
-                $session['step'] = 11;
+                
+                $session['step'] = 12;
                 Cache::put($sessionKey, $session, now()->addMinutes(15));
 
                 $quickReplies = [
@@ -262,9 +301,9 @@ class FacebookBotController extends Controller
                 $this->sendMessageWithQuickReplies($senderPsid, "To verify your identity, what is the student's BIRTHDATE? (Format: MM-DD-YYYY, e.g. 04-30-2010)", $quickReplies);
                 break;
 
-            case 11:
+            case 12:
                 $session['data']['birthdate'] = $messageText;
-                $session['step'] = 12;
+                $session['step'] = 13;
                 Cache::put($sessionKey, $session, now()->addMinutes(15));
 
                 $quickReplies = [
@@ -273,7 +312,7 @@ class FacebookBotController extends Controller
                 $this->sendMessageWithQuickReplies($senderPsid, "What is the GRADE LEVEL? (e.g., Grade 1, Grade 5, Kinder)", $quickReplies);
                 break;
 
-            case 12:
+            case 13:
                 $grade = trim($messageText);
                 $birthdate = $session['data']['birthdate'];
                 $type = $session['data']['type'] ?? 'name';
