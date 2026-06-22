@@ -249,6 +249,13 @@ class FacebookBotController extends Controller
                 break;
 
             case 3:
+                if (!$this->isValidGradeLevel($messageText)) {
+                    $quickReplies = [
+                        ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+                    ];
+                    $this->sendMessageWithQuickReplies($senderPsid, "⚠️ Invalid Grade Level.\n\nPlease enter a valid grade level (e.g. Grade 1, Grade 5, Kinder):", $quickReplies);
+                    return;
+                }
                 $session['data']['grade'] = $messageText;
                 $session['step'] = 4;
                 Cache::put($sessionKey, $session, now()->addMinutes(15));
@@ -261,6 +268,14 @@ class FacebookBotController extends Controller
 
             case 4:
                 $birthdate = trim($messageText);
+                $formattedBirthdate = $this->parseBirthdate($birthdate);
+                if (!$formattedBirthdate) {
+                    $quickReplies = [
+                        ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+                    ];
+                    $this->sendMessageWithQuickReplies($senderPsid, "⚠️ Invalid birthdate format.\n\nPlease enter a valid birthdate (Format: MM-DD-YYYY, e.g. 04-30-2020):", $quickReplies);
+                    return;
+                }
                 $grade = $session['data']['grade'];
                 $type = $session['data']['type'] ?? 'name';
 
@@ -345,6 +360,15 @@ class FacebookBotController extends Controller
                 break;
 
             case 12:
+                $birthdate = trim($messageText);
+                $formattedBirthdate = $this->parseBirthdate($birthdate);
+                if (!$formattedBirthdate) {
+                    $quickReplies = [
+                        ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+                    ];
+                    $this->sendMessageWithQuickReplies($senderPsid, "⚠️ Invalid birthdate format.\n\nPlease enter a valid birthdate (Format: MM-DD-YYYY, e.g. 04-30-2010):", $quickReplies);
+                    return;
+                }
                 $session['data']['birthdate'] = $messageText;
                 $session['step'] = 13;
                 Cache::put($sessionKey, $session, now()->addMinutes(15));
@@ -357,6 +381,13 @@ class FacebookBotController extends Controller
 
             case 13:
                 $grade = trim($messageText);
+                if (!$this->isValidGradeLevel($grade)) {
+                    $quickReplies = [
+                        ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+                    ];
+                    $this->sendMessageWithQuickReplies($senderPsid, "⚠️ Invalid Grade Level.\n\nPlease enter a valid grade level (e.g. Grade 1, Grade 5, Kinder):", $quickReplies);
+                    return;
+                }
                 $birthdate = $session['data']['birthdate'];
                 $type = $session['data']['type'] ?? 'name';
 
@@ -560,6 +591,26 @@ class FacebookBotController extends Controller
         }
 
         return $input;
+    }
+
+    /**
+     * Check if the parsed grade level is a valid standard level
+     */
+    private function isValidGradeLevel($input)
+    {
+        $normalized = $this->normalizeGradeLevel($input);
+        
+        // Check if it is Grade 1-12
+        if (preg_match('/^Grade\s+(1[0-2]|[1-9])$/i', $normalized)) {
+            return true;
+        }
+        
+        // Check if it is Kinder 1-2
+        if (preg_match('/^Kinder\s+[1-2]$/i', $normalized)) {
+            return true;
+        }
+        
+        return false;
     }
 
     /**
