@@ -46,9 +46,17 @@
                     onchange="this.form.submit()"
                 >
                     <option value="">Any Children Count</option>
-                    <option value="1" @selected(request('children_filter') === '1')>1 Child</option>
-                    <option value="2" @selected(request('children_filter') === '2')>2 Children</option>
-                    <option value="3+" @selected(request('children_filter') === '3+')>3+ Children</option>
+                    @for($i = 1; $i <= $maxChildren; $i++)
+                        <option value="{{ $i }}" @selected(request('children_filter') == $i)>
+                            {{ $i }} {{ $i === 1 ? 'Child' : 'Children' }}
+                        </option>
+                    @endfor
+                    @if($maxChildren >= 3)
+                        <option value="3+" @selected(request('children_filter') === '3+')>3+ Children</option>
+                    @endif
+                    @if($maxChildren >= 5)
+                        <option value="5+" @selected(request('children_filter') === '5+')>5+ Children</option>
+                    @endif
                 </select>
 
                 <!-- Sort Dropdown -->

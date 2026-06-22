@@ -35,12 +35,11 @@ class AdminStudentFamilyController extends Controller
         // Filter by number of children
         if ($request->filled('children_filter')) {
             $filter = $request->children_filter;
-            if ($filter === '1') {
-                $query->has('students', '=', 1);
-            } elseif ($filter === '2') {
-                $query->has('students', '=', 2);
-            } elseif ($filter === '3+') {
-                $query->has('students', '>=', 3);
+            if (is_numeric($filter)) {
+                $query->has('students', '=', (int)$filter);
+            } elseif (str_ends_with($filter, '+')) {
+                $val = (int)rtrim($filter, '+');
+                $query->has('students', '>=', $val);
             }
         }
 
@@ -60,6 +59,14 @@ class AdminStudentFamilyController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        return view('admin.students.families', compact('families'));
+        $maxChildren = \DB::table('students')
+            ->selectRaw('count(*) as count')
+            ->groupBy('user_id')
+            ->orderByDesc('count')
+            ->first()
+            ->count ?? 0;
+        $maxChildren = max(3, $maxChildren);
+
+        return view('admin.students.families', compact('families', 'maxChildren'));
     }
 }
