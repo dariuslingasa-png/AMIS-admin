@@ -563,13 +563,9 @@ class FacebookBotController extends Controller
                 }
 
                 $email = $student->school_email ?? $student->ms_email ?? null;
-                $password = $student->temp_password ?? null;
 
                 if ($email) {
                     $msg .= "\n\nMicrosoft 365 Account:\n📧 Username: {$email}";
-                    if ($password) {
-                        $msg .= "\n🔑 Temp Password: {$password}";
-                    }
                 } else {
                     $msg .= "\n\nYou can now access Microsoft 365.";
                 }
@@ -581,6 +577,11 @@ class FacebookBotController extends Controller
             case 'under_review':
                 return "⏳ Pending Enrollment\n\nWe found the record for {$fullName}. The status is currently PENDING or under review by the admin. Please wait for an email or SMS notification for the next steps.";
             
+            case 'rejected':
+            case 'disapproved':
+            case 'cancelled':
+                return "❌ Enrollment Disapproved\n\nThe enrollment application for {$fullName} was not approved. Please contact the school administrator for more details.";
+
             default:
                 return "❌ No Record Found / Draft Application\n\nThe application form for {$fullName} is not yet fully submitted. Please complete the form on the enrollment portal.";
         }
