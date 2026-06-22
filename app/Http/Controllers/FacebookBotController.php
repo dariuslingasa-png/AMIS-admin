@@ -259,23 +259,23 @@ class FacebookBotController extends Controller
                 $quickReplies = [
                     ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
                 ];
-                $this->sendMessageWithQuickReplies($senderPsid, "What is the GRADE LEVEL? (e.g., Grade 1, Grade 5, Kinder)", $quickReplies);
+                $this->sendMessageWithQuickReplies($senderPsid, "To verify your identity, what is the student's BIRTHDATE? (Format: MM-DD-YYYY, e.g. 04-30-2010)", $quickReplies);
                 break;
 
             case 11:
-                $session['data']['grade'] = $messageText;
+                $session['data']['birthdate'] = $messageText;
                 $session['step'] = 12;
                 Cache::put($sessionKey, $session, now()->addMinutes(15));
 
                 $quickReplies = [
                     ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
                 ];
-                $this->sendMessageWithQuickReplies($senderPsid, "To verify your identity, what is the student's BIRTHDATE? (Format: MM-DD-YYYY, e.g. 04-30-2010)", $quickReplies);
+                $this->sendMessageWithQuickReplies($senderPsid, "What is the GRADE LEVEL? (e.g., Grade 1, Grade 5, Kinder)", $quickReplies);
                 break;
 
             case 12:
-                $birthdate = trim($messageText);
-                $grade = $session['data']['grade'];
+                $grade = trim($messageText);
+                $birthdate = $session['data']['birthdate'];
                 $type = $session['data']['type'] ?? 'name';
 
                 Cache::forget($sessionKey);
@@ -839,11 +839,42 @@ class FacebookBotController extends Controller
         $query->whereDate('date_of_birth', $formattedBirthdate);
         $applicant = $query->first();
 
-        if (!$applicant || !$applicant->student) {
+        if ($applicant) {
+            $status = strtolower($applicant->status ?? '');
+            if (in_array($status, ['submitted', 'pending', 'under_review'])) {
+                $fullName = strtoupper(trim($applicant->first_name . ' ' . $applicant->last_name));
+                return "⏳ Pending Enrollment\n\nWe found the record for {$fullName}. The status is currently PENDING or under review by the admin. Please wait for an email or SMS notification for the next steps.";
+            }
+        }
+
+        if (!$applicant) {
             return "❌ Student Account Not Found\n\nWe couldn't find any student account for {$name} with Grade: {$grade} and Birthdate: {$birthdate}. Please verify and try again.";
         }
 
         $student = $applicant->student;
+
+        // Check if credentials reset is allowed
+        $status = strtolower($applicant->status ?? '');
+        $isApproved = in_array($status, ['approved', 'registered']);
+        $isOld = (strtolower($applicant->student_type ?? '') === 'old');
+        $hasAmisEmail = false;
+        if ($student) {
+            if (str_contains(strtolower($student->school_email ?? ''), '@amis.edu.ph') || 
+                str_contains(strtolower($student->ms_email ?? ''), '@amis.edu.ph')) {
+                $hasAmisEmail = true;
+            }
+        }
+        if (str_contains(strtolower($applicant->email ?? ''), '@amis.edu.ph')) {
+            $hasAmisEmail = true;
+        }
+
+        if ($isApproved || $isOld || $hasAmisEmail) {
+            if (!$student) {
+                return "❌ Student Account Not Found\n\nWe verified your enrollment is approved/old, but your Microsoft 365 credentials have not been created yet. Please contact the school administrator.";
+            }
+        } else {
+            return "❌ Access Denied\n\nCredentials can only be resent for approved or old students with active M365 accounts.";
+        }
 
         // Perform credentials reset
         $resetResult = $this->resetMicrosoftPasswordAndEmail($student, $applicant);
@@ -853,9 +884,11 @@ class FacebookBotController extends Controller
         }
 
         $tempPassword = $resetResult['temp_password'];
+        $fullName = strtoupper(trim($applicant->first_name . ' ' . $applicant->last_name));
+        $amisId = $student->student_number ?? $applicant->amis_student_id ?? 'N/A';
 
-        // Option A: Show only AMIS email and password
-        return "✅ Credentials Sent Successfully!\n\nHere are the M365 details:\n📧 School Email: {$student->school_email}\n🔑 Temp Password: {$tempPassword}\n\nPlease login to portal.office.com and change your password on first login.";
+        // Display Full Name, AMIS ID, School Email, and Temp Password
+        return "✅ Credentials Sent Successfully!\n\nHere are the student's M365 details:\n👤 Full Name: {$fullName}\n🆔 AMIS ID: {$amisId}\n📧 School Email: {$student->school_email}\n🔑 Temp Password: {$tempPassword}\n\nPlease login to portal.office.com and change your password on first login.";
     }
 
     /**
@@ -877,7 +910,10 @@ class FacebookBotController extends Controller
             ->orWhere('ms_email', $id)
             ->first();
 
-        if (!$student) {
+        $applicant = null;
+        if ($student) {
+            $applicant = $student->applicant;
+        } else {
             $applicant = EnrollmentApplicant::where('amis_student_id', $id)
                 ->orWhere('id', $id)
                 ->first();
@@ -886,11 +922,9 @@ class FacebookBotController extends Controller
             }
         }
 
-        if (!$student || !$student->applicant) {
-            return "❌ Student Account Not Found\n\nWe couldn't find any student account with ID: {$id}. Please verify and try again.";
+        if (!$applicant) {
+            return "❌ Student Account Not Found\n\nWe couldn't find any student or enrollment record with ID: {$id}. Please verify and try again.";
         }
-
-        $applicant = $student->applicant;
         
         // Verify grade and birthdate
         $appGrade = $this->normalizeGradeLevel($applicant->grade_level);
@@ -906,6 +940,36 @@ class FacebookBotController extends Controller
             return "❌ Verification Failed\n\nThe grade level or birthdate you provided does not match our records. Please make sure the student ID, grade level, and birthdate are correct.";
         }
 
+        $fullName = strtoupper(trim($applicant->first_name . ' ' . $applicant->last_name));
+        $status = strtolower($applicant->status ?? '');
+
+        // Check if pending first
+        if (in_array($status, ['submitted', 'pending', 'under_review'])) {
+            return "⏳ Pending Enrollment\n\nWe found the record for {$fullName}. The status is currently PENDING or under review by the admin. Please wait for an email or SMS notification for the next steps.";
+        }
+
+        // Check if credentials reset is allowed
+        $isApproved = in_array($status, ['approved', 'registered']);
+        $isOld = (strtolower($applicant->student_type ?? '') === 'old');
+        $hasAmisEmail = false;
+        if ($student) {
+            if (str_contains(strtolower($student->school_email ?? ''), '@amis.edu.ph') || 
+                str_contains(strtolower($student->ms_email ?? ''), '@amis.edu.ph')) {
+                $hasAmisEmail = true;
+            }
+        }
+        if (str_contains(strtolower($applicant->email ?? ''), '@amis.edu.ph')) {
+            $hasAmisEmail = true;
+        }
+
+        if ($isApproved || $isOld || $hasAmisEmail) {
+            if (!$student) {
+                return "❌ Student Account Not Found\n\nWe verified your enrollment is approved/old, but your Microsoft 365 credentials have not been created yet. Please contact the school administrator.";
+            }
+        } else {
+            return "❌ Access Denied\n\nCredentials can only be resent for approved or old students with active M365 accounts.";
+        }
+
         // Perform credentials reset
         $resetResult = $this->resetMicrosoftPasswordAndEmail($student, $applicant);
 
@@ -914,9 +978,10 @@ class FacebookBotController extends Controller
         }
 
         $tempPassword = $resetResult['temp_password'];
+        $amisId = $student->student_number ?? $applicant->amis_student_id ?? 'N/A';
 
-        // Option B: Show full name, email, password
-        return "✅ Credentials Sent Successfully!\n\nHere are the student's M365 details:\n👤 Full Name: {$applicant->first_name} {$applicant->last_name}\n📧 School Email: {$student->school_email}\n🔑 Temp Password: {$tempPassword}\n\nPlease login to portal.office.com and change your password on first login.";
+        // Display Full Name, AMIS ID, School Email, and Temp Password
+        return "✅ Credentials Sent Successfully!\n\nHere are the student's M365 details:\n👤 Full Name: {$fullName}\n🆔 AMIS ID: {$amisId}\n📧 School Email: {$student->school_email}\n🔑 Temp Password: {$tempPassword}\n\nPlease login to portal.office.com and change your password on first login.";
     }
 }
 
