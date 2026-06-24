@@ -6,6 +6,7 @@
     window.amisChatbot = function () {
         return {
             isOpen: false,
+            isCentered: false,
             userInput: '',
             messages: [],
             isLoading: false,
@@ -61,10 +62,9 @@
                     this.scrollToBottom();
                 }
             },
-            resetChat() {
-                this.messages = [];
-                this.userInput = '';
-                this.isLoading = false;
+            toggleSize() {
+                this.isCentered = !this.isCentered;
+                this.scrollToBottom();
             }
         };
     };
@@ -73,6 +73,14 @@
    style="position: fixed; right: 1.5rem; bottom: 1.5rem; z-index: 9999; display: flex; flex-direction: column; align-items: flex-end;">
 
     <!-- Chat Panel -->
+    <div x-show="isOpen && isCentered"
+         x-cloak
+         x-transition.opacity
+         @click="isCentered = false"
+         class="fixed inset-0 bg-slate-950/35 backdrop-blur-[1px]"
+         style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.35); backdrop-filter: blur(1px);">
+    </div>
+
     <div x-show="isOpen"
          x-cloak
          x-transition:enter="transition ease-out duration-200"
@@ -82,7 +90,9 @@
          x-transition:leave-start="opacity-100 translate-y-0 scale-100"
          x-transition:leave-end="opacity-0 translate-y-10 scale-95"
          class="absolute bottom-16 right-0 w-[calc(100vw-2rem)] sm:w-96 h-[480px] max-h-[75vh] bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-2xl flex flex-col overflow-hidden"
-         style="position: absolute; right: 0; bottom: 4rem; width: min(24rem, calc(100vw - 2rem)); height: 480px; max-height: 75vh; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 1rem; box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25); flex-direction: column; overflow: hidden;">
+         :style="isCentered
+            ? 'position: fixed; left: 50%; top: 50%; right: auto; bottom: auto; transform: translate(-50%, -50%); width: min(34rem, calc(100vw - 2rem)); height: min(620px, calc(100vh - 2rem)); max-height: calc(100vh - 2rem); background: #ffffff; border: 1px solid #e5e7eb; border-radius: 1rem; box-shadow: 0 25px 70px -18px rgba(15, 23, 42, 0.45); display: flex; flex-direction: column; overflow: hidden;'
+            : 'position: absolute; right: 0; bottom: 4rem; width: min(24rem, calc(100vw - 2rem)); height: 480px; max-height: 75vh; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 1rem; box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25); display: flex; flex-direction: column; overflow: hidden;'">
          
          <!-- Panel Header -->
          <div class="px-4 py-3 bg-gradient-to-r from-emerald-700 to-teal-900 text-white flex items-center justify-between shadow-sm shrink-0">
@@ -101,12 +111,15 @@
                  </div>
              </div>
              <div class="flex items-center gap-2">
-                 <button type="button" @click="resetChat()" class="text-emerald-100 hover:text-white transition p-1 cursor-pointer" title="Reset Conversation">
-                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89H18" />
+                 <button type="button" @click="toggleSize()" class="text-emerald-100 hover:text-white transition p-1 cursor-pointer" title="Toggle Chat Size">
+                     <svg x-show="!isCentered" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                         <path stroke-linecap="round" stroke-linejoin="round" d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3M3 16v3a2 2 0 002 2h3m8 0h3a2 2 0 002-2v-3" />
+                     </svg>
+                     <svg x-show="isCentered" x-cloak class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 3v3a3 3 0 01-3 3H3m18 0h-3a3 3 0 01-3-3V3M3 15h3a3 3 0 013 3v3m6 0v-3a3 3 0 013-3h3" />
                      </svg>
                  </button>
-                 <button type="button" @click="isOpen = false" class="text-emerald-100 hover:text-white text-xl leading-none p-1 cursor-pointer">&times;</button>
+                 <button type="button" @click="isOpen = false; isCentered = false" class="text-emerald-100 hover:text-white text-xl leading-none p-1 cursor-pointer">&times;</button>
              </div>
          </div>
 
