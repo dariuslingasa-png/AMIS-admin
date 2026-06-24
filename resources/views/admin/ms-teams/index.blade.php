@@ -197,7 +197,16 @@
                                     <i data-lucide="graduation-cap" class="w-4 h-4"></i>
                                 </div>
                                 <div>
-                                    <h2 class="text-sm font-bold text-slate-800 tracking-tight uppercase">{{ $grade }}</h2>
+                                    @if(isset($gradeTeams[$grade]))
+                                        <a href="{{ $gradeTeams[$grade]->team_url }}" target="_blank" class="hover:underline flex items-center gap-1.5 group/grade" title="Open Grade-Level Teams Workspace">
+                                            <h2 class="text-sm font-bold text-slate-800 tracking-tight uppercase group-hover/grade:text-emerald-700">{{ $grade }}</h2>
+                                            <svg class="w-3.5 h-3.5 text-purple-600 shrink-0 opacity-85 hover:opacity-100 transition-opacity" viewBox="0 0 24 24" fill="currentColor">
+                                                <path d="M12.5 12a1 1 0 0 0-1-1h-2a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-2zM9.5 2A2.5 2.5 0 0 0 7 4.5v15A2.5 2.5 0 0 0 9.5 22h5a2.5 2.5 0 0 0 2.5-2.5v-15A2.5 2.5 0 0 0 14.5 2h-5zM9.5 3.5h5a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-15a1 1 0 0 1 1-1z"/>
+                                            </svg>
+                                        </a>
+                                    @else
+                                        <h2 class="text-sm font-bold text-slate-800 tracking-tight uppercase">{{ $grade }}</h2>
+                                    @endif
                                     @if($gradeAdvisor)
                                         <span class="text-[10px] font-bold text-teal-700 block mt-0.5 uppercase tracking-wide">
                                             Advisor: {{ $gradeAdvisor->teacher_name }}
@@ -405,6 +414,7 @@
         </div>
     </div>
 
+    <script>
     function getFlexibleSections(grade, shifts, genders) {
         let list = [];
         shifts.forEach(shift => {

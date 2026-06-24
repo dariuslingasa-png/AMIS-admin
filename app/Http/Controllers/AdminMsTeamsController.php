@@ -31,7 +31,13 @@ class AdminMsTeamsController extends Controller
             'total_failed'   => StudentSection::where('ms_status', 'failed')->count(),
         ];
 
-        return view('admin.ms-teams.index', compact('sections', 'stats'));
+        $schoolYear = config('services.school.year');
+        $gradeTeams = \App\Models\MsTeam::where('type', 'grade')
+            ->where('school_year', $schoolYear)
+            ->get()
+            ->keyBy('grade_level');
+
+        return view('admin.ms-teams.index', compact('sections', 'stats', 'gradeTeams'));
     }
 
     public function store(Request $request)
