@@ -34,7 +34,10 @@ class SyncFromMsTeams extends Command
         $this->newLine();
 
         // 2. Load all sections from the database
-        $sections = Section::all();
+        // Sort sections so that sections with concrete names are processed before those with placeholder/dummy 'A' or empty names
+        $sections = Section::all()->sortBy(function ($sec) {
+            return ($sec->name === 'A' || empty($sec->name)) ? 1 : 0;
+        });
         $this->info('Loaded ' . $sections->count() . ' sections from the database.');
         $this->newLine();
 
@@ -45,12 +48,16 @@ class SyncFromMsTeams extends Command
         // Track updates to perform
         $sectionUpdates = [];
         $subjectUpdates = [];
+        $assignedTeamIds = []; // Track assigned Team IDs to prevent duplicates
 
         // Match Teams to Sections
         foreach ($sections as $section) {
             $matchingTeams = [];
 
             foreach ($teams as $team) {
+                if (in_array($team['id'], $assignedTeamIds)) {
+                    continue;
+                }
                 if ($this->isMatch($section, $team)) {
                     $matchingTeams[] = $team;
                 }
@@ -72,6 +79,7 @@ class SyncFromMsTeams extends Command
             }
 
             $matchedCount++;
+            $assignedTeamIds[] = $bestTeam['id']; // Track assigned Team ID
 
             // Record section update
             $sectionUpdates[] = [
@@ -148,12 +156,27 @@ class SyncFromMsTeams extends Command
             $updatedSections = 0;
             foreach ($sectionUpdates as $update) {
                 $cleanedName = $this->cleanTeamName($update['team_name']);
-                $update['section']->update([
-                    'ms_team_id' => $update['team_id'],
-                    'ms_team_url' => $update['team_url'],
-                    'name' => ($cleanedName !== '') ? $cleanedName : $update['section']->name,
-                ]);
-                $updatedSections++;
+                
+                // Safety check: check if another section already holds this ms_team_id to prevent constraint violations
+                $existingConflict = Section::where('ms_team_id', $update['team_id'])
+                    ->where('id', '!=', $update['section']->id)
+                    ->first();
+
+                if ($existingConflict) {
+                    $this->warn("Skipping Section [ID {$update['section']->id}] -> matched Team ID {$update['team_id']} is already held by Section [ID {$existingConflict->id} ({$existingConflict->grade_level} - {$existingConflict->name})]");
+                    continue;
+                }
+
+                try {
+                    $update['section']->update([
+                        'ms_team_id' => $update['team_id'],
+                        'ms_team_url' => $update['team_url'],
+                        'name' => ($cleanedName !== '') ? $cleanedName : $update['section']->name,
+                    ]);
+                    $updatedSections++;
+                } catch (\Exception $e) {
+                    $this->error("Failed to update Section [ID {$update['section']->id}]: " . $e->getMessage());
+                }
             }
 
             $updatedSubjects = 0;
