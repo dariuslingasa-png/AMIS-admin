@@ -1,73 +1,80 @@
 {{-- Interactive Floating Chatbot Widget --}}
-<div x-data="{ 
-    isOpen: false, 
-    userInput: '',
-    messages: [],
-    isLoading: false,
-    escapeHtml(value) {
-        const div = document.createElement('div');
-        div.textContent = value || '';
-        return div.innerHTML;
-    },
-    formatMessage(value) {
-        return this.escapeHtml(value).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    },
-    async sendMessage() {
-        const text = this.userInput.trim();
-        if (!text) return;
-        
-        // Push user message
-        this.messages.push({ sender: 'user', text: text });
-        this.userInput = '';
-        this.isLoading = true;
-        
-        this.$nextTick(() => {
-            const el = document.getElementById('chat-messages-container');
-            if (el) el.scrollTop = el.scrollHeight;
-        });
+<style>
+    [x-cloak] { display: none !important; }
+</style>
+<script>
+    window.amisChatbot = function () {
+        return {
+            isOpen: false,
+            userInput: '',
+            messages: [],
+            isLoading: false,
+            escapeHtml(value) {
+                const div = document.createElement('div');
+                div.textContent = value || '';
+                return div.innerHTML;
+            },
+            formatMessage(value) {
+                return this.escapeHtml(value).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            },
+            scrollToBottom() {
+                this.$nextTick(() => {
+                    const el = document.getElementById('chat-messages-container');
+                    if (el) el.scrollTop = el.scrollHeight;
+                });
+            },
+            async sendMessage() {
+                const text = this.userInput.trim();
+                if (!text) return;
 
-        try {
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-            const response = await fetch('/api/chatbot', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken
-                },
-                body: JSON.stringify({
-                    messages: this.messages.slice(-10)
-                })
-            });
+                this.messages.push({ sender: 'user', text: text });
+                this.userInput = '';
+                this.isLoading = true;
+                this.scrollToBottom();
 
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
+                try {
+                    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+                    const response = await fetch('/api/chatbot', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken
+                        },
+                        body: JSON.stringify({
+                            messages: this.messages.slice(-10)
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+
+                    const data = await response.json();
+                    const reply = data.reply || 'Sorry, I encountered an issue. Please try again.';
+
+                    this.messages.push({ sender: 'bot', text: reply });
+                } catch (error) {
+                    console.error('Chatbot error:', error);
+                    this.messages.push({ sender: 'bot', text: 'Sorry, I am offline at the moment. Please try again later or click **Submit a Request** above.' });
+                } finally {
+                    this.isLoading = false;
+                    this.scrollToBottom();
+                }
+            },
+            resetChat() {
+                this.messages = [];
+                this.userInput = '';
+                this.isLoading = false;
             }
-
-            const data = await response.json();
-            const reply = data.reply || 'Sorry, I encountered an issue. Please try again.';
-            
-            this.messages.push({ sender: 'bot', text: reply });
-        } catch (error) {
-            console.error('Chatbot error:', error);
-            this.messages.push({ sender: 'bot', text: 'Sorry, I am offline at the moment. Please try again later or click **Submit a Request** above.' });
-        } finally {
-            this.isLoading = false;
-            this.$nextTick(() => {
-                const el = document.getElementById('chat-messages-container');
-                if (el) el.scrollTop = el.scrollHeight;
-            });
-        }
-    },
-    resetChat() {
-        this.messages = [];
-        this.userInput = '';
-        this.isLoading = false;
-    }
-}" class="fixed bottom-6 right-6 z-50 flex flex-col items-end print:hidden"
+        };
+    };
+</script>
+<div x-data="window.amisChatbot()" class="fixed bottom-6 right-6 z-50 flex flex-col items-end print:hidden"
    style="position: fixed; right: 1.5rem; bottom: 1.5rem; z-index: 9999; display: flex; flex-direction: column; align-items: flex-end;">
 
     <!-- Chat Panel -->
-    <div x-show="isOpen" 
+    <div x-show="isOpen"
+         x-cloak
          x-transition:enter="transition ease-out duration-200"
          x-transition:enter-start="opacity-0 translate-y-10 scale-95"
          x-transition:enter-end="opacity-100 translate-y-0 scale-100"
@@ -75,7 +82,7 @@
          x-transition:leave-start="opacity-100 translate-y-0 scale-100"
          x-transition:leave-end="opacity-0 translate-y-10 scale-95"
          class="absolute bottom-16 right-0 w-[calc(100vw-2rem)] sm:w-96 h-[480px] max-h-[75vh] bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-2xl flex flex-col overflow-hidden"
-         style="display: none; position: absolute; right: 0; bottom: 4rem; width: min(24rem, calc(100vw - 2rem)); height: 480px; max-height: 75vh; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 1rem; box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25); flex-direction: column; overflow: hidden;">
+         style="position: absolute; right: 0; bottom: 4rem; width: min(24rem, calc(100vw - 2rem)); height: 480px; max-height: 75vh; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 1rem; box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25); flex-direction: column; overflow: hidden;">
          
          <!-- Panel Header -->
          <div class="px-4 py-3 bg-gradient-to-r from-emerald-700 to-teal-900 text-white flex items-center justify-between shadow-sm shrink-0">
