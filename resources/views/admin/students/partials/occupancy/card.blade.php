@@ -119,6 +119,13 @@
                             <!-- Actions -->
                             <td class="py-3 text-right">
                                 <div class="flex items-center justify-end gap-1">
+                                    @if($section->ms_team_id)
+                                        <a href="{{ $section->ms_team_url }}" target="_blank" class="h-7 w-7 rounded-lg bg-purple-50 text-purple-700 border border-purple-100 hover:bg-purple-100/80 flex items-center justify-center transition active:scale-[0.95]" title="Open Microsoft Teams Workspace">
+                                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                                                <path d="M12.5 12a1 1 0 0 0-1-1h-2a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-2zM9.5 2A2.5 2.5 0 0 0 7 4.5v15A2.5 2.5 0 0 0 9.5 22h5a2.5 2.5 0 0 0 2.5-2.5v-15A2.5 2.5 0 0 0 14.5 2h-5zM9.5 3.5h5a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-15a1 1 0 0 1 1-1z"/>
+                                            </svg>
+                                        </a>
+                                    @endif
                                     <button type="button" @click="showRoster = !showRoster" class="h-7 w-7 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-slate-500 hover:bg-slate-50 active:scale-[0.95] transition cursor-pointer" title="View Roster">
                                         <i data-lucide="users" class="h-3.5 w-3.5"></i>
                                     </button>

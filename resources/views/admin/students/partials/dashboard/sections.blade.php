@@ -78,6 +78,16 @@
                                     <span class="w-1.5 h-1.5 rounded-full {{ $sec->fill_rate >= 90 ? 'bg-rose-500 animate-pulse' : ($sec->fill_rate >= 60 ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500') }}"></span>
                                     {{ $sec->fill_rate >= 90 ? 'Full' : ($sec->fill_rate >= 60 ? 'Fast' : 'Open') }}
                                 </span>
+
+                                @if($sec->ms_team_id)
+                                    <span class="text-slate-350 font-light">&middot;</span>
+                                    <a href="{{ $sec->ms_team_url }}" target="_blank" onclick="event.stopPropagation();" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase bg-purple-50 text-purple-700 border border-purple-100 hover:bg-purple-100 transition" title="Open Microsoft Teams Workspace">
+                                        <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M12.5 12a1 1 0 0 0-1-1h-2a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-2zM9.5 2A2.5 2.5 0 0 0 7 4.5v15A2.5 2.5 0 0 0 9.5 22h5a2.5 2.5 0 0 0 2.5-2.5v-15A2.5 2.5 0 0 0 14.5 2h-5zM9.5 3.5h5a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-15a1 1 0 0 1 1-1z"/>
+                                        </svg>
+                                        Teams
+                                    </a>
+                                @endif
                             </div>
                         </div>
                         
@@ -160,6 +170,16 @@
                                     <span class="w-1.5 h-1.5 rounded-full {{ $sec->fill_rate >= 90 ? 'bg-rose-500 animate-pulse' : ($sec->fill_rate >= 60 ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500') }}"></span>
                                     {{ $sec->fill_rate >= 90 ? 'Full' : ($sec->fill_rate >= 60 ? 'Fast' : 'Open') }}
                                 </span>
+
+                                @if($sec->ms_team_id)
+                                    <span class="text-slate-350 font-light">&middot;</span>
+                                    <a href="{{ $sec->ms_team_url }}" target="_blank" onclick="event.stopPropagation();" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase bg-purple-50 text-purple-700 border border-purple-100 hover:bg-purple-100 transition" title="Open Microsoft Teams Workspace">
+                                        <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M12.5 12a1 1 0 0 0-1-1h-2a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-2zM9.5 2A2.5 2.5 0 0 0 7 4.5v15A2.5 2.5 0 0 0 9.5 22h5a2.5 2.5 0 0 0 2.5-2.5v-15A2.5 2.5 0 0 0 14.5 2h-5zM9.5 3.5h5a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-15a1 1 0 0 1 1-1z"/>
+                                        </svg>
+                                        Teams
+                                    </a>
+                                @endif
                             </div>
                         </div>
                         
@@ -242,6 +262,16 @@
                                     <span class="w-1.5 h-1.5 rounded-full {{ $sec->fill_rate >= 90 ? 'bg-rose-500 animate-pulse' : ($sec->fill_rate >= 60 ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500') }}"></span>
                                     {{ $sec->fill_rate >= 90 ? 'Full' : ($sec->fill_rate >= 60 ? 'Fast' : 'Open') }}
                                 </span>
+
+                                @if($sec->ms_team_id)
+                                    <span class="text-slate-350 font-light">&middot;</span>
+                                    <a href="{{ $sec->ms_team_url }}" target="_blank" onclick="event.stopPropagation();" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase bg-purple-50 text-purple-700 border border-purple-100 hover:bg-purple-100 transition" title="Open Microsoft Teams Workspace">
+                                        <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M12.5 12a1 1 0 0 0-1-1h-2a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-2zM9.5 2A2.5 2.5 0 0 0 7 4.5v15A2.5 2.5 0 0 0 9.5 22h5a2.5 2.5 0 0 0 2.5-2.5v-15A2.5 2.5 0 0 0 14.5 2h-5zM9.5 3.5h5a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-15a1 1 0 0 1 1-1z"/>
+                                        </svg>
+                                        Teams
+                                    </a>
+                                @endif
                             </div>
                         </div>
                         

@@ -17,7 +17,7 @@
         updatePreview() {
             if (this.mode !== 'Flexible Online Learning') { this.previewList = []; return; }
             this.previewList = getFlexibleSections(this.grade, this.shifts, this.genders)
-                .map(item => `${item.prefix} - ${item.name} [${item.genderLabel} & ${item.shift}]`);
+                .map(item => item.name ? `${item.prefix} - ${item.name} [${item.genderLabel} & ${item.shift}]` : `${item.prefix} [${item.genderLabel} & ${item.shift}]`);
         },
         async startCreating() {
             let combos = [];
@@ -25,7 +25,7 @@
                 getFlexibleSections(this.grade, this.shifts, this.genders).forEach(item => {
                     combos.push({ grade_level: item.grade, learning_mode: this.mode, shift: item.shift, gender: item.gender, name: item.name, school_year: this.schoolYear });
                 });
-            } else { combos.push({ grade_level: this.grade, learning_mode: this.mode, shift: null, gender: this.genderSingle, name: getSectionName(this.grade, null, this.genderSingle), school_year: this.schoolYear }); }
+            } else { combos.push({ grade_level: this.grade, learning_mode: this.mode, shift: null, gender: this.genderSingle, name: null, school_year: this.schoolYear }); }
             if (!combos.length) return;
             this.progressMode = true;
             this.progressRows = combos.map(c => ({ title: c.learning_mode === 'Flexible Online Learning' ? `${c.grade_level} ${c.shift} ${c.gender === 'male' ? 'Boys' : 'Girls'}` : `${c.grade_level} F2F ${c.gender === 'male' ? 'Boys' : 'Girls'}`, status: 'pending', error: '' }));
@@ -428,64 +428,23 @@
         </div>
     </div>
 
-    <script>
-    const FLEXIBLE_SECTIONS = [
-        { grade: 'Kinder 2', shift: '1st Shift', gender: 'male', name: 'ABU BAKR AS-SIDDEEQ' },
-        { grade: 'Kinder 2', shift: '1st Shift', gender: 'female', name: 'UTHMAN IBN AFFAN' },
-        { grade: 'Grade 1', shift: '1st Shift', gender: 'female', name: 'ALI IBN ABI TALIB' },
-        { grade: 'Grade 1', shift: '1st Shift', gender: 'male', name: 'HUDHAYFAH IBN AL-YAMAN' },
-        { grade: 'Grade 2', shift: '1st Shift', gender: 'female', name: 'TALHAH IBN UBAYDULLAH' },
-        { grade: 'Grade 2', shift: '1st Shift', gender: 'male', name: 'AMR IBN AL-JAMUH' },
-        { grade: 'Grade 3', shift: '1st Shift', gender: 'male', name: 'AMMAR IBN YASIR' },
-        { grade: 'Grade 3', shift: '1st Shift', gender: 'female', name: 'HABIB IBN ZAYD AL-ANSARI' },
-        { grade: 'Grade 4', shift: '1st Shift', gender: 'male', name: 'ABDUR RAHMAN IBN AWF' },
-        { grade: 'Grade 4', shift: '1st Shift', gender: 'female', name: 'HAKIM IBN HIZAM' },
-        { grade: 'Grade 5', shift: '1st Shift', gender: 'male', name: 'MUHAMMAD IBN MASLAMAH' },
-        { grade: 'Grade 5', shift: '1st Shift', gender: 'female', name: 'HAMZA IBN ABDUL-MUTTALIB' },
-        { grade: 'Grade 6', shift: '1st Shift', gender: 'female', name: 'ABDULLAH IBN SALAM' },
-        { grade: 'Grade 6', shift: '1st Shift', gender: 'male', name: 'ABBAS IBN ABD AL-MUTTALIB' },
-        { grade: 'Grade 7', shift: '1st Shift', gender: 'female', name: 'USAMA IBN ZAYD' },
-        { grade: 'Grade 7', shift: '1st Shift', gender: 'male', name: 'ABU SUFYAN IBN AL-HARITH' },
-        { grade: 'Grade 8', shift: '1st Shift', gender: 'female', name: "SA'AD IBN MU'ADH" },
-        { grade: 'Grade 9', shift: '1st Shift', gender: 'female', name: 'ABU HURAYRAH' },
-        { grade: 'Grade 10', shift: '1st Shift', gender: 'female', name: 'UTBAH IBN GHAZWAN' },
-        { grade: 'Grade 11', shift: '1st Shift', gender: 'female', name: 'ABU UBAYDAH IBN AL-JARRAH' },
-        { grade: 'Grade 12', shift: '1st Shift', gender: 'female', name: "ABU MUSA AL-ASH'ARI" },
-        { grade: 'Kinder 1', shift: '2nd Shift', gender: 'male', name: 'HUSAYN IBN ALI' },
-        { grade: 'Kinder 2', shift: '2nd Shift', gender: 'female', name: "ABDULLAH IBN MAS'UD" },
-        { grade: 'Kinder 2', shift: '2nd Shift', gender: 'male', name: 'UMAR IBN AL-KHATTAB' },
-        { grade: 'Grade 1', shift: '2nd Shift', gender: 'male', name: 'SUHAYB AR-RUMI' },
-        { grade: 'Grade 1', shift: '2nd Shift', gender: 'female', name: "SA'D IBN ABI WAQQAS" },
-        { grade: 'Grade 2', shift: '2nd Shift', gender: 'male', name: 'SAEED IBN ZAYD' },
-        { grade: 'Grade 2', shift: '2nd Shift', gender: 'female', name: 'ASIM IBN THABIT' },
-        { grade: 'Grade 3', shift: '2nd Shift', gender: 'female', name: 'ZAYD IBN HARITHA' },
-        { grade: 'Grade 3', shift: '2nd Shift', gender: 'male', name: 'THABIT IBN QAYS' },
-        { grade: 'Grade 4', shift: '2nd Shift', gender: 'male', name: 'IKRIMAH IBN ABI JAHL' },
-        { grade: 'Grade 4', shift: '2nd Shift', gender: 'female', name: 'AZ-ZUBAIR IBN AL AWWAM' },
-        { grade: 'Grade 5', shift: '2nd Shift', gender: 'male', name: "MUS'AB IBN UMAIR" },
-        { grade: 'Grade 6', shift: '2nd Shift', gender: 'male', name: 'KHALID IBN WALID' },
-        { grade: 'Grade 7', shift: '2nd Shift', gender: 'male', name: 'ANAS IBN MALIK' },
-        { grade: 'Grade 8', shift: '2nd Shift', gender: 'male', name: "MU'ADH IBN JABAL" },
-        { grade: 'Grade 8', shift: '2nd Shift', gender: 'female', name: "NU'AYM IBN MAS'UD" },
-        { grade: 'Grade 9', shift: '2nd Shift', gender: 'male', name: 'ABU DHARR AL-GHIFARI' },
-        { grade: 'Grade 10', shift: '2nd Shift', gender: 'male', name: 'ABU AYYUB AL-ANSARI' },
-        { grade: 'Grade 11', shift: '2nd Shift', gender: 'male', name: 'ABU UBAY IBN HATIM' },
-        { grade: 'Grade 12', shift: '2nd Shift', gender: 'male', name: 'SUHAYB AR-RUMI' },
-    ];
-
     function getFlexibleSections(grade, shifts, genders) {
-        return FLEXIBLE_SECTIONS
-            .filter(item => item.grade === grade && shifts.includes(item.shift) && genders.includes(item.gender))
-            .map(item => ({
-                ...item,
-                prefix: getGradePrefix(item.grade),
-                genderLabel: item.gender === 'male' ? 'Boys' : 'Girls',
-            }));
+        let list = [];
+        shifts.forEach(shift => {
+            genders.forEach(gender => {
+                list.push({
+                    grade: grade,
+                    shift: shift,
+                    gender: gender,
+                    name: null,
+                    prefix: getGradePrefix(grade),
+                    genderLabel: gender === 'male' ? 'Boys' : 'Girls'
+                });
+            });
+        });
+        return list;
     }
 
-    function getSectionName(grade, shift, gender) {
-        return FLEXIBLE_SECTIONS.find(item => item.grade === grade && item.shift === shift && item.gender === gender)?.name || null;
-    }
     function getGradePrefix(grade) {
         if (grade === 'Kinder 1') return 'K1'; if (grade === 'Kinder 2') return 'K2';
         return 'G' + grade.replace('Grade ', '');

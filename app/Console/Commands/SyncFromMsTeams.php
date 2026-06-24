@@ -147,9 +147,11 @@ class SyncFromMsTeams extends Command
 
             $updatedSections = 0;
             foreach ($sectionUpdates as $update) {
+                $cleanedName = $this->cleanTeamName($update['team_name']);
                 $update['section']->update([
                     'ms_team_id' => $update['team_id'],
                     'ms_team_url' => $update['team_url'],
+                    'name' => ($cleanedName !== '') ? $cleanedName : $update['section']->name,
                 ]);
                 $updatedSections++;
             }
@@ -332,14 +334,18 @@ class SyncFromMsTeams extends Command
         // Strip gender/brackets (e.g. (BOYS), (GIRLS), (MIX))
         $cleaned = preg_replace('/\((boys|girls|mix)\)/i', '', $cleaned);
         
+        // Strip info brackets (e.g. [Boys & 1st Shift])
+        $cleaned = preg_replace('/\[.*\]/i', '', $cleaned);
+        
         // Strip leading/trailing hyphens and spaces
         $cleaned = trim($cleaned, " \t\n\r\0\x0B-");
         
         return $cleaned;
     }
 
-    private function normalizeName(string $name): string
+    private function normalizeName(?string $name): string
     {
+        $name = $name ?? '';
         $cleaned = strtolower($name);
         $cleaned = str_replace('-', ' ', $cleaned);
         $cleaned = preg_replace('/[^a-z0-9\s]/', '', $cleaned);
