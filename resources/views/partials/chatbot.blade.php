@@ -63,7 +63,8 @@
         this.userInput = '';
         this.isLoading = false;
     }
-}" class="fixed bottom-6 right-6 z-50 flex flex-col items-end print:hidden">
+}" class="fixed bottom-6 right-6 z-50 flex flex-col items-end print:hidden"
+   style="position: fixed; right: 1.5rem; bottom: 1.5rem; z-index: 9999; display: flex; flex-direction: column; align-items: flex-end;">
 
     <!-- Chat Panel -->
     <div x-show="isOpen" 
@@ -74,7 +75,7 @@
          x-transition:leave-start="opacity-100 translate-y-0 scale-100"
          x-transition:leave-end="opacity-0 translate-y-10 scale-95"
          class="absolute bottom-16 right-0 w-[calc(100vw-2rem)] sm:w-96 h-[480px] max-h-[75vh] bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-2xl flex flex-col overflow-hidden"
-         style="display: none;">
+         style="display: none; position: absolute; right: 0; bottom: 4rem; width: min(24rem, calc(100vw - 2rem)); height: 480px; max-height: 75vh; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 1rem; box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25); flex-direction: column; overflow: hidden;">
          
          <!-- Panel Header -->
          <div class="px-4 py-3 bg-gradient-to-r from-emerald-700 to-teal-900 text-white flex items-center justify-between shadow-sm shrink-0">
@@ -161,28 +162,22 @@
     </div>
 
     <!-- Floating Action Button & Need Help Pill -->
-    <div class="flex items-center gap-2 cursor-pointer" @click="isOpen = !isOpen">
+    <div class="flex items-center gap-2 cursor-pointer" @click="isOpen = !isOpen" style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
          <span x-show="!isOpen" 
                x-transition:enter="transition ease-out duration-300"
                x-transition:enter-start="opacity-0 translate-x-4"
                x-transition:enter-end="opacity-100 translate-x-0"
-               class="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-250 border border-gray-250 dark:border-gray-700 px-3.5 py-1.5 rounded-full text-xs font-extrabold shadow-md whitespace-nowrap animate-bounce select-none">
+               class="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-250 border border-gray-250 dark:border-gray-700 px-3.5 py-1.5 rounded-full text-xs font-extrabold shadow-md whitespace-nowrap animate-bounce select-none"
+               style="display: inline-flex; align-items: center; white-space: nowrap; border-radius: 9999px; border: 1px solid #d1d5db; background: #ffffff; color: #1f2937; padding: 0.375rem 0.875rem; font-size: 0.75rem; line-height: 1rem; font-weight: 800; box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.1); user-select: none;">
              AMIS-ian, Need help??
          </span>
          
-         <button class="flex items-center justify-center w-14 h-14 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer"
-                 style="box-shadow: 0 8px 30px rgba(5, 150, 105, 0.35);">
-             <!-- Close icon if open, else chat bubble icon -->
-             <template x-if="isOpen">
-                 <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                 </svg>
-             </template>
-             <template x-if="!isOpen">
-                 <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                     <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                 </svg>
-             </template>
+         <button type="button"
+                 class="flex items-center justify-center w-14 h-14 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer"
+                 style="width: 3.5rem; height: 3.5rem; min-width: 3.5rem; border: 0; border-radius: 9999px; background: #059669; color: #ffffff; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 30px rgba(5, 150, 105, 0.35); cursor: pointer;">
+             <svg class="w-7 h-7" width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                 <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+             </svg>
          </button>
     </div>
 
