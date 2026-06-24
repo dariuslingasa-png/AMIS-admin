@@ -4,7 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $title ?? 'AMIS Admin' }}</title>
+    <title>{{ $title ?? 'AMIS Support Portal' }}</title>
+    <link rel="icon" type="image/svg+xml" href="{{ asset('images/AMIS_Logo.svg') }}">
     <link rel="icon" type="image/png" href="{{ asset('images/AMIS_Logo.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script defer src="https://unpkg.com/lucide@latest"></script>
