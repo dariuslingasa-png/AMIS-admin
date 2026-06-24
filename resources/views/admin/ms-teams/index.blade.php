@@ -220,10 +220,10 @@
                                     $genderBadgeColor = $section->gender === 'male' ? 'bg-indigo-100/60 text-indigo-700' : 'bg-rose-100/60 text-rose-700';
                                     $genderLabel = $section->gender === 'male' ? 'Boys' : 'Girls';
                                 @endphp
-                                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-slate-50/70 rounded-xl border border-slate-100 hover:border-slate-200/80 transition-colors"
+                                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 bg-slate-50/70 rounded-xl border border-slate-100 hover:border-slate-200/80 transition-colors"
                                      x-show="search === '' || '{{ strtolower($section->grade_level) }} {{ strtolower($section->section_title) }} {{ strtolower($section->name) }}'.includes(search.toLowerCase())">
                                     
-                                    <div class="space-y-2">
+                                    <div class="space-y-2 flex-1 min-w-0">
                                         <!-- Section Title -->
                                         <span class="text-sm font-bold text-slate-800 block tracking-tight uppercase">{{ $section->name ?? 'UNNAMED' }}</span>
                                         
@@ -249,12 +249,39 @@
                                                 <span class="text-slate-600 font-semibold">{{ $section->subjects_count }} Subjects</span>
                                             </span>
                                         </div>
+                                    </div>
 
-
+                                    <!-- MS Teams Connection Card -->
+                                    <div class="flex items-center shrink-0 min-w-0 max-w-full md:w-[170px]">
+                                        @if($section->ms_team_id)
+                                            <a href="{{ $section->ms_team_url }}" target="_blank" 
+                                               class="w-full flex items-center gap-2 p-2 rounded-xl border border-purple-100 bg-purple-50/50 hover:bg-purple-100/70 hover:border-purple-200 transition text-purple-700 min-w-0"
+                                               title="Open Microsoft Teams Workspace">
+                                                <div class="w-7 h-7 rounded-lg bg-purple-600 text-white flex items-center justify-center shrink-0">
+                                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                                                        <path d="M12.5 12a1 1 0 0 0-1-1h-2a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-2zM9.5 2A2.5 2.5 0 0 0 7 4.5v15A2.5 2.5 0 0 0 9.5 22h5a2.5 2.5 0 0 0 2.5-2.5v-15A2.5 2.5 0 0 0 14.5 2h-5zM9.5 3.5h5a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-15a1 1 0 0 1 1-1z"/>
+                                                    </svg>
+                                                </div>
+                                                <div class="flex flex-col min-w-0 text-left">
+                                                    <span class="text-[9px] font-bold uppercase tracking-wider text-purple-400 leading-none">Teams Sync</span>
+                                                    <span class="text-xs font-extrabold truncate mt-0.5">Connected</span>
+                                                </div>
+                                            </a>
+                                        @else
+                                            <div class="w-full flex items-center gap-2 p-2 rounded-xl border border-slate-100 bg-slate-50 text-slate-400">
+                                                <div class="w-7 h-7 rounded-lg bg-slate-200 text-slate-500 flex items-center justify-center shrink-0">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                                </div>
+                                                <div class="flex flex-col text-left">
+                                                    <span class="text-[9px] font-bold uppercase tracking-wider text-slate-400 leading-none">Teams Status</span>
+                                                    <span class="text-xs font-extrabold mt-0.5 text-slate-400">Not Linked</span>
+                                                </div>
+                                            </div>
+                                        @endif
                                     </div>
 
                                     <!-- Action buttons -->
-                                    <div class="flex items-center gap-2 self-end sm:self-auto shrink-0">
+                                    <div class="flex items-center gap-2 shrink-0 self-end md:self-auto">
                                         <button type="button" @click="openEdit({{ $section->id }}, '{{ addslashes($section->name ?? '') }}')" 
                                                 class="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-200/50 rounded-xl transition border border-slate-200 bg-white"
                                                 title="Rename Section">
@@ -269,7 +296,7 @@
                                             </button>
                                         </form>
                                         <a href="{{ route('admin.ms-teams.show', $section) }}" 
-                                           class="inline-flex items-center gap-1 bg-emerald-800 hover:bg-emerald-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl transition shadow-xs">
+                                           class="inline-flex items-center gap-1 bg-emerald-800 hover:bg-emerald-700 text-white font-bold text-xs px-3.5 py-2.5 rounded-xl transition shadow-xs">
                                             <span>Manage</span>
                                             <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
                                         </a>
