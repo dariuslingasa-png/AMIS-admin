@@ -148,7 +148,7 @@
                 
                 if (form.action.includes('ms-sync/students')) {
                     modalTitle.textContent = "Syncing Student Account";
-                    modalText.textContent = "Updating status, teams enrollment, and Microsoft license for this student. Please wait...";
+                    modalText.textContent = "Updating Microsoft account status and license for this student. Please wait...";
                 } else {
                     modalTitle.textContent = "Syncing Microsoft Licenses";
                     modalText.textContent = "We are updating Microsoft status and licenses for the current student filter. Please do not close or refresh this page.";

@@ -114,6 +114,8 @@ Route::name('admin.')->group(function () {
         Route::get('/students/promotions', [AdminStudentProcessController::class, 'promotions'])->name('students.promotions');
         Route::get('/students/occupancy', [AdminStudentDashboardController::class, 'occupancy'])->name('students.occupancy');
         Route::get('/students/occupancy/grade/{grade}/roster-print', [AdminStudentDashboardController::class, 'gradeRosterPrint'])->name('students.grade-roster-print');
+        Route::get('/students/reports', [AdminStudentDashboardController::class, 'reports'])->name('students.reports');
+        Route::get('/students/reports/print-all', [AdminStudentDashboardController::class, 'printAllRosters'])->name('students.print-all-rosters');
         Route::get('/students/families', [AdminStudentFamilyController::class, 'families'])->name('students.families');
         Route::get('/students/{student}', [AdminStudentController::class, 'show'])->name('students.show');
         Route::post('/students/{student}/resend', [AdminStudentAccountController::class, 'resendCredentials'])->name('students.resend');
@@ -156,6 +158,7 @@ Route::name('admin.')->group(function () {
         Route::post('/ms-sync/import-all', [AdminMsSyncController::class, 'importAll'])->name('ms-sync.import-all');
         Route::post('/ms-sync/import', [AdminMsSyncController::class, 'importFromAzure'])->name('ms-sync.import');
         Route::post('/ms-sync/delete-azure', [AdminMsSyncController::class, 'deleteFromAzure'])->name('ms-sync.delete-azure');
+        Route::get('/ms-sync/students/{student}', [AdminMsSyncController::class, 'showStudentSyncRedirect'])->name('ms-sync.student.redirect');
         Route::post('/ms-sync/students/{student}', [AdminMsSyncController::class, 'syncStudent'])->name('ms-sync.student');
         Route::post('/ms-sync/sync-all-licenses', [AdminMsSyncController::class, 'syncAllLicenses'])->name('ms-sync.sync-all-licenses');
 

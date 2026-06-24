@@ -153,7 +153,7 @@ class AdminMsSyncController extends Controller
         $azureEnabled = true;
         try {
             $graph = new MicrosoftGraphService();
-            $azUser = $graph->graph()->get("/users/{$azureId}")->json();
+            $azUser = $graph->getUser($azureId);
             $azureEnabled = $azUser['accountEnabled'] ?? true;
         } catch (\Exception $e) {
             Log::warning("Could not fetch enabled status for imported user {$azureId}: " . $e->getMessage());
@@ -430,6 +430,13 @@ class AdminMsSyncController extends Controller
     /**
      * Sync a single student to Teams, status, and licenses.
      */
+    public function showStudentSyncRedirect(Student $student)
+    {
+        return redirect()
+            ->route('admin.students.show', $student)
+            ->withErrors(['error' => 'Use the Sync Microsoft License button to run Microsoft sync.']);
+    }
+
     public function syncStudent(Student $student)
     {
         if (!$student->ms_user_id) {
@@ -437,13 +444,12 @@ class AdminMsSyncController extends Controller
         }
 
         $graph   = new MicrosoftGraphService();
-        $service = new MsTeamsEnrollmentService($graph);
         $studentSkuId = config('services.microsoft.student_sku_id');
 
         try {
             // Sync password status
             try {
-                $azUser = $graph->graph()->get("/users/{$student->ms_user_id}?\$select=id,lastPasswordChangeDateTime,createdDateTime")->json();
+                $azUser = $graph->getUser($student->ms_user_id, ['id', 'lastPasswordChangeDateTime', 'createdDateTime']);
                 $lastPwChangeStr = $azUser['lastPasswordChangeDateTime'] ?? null;
                 $createdStr = $azUser['createdDateTime'] ?? null;
                 if ($lastPwChangeStr) {
@@ -470,12 +476,10 @@ class AdminMsSyncController extends Controller
                 Log::warning("Failed to sync password status for student {$student->school_email}: " . $pwEx->getMessage());
             }
 
-            // 1. Sync Teams channels
-            $result = $service->enrollStudent($student);
-            $msg = "Synced {$student->student_number}: {$result['enrolled']} enrolled.";
-            if ($result['failed'] > 0) $msg .= " {$result['failed']} failed.";
+            $msg = "Synced {$student->student_number}.";
 
-            // 2. Sync account status and licensing from database to Entra ID
+            // Sync account status and licensing from database to Entra ID.
+            // Teams enrollment is handled separately so license sync cannot get stuck behind Teams/channel Graph calls.
             $user = $student->user;
             if ($user) {
                 $status = $user->account_status ?? 'verified';
@@ -561,8 +565,7 @@ class AdminMsSyncController extends Controller
         $successCount = 0;
         $failedCount = 0;
         $errors = [];
-        $enrollmentService = new MsTeamsEnrollmentService($graph);
-        
+
         foreach ($students as $student) {
             try {
                 $user = $student->user;
@@ -622,13 +625,6 @@ class AdminMsSyncController extends Controller
                 // If status and license already match desired state, skip writing to Microsoft Graph
                 if (!$needsEnabledUpdate && !$needsLicenseUpdate) {
                     $student->update(['ms_license_active' => $hasLicense]);
-                    // Check if we still need to enroll them in Teams (status not 'enrolled')
-                    if ($desiredEnabled) {
-                        $msStatus = $student->studentSection->ms_status ?? 'pending';
-                        if ($msStatus !== 'enrolled') {
-                            $enrollmentService->enrollStudent($student);
-                        }
-                    }
                     $successCount++;
                     continue;
                 }
@@ -657,14 +653,6 @@ class AdminMsSyncController extends Controller
                                 'ms_user_id' => $azUserId,
                             ]);
                         } catch (\Throwable $e) {}
-                    }
-                }
-                
-                // Enroll in Teams if verified and not yet fully enrolled
-                if ($desiredEnabled) {
-                    $msStatus = $student->studentSection->ms_status ?? 'pending';
-                    if ($msStatus !== 'enrolled') {
-                        $enrollmentService->enrollStudent($student);
                     }
                 }
                 

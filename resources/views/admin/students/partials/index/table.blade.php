@@ -51,7 +51,7 @@
                         $name = $fullName ? \Illuminate\Support\Str::upper($fullName) : 'STUDENT PROFILE';
                         $initials = collect(explode(' ', $name))->filter()->take(2)->map(fn ($part) => \Illuminate\Support\Str::substr($part, 0, 1))->join('');
                         $photoUrl = \App\Support\EnrollmentStorage::url($student->applicant->photo_2x2_url ?? null);
-                        $msStatus = $student->studentSection->ms_status ?? 'pending';
+                        $msStatus = $student->studentSection->ms_status ?? ($student->ms_user_id && $student->ms_license_active ? 'enrolled' : 'pending');
                         $gender = strtolower((string) ($student->applicant->gender ?? ''));
                         $genderLabel = $gender === 'male' ? 'Male' : ($gender === 'female' ? 'Female' : 'Not Set');
                         $genderClass = $gender === 'male' ? 'bg-blue-50 text-blue-700 ring-blue-100' : ($gender === 'female' ? 'bg-violet-50 text-violet-700 ring-violet-100' : 'bg-slate-50 text-slate-500 ring-slate-100');
@@ -188,10 +188,10 @@
                         <!-- Action -->
                          <td class="px-5 py-4 text-right print:hidden">
                             <div class="flex items-center justify-end gap-1.5">
-                                @if($student->ms_user_id && ($msStatus !== 'enrolled' || $student->ms_license_active === false))
+                                @if($student->ms_user_id && $student->ms_license_active !== true)
                                     <form method="POST" action="{{ route('admin.ms-sync.student', $student) }}" class="inline-block">
                                         @csrf
-                                        <button type="submit" class="inline-flex h-9 items-center gap-1.5 rounded-md border border-emerald-100 bg-emerald-50 px-2.5 text-xs font-bold text-emerald-700 transition hover:bg-emerald-100 cursor-pointer" title="Sync Microsoft Account & License">
+                                        <button type="submit" class="inline-flex h-9 items-center gap-1.5 rounded-md border border-emerald-100 bg-emerald-50 px-2.5 text-xs font-bold text-emerald-700 transition hover:bg-emerald-100 cursor-pointer" title="Sync Microsoft account status and license">
                                             <i data-lucide="refresh-cw" class="h-3.5 w-3.5"></i>
                                             <span>Sync License</span>
                                         </button>

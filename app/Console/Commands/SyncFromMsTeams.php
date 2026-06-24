@@ -259,17 +259,19 @@ class SyncFromMsTeams extends Command
             return $teams[0];
         }
 
+        $sectionName = $section->name ?? '';
+
         // Prefer exact matches on name
         foreach ($teams as $team) {
             $cleanedTeam = $this->normalizeName($this->cleanTeamName($team['displayName']));
-            $cleanedSection = $this->normalizeName($section->name);
+            $cleanedSection = $this->normalizeName($sectionName);
             if ($cleanedTeam === $cleanedSection) {
                 return $team;
             }
         }
 
         // Prefer team names containing hyphens if section name has hyphens
-        if (str_contains($section->name, '-')) {
+        if (str_contains($sectionName, '-')) {
             foreach ($teams as $team) {
                 if (str_contains($team['displayName'], '-')) {
                     return $team;

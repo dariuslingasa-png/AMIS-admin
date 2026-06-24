@@ -274,8 +274,32 @@ class EnrollmentApprovalService
         string $tempPassword,
     ): Student {
         try {
+            // Find or create a unique User record for this student school email UPN
+            $studentUser = \App\Models\User::where('email', $schoolEmail)->first();
+            if (!$studentUser) {
+                $prefix = explode('@', $schoolEmail)[0];
+                $username = $prefix;
+                if (\App\Models\User::where('username', $username)->exists()) {
+                    $username = $prefix . '_' . $studentNumber;
+                }
+                $studentUser = \App\Models\User::create([
+                    'name'              => trim(($applicant->first_name ?? '') . ' ' . ($applicant->last_name ?? '')),
+                    'email'             => $schoolEmail,
+                    'username'          => $username,
+                    'password'          => Hash::make(Str::random(32)),
+                    'role'              => 'student',
+                    'account_status'    => 'verified',
+                    'email_verified_at' => now(),
+                ]);
+            } else {
+                $studentUser->update([
+                    'role'           => 'student',
+                    'account_status' => 'verified',
+                ]);
+            }
+
             return Student::create([
-                'user_id' => $applicant->user_id,
+                'user_id' => $studentUser->id,
                 'enrollment_applicant_id' => $applicant->id,
                 'student_number' => $studentNumber,
                 'school_email' => $schoolEmail,

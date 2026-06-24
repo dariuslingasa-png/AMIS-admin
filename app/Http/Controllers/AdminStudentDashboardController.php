@@ -128,39 +128,23 @@ class AdminStudentDashboardController extends Controller
     {
         $grade = urldecode($grade);
 
-        $sections = Section::with(['students.student.applicant', 'activeAdvisory'])
-            ->where('grade_level', $grade)
+        $students = Student::where('grade_level', $grade)
+            ->whereHas('studentSection')
+            ->with(['applicant'])
             ->get()
-            ->map(function ($section) {
-                $sortedStudents = $section->students->sortBy(function ($studentSection) {
-                    $applicant = $studentSection->student?->applicant;
-                    $lastName = strtoupper(trim($applicant?->last_name ?? ''));
-                    $firstName = strtoupper(trim($applicant?->first_name ?? ''));
-                    return $lastName . ' ' . $firstName;
-                });
-                $section->setRelation('students', $sortedStudents);
-
-                $isF2f = str_contains(strtolower((string) $section->learning_mode), 'face') ||
-                         str_contains(strtolower((string) $section->learning_mode), 'f2f') ||
-                         strtoupper((string) $section->shift) === 'F2F';
-                $section->is_f2f = $isF2f;
-                $section->capacity_limit = $isF2f ? 30 : 45;
-                $section->occupied = $section->students->count();
-                $section->remaining = max(0, $section->capacity_limit - $section->occupied);
-                $section->fill_rate = $section->capacity_limit > 0 ? min(100, round(($section->occupied / $section->capacity_limit) * 100)) : 0;
-                
-                $advisor = $section->grade_advisor;
-                $section->advisor_name = $advisor ? ($advisor->teacher_name ?? $advisor->teacher?->name ?? 'No Advisor') : 'No Advisor';
-                $section->advisor_email = $advisor ? ($advisor->teacher_email ?? $advisor->teacher?->email ?? null) : null;
-                
-                return $section;
+            ->sortBy(function ($student) {
+                $applicant = $student->applicant;
+                $lastName = strtoupper(trim($applicant?->last_name ?? ''));
+                $firstName = strtoupper(trim($applicant?->first_name ?? ''));
+                $middleName = strtoupper(trim($applicant?->middle_name ?? ''));
+                return $lastName . ' ' . $firstName . ' ' . $middleName;
             });
 
-        if ($sections->isEmpty()) {
-            abort(404, 'No sections found for this grade level.');
+        if ($students->isEmpty()) {
+            abort(404, 'No enrolled students found for this grade level.');
         }
 
-        return view('admin.students.grade-roster-print', compact('sections', 'grade'));
+        return view('admin.students.grade-roster-print', compact('students', 'grade'));
     }
 
     public function occupancy(Request $request)
@@ -203,5 +187,85 @@ class AdminStudentDashboardController extends Controller
         $totalOfficial = Student::whereHas('user', fn($q) => $q->where('account_status', 'verified'))->count();
 
         return view('admin.students.occupancy', compact('sectionsGrouped', 'sections', 'totalOfficial'));
+    }
+
+    public function reports(Request $request)
+    {
+        $gradeOrder = ['Kinder 1', 'Kinder 2', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'];
+
+        $students = Student::whereHas('studentSection')
+            ->with(['applicant'])
+            ->get();
+
+        $studentsGrouped = $students->groupBy('grade_level');
+
+        $grades = collect($gradeOrder)->map(function ($gradeLevel) use ($studentsGrouped) {
+            $gradeStudents = $studentsGrouped->get($gradeLevel, collect());
+            $enrolledCount = $gradeStudents->count();
+            
+            $withLrn = $gradeStudents->filter(function($s) {
+                $lrn = strtoupper(trim($s->applicant?->lrn ?? ''));
+                return !empty($lrn) && $lrn !== 'NA' && $lrn !== 'N/A' && $lrn !== 'MISSING LRN' && $lrn !== 'NA - MISSING LRN';
+            })->count();
+            $withoutLrn = $enrolledCount - $withLrn;
+
+            return [
+                'grade_level' => $gradeLevel,
+                'enrolled_count' => $enrolledCount,
+                'with_lrn' => $withLrn,
+                'without_lrn' => $withoutLrn,
+            ];
+        });
+
+        $totalOfficial = Student::whereHas('user', fn($q) => $q->where('account_status', 'verified'))->count();
+        $totalEnrolled = $students->count();
+        $totalWithLrn = $students->filter(function($s) {
+            $lrn = strtoupper(trim($s->applicant?->lrn ?? ''));
+            return !empty($lrn) && $lrn !== 'NA' && $lrn !== 'N/A' && $lrn !== 'MISSING LRN' && $lrn !== 'NA - MISSING LRN';
+        })->count();
+        $totalWithoutLrn = $totalEnrolled - $totalWithLrn;
+
+        $stats = [
+            'total_official' => $totalOfficial,
+            'total_enrolled' => $totalEnrolled,
+            'total_with_lrn' => $totalWithLrn,
+            'total_without_lrn' => $totalWithoutLrn,
+        ];
+
+        return view('admin.students.reports', compact('grades', 'stats'));
+    }
+
+    public function printAllRosters(Request $request)
+    {
+        $gradeOrder = ['Kinder 1', 'Kinder 2', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'];
+
+        $students = Student::whereHas('studentSection')
+            ->with(['applicant'])
+            ->get();
+
+        $studentsGrouped = $students->groupBy('grade_level');
+
+        $gradesData = collect($gradeOrder)->mapWithKeys(function ($gradeLevel) use ($studentsGrouped) {
+            $gradeStudents = $studentsGrouped->get($gradeLevel, collect());
+            if ($gradeStudents->isEmpty()) {
+                return [];
+            }
+            
+            $sortedStudents = $gradeStudents->sortBy(function ($student) {
+                $applicant = $student->applicant;
+                $lastName = html_entity_decode(strtoupper(trim($applicant?->last_name ?? '')), ENT_QUOTES, 'UTF-8');
+                $firstName = html_entity_decode(strtoupper(trim($applicant?->first_name ?? '')), ENT_QUOTES, 'UTF-8');
+                $middleName = html_entity_decode(strtoupper(trim($applicant?->middle_name ?? '')), ENT_QUOTES, 'UTF-8');
+                return $lastName . ' ' . $firstName . ' ' . $middleName;
+            });
+
+            return [$gradeLevel => $sortedStudents];
+        });
+
+        if ($gradesData->isEmpty()) {
+            abort(404, 'No enrolled students found in any grade level.');
+        }
+
+        return view('admin.students.all-roster-print', compact('gradesData'));
     }
 }

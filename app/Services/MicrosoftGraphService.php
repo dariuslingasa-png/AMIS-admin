@@ -233,6 +233,32 @@ class MicrosoftGraphService
     }
 
     /**
+     * Fetch a user object from Microsoft Graph by UPN or object ID.
+     *
+     * @param  string  $upnOrId  The user principal name or Azure AD object ID.
+     * @param  array   $select   Optional list of properties to select (e.g. ['id', 'displayName']).
+     * @return array   The user object from MS Graph.
+     *
+     * @throws \Exception if the request fails.
+     */
+    public function getUser(string $upnOrId, array $select = []): array
+    {
+        $url = '/users/' . urlencode($upnOrId);
+
+        if (! empty($select)) {
+            $url .= '?$select=' . implode(',', $select);
+        }
+
+        $response = $this->graph()->get($url);
+
+        if (! $response->successful()) {
+            throw new \Exception("Failed to fetch Microsoft user {$upnOrId}: " . $response->body());
+        }
+
+        return $response->json();
+    }
+
+    /**
      * Add admin as owner to a specific team.
      */
     public function addAdminAsTeamOwner(string $teamId): void
@@ -796,6 +822,34 @@ class MicrosoftGraphService
         return $response->json('value', []);
     }
 
+    /**
+     * List all members of a Team.
+     */
+    public function listTeamMembers(string $teamId): array
+    {
+        $response = $this->graph()->get("/teams/{$teamId}/members");
+
+        if (! $response->successful()) {
+            Log::error('Graph listTeamMembers error', ['status' => $response->status(), 'body' => $response->body()]);
+            throw new \Exception('Failed to list team members: '.$response->body());
+        }
+
+        return $response->json('value', []);
+    }
+
+    /**
+     * Remove a member from a Team.
+     */
+    public function removeTeamMember(string $teamId, string $membershipId): void
+    {
+        $response = $this->graph()->delete("/teams/{$teamId}/members/{$membershipId}");
+
+        if (! $response->successful() && $response->status() !== 404) {
+            Log::error('Graph removeTeamMember error', ['status' => $response->status(), 'body' => $response->body()]);
+            throw new \Exception('Failed to remove team member: '.$response->body());
+        }
+    }
+
     // ── Team Membership ───────────────────────────────────────────────
 
     /**
@@ -1052,5 +1106,46 @@ class MicrosoftGraphService
         }
 
         return $response->json('responses') ?? [];
+    }
+
+    /**
+     * List all members of a channel.
+     */
+    public function listChannelMembers(string $teamId, string $channelId): array
+    {
+        $response = $this->graph()->get("/teams/{$teamId}/channels/{$channelId}/members");
+
+        if (!$response->successful()) {
+            Log::error('Graph listChannelMembers error', $response->json());
+            throw new \Exception('Failed to list channel members: ' . $response->body());
+        }
+
+        return $response->json('value', []);
+    }
+
+    /**
+     * Remove a member from a channel.
+     */
+    public function removeChannelMember(string $teamId, string $channelId, string $membershipId): void
+    {
+        $response = $this->graph()->delete("/teams/{$teamId}/channels/{$channelId}/members/{$membershipId}");
+
+        if (!$response->successful() && $response->status() !== 404) {
+            Log::error('Graph removeChannelMember error', $response->json());
+            throw new \Exception('Failed to remove channel member: ' . $response->body());
+        }
+    }
+
+    /**
+     * Delete a channel.
+     */
+    public function deleteChannel(string $teamId, string $channelId): void
+    {
+        $response = $this->graph()->delete("/teams/{$teamId}/channels/{$channelId}");
+
+        if (!$response->successful() && $response->status() !== 404) {
+            Log::error('Graph deleteChannel error', $response->json());
+            throw new \Exception('Failed to delete channel: ' . $response->body());
+        }
     }
 }
