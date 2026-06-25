@@ -226,6 +226,7 @@ class AdminSupportTicketController extends Controller
             'Enrollment Concern',
             'Payment Concern',
             'Microsoft Account Issue',
+            'Document Request',
             'General Inquiry'
         ];
 
@@ -248,6 +249,7 @@ class AdminSupportTicketController extends Controller
             'Enrollment Concern',
             'Payment Concern',
             'Microsoft Account Issue',
+            'Document Request',
             'General Inquiry'
         ];
 
