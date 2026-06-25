@@ -97,8 +97,19 @@ class FacebookBotController extends Controller
 
         // Handle inquiries or inquiries payload
         if ($normalizedText === 'inquiries_coming_soon' || $normalizedText === 'inquiries' || $normalizedText === 'inquiries (coming soon)' || str_contains($normalizedText, 'inquiry')) {
-            $this->sendMessage($senderPsid, "The Inquiries feature is coming soon! 🚀\n\nFor now, please choose 'Enrollment Status' to check student enrollment status.");
-            $this->sendMainMenu($senderPsid);
+            $buttons = [
+                [
+                    'type' => 'web_url',
+                    'title' => 'Go to Support Portal',
+                    'url' => 'https://support.amis.edu.ph'
+                ],
+                [
+                    'type' => 'postback',
+                    'title' => 'Back to Menu',
+                    'payload' => 'GET_STARTED'
+                ]
+            ];
+            $this->sendButtonMessage($senderPsid, "Need help or have inquiries? 🚀\n\nYou can submit a support ticket directly through our new AMIS Support Portal! Click the button below to proceed:", $buttons);
             return;
         }
 
@@ -122,12 +133,12 @@ class FacebookBotController extends Controller
             ];
             Cache::put($sessionKey, $session, now()->addMinutes(15));
 
-            $buttons = [
-                ['type' => 'postback', 'title' => 'NEW', 'payload' => 'ENROLLMENT_STUDENT_NEW'],
-                ['type' => 'postback', 'title' => 'OLD', 'payload' => 'ENROLLMENT_STUDENT_OLD'],
-                ['type' => 'postback', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+            $quickReplies = [
+                ['content_type' => 'text', 'title' => '🆕 New Student', 'payload' => 'ENROLLMENT_STUDENT_NEW'],
+                ['content_type' => 'text', 'title' => '🔄 Old Student', 'payload' => 'ENROLLMENT_STUDENT_OLD'],
+                ['content_type' => 'text', 'title' => '🏠 Main Menu',  'payload' => 'GET_STARTED'],
             ];
-            $this->sendButtonMessage($senderPsid, "Are you an Old or New student?", $buttons);
+            $this->sendMessageWithQuickReplies($senderPsid, "📋 Let's try again. Are you a New or Old student?", $quickReplies);
             return;
         }
 
@@ -139,12 +150,12 @@ class FacebookBotController extends Controller
             ];
             Cache::put($sessionKey, $session, now()->addMinutes(15));
 
-            $buttons = [
-                ['type' => 'postback', 'title' => 'NEW', 'payload' => 'CREDENTIALS_STUDENT_NEW'],
-                ['type' => 'postback', 'title' => 'OLD', 'payload' => 'CREDENTIALS_STUDENT_OLD'],
-                ['type' => 'postback', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+            $quickReplies = [
+                ['content_type' => 'text', 'title' => '🆕 New Student', 'payload' => 'CREDENTIALS_STUDENT_NEW'],
+                ['content_type' => 'text', 'title' => '🔄 Old Student', 'payload' => 'CREDENTIALS_STUDENT_OLD'],
+                ['content_type' => 'text', 'title' => '🏠 Main Menu',  'payload' => 'GET_STARTED'],
             ];
-            $this->sendButtonMessage($senderPsid, "🔐 Resend Credentials\nNote: use your only official AMIS email @amis.edu.ph\n\nAre you an Old or New student?", $buttons);
+            $this->sendMessageWithQuickReplies($senderPsid, "🔐 Let's try again. Are you a New or Old student?", $quickReplies);
             return;
         }
 
@@ -157,12 +168,12 @@ class FacebookBotController extends Controller
             ];
             Cache::put($sessionKey, $session, now()->addMinutes(15));
 
-            $buttons = [
-                ['type' => 'postback', 'title' => 'NEW', 'payload' => 'ENROLLMENT_STUDENT_NEW'],
-                ['type' => 'postback', 'title' => 'OLD', 'payload' => 'ENROLLMENT_STUDENT_OLD'],
-                ['type' => 'postback', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+            $quickReplies = [
+                ['content_type' => 'text', 'title' => '🆕 New Student',  'payload' => 'ENROLLMENT_STUDENT_NEW'],
+                ['content_type' => 'text', 'title' => '🔄 Old Student',  'payload' => 'ENROLLMENT_STUDENT_OLD'],
+                ['content_type' => 'text', 'title' => '🏠 Main Menu',   'payload' => 'GET_STARTED'],
             ];
-            $this->sendButtonMessage($senderPsid, "Are you an Old or New student?", $buttons);
+            $this->sendMessageWithQuickReplies($senderPsid, "📋 Enrollment Status Check\n\nAre you a New or Old student?", $quickReplies);
             return;
         }
 
@@ -175,12 +186,12 @@ class FacebookBotController extends Controller
             ];
             Cache::put($sessionKey, $session, now()->addMinutes(15));
 
-            $buttons = [
-                ['type' => 'postback', 'title' => 'NEW', 'payload' => 'CREDENTIALS_STUDENT_NEW'],
-                ['type' => 'postback', 'title' => 'OLD', 'payload' => 'CREDENTIALS_STUDENT_OLD'],
-                ['type' => 'postback', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+            $quickReplies = [
+                ['content_type' => 'text', 'title' => '🆕 New Student', 'payload' => 'CREDENTIALS_STUDENT_NEW'],
+                ['content_type' => 'text', 'title' => '🔄 Old Student', 'payload' => 'CREDENTIALS_STUDENT_OLD'],
+                ['content_type' => 'text', 'title' => '🏠 Main Menu',  'payload' => 'GET_STARTED'],
             ];
-            $this->sendButtonMessage($senderPsid, "🔐 Resend Credentials\nNote: use your only official AMIS email @amis.edu.ph\n\nAre you an Old or New student?", $buttons);
+            $this->sendMessageWithQuickReplies($senderPsid, "🔐 Resend M365 Credentials\n\nNote: This will resend your official AMIS @amis.edu.ph email credentials.\n\nAre you a New or Old student?", $quickReplies);
             return;
         }
 
@@ -273,9 +284,17 @@ class FacebookBotController extends Controller
                 Cache::put($sessionKey, $session, now()->addMinutes(15));
 
                 $quickReplies = [
-                    ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+                    ['content_type' => 'text', 'title' => 'Kinder 1',  'payload' => 'Kinder 1'],
+                    ['content_type' => 'text', 'title' => 'Kinder 2',  'payload' => 'Kinder 2'],
+                    ['content_type' => 'text', 'title' => 'Grade 1',   'payload' => 'Grade 1'],
+                    ['content_type' => 'text', 'title' => 'Grade 2',   'payload' => 'Grade 2'],
+                    ['content_type' => 'text', 'title' => 'Grade 3',   'payload' => 'Grade 3'],
+                    ['content_type' => 'text', 'title' => 'Grade 4',   'payload' => 'Grade 4'],
+                    ['content_type' => 'text', 'title' => 'Grade 5',   'payload' => 'Grade 5'],
+                    ['content_type' => 'text', 'title' => 'Grade 6',   'payload' => 'Grade 6'],
+                    ['content_type' => 'text', 'title' => '🏠 Menu',   'payload' => 'GET_STARTED'],
                 ];
-                $this->sendMessageWithQuickReplies($senderPsid, "What is the GRADE LEVEL applied for? (e.g., Grade 1, Grade 5, Kinder)", $quickReplies);
+                $this->sendMessageWithQuickReplies($senderPsid, "📚 What GRADE LEVEL did the student apply for?\n(Tap below or type e.g. Grade 7, Grade 11)", $quickReplies);
                 break;
 
             case 3:
@@ -879,25 +898,50 @@ class FacebookBotController extends Controller
      */
     private function sendMainMenu($recipientPsid)
     {
-        $buttons = [
+        // Greeting text first
+        $this->sendMessage($recipientPsid, "Assalamualaikum! 👋 Welcome to the AMIS Support Bot.\nHow may I help you today?");
+
+        // Generic Template carousel — 3 cards
+        $elements = [
             [
-                'type' => 'postback',
-                'title' => '📝 Enrollment Status',
-                'payload' => 'CHECK_ENROLLMENT_STATUS'
+                'title'     => '📋 Enrollment Status',
+                'subtitle'  => 'Check if your child\'s enrollment has been approved.',
+                'image_url' => 'https://admin.amis.edu.ph/images/AMIS_Logo.png',
+                'buttons'   => [
+                    [
+                        'type'    => 'postback',
+                        'title'   => 'Check Status',
+                        'payload' => 'CHECK_ENROLLMENT_STATUS',
+                    ],
+                ],
             ],
             [
-                'type' => 'postback',
-                'title' => '🔐 Resend Credentials',
-                'payload' => 'RESEND_CREDENTIALS'
+                'title'     => '🔐 Resend Credentials',
+                'subtitle'  => 'Get your Microsoft 365 school email & password.',
+                'image_url' => 'https://admin.amis.edu.ph/images/AMIS_Logo.png',
+                'buttons'   => [
+                    [
+                        'type'    => 'postback',
+                        'title'   => 'Resend Credentials',
+                        'payload' => 'RESEND_CREDENTIALS',
+                    ],
+                ],
             ],
             [
-                'type' => 'postback',
-                'title' => '💬 Inquiries',
-                'payload' => 'INQUIRIES_COMING_SOON'
-            ]
+                'title'     => '💬 Inquiries & Support',
+                'subtitle'  => 'Submit a ticket for login issues, documents, and more.',
+                'image_url' => 'https://admin.amis.edu.ph/images/AMIS_Logo.png',
+                'buttons'   => [
+                    [
+                        'type' => 'web_url',
+                        'title' => 'Open Support Portal',
+                        'url'  => 'https://support.amis.edu.ph',
+                    ],
+                ],
+            ],
         ];
 
-        $this->sendButtonMessage($recipientPsid, "Assalamualaikum AMIS-ian! 👋\n\nHow may I help you today? 😊", $buttons);
+        $this->sendCarouselMessage($recipientPsid, $elements);
     }
 
     /**
@@ -1043,7 +1087,7 @@ class FacebookBotController extends Controller
                     'payload' => 'RESEND_CREDENTIALS'
                 ],
                 [
-                    'question' => 'Inquiries (COMING SOON)',
+                    'question' => 'Inquiries & Concerns',
                     'payload' => 'INQUIRIES_COMING_SOON'
                 ]
             ]
