@@ -786,9 +786,16 @@ class EnrollmentApprovalService
 
     private function onboardingMailer(): string
     {
+        $mailers = config('mail.mailers', []);
+
+        // Prefer the dedicated inquiries@amis.edu.ph mailer if its password is set
+        if (array_key_exists('inquiries', $mailers) && filled(env('MAIL_INQUIRIES_PASSWORD'))) {
+            return 'inquiries';
+        }
+
         $default = (string) config('mail.default', 'log');
 
-        if (in_array($default, ['log', 'array'], true) && array_key_exists('sendmail', config('mail.mailers', []))) {
+        if (in_array($default, ['log', 'array'], true) && array_key_exists('sendmail', $mailers)) {
             return 'sendmail';
         }
 

@@ -24,6 +24,7 @@ class EnrollmentOnboardingMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
+            from: new \Illuminate\Mail\Mailables\Address('inquiries@amis.edu.ph', 'AMIS Admissions'),
             subject: 'AMIS Enrollment Approved for '.$this->studentName(),
         );
     }

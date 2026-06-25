@@ -73,6 +73,18 @@ return [
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
         ],
 
+        // inquiries@amis.edu.ph — used for approval/onboarding emails
+        'inquiries' => [
+            'transport' => 'smtp',
+            'scheme' => env('MAIL_INQUIRIES_SCHEME', env('MAIL_SCHEME', 'ssl')),
+            'host' => env('MAIL_INQUIRIES_HOST', env('MAIL_HOST', 'mail.amis.edu.ph')),
+            'port' => env('MAIL_INQUIRIES_PORT', env('MAIL_PORT', 465)),
+            'username' => env('MAIL_INQUIRIES_USERNAME', 'inquiries@amis.edu.ph'),
+            'password' => env('MAIL_INQUIRIES_PASSWORD'),
+            'timeout' => null,
+            'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
+        ],
+
         'ses' => [
             'transport' => 'ses',
         ],
