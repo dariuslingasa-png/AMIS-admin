@@ -71,7 +71,7 @@ class TeacherDirectoryService
 
         $teacher['photo'] = $request->hasFile('photo') ? $this->storePhoto($request, $id) : ($existing['photo'] ?? null);
         $teacher['password_changed'] = $existing['password_changed'] ?? 'No';
-        $teacher['subjects'] = $this->cleanSubjects($existing['subjects'] ?? []);
+        $teacher['subjects'] = collect($existing['subjects'] ?? [])->filter()->unique()->values()->all();
 
         if ($oldEmail && strtolower($oldEmail) !== strtolower($teacher['email'])) {
             $teacher['password_changed'] = 'No';
