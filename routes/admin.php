@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\AdministrationController;
 use App\Http\Controllers\Admin\AccessControlController;
 use App\Http\Controllers\Admin\SecurityWorkspaceController;
 use App\Http\Controllers\Admin\SystemManagementController;
+use App\Http\Controllers\Admin\AdminSupportTicketController;
 use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\AdminClassScheduleController;
 use App\Http\Controllers\AdminDiscountSettingsController;
@@ -273,6 +274,14 @@ Route::name('admin.')->group(function () {
             Route::post('/{section}/subjects', [AdminMsTeamsController::class, 'storeSubject'])->name('subjects.store');
             Route::post('/{section}/retry-team', [AdminMsTeamsController::class, 'retryTeam'])->name('retry-team');
             Route::post('/{section}/sync-advisor', [AdminMsTeamsController::class, 'syncAdvisor'])->name('sync-advisor');
+        });
+        Route::prefix('support')->name('support.')->group(function () {
+            Route::get('/', [AdminSupportTicketController::class, 'index'])->name('index');
+            Route::get('/settings', [AdminSupportTicketController::class, 'settings'])->name('settings');
+            Route::post('/settings', [AdminSupportTicketController::class, 'saveSettings'])->name('settings.save');
+            Route::get('/screenshot', [AdminSupportTicketController::class, 'viewScreenshot'])->name('screenshot');
+            Route::get('/{ticket}', [AdminSupportTicketController::class, 'show'])->name('show');
+            Route::patch('/{ticket}/status', [AdminSupportTicketController::class, 'updateStatus'])->name('status');
         });
     });
 });
