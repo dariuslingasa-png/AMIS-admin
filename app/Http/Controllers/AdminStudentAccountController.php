@@ -57,7 +57,7 @@ class AdminStudentAccountController extends Controller
                     ->patch("https://graph.microsoft.com/v1.0/users/{$student->school_email}", [
                         'passwordProfile' => [
                             'password'                      => $tempPassword,
-                            'forceChangePasswordNextSignIn' => true,
+                            'forceChangePasswordNextSignIn' => false,
                         ],
                     ]);
 
