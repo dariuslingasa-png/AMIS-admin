@@ -12,11 +12,80 @@ use Illuminate\Support\Str;
 
 class AdminStudentAccountController extends Controller
 {
-    public function resendCredentials(Student $student)
+    public function resendCredentials(Student $student, Request $request)
     {
         $applicant = $student->applicant;
+        $resetFormat = $request->input('reset_format', 'none');
 
         $tempPassword = $student->temp_password;
+        $isReset = false;
+
+        if ($resetFormat === 'birthdate') {
+            $dob = $applicant->date_of_birth;
+            if ($dob) {
+                $ts = strtotime((string) $dob);
+                if ($ts !== false) {
+                    $tempPassword = strtolower(date('M', $ts)) . date('d', $ts) . date('Y', $ts);
+                } else {
+                    $tempPassword = 'amis' . rand(1000, 9999);
+                }
+            } else {
+                $tempPassword = 'amis' . rand(1000, 9999);
+            }
+            $isReset = true;
+        } elseif ($resetFormat === 'name') {
+            $firstGivenName = preg_split('/\s+/', trim((string) $applicant->first_name))[0] ?? '';
+            $firstNameClean = preg_replace('/[^a-zA-Z]/', '', $firstGivenName);
+            $lastNameClean = preg_replace('/[^a-zA-Z]/', '', (string) $applicant->last_name);
+            $firstLetter = strtolower(substr($firstNameClean, 0, 1));
+            $tempPassword = $firstLetter . strtolower($lastNameClean);
+            $isReset = true;
+        }
+
+        if ($isReset) {
+            $student->update([
+                'temp_password'       => $tempPassword,
+                'password_changed_at' => null,
+                'credentials_sent_at' => now(),
+            ]);
+
+            $msError = null;
+            try {
+                $graph = new MicrosoftGraphService();
+                $token = (new \ReflectionMethod($graph, 'getAccessToken'))->invoke($graph);
+                $response = Http::withToken($token)
+                    ->patch("https://graph.microsoft.com/v1.0/users/{$student->school_email}", [
+                        'passwordProfile' => [
+                            'password'                      => $tempPassword,
+                            'forceChangePasswordNextSignIn' => true,
+                        ],
+                    ]);
+
+                if ($response->failed()) {
+                    $msError = $response->json()['error']['message'] ?? 'Microsoft API returned an error.';
+                } else {
+                    \App\Models\AdminAuditLog::record('password_reset_resend', true, "Manually reset Microsoft password for {$student->school_email} using {$resetFormat} format", [
+                        'email' => $student->school_email,
+                        'reset_format' => $resetFormat,
+                    ]);
+                }
+            } catch (\Exception $e) {
+                $msError = $e->getMessage();
+                Log::error('Failed to reset Microsoft password during manual admin reset: ' . $msError);
+            }
+
+            $parentEmail = $applicant->parent_email ?: $applicant->email;
+            if ($parentEmail && $parentEmail !== 'NA') {
+                $this->sendCredentialsEmail($applicant, $student, $tempPassword);
+            }
+
+            if ($msError) {
+                return back()->with('success', 'Password reset locally and email sent, but Microsoft sync failed: ' . $msError);
+            }
+
+            return back()->with('success', 'Password reset to ' . $resetFormat . ' format and credentials resent to ' . ($parentEmail ?? 'parent') . '.');
+        }
+
         $isHashed = str_starts_with($tempPassword ?? '', '$');
         
         if (blank($tempPassword) || $isHashed) {

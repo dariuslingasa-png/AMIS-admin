@@ -90,14 +90,42 @@
                 </div>
             </form>
 
-            <!-- Resend credentials form -->
-            <form method="POST" action="{{ route('admin.students.resend', $student) }}">
-                @csrf
-                <button type="submit" class="w-full inline-flex h-11 items-center justify-center gap-2.5 rounded-xl bg-amber-500 px-4 text-sm font-bold text-white hover:bg-amber-600 active:scale-[0.98] transition-all duration-200 cursor-pointer">
-                    <i data-lucide="key" class="h-4 w-4"></i>
-                    <span>Resend Credentials</span>
-                </button>
-            </form>
+            <!-- Credentials Actions -->
+            <div class="border-t border-slate-100 pt-4 mt-4 dark:border-slate-800 space-y-2">
+                <label class="block text-xxs font-extrabold uppercase tracking-wider text-slate-400">Credentials & Password Workspace</label>
+                
+                <!-- Resend Current Credentials -->
+                <form method="POST" action="{{ route('admin.students.resend', $student) }}">
+                    @csrf
+                    <input type="hidden" name="reset_format" value="none">
+                    <button type="submit" class="w-full inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 px-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98] transition-all duration-200 cursor-pointer">
+                        <i data-lucide="mail" class="h-3.5 w-3.5"></i>
+                        <span>Email Current Credentials</span>
+                    </button>
+                </form>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <!-- Reset using Birthdate -->
+                    <form method="POST" action="{{ route('admin.students.resend', $student) }}">
+                        @csrf
+                        <input type="hidden" name="reset_format" value="birthdate">
+                        <button type="submit" class="w-full inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-amber-500 px-2 text-[10px] font-extrabold text-white hover:bg-amber-600 active:scale-[0.98] transition-all duration-200 cursor-pointer" title="Reset password to birthdate format (e.g. aug292004)">
+                            <i data-lucide="calendar" class="h-3.5 w-3.5"></i>
+                            <span>Reset to Birthdate</span>
+                        </button>
+                    </form>
+
+                    <!-- Reset using Name -->
+                    <form method="POST" action="{{ route('admin.students.resend', $student) }}">
+                        @csrf
+                        <input type="hidden" name="reset_format" value="name">
+                        <button type="submit" class="w-full inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-amber-600 px-2 text-[10px] font-extrabold text-white hover:bg-amber-700 active:scale-[0.98] transition-all duration-200 cursor-pointer" title="Reset password to name format (e.g. mlingasa)">
+                            <i data-lucide="user" class="h-3.5 w-3.5"></i>
+                            <span>Reset to Name</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
 
             <!-- Force Teams & License Sync -->
             @if($student->ms_user_id)
