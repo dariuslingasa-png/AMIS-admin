@@ -16,25 +16,16 @@ class AdminStudentAccountController extends Controller
     {
         $applicant = $student->applicant;
 
-        $tempPassword = 'Amis@' . strtoupper(Str::random(5)) . rand(10, 99);
+        $tempPassword = $student->temp_password;
+        $isHashed = str_starts_with($tempPassword ?? '', '$');
+        
+        if (blank($tempPassword) || $isHashed) {
+            $tempPassword = '(Already changed / set by student)';
+        }
+
         $student->update([
-            'temp_password'       => $tempPassword,
             'credentials_sent_at' => now(),
         ]);
-
-        try {
-            $graph = new MicrosoftGraphService();
-            $token = (new \ReflectionMethod($graph, 'getAccessToken'))->invoke($graph);
-            Http::withToken($token)
-                ->patch("https://graph.microsoft.com/v1.0/users/{$student->school_email}", [
-                    'passwordProfile' => [
-                        'password'                      => $tempPassword,
-                        'forceChangePasswordNextSignIn' => true,
-                    ],
-                ]);
-        } catch (\Exception $e) {
-            Log::error('Failed to reset Microsoft password: ' . $e->getMessage());
-        }
 
         $parentEmail = $applicant->parent_email ?: $applicant->email;
         if ($parentEmail && $parentEmail !== 'NA') {
