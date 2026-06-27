@@ -57,14 +57,17 @@ class StudentAuthService
         if ($student->temp_password) {
             $isHashed = str_starts_with($student->temp_password, '$');
             if ($isHashed && Hash::check($password, $student->temp_password)) {
+                $student->update(['last_login_at' => now()]);
                 return AuthAttemptResult::success($user);
             }
             if (!$isHashed && $password === $student->temp_password) {
+                $student->update(['last_login_at' => now()]);
                 return AuthAttemptResult::success($user);
             }
         }
 
         if (Hash::check($password, $user->password)) {
+            $student->update(['last_login_at' => now()]);
             return AuthAttemptResult::success($user);
         }
 
@@ -143,6 +146,11 @@ class StudentAuthService
                 'login_id',
                 'Your student account is currently disabled. Please contact administration.'
             );
+        }
+
+        $student = Student::where('user_id', $user->id)->first();
+        if ($student) {
+            $student->update(['last_login_at' => now()]);
         }
 
         return AuthAttemptResult::success($user);
@@ -236,14 +244,52 @@ class StudentAuthService
             return MicrosoftLoginResult::denied($deniedMessage, $tenantId, $redirectUri);
         }
 
-        $user = User::where('email', $email)->first();
-        if (! $user || ! $this->isVerifiedStudentUser($user)) {
+        // Look up student record by school_email
+        $student = Student::with('applicant')->where('school_email', $email)->first();
+        if (! $student) {
             return MicrosoftLoginResult::denied($deniedMessage, $tenantId, $redirectUri);
         }
 
-        $student = Student::with('applicant')->where('user_id', $user->id)->first();
-        if (! $student || $student->applicant?->status !== 'approved') {
+        if ($student->applicant && $student->applicant->status !== 'approved') {
             return MicrosoftLoginResult::denied($deniedMessage, $tenantId, $redirectUri);
+        }
+
+        // Find or create a unique User record for this student UPN
+        $user = User::where('email', $email)->first();
+        if (! $user) {
+            $prefix = explode('@', $email)[0];
+            $username = $prefix;
+            if (User::where('username', $username)->exists()) {
+                $username = $prefix . '_' . $student->student_number;
+            }
+            $name = $student->applicant 
+                ? (trim(($student->applicant->first_name ?? '') . ' ' . ($student->applicant->last_name ?? '')))
+                : $student->student_number;
+
+            $user = User::create([
+                'name'              => $name ?: $prefix,
+                'email'             => $email,
+                'username'          => $username,
+                'password'          => Hash::make(Str::random(32)),
+                'role'              => UserRole::Student->value,
+                'account_status'    => AccountStatus::Verified->value,
+                'email_verified_at' => now(),
+            ]);
+        } else {
+            $user->update([
+                'role'           => UserRole::Student->value,
+                'account_status' => AccountStatus::Verified->value,
+            ]);
+        }
+
+        // Link student to this unique user account if not already linked
+        if ($student->user_id !== $user->id) {
+            $student->update([
+                'user_id' => $user->id,
+                'last_login_at' => now()
+            ]);
+        } else {
+            $student->update(['last_login_at' => now()]);
         }
 
         return MicrosoftLoginResult::success($user);
