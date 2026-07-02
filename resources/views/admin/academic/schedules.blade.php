@@ -237,6 +237,16 @@
         },
         getPreviewCellColspan(day, interval) {
             let daysList = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
+
+            // Helper: two cells are "mergeable" if same subject + same time slot
+            let isSameClass = (a, b) => {
+                if (!a || !b) return false;
+                if (a.id && b.id && a.id === b.id) return true;
+                return a.subject_name === b.subject_name &&
+                       a.start_time === b.start_time &&
+                       a.end_time === b.end_time;
+            };
+
             if (this.isDraftCell(day, interval)) {
                 let dayIndex = daysList.indexOf(day);
                 if (dayIndex > 0) {
@@ -260,18 +270,20 @@
             let cell = this.getClassCell(day, interval);
             if (cell) {
                 let dayIndex = daysList.indexOf(day);
+                // If previous day has the same class → this cell is part of a merge → hide it (return 0)
                 if (dayIndex > 0) {
                     let prevDay = daysList[dayIndex - 1];
                     let prevCell = this.getClassCell(prevDay, interval);
-                    if (prevCell && prevCell.id === cell.id) {
+                    if (isSameClass(prevCell, cell)) {
                         return 0;
                     }
                 }
+                // Count how many consecutive days share the same class → colspan
                 let colspan = 1;
                 for (let i = dayIndex + 1; i < 5; i++) {
                     let nextDay = daysList[i];
                     let nextCell = this.getClassCell(nextDay, interval);
-                    if (nextCell && nextCell.id === cell.id) {
+                    if (isSameClass(cell, nextCell)) {
                         colspan++;
                     } else {
                         break;
