@@ -40,18 +40,41 @@
             selected_days: []
         },
         openAddClass(sectionId) {
-            this.editForm = {
-                id: 0,
-                section_id: sectionId,
-                subject_name: '',
-                teacher_name: '',
-                day: '',
-                start_time: '',
-                end_time: '',
-                spans_all_days: false,
-                selected_days: []
-            };
+            let draftKey = 'schedule_draft_' + sectionId;
+            let saved = null;
+            try { saved = JSON.parse(localStorage.getItem(draftKey)); } catch(e) {}
+            if (saved && saved.section_id == sectionId) {
+                this.editForm = saved;
+            } else {
+                this.editForm = {
+                    id: 0,
+                    section_id: sectionId,
+                    subject_name: '',
+                    teacher_name: '',
+                    day: '',
+                    start_time: '',
+                    end_time: '',
+                    spans_all_days: false,
+                    selected_days: []
+                };
+            }
             this.addModal = true;
+        },
+        saveDraft() {
+            if (!this.editForm.section_id) return;
+            let draftKey = 'schedule_draft_' + this.editForm.section_id;
+            // Only save if there's something meaningful to preserve
+            if (this.editForm.subject_name || this.editForm.start_time) {
+                try { localStorage.setItem(draftKey, JSON.stringify(this.editForm)); } catch(e) {}
+            }
+        },
+        clearDraft(sectionId) {
+            let id = sectionId || this.editForm.section_id;
+            try { localStorage.removeItem('schedule_draft_' + id); } catch(e) {}
+        },
+        closeAddModal() {
+            this.saveDraft();
+            this.addModal = false;
         },
         toggleDaySelection(day) {
             if (this.editForm.selected_days.includes(day)) {

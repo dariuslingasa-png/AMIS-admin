@@ -36,21 +36,21 @@
                 <span class="admin-modal-title text-base font-extrabold text-slate-950">Schedule Class</span>
                 <div class="text-[11px] text-slate-400 font-light mt-0.5">Map a subject to a day and time slot.</div>
             </div>
-            <button type="button" class="text-slate-400 hover:text-slate-655 text-xl font-bold" @click="addModal = false">&times;</button>
+            <button type="button" class="text-slate-400 hover:text-slate-655 text-xl font-bold" @click="closeAddModal()">&times;</button>
         </div>
         @include('admin.academic.schedules._form-fields', ['prefix' => 'create'])
         <div class="admin-modal-footer flex justify-between gap-2 pt-3 border-t border-slate-50 mt-2">
-            <button type="button" class="px-4 py-2 text-xs font-bold text-slate-655 hover:bg-slate-50 border border-slate-200 rounded-xl transition cursor-pointer" @click="addModal = false">Cancel</button>
+            <button type="button" class="px-4 py-2 text-xs font-bold text-slate-655 hover:bg-slate-50 border border-slate-200 rounded-xl transition cursor-pointer" @click="closeAddModal()">Cancel</button>
             <div class="flex gap-2">
                 <button type="submit"
-                    @click="document.getElementById('add_another_flag').value = '1'"
+                    @click="clearDraft(); document.getElementById('add_another_flag').value = '1'; isSaving = true"
                     class="relative inline-flex min-w-[160px] items-center justify-center gap-1.5 px-4 py-2 text-xs font-bold text-indigo-700 bg-white border-2 border-indigo-200 hover:bg-indigo-50 hover:border-indigo-400 rounded-xl transition cursor-pointer"
                     :class="isSaving ? 'btn-loading opacity-60' : ''" :disabled="isSaving">
                     <span class="btn-spinner" x-show="isSaving"></span>
                     <span class="btn-text-content">+ Add Another Slot</span>
                 </button>
                 <button type="submit"
-                    @click="document.getElementById('add_another_flag').value = '0'"
+                    @click="clearDraft(); document.getElementById('add_another_flag').value = '0'; isSaving = true"
                     class="relative inline-flex min-w-[130px] items-center justify-center px-4 py-2 text-xs font-bold text-white bg-indigo-700 hover:bg-indigo-600 rounded-xl transition cursor-pointer"
                     :class="isSaving ? 'btn-loading' : ''" :disabled="isSaving">
                     <span class="btn-spinner" x-show="isSaving"></span>
