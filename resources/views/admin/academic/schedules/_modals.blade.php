@@ -5,8 +5,8 @@
 </datalist>
 
 <div class="admin-modal-overlay flex items-center justify-center fixed inset-0 z-50 bg-slate-950/40 backdrop-blur-xs p-4"
-     x-show="syncModal" x-cloak x-transition @click.self="syncModal = false">
-    <div class="admin-modal-card bg-white rounded-2xl shadow-xl w-full max-w-md p-6 flex flex-col gap-4 border border-slate-200">
+     x-show="syncModal" x-cloak x-transition>
+    <div class="admin-modal-card bg-white rounded-2xl shadow-xl w-full max-w-md p-8 flex flex-col gap-4 border border-slate-200">
         <div class="admin-modal-header border-b border-slate-100 pb-3 flex items-center justify-between">
             <span class="admin-modal-title text-base font-extrabold text-slate-950">Sync Microsoft Teams</span>
             <button type="button" class="text-slate-400 hover:text-slate-655 text-xl font-bold" @click="syncModal = false">&times;</button>
@@ -26,8 +26,8 @@
 </div>
 
 <div class="admin-modal-overlay flex items-center justify-center fixed inset-0 z-50 bg-slate-950/40 backdrop-blur-xs p-4"
-     x-show="addModal" x-cloak x-transition @click.self="addModal = false">
-    <form method="POST" action="{{ route('admin.academic.schedules.store') }}" class="admin-modal-card bg-white rounded-2xl shadow-xl w-full max-w-2xl p-6 flex flex-col gap-4 border border-slate-200" @submit="isSaving = true">
+     x-show="addModal" x-cloak x-transition>
+    <form method="POST" action="{{ route('admin.academic.schedules.store') }}" class="admin-modal-card bg-white rounded-2xl shadow-xl w-full max-w-2xl p-8 flex flex-col gap-4 border border-slate-200" @submit="isSaving = true">
         @csrf
         <input type="hidden" name="_schedule_form" value="create">
         <div class="admin-modal-header border-b border-slate-100 pb-3 flex items-center justify-between">
@@ -49,8 +49,8 @@
 </div>
 
 <div class="admin-modal-overlay flex items-center justify-center fixed inset-0 z-50 bg-slate-950/40 backdrop-blur-xs p-4"
-     x-show="editModal" x-cloak x-transition @click.self="editModal = false">
-    <form method="POST" :action="editAction" class="admin-modal-card bg-white rounded-2xl shadow-xl w-full max-w-2xl p-6 flex flex-col gap-4 border border-slate-200" @submit="isSaving = true">
+     x-show="editModal" x-cloak x-transition>
+    <form method="POST" :action="editAction" class="admin-modal-card bg-white rounded-2xl shadow-xl w-full max-w-2xl p-8 flex flex-col gap-4 border border-slate-200" @submit="isSaving = true">
         @csrf
         @method('PATCH')
         <input type="hidden" name="_schedule_form" value="edit">
@@ -74,8 +74,8 @@
 </div>
 
 <div class="admin-modal-overlay flex items-center justify-center fixed inset-0 z-50 bg-slate-950/40 backdrop-blur-xs p-4"
-     x-show="deleteModal" x-cloak x-transition @click.self="deleteModal = false">
-    <form method="POST" :action="deleteAction" class="admin-modal-card bg-white rounded-2xl shadow-xl w-full max-w-md p-6 flex flex-col gap-4 border border-slate-200" @submit="isDeleting = true">
+     x-show="deleteModal" x-cloak x-transition>
+    <form method="POST" :action="deleteAction" class="admin-modal-card bg-white rounded-2xl shadow-xl w-full max-w-md p-8 flex flex-col gap-4 border border-slate-200" @submit="isDeleting = true">
         @csrf
         @method('DELETE')
         <div class="admin-modal-header border-b border-slate-100 pb-3 flex items-center justify-between">

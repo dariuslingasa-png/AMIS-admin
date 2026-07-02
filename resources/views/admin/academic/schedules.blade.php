@@ -31,11 +31,11 @@
             section_id: 0,
             subject_name: '',
             teacher_name: '',
-            day: 'Sunday',
-            start_time: '08:00',
-            end_time: '09:00',
+            day: '',
+            start_time: '',
+            end_time: '',
             spans_all_days: false,
-            selected_days: ['Sunday']
+            selected_days: []
         },
         openAddClass(sectionId) {
             this.editForm = {
@@ -43,11 +43,11 @@
                 section_id: sectionId,
                 subject_name: '',
                 teacher_name: '',
-                day: 'Sunday',
-                start_time: '08:00',
-                end_time: '09:00',
+                day: '',
+                start_time: '',
+                end_time: '',
                 spans_all_days: false,
-                selected_days: ['Sunday']
+                selected_days: []
             };
             this.addModal = true;
         },
