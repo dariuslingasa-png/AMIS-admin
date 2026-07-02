@@ -53,13 +53,22 @@
             if (saved && saved.section_id == sectionId) {
                 this.editForm = saved;
             } else {
+                // Auto-fill start_time from the latest end_time of existing schedules
+                let existing = this.schedulesBySection[String(sectionId)] || [];
+                let latestEnd = '';
+                if (existing.length > 0) {
+                    let maxEnd = existing.reduce((max, s) => {
+                        return s.end_time > max ? s.end_time : max;
+                    }, '');
+                    latestEnd = maxEnd;
+                }
                 this.editForm = {
                     id: 0,
                     section_id: sectionId,
                     subject_name: '',
                     teacher_name: '',
                     day: '',
-                    start_time: '',
+                    start_time: latestEnd,
                     end_time: '',
                     spans_all_days: false,
                     selected_days: []
@@ -415,7 +424,16 @@
             this.isSyncing = true;
             setTimeout(() => { this.isSyncing = false; this.syncModal = false; }, 900);
         }
-    }">
+    }"
+    x-init="
+        if (addModal && editForm.section_id && !editForm.start_time) {
+            let existing = schedulesBySection[String(editForm.section_id)] || [];
+            if (existing.length > 0) {
+                let maxEnd = existing.reduce((max, s) => s.end_time > max ? s.end_time : max, '');
+                editForm.start_time = maxEnd;
+            }
+        }
+    ">
         <div class="academic-hero-banner">
             <div class="absolute right-0 top-0 -mt-4 -mr-4 w-56 h-56 rounded-full bg-indigo-500/15 blur-3xl"></div>
             <div class="absolute left-1/3 bottom-0 -mb-8 w-64 h-64 rounded-full bg-sky-500/10 blur-3xl"></div>
