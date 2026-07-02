@@ -21,23 +21,22 @@
                             <tr class="border-b border-slate-100 last:border-0">
                                 <td class="p-2 border-r border-slate-200 font-extrabold text-slate-500 text-center text-[8px]" x-text="interval.label"></td>
                                 <template x-for="d in ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday']">
-                                    <template x-if="getPreviewCellColspan(d, interval) > 0">
-                                        <td :colspan="getPreviewCellColspan(d, interval)"
-                                            class="p-2 border-r border-slate-100 last:border-0 text-center relative group min-h-[30px] cursor-pointer transition"
-                                            :class="getClassCellBg(d, interval)"
-                                            @click="clickPreviewCell(d, interval)">
-                                            
-                                            <!-- Show class name or draft -->
-                                            <span class="block truncate max-w-[150px] mx-auto text-[8.5px] font-bold"
-                                                  :title="isDraftCell(d, interval) ? 'Draft selection' : getClassCellTitle(d, interval)"
-                                                  x-text="isDraftCell(d, interval) ? (editForm.subject_name || 'Draft') : getClassCellSubject(d, interval)"></span>
-                                                  
-                                            <!-- Plus icon on hover -->
-                                            <template x-if="!hasClassCell(d, interval) && !isDraftCell(d, interval)">
-                                                <span class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 text-indigo-600 font-black text-[11px] bg-indigo-50/50">+</span>
-                                            </template>
-                                        </td>
-                                    </template>
+                                    <td x-show="getPreviewCellColspan(d, interval) > 0"
+                                        :colspan="getPreviewCellColspan(d, interval)"
+                                        class="p-2 border-r border-slate-100 last:border-0 text-center relative group min-h-[30px] cursor-pointer transition"
+                                        :class="getClassCellBg(d, interval)"
+                                        @click="clickPreviewCell(d, interval)">
+                                        
+                                        <!-- Show class name or draft -->
+                                        <span class="block truncate max-w-[150px] mx-auto text-[8.5px] font-bold"
+                                              :title="isDraftCell(d, interval) ? 'Draft selection' : getClassCellTitle(d, interval)"
+                                              x-text="isDraftCell(d, interval) ? (editForm.subject_name || 'Draft') : getClassCellSubject(d, interval)"></span>
+                                              
+                                        <!-- Plus icon on hover -->
+                                        <template x-if="!hasClassCell(d, interval) && !isDraftCell(d, interval)">
+                                            <span class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 text-indigo-600 font-black text-[11px] bg-indigo-50/50">+</span>
+                                        </template>
+                                    </td>
                                 </template>
                             </tr>
                         </template>

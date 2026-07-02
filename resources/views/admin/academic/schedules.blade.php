@@ -71,7 +71,7 @@
         formatTimeIntervalLabel(start, end) {
             let parseTime = (t) => {
                 let [h, m] = t.split(':').map(Number);
-                let ampm = h >= 12 ? 'p.m.' : 'a.m.';
+                let ampm = h >= 12 ? 'PM' : 'AM';
                 let displayH = h % 12 || 12;
                 return { displayH, mStr: String(m).padStart(2, '0'), ampm };
             };
@@ -95,8 +95,12 @@
                 let [sh, sm] = this.editForm.start_time.split(':').map(Number);
                 let [eh, em] = this.editForm.end_time.split(':').map(Number);
                 if (!isNaN(sh) && !isNaN(eh)) {
-                    boundaries.push(sh * 60 + sm);
-                    boundaries.push(eh * 60 + em);
+                    let draftStart = sh * 60 + sm;
+                    let draftEnd = eh * 60 + em;
+                    if (draftStart < draftEnd) {
+                        boundaries.push(draftStart);
+                        boundaries.push(draftEnd);
+                    }
                 }
             }
 
