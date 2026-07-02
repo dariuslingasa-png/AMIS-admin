@@ -22,6 +22,7 @@ class ClassScheduleRequest extends FormRequest
             'start_time' => ['required', 'date_format:H:i'],
             'end_time' => ['required', 'date_format:H:i'],
             'spans_all_days' => ['nullable', 'boolean'],
+            'mode' => ['nullable', 'string', 'in:f2f,online'],
         ];
     }
 }

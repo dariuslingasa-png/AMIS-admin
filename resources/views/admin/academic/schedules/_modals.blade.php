@@ -31,6 +31,7 @@
         @csrf
         <input type="hidden" name="_schedule_form" value="create">
         <input type="hidden" name="_add_another" id="add_another_flag" value="0">
+        <input type="hidden" name="mode" value="{{ $mode }}">
         <div class="admin-modal-header border-b border-slate-100 pb-3 flex items-center justify-between">
             <div>
                 <span class="admin-modal-title text-base font-extrabold text-slate-950">Schedule Class</span>
@@ -68,6 +69,7 @@
         @method('PATCH')
         <input type="hidden" name="_schedule_form" value="edit">
         <input type="hidden" name="schedule_id" x-model="editForm.id">
+        <input type="hidden" name="mode" value="{{ $mode }}">
         <div class="admin-modal-header border-b border-slate-100 pb-3 flex items-center justify-between">
             <div>
                 <span class="admin-modal-title text-base font-extrabold text-slate-950">Edit Schedule</span>
