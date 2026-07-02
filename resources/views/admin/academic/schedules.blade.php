@@ -10,13 +10,13 @@
     $clearDraftSection = session('clear_draft_section');
 @endphp
 
-@if($clearDraftSection)
-<script>
-    try { localStorage.removeItem('schedule_draft_{{ $clearDraftSection }}'); } catch(e) {}
-</script>
-@endif
 
 <x-admin-layout title="Class Management Workspace">
+    @if($clearDraftSection)
+    <script>
+        try { localStorage.removeItem('schedule_draft_{{ $clearDraftSection }}'); } catch(e) {}
+    </script>
+    @endif
     <div class="analytics-page flex flex-col gap-6" x-data="{
         activeWorkspace: 'schedule',
         activeSectionId: @js($activeSectionId),
@@ -270,7 +270,7 @@
             let cell = this.getClassCell(day, interval);
             if (cell) {
                 let dayIndex = daysList.indexOf(day);
-                // If previous day has the same class → this cell is part of a merge → hide it (return 0)
+                // If prev day has same class, this cell is part of a merge - hide it (return 0)
                 if (dayIndex > 0) {
                     let prevDay = daysList[dayIndex - 1];
                     let prevCell = this.getClassCell(prevDay, interval);
@@ -278,7 +278,7 @@
                         return 0;
                     }
                 }
-                // Count how many consecutive days share the same class → colspan
+                // Count how many consecutive days share the same class - colspan
                 let colspan = 1;
                 for (let i = dayIndex + 1; i < 5; i++) {
                     let nextDay = daysList[i];
