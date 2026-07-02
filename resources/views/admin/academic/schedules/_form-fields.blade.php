@@ -3,32 +3,34 @@
     <div class="md:col-span-3 space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-100 flex flex-col justify-between">
         <div>
             <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-2">Timetable Preview</span>
-            <div class="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-3xs">
+            
+            <!-- When there are intervals to show -->
+            <div x-show="getPreviewIntervals().length > 0" x-transition class="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-3xs">
                 <table class="w-full text-[9px] border-collapse">
                     <thead>
                         <tr class="bg-slate-100 border-b border-slate-200">
-                            <th class="p-2 border-r border-slate-200 font-extrabold text-slate-500 w-14 text-center">Time</th>
+                            <th class="p-2 border-r border-slate-200 font-extrabold text-slate-500 w-24 text-center">Time</th>
                             <template x-for="d in ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday']">
                                 <th class="p-2 border-r border-slate-200 font-black text-slate-700 text-center" x-text="d.substring(0,3)"></th>
                             </template>
                         </tr>
                     </thead>
                     <tbody>
-                        <template x-for="hour in [8, 9, 10, 11, 12, 13, 14, 15, 16]">
+                        <template x-for="interval in getPreviewIntervals()">
                             <tr class="border-b border-slate-100 last:border-0">
-                                <td class="p-2 border-r border-slate-200 font-bold text-slate-400 text-center" x-text="formatHourLabel(hour)"></td>
+                                <td class="p-2 border-r border-slate-200 font-extrabold text-slate-500 text-center text-[8px]" x-text="interval.label"></td>
                                 <template x-for="d in ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday']">
                                     <td class="p-2 border-r border-slate-100 last:border-0 text-center relative group min-h-[30px] cursor-pointer transition"
-                                        :class="getClassCellBg(d, hour)"
-                                        @click="clickPreviewCell(d, hour)">
+                                        :class="getClassCellBg(d, interval)"
+                                        @click="clickPreviewCell(d, interval)">
                                         
                                         <!-- Show class name or draft -->
-                                        <span class="block truncate max-w-[55px] mx-auto text-[8px]"
-                                              :title="isDraftCell(d, hour) ? 'Draft selection' : getClassCellTitle(d, hour)"
-                                              x-text="isDraftCell(d, hour) ? (editForm.subject_name || 'Draft') : getClassCellSubject(d, hour)"></span>
+                                        <span class="block truncate max-w-[55px] mx-auto text-[8.5px] font-bold"
+                                              :title="isDraftCell(d, interval) ? 'Draft selection' : getClassCellTitle(d, interval)"
+                                              x-text="isDraftCell(d, interval) ? (editForm.subject_name || 'Draft') : getClassCellSubject(d, interval)"></span>
                                               
                                         <!-- Plus icon on hover -->
-                                        <template x-if="!hasClassCell(d, hour) && !isDraftCell(d, hour)">
+                                        <template x-if="!hasClassCell(d, interval) && !isDraftCell(d, interval)">
                                             <span class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 text-indigo-600 font-black text-[11px] bg-indigo-50/50">+</span>
                                         </template>
                                     </td>
@@ -38,10 +40,19 @@
                     </tbody>
                 </table>
             </div>
+
+            <!-- Empty Placeholder (when times are blank) -->
+            <div x-show="getPreviewIntervals().length === 0" x-transition class="border border-dashed border-slate-200 rounded-xl bg-white p-12 text-center flex flex-col items-center justify-center min-h-[250px]">
+                <div class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-350 mb-3 border border-slate-100">
+                    <i data-lucide="clock" class="w-5 h-5"></i>
+                </div>
+                <span class="text-[11px] font-extrabold text-slate-700 uppercase block mb-1">Enter Schedule Times</span>
+                <p class="text-[9.5px] text-slate-400 max-w-[200px] leading-normal">Type a **Start** and **End** time on the right to preview your schedule block here.</p>
+            </div>
         </div>
 
-        <div class="text-[9px] text-slate-400 font-light leading-normal border-t border-slate-200/50 pt-2">
-            * Click any empty cell in the preview to select that day and time.
+        <div class="text-[9px] text-slate-400 font-light leading-normal border-t border-slate-200/50 pt-2" x-show="getPreviewIntervals().length > 0">
+            * Click any empty cell in the preview to select or deselect that day.
         </div>
     </div>
 

@@ -68,39 +68,91 @@
         getSelectedDaysString() {
             return this.editForm.selected_days.join(',');
         },
-        formatHourLabel(hour) {
-            let h = hour > 12 ? hour - 12 : hour;
-            let ampm = hour >= 12 ? 'PM' : 'AM';
-            return `${h}:00 ${ampm}`;
+        formatTimeIntervalLabel(start, end) {
+            let parseTime = (t) => {
+                let [h, m] = t.split(':').map(Number);
+                let ampm = h >= 12 ? 'p.m.' : 'a.m.';
+                let displayH = h % 12 || 12;
+                return { displayH, mStr: String(m).padStart(2, '0'), ampm };
+            };
+            let s = parseTime(start);
+            let e = parseTime(end);
+            if (s.ampm === e.ampm) {
+                return `${s.displayH}:${s.mStr}-${e.displayH}:${e.mStr} ${e.ampm}`;
+            }
+            return `${s.displayH}:${s.mStr} ${s.ampm} - ${e.displayH}:${e.mStr} ${e.ampm}`;
+        },
+        getPreviewIntervals() {
+            let boundaries = [];
+            let schedules = this.getSectionSchedules();
+            
+            schedules.forEach(s => {
+                boundaries.push(s.start_minutes);
+                boundaries.push(s.end_minutes);
+            });
+
+            if (this.editForm.start_time && this.editForm.end_time) {
+                let [sh, sm] = this.editForm.start_time.split(':').map(Number);
+                let [eh, em] = this.editForm.end_time.split(':').map(Number);
+                if (!isNaN(sh) && !isNaN(eh)) {
+                    boundaries.push(sh * 60 + sm);
+                    boundaries.push(eh * 60 + em);
+                }
+            }
+
+            boundaries = [...new Set(boundaries)].sort((a, b) => a - b);
+            let list = [];
+            for (let i = 0; i < boundaries.length - 1; i++) {
+                let startMin = boundaries[i];
+                let endMin = boundaries[i+1];
+                
+                let sh = Math.floor(startMin / 60);
+                let sm = startMin % 60;
+                let eh = Math.floor(endMin / 60);
+                let em = endMin % 60;
+
+                let startTimeStr = `${String(sh).padStart(2, '0')}:${String(sm).padStart(2, '0')}`;
+                let endTimeStr = `${String(eh).padStart(2, '0')}:${String(em).padStart(2, '0')}`;
+                
+                list.push({
+                    start_minutes: startMin,
+                    end_minutes: endMin,
+                    start_time: startTimeStr,
+                    end_time: endTimeStr,
+                    label: this.formatTimeIntervalLabel(startTimeStr, endTimeStr),
+                    minutes: endMin - startMin
+                });
+            }
+            return list;
         },
         getSectionSchedules() {
             return this.schedulesBySection[this.editForm.section_id] || [];
         },
-        getClassCell(day, hour) {
+        getClassCell(day, interval) {
             let schedules = this.getSectionSchedules();
-            let startMin = hour * 60;
-            let endMin = (hour + 1) * 60;
             return schedules.find(s => {
                 let sDay = s.day || s.payload?.day;
                 if (sDay !== day && !s.spans_all_days) return false;
-                return s.start_minutes < endMin && s.end_minutes > startMin;
+                return s.start_minutes <= interval.start_minutes && s.end_minutes >= interval.end_minutes;
             });
         },
-        hasClassCell(day, hour) {
-            return !!this.getClassCell(day, hour);
+        hasClassCell(day, interval) {
+            return !!this.getClassCell(day, interval);
         },
-        isDraftCell(day, hour) {
+        isDraftCell(day, interval) {
             if (!this.isDaySelected(day)) return false;
             if (!this.editForm.start_time || !this.editForm.end_time) return false;
-            let [startH, startM] = this.editForm.start_time.split(':').map(Number);
-            let [endH, endM] = this.editForm.end_time.split(':').map(Number);
-            return hour >= startH && hour < endH;
+            let [sh, sm] = this.editForm.start_time.split(':').map(Number);
+            let [eh, em] = this.editForm.end_time.split(':').map(Number);
+            let draftStart = sh * 60 + sm;
+            let draftEnd = eh * 60 + em;
+            return draftStart <= interval.start_minutes && draftEnd >= interval.end_minutes;
         },
-        getClassCellBg(day, hour) {
-            if (this.isDraftCell(day, hour)) {
+        getClassCellBg(day, interval) {
+            if (this.isDraftCell(day, interval)) {
                 return 'bg-indigo-600 text-white font-extrabold border border-indigo-700 shadow-xs';
             }
-            let schedule = this.getClassCell(day, hour);
+            let schedule = this.getClassCell(day, interval);
             if (!schedule) return 'bg-white hover:bg-slate-50 border border-slate-100';
             let color = schedule.color_class || 'academic';
             if (color === 'quran') return 'bg-emerald-50 text-emerald-800 border border-emerald-100 font-extrabold';
@@ -110,18 +162,18 @@
             if (color === 'event') return 'bg-teal-50 text-teal-800 border border-teal-100 font-extrabold';
             return 'bg-purple-50 text-purple-800 border border-purple-100 font-extrabold';
         },
-        getClassCellSubject(day, hour) {
-            let schedule = this.getClassCell(day, hour);
+        getClassCellSubject(day, interval) {
+            let schedule = this.getClassCell(day, interval);
             return schedule ? schedule.subject_name : '';
         },
-        getClassCellTitle(day, hour) {
-            let schedule = this.getClassCell(day, hour);
+        getClassCellTitle(day, interval) {
+            let schedule = this.getClassCell(day, interval);
             return schedule ? `${schedule.subject_name} (${schedule.time_label})` : '';
         },
-        clickPreviewCell(day, hour) {
-            let schedule = this.getClassCell(day, hour);
+        clickPreviewCell(day, interval) {
+            let schedule = this.getClassCell(day, interval);
             if (!schedule) {
-                if (this.isDraftCell(day, hour)) {
+                if (this.isDraftCell(day, interval)) {
                     this.toggleDaySelection(day);
                     return;
                 }
@@ -129,19 +181,20 @@
                 if (!this.editForm.start_time || !this.editForm.end_time) {
                     this.editForm.day = day;
                     this.editForm.selected_days = [day];
-                    this.editForm.start_time = String(hour).padStart(2, '0') + ':00';
-                    this.editForm.end_time = String(hour + 1).padStart(2, '0') + ':00';
+                    this.editForm.start_time = interval.start_time;
+                    this.editForm.end_time = interval.end_time;
                     return;
                 }
 
                 let [startH, startM] = this.editForm.start_time.split(':').map(Number);
-                if (hour === startH) {
+                let startMin = startH * 60 + startM;
+                if (interval.start_minutes === startMin) {
                     this.toggleDaySelection(day);
                 } else {
                     this.editForm.day = day;
                     this.editForm.selected_days = [day];
-                    this.editForm.start_time = String(hour).padStart(2, '0') + ':00';
-                    this.editForm.end_time = String(hour + 1).padStart(2, '0') + ':00';
+                    this.editForm.start_time = interval.start_time;
+                    this.editForm.end_time = interval.end_time;
                 }
             }
         },
