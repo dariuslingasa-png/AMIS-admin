@@ -102,7 +102,8 @@ class AdminClassScheduleController extends Controller
     public function store(ClassScheduleRequest $request)
     {
         $validated = $request->validated();
-        
+        $sectionId = $validated['section_id'];
+
         if (!empty($validated['spans_all_days'])) {
             $this->schedules->store(array_merge($validated, ['day' => 'Sunday', 'spans_all_days' => true]));
         } else {
@@ -110,6 +111,13 @@ class AdminClassScheduleController extends Controller
             foreach ($days as $day) {
                 $this->schedules->store(array_merge($validated, ['day' => trim($day), 'spans_all_days' => false]));
             }
+        }
+
+        if ($request->input('_add_another')) {
+            return back()
+                ->with('status', 'Class schedule saved. Add your next class below.')
+                ->with('schedule_workspace', 'schedule')
+                ->with('reopen_add_modal', $sectionId);
         }
 
         return back()

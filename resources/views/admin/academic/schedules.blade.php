@@ -6,6 +6,7 @@
     $failedScheduleId = (int) old('schedule_id', 0);
     $activeSection = $sections->firstWhere('id', $activeSectionId) ?? $sections->first();
     $activeGradeLevel = $activeSection?->grade_level ?? '';
+    $reopenAddModal = session('reopen_add_modal');
 @endphp
 
 <x-admin-layout title="Class Management Workspace">
@@ -16,6 +17,7 @@
         gradeSections: @js($sections->groupBy('grade_level')->map(fn($group) => $group->map(fn($s) => ['id' => $s->id])->values())),
         schedulesBySection: @js($schedulesBySection),
         syncModal: false,
+        addModal: @js((bool) $reopenAddModal),
         isSaving: false,
         isDeleting: false,
         isSyncing: false,
@@ -28,7 +30,7 @@
         deleteAction: '',
         editForm: {
             id: 0,
-            section_id: 0,
+            section_id: @js($reopenAddModal ?: $activeSectionId),
             subject_name: '',
             teacher_name: '',
             day: '',
