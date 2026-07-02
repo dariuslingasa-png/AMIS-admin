@@ -53,8 +53,10 @@
         },
         toggleDaySelection(day) {
             if (this.editForm.selected_days.includes(day)) {
-                if (this.editForm.selected_days.length > 1) {
-                    this.editForm.selected_days = this.editForm.selected_days.filter(d => d !== day);
+                this.editForm.selected_days = this.editForm.selected_days.filter(d => d !== day);
+                if (this.editForm.selected_days.length === 0) {
+                    this.editForm.start_time = '';
+                    this.editForm.end_time = '';
                 }
             } else {
                 this.editForm.selected_days.push(day);
@@ -119,6 +121,11 @@
         clickPreviewCell(day, hour) {
             let schedule = this.getClassCell(day, hour);
             if (!schedule) {
+                if (this.isDraftCell(day, hour)) {
+                    this.toggleDaySelection(day);
+                    return;
+                }
+
                 if (!this.editForm.start_time || !this.editForm.end_time) {
                     this.editForm.day = day;
                     this.editForm.selected_days = [day];
@@ -129,10 +136,8 @@
 
                 let [startH, startM] = this.editForm.start_time.split(':').map(Number);
                 if (hour === startH) {
-                    // Same time slot: toggle day selection!
                     this.toggleDaySelection(day);
                 } else {
-                    // Different slot: set new time and select only this day
                     this.editForm.day = day;
                     this.editForm.selected_days = [day];
                     this.editForm.start_time = String(hour).padStart(2, '0') + ':00';
