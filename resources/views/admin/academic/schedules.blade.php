@@ -14,6 +14,7 @@
         activeSectionId: @js($activeSectionId),
         activeGradeLevel: @js($activeGradeLevel),
         gradeSections: @js($sections->groupBy('grade_level')->map(fn($group) => $group->map(fn($s) => ['id' => $s->id])->values())),
+        schedulesBySection: @js($schedulesBySection),
         syncModal: false,
         isSaving: false,
         isDeleting: false,
@@ -64,6 +65,59 @@
         },
         getSelectedDaysString() {
             return this.editForm.selected_days.join(',');
+        },
+        formatHourLabel(hour) {
+            let h = hour > 12 ? hour - 12 : hour;
+            let ampm = hour >= 12 ? 'PM' : 'AM';
+            return `${h}:00 ${ampm}`;
+        },
+        getSectionSchedules() {
+            return this.schedulesBySection[this.editForm.section_id] || [];
+        },
+        getClassCell(day, hour) {
+            let schedules = this.getSectionSchedules();
+            let startMin = hour * 60;
+            let endMin = (hour + 1) * 60;
+            return schedules.find(s => {
+                let sDay = s.day || s.payload?.day;
+                if (sDay !== day && !s.spans_all_days) return false;
+                return s.start_minutes < endMin && s.end_minutes > startMin;
+            });
+        },
+        hasClassCell(day, hour) {
+            return !!this.getClassCell(day, hour);
+        },
+        getClassCellBg(day, hour) {
+            let schedule = this.getClassCell(day, hour);
+            if (!schedule) return 'bg-white hover:bg-slate-50 border border-slate-100';
+            let color = schedule.color_class || 'academic';
+            if (color === 'quran') return 'bg-emerald-50 text-emerald-800 border border-emerald-100 font-extrabold';
+            if (color === 'hadith') return 'bg-amber-50 text-amber-800 border border-amber-100 font-extrabold';
+            if (color === 'arabic') return 'bg-blue-50 text-blue-800 border border-blue-100 font-extrabold';
+            if (color === 'recess') return 'bg-red-50 text-red-800 border border-red-100 font-extrabold';
+            if (color === 'event') return 'bg-teal-50 text-teal-800 border border-teal-100 font-extrabold';
+            return 'bg-purple-50 text-purple-800 border border-purple-100 font-extrabold';
+        },
+        getClassCellSubject(day, hour) {
+            let schedule = this.getClassCell(day, hour);
+            return schedule ? schedule.subject_name : '';
+        },
+        getClassCellTitle(day, hour) {
+            let schedule = this.getClassCell(day, hour);
+            return schedule ? `${schedule.subject_name} (${schedule.time_label})` : '';
+        },
+        clickPreviewCell(day, hour) {
+            let schedule = this.getClassCell(day, hour);
+            if (!schedule) {
+                this.editForm.day = day;
+                if (!this.editForm.selected_days.includes(day)) {
+                    this.editForm.selected_days = [day];
+                }
+                let startH = String(hour).padStart(2, '0');
+                let endH = String(hour + 1).padStart(2, '0');
+                this.editForm.start_time = `${startH}:00`;
+                this.editForm.end_time = `${endH}:00`;
+            }
         },
         editId: null,
         editName: '',

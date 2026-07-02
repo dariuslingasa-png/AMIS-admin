@@ -1,7 +1,7 @@
 <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
     <!-- Left Column: Weekly Calendar selector (2 cols) -->
-    <div class="md:col-span-2 space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-100 flex flex-col justify-between">
-        <div class="space-y-3">
+    <div class="md:col-span-2 space-y-4 bg-slate-50 p-4 rounded-2xl border border-slate-100 flex flex-col justify-between">
+        <div class="space-y-4">
             <div class="flex items-center justify-between">
                 <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Weekly Calendar</span>
                 <button type="button" 
@@ -34,10 +34,50 @@
                 <div class="text-[11px] font-extrabold text-emerald-800 uppercase">Daily Class Active</div>
                 <div class="text-[9px] text-emerald-600 leading-normal">This class will automatically span all days (Sunday to Thursday).</div>
             </div>
+
+            <!-- Calendar Preview Grid (compact) -->
+            <div class="mt-4 border-t border-slate-200/50 pt-3">
+                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-2">Timetable Preview</span>
+                <div class="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-3xs">
+                    <table class="w-full text-[8px] border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100 border-b border-slate-200">
+                                <th class="p-1 border-r border-slate-200 font-extrabold text-slate-500 w-10 text-center">Time</th>
+                                <template x-for="d in ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday']">
+                                    <th class="p-1 border-r border-slate-200 font-black text-slate-700 text-center" x-text="d.substring(0,3)"></th>
+                                </template>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template x-for="hour in [8, 9, 10, 11, 12, 13, 14, 15, 16]">
+                                <tr class="border-b border-slate-100 last:border-0">
+                                    <td class="p-1 border-r border-slate-200 font-bold text-slate-400 text-center" x-text="formatHourLabel(hour)"></td>
+                                    <template x-for="d in ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday']">
+                                        <td class="p-1 border-r border-slate-100 last:border-0 text-center relative group min-h-[22px] cursor-pointer transition"
+                                            :class="getClassCellBg(d, hour)"
+                                            @click="clickPreviewCell(d, hour)">
+                                            
+                                            <!-- Show class name -->
+                                            <span class="block truncate max-w-[42px] mx-auto text-[7.5px]"
+                                                  :title="getClassCellTitle(d, hour)"
+                                                  x-text="getClassCellSubject(d, hour)"></span>
+                                                  
+                                            <!-- Plus icon on hover -->
+                                            <template x-if="!hasClassCell(d, hour)">
+                                                <span class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 text-indigo-600 font-black text-[9px] bg-indigo-50/50">+</span>
+                                            </template>
+                                        </td>
+                                    </template>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
 
         <div class="text-[9px] text-slate-400 font-light leading-normal border-t border-slate-200/50 pt-2 mt-2">
-            * Selected days will have this class. Click **Daily** to stretch across the entire week.
+            * Click any empty slot in the preview to select that day and time.
         </div>
     </div>
 
