@@ -1,0 +1,1028 @@
+diff --git a/resources/views/admin/students/reports.blade.php b/resources/views/admin/students/reports.blade.php
+index b517130..eaf330e 100644
+--- a/resources/views/admin/students/reports.blade.php
++++ b/resources/views/admin/students/reports.blade.php
+@@ -1,223 +1,856 @@
+ <x-admin-layout
+-    title="Student Reports"
++    title="Microsoft 365 & Teams Analytics Dashboard"
+     :breadcrumbs="[
+         ['label' => 'Students', 'href' => route('admin.students.index')],
+-        ['label' => 'Reports', 'href' => null],
++        ['label' => 'M365 & Teams Analytics', 'href' => null],
+     ]"
+ >
+-    <div class="space-y-6">
+-        <!-- Banner -->
+-        <section class="relative overflow-hidden rounded-3xl border border-emerald-700/30 bg-gradient-to-br from-emerald-800 via-emerald-900 to-teal-950 p-6 text-white shadow-xl shadow-slate-900/10">
+-            <!-- Decorative blur shapes -->
+-            <div class="absolute -right-16 -top-16 h-40 w-40 rounded-full bg-emerald-500/20 blur-3xl"></div>
+-            <div class="absolute -left-16 -bottom-16 h-40 w-40 rounded-full bg-teal-500/10 blur-3xl"></div>
+-
+-            <div class="relative flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
++    <!-- Include Chart.js via CDN -->
++    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
++
++    <!-- Custom CSS for Printable Reports & Clean Layout -->
++    <style>
++        @media print {
++            body {
++                background: white !important;
++                color: black !important;
++            }
++            .no-print, .no-print * {
++                display: none !important;
++            }
++            .print-full-width {
++                width: 100% !important;
++                max-width: 100% !important;
++                box-shadow: none !important;
++                border: none !important;
++                padding: 0 !important;
++                margin: 0 !important;
++            }
++            .chart-container-print {
++                page-break-inside: avoid;
++                break-inside: avoid;
++            }
++        }
++        [x-cloak] { display: none !important; }
++    </style>
++
++    <div x-data="{
++        // Navigation Tab
++        activeTab: 'overview',
++
++        // Filters State
++        selectedSchoolYear: '',
++        selectedGrade: '',
++        selectedSection: '',
++        selectedAdviser: '',
++        selectedStatus: '',
++        dateRange: '',
++        searchQuery: '',
++
++        // Data Storage
++        summary: {
++            total_registered: 0,
++            accounts_generated: 0,
++            licensed_count: 0,
++            unlicensed_count: 0,
++            active_accounts: 0,
++            inactive_accounts: 0,
++            logged_in: 0,
++            never_signed_in: 0,
++            joined_teams: 0,
++            not_joined_teams: 0,
++            assigned_class: 0,
++            without_class: 0,
++            joined_class: 0,
++            not_joined_class: 0,
++            temp_password: 0,
++            password_changed: 0,
++            last_sign_in_activity: 'Loading...'
++        },
++        gradeBreakdown: [],
++        students: { data: [], current_page: 1, last_page: 1, total: 0 },
++        lastSync: 'Never',
++        generatedAt: '',
++
++        // Loading states
++        loading: false,
++        syncing: false,
++        errorMessage: '',
++        successMessage: '',
++        perPage: 10,
++        currentPage: 1,
++        charts: {},
++
++        init() {
++            this.fetchData();
++            // Auto refresh every 5 minutes
++            setInterval(() => this.fetchData(this.currentPage), 300000);
++        },
++
++        async fetchData(page = 1) {
++            this.loading = true;
++            this.errorMessage = '';
++            this.currentPage = page;
++
++            let params = new URLSearchParams({
++                page: this.currentPage,
++                per_page: this.perPage,
++                search: this.searchQuery,
++                school_year: this.selectedSchoolYear,
++                grade_level: this.selectedGrade,
++                section_id: this.selectedSection,
++                adviser: this.selectedAdviser,
++                status: this.selectedStatus,
++                date_range: this.dateRange
++            });
++
++            try {
++                const res = await fetch(`{{ route('admin.students.reports.data') }}?${params.toString()}`);
++                const data = await res.json();
++
++                if (data.success) {
++                    this.summary = data.summary;
++                    this.gradeBreakdown = data.gradeBreakdown;
++                    this.students = data.students;
++                    this.lastSync = data.last_sync;
++                    this.generatedAt = data.generated_at;
++
++                    this.$nextTick(() => {
++                        this.renderCharts(data.charts);
++                        if (typeof lucide !== 'undefined') {
++                            lucide.createIcons();
++                        }
++                    });
++                } else {
++                    this.errorMessage = 'Failed to load report analytics data.';
++                }
++            } catch (e) {
++                this.errorMessage = 'Network error loading analytics dashboard data.';
++            } finally {
++                this.loading = false;
++            }
++        },
++
++        async forceSync() {
++            this.syncing = true;
++            this.errorMessage = '';
++            this.successMessage = '';
++
++            try {
++                const res = await fetch(`{{ route('admin.students.reports.sync') }}`, {
++                    method: 'POST',
++                    headers: {
++                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
++                        'Accept': 'application/json'
++                    }
++                });
++                const data = await res.json();
++
++                if (data.success) {
++                    this.successMessage = data.message;
++                    this.lastSync = data.last_sync;
++                    this.fetchData(this.currentPage);
++                } else {
++                    this.errorMessage = data.message || 'Synchronization failed.';
++                }
++            } catch (e) {
++                this.errorMessage = 'Network error during Microsoft Graph sync.';
++            } finally {
++                this.syncing = false;
++            }
++        },
++
++        renderCharts(chartData) {
++            // Destroy existing chart instances to prevent rendering issues on resize/update
++            Object.keys(this.charts).forEach(key => {
++                if (this.charts[key]) this.charts[key].destroy();
++            });
++
++            const createChart = (id, type, labels, data, colors, isDonut = false) => {
++                const ctx = document.getElementById(id);
++                if (!ctx) return null;
++
++                return new Chart(ctx, {
++                    type: type,
++                    data: {
++                        labels: labels,
++                        datasets: [{
++                            data: data,
++                            backgroundColor: colors,
++                            borderWidth: 0,
++                            hoverOffset: 4
++                        }]
++                    },
++                    options: {
++                        responsive: true,
++                        maintainAspectRatio: false,
++                        plugins: {
++                            legend: {
++                                position: 'bottom',
++                                labels: {
++                                    font: { size: 9, weight: 'bold' },
++                                    boxWidth: 10,
++                                    padding: 8
++                                }
++                            }
++                        },
++                        cutout: isDonut ? '65%' : undefined
++                    }
++                });
++            };
++
++            const colors = {
++                emerald: ['#10b981', '#a7f3d0'],
++                indigo: ['#6366f1', '#c7d2fe'],
++                rose: ['#f43f5e', '#fecdd3'],
++                amber: ['#f59e0b', '#fde68a'],
++                blue: ['#3b82f6', '#bfdbfe'],
++                purple: ['#8b5cf6', '#ddd6fe'],
++                slate: ['#475569', '#cbd5e1']
++            };
++
++            // Provisioned vs Unprovisioned
++            this.charts.accountStatus = createChart('chartAccountStatus', 'pie', chartData.accountStatus.labels, chartData.accountStatus.data, [colors.indigo[0], colors.slate[1]]);
++            
++            // Active vs Inactive Logins
++            this.charts.loginStatus = createChart('chartLoginStatus', 'pie', chartData.loginStatus.labels, chartData.loginStatus.data, [colors.blue[0], colors.amber[0]]);
++            
++            // Teams Adoption
++            this.charts.teamsAdoption = createChart('chartTeamsAdoption', 'doughnut', chartData.teamsAdoption.labels, chartData.teamsAdoption.data, [colors.purple[0], colors.slate[1]], true);
++            
++            // Class Join Status
++            this.charts.classJoinStatus = createChart('chartClassJoinStatus', 'doughnut', chartData.classJoinStatus.labels, chartData.classJoinStatus.data, [colors.emerald[0], colors.rose[0]], true);
++            
++            // Password Change Status
++            this.charts.passwordChangeStatus = createChart('chartPasswordChangeStatus', 'pie', chartData.passwordChangeStatus.labels, chartData.passwordChangeStatus.data, [colors.emerald[0], colors.amber[0]]);
++            
++            // Active vs Inactive Accounts
++            this.charts.activeInactive = createChart('chartActiveInactive', 'pie', chartData.activeInactive.labels, chartData.activeInactive.data, [colors.emerald[0], colors.rose[0]]);
++            
++            // License Assignment Status
++            this.charts.licenseStatus = createChart('chartLicenseStatus', 'pie', chartData.licenseStatus.labels, chartData.licenseStatus.data, [colors.blue[0], colors.rose[0]]);
++
++            // Bar chart for grade level student counts
++            const barCtx = document.getElementById('chartGradeDistribution');
++            if (barCtx) {
++                this.charts.gradeDistribution = new Chart(barCtx, {
++                    type: 'bar',
++                    data: {
++                        labels: chartData.gradeDistribution.labels,
++                        datasets: [{
++                            data: chartData.gradeDistribution.data,
++                            backgroundColor: colors.indigo[0],
++                            borderRadius: 6
++                        }]
++                    },
++                    options: {
++                        responsive: true,
++                        maintainAspectRatio: false,
++                        plugins: { legend: { display: false } },
++                        scales: {
++                            y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 9 } } },
++                            x: { grid: { display: false }, ticks: { font: { size: 9 } } }
++                        }
++                    }
++                });
++            }
++        },
++
++        exportCsv() {
++            if (!this.students.data.length) return;
++            let headers = ['Student Number', 'Full Name', 'Grade Level', 'Email', 'License Status', 'Account Status', 'Last Sign-in', 'Teams Joined', 'Class Joined', 'Password Changed'];
++            let rows = this.students.data.map(s => [
++                s.student_number,
++                s.name,
++                s.grade,
++                s.email,
++                s.license,
++                s.account_enabled,
++                s.last_sign_in,
++                s.teams_joined,
++                s.class_joined,
++                s.password_changed
++            ]);
++            let csvContent = '\uFEFF' + [headers.join(','), ...rows.map(e => e.map(val => `"${val}"`).join(','))].join('\n');
++            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
++            const link = document.createElement("a");
++            link.href = URL.createObjectURL(blob);
++            link.setAttribute("download", `AMIS_M365_Analytics_${new Date().toISOString().slice(0,10)}.csv`);
++            document.body.appendChild(link);
++            link.click();
++            document.body.removeChild(link);
++        },
++
++        exportExcel() {
++            this.exportCsv();
++        },
++
++        printReport() {
++            window.print();
++        }
++    }" class="space-y-6 print-full-width">
++
++        <!-- Top Status Banner -->
++        <section class="relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6 no-print">
++            <div class="flex items-center gap-4">
++                <div class="h-12 w-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
++                    <i data-lucide="line-chart" class="h-6 w-6"></i>
++                </div>
+                 <div>
+-                    <span class="inline-flex rounded-full bg-white/10 px-3 py-1 text-xs font-black uppercase tracking-[0.22em] text-slate-200">
+-                        Reports Workspace
+-                    </span>
+-                    <h1 class="mt-4 text-3xl font-black tracking-tight">Student Records & Roster Reports</h1>
+-                    <p class="mt-2 max-w-2xl text-sm font-medium leading-6 text-emerald-100">
+-                        Access, analyze, and print grade-level rosters, track LRN compliance, and export official reports for registration and audit purposes.
++                    <h1 class="text-2xl font-black text-slate-900 tracking-tight">M365 & Teams Analytics</h1>
++                    <p class="text-xs font-semibold text-slate-500 mt-1 flex flex-wrap items-center gap-x-4 gap-y-1">
++                        <span>Report Generated: <strong class="text-slate-700" x-text="generatedAt || 'Loading...'"></strong></span>
++                        <span>·</span>
++                        <span>M365 Sync: <strong class="text-slate-700" x-text="lastSync"></strong></span>
+                     </p>
+                 </div>
+             </div>
++
++            <div class="flex items-center gap-3 self-start md:self-center">
++                <!-- Sync Button -->
++                <button 
++                    type="button" 
++                    @click="forceSync()"
++                    :disabled="syncing"
++                    class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-black text-slate-700 hover:bg-slate-50 active:scale-95 transition shadow-xs cursor-pointer disabled:opacity-50"
++                >
++                    <svg x-show="syncing" class="animate-spin h-3.5 w-3.5 text-slate-700" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
++                    <i x-show="!syncing" data-lucide="refresh-cw" class="h-3.5 w-3.5"></i>
++                    <span x-text="syncing ? 'Synchronizing...' : 'Sync Microsoft Graph'"></span>
++                </button>
++            </div>
+         </section>
+ 
+-        <!-- Stats Grid -->
+-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5">
+-            <!-- Stat 1 -->
+-            <div class="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition duration-300 relative overflow-hidden">
+-                <div class="flex items-center justify-between">
+-                    <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Total Enrolled Students</p>
+-                    <div class="rounded-xl bg-emerald-50 p-2 text-emerald-600 group-hover:scale-110 transition duration-300">
+-                        <i data-lucide="graduation-cap" class="h-4.5 w-4.5"></i>
+-                    </div>
++        <!-- Feedback Messages -->
++        <div class="no-print space-y-3" x-cloak>
++            <div x-show="errorMessage" class="flex items-center gap-3 rounded-2xl bg-rose-50 border border-rose-200 px-4 py-3 text-xs font-bold text-rose-800">
++                <i data-lucide="alert-circle" class="h-4.5 w-4.5 text-rose-600 shrink-0"></i>
++                <span x-text="errorMessage"></span>
++            </div>
++            <div x-show="successMessage" class="flex items-center gap-3 rounded-2xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-xs font-bold text-emerald-800">
++                <i data-lucide="check-circle-2" class="h-4.5 w-4.5 text-emerald-600 shrink-0"></i>
++                <span x-text="successMessage"></span>
++            </div>
++        </div>
++
++        <!-- Dashboard Filter Panel -->
++        <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm space-y-4 no-print">
++            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
++                <h2 class="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
++                    <i data-lucide="sliders-horizontal" class="h-3.5 w-3.5"></i>
++                    Dashboard Filters
++                </h2>
++                <button 
++                    type="button"
++                    @click="
++                        selectedSchoolYear = '';
++                        selectedGrade = '';
++                        selectedSection = '';
++                        selectedAdviser = '';
++                        selectedStatus = '';
++                        dateRange = '';
++                        searchQuery = '';
++                        fetchData(1);
++                    "
++                    class="text-[10px] font-black uppercase text-indigo-600 hover:text-indigo-800 transition"
++                >
++                    Reset Filters
++                </button>
++            </div>
++
++            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
++                <!-- School Year -->
++                <div>
++                    <label class="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">School Year</label>
++                    <select x-model="selectedSchoolYear" @change="fetchData(1)" class="w-full rounded-xl border border-slate-200 bg-slate-50/50 p-2 text-xs font-bold text-slate-700 outline-none focus:border-indigo-500 focus:bg-white transition">
++                        <option value="">All School Years</option>
++                        @foreach($schoolYears as $sy)
++                            <option value="{{ $sy }}">{{ $sy }}</option>
++                        @endforeach
++                    </select>
+                 </div>
+-                <div class="flex items-baseline gap-2 mt-2">
+-                    <span class="text-2xl font-black text-slate-900">{{ number_format($stats['total_enrolled']) }}</span>
+-                    <span class="text-xs font-bold text-slate-500">Students</span>
++
++                <!-- Grade Level -->
++                <div>
++                    <label class="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Grade Level</label>
++                    <select x-model="selectedGrade" @change="fetchData(1)" class="w-full rounded-xl border border-slate-200 bg-slate-50/50 p-2 text-xs font-bold text-slate-700 outline-none focus:border-indigo-500 focus:bg-white transition">
++                        <option value="">All Grade Levels</option>
++                        @foreach($gradeLevels as $gl)
++                            <option value="{{ $gl }}">{{ $gl }}</option>
++                        @endforeach
++                    </select>
+                 </div>
+-                <div class="mt-2 text-[10px] font-semibold text-slate-500">
+-                    Assigned to class sections
++
++                <!-- Section -->
++                <div>
++                    <label class="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Section</label>
++                    <select x-model="selectedSection" @change="fetchData(1)" class="w-full rounded-xl border border-slate-200 bg-slate-50/50 p-2 text-xs font-bold text-slate-700 outline-none focus:border-indigo-500 focus:bg-white transition">
++                        <option value="">All Sections</option>
++                        @foreach($sections as $sec)
++                            <option value="{{ $sec->id }}" x-show="selectedGrade === '' || '{{ $sec->grade_level }}' === selectedGrade">{{ $sec->display_name }}</option>
++                        @endforeach
++                    </select>
++                </div>
++
++                <!-- Adviser -->
++                <div>
++                    <label class="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Advisor</label>
++                    <select x-model="selectedAdviser" @change="fetchData(1)" class="w-full rounded-xl border border-slate-200 bg-slate-50/50 p-2 text-xs font-bold text-slate-700 outline-none focus:border-indigo-500 focus:bg-white transition">
++                        <option value="">All Advisors</option>
++                        @foreach($advisors as $adv)
++                            <option value="{{ $adv['email'] }}">{{ $adv['name'] }}</option>
++                        @endforeach
++                    </select>
++                </div>
++
++                <!-- Status -->
++                <div>
++                    <label class="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">M365 / Sync Status</label>
++                    <select x-model="selectedStatus" @change="fetchData(1)" class="w-full rounded-xl border border-slate-200 bg-slate-50/50 p-2 text-xs font-bold text-slate-700 outline-none focus:border-indigo-500 focus:bg-white transition">
++                        <option value="">All Accounts</option>
++                        <option value="has_account">Has Microsoft Account</option>
++                        <option value="no_account">No Microsoft Account</option>
++                        <option value="active_account">Account Enabled (Azure)</option>
++                        <option value="inactive_account">Account Disabled (Azure)</option>
++                        <option value="logged_in">Logged In</option>
++                        <option value="never_signed_in">Never Signed In</option>
++                        <option value="joined_teams">Joined Teams</option>
++                        <option value="not_joined_teams">Not Yet Joined Teams</option>
++                        <option value="licensed">Microsoft License Assigned</option>
++                        <option value="unlicensed">No Microsoft License</option>
++                        <option value="assigned_class">Assigned Class</option>
++                        <option value="no_class">Without Assigned Class</option>
++                        <option value="joined_class">Joined Class Section</option>
++                        <option value="not_joined_class">Not Yet Joined Class</option>
++                        <option value="temp_password">Initial Temporary Password</option>
++                        <option value="password_changed">Password Changed</option>
++                    </select>
++                </div>
++
++                <!-- Date Range -->
++                <div>
++                    <label class="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Date Registered</label>
++                    <input 
++                        type="text" 
++                        x-model="dateRange"
++                        placeholder="YYYY-MM-DD to YYYY-MM-DD"
++                        @change="fetchData(1)"
++                        class="w-full rounded-xl border border-slate-200 bg-slate-50/50 p-2 text-xs font-bold text-slate-700 outline-none focus:border-indigo-500 focus:bg-white transition"
++                    >
+                 </div>
+             </div>
++        </section>
+ 
+-            <!-- Stat 2 -->
+-            <div class="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition duration-300 relative overflow-hidden">
+-                <div class="flex items-center justify-between">
+-                    <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">With LRN</p>
+-                    <div class="rounded-xl bg-blue-50 p-2 text-blue-600 group-hover:scale-110 transition duration-300">
+-                        <i data-lucide="shield-check" class="h-4.5 w-4.5"></i>
+-                    </div>
++        <!-- Tabs Navigation -->
++        <div class="border-b border-slate-200 no-print">
++            <nav class="-mb-px flex gap-6" aria-label="Tabs">
++                <button 
++                    @click="activeTab = 'overview'"
++                    :class="activeTab === 'overview' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'"
++                    class="w-full sm:w-auto text-center border-b-2 py-4 px-1 text-sm font-extrabold transition cursor-pointer"
++                >
++                    Overview Dashboard
++                </button>
++                <button 
++                    @click="activeTab = 'm365'"
++                    :class="activeTab === 'm365' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'"
++                    class="w-full sm:w-auto text-center border-b-2 py-4 px-1 text-sm font-extrabold transition cursor-pointer"
++                >
++                    Microsoft 365 Analytics
++                </button>
++                <button 
++                    @click="activeTab = 'teams'"
++                    :class="activeTab === 'teams' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'"
++                    class="w-full sm:w-auto text-center border-b-2 py-4 px-1 text-sm font-extrabold transition cursor-pointer"
++                >
++                    Teams & Engagement
++                </button>
++            </nav>
++        </div>
++
++        <!-- Tab Panel: Overview Dashboard -->
++        <div x-show="activeTab === 'overview'" x-transition class="space-y-6">
++            <!-- Summary KPI Cards -->
++            <div class="grid grid-cols-2 lg:grid-cols-6 gap-4">
++                <!-- Card 1 -->
++                <div class="rounded-2xl border border-slate-100 bg-white p-5 shadow-xs hover:shadow-md transition duration-300">
++                    <p class="text-[9px] font-black uppercase tracking-wider text-slate-400">Total Enrolled</p>
++                    <div class="text-2xl font-black text-slate-900 mt-2" x-text="summary.total_registered">0</div>
++                    <p class="text-[9px] font-semibold text-slate-500 mt-1">Students in records</p>
++                </div>
++                <!-- Card 2 -->
++                <div class="rounded-2xl border border-indigo-150 bg-indigo-50/20 p-5 shadow-xs hover:shadow-md transition duration-300">
++                    <p class="text-[9px] font-black uppercase tracking-wider text-indigo-600">MS Accounts</p>
++                    <div class="text-2xl font-black text-indigo-700 mt-2" x-text="summary.accounts_generated">0</div>
++                    <p class="text-[9px] font-semibold text-indigo-600 mt-1">Accounts provisioned</p>
++                </div>
++                <!-- Card 3 -->
++                <div class="rounded-2xl border border-emerald-150 bg-emerald-50/20 p-5 shadow-xs hover:shadow-md transition duration-300">
++                    <p class="text-[9px] font-black uppercase tracking-wider text-emerald-600">Active Accounts</p>
++                    <div class="text-2xl font-black text-emerald-700 mt-2" x-text="summary.active_accounts">0</div>
++                    <p class="text-[9px] font-semibold text-emerald-600 mt-1">Enabled in Azure AD</p>
++                </div>
++                <!-- Card 4 -->
++                <div class="rounded-2xl border border-blue-150 bg-blue-50/20 p-5 shadow-xs hover:shadow-md transition duration-300">
++                    <p class="text-[9px] font-black uppercase tracking-wider text-blue-600">Portal Logins</p>
++                    <div class="text-2xl font-black text-blue-700 mt-2" x-text="summary.logged_in">0</div>
++                    <p class="text-[9px] font-semibold text-blue-600 mt-1">Students logged in</p>
+                 </div>
+-                <div class="flex items-baseline gap-2 mt-2">
+-                    <span class="text-2xl font-black text-slate-900">{{ number_format($stats['total_with_lrn']) }}</span>
+-                    <span class="text-xs font-bold text-blue-600">
+-                        @if($stats['total_enrolled'] > 0)
+-                            {{ round(($stats['total_with_lrn'] / $stats['total_enrolled']) * 100, 1) }}%
+-                        @else
+-                            0%
+-                        @endif
+-                    </span>
++                <!-- Card 5 -->
++                <div class="rounded-2xl border border-purple-150 bg-purple-50/20 p-5 shadow-xs hover:shadow-md transition duration-300">
++                    <p class="text-[9px] font-black uppercase tracking-wider text-purple-600">Joined Teams</p>
++                    <div class="text-2xl font-black text-purple-700 mt-2" x-text="summary.joined_teams">0</div>
++                    <p class="text-[9px] font-semibold text-purple-600 mt-1">Enrolled in Teams</p>
+                 </div>
+-                <div class="mt-2 text-[10px] font-semibold text-slate-500">
+-                    Learner Reference Number coverage
++                <!-- Card 6 -->
++                <div class="rounded-2xl border border-teal-150 bg-teal-50/20 p-5 shadow-xs hover:shadow-md transition duration-300">
++                    <p class="text-[9px] font-black uppercase tracking-wider text-teal-600">Joined Class</p>
++                    <div class="text-2xl font-black text-teal-700 mt-2" x-text="summary.joined_class">0</div>
++                    <p class="text-[9px] font-semibold text-teal-700 mt-1">Confirmed class rosters</p>
+                 </div>
+             </div>
+ 
+-            <!-- Stat 3 -->
+-            <div class="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition duration-300 relative overflow-hidden">
+-                <div class="flex items-center justify-between">
+-                    <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Missing LRN</p>
+-                    <div class="rounded-xl bg-rose-50 p-2 text-rose-600 group-hover:scale-110 transition duration-300">
+-                        <i data-lucide="shield-alert" class="h-4.5 w-4.5"></i>
++            <!-- Charts Grid -->
++            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
++                <!-- Bar Chart: Grade Distribution -->
++                <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col h-[320px] chart-container-print">
++                    <h3 class="text-xs font-black uppercase tracking-wider text-slate-800 mb-4">Students per Grade Level</h3>
++                    <div class="flex-1 relative">
++                        <canvas id="chartGradeDistribution"></canvas>
+                     </div>
+                 </div>
+-                <div class="flex items-baseline gap-2 mt-2">
+-                    <span class="text-2xl font-black text-rose-600">{{ number_format($stats['total_without_lrn']) }}</span>
+-                    <span class="text-xs font-bold text-rose-500">Needs Attention</span>
++
++                <!-- Pie Chart: Account Provisioning Status -->
++                <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col h-[320px] chart-container-print">
++                    <h3 class="text-xs font-black uppercase tracking-wider text-slate-800 mb-4">Microsoft Account Status</h3>
++                    <div class="flex-1 relative">
++                        <canvas id="chartAccountStatus"></canvas>
++                    </div>
+                 </div>
+-                <div class="mt-2 text-[10px] font-semibold text-slate-500">
+-                    Students missing LRN in records
++
++                <!-- Doughnut Chart: Class Join Status -->
++                <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col h-[320px] chart-container-print">
++                    <h3 class="text-xs font-black uppercase tracking-wider text-slate-800 mb-4">Class Join Status</h3>
++                    <div class="flex-1 relative">
++                        <canvas id="chartClassJoinStatus"></canvas>
++                    </div>
+                 </div>
+             </div>
+ 
+-            <!-- Stat 4 -->
+-            <div class="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition duration-300 relative overflow-hidden">
+-                <div class="flex items-center justify-between">
+-                    <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Verified Users</p>
+-                    <div class="rounded-xl bg-indigo-50 p-2 text-indigo-600 group-hover:scale-110 transition duration-300">
+-                        <i data-lucide="user-check" class="h-4.5 w-4.5"></i>
++            <!-- Grade Level Breakdown Table -->
++            <div class="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden chart-container-print">
++                <div class="p-5 border-b border-slate-100">
++                    <h3 class="text-sm font-extrabold text-slate-900">Analytics Breakdown per Grade Level</h3>
++                    <p class="text-xs text-slate-500 mt-1">Overview of student accounts, logins, and Teams activation by grade.</p>
++                </div>
++                <div class="overflow-x-auto">
++                    <table class="w-full text-left text-xs align-middle">
++                        <thead>
++                            <tr class="bg-slate-50 text-[10px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-100">
++                                <th class="px-5 py-3 font-black">Grade Level</th>
++                                <th class="px-5 py-3 text-center font-black">Total Students</th>
++                                <th class="px-5 py-3 text-center font-black">MS Accounts</th>
++                                <th class="px-5 py-3 text-center font-black">Portal Logins</th>
++                                <th class="px-5 py-3 text-center font-black">Joined Teams</th>
++                                <th class="px-5 py-3 text-center font-black">Joined Class</th>
++                                <th class="px-5 py-3 text-center font-black">Password Changed</th>
++                            </tr>
++                        </thead>
++                        <tbody class="divide-y divide-slate-100">
++                            <template x-for="g in gradeBreakdown" :key="g.grade_level">
++                                <tr class="hover:bg-slate-50/30 transition">
++                                    <td class="px-5 py-3">
++                                        <span class="font-extrabold text-slate-800 uppercase" x-text="g.grade_level"></span>
++                                    </td>
++                                    <td class="px-5 py-3 text-center font-bold text-slate-700" x-text="g.total"></td>
++                                    <td class="px-5 py-3 text-center font-bold text-slate-700" x-text="g.accounts"></td>
++                                    <td class="px-5 py-3 text-center font-bold text-slate-700" x-text="g.logged_in"></td>
++                                    <td class="px-5 py-3 text-center font-bold text-slate-700" x-text="g.joined_teams"></td>
++                                    <td class="px-5 py-3 text-center font-bold text-slate-700" x-text="g.joined_class"></td>
++                                    <td class="px-5 py-3 text-center font-bold text-slate-700" x-text="g.password_changed"></td>
++                                </tr>
++                            </template>
++                        </tbody>
++                    </table>
++                </div>
++            </div>
++        </div>
++
++        <!-- Tab Panel: Microsoft 365 Analytics -->
++        <div x-show="activeTab === 'm365'" x-transition class="space-y-6">
++            <!-- M365 Cards Grid -->
++            <div class="grid grid-cols-2 lg:grid-cols-6 gap-4">
++                <!-- MS License Assigned -->
++                <div class="rounded-2xl border border-slate-100 bg-white p-5 shadow-xs">
++                    <p class="text-[9px] font-black uppercase tracking-wider text-slate-400">License Assigned</p>
++                    <div class="text-2xl font-black text-slate-900 mt-2" x-text="summary.licensed_count">0</div>
++                    <p class="text-[9px] font-semibold text-blue-600 mt-1">M365 Student SKU</p>
++                </div>
++                <!-- No Microsoft License -->
++                <div class="rounded-2xl border border-slate-100 bg-white p-5 shadow-xs">
++                    <p class="text-[9px] font-black uppercase tracking-wider text-slate-400">No License</p>
++                    <div class="text-2xl font-black text-rose-600 mt-2" x-text="summary.unlicensed_count">0</div>
++                    <p class="text-[9px] font-semibold text-slate-500 mt-1">Needs license assignment</p>
++                </div>
++                <!-- Inactive Microsoft Accounts -->
++                <div class="rounded-2xl border border-slate-100 bg-white p-5 shadow-xs">
++                    <p class="text-[9px] font-black uppercase tracking-wider text-slate-400">Disabled Accounts</p>
++                    <div class="text-2xl font-black text-rose-600 mt-2" x-text="summary.inactive_accounts">0</div>
++                    <p class="text-[9px] font-semibold text-slate-500 mt-1">Disabled in Azure AD</p>
++                </div>
++                <!-- Never Signed In -->
++                <div class="rounded-2xl border border-slate-100 bg-white p-5 shadow-xs">
++                    <p class="text-[9px] font-black uppercase tracking-wider text-slate-400">Never Signed In</p>
++                    <div class="text-2xl font-black text-amber-600 mt-2" x-text="summary.never_signed_in">0</div>
++                    <p class="text-[9px] font-semibold text-slate-500 mt-1">Inactive credentials</p>
++                </div>
++                <!-- Temp Password Not Changed -->
++                <div class="rounded-2xl border border-slate-100 bg-white p-5 shadow-xs">
++                    <p class="text-[9px] font-black uppercase tracking-wider text-slate-400">Temp Passwords</p>
++                    <div class="text-2xl font-black text-amber-600 mt-2" x-text="summary.temp_password">0</div>
++                    <p class="text-[9px] font-semibold text-slate-500 mt-1">Initial password active</p>
++                </div>
++                <!-- Password Changed -->
++                <div class="rounded-2xl border border-slate-100 bg-white p-5 shadow-xs">
++                    <p class="text-[9px] font-black uppercase tracking-wider text-slate-400">Passwords Changed</p>
++                    <div class="text-2xl font-black text-emerald-600 mt-2" x-text="summary.password_changed">0</div>
++                    <p class="text-[9px] font-semibold text-slate-500 mt-1">Credentials updated</p>
++                </div>
++            </div>
++
++            <!-- Charts Grid -->
++            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
++                <!-- Pie Chart: M365 Login Status -->
++                <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col h-[280px] chart-container-print">
++                    <h3 class="text-xs font-black uppercase tracking-wider text-slate-800 mb-4">M365 Login Status</h3>
++                    <div class="flex-1 relative">
++                        <canvas id="chartLoginStatus"></canvas>
++                    </div>
++                </div>
++
++                <!-- Pie Chart: Active vs Inactive Accounts -->
++                <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col h-[280px] chart-container-print">
++                    <h3 class="text-xs font-black uppercase tracking-wider text-slate-800 mb-4">Active vs Inactive (Azure)</h3>
++                    <div class="flex-1 relative">
++                        <canvas id="chartActiveInactive"></canvas>
++                    </div>
++                </div>
++
++                <!-- Pie Chart: License Status -->
++                <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col h-[280px] chart-container-print">
++                    <h3 class="text-xs font-black uppercase tracking-wider text-slate-800 mb-4">License Assignment</h3>
++                    <div class="flex-1 relative">
++                        <canvas id="chartLicenseStatus"></canvas>
+                     </div>
+                 </div>
+-                <div class="flex items-baseline gap-2 mt-2">
+-                    <span class="text-2xl font-black text-slate-900">{{ number_format($stats['total_official']) }}</span>
+-                    <span class="text-xs font-bold text-indigo-600">Active Accounts</span>
++
++                <!-- Pie Chart: Password Change Status -->
++                <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col h-[280px] chart-container-print">
++                    <h3 class="text-xs font-black uppercase tracking-wider text-slate-800 mb-4">Password Status</h3>
++                    <div class="flex-1 relative">
++                        <canvas id="chartPasswordChangeStatus"></canvas>
++                    </div>
++                </div>
++            </div>
++        </div>
++
++        <!-- Tab Panel: Teams & Engagement -->
++        <div x-show="activeTab === 'teams'" x-transition class="space-y-6">
++            <!-- Teams Cards Grid -->
++            <div class="grid grid-cols-2 lg:grid-cols-6 gap-4">
++                <!-- Students Joined Microsoft Teams -->
++                <div class="rounded-2xl border border-slate-100 bg-white p-5 shadow-xs">
++                    <p class="text-[9px] font-black uppercase tracking-wider text-slate-400">Joined Teams</p>
++                    <div class="text-2xl font-black text-slate-900 mt-2" x-text="summary.joined_teams">0</div>
++                    <p class="text-[9px] font-semibold text-slate-500 mt-1">Sync confirmed</p>
++                </div>
++                <!-- Students Not Yet Joined Microsoft Teams -->
++                <div class="rounded-2xl border border-slate-100 bg-white p-5 shadow-xs">
++                    <p class="text-[9px] font-black uppercase tracking-wider text-slate-400">Not Joined Teams</p>
++                    <div class="text-2xl font-black text-rose-600 mt-2" x-text="summary.not_joined_teams">0</div>
++                    <p class="text-[9px] font-semibold text-slate-500 mt-1">Needs Teams sync</p>
++                </div>
++                <!-- Students with Assigned Class -->
++                <div class="rounded-2xl border border-slate-100 bg-white p-5 shadow-xs">
++                    <p class="text-[9px] font-black uppercase tracking-wider text-slate-400">Assigned Class</p>
++                    <div class="text-2xl font-black text-slate-900 mt-2" x-text="summary.assigned_class">0</div>
++                    <p class="text-[9px] font-semibold text-slate-500 mt-1">Local section assigned</p>
++                </div>
++                <!-- Students Without Assigned Class -->
++                <div class="rounded-2xl border border-slate-100 bg-white p-5 shadow-xs">
++                    <p class="text-[9px] font-black uppercase tracking-wider text-slate-400">Without Class</p>
++                    <div class="text-2xl font-black text-rose-600 mt-2" x-text="summary.without_class">0</div>
++                    <p class="text-[9px] font-semibold text-slate-500 mt-1">Unallocated roster slots</p>
+                 </div>
+-                <div class="mt-2 text-[10px] font-semibold text-slate-500">
+-                    Total portal users verified
++                <!-- Students with Joined Class -->
++                <div class="rounded-2xl border border-slate-100 bg-white p-5 shadow-xs">
++                    <p class="text-[9px] font-black uppercase tracking-wider text-slate-400">Joined Class</p>
++                    <div class="text-2xl font-black text-emerald-600 mt-2" x-text="summary.joined_class">0</div>
++                    <p class="text-[9px] font-semibold text-slate-500 mt-1">Active class rosters</p>
++                </div>
++                <!-- Students Not Yet Joined Class -->
++                <div class="rounded-2xl border border-slate-100 bg-white p-5 shadow-xs">
++                    <p class="text-[9px] font-black uppercase tracking-wider text-slate-400">Not Joined Class</p>
++                    <div class="text-2xl font-black text-rose-600 mt-2" x-text="summary.not_joined_class">0</div>
++                    <p class="text-[9px] font-semibold text-slate-500 mt-1">Pending channel invitations</p>
++                </div>
++            </div>
++
++            <!-- Charts Grid -->
++            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
++                <!-- Donut Chart: Microsoft Teams Adoption -->
++                <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col h-[280px] chart-container-print">
++                    <h3 class="text-xs font-black uppercase tracking-wider text-slate-800 mb-4">Microsoft Teams Adoption</h3>
++                    <div class="flex-1 relative">
++                        <canvas id="chartTeamsAdoption"></canvas>
++                    </div>
++                </div>
++
++                <!-- Donut Chart: Class Join Status -->
++                <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col h-[280px] chart-container-print">
++                    <h3 class="text-xs font-black uppercase tracking-wider text-slate-800 mb-4">Class Join Status</h3>
++                    <div class="flex-1 relative">
++                        <canvas id="chartClassJoinStatus"></canvas>
++                    </div>
+                 </div>
+             </div>
+         </div>
+ 
+-        <!-- Grade Levels Report Table Section -->
+-        <div class="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
++        <!-- Student Details Paginated Directory (Always Visible below stats) -->
++        <section class="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden chart-container-print">
+             <div class="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                 <div>
+-                    <h2 class="text-lg font-bold text-slate-900">Official Roster Documents</h2>
+-                    <p class="text-xs font-medium text-slate-500">Print or save alphabetical student rosters sorted per grade level.</p>
+-                </div>
+-                @if($stats['total_enrolled'] > 0)
+-                    <div class="flex items-center gap-2">
+-                        <a href="{{ route('admin.students.print-all-rosters') }}" 
+-                           target="_blank" 
+-                           class="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-extrabold text-white hover:bg-indigo-700 active:scale-[0.97] transition shadow-md cursor-pointer"
+-                        >
+-                            <i data-lucide="printer" class="h-4 w-4"></i>
+-                            Print All Grades
+-                        </a>
+-                        <a href="{{ route('admin.students.print-all-rosters', ['print' => 1]) }}" 
+-                           target="_blank" 
+-                           class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 active:scale-[0.97] transition cursor-pointer"
+-                           title="Direct Print All"
+-                        >
+-                            <i data-lucide="external-link" class="h-4 w-4"></i>
+-                        </a>
++                    <h2 class="text-lg font-bold text-slate-900">Student Telemetry Directory</h2>
++                    <p class="text-xs text-slate-500 mt-1">Detailed directory of student credentials, licensing, activity logs, and group states.</p>
++                </div>
++                <div class="flex flex-wrap items-center gap-2 no-print">
++                    <!-- Export Utilities -->
++                    <button type="button" @click="exportCsv()" class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition cursor-pointer">
++                        <i data-lucide="file-spreadsheet" class="h-3.5 w-3.5 text-slate-500"></i> Export CSV
++                    </button>
++                    <button type="button" @click="exportExcel()" class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition cursor-pointer">
++                        <i data-lucide="download" class="h-3.5 w-3.5 text-slate-500"></i> Export Excel
++                    </button>
++                    <button type="button" @click="printReport()" class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition cursor-pointer">
++                        <i data-lucide="printer" class="h-3.5 w-3.5 text-slate-500"></i> Print / PDF
++                    </button>
++                </div>
++            </div>
++
++            <!-- Directory Search Input -->
++            <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50 no-print flex flex-col sm:flex-row sm:items-center justify-between gap-3">
++                <div class="relative w-full sm:max-w-xs">
++                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
++                        <i data-lucide="search" class="h-3.5 w-3.5"></i>
+                     </div>
+-                @endif
++                    <input 
++                        type="search" 
++                        x-model="searchQuery" 
++                        @input.debounce.300ms="fetchData(1)"
++                        placeholder="Search by name, ID, or email..."
++                        class="w-full bg-white border border-slate-200 text-slate-800 text-xs rounded-xl pl-9 pr-4 py-2 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 outline-none font-bold transition"
++                    >
++                </div>
++                <div class="flex items-center gap-2 text-xs font-semibold text-slate-400 shrink-0">
++                    <span x-text="students.total + ' matching records'"></span>
++                </div>
+             </div>
+ 
++            <!-- Table -->
+             <div class="overflow-x-auto">
+-                <table class="w-full text-left text-sm align-middle">
++                <table class="w-full text-left text-xs align-middle">
+                     <thead>
+                         <tr class="bg-slate-50 text-[10px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-100">
+-                            <th class="px-6 py-4 font-black">Grade Level</th>
+-                            <th class="px-6 py-4 font-black">Total Enrolled</th>
+-                            <th class="px-6 py-4 font-black">LRN Coverage</th>
+-                            <th class="px-6 py-4 font-black">LRN Status</th>
+-                            <th class="px-6 py-4 text-right font-black">Actions</th>
++                            <th class="px-4 py-3 font-black">Student ID</th>
++                            <th class="px-4 py-3 font-black">Student Name</th>
++                            <th class="px-4 py-3 font-black">Grade</th>
++                            <th class="px-4 py-3 font-black">Microsoft Email</th>
++                            <th class="px-4 py-3 font-black">License Status</th>
++                            <th class="px-4 py-3 font-black">Account Enabled</th>
++                            <th class="px-4 py-3 font-black">Last Activity</th>
++                            <th class="px-4 py-3 font-black">Teams Joined</th>
++                            <th class="px-4 py-3 font-black">Class Joined</th>
++                            <th class="px-4 py-3 font-black">Password Status</th>
++                            <th class="px-4 py-3 text-right font-black no-print">Actions</th>
+                         </tr>
+                     </thead>
+                     <tbody class="divide-y divide-slate-100">
+-                        @foreach ($grades as $g)
+-                            @php
+-                                $total = $g['enrolled_count'];
+-                                $withLrn = $g['with_lrn'];
+-                                $withoutLrn = $g['without_lrn'];
+-                                $coveragePercent = $total > 0 ? round(($withLrn / $total) * 100) : 0;
+-                            @endphp
+-                            <tr class="hover:bg-slate-50/50 transition duration-150">
+-                                <td class="px-6 py-4">
+-                                    <div class="flex items-center gap-3">
+-                                        <div class="h-8 w-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center font-extrabold text-xs">
+-                                            {{ substr($g['grade_level'], 0, 2) }}
+-                                        </div>
+-                                        <div>
+-                                            <div class="font-extrabold text-slate-800 uppercase tracking-tight text-xs">{{ $g['grade_level'] }}</div>
+-                                            <div class="text-[9px] font-black text-slate-400 uppercase mt-0.5">Al Munawwara School</div>
+-                                        </div>
+-                                    </div>
++                        <!-- Loading State -->
++                        <tr x-show="loading">
++                            <td colspan="11" class="p-8 text-center text-slate-400 font-bold no-print">
++                                <div class="flex items-center justify-center gap-2">
++                                    <svg class="animate-spin h-5 w-5 text-indigo-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
++                                    <span>Retrieving telemetry records from database...</span>
++                                </div>
++                            </td>
++                        </tr>
++                        <!-- Roster Items -->
++                        <template x-for="s in students.data" :key="s.id">
++                            <tr class="hover:bg-slate-50/50 transition" x-show="!loading">
++                                <td class="px-4 py-3 font-extrabold text-slate-700" x-text="s.student_number"></td>
++                                <td class="px-4 py-3 font-extrabold text-slate-900 uppercase" x-text="s.name"></td>
++                                <td class="px-4 py-3 uppercase">
++                                    <span class="inline-flex rounded bg-slate-100 px-1.5 py-0.5 text-[9px] font-black text-slate-600" x-text="s.grade"></span>
++                                </td>
++                                <td class="px-4 py-3 font-mono text-[10px] text-slate-600">
++                                    <span x-text="s.email"></span>
++                                    <div class="text-slate-400 mt-0.5" x-show="s.password_changed !== 'Changed'">Temp PW: <span class="font-extrabold" x-text="s.temp_password"></span></div>
++                                </td>
++                                <td class="px-4 py-3">
++                                    <span :class="s.license === 'Licensed' ? 'bg-blue-50 text-blue-700' : 'bg-rose-50 text-rose-700'" class="inline-flex rounded px-1.5 py-0.5 text-[9px] font-bold uppercase" x-text="s.license"></span>
++                                </td>
++                                <td class="px-4 py-3">
++                                    <span :class="s.account_enabled === 'Enabled' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'" class="inline-flex rounded px-1.5 py-0.5 text-[9px] font-bold uppercase" x-text="s.account_enabled"></span>
+                                 </td>
+-                                <td class="px-6 py-4">
+-                                    <span class="inline-flex rounded-lg border border-slate-200/80 bg-white px-2 py-0.5 text-[10px] font-black text-slate-700 uppercase">
+-                                        {{ $total }} {{ Str::plural('Student', $total) }}
+-                                    </span>
++                                <td class="px-4 py-3 font-medium text-slate-500" x-text="s.last_sign_in"></td>
++                                <td class="px-4 py-3">
++                                    <span :class="s.teams_joined === 'Joined' ? 'bg-purple-50 text-purple-700' : 'bg-slate-100 text-slate-500'" class="inline-flex rounded px-1.5 py-0.5 text-[9px] font-bold uppercase" x-text="s.teams_joined"></span>
+                                 </td>
+-                                <td class="px-6 py-4">
+-                                    <div class="flex items-center gap-3 max-w-[200px]">
+-                                        <span class="font-black text-slate-800 text-xs min-w-[32px]">{{ $coveragePercent }}%</span>
+-                                        <div class="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
+-                                            <div class="h-full rounded-full transition-all duration-500 {{ $coveragePercent === 100 ? 'bg-emerald-500' : ($coveragePercent >= 75 ? 'bg-blue-500' : ($coveragePercent > 0 ? 'bg-amber-500' : 'bg-slate-300')) }}" style="width: {{ $coveragePercent }}%;"></div>
+-                                        </div>
+-                                    </div>
++                                <td class="px-4 py-3">
++                                    <span :class="s.class_joined === 'Joined' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'" class="inline-flex rounded px-1.5 py-0.5 text-[9px] font-bold uppercase" x-text="s.class_joined"></span>
+                                 </td>
+-                                <td class="px-6 py-4">
+-                                    @if ($total === 0)
+-                                        <span class="inline-flex items-center gap-1 rounded bg-slate-50 px-1.5 py-0.5 text-[9px] font-bold text-slate-400 uppercase">
+-                                            Empty Grade
+-                                        </span>
+-                                    @elseif ($withoutLrn === 0)
+-                                        <span class="inline-flex items-center gap-1 rounded bg-emerald-50 px-1.5 py-0.5 text-[9px] font-bold text-emerald-700 uppercase">
+-                                            <i data-lucide="check-circle-2" class="h-3 w-3"></i> Complete
+-                                        </span>
+-                                    @else
+-                                        <span class="inline-flex items-center gap-1 rounded bg-rose-50 px-1.5 py-0.5 text-[9px] font-bold text-rose-700 uppercase" title="{{ $withoutLrn }} students lack LRN">
+-                                            <i data-lucide="alert-triangle" class="h-3 w-3"></i> {{ $withoutLrn }} Missing LRN
+-                                        </span>
+-                                    @endif
++                                <td class="px-4 py-3">
++                                    <span :class="s.password_changed === 'Changed' ? 'bg-emerald-50 text-emerald-700 font-extrabold' : 'bg-amber-50 text-amber-700 font-bold'" class="inline-flex rounded px-1.5 py-0.5 text-[9px] uppercase" x-text="s.password_changed"></span>
+                                 </td>
+-                                <td class="px-6 py-4 text-right">
+-                                    @if($total > 0)
+-                                        <div class="flex items-center justify-end gap-2">
+-                                            <a href="{{ route('admin.students.grade-roster-print', $g['grade_level']) }}" 
+-                                               target="_blank" 
+-                                               class="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-extrabold text-white hover:bg-emerald-700 active:scale-[0.97] transition shadow-sm cursor-pointer"
+-                                            >
+-                                                <i data-lucide="printer" class="h-3.5 w-3.5"></i>
+-                                                Print PDF
+-                                            </a>
+-                                            <a href="{{ route('admin.students.grade-roster-print', ['grade' => $g['grade_level'], 'print' => 1]) }}" 
+-                                               target="_blank" 
+-                                               class="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 active:scale-[0.97] transition cursor-pointer"
+-                                               title="Direct Print"
+-                                            >
+-                                                <i data-lucide="external-link" class="h-3.5 w-3.5"></i>
+-                                            </a>
+-                                        </div>
+-                                    @else
+-                                        <button disabled class="inline-flex items-center gap-1.5 rounded-xl bg-slate-100 px-3 py-1.5 text-xs font-extrabold text-slate-400 cursor-not-allowed">
+-                                            <i data-lucide="printer" class="h-3.5 w-3.5"></i>
+-                                            No Students
+-                                        </button>
+-                                    @endif
++                                <td class="px-4 py-3 text-right no-print">
++                                    <a :href="`/students/${s.id}`" class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-bold text-slate-700 hover:bg-slate-50 transition cursor-pointer">
++                                        Inspect
++                                    </a>
+                                 </td>
+                             </tr>
+-                        @endforeach
++                        </template>
++                        <!-- Empty State -->
++                        <tr x-show="!loading && students.data.length === 0">
++                            <td colspan="11" class="p-8 text-center text-slate-400 font-medium">
++                                No student telemetry records match the selected parameters.
++                            </td>
++                        </tr>
+                     </tbody>
+                 </table>
+             </div>
+-        </div>
++
++            <!-- Pagination Bar -->
++            <div class="px-6 py-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 no-print" x-show="students.last_page > 1">
++                <span class="text-xs font-bold text-slate-400" x-text="'Page ' + students.current_page + ' of ' + students.last_page"></span>
++                <div class="flex items-center gap-1">
++                    <button 
++                        type="button" 
++                        @click="fetchData(students.current_page - 1)"
++                        :disabled="students.current_page === 1"
++                        class="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 transition cursor-pointer disabled:opacity-50"
++                    >
++                        Previous
++                    </button>
++                    <button 
++                        type="button" 
++                        @click="fetchData(students.current_page + 1)"
++                        :disabled="students.current_page === students.last_page"
++                        class="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 transition cursor-pointer disabled:opacity-50"
++                    >
++                        Next
++                    </button>
++                </div>
++            </div>
++        </section>
+     </div>
+ </x-admin-layout>
