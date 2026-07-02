@@ -27,7 +27,7 @@
 
 <div class="admin-modal-overlay flex items-center justify-center fixed inset-0 z-50 bg-slate-950/40 backdrop-blur-xs p-4"
      x-show="addModal" x-cloak x-transition>
-    <form method="POST" action="{{ route('admin.academic.schedules.store') }}" class="admin-modal-card bg-white rounded-2xl shadow-xl w-full max-w-2xl p-8 flex flex-col gap-4 border border-slate-200" @submit="isSaving = true">
+    <form method="POST" action="{{ route('admin.academic.schedules.store') }}" class="admin-modal-card bg-white rounded-2xl shadow-xl w-full max-w-4xl p-8 flex flex-col gap-4 border border-slate-200" @submit="isSaving = true">
         @csrf
         <input type="hidden" name="_schedule_form" value="create">
         <div class="admin-modal-header border-b border-slate-100 pb-3 flex items-center justify-between">
@@ -50,7 +50,7 @@
 
 <div class="admin-modal-overlay flex items-center justify-center fixed inset-0 z-50 bg-slate-950/40 backdrop-blur-xs p-4"
      x-show="editModal" x-cloak x-transition>
-    <form method="POST" :action="editAction" class="admin-modal-card bg-white rounded-2xl shadow-xl w-full max-w-2xl p-8 flex flex-col gap-4 border border-slate-200" @submit="isSaving = true">
+    <form method="POST" :action="editAction" class="admin-modal-card bg-white rounded-2xl shadow-xl w-full max-w-4xl p-8 flex flex-col gap-4 border border-slate-200" @submit="isSaving = true">
         @csrf
         @method('PATCH')
         <input type="hidden" name="_schedule_form" value="edit">

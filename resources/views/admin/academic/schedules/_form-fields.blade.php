@@ -97,7 +97,7 @@
         <!-- Form fields on the right -->
         <label class="flex flex-col gap-1">
             <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Class Section *</span>
-            <select name="section_id" x-model="editForm.section_id" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl px-3 py-2 outline-none">
+            <select name="section_id" x-model="editForm.section_id" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl px-3 py-2 outline-none truncate max-w-full">
                 @foreach($sections as $section)
                     <option value="{{ $section->id }}">
                         {{ $section->grade_level }} - {{ $section->official_name ?: ($section->name ?: 'General') }} ({{ $section->formatted_learning_mode }} - {{ ucfirst($section->gender === 'male' ? 'Boys' : ($section->gender === 'female' ? 'Girls' : 'Merge')) }})
