@@ -252,6 +252,12 @@
                             </a>
                         @endif
                         
+                        {{-- Add Class Button --}}
+                        <button type="button" @click="openAddClass({{ $section->id }})"
+                                class="inline-flex items-center gap-1.5 bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-[10px] px-3 py-1.5 rounded-lg transition cursor-pointer">
+                            <i data-lucide="plus" class="w-3 h-3"></i> Add Class
+                        </button>
+                        
                         {{-- Rename Action --}}
                         <button type="button" @click="openEdit({{ $section->id }}, '{{ $section->name ?: '' }}')"
                                 class="inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-[10px] px-3 py-1.5 rounded-lg transition cursor-pointer">
@@ -274,9 +280,14 @@
 
                 @if($entries->isEmpty())
                     <div class="p-6">
-                        <div class="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-10 text-center">
+                        <div class="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-10 text-center flex flex-col items-center justify-center">
                             <i data-lucide="calendar-plus" class="mx-auto h-6 w-6 text-slate-400"></i>
                             <p class="mt-2 text-xs font-bold text-slate-500">No classes scheduled yet.</p>
+                            <button type="button" 
+                                    @click="openAddClass({{ $section->id }})"
+                                    class="mt-4 inline-flex items-center gap-1.5 bg-indigo-700 hover:bg-indigo-850 text-white font-extrabold text-xs px-4 py-2.5 rounded-xl transition shadow-3xs cursor-pointer">
+                                <i data-lucide="plus-circle" class="w-4 h-4"></i> Add First Class
+                            </button>
                         </div>
                     </div>
                 @else

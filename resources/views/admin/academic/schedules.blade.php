@@ -21,6 +21,31 @@
         editingCell: null,
         createModal: false,
         editModal: false,
+        addModal: false,
+        deleteModal: false,
+        editAction: '',
+        deleteAction: '',
+        editForm: {
+            id: 0,
+            section_id: 0,
+            subject_name: '',
+            teacher_name: '',
+            day: 'Sunday',
+            start_time: '08:00',
+            end_time: '09:00'
+        },
+        openAddClass(sectionId) {
+            this.editForm = {
+                id: 0,
+                section_id: sectionId,
+                subject_name: '',
+                teacher_name: '',
+                day: 'Sunday',
+                start_time: '08:00',
+                end_time: '09:00'
+            };
+            this.addModal = true;
+        },
         editId: null,
         editName: '',
         editError: '',
