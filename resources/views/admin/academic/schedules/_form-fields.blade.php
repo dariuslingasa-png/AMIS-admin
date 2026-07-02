@@ -4,8 +4,8 @@
         <div>
             <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-2">Timetable Preview</span>
             
-            <!-- When there are intervals to show -->
-            <div x-show="getPreviewIntervals().length > 0" x-transition class="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-3xs">
+            <!-- Table is always visible, only body rows change dynamically -->
+            <div class="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-3xs">
                 <table class="w-full text-[9px] border-collapse">
                     <thead>
                         <tr class="bg-slate-100 border-b border-slate-200">
@@ -16,6 +16,7 @@
                         </tr>
                     </thead>
                     <tbody>
+                        <!-- Loop intervals if populated -->
                         <template x-for="interval in getPreviewIntervals()">
                             <tr class="border-b border-slate-100 last:border-0">
                                 <td class="p-2 border-r border-slate-200 font-extrabold text-slate-500 text-center text-[8px]" x-text="interval.label"></td>
@@ -37,17 +38,19 @@
                                 </template>
                             </tr>
                         </template>
+
+                        <!-- Empty state placeholder inside table body if no intervals -->
+                        <tr x-show="getPreviewIntervals().length === 0">
+                            <td colspan="6" class="p-12 text-center text-slate-400 bg-white">
+                                <div class="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-350 mx-auto mb-3 border border-slate-100">
+                                    <i data-lucide="clock" class="w-4.5 h-4.5"></i>
+                                </div>
+                                <span class="text-[10px] font-extrabold text-slate-700 uppercase block mb-1">Enter Schedule Times</span>
+                                <p class="text-[9px] text-slate-400 max-w-[200px] mx-auto leading-normal">Type a **Start** and **End** time on the right to preview your schedule block.</p>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
-            </div>
-
-            <!-- Empty Placeholder (when times are blank) -->
-            <div x-show="getPreviewIntervals().length === 0" x-transition class="border border-dashed border-slate-200 rounded-xl bg-white p-12 text-center flex flex-col items-center justify-center min-h-[250px]">
-                <div class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-350 mb-3 border border-slate-100">
-                    <i data-lucide="clock" class="w-5 h-5"></i>
-                </div>
-                <span class="text-[11px] font-extrabold text-slate-700 uppercase block mb-1">Enter Schedule Times</span>
-                <p class="text-[9.5px] text-slate-400 max-w-[200px] leading-normal">Type a **Start** and **End** time on the right to preview your schedule block here.</p>
             </div>
         </div>
 
@@ -99,8 +102,12 @@
             <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Class Section *</span>
             <select name="section_id" x-model="editForm.section_id" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl px-3 py-2 outline-none truncate max-w-full">
                 @foreach($sections as $section)
+                    @php
+                        $shortMode = str_contains(strtolower($section->learning_mode), 'online') ? 'Online' : 'F2F';
+                        $genderName = ucfirst($section->gender === 'male' ? 'Boys' : ($section->gender === 'female' ? 'Girls' : 'Merge'));
+                    @endphp
                     <option value="{{ $section->id }}">
-                        {{ $section->grade_level }} - {{ $section->official_name ?: ($section->name ?: 'General') }} ({{ $section->formatted_learning_mode }} - {{ ucfirst($section->gender === 'male' ? 'Boys' : ($section->gender === 'female' ? 'Girls' : 'Merge')) }})
+                        {{ $section->grade_level }} - {{ $section->official_name ?: ($section->name ?: 'General') }} ({{ $shortMode }} · {{ $genderName }})
                     </option>
                 @endforeach
             </select>
