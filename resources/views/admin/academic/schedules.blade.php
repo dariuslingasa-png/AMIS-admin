@@ -87,7 +87,17 @@
         hasClassCell(day, hour) {
             return !!this.getClassCell(day, hour);
         },
+        isDraftCell(day, hour) {
+            if (!this.isDaySelected(day)) return false;
+            if (!this.editForm.start_time || !this.editForm.end_time) return false;
+            let [startH, startM] = this.editForm.start_time.split(':').map(Number);
+            let [endH, endM] = this.editForm.end_time.split(':').map(Number);
+            return hour >= startH && hour < endH;
+        },
         getClassCellBg(day, hour) {
+            if (this.isDraftCell(day, hour)) {
+                return 'bg-indigo-600 text-white font-extrabold border border-indigo-700 shadow-xs';
+            }
             let schedule = this.getClassCell(day, hour);
             if (!schedule) return 'bg-white hover:bg-slate-50 border border-slate-100';
             let color = schedule.color_class || 'academic';
@@ -109,14 +119,25 @@
         clickPreviewCell(day, hour) {
             let schedule = this.getClassCell(day, hour);
             if (!schedule) {
-                this.editForm.day = day;
-                if (!this.editForm.selected_days.includes(day)) {
+                if (!this.editForm.start_time || !this.editForm.end_time) {
+                    this.editForm.day = day;
                     this.editForm.selected_days = [day];
+                    this.editForm.start_time = String(hour).padStart(2, '0') + ':00';
+                    this.editForm.end_time = String(hour + 1).padStart(2, '0') + ':00';
+                    return;
                 }
-                let startH = String(hour).padStart(2, '0');
-                let endH = String(hour + 1).padStart(2, '0');
-                this.editForm.start_time = `${startH}:00`;
-                this.editForm.end_time = `${endH}:00`;
+
+                let [startH, startM] = this.editForm.start_time.split(':').map(Number);
+                if (hour === startH) {
+                    // Same time slot: toggle day selection!
+                    this.toggleDaySelection(day);
+                } else {
+                    // Different slot: set new time and select only this day
+                    this.editForm.day = day;
+                    this.editForm.selected_days = [day];
+                    this.editForm.start_time = String(hour).padStart(2, '0') + ':00';
+                    this.editForm.end_time = String(hour + 1).padStart(2, '0') + ':00';
+                }
             }
         },
         editId: null,

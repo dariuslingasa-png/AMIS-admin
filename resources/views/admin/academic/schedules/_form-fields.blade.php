@@ -57,13 +57,13 @@
                                             :class="getClassCellBg(d, hour)"
                                             @click="clickPreviewCell(d, hour)">
                                             
-                                            <!-- Show class name -->
+                                            <!-- Show class name or draft -->
                                             <span class="block truncate max-w-[42px] mx-auto text-[7.5px]"
-                                                  :title="getClassCellTitle(d, hour)"
-                                                  x-text="getClassCellSubject(d, hour)"></span>
+                                                  :title="isDraftCell(d, hour) ? 'Draft selection' : getClassCellTitle(d, hour)"
+                                                  x-text="isDraftCell(d, hour) ? (editForm.subject_name || 'Draft') : getClassCellSubject(d, hour)"></span>
                                                   
                                             <!-- Plus icon on hover -->
-                                            <template x-if="!hasClassCell(d, hour)">
+                                            <template x-if="!hasClassCell(d, hour) && !isDraftCell(d, hour)">
                                                 <span class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 text-indigo-600 font-black text-[9px] bg-indigo-50/50">+</span>
                                             </template>
                                         </td>
