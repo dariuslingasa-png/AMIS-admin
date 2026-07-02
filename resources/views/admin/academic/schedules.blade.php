@@ -6,8 +6,15 @@
     $failedScheduleId = (int) old('schedule_id', 0);
     $activeSection = $sections->firstWhere('id', $activeSectionId) ?? $sections->first();
     $activeGradeLevel = $activeSection?->grade_level ?? '';
-    $reopenAddModal = session('reopen_add_modal');
+    $reopenAddModal  = session('reopen_add_modal');
+    $clearDraftSection = session('clear_draft_section');
 @endphp
+
+@if($clearDraftSection)
+<script>
+    try { localStorage.removeItem('schedule_draft_{{ $clearDraftSection }}'); } catch(e) {}
+</script>
+@endif
 
 <x-admin-layout title="Class Management Workspace">
     <div class="analytics-page flex flex-col gap-6" x-data="{

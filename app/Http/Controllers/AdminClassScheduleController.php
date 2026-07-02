@@ -117,7 +117,8 @@ class AdminClassScheduleController extends Controller
             return back()
                 ->with('status', 'Class schedule saved. Add your next class below.')
                 ->with('schedule_workspace', 'schedule')
-                ->with('reopen_add_modal', $sectionId);
+                ->with('reopen_add_modal', $sectionId)
+                ->with('clear_draft_section', $sectionId);
         }
 
         return back()

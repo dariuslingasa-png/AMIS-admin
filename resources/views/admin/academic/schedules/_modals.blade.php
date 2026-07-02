@@ -43,14 +43,14 @@
             <button type="button" class="px-4 py-2 text-xs font-bold text-slate-655 hover:bg-slate-50 border border-slate-200 rounded-xl transition cursor-pointer" @click="closeAddModal()">Cancel</button>
             <div class="flex gap-2">
                 <button type="submit"
-                    @click="clearDraft(); document.getElementById('add_another_flag').value = '1'; isSaving = true"
+                    @click="clearDraft(); document.getElementById('add_another_flag').value = '1'"
                     class="relative inline-flex min-w-[160px] items-center justify-center gap-1.5 px-4 py-2 text-xs font-bold text-indigo-700 bg-white border-2 border-indigo-200 hover:bg-indigo-50 hover:border-indigo-400 rounded-xl transition cursor-pointer"
                     :class="isSaving ? 'btn-loading opacity-60' : ''" :disabled="isSaving">
                     <span class="btn-spinner" x-show="isSaving"></span>
                     <span class="btn-text-content">+ Add Another Slot</span>
                 </button>
                 <button type="submit"
-                    @click="clearDraft(); document.getElementById('add_another_flag').value = '0'; isSaving = true"
+                    @click="clearDraft(); document.getElementById('add_another_flag').value = '0'"
                     class="relative inline-flex min-w-[130px] items-center justify-center px-4 py-2 text-xs font-bold text-white bg-indigo-700 hover:bg-indigo-600 rounded-xl transition cursor-pointer"
                     :class="isSaving ? 'btn-loading' : ''" :disabled="isSaving">
                     <span class="btn-spinner" x-show="isSaving"></span>
