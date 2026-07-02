@@ -303,16 +303,19 @@
             } catch (e) { this.editError = 'Network error. Try again.'; this.editSaving = false; }
         },
         startInlineCreate(sectionId, day, startTime, endTime) {
-            this.editingCell = {
-                type: 'create',
+            // Open the Add modal pre-filled with day, time, and section
+            this.editForm = {
                 id: 0,
                 section_id: sectionId,
+                subject_name: '',
+                teacher_name: '',
                 day: day,
                 start_time: startTime,
                 end_time: endTime,
-                subject_name: '',
-                teacher_name: ''
+                spans_all_days: false,
+                selected_days: [day]
             };
+            this.addModal = true;
             this.$nextTick(() => window.lucide?.createIcons?.());
         },
         startInlineEdit(entry) {
