@@ -238,7 +238,7 @@
         getPreviewCellColspan(day, interval) {
             let daysList = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
 
-            // Helper: two cells are "mergeable" if same subject + same time slot
+            // Helper: two cells are mergeable if same subject + same time slot
             let isSameClass = (a, b) => {
                 if (!a || !b) return false;
                 if (a.id && b.id && a.id === b.id) return true;
