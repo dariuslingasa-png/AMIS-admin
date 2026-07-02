@@ -516,6 +516,16 @@
                             </tbody>
                         </table>
                     </div>
+
+                    {{-- Add Another Slot button below the timetable --}}
+                    <div class="flex items-center justify-center pt-3 pb-1">
+                        <button type="button"
+                                @click="openAddClass({{ $section->id }})"
+                                class="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-extrabold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 hover:border-indigo-400 rounded-xl transition cursor-pointer shadow-xs">
+                            <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+                            Add Another Slot
+                        </button>
+                    </div>
                 @endif
             </div>
         @endforeach
