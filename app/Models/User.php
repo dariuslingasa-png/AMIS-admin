@@ -282,7 +282,9 @@ class User extends Authenticatable
             || $routeName === 'admin.applicants.index'
             || $routeName === 'admin.applicants.show'
             || $routeName === 'admin.students.index'
-            || $routeName === 'admin.students.show';
+            || $routeName === 'admin.students.show'
+            || $routeName === 'admin.students.reports'
+            || str_starts_with($routeName, 'admin.support.');
     }
 
     public function defaultAccessPermissions(): array

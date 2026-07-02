@@ -54,103 +54,77 @@
                 <table class="w-full text-left text-sm">
                     <thead class="bg-slate-50 text-xs uppercase tracking-wider text-slate-500 border-b border-slate-100">
                         <tr>
-                            <th class="px-5 py-4 font-black">Timeline & Student</th>
-                            <th class="w-36 px-5 py-4 font-black">Student ID</th>
-                            <th class="w-48 px-5 py-4 font-black">Assigned Section</th>
-                            <th class="w-56 px-5 py-4 font-black">Credentials Set</th>
-                            <th class="w-48 px-5 py-4 font-black">Verified Payment</th>
-                            <th class="w-40 px-5 py-4 font-black">MS Cloud State</th>
+                            <th class="px-5 py-4 font-black">Date & Time</th>
+                            <th class="w-48 px-5 py-4 font-black">Event Action</th>
+                            <th class="px-5 py-4 font-black">Audit Message</th>
+                            <th class="w-64 px-5 py-4 font-black">Performed By</th>
+                            <th class="w-36 px-5 py-4 font-black">IP Address</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 bg-white">
                         @forelse ($logs as $log)
                             @php
-                                $fullName = trim(($log->applicant->first_name ?? '').' '.($log->applicant->middle_name ?? '').' '.($log->applicant->last_name ?? ''));
-                                $name = $fullName ? \Illuminate\Support\Str::upper($fullName) : 'STUDENT ACCOUNT';
-                                $initials = collect(explode(' ', $name))->filter()->take(2)->map(fn ($part) => \Illuminate\Support\Str::substr($part, 0, 1))->join('');
-                                $photoUrl = \App\Support\EnrollmentStorage::url($log->applicant->photo_2x2_url ?? null);
-                                $msStatus = $log->studentSection->ms_status ?? 'pending';
-                                $paddedAppId = $log->applicant ? 'APPLICANT #' . str_pad($log->applicant->id, 4, '0', STR_PAD_LEFT) : 'APPLICANT';
+                                $badgeColor = match($log->event) {
+                                    'application_approved', 'license_assigned', 'account_created' => 'green',
+                                    'license_revoked', 'user_deleted' => 'red',
+                                    'credentials_sent', 'credentials_resent' => 'yellow',
+                                    'email_renamed' => 'blue',
+                                    default => 'gray'
+                                };
+                                $eventLabel = match($log->event) {
+                                    'application_approved' => 'Approved',
+                                    'application_status_updated' => 'Status Update',
+                                    'onboarding_email_resent' => 'Resend Mail',
+                                    'section_verified' => 'Section Verified',
+                                    'documents_approved' => 'Docs Approved',
+                                    'documents_rejected' => 'Docs Rejected',
+                                    'document_approved' => 'Doc Approved',
+                                    'document_rejected' => 'Doc Rejected',
+                                    'license_assigned' => 'License Sync',
+                                    'credentials_sent' => 'Credentials Set',
+                                    'credentials_resent' => 'Credentials Resent',
+                                    'email_renamed' => 'Email Updated',
+                                    default => ucfirst(str_replace('_', ' ', $log->event))
+                                };
                             @endphp
                             <tr class="transition hover:bg-slate-50/50">
-                                <!-- Timestamp and Student Initials & Name -->
-                                <td class="px-5 py-4">
-                                    <div class="flex items-center gap-3">
-                                        <!-- Timeline point indicator -->
-                                        <div class="relative flex flex-col items-center">
-                                            <div class="h-2 w-2 rounded-full bg-emerald-600 ring-4 ring-emerald-50"></div>
-                                        </div>
-                                        <x-smart-image
-                                            :src="$photoUrl"
-                                            :alt="$name"
-                                            :fallback-initials="$initials ?: 'ST'"
-                                            size="40"
-                                            rounded="rounded-xl"
-                                            containerClass="bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100 font-extrabold"
-                                            :eager="false"
-                                        />
-                                        <div>
-                                            <div class="font-extrabold text-slate-900 leading-tight">{{ $name }}</div>
-                                            <div class="mt-1 text-[10px] font-bold text-slate-400 flex items-center gap-1">
-                                                <i data-lucide="clock" class="h-3 w-3"></i>
-                                                {{ $log->created_at ? $log->created_at->timezone('Asia/Manila')->format('M d, Y h:i A') : 'NA' }}
-                                            </div>
-                                        </div>
+                                <!-- Date & Time -->
+                                <td class="px-5 py-4 text-xs font-bold text-slate-700 whitespace-nowrap">
+                                    <div class="flex items-center gap-2">
+                                        <div class="h-2 w-2 rounded-full bg-emerald-500 ring-4 ring-emerald-50"></div>
+                                        <span>{{ $log->created_at ? $log->created_at->timezone('Asia/Manila')->format('M d, Y h:i A') : 'NA' }}</span>
                                     </div>
                                 </td>
 
-                                <!-- Student ID -->
+                                <!-- Event Action Badge -->
                                 <td class="px-5 py-4">
-                                    <span class="font-black text-slate-800 bg-slate-100 px-2 py-0.5 rounded text-xs">
-                                        {{ $log->student_number ?? '-' }}
-                                    </span>
+                                    <x-badge :color="$badgeColor">{{ $eventLabel }}</x-badge>
                                 </td>
 
-                                <!-- Grade Level & Section -->
+                                <!-- Audit Message -->
                                 <td class="px-5 py-4">
-                                    <div class="font-bold text-slate-700">{{ $log->grade_level ?? '-' }}</div>
-                                    <div class="mt-0.5 text-[10px] font-bold uppercase text-slate-400">
-                                        {{ $log->studentSection->section->official_name ?? $log->studentSection->section->name ?? 'No Section' }}
+                                    <div class="text-sm font-extrabold text-slate-900 leading-normal">
+                                        {{ $log->message }}
                                     </div>
                                 </td>
 
-                                <!-- School Email -->
+                                <!-- Performed By -->
                                 <td class="px-5 py-4">
-                                    <div class="font-semibold text-slate-700 text-xs flex items-center gap-1">
-                                        <i data-lucide="mail" class="h-3 w-3 text-slate-400"></i>
-                                        {{ $log->school_email ?? '-' }}
-                                    </div>
-                                    <div class="mt-0.5 text-[10px] font-bold text-slate-400">
-                                        {{ $paddedAppId }}
+                                    <div class="font-bold text-slate-700 text-xs flex items-center gap-1">
+                                        <i data-lucide="user" class="h-3.5 w-3.5 text-slate-400"></i>
+                                        {{ $log->email ?: 'System Process' }}
                                     </div>
                                 </td>
 
-                                <!-- Verified Payment & OR -->
-                                <td class="px-5 py-4">
-                                    @if($log->applicant && $log->applicant->payment)
-                                        <div class="font-bold text-emerald-700 text-xs flex items-center gap-1">
-                                            <i data-lucide="badge-check" class="h-3.5 w-3.5"></i>
-                                            OR {{ $log->applicant->payment->or_number ?: 'VERIFIED' }}
-                                        </div>
-                                        <div class="mt-0.5 text-[10px] font-semibold text-slate-500">
-                                            Amount: PHP {{ number_format($log->applicant->payment->amount_paid ?? 0, 2) }}
-                                        </div>
-                                    @else
-                                        <span class="text-xs text-slate-400 font-bold">Onboarded (Old/Scholar)</span>
-                                    @endif
-                                </td>
-
-                                <!-- MS Sync status -->
-                                <td class="px-5 py-4">
-                                    <x-badge :color="$msStatusBadge[$msStatus] ?? 'gray'">
-                                        {{ $msStatusLabel[$msStatus] ?? 'Unknown' }}
-                                    </x-badge>
+                                <!-- IP Address -->
+                                <td class="px-5 py-4 font-mono text-xs text-slate-500 whitespace-nowrap">
+                                    {{ $log->ip_address ?: '-' }}
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="px-5 py-12 text-center text-sm text-slate-400">
-                                    No enrollment onboarding events logged.
+                                <td colspan="5" class="px-5 py-12 text-center text-sm text-slate-400">
+                                    No administrative history events logged.
                                 </td>
                             </tr>
                         @endforelse

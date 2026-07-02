@@ -46,7 +46,7 @@
         <option value="temp" @selected(request('password_status') === 'temp')>Temporary Password</option>
         <option value="no_account" @selected(request('password_status') === 'no_account')>No Microsoft Account</option>
     </select>
-    <button class="col-span-12 lg:col-span-1 inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-800">
+    <button class="col-span-12 lg:col-span-1 inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white shadow-sm transition-colors duration-100 hover:bg-emerald-800">
         <i data-lucide="filter" class="h-4 w-4"></i>
         <span class="lg:hidden">Filter</span>
     </button>

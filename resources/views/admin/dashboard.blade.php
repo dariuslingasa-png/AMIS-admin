@@ -44,7 +44,7 @@
             </div>
             <div class="flex items-center gap-2">
                 <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">{{ $totalApplications }} Applications Applied</span>
-                <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">14 modules</span>
+                <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">15 modules</span>
             </div>
         </div>
 
@@ -59,6 +59,8 @@
             <x-dashboard.module-card icon="chart-no-axes-combined" name="Analytics" owner="Admin Analytics" summary="Charts, insights, performance reports" accent="orange" shape="circle" status="Coming Soon" disabled />
             <x-dashboard.module-card icon="file-down" name="Reports" owner="Registrar / Finance" summary="PDF, Excel, registrar and finance exports" accent="pink" shape="arch" status="Coming Soon" disabled />
             <x-dashboard.module-card :href="route('admin.administration.users.index')" icon="users" name="Administration" owner="System Admin" summary="User directories, verification status, and credentials security" accent="fuchsia" shape="soft" />
+            <x-dashboard.module-card :href="route('admin.support.index')" icon="message-square" name="Support Center" owner="IT / Support" summary="Manage student and parent inquiries, concerns, and support tickets" accent="rose" shape="soft" />
+            <x-dashboard.module-card :href="route('admin.registrations.halaqah')" icon="user-plus" name="Registrations" owner="Registrar Office" summary="Halaqah Online, study circles, public inquiry registrations" accent="purple" shape="soft" />
             <x-dashboard.module-card :href="route('admin.access-control.roles.index')" icon="key" name="Access Control" owner="Security Officer" summary="Roles, permissions matrix, and access policy definitions" accent="indigo" shape="soft" />
             <x-dashboard.module-card :href="route('admin.security-workspace.login-activity')" icon="shield-check" name="Security Workspace" owner="Security Auditing" summary="Session tracking, login attempts, force revokes, and alerts" accent="rose" shape="soft" />
             <x-dashboard.module-card :href="route('admin.system-management.backups.index')" icon="settings-2" name="System Management" owner="DevOps Admin" summary="Backup Center, restore dumps, health status, and API sync" accent="slate" shape="soft" />

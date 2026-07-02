@@ -10,13 +10,12 @@
             ],
         ],
         [
-            'active' => (request()->routeIs('admin.applications.*') || request()->routeIs('admin.applicants.*') || request()->routeIs('admin.enrollment.index') || request()->routeIs('admin.enrollment.masters-list') || request()->routeIs('admin.students.families')) && request('workspace') !== 'reports',
+            'active' => (request()->routeIs('admin.applications.*') || request()->routeIs('admin.applicants.*') || request()->routeIs('admin.enrollment.index') || request()->routeIs('admin.enrollment.masters-list')) && request('workspace') !== 'reports',
             'icon' => 'clipboard-check', 'iconClass' => 'text-violet-600', 'headerClass' => 'text-violet-700', 'activeClass' => 'sidebar-link-active-violet', 'title' => 'Applications',
             'links' => [
                 ['Dashboard', 'layout-dashboard', route('admin.applications.dashboard'), request()->routeIs('admin.applications.dashboard')],
                 ['Enrollment Applications', 'file-text', route('admin.applications.enrollment'), request()->routeIs('admin.applications.enrollment') || request()->routeIs('admin.applicants.index')],
                 ['Applicant Review', 'file-search', route('admin.applications.review'), request()->routeIs('admin.applications.review') || request()->routeIs('admin.applicants.show')],
-                ['Family Review', 'users', route('admin.students.families'), request()->routeIs('admin.students.families')],
                 ['Requirements', 'list-checks', route('admin.applications.requirements'), request()->routeIs('admin.applications.requirements')],
                 ['Approval Workflow', 'shield-check', route('admin.applications.approval'), request()->routeIs('admin.applications.approval')],
                 ['Enrollee Masters List', 'list', route('admin.enrollment.masters-list'), request()->routeIs('admin.enrollment.masters-list') && request('workspace') !== 'reports'],
@@ -28,14 +27,10 @@
             'links' => [
                 ['Dashboard', 'layout-dashboard', route('admin.students.dashboard'), request()->routeIs('admin.students.dashboard')],
                 ['Student Records', 'user-check', route('admin.students.index'), (request()->routeIs('admin.students.index') || request()->routeIs('admin.students.show')) && !request()->routeIs('admin.students.families')],
-                ['Family Accounts', 'users', route('admin.students.families'), request()->routeIs('admin.students.families')],
                 ['Account Onboarding', 'user-cog', route('admin.students.accounts'), request()->routeIs('admin.students.accounts')],
-                ['Student Documents', 'file-text', route('admin.students.documents'), request()->routeIs('admin.students.documents')],
-                ['Document Verification', 'shield-check', route('admin.students.verification'), request()->routeIs('admin.students.verification')],
                 ['Enrollment History', 'history', route('admin.students.history'), request()->routeIs('admin.students.history')],
-                ['Promotions & Transfers', 'arrow-left-right', route('admin.students.promotions'), request()->routeIs('admin.students.promotions')],
-                ['Section Occupancy', 'grid', route('admin.students.occupancy'), request()->routeIs('admin.students.occupancy')],
-                ['Reports', 'file-text', route('admin.students.reports'), request()->routeIs('admin.students.reports')],
+                ['Reports & Analytics', 'file-text', route('admin.students.reports'), request()->routeIs('admin.students.reports')],
+                ['Call Attendance', 'calendar-days', route('admin.students.attendance'), request()->routeIs('admin.students.attendance')],
             ],
         ],
         [
@@ -43,8 +38,7 @@
             'icon' => 'book-open-check', 'iconClass' => 'text-sky-600', 'headerClass' => 'text-sky-700', 'activeClass' => 'sidebar-link-active-sky', 'title' => 'Academic',
             'links' => [
                 ['Dashboard', 'layout-dashboard', route('admin.academic.dashboard'), request()->routeIs('admin.academic.dashboard') || request()->routeIs('admin.academic.dashboard.index')],
-                ['Class Sections', 'grid', route('admin.ms-teams.index'), request()->routeIs('admin.ms-teams.*')],
-                ['Class Schedule', 'calendar-days', route('admin.academic.schedules'), request()->routeIs('admin.academic.schedules')],
+                ['Class Management', 'calendar-days', route('admin.academic.schedules'), request()->routeIs('admin.academic.schedules')],
                 ['Adviser', 'contact-2', route('admin.academic.class-advisory'), request()->routeIs('admin.academic.class-advisory')],
                 ['Teachers', 'contact-2', route('admin.academic.teachers'), request()->routeIs('admin.academic.teachers')],
                 ['Operations', 'activity', route('admin.academic.operations'), request()->routeIs('admin.academic.operations')],
@@ -98,6 +92,20 @@
             ],
         ],
         [
+            'active' => request()->routeIs('admin.support.*'),
+            'icon' => 'message-square', 'iconClass' => 'text-rose-600', 'headerClass' => 'text-rose-700', 'activeClass' => 'sidebar-link-active-rose', 'title' => 'Support Center',
+            'links' => [
+                ['Inquiries List', 'list', route('admin.support.index'), request()->routeIs('admin.support.index') || request()->routeIs('admin.support.show')],
+            ],
+        ],
+        [
+            'active' => request()->routeIs('admin.registrations.*'),
+            'icon' => 'user-plus', 'iconClass' => 'text-emerald-600', 'headerClass' => 'text-emerald-700', 'activeClass' => 'sidebar-link-active-emerald', 'title' => 'Registrations',
+            'links' => [
+                ['Halaqah Online', 'check-square', route('admin.registrations.halaqah'), request()->routeIs('admin.registrations.halaqah')],
+            ],
+        ],
+        [
             'active' => request()->routeIs('admin.access-control.*'),
             'icon' => 'key', 'iconClass' => 'text-indigo-600', 'headerClass' => 'text-indigo-700', 'activeClass' => 'sidebar-link-active-indigo', 'title' => 'Access Control',
             'links' => [
@@ -147,13 +155,14 @@
 
     if ($isTeacherAdminViewer) {
         $workspaceSections = array_values(array_filter($workspaceSections, function ($section) {
-            return in_array($section['title'], ['Applications', 'Students'], true);
+            return in_array($section['title'], ['Applications', 'Students', 'Support Center'], true);
         }));
 
         $workspaceSections = array_map(function ($section) {
             $section['links'] = array_values(array_filter($section['links'], function ($link) use ($section) {
                 return ($section['title'] === 'Applications' && $link[0] === 'Enrollment Applications')
-                    || ($section['title'] === 'Students' && $link[0] === 'Student Records');
+                    || ($section['title'] === 'Students' && ($link[0] === 'Student Records' || $link[0] === 'Reports & Analytics' || $link[0] === 'Call Attendance'))
+                    || ($section['title'] === 'Support Center');
             }));
 
             return $section;

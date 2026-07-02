@@ -15,29 +15,7 @@ class AdminMsTeamsController extends Controller
 {
     public function index(Request $request)
     {
-        $sections = Section::withCount(['students as enrolled_count' => fn($q) => $q->where('ms_status', 'enrolled')])
-            ->withCount('subjects')
-            ->orderBy('grade_level')
-            ->orderBy('learning_mode')
-            ->orderBy('shift')
-            ->orderBy('gender')
-            ->get();
-
-        $stats = [
-            'total_sections' => $sections->count(),
-            'with_team'      => $sections->whereNotNull('ms_team_id')->count(),
-            'without_team'   => $sections->whereNull('ms_team_id')->count(),
-            'total_enrolled' => StudentSection::where('ms_status', 'enrolled')->count(),
-            'total_failed'   => StudentSection::where('ms_status', 'failed')->count(),
-        ];
-
-        $schoolYear = config('services.school.year');
-        $gradeTeams = \App\Models\MsTeam::where('type', 'grade')
-            ->where('school_year', $schoolYear)
-            ->get()
-            ->keyBy('grade_level');
-
-        return view('admin.ms-teams.index', compact('sections', 'stats', 'gradeTeams'));
+        return redirect()->route('admin.academic.schedules');
     }
 
     public function store(Request $request)
@@ -46,90 +24,58 @@ class AdminMsTeamsController extends Controller
             'grade_level'   => 'required|string',
             'learning_mode' => 'required|string',
             'name'          => 'nullable|string|max:255',
+            'gender'        => 'required|in:male,female',
+            'shift'         => 'nullable|string',
             'school_year'   => 'required|string',
-            // Flexible: arrays of shifts + genders
-            'shifts'        => 'nullable|array',
-            'shifts.*'      => 'string',
-            'genders'       => 'nullable|array',
-            'genders.*'     => 'in:male,female',
-            // F2F: single gender
-            'gender_single' => 'nullable|in:male,female',
         ]);
 
-        $isFlexible  = $request->learning_mode === 'Flexible Online Learning';
         $sectionName = $request->name ?: null;
-        $graph       = new MicrosoftGraphService();
-        $created     = 0;
+        $shift       = $request->learning_mode === 'Flexible Online Learning' ? $request->shift : null;
+        $genderLabel = $request->gender === 'male' ? 'Boys' : 'Girls';
 
-        if ($isFlexible) {
-            $shifts  = $request->input('shifts', []);
-            $genders = $request->input('genders', []);
+        // Grade prefix: Kinder 1 → K1, Kinder 2 → K2, etc.
+        $grade = $request->grade_level;
+        if ($grade === 'Kinder 1') $prefix = 'K1';
+        elseif ($grade === 'Kinder 2') $prefix = 'K2';
+        else $prefix = 'G' . str_replace('Grade ', '', $grade);
 
-            if (empty($shifts) || empty($genders)) {
-                return back()->withErrors(['ms' => 'Select at least one shift and one gender.'])->withInput();
+        $shiftLabel = $shift ? ($shift === '1st Shift' ? '1st Shift' : '2nd Shift') : 'F2F';
+        $namePart   = $sectionName ? " - {$sectionName}" : '';
+        $teamName   = "{$prefix}{$namePart} [{$genderLabel} & {$shiftLabel}]";
+
+        $msTeamId = null; $msTeamUrl = null;
+        try {
+            $graph     = new MicrosoftGraphService();
+            $result    = $graph->createTeam($teamName);
+            $msTeamId  = $graph->waitForTeam($result['id']);
+            $msTeamUrl = "https://teams.microsoft.com/l/team/{$msTeamId}";
+
+            $generalChannelId = $graph->getGeneralChannelId($msTeamId);
+            if ($generalChannelId) {
+                $graph->postWelcomeCard($msTeamId, $generalChannelId, [
+                    'grade_level'   => $request->grade_level,
+                    'learning_mode' => $request->learning_mode,
+                    'shift'         => $shift,
+                    'gender'        => $request->gender,
+                ]);
             }
-
-            foreach ($shifts as $shift) {
-                foreach ($genders as $gender) {
-                    $genderLabel = $gender === 'male' ? 'Boys' : 'Girls';
-                    $teamName    = $request->grade_level
-                        . ($sectionName ? " - {$sectionName}" : '')
-                        . " {$shift} {$genderLabel} {$request->school_year}";
-
-                    $msTeamId = null; $msTeamUrl = null;
-                    try {
-                        $result   = $graph->createTeam($teamName);
-                        $msTeamId = $graph->waitForTeam($result['id']);
-                        $msTeamUrl = "https://teams.microsoft.com/l/team/{$msTeamId}";
-                    } catch (\Exception $e) {
-                        Log::error("Failed to create MS Team [{$teamName}]: " . $e->getMessage());
-                    }
-
-                    Section::create([
-                        'name'          => $sectionName,
-                        'grade_level'   => $request->grade_level,
-                        'learning_mode' => $request->learning_mode,
-                        'shift'         => $shift,
-                        'gender'        => $gender,
-                        'school_year'   => $request->school_year,
-                        'ms_team_id'    => $msTeamId,
-                        'ms_team_url'   => $msTeamUrl,
-                    ]);
-                    $created++;
-                }
-            }
-        } else {
-            // Face-to-Face — single section
-            $gender      = $request->gender_single ?? 'male';
-            $genderLabel = $gender === 'male' ? 'Boys' : 'Girls';
-            $teamName    = $request->grade_level
-                . ($sectionName ? " - {$sectionName}" : '')
-                . " F2F {$genderLabel} {$request->school_year}";
-
-            $msTeamId = null; $msTeamUrl = null;
-            try {
-                $result   = $graph->createTeam($teamName);
-                $msTeamId = $graph->waitForTeam($result['id']);
-                $msTeamUrl = "https://teams.microsoft.com/l/team/{$msTeamId}";
-            } catch (\Exception $e) {
-                Log::error("Failed to create MS Team [{$teamName}]: " . $e->getMessage());
-            }
-
-            Section::create([
-                'name'          => $sectionName,
-                'grade_level'   => $request->grade_level,
-                'learning_mode' => $request->learning_mode,
-                'shift'         => null,
-                'gender'        => $gender,
-                'school_year'   => $request->school_year,
-                'ms_team_id'    => $msTeamId,
-                'ms_team_url'   => $msTeamUrl,
-            ]);
-            $created = 1;
+        } catch (\Exception $e) {
+            Log::error("Failed to create MS Team [{$teamName}]: " . $e->getMessage());
         }
 
-        return redirect()->route('admin.ms-teams.index')
-            ->with('success', "{$created} section(s) created for {$request->grade_level}.");
+        Section::create([
+            'name'          => $sectionName,
+            'grade_level'   => $request->grade_level,
+            'learning_mode' => $request->learning_mode,
+            'shift'         => $shift,
+            'gender'        => $request->gender,
+            'school_year'   => $request->school_year,
+            'ms_team_id'    => $msTeamId,
+            'ms_team_url'   => $msTeamUrl,
+        ]);
+
+        return redirect()->route('admin.academic.schedules')
+            ->with('success', "Section created successfully.");
     }
 
     /**
@@ -316,8 +262,9 @@ class AdminMsTeamsController extends Controller
             }
         }
 
-        return redirect()->route('admin.ms-teams.index')
-            ->with('success', "Section \"{$section->grade_level}\" deleted." . ($msTeamId ? ' MS Team also removed from Azure.' : ''));
+        return redirect()->route('admin.academic.schedules')
+            ->with('success', "Section \"{$section->grade_level}\" deleted." . ($msTeamId ? ' MS Team also removed from Azure.' : ''))
+            ->with('schedule_workspace', 'sections');
     }
 
     /**
@@ -590,6 +537,110 @@ class AdminMsTeamsController extends Controller
         } catch (\Exception $e) {
             Log::error("syncAdvisor failed: " . $e->getMessage());
             return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+        }
+    }
+
+    /**
+     * Render the Teams Structure Explorer page.
+     */
+    public function structure()
+    {
+        $sections = Section::whereNotNull('ms_team_id')
+            ->orderByRaw("FIELD(grade_level,'Kinder 1','Kinder 2','Grade 1','Grade 2','Grade 3','Grade 4','Grade 5','Grade 6','Grade 7','Grade 8','Grade 9','Grade 10','Grade 11','Grade 12')")
+            ->orderBy('shift')
+            ->orderBy('gender')
+            ->get();
+
+        $stats = [
+            'total_sections' => $sections->count(),
+            'no_team'        => Section::whereNull('ms_team_id')->count(),
+        ];
+
+        return view('admin.ms-teams.structure', compact('sections', 'stats'));
+    }
+
+    /**
+     * AJAX: fetch live channels + members for one section team from MS Graph.
+     */
+    public function structureData(Request $request)
+    {
+        $sectionId = $request->get('section_id');
+        $section   = Section::findOrFail($sectionId);
+
+        if (!$section->ms_team_id) {
+            return response()->json(['success' => false, 'message' => 'No MS Team linked.'], 422);
+        }
+
+        $graph = new MicrosoftGraphService();
+
+        try {
+            // 1. Get all channels
+            $channels = $graph->listChannels($section->ms_team_id);
+
+            // 2. Get DB subjects (private channels) keyed by ms_channel_id
+            $dbSubjects = \App\Models\SectionSubject::where('section_id', $section->id)
+                ->whereNotNull('ms_channel_id')
+                ->get()
+                ->keyBy('ms_channel_id');
+
+            // 3. Get top-level team members (General channel = all members)
+            $teamMembers = $graph->listTeamMembers($section->ms_team_id);
+
+            $channelData = [];
+            foreach ($channels as $ch) {
+                $chId        = $ch['id'];
+                $chName      = $ch['displayName'];
+                $isPrivate   = ($ch['membershipType'] ?? 'standard') === 'private';
+                $dbSubject   = $dbSubjects->get($chId);
+
+                // For private channels, fetch their own member list
+                $members = [];
+                if ($isPrivate) {
+                    try {
+                        $rawMembers = $graph->listChannelMembers($section->ms_team_id, $chId);
+                        foreach ($rawMembers as $m) {
+                            $members[] = [
+                                'displayName' => $m['displayName'] ?? 'Unknown',
+                                'email'       => $m['email'] ?? null,
+                                'role'        => in_array('owner', $m['roles'] ?? []) ? 'owner' : 'member',
+                            ];
+                        }
+                    } catch (\Exception) {
+                        $members = [];
+                    }
+                } else {
+                    // Standard channel: use team-level members
+                    foreach ($teamMembers as $m) {
+                        $members[] = [
+                            'displayName' => $m['displayName'] ?? 'Unknown',
+                            'email'       => $m['email'] ?? null,
+                            'role'        => in_array('owner', $m['roles'] ?? []) ? 'owner' : 'member',
+                        ];
+                    }
+                }
+
+                $channelData[] = [
+                    'id'           => $chId,
+                    'name'         => $chName,
+                    'type'         => $isPrivate ? 'private' : 'standard',
+                    'subject_name' => $dbSubject?->subject_name,
+                    'teacher_name' => $dbSubject?->teacher_name,
+                    'member_count' => count($members),
+                    'members'      => $members,
+                ];
+            }
+
+            return response()->json([
+                'success'      => true,
+                'section_id'   => $section->id,
+                'team_id'      => $section->ms_team_id,
+                'team_url'     => $section->ms_team_url,
+                'channels'     => $channelData,
+                'total_members'=> count($teamMembers),
+            ]);
+        } catch (\Exception $e) {
+            Log::error("structureData failed for section {$section->id}: " . $e->getMessage());
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
 }

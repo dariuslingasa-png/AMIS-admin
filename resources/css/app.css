@@ -168,9 +168,20 @@ body {
 
 .admin-shell {
     min-height: 100vh;
+    position: relative;
+}
+
+.admin-shell::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
     background:
         radial-gradient(circle at 16% 0%, rgba(16, 185, 129, .08), transparent 30rem),
         linear-gradient(180deg, #f7fbf9 0%, #f8fafc 45%, #f9fafb 100%);
+    pointer-events: none;
+    will-change: transform;
+    transform: translateZ(0);
 }
 
 .admin-sidebar {

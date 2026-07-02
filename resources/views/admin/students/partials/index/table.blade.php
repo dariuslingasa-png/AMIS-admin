@@ -10,35 +10,36 @@
         <table class="w-full text-left text-sm">
             <thead class="bg-slate-50 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
                 <tr class="border-b border-slate-100">
-                    <th class="w-72 px-5 py-4 font-bold">
-                        <a href="{{ $sortUrl('name') }}" class="flex items-center gap-1 hover:text-slate-600 transition print:hidden">
-                            Student Name
-                            <i data-lucide="{{ $sortIcon('name') }}" class="h-3 w-3"></i>
-                        </a>
-                        <span class="hidden print:inline">Student Name</span>
-                    </th>
-                    <th class="w-40 px-5 py-4 font-bold">
+                    <th class="w-32 px-5 py-4 font-bold">
                         <a href="{{ $sortUrl('student_id') }}" class="flex items-center gap-1 hover:text-slate-600 transition print:hidden">
                             AMIS ID
                             <i data-lucide="{{ $sortIcon('student_id') }}" class="h-3 w-3"></i>
                         </a>
                         <span class="hidden print:inline">AMIS ID</span>
                     </th>
-                    <th class="w-32 px-5 py-4 font-bold">
+                    <th class="w-80 px-5 py-4 font-bold">
+                        <a href="{{ $sortUrl('name') }}" class="flex items-center gap-1 hover:text-slate-600 transition print:hidden">
+                            Student Name
+                            <i data-lucide="{{ $sortIcon('name') }}" class="h-3 w-3"></i>
+                        </a>
+                        <span class="hidden print:inline">Student Name</span>
+                    </th>
+                    <th class="w-24 px-5 py-4 font-bold">Type</th>
+                    <th class="w-24 px-5 py-4 font-bold">Mode</th>
+                    <th class="w-28 px-5 py-4 font-bold">
                         <a href="{{ $sortUrl('gender') }}" class="flex items-center gap-1 hover:text-slate-600 transition print:hidden">
                             Gender
                             <i data-lucide="{{ $sortIcon('gender') }}" class="h-3 w-3"></i>
                         </a>
                         <span class="hidden print:inline">Gender</span>
                     </th>
-                    <th class="w-32 px-5 py-4 font-bold">
+                    <th class="w-28 px-5 py-4 font-bold">
                         <a href="{{ $sortUrl('grade') }}" class="flex items-center gap-1 hover:text-slate-600 transition print:hidden">
                             Grade
                             <i data-lucide="{{ $sortIcon('grade') }}" class="h-3 w-3"></i>
                         </a>
                         <span class="hidden print:inline">Grade</span>
                     </th>
-                    <th class="w-40 px-5 py-4 font-bold print:hidden">Section</th>
                     <th class="w-48 px-5 py-4 font-bold">{{ $isTeacherAdminViewer ? 'School Email' : 'School Email / Temp Pass' }}</th>
                     <th class="w-40 px-5 py-4 font-bold print:hidden">MS Sync State</th>
                     <th class="w-36 px-5 py-4 text-right font-bold print:hidden">Action</th>
@@ -47,7 +48,14 @@
             <tbody class="divide-y divide-slate-100 bg-white">
                 @forelse ($students as $student)
                      @php
-                        $fullName = html_entity_decode(implode(' ', array_filter([trim($student->applicant->first_name ?? ''), trim($student->applicant->middle_name ?? ''), trim($student->applicant->last_name ?? '')])), ENT_QUOTES, 'UTF-8');
+                        $firstName = trim($student->applicant->first_name ?? '');
+                        $middleName = trim($student->applicant->middle_name ?? '');
+                        $lastName = trim($student->applicant->last_name ?? '');
+                        $middleInitial = '';
+                        if ($middleName !== '') {
+                            $middleInitial = \Illuminate\Support\Str::upper(\Illuminate\Support\Str::substr($middleName, 0, 1)) . '.';
+                        }
+                        $fullName = html_entity_decode(implode(' ', array_filter([$firstName, $middleInitial, $lastName])), ENT_QUOTES, 'UTF-8');
                         $name = $fullName ? \Illuminate\Support\Str::upper($fullName) : 'STUDENT PROFILE';
                         $initials = collect(explode(' ', $name))->filter()->take(2)->map(fn ($part) => \Illuminate\Support\Str::substr($part, 0, 1))->join('');
                         $photoUrl = \App\Support\EnrollmentStorage::url($student->applicant->photo_2x2_url ?? null);
@@ -64,8 +72,22 @@
                             $modeAbbr = 'ODL';
                         }
                         $isHashed = str_starts_with($student->temp_password ?? '', '$');
+
+                        $typeLower = strtolower($studentType);
+                        $typeClass = $typeLower === 'new' 
+                            ? 'bg-emerald-50 text-emerald-700 ring-emerald-100' 
+                            : ($typeLower === 'old' ? 'bg-slate-100 text-slate-700 ring-slate-200' : 'bg-amber-50 text-amber-700 ring-amber-100');
+
+                        $modeClass = $modeAbbr === 'F2F' 
+                            ? 'bg-blue-50 text-blue-700 ring-blue-100' 
+                            : 'bg-rose-50 text-rose-700 ring-rose-100';
                     @endphp
-                    <tr class="transition hover:bg-slate-50">
+                    <tr class="transition-colors duration-100 ease-in-out hover:bg-slate-50">
+                        <!-- Student Number -->
+                        <td class="px-5 py-4 font-extrabold text-slate-600">
+                            {{ $student->student_number ?? '-' }}
+                        </td>
+
                         <!-- Student Photo & Name -->
                         <td class="px-5 py-4">
                             <div class="flex items-center gap-3">
@@ -79,13 +101,9 @@
                                     :eager="false"
                                 />
                                 <div>
-                                    <div class="font-extrabold text-slate-950">{{ $name }}</div>
+                                    <div class="font-extrabold text-slate-950 whitespace-nowrap">{{ $name }}</div>
                                     <div class="mt-0.5 flex flex-wrap items-center gap-1.5 text-[10px] text-slate-400 font-extrabold print:hidden">
                                          <span class="text-slate-400">SY {{ $student->school_year ?? '-' }}</span>
-                                         <span class="text-slate-350">•</span>
-                                         <span class="inline-flex items-center rounded bg-slate-100 px-1.5 py-0.5 font-bold text-slate-600 uppercase">{{ $studentType }}</span>
-                                         <span class="text-slate-350">•</span>
-                                         <span class="inline-flex items-center rounded bg-slate-100 px-1.5 py-0.5 font-bold text-slate-600 uppercase">{{ $modeAbbr }}</span>
                                          @if (!$student->applicant || $student->applicant->completion_percentage < 100)
                                              <span class="text-slate-355">•</span>
                                              @php
@@ -93,21 +111,19 @@
                                              @endphp
                                              <span class="inline-flex items-center rounded bg-amber-50 px-1.5 py-0.5 font-bold text-amber-700 ring-1 ring-amber-100 uppercase cursor-help" title="Missing: {{ $missingList }}">Incomplete</span>
                                          @endif
-                                         @if (!$isTeacherAdminViewer && $student->applicant && $student->applicant->user)
-                                             <span class="text-slate-350">•</span>
-                                             <a href="{{ route('admin.students.families', ['search' => $student->applicant->user->email]) }}" class="inline-flex items-center gap-0.5 text-emerald-600 hover:text-emerald-700 font-extrabold uppercase transition" title="View Family Account">
-                                                 <i data-lucide="home" class="h-2.5 w-2.5"></i>
-                                                 Family
-                                             </a>
-                                         @endif
                                      </div>
                                 </div>
                             </div>
                         </td>
 
-                        <!-- Student Number -->
-                        <td class="px-5 py-4 font-extrabold text-slate-600">
-                            {{ $student->student_number ?? '-' }}
+                        <!-- Student Type -->
+                        <td class="px-5 py-4">
+                            <span class="inline-flex rounded-md px-2 py-0.5 text-xs font-bold ring-1 uppercase {{ $typeClass }}">{{ $studentType }}</span>
+                        </td>
+
+                        <!-- Mode -->
+                        <td class="px-5 py-4">
+                            <span class="inline-flex rounded-md px-2 py-0.5 text-xs font-bold ring-1 uppercase {{ $modeClass }}">{{ $modeAbbr }}</span>
                         </td>
 
                         <!-- Gender -->
@@ -120,10 +136,6 @@
                             {{ $student->grade_level ?? '-' }}
                         </td>
 
-                        <!-- Section -->
-                        <td class="px-5 py-4 font-medium text-slate-600 print:hidden">
-                            {{ $student->studentSection->section->official_name ?? $student->studentSection->section->name ?? 'No Section' }}
-                        </td>
 
                          <!-- School Email / Temp Pass -->
                          <td class="px-5 py-4 text-xs">
@@ -163,7 +175,7 @@
                                      @endphp
                                      <button onclick="copyToClipboard(this.getAttribute('data-copy'), this)" 
                                              data-copy="{{ $copyVal }}" 
-                                             class="text-slate-400 hover:text-slate-655 transition cursor-pointer p-1 rounded hover:bg-slate-100 print:hidden flex items-center justify-center border-0 bg-transparent shrink-0 mt-0.5" 
+                                             class="text-slate-400 hover:text-slate-655 transition-colors duration-100 cursor-pointer p-1 rounded hover:bg-slate-100 print:hidden flex items-center justify-center border-0 bg-transparent shrink-0 mt-0.5" 
                                              title="{{ $isTeacherAdminViewer ? 'Copy Email' : 'Copy Email & Password' }}">
                                          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
                                      </button>
@@ -188,24 +200,26 @@
                         <!-- Action -->
                          <td class="px-5 py-4 text-right print:hidden">
                             <div class="flex items-center justify-end gap-1.5">
-                                @if($student->ms_user_id && $student->ms_license_active !== true)
+                                @if($student->ms_user_id && ($student->ms_license_active === false || ($student->ms_license_active !== true && $msStatus !== 'enrolled')))
                                     <form method="POST" action="{{ route('admin.ms-sync.student', $student) }}" class="inline-block">
                                         @csrf
-                                        <button type="submit" class="inline-flex h-9 items-center gap-1.5 rounded-md border border-emerald-100 bg-emerald-50 px-2.5 text-xs font-bold text-emerald-700 transition hover:bg-emerald-100 cursor-pointer" title="Sync Microsoft account status and license">
+                                        <button type="submit" class="inline-flex h-9 items-center gap-1.5 rounded-md border border-emerald-100 bg-emerald-50 px-2.5 text-xs font-bold text-emerald-700 transition-colors duration-100 hover:bg-emerald-100 cursor-pointer" title="Sync Microsoft account status and license">
                                             <i data-lucide="refresh-cw" class="h-3.5 w-3.5"></i>
                                             <span>Sync License</span>
                                         </button>
                                     </form>
                                 @endif
-                                <a href="{{ route('admin.students.show', $student) }}" class="inline-flex h-9 items-center gap-2 rounded-md border border-emerald-100 bg-white px-3 text-xs font-bold text-emerald-700 transition hover:bg-emerald-50">
+                                <a href="{{ route('admin.students.index', ['search' => $student->student_number, 'print_info' => 1]) }}" target="_blank" class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 transition-colors duration-100 hover:bg-slate-50" title="Print Info Sheet">
+                                    <i data-lucide="printer" class="h-4 w-4"></i>
+                                </a>
+                                <a href="{{ route('admin.students.show', $student) }}" class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-emerald-100 bg-white text-emerald-700 transition-colors duration-100 hover:bg-emerald-50" title="{{ $isTeacherAdminViewer ? 'View' : 'Manage' }}">
                                     <i data-lucide="file-search" class="h-4 w-4"></i>
-                                    {{ $isTeacherAdminViewer ? 'View' : 'Manage' }}
                                 </a>
                                 <form method="POST" action="{{ route('admin.students.destroy', $student) }}"
                                       onsubmit="return confirm('Delete {{ $student->student_number }} ({{ $student->school_email }})?\n\nThis will permanently delete the student from the portal and Microsoft 365. This action cannot be undone.')">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-rose-200 bg-white text-rose-500 transition hover:bg-rose-50" title="Delete Student">
+                                    <button type="submit" class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-rose-200 bg-white text-rose-500 transition-colors duration-100 hover:bg-rose-50" title="Delete Student">
                                         <i data-lucide="trash-2" class="h-4 w-4"></i>
                                     </button>
                                 </form>

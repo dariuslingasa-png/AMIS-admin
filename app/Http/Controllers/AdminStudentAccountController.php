@@ -16,39 +16,20 @@ class AdminStudentAccountController extends Controller
     {
         $applicant = $student->applicant;
         $resetFormat = $request->input('reset_format', 'none');
+        $customPassword = $request->input('custom_password');
 
         $tempPassword = $student->temp_password;
         $isReset = false;
 
-        if ($resetFormat === 'birthdate') {
-            $dob = $applicant->date_of_birth;
-            if ($dob) {
-                $ts = strtotime((string) $dob);
-                if ($ts !== false) {
-                    $tempPassword = strtolower(date('M', $ts)) . date('d', $ts) . date('Y', $ts);
-                } else {
-                    $tempPassword = 'amis' . rand(1000, 9999);
-                }
-            } else {
-                $tempPassword = 'amis' . rand(1000, 9999);
-            }
+        if (filled($customPassword)) {
+            $tempPassword = $customPassword;
             $isReset = true;
-        } elseif ($resetFormat === 'name') {
-            $firstGivenName = preg_split('/\s+/', trim((string) $applicant->first_name))[0] ?? '';
-            $firstNameClean = preg_replace('/[^a-zA-Z]/', '', $firstGivenName);
-            $lastNameClean = preg_replace('/[^a-zA-Z]/', '', (string) $applicant->last_name);
-            $firstLetter = strtolower(substr($firstNameClean, 0, 1));
-            $tempPassword = $firstLetter . strtolower($lastNameClean);
+        } elseif ($resetFormat !== 'none') {
+            $tempPassword = 'amis12345';
             $isReset = true;
         }
 
         if ($isReset) {
-            $student->update([
-                'temp_password'       => $tempPassword,
-                'password_changed_at' => null,
-                'credentials_sent_at' => now(),
-            ]);
-
             $msError = null;
             try {
                 $graph = new MicrosoftGraphService();
@@ -64,6 +45,13 @@ class AdminStudentAccountController extends Controller
                 if ($response->failed()) {
                     $msError = $response->json()['error']['message'] ?? 'Microsoft API returned an error.';
                 } else {
+                    // Update database only if Microsoft Graph succeeds!
+                    $student->update([
+                        'temp_password'       => $tempPassword,
+                        'password_changed_at' => null,
+                        'credentials_sent_at' => now(),
+                    ]);
+
                     \App\Models\AdminAuditLog::record('password_reset_resend', true, "Manually reset Microsoft password for {$student->school_email} using {$resetFormat} format", [
                         'email' => $student->school_email,
                         'reset_format' => $resetFormat,
@@ -74,16 +62,17 @@ class AdminStudentAccountController extends Controller
                 Log::error('Failed to reset Microsoft password during manual admin reset: ' . $msError);
             }
 
-            $parentEmail = $applicant->parent_email ?: $applicant->email;
-            if ($parentEmail && $parentEmail !== 'NA') {
-                $this->sendCredentialsEmail($applicant, $student, $tempPassword);
-            }
-
             if ($msError) {
-                return back()->with('success', 'Password reset locally and email sent, but Microsoft sync failed: ' . $msError);
+                return back()->withErrors(['error' => 'Failed to reset password on Microsoft Office 365: ' . $msError . '. Local database and email were not changed.']);
             }
 
-            return back()->with('success', 'Password reset to ' . $resetFormat . ' format and credentials resent to ' . ($parentEmail ?? 'parent') . '.');
+            // Do not send credentials email automatically on manual reset
+            // $parentEmail = $applicant->parent_email ?: $applicant->email;
+            // if ($parentEmail && $parentEmail !== 'NA') {
+            //     $this->sendCredentialsEmail($applicant, $student, $tempPassword);
+            // }
+
+            return back()->with('success', 'Password successfully reset to ' . $tempPassword . ' on Microsoft Office 365.');
         }
 
         $isHashed = str_starts_with($tempPassword ?? '', '$');

@@ -16,6 +16,12 @@
             'Pending' => 'border-amber-200 bg-amber-50 text-amber-700',
             default => 'border-slate-200 bg-white/80 text-slate-600',
         };
+        $familyStatusChip = fn ($status) => match ($status) {
+            'Approved' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
+            'Rejected' => 'border-rose-200 bg-rose-50 text-rose-700',
+            'Pending' => 'border-amber-200 bg-amber-50 text-amber-700',
+            default => 'border-slate-200 bg-white/80 text-slate-600',
+        };
         $typeLabel = fn ($type) => match (\Illuminate\Support\Str::of((string) $type)->lower()->replace(['_', '-'], ' ')->squish()->toString()) {
             'old', 'old student', 'returning', 'returnee', 'existing' => 'OLD STUDENT',
             'transferee', 'transfer', 'transferee student' => 'TRANSFEREE STUDENT',
@@ -221,7 +227,7 @@
 
         <div class="px-6 py-5">
             <!-- Applications Metrics Tracking Panel -->
-            <div class="mb-6 grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div class="mb-6 grid grid-cols-1 md:grid-cols-4 gap-5">
                 <!-- Approved Card -->
                 <div class="group relative overflow-hidden rounded-xl border border-emerald-100 bg-emerald-50/30 p-5 transition-all duration-300 hover:-translate-y-0.5 hover:bg-emerald-50/50 hover:shadow-sm">
                     <div class="flex items-center justify-between">
@@ -262,6 +268,27 @@
                         </div>
                     </div>
                     <div class="absolute bottom-0 left-0 h-1 w-full bg-rose-500/80 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
+                </div>
+
+                <!-- Duplicate Detection Card (read-only) -->
+                <div class="group relative overflow-hidden rounded-xl border border-amber-100 bg-amber-50/30 p-5 transition-all duration-300 hover:-translate-y-0.5 hover:bg-amber-50/50 hover:shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <span class="text-xs font-extrabold uppercase tracking-wider text-amber-600">Possible Duplicates</span>
+                            <h3 class="mt-2 text-3xl font-black tracking-tight text-amber-950">{{ number_format($duplicateCount) }}</h3>
+                            <p class="mt-1 text-[10px] font-bold text-amber-500 leading-snug">Same name &amp; birthdate detected</p>
+                        </div>
+                        <div class="rounded-lg bg-amber-100/80 p-3 text-amber-700 transition-transform duration-300 group-hover:scale-110">
+                            <i data-lucide="copy" class="h-6 w-6"></i>
+                        </div>
+                    </div>
+                    @if($duplicateCount > 0)
+                        <div class="mt-3 inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-black text-amber-700 ring-1 ring-amber-200">
+                            <i data-lucide="alert-triangle" class="h-3 w-3"></i>
+                            Search by name to review
+                        </div>
+                    @endif
+                    <div class="absolute bottom-0 left-0 h-1 w-full bg-amber-500/80 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
                 </div>
             </div>
 
@@ -373,6 +400,10 @@
                                                         {{ $family['approved_count'] }}/1 Approved
                                                     </span>
                                                 @endif
+                                                <span class="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-black uppercase tracking-wide shadow-sm {{ $familyStatusChip($family['overall_status']) }}">
+                                                    <i data-lucide="info" class="h-3.5 w-3.5"></i>
+                                                    {{ $family['overall_status'] }}
+                                                </span>
                                                 <span class="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-black uppercase tracking-wide shadow-sm {{ $familyPaymentChip($family['payment_status']) }}">
                                                     <i data-lucide="receipt" class="h-3.5 w-3.5"></i>
                                                     {{ $family['payment_status'] }}

@@ -2,20 +2,235 @@
 
 namespace App\Services\Admin\Academic;
 
-use App\Models\SectionSubject;
-use App\Repositories\ClassScheduleRepository;
+use App\Models\ClassSchedule;
+use App\Models\Section;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 
 class ClassScheduleService
 {
-    public function __construct(private readonly ClassScheduleRepository $schedules)
-    {
-    }
+    public const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
+
+    public function __construct(
+        private readonly TeacherMatcherService $matcher,
+        private readonly TeacherDirectoryService $directory,
+    ) {}
+
+    // ── Query ────────────────────────────────────────────────────────────────
 
     public function sections(): Collection
     {
-        return $this->schedules->sections();
+        return Section::withCount('students')->with('subjects')->orderBy('id')->get();
+    }
+
+    public function f2fSections(): Collection
+    {
+        return Section::withCount('students')
+            ->where(fn ($q) => $q->where('learning_mode', 'like', '%Face%')->orWhere('learning_mode', 'like', '%f2f%'))
+            ->orderByRaw("FIELD(grade_level,'Kinder 1','Kinder 2','Grade 1','Grade 2','Grade 3','Grade 4','Grade 5','Grade 6','Grade 7','Grade 8','Grade 9','Grade 10','Grade 11','Grade 12')")
+            ->get();
+    }
+
+    public function onlineSections(): Collection
+    {
+        return Section::withCount('students')
+            ->where(fn ($q) => $q->where('learning_mode', 'like', '%Online%')->orWhere('learning_mode', 'like', '%Flexible%'))
+            ->orderByRaw("FIELD(grade_level,'Kinder 1','Kinder 2','Grade 1','Grade 2','Grade 3','Grade 4','Grade 5','Grade 6','Grade 7','Grade 8','Grade 9','Grade 10','Grade 11','Grade 12')")
+            ->get();
+    }
+
+    public function schedulesBySection(Collection $sections, string $mode = 'f2f'): Collection
+    {
+        $sectionIds = $sections->pluck('id');
+
+        return ClassSchedule::whereIn('section_id', $sectionIds)
+            ->where('mode', $mode)
+            ->get()
+            ->map(fn (ClassSchedule $s) => $this->present($s))
+            ->sortBy([['day_index', 'asc'], ['start_minutes', 'asc']])
+            ->groupBy('section_id');
+    }
+
+    public function allTeachersForPicker(): array
+    {
+        return $this->matcher->allTeachers();
+    }
+
+    // ── Mutate ───────────────────────────────────────────────────────────────
+
+    public function store(array $data): ClassSchedule
+    {
+        $this->ensureNoConflict($data);
+
+        $matched = $this->matcher->match($data['teacher_display'] ?? '');
+
+        return ClassSchedule::create([
+            'section_id'     => $data['section_id'],
+            'subject_name'   => $data['subject_name'],
+            'spans_all_days' => (bool) ($data['spans_all_days'] ?? false),
+            'is_special'     => (bool) ($data['is_special'] ?? false),
+            'color_class'    => $data['color_class'] ?? $this->inferColorClass($data['subject_name']),
+            'teacher_key'    => $matched['key'],
+            'teacher_display'=> $matched['display'],
+            'teacher_status' => $matched['status'],
+            'day'            => $data['day'],
+            'start_time'     => $data['start_time'],
+            'end_time'       => $data['end_time'],
+            'mode'           => $data['mode'] ?? 'f2f',
+            'school_year'    => $data['school_year'] ?? '2026-2027',
+            'created_by'     => auth()->id(),
+        ]);
+    }
+
+    public function update(ClassSchedule $schedule, array $data): ClassSchedule
+    {
+        $this->ensureNoConflict($data, $schedule->id);
+
+        $rawTeacher = $data['teacher_display'] ?? $schedule->teacher_display ?? '';
+        $matched = $this->matcher->match($rawTeacher);
+
+        $schedule->update([
+            'section_id'     => $data['section_id'],
+            'subject_name'   => $data['subject_name'],
+            'spans_all_days' => (bool) ($data['spans_all_days'] ?? false),
+            'is_special'     => (bool) ($data['is_special'] ?? false),
+            'color_class'    => $data['color_class'] ?? $this->inferColorClass($data['subject_name']),
+            'teacher_key'    => $matched['key'],
+            'teacher_display'=> $matched['display'],
+            'teacher_status' => $matched['status'],
+            'day'            => $data['day'],
+            'start_time'     => $data['start_time'],
+            'end_time'       => $data['end_time'],
+            'mode'           => $data['mode'] ?? $schedule->mode,
+            'school_year'    => $data['school_year'] ?? $schedule->school_year,
+        ]);
+
+        return $schedule->fresh();
+    }
+
+    /**
+     * Manually resolve an unmatched/manual teacher to a specific teacher_key.
+     * Rule 9: Save teacher_key, not teacher_name.
+     */
+    public function resolveTeacher(ClassSchedule $schedule, string $teacherKey): ClassSchedule
+    {
+        $schedule->update([
+            'teacher_key'    => $teacherKey,
+            'teacher_status' => 'matched',
+        ]);
+
+        return $schedule->fresh();
+    }
+
+    // ── Present ──────────────────────────────────────────────────────────────
+
+    public function present(ClassSchedule $s): array
+    {
+        $teachers = collect($this->matcher->allTeachers())->keyBy('id');
+        $teacherName = $s->teacher_key
+            ? ($teachers[$s->teacher_key]['name'] ?? $s->teacher_display ?? 'Teacher pending')
+            : ($s->teacher_display ?? 'Teacher pending');
+
+        $start = substr($s->start_time, 0, 5);
+        $end   = substr($s->end_time, 0, 5);
+
+        return [
+            'id'             => $s->id,
+            'section_id'     => $s->section_id,
+            'subject_name'   => $s->subject_name,
+            'teacher_name'   => $teacherName,
+            'teacher_key'    => $s->teacher_key,
+            'teacher_display'=> $s->teacher_display,
+            'teacher_status' => $s->teacher_status,
+            'day'            => $s->day,
+            'day_index'      => array_search($s->day, self::DAYS, true) ?: 0,
+            'start_time'     => $start,
+            'end_time'       => $end,
+            'start_minutes'  => $s->startMinutes(),
+            'end_minutes'    => $s->endMinutes(),
+            'duration_min'   => $s->endMinutes() - $s->startMinutes(),
+            'spans_all_days' => $s->spans_all_days,
+            'is_special'     => $s->is_special,
+            'color_class'    => $s->color_class ?? $this->inferColorClass($s->subject_name),
+            'mode'           => $s->mode,
+            'time_label'     => $this->timeLabel($start) . ' – ' . $this->timeLabel($end),
+            'payload'        => [
+                'id'              => $s->id,
+                'section_id'      => $s->section_id,
+                'subject_name'    => $s->subject_name,
+                'teacher_display' => $s->teacher_display,
+                'teacher_key'     => $s->teacher_key,
+                'teacher_status'  => $s->teacher_status,
+                'day'             => $s->day,
+                'start_time'      => $start,
+                'end_time'        => $end,
+                'spans_all_days'  => $s->spans_all_days,
+                'is_special'      => $s->is_special,
+                'mode'            => $s->mode,
+            ],
+        ];
+    }
+
+    public function days(): array
+    {
+        return self::DAYS;
+    }
+
+    public function timeOptions(): array
+    {
+        $times = [];
+        for ($minutes = 7 * 60; $minutes <= 17 * 60; $minutes += 5) {
+            $value = sprintf('%02d:%02d', intdiv($minutes, 60), $minutes % 60);
+            $times[$value] = $this->timeLabel($value);
+        }
+        return $times;
+    }
+
+    // ── Private ──────────────────────────────────────────────────────────────
+
+    private function ensureNoConflict(array $data, ?int $ignoreId = null): void
+    {
+        [$startH, $startM] = array_map('intval', explode(':', $data['start_time']));
+        [$endH, $endM]     = array_map('intval', explode(':', $data['end_time']));
+        $startMin = $startH * 60 + $startM;
+        $endMin   = $endH * 60 + $endM;
+
+        if ($endMin <= $startMin) {
+            throw ValidationException::withMessages(['end_time' => 'End time must be after start time.']);
+        }
+
+        $conflicts = ClassSchedule::where('section_id', $data['section_id'])
+            ->where('day', $data['day'])
+            ->where('mode', $data['mode'] ?? 'f2f')
+            ->when($ignoreId, fn ($q) => $q->whereKeyNot($ignoreId))
+            ->get();
+
+        foreach ($conflicts as $entry) {
+            $eStart = $entry->startMinutes();
+            $eEnd   = $entry->endMinutes();
+            if ($startMin < $eEnd && $eStart < $endMin) {
+                throw ValidationException::withMessages([
+                    'start_time' => 'This section already has a class during that time slot.',
+                ]);
+            }
+        }
+    }
+
+    private function inferColorClass(string $subject): string
+    {
+        $s = mb_strtolower($subject);
+        if (str_contains($s, "qur'an") || str_contains($s, 'quran')) return 'quran';
+        if (str_contains($s, 'hadith'))   return 'hadith';
+        if (str_contains($s, 'arabic'))   return 'arabic';
+        if (str_contains($s, 'recess') || str_contains($s, 'break')) return 'recess';
+        if (str_contains($s, 'assembly') || str_contains($s, 'departure')) return 'event';
+        if (str_contains($s, 'meeting') || str_contains($s, 'circle') || str_contains($s, 'wrap')) return 'event';
+        return 'academic';
+    }
+
+    private function timeLabel(string $time): string
+    {
+        return date('g:i A', strtotime($time));
     }
 
     public function advisories(): Collection
@@ -36,162 +251,6 @@ class ClassScheduleService
                 });
             })
             ->values();
-    }
-
-    public function schedulesBySection(Collection $sections): Collection
-    {
-        return $this->schedules->timetableEntries($sections)
-            ->filter(fn (SectionSubject $subject) => $this->isScheduled($subject->schedule))
-            ->map(fn (SectionSubject $subject) => $this->present($subject))
-            ->sortBy([['day_index', 'asc'], ['start_minutes', 'asc']])
-            ->groupBy('section_id');
-    }
-
-    public function store(array $data): SectionSubject
-    {
-        $this->ensureNoConflict($data);
-
-        return $this->schedules->create([
-            'section_id' => $data['section_id'],
-            'subject_name' => $data['subject_name'],
-            'teacher_name' => $data['teacher_name'] ?? null,
-            'schedule' => $this->formatSchedule($data),
-        ]);
-    }
-
-    public function update(SectionSubject $schedule, array $data): SectionSubject
-    {
-        $this->ensureNoConflict($data, $schedule->id);
-
-        $schedule->update([
-            'section_id' => $data['section_id'],
-            'subject_name' => $data['subject_name'],
-            'teacher_name' => $data['teacher_name'] ?? null,
-            'schedule' => $this->formatSchedule($data),
-        ]);
-
-        return $schedule;
-    }
-
-    public function days(): array
-    {
-        return ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
-    }
-
-    public function timeOptions(): array
-    {
-        $times = [];
-
-        for ($minutes = 7 * 60; $minutes <= 17 * 60; $minutes += 30) {
-            $value = sprintf('%02d:%02d', intdiv($minutes, 60), $minutes % 60);
-            $times[$value] = $this->timeLabel($value);
-        }
-
-        return $times;
-    }
-
-    public function present(SectionSubject $subject): array
-    {
-        $parsed = $this->parseSchedule($subject->schedule);
-
-        return [
-            'id' => $subject->id,
-            'section_id' => $subject->section_id,
-            'subject_name' => $subject->subject_name,
-            'teacher_name' => $subject->teacher_name ?: 'Teacher pending',
-            'day' => $parsed['day'],
-            'day_index' => array_search($parsed['day'], $this->days(), true) ?: 0,
-            'start_time' => $parsed['start_time'],
-            'end_time' => $parsed['end_time'],
-            'start_minutes' => $this->minutes($parsed['start_time']),
-            'time_label' => "{$this->timeLabel($parsed['start_time'])} - {$this->timeLabel($parsed['end_time'])}",
-            'payload' => [
-                'id' => $subject->id,
-                'section_id' => $subject->section_id,
-                'subject_name' => $subject->subject_name,
-                'teacher_name' => $subject->teacher_name,
-                'day' => $parsed['day'],
-                'start_time' => $parsed['start_time'],
-                'end_time' => $parsed['end_time'],
-            ],
-        ];
-    }
-
-    public function parseSchedule(?string $schedule): array
-    {
-        $fallback = ['day' => 'Sunday', 'start_time' => '08:00', 'end_time' => '09:00'];
-        if (! $schedule || ! preg_match('/^([A-Za-z]+)\s+(\d{2}:\d{2})-(\d{2}:\d{2})$/', $schedule, $matches)) {
-            return $fallback;
-        }
-
-        return [
-            'day' => in_array($matches[1], $this->days(), true) ? $matches[1] : 'Sunday',
-            'start_time' => $matches[2],
-            'end_time' => $matches[3],
-        ];
-    }
-
-    private function ensureNoConflict(array $data, ?int $ignoreId = null): void
-    {
-        if ($this->minutes($data['end_time']) <= $this->minutes($data['start_time'])) {
-            throw ValidationException::withMessages(['end_time' => 'End time must be later than start time.']);
-        }
-
-        $entries = $this->schedules->scheduledEntries($ignoreId)
-            ->filter(fn (SectionSubject $subject) => $this->isScheduled($subject->schedule));
-
-        foreach ($entries as $entry) {
-            $parsed = $this->parseSchedule($entry->schedule);
-            if ($parsed['day'] !== $data['day'] || ! $this->overlaps($data, $parsed)) {
-                continue;
-            }
-
-            if ((int) $entry->section_id === (int) $data['section_id']) {
-                throw ValidationException::withMessages([
-                    'start_time' => 'This section already has a class during that time.',
-                ]);
-            }
-
-            if ($this->sameTeacher($entry->teacher_name, $data['teacher_name'] ?? null)) {
-                throw ValidationException::withMessages([
-                    'teacher_name' => 'This teacher already has a class during that time.',
-                ]);
-            }
-        }
-    }
-
-    private function formatSchedule(array $data): string
-    {
-        return "{$data['day']} {$data['start_time']}-{$data['end_time']}";
-    }
-
-    private function isScheduled(?string $schedule): bool
-    {
-        return is_string($schedule)
-            && preg_match('/^[A-Za-z]+\s+\d{2}:\d{2}-\d{2}:\d{2}$/', $schedule) === 1;
-    }
-
-    private function overlaps(array $a, array $b): bool
-    {
-        return $this->minutes($a['start_time']) < $this->minutes($b['end_time'])
-            && $this->minutes($b['start_time']) < $this->minutes($a['end_time']);
-    }
-
-    private function sameTeacher(?string $a, ?string $b): bool
-    {
-        return filled($a) && filled($b) && mb_strtolower(trim($a)) === mb_strtolower(trim($b));
-    }
-
-    private function minutes(string $time): int
-    {
-        [$hours, $minutes] = array_map('intval', explode(':', $time));
-
-        return ($hours * 60) + $minutes;
-    }
-
-    private function timeLabel(string $time): string
-    {
-        return date('h:i A', strtotime($time));
     }
 
     private function initials(string $name): string

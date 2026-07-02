@@ -21,13 +21,13 @@
                     </p>
                 </div>
                 <div class="flex flex-wrap gap-3">
+                    <a href="{{ route('admin.academic.schedules') }}" class="inline-flex items-center gap-2 border border-white/20 bg-white/10 px-5 py-2.5 rounded-xl text-white hover:bg-white/15 active:bg-white/20 transition-all duration-150 text-sm font-black hover:scale-[1.02] cursor-pointer shadow-sm shadow-indigo-950/10">
+                        <i data-lucide="grid" class="w-4 h-4 text-white"></i>
+                        Class Management
+                    </a>
                     <a href="{{ route('admin.academic.subjects') }}" class="inline-flex items-center gap-2 bg-white hover:bg-indigo-50 active:bg-indigo-100 text-indigo-950 font-black text-sm px-5 py-2.5 rounded-xl transition-all duration-150 shadow-md shadow-indigo-950/20 hover:scale-[1.02] cursor-pointer">
                         <i data-lucide="book-open" class="w-4 h-4 text-indigo-700"></i>
                         Open Subjects
-                    </a>
-                    <a href="{{ route('admin.ms-teams.index') }}" class="inline-flex items-center gap-2 border border-white/20 bg-white/10 px-5 py-2.5 rounded-xl text-white hover:bg-white/15 active:bg-white/20 transition-all duration-150 text-sm font-black hover:scale-[1.02] cursor-pointer shadow-sm shadow-indigo-950/10">
-                        <i data-lucide="users-round" class="w-4 h-4"></i>
-                        Sections
                     </a>
                 </div>
             </div>

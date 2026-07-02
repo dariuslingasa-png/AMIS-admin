@@ -27,7 +27,7 @@
     <x-card title="Registered Subjects & Channels" subtitle="Academic subjects linked in Teams">
         <div class="overflow-hidden rounded-md border border-slate-200 mt-2">
             <table class="w-full text-left text-sm">
-                <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                <thead class="bg-slate-55 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                     <tr>
                         <th class="px-5 py-4 font-bold">Subject Name</th>
                         <th class="px-5 py-4 font-bold">Assigned Teacher</th>
@@ -48,6 +48,60 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+    </x-card>
+
+    <!-- History & Onboarding Logs Timeline -->
+    <x-card title="Academic History & Onboarding Log" subtitle="Chronological audit trail of status transitions and sync events">
+        <div class="flow-root mt-4">
+            <ul role="list" class="-mb-8">
+                @forelse($auditLogs ?? [] as $index => $log)
+                    @php
+                        $iconClass = match($log->event) {
+                            'license_assigned', 'account_created' => 'bg-emerald-500 text-white',
+                            'license_revoked', 'user_deleted' => 'bg-rose-500 text-white',
+                            'credentials_sent', 'credentials_resent' => 'bg-amber-500 text-white',
+                            'email_renamed' => 'bg-blue-500 text-white',
+                            default => 'bg-slate-400 text-white'
+                        };
+                        $lucideIcon = match($log->event) {
+                            'license_assigned', 'account_created' => 'check',
+                            'license_revoked', 'user_deleted' => 'x',
+                            'credentials_sent', 'credentials_resent' => 'key',
+                            'email_renamed' => 'mail',
+                            default => 'activity'
+                        };
+                    @endphp
+                    <li>
+                        <div class="relative pb-8">
+                            @if ($index < count($auditLogs) - 1)
+                                <span class="absolute left-5 top-5 -ml-px h-full w-0.5 bg-slate-200" aria-hidden="true"></span>
+                            @endif
+                            <div class="relative flex items-start space-x-3">
+                                <div>
+                                    <div class="relative flex h-10 w-10 items-center justify-center rounded-full {{ $iconClass }} ring-8 ring-white">
+                                        <i data-lucide="{{ $lucideIcon }}" class="h-4 w-4"></i>
+                                    </div>
+                                </div>
+                                <div class="min-w-0 flex-1 py-1.5">
+                                    <div class="text-xs font-bold text-slate-900 leading-normal">
+                                        {{ $log->message }}
+                                    </div>
+                                    <div class="mt-1 flex items-center justify-between text-[10px] text-slate-400 font-bold">
+                                        <span>Triggered by: <span class="text-slate-600 font-semibold">{{ $log->email ?: 'System' }}</span></span>
+                                        <span>{{ $log->created_at ? $log->created_at->timezone('Asia/Manila')->format('M d, Y h:i A') : '-' }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                @empty
+                    <div class="text-center py-10 text-xs font-bold text-slate-400">
+                        <i data-lucide="history" class="h-8 w-8 mx-auto mb-2 text-slate-350"></i>
+                        No administrative history events logged for this student.
+                    </div>
+                @endforelse
+            </ul>
         </div>
     </x-card>
 </div>

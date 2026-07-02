@@ -110,14 +110,26 @@ Route::name('admin.')->group(function () {
         Route::get('/students/dashboard/sections/{section}/roster-print', [AdminStudentDashboardController::class, 'rosterPrint'])->name('students.roster-print');
         Route::get('/students/history', [AdminStudentProcessController::class, 'history'])->name('students.history');
         Route::get('/students/accounts', [AdminStudentProcessController::class, 'accounts'])->name('students.accounts');
-        Route::get('/students/documents', [AdminStudentProcessController::class, 'documents'])->name('students.documents');
+        Route::redirect('/students/documents', '/students')->name('students.documents');
         Route::get('/students/verification', [AdminStudentProcessController::class, 'verification'])->name('students.verification');
-        Route::get('/students/promotions', [AdminStudentProcessController::class, 'promotions'])->name('students.promotions');
-        Route::get('/students/occupancy', [AdminStudentDashboardController::class, 'occupancy'])->name('students.occupancy');
+        Route::redirect('/students/promotions', '/students')->name('students.promotions');
+        Route::redirect('/students/occupancy', '/students/reports')->name('students.occupancy');
         Route::get('/students/occupancy/grade/{grade}/roster-print', [AdminStudentDashboardController::class, 'gradeRosterPrint'])->name('students.grade-roster-print');
         Route::get('/students/reports', [AdminStudentDashboardController::class, 'reports'])->name('students.reports');
+        Route::get('/students/attendance', [AdminStudentDashboardController::class, 'attendance'])->name('students.attendance');
+        Route::get('/students/reports/data', [AdminStudentDashboardController::class, 'reportsData'])->name('students.reports.data');
+        Route::get('/students/reports/enrollment-payments', [AdminStudentDashboardController::class, 'enrollmentPaymentsReportData'])->name('students.reports.enrollment-payments');
+        Route::get('/students/reports/class-roster', [AdminStudentDashboardController::class, 'classRosterData'])->name('students.reports.class-roster');
+        Route::post('/students/reports/sync', [AdminStudentDashboardController::class, 'syncNow'])->name('students.reports.sync');
         Route::get('/students/reports/print-all', [AdminStudentDashboardController::class, 'printAllRosters'])->name('students.print-all-rosters');
-        Route::get('/students/families', [AdminStudentFamilyController::class, 'families'])->name('students.families');
+        Route::get('/google-drive/auth', [\App\Http\Controllers\Admin\GoogleDriveAuthController::class, 'redirect'])->name('google-drive.auth');
+        Route::get('/google-drive/callback', [\App\Http\Controllers\Admin\GoogleDriveAuthController::class, 'callback'])->name('google-drive.callback');
+        Route::get('/auth/google-drive/callback', [\App\Http\Controllers\Admin\GoogleDriveAuthController::class, 'callback'])->name('google-drive.callback.auth');
+        Route::post('/students/reports/sync-google-drive', [AdminStudentDashboardController::class, 'syncGoogleDrive'])->name('students.reports.sync-google-drive');
+        Route::redirect('/students/families', '/students')->name('students.families');
+        Route::get('/students/export-canva', [AdminStudentController::class, 'exportCanva'])->name('students.export-canva');
+        Route::get('/students/export-verification-db', [AdminStudentController::class, 'exportVerificationDatabase'])->name('students.export-verification-db');
+        Route::post('/students/bulk-print-list', [AdminStudentController::class, 'bulkPrintList'])->name('students.bulk-print-list');
         Route::get('/students/{student}', [AdminStudentController::class, 'show'])->name('students.show');
         Route::post('/students/{student}/resend', [AdminStudentAccountController::class, 'resendCredentials'])->name('students.resend');
         Route::post('/students/{student}/status', [AdminStudentAccountController::class, 'updateStatus'])->name('students.update-status');
@@ -257,6 +269,8 @@ Route::name('admin.')->group(function () {
 
         Route::prefix('ms-teams')->name('ms-teams.')->group(function () {
             Route::get('/', [AdminMsTeamsController::class, 'index'])->name('index');
+            Route::get('/structure', [AdminMsTeamsController::class, 'structure'])->name('structure');
+            Route::get('/structure/data', [AdminMsTeamsController::class, 'structureData'])->name('structure.data');
             Route::post('/', [AdminMsTeamsController::class, 'store'])->name('store');
             Route::post('/store-single', [AdminMsTeamsController::class, 'storeSingle'])->name('store-single');
             Route::post('/fix-admin-access', [AdminMsTeamsController::class, 'fixAdminAccess'])->name('fix-access');
@@ -282,6 +296,11 @@ Route::name('admin.')->group(function () {
             Route::get('/screenshot', [AdminSupportTicketController::class, 'viewScreenshot'])->name('screenshot');
             Route::get('/{ticket}', [AdminSupportTicketController::class, 'show'])->name('show');
             Route::patch('/{ticket}/status', [AdminSupportTicketController::class, 'updateStatus'])->name('status');
+        });
+        Route::prefix('registrations')->name('registrations.')->group(function () {
+            Route::get('/halaqah', [\App\Http\Controllers\Admin\RegistrationController::class, 'halaqah'])->name('halaqah');
+            Route::patch('/halaqah/{id}/toggle', [\App\Http\Controllers\Admin\RegistrationController::class, 'toggleStatus'])->name('halaqah.toggle');
+            Route::delete('/halaqah/{id}', [\App\Http\Controllers\Admin\RegistrationController::class, 'destroy'])->name('halaqah.destroy');
         });
     });
 });

@@ -162,13 +162,7 @@
                                         <span class="text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">{{ strtoupper($studentType) }}</span>
                                         <span class="text-slate-300">•</span>
                                         <span class="text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded">{{ $modeAbbr }}</span>
-                                        @if ($student->applicant && $student->applicant->user)
-                                            <span class="text-slate-300">•</span>
-                                            <a href="{{ route('admin.students.families', ['search' => $student->applicant->user->email]) }}" class="inline-flex items-center gap-0.5 text-emerald-600 hover:text-emerald-700 font-extrabold transition" title="View Family Account">
-                                                <i data-lucide="home" class="h-3 w-3"></i>
-                                                Family
-                                            </a>
-                                        @endif
+
                                     </div>
                                 </td>
 

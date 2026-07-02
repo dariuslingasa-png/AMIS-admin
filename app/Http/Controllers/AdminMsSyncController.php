@@ -523,6 +523,22 @@ class AdminMsSyncController extends Controller
                 }
             }
 
+            // Retry Teams enrollment if it is pending or failed
+            $studentSection = $student->studentSection;
+            if ($studentSection && $studentSection->ms_status !== 'enrolled') {
+                try {
+                    $enrollService = new MsTeamsEnrollmentService($graph);
+                    $enrollResult = $enrollService->enrollStudent($student);
+                    if ($enrollResult['failed'] > 0) {
+                        Log::warning("Teams enrollment retry during syncStudent failed for {$student->school_email}: " . implode(', ', $enrollResult['errors']));
+                    } else {
+                        $msg .= " Teams enrollment synchronized successfully.";
+                    }
+                } catch (\Exception $enrollEx) {
+                    Log::error("Teams enrollment retry during syncStudent threw exception for {$student->school_email}: " . $enrollEx->getMessage());
+                }
+            }
+
             return back()->with('success', $msg . " Status and licenses synchronized successfully.");
         } catch (\Exception $e) {
             return back()->withErrors(['error' => $e->getMessage()]);

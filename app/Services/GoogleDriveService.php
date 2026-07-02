@@ -14,10 +14,10 @@ class GoogleDriveService
 
     public function __construct()
     {
-        $this->clientId = env('GOOGLE_DRIVE_CLIENT_ID');
-        $this->clientSecret = env('GOOGLE_DRIVE_CLIENT_SECRET');
-        $this->refreshToken = env('GOOGLE_DRIVE_REFRESH_TOKEN');
-        $this->folderId = env('GOOGLE_DRIVE_FOLDER_ID');
+        $this->clientId = config('services.google_drive.client_id');
+        $this->clientSecret = config('services.google_drive.client_secret');
+        $this->refreshToken = config('services.google_drive.refresh_token');
+        $this->folderId = config('services.google_drive.folder_id');
     }
 
     public function isConfigured(): bool
@@ -27,33 +27,89 @@ class GoogleDriveService
 
     public function uploadFile(string $filePath, string $filename): bool
     {
+        return $this->uploadFileToFolder($filePath, $filename, $this->folderId ?: 'root');
+    }
+
+    public function findOrCreateFolder(string $folderName, ?string $parentId = null): string
+    {
         if (!$this->isConfigured()) {
-            throw new \Exception('Google Drive credentials are not fully configured in your .env file.');
+            throw new \Exception('Google Drive credentials are not fully configured.');
         }
 
-        // 1. Get Access Token via OAuth2 Token Refresh
+        $accessToken = $this->getAccessToken();
+        $parent = $parentId ?: $this->folderId ?: 'root';
+
+        // Search for existing folder
+        $query = "name='" . str_replace("'", "\\'", $folderName) . "' and mimeType='application/vnd.google-apps.folder' and '{$parent}' in parents and trashed = false";
+        $response = Http::withHeaders([
+            'Authorization' => "Bearer {$accessToken}",
+        ])->get('https://www.googleapis.com/drive/v3/files', [
+            'q' => $query,
+            'fields' => 'files(id, name)',
+            'pageSize' => 1
+        ]);
+
+        if ($response->successful()) {
+            $files = $response->json('files');
+            if (!empty($files)) {
+                return $files[0]['id'];
+            }
+        }
+
+        // Create folder
+        $response = Http::withHeaders([
+            'Authorization' => "Bearer {$accessToken}",
+            'Content-Type' => 'application/json'
+        ])->post('https://www.googleapis.com/drive/v3/files', [
+            'name' => $folderName,
+            'mimeType' => 'application/vnd.google-apps.folder',
+            'parents' => [$parent]
+        ]);
+
+        if (!$response->successful()) {
+            Log::error('Google Drive Create Folder Failed', [
+                'status' => $response->status(),
+                'body' => $response->body()
+            ]);
+            throw new \Exception('Google Drive API returned error: ' . $response->body());
+        }
+
+        return $response->json('id');
+    }
+
+    public function uploadFileToFolder(string $filePath, string $filename, string $parentId): bool
+    {
+        if (!$this->isConfigured()) {
+            throw new \Exception('Google Drive credentials are not fully configured.');
+        }
+
         $accessToken = $this->getAccessToken();
 
-        // 2. Read file contents
         $fileContent = file_get_contents($filePath);
         if ($fileContent === false) {
-            throw new \Exception("Failed to read backup file at: {$filePath}");
+            throw new \Exception("Failed to read file at: {$filePath}");
         }
 
         $metadata = [
             'name' => $filename,
+            'parents' => [$parentId]
         ];
-        if (filled($this->folderId)) {
-            $metadata['parents'] = [$this->folderId];
-        }
 
         $boundary = 'amis_gdrive_upload_boundary_' . time();
         
+        $mimeType = 'application/octet-stream';
+        $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+        if ($ext === 'pdf') {
+            $mimeType = 'application/pdf';
+        } elseif (in_array($ext, ['png', 'jpg', 'jpeg', 'gif', 'webp'])) {
+            $mimeType = 'image/' . ($ext === 'jpg' ? 'jpeg' : $ext);
+        }
+
         $multipartBody = "--{$boundary}\r\n" .
             "Content-Type: application/json; charset=UTF-8\r\n\r\n" .
             json_encode($metadata) . "\r\n" .
             "--{$boundary}\r\n" .
-            "Content-Type: text/plain\r\n\r\n" .
+            "Content-Type: {$mimeType}\r\n\r\n" .
             $fileContent . "\r\n" .
             "--{$boundary}--";
 
@@ -63,7 +119,7 @@ class GoogleDriveService
           ->post('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart');
 
         if (!$response->successful()) {
-            Log::error('Google Drive Upload Failed', [
+            Log::error('Google Drive Upload File to Folder Failed', [
                 'status' => $response->status(),
                 'body' => $response->body(),
             ]);

@@ -169,10 +169,17 @@
             }
         }
         
+        let hasPrinted = false;
+        function doPrint() {
+            if (hasPrinted) return;
+            hasPrinted = true;
+            window.print();
+        }
         window.addEventListener('load', () => {
-            setTimeout(() => {
-                window.print();
-            }, 600);
+            setTimeout(doPrint, 1000);
+        });
+        window.addEventListener('focus', () => {
+            setTimeout(doPrint, 200);
         });
     </script>
 </body>

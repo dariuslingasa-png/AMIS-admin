@@ -214,13 +214,13 @@ class AmisBackupCommand extends Command
 
     private function generateRcloneConfig(string $tempDir): string
     {
-        $clientId = env('GOOGLE_DRIVE_CLIENT_ID');
-        $clientSecret = env('GOOGLE_DRIVE_CLIENT_SECRET');
-        $refreshToken = env('GOOGLE_DRIVE_REFRESH_TOKEN');
-        $folderId = env('GOOGLE_DRIVE_FOLDER_ID');
+        $clientId = config('services.google_drive.client_id');
+        $clientSecret = config('services.google_drive.client_secret');
+        $refreshToken = config('services.google_drive.refresh_token');
+        $folderId = config('services.google_drive.folder_id');
 
         if (empty($clientId) || empty($clientSecret) || empty($refreshToken)) {
-            throw new \Exception('Google Drive parameters are missing in your .env file.');
+            throw new \Exception('Google Drive credentials are not fully configured in config/services.php.');
         }
 
         $configPath = storage_path('app/backups/rclone.conf');

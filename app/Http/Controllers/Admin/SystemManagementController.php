@@ -72,6 +72,7 @@ class SystemManagementController extends Controller
         $driveService = new \App\Services\GoogleDriveService();
         $gdriveConfigured = $driveService->isConfigured();
         $gdriveQuota = $driveService->getStorageQuota();
+        $gdriveConnected = ($gdriveQuota !== null);
 
         if ($gdriveQuota) {
             $gdriveTotal = $gdriveQuota['limit'];
@@ -104,6 +105,7 @@ class SystemManagementController extends Controller
             'dbPort', 
             'formattedDbSize', 
             'gdriveConfigured',
+            'gdriveConnected',
             'formattedFreeDisk',
             'formattedTotalDisk',
             'formattedUsedDisk',
@@ -482,7 +484,7 @@ class SystemManagementController extends Controller
                 'name' => 'Google Drive Backup API',
                 'description' => 'Disaster recovery automated uploading and storage pruning commands.',
                 'configured' => (new \App\Services\GoogleDriveService())->isConfigured(),
-                'folder_id' => env('GOOGLE_DRIVE_FOLDER_ID') ?: 'Not Set',
+                'folder_id' => config('services.google_drive.folder_id') ?: 'Not Set',
             ],
             'email' => [
                 'name' => 'SMTP Service',

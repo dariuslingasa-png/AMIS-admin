@@ -37,14 +37,7 @@
                     <x-applicant.detail-section :title="$section['title']" :icon="$section['icon']" :fields="$section['fields']" />
                 @endforeach
             </div>
-            @if($student->applicant && $student->applicant->user)
-                <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end">
-                    <a href="{{ route('admin.students.families', ['search' => $student->applicant->user->email]) }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/20 dark:hover:bg-emerald-900/30 border border-emerald-100 dark:border-emerald-900/50 text-xs font-bold text-emerald-700 dark:text-emerald-400 transition" title="View Family Account">
-                        <i data-lucide="home" class="h-3.5 w-3.5"></i>
-                        View Family Account
-                    </a>
-                </div>
-            @endif
+
         </x-card>
     @endunless
 
@@ -88,14 +81,7 @@
                 </tbody>
             </table>
         </div>
-        @if(!$isTeacherAdminViewer && $student->applicant && $student->applicant->user)
-            <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end">
-                <a href="{{ route('admin.students.families', ['search' => $student->applicant->user->email]) }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/20 dark:hover:bg-emerald-900/30 border border-emerald-100 dark:border-emerald-900/50 text-xs font-bold text-emerald-700 dark:text-emerald-400 transition" title="View Family Group">
-                    <i data-lucide="users" class="h-3.5 w-3.5"></i>
-                    Manage Family Group
-                </a>
-            </div>
-        @endif
+
     </x-card>
     @endif
 

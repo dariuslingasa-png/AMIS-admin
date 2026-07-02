@@ -94,6 +94,22 @@ class EnrollmentStorage
         return ltrim(substr($file, strlen($root)), '/');
     }
 
+    public static function getAbsolutePath(?string $path): ?string
+    {
+        if (blank($path)) {
+            return null;
+        }
+        $path = ltrim((string) $path, '/');
+        
+        foreach (self::roots() as $root) {
+            $absolute = rtrim($root, '/').'/'.$path;
+            if (is_file($absolute) && filesize($absolute) > 0) {
+                return $absolute;
+            }
+        }
+        return null;
+    }
+
     private static function roots(): array
     {
         return [

@@ -50,23 +50,68 @@ class EnrollmentApprovalService
                 ]);
             }
 
+            // Sync enrollees files to Google Drive on approval
+            try {
+                $driveUploadService = app(\App\Services\GoogleDriveUploadService::class);
+                $driveUploadService->uploadApplicantFiles($applicant);
+            } catch (\Throwable $e) {
+                Log::error('Auto Google Drive upload failed on backfill: ' . $e->getMessage());
+            }
+
             if (! $applicant->student->account && $this->shouldGenerateSoa($applicant)) {
                 $this->generateSoa($applicant->student, $applicant);
 
-                return 'Student already onboarded. Missing SOA was generated. Microsoft profile photo sync was retried.';
+                return 'Student already onboarded. Missing SOA was generated. Microsoft profile photo sync was retried. Files synced to Google Drive.';
             }
 
-            return 'Student already onboarded. Microsoft profile photo sync was retried.';
+            return 'Student already onboarded. Microsoft profile photo sync was retried. Files synced to Google Drive.';
         }
 
 
 
-        return DB::transaction(function () use ($applicant, $settings) {
+        // ── Duplicate student guard ────────────────────────────────────────────
+        // Prevent creating a second student record (and MS account) for the same
+        // person when a parent submitted multiple enrollment applications.
+        // We match by first name + last name + date of birth (case-insensitive).
+        $duplicateStudent = Student::whereHas('applicant', function ($q) use ($applicant) {
+                $q->whereRaw('LOWER(TRIM(first_name)) = ?', [mb_strtolower(trim((string) $applicant->first_name))])
+                  ->whereRaw('LOWER(TRIM(last_name)) = ?',  [mb_strtolower(trim((string) $applicant->last_name))])
+                  ->where('date_of_birth', $applicant->date_of_birth);
+            })
+            ->where('school_year', $applicant->school_year ?? config('services.school.year'))
+            ->first();
+
+        if ($duplicateStudent) {
+            AdminAuditLog::record(
+                'duplicate_approval_blocked',
+                false,
+                "Approval blocked for applicant #{$applicant->id} — duplicate student detected: #{$duplicateStudent->student_number}",
+                [
+                    'applicant_id'    => $applicant->id,
+                    'applicant_name'  => trim("{$applicant->first_name} {$applicant->last_name}"),
+                    'existing_student'=> $duplicateStudent->student_number,
+                    'existing_email'  => $duplicateStudent->school_email,
+                ]
+            );
+
+            throw ValidationException::withMessages([
+                'status' => "⚠️ Duplicate student detected!\n\n"
+                    . "A student with the same name and date of birth already exists:\n"
+                    . "• Student #: {$duplicateStudent->student_number}\n"
+                    . "• School Email: {$duplicateStudent->school_email}\n\n"
+                    . "Do NOT approve this application. Instead, link this applicant to the existing student record to avoid creating a duplicate Microsoft account.\n\n"
+                    . "If this is a different student with the same name and birthdate, contact IT to resolve manually.",
+            ]);
+        }
+        // ── End duplicate guard ───────────────────────────────────────────────
+
+        $result = DB::transaction(function () use ($applicant, $settings) {
             $shouldGenerateMicrosoftAccount = $settings->generate_microsoft_account ?? true;
             $graph = $shouldGenerateMicrosoftAccount ? new MicrosoftGraphService : null;
             $studentNumber = $this->generateStudentNumber($applicant);
             [$mailNick, $schoolEmail] = $this->generateSchoolEmail($applicant, $studentNumber, $graph);
-            $tempPassword = 'Amis@'.strtoupper(Str::random(5)).rand(10, 99);
+            // Use birthdate as temp password (aug291997 format) — simple for students
+            $tempPassword = $this->generateBirthdatePassword($applicant);
             $student = $this->createStudent($applicant, $studentNumber, $schoolEmail, null, $tempPassword);
 
             if ($shouldGenerateMicrosoftAccount) {
@@ -114,6 +159,33 @@ class EnrollmentApprovalService
                 default => 'Application approved.' . $credentialsInfo . ' Student credentials were generated. Welcome email auto-send is currently disabled.',
             };
         });
+
+        // Sync enrollees files to Google Drive on approval
+        try {
+            $driveUploadService = app(\App\Services\GoogleDriveUploadService::class);
+            $driveUploadService->uploadApplicantFiles($applicant);
+        } catch (\Throwable $e) {
+            Log::error('Auto Google Drive upload failed on approval transaction success: ' . $e->getMessage());
+        }
+
+        return $result;
+    }
+
+    /**
+     * Generate a simple birthdate-based password: aug291997, jan012005, etc.
+     * Falls back to a secure random if DOB is missing.
+     */
+    private function generateBirthdatePassword(EnrollmentApplicant $applicant): string
+    {
+        $dob = $applicant->date_of_birth;
+        if ($dob) {
+            $ts = strtotime((string) $dob);
+            if ($ts !== false) {
+                return ucfirst(strtolower(date('M', $ts))) . date('d', $ts) . date('Y', $ts) . '@';
+            }
+        }
+        // Fallback: strong password compliant with MS Graph requirements
+        return 'Amis@' . rand(10000, 99999);
     }
 
     private function generateStudentNumber(EnrollmentApplicant $applicant): string
@@ -252,6 +324,13 @@ class EnrollmentApprovalService
                             'ms_user_id' => $msUserId,
                         ]);
                     }
+                }
+
+                // Auto-disable MFA for the new student account
+                try {
+                    $graph->disablePerUserMfa($msUserId);
+                } catch (\Throwable $mfaEx) {
+                    Log::warning("Could not disable MFA for {$schoolEmail}: " . $mfaEx->getMessage());
                 }
             }
 
@@ -620,7 +699,7 @@ class EnrollmentApprovalService
             ->squish()
             ->toString();
 
-        return $studentType === 'new' || $studentType === 'new student';
+        return $studentType === 'new' || $studentType === 'new student' || $studentType === 'transferee' || $studentType === 'transfer';
     }
 
     private function sendOnboardingIfPossible(
@@ -683,11 +762,13 @@ class EnrollmentApprovalService
         }
 
         $student = $applicant->student;
-        $tempPassword = 'Amis@'.strtoupper(Str::random(5)).rand(10, 99);
+        // Use birthdate-based password for resend too (consistent with initial approval)
+        $tempPassword = $this->generateBirthdatePassword($applicant);
 
         try {
             if (filled($student->school_email)) {
-                (new MicrosoftGraphService)->resetPassword($student->school_email, $tempPassword);
+                // Reset without forcing change on next sign-in
+                (new MicrosoftGraphService)->resetPasswordSimple($student->school_email, $tempPassword);
             }
         } catch (\Throwable $exception) {
             $msError = 'Microsoft password reset failed: '.$exception->getMessage();

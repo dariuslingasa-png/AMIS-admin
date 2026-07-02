@@ -74,11 +74,19 @@
         <div>
             <span class="text-xs font-extrabold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">Student Administration</span>
         </div>
-        <a href="{{ route('admin.students.index') }}"
-           class="inline-flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2 text-sm font-bold text-slate-700 dark:text-slate-300 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98]">
-            <i data-lucide="chevron-left" class="h-4 w-4"></i>
-            Back to directory
-        </a>
+        <div class="flex items-center gap-2">
+            <a href="{{ route('admin.students.index', ['search' => $student->student_number, 'print_info' => 1]) }}"
+               target="_blank"
+               class="inline-flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2 text-sm font-bold text-slate-700 dark:text-slate-300 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98]">
+                <i data-lucide="printer" class="h-4 w-4 text-slate-500"></i>
+                <span>Print Official Sheet</span>
+            </a>
+            <a href="{{ route('admin.students.index') }}"
+               class="inline-flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2 text-sm font-bold text-slate-700 dark:text-slate-300 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98]">
+                <i data-lucide="chevron-left" class="h-4 w-4"></i>
+                <span>Back to directory</span>
+            </a>
+        </div>
     </div>
 
     <div class="applicant-page" x-data="{
@@ -223,12 +231,7 @@
                             @endphp
                             <span class="applicant-pill bg-amber-500/20 text-amber-200 border border-amber-500/30 font-extrabold cursor-help" title="Missing: {{ $missingList }}">INCOMPLETE</span>
                         @endif
-                        @if (!$isTeacherAdminViewer && $student->applicant && $student->applicant->user)
-                            <a href="{{ route('admin.students.families', ['search' => $student->applicant->user->email]) }}" class="applicant-pill bg-emerald-500/20 text-emerald-200 border border-emerald-500/30 font-extrabold flex items-center gap-1 hover:bg-emerald-500/30 transition" title="View Family Group">
-                                <i data-lucide="home" class="h-3 w-3"></i>
-                                FAMILY GROUP
-                            </a>
-                        @endif
+
                     </div>
                 </div>
             </section>
@@ -246,20 +249,14 @@
                             :class="activeTab === 'academic' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-900/50'" 
                             class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 focus:outline-none flex-1 sm:flex-initial cursor-pointer">
                         <i data-lucide="graduation-cap" class="h-4 w-4"></i>
-                        <span>Classroom & MS Teams</span>
+                        <span>Academic & History</span>
                     </button>
                     @unless ($isTeacherAdminViewer)
-                    <button @click="activeTab = 'payment'"
-                            :class="activeTab === 'payment' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-900/50'" 
-                            class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 focus:outline-none flex-1 sm:flex-initial cursor-pointer">
-                        <i data-lucide="receipt" class="h-4 w-4"></i>
-                        <span>Payment Proof</span>
-                    </button>
                     <button @click="activeTab = 'documents'" 
                             :class="activeTab === 'documents' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-900/50'" 
                             class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 focus:outline-none flex-1 sm:flex-initial cursor-pointer">
-                        <i data-lucide="folder-open" class="h-4 w-4"></i>
-                        <span>Requirement Files</span>
+                        <i data-lucide="shield-check" class="h-4 w-4"></i>
+                        <span>Documents & Verification</span>
                     </button>
                     @endunless
                 </nav>
@@ -269,7 +266,6 @@
             @include('admin.students.partials.show.overview')
             @include('admin.students.partials.show.academic')
             @unless ($isTeacherAdminViewer)
-                @include('admin.students.partials.show.payment')
                 @include('admin.students.partials.show.documents')
             @endunless
         </main>

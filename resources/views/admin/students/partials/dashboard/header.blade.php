@@ -19,9 +19,13 @@
                 <i data-lucide="user-check" class="w-4 h-4 text-emerald-600"></i>
                 Student Records
             </a>
-            <a href="{{ route('admin.students.history') }}" class="inline-flex items-center gap-2 border border-white/20 bg-white/10 px-5 py-2.5 rounded-xl text-white hover:bg-white/15 active:bg-white/20 transition-all duration-150 text-sm font-black hover:scale-[1.02] cursor-pointer shadow-sm shadow-indigo-950/10">
-                <i data-lucide="history" class="w-4 h-4"></i>
-                Enrollment History
+            <a href="{{ route('admin.students.accounts') }}" class="inline-flex items-center gap-2 border border-white/20 bg-white/10 px-5 py-2.5 rounded-xl text-white hover:bg-white/15 active:bg-white/20 transition-all duration-150 text-sm font-black hover:scale-[1.02] cursor-pointer shadow-sm shadow-indigo-950/10">
+                <i data-lucide="user-cog" class="w-4 h-4"></i>
+                Account Onboarding
+            </a>
+            <a href="{{ route('admin.students.reports') }}" class="inline-flex items-center gap-2 border border-white/20 bg-white/10 px-5 py-2.5 rounded-xl text-white hover:bg-white/15 active:bg-white/20 transition-all duration-150 text-sm font-black hover:scale-[1.02] cursor-pointer shadow-sm shadow-indigo-950/10">
+                <i data-lucide="file-text" class="w-4 h-4"></i>
+                Reports & Analytics
             </a>
         </div>
     </div>

@@ -1,6 +1,6 @@
 <datalist id="schedule-teachers">
     @foreach($teachers as $teacher)
-        <option value="{{ $teacher }}"></option>
+        <option value="{{ $teacher['name'] }}"></option>
     @endforeach
 </datalist>
 

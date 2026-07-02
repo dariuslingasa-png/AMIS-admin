@@ -128,7 +128,41 @@ class AdminStudentProcessController extends Controller
                   );
             });
         }
-        $students = $query->paginate(20);
+
+        // Fetch all matching students to perform family-based grouping
+        $allStudents = $query->get();
+
+        $groups = [];
+        foreach ($allStudents as $student) {
+            $applicant = $student->applicant;
+            $familyId = ($applicant && $applicant->family_application_id !== null) ? trim($applicant->family_application_id) : '';
+            $groupKey = ($familyId !== '') ? 'fam_' . $familyId : 'solo_' . $student->id;
+
+            if (!isset($groups[$groupKey])) {
+                $groups[$groupKey] = [
+                    'family_id' => $familyId,
+                    'students' => [],
+                ];
+            }
+            $groups[$groupKey]['students'][] = $student;
+        }
+
+        // Paginate the family and student groups
+        $groupedCollection = collect(array_values($groups));
+        $perPage = 25;
+        $page = \Illuminate\Pagination\Paginator::resolveCurrentPage() ?: 1;
+        
+        $students = new \Illuminate\Pagination\LengthAwarePaginator(
+            $groupedCollection->forPage($page, $perPage),
+            $groupedCollection->count(),
+            $perPage,
+            $page,
+            [
+                'path' => \Illuminate\Pagination\Paginator::resolveCurrentPath(),
+                'query' => $request->query()
+            ]
+        );
+
         return view('admin.students.verification', compact('students'));
     }
 
@@ -151,17 +185,29 @@ class AdminStudentProcessController extends Controller
 
     public function history(Request $request)
     {
-        $query = Student::with(['applicant.payment', 'studentSection.section', 'applicant.user'])->latest();
+        $query = \App\Models\AdminAuditLog::with('user')
+            ->whereIn('event', [
+                'application_approved',
+                'application_status_updated',
+                'onboarding_email_resent',
+                'section_verified',
+                'documents_approved',
+                'documents_rejected',
+                'document_approved',
+                'document_rejected',
+                'license_assigned',
+                'credentials_sent',
+                'credentials_resent',
+                'email_renamed'
+            ])
+            ->latest();
 
         if ($request->filled('search')) {
             $s = $request->search;
             $query->where(function ($q) use ($s) {
-                $q->where('student_number', 'like', "%{$s}%")
-                  ->orWhere('school_email', 'like', "%{$s}%")
-                  ->orWhereHas('applicant', fn($a) =>
-                      $a->where('first_name', 'like', "%{$s}%")
-                        ->orWhere('last_name', 'like', "%{$s}%")
-                  );
+                $q->where('message', 'like', "%{$s}%")
+                  ->orWhere('email', 'like', "%{$s}%")
+                  ->orWhere('event', 'like', "%{$s}%");
             });
         }
 

@@ -151,34 +151,65 @@
             <div class="space-y-6">
                 <!-- Google Drive Widget -->
                 <div class="overflow-hidden rounded-3xl bg-slate-950 p-6 text-white shadow-xl shadow-slate-900/10">
-                    <div class="flex items-center gap-3">
-                        <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10 text-white backdrop-blur">
-                            <i data-lucide="cloud" class="h-6 w-6"></i>
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10 text-white backdrop-blur">
+                                <i data-lucide="cloud" class="h-6 w-6"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-black uppercase tracking-wider">Google Drive Storage</h3>
+                                <p class="text-[10px] font-semibold text-slate-400">Cloud backup storage tracker</p>
+                            </div>
                         </div>
                         <div>
-                            <h3 class="text-sm font-black uppercase tracking-wider">Google Drive Storage</h3>
-                            <p class="text-[10px] font-semibold text-slate-400">Cloud backup storage tracker</p>
+                            @if ($gdriveConnected)
+                                <span class="inline-flex rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-emerald-400 border border-emerald-500/30">Connected</span>
+                            @else
+                                <span class="inline-flex rounded-full bg-rose-500/20 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-rose-400 border border-rose-500/30">Disconnected</span>
+                            @endif
                         </div>
                     </div>
 
                     <div class="mt-6 space-y-4">
-                        <div class="relative w-full bg-white/10 rounded-full h-3.5 overflow-hidden">
-                            <div class="h-3.5 rounded-full transition-all duration-500 bg-gradient-to-r from-violet-500 to-indigo-500" style="width: {{ min($diskUsagePercent, 100) }}%"></div>
-                        </div>
-                        <div class="flex items-center justify-between text-xs font-bold text-slate-300">
-                            <span>Usage: {{ $diskUsagePercent }}%</span>
-                            <span>{{ $formattedUsedDisk }} used</span>
-                        </div>
-                        <div class="border-t border-white/10 pt-4 grid grid-cols-2 gap-2 text-xs font-semibold text-slate-400">
-                            <div>
-                                <span class="block text-[10px] font-black uppercase tracking-widest text-slate-500">Total Quota</span>
-                                <span class="text-sm font-bold text-white mt-1 block">{{ $formattedTotalDisk }}</span>
+                        @if ($gdriveConnected)
+                            <div class="relative w-full bg-white/10 rounded-full h-3.5 overflow-hidden">
+                                <div class="h-3.5 rounded-full transition-all duration-500 bg-gradient-to-r from-violet-500 to-indigo-500" style="width: {{ min($diskUsagePercent, 100) }}%"></div>
                             </div>
-                            <div>
-                                <span class="block text-[10px] font-black uppercase tracking-widest text-slate-500">Available</span>
-                                <span class="text-sm font-bold text-white mt-1 block">{{ $formattedFreeDisk }}</span>
+                            <div class="flex items-center justify-between text-xs font-bold text-slate-300">
+                                <span>Usage: {{ $diskUsagePercent }}%</span>
+                                <span>{{ $formattedUsedDisk }} used</span>
                             </div>
-                        </div>
+                            <div class="border-t border-white/10 pt-4 grid grid-cols-2 gap-2 text-xs font-semibold text-slate-400">
+                                <div>
+                                    <span class="block text-[10px] font-black uppercase tracking-widest text-slate-500">Total Quota</span>
+                                    <span class="text-sm font-bold text-white mt-1 block">{{ $formattedTotalDisk }}</span>
+                                </div>
+                                <div>
+                                    <span class="block text-[10px] font-black uppercase tracking-widest text-slate-500">Available</span>
+                                    <span class="text-sm font-bold text-white mt-1 block">{{ $formattedFreeDisk }}</span>
+                                </div>
+                            </div>
+                            <div class="border-t border-white/10 pt-4">
+                                <a href="{{ route('admin.google-drive.auth', ['back_to' => 'backups']) }}" class="inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-white/15 hover:bg-white/5 py-2.5 text-xs font-bold text-slate-300 transition cursor-pointer">
+                                    <i data-lucide="refresh-cw" class="h-3.5 w-3.5"></i>
+                                    Reconnect Google Drive
+                                </a>
+                            </div>
+                        @else
+                            <div class="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-4 space-y-3 text-xs text-slate-300">
+                                <div class="font-bold text-rose-400 flex items-center gap-1.5">
+                                    <i data-lucide="alert-triangle" class="h-4 w-4 shrink-0 text-rose-450"></i>
+                                    Authorization Required
+                                </div>
+                                <p class="text-[11px] leading-relaxed text-slate-400 font-medium">
+                                    The Google Drive storage API connection is inactive, expired, or revoked. You must re-authorize the account to perform cloud backups.
+                                </p>
+                                <a href="{{ route('admin.google-drive.auth', ['back_to' => 'backups']) }}" class="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-indigo-650 hover:bg-indigo-700 py-2.5 text-xs font-bold text-white transition cursor-pointer">
+                                    <i data-lucide="key-round" class="h-4 w-4"></i>
+                                    Connect Google Drive
+                                </a>
+                            </div>
+                        @endif
                     </div>
                 </div>
 

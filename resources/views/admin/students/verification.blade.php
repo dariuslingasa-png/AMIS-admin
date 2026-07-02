@@ -11,9 +11,73 @@
         ['label' => 'Document Verification', 'href' => null],
     ]"
 >
+    <!-- Custom CSS for Printable Reports & Clean Layout -->
+    <style>
+        @media print {
+            body aside#default-sidebar,
+            body aside.admin-sidebar,
+            body nav,
+            body footer,
+            body .no-print,
+            body #topLoadingBar,
+            body #toastContainer,
+            body .breadcrumbs {
+                display: none !important;
+                visibility: hidden !important;
+                position: absolute !important;
+                left: -9999px !important;
+                width: 0 !important;
+                height: 0 !important;
+                overflow: hidden !important;
+                pointer-events: none !important;
+            }
+            body .admin-shell, 
+            body .admin-content, 
+            body main, 
+            body .mx-auto, 
+            body #adminMainContent {
+                display: block !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                border: none !important;
+                box-shadow: none !important;
+                background: white !important;
+                margin-left: 0 !important;
+                padding-left: 0 !important;
+            }
+            body, html {
+                background: white !important;
+                color: black !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            table {
+                font-size: 10px !important;
+                width: 100% !important;
+                border-collapse: collapse !important;
+            }
+            th, td {
+                padding: 4px 6px !important;
+                border: 1px solid #cbd5e1 !important;
+            }
+            tr {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+            tr:nth-child(even) {
+                background-color: #f8fafc !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+        }
+    </style>
+
     <div class="space-y-6">
         <!-- Banner -->
-        <section class="overflow-hidden rounded-3xl border border-emerald-700/30 bg-gradient-to-br from-emerald-800 via-emerald-900 to-teal-950 p-6 text-white shadow-xl shadow-slate-900/10">
+        <section class="overflow-hidden rounded-3xl border border-emerald-700/30 bg-gradient-to-br from-emerald-800 via-emerald-900 to-teal-950 p-6 text-white shadow-xl shadow-slate-900/10 no-print">
             <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                 <div>
                     <span class="inline-flex rounded-full bg-white/10 px-3 py-1 text-xs font-black uppercase tracking-[0.22em] text-slate-200">Students Workspace</span>
@@ -28,7 +92,7 @@
         <!-- Main Card -->
         <x-card title="Verification Registry" subtitle="Review verification statuses for mandatory enrollment requirements">
             <!-- Search Filter -->
-            <div class="px-4 py-4 sm:px-6 border-b border-slate-200/60 bg-slate-50/50">
+            <div class="px-4 py-4 sm:px-6 border-b border-slate-200/60 bg-slate-50/50 no-print">
                 <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                     <div></div>
                     <div class="flex items-center gap-2">
@@ -46,6 +110,10 @@
                                 Search
                             </button>
                         </form>
+                        <button type="button" onclick="window.print()" class="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 text-xs font-bold text-slate-700 hover:bg-slate-50 active:scale-95 transition cursor-pointer">
+                            <i data-lucide="printer" class="h-3.5 w-3.5 text-slate-500"></i>
+                            <span>Print / PDF</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -66,62 +134,93 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 bg-white">
-                            @forelse ($students as $student)
+                            @forelse ($students as $group)
                                 @php
-                                    $applicant = $student->applicant;
-                                    $fullName = $applicant ? html_entity_decode(trim(($applicant->first_name ?? '').' '.($applicant->middle_name ?? '').' '.($applicant->last_name ?? '')), ENT_QUOTES, 'UTF-8') : 'Unknown Student';
-                                    
-                                    $requirements = $applicant ? $reviewService->getRequiredDocuments($applicant) : [];
-                                    $statuses = $applicant->document_statuses ?? [];
-                                    $approved = collect(array_keys($requirements))->filter(fn ($key) => ($statuses[$key] ?? 'pending') === 'approved')->count();
-                                    $totalReq = count($requirements);
-                                    $ready = $totalReq > 0 && $approved === $totalReq;
+                                    $familyId = $group['family_id'];
+                                    $groupStudents = $group['students'];
                                 @endphp
-                                <tr class="align-middle transition hover:bg-slate-50/30">
-                                    <td class="px-5 py-4">
-                                        <span class="font-extrabold text-slate-900 block uppercase">{{ $fullName }}</span>
-                                        <div class="mt-1 flex items-center gap-1.5 text-xs font-bold text-slate-400">
-                                            <span>{{ $student->student_number }}</span>
-                                            @if ($student->applicant && $student->applicant->user)
-                                                <span class="text-slate-300">•</span>
-                                                <a href="{{ route('admin.students.families', ['search' => $student->applicant->user->email]) }}" class="inline-flex items-center gap-0.5 text-emerald-600 hover:text-emerald-700 font-extrabold transition" title="View Family Account">
-                                                    <i data-lucide="home" class="h-3 w-3"></i>
-                                                    Family
-                                                </a>
-                                            @endif
-                                        </div>
-                                    </td>
-                                    <td class="px-5 py-4 text-xs font-bold text-slate-600">
-                                        {{ $student->grade_level }}
-                                    </td>
-                                    <td class="px-5 py-4">
-                                        @if($applicant)
-                                            <div class="flex flex-wrap gap-2 max-w-xl">
-                                                @foreach ($requirements as $key => $label)
-                                                    @php $state = $statuses[$key] ?? 'pending'; @endphp
-                                                    <x-badge :color="$docColor[$state] ?? 'gray'">
-                                                        {{ $label }}: {{ \Illuminate\Support\Str::headline($state) }}
-                                                    </x-badge>
-                                                @endforeach
+                                <tr class="align-top transition hover:bg-slate-50/30">
+                                    <td class="px-5 py-3">
+                                        @foreach ($groupStudents as $student)
+                                            @php
+                                                $applicant = $student->applicant;
+                                                $fullName = $applicant ? html_entity_decode(trim(($applicant->first_name ?? '').' '.($applicant->middle_name ?? '').' '.($applicant->last_name ?? '')), ENT_QUOTES, 'UTF-8') : 'Unknown Student';
+                                            @endphp
+                                            <div class="py-2 border-b border-slate-100 last:border-b-0 min-h-[52px] flex flex-col justify-center">
+                                                <span class="font-extrabold text-slate-900 block uppercase">{{ $fullName }}</span>
+                                                <div class="mt-1 flex items-center gap-1.5 text-xs font-bold text-slate-400">
+                                                    <span class="inline-flex items-center justify-center rounded bg-slate-100 px-1.5 py-0.5 text-[9px] font-black text-slate-650">{{ $student->student_number }}</span>
+                                                    @if ($familyId)
+                                                        <span class="text-slate-300">•</span>
+                                                        <span class="inline-flex items-center gap-0.5 text-emerald-600 font-extrabold text-[10px]">
+                                                            <i data-lucide="home" class="h-3 w-3"></i>
+                                                            Family ID: {{ $familyId }}
+                                                        </span>
+                                                    @endif
+                                                </div>
                                             </div>
-                                        @else
-                                            <span class="text-xs font-bold text-slate-400 italic">No applicant record linked</span>
-                                        @endif
+                                        @endforeach
                                     </td>
-                                    <td class="px-5 py-4 text-center">
-                                        @if($totalReq > 0)
-                                            <x-badge :color="$ready ? 'green' : 'yellow'">
-                                                {{ $approved }}/{{ $totalReq }} Approved
-                                            </x-badge>
-                                        @else
-                                            <span class="text-xs font-bold text-slate-400">-</span>
-                                        @endif
+                                    <td class="px-5 py-3 text-xs font-bold text-slate-600">
+                                        @foreach ($groupStudents as $student)
+                                            <div class="py-2 border-b border-slate-100 last:border-b-0 min-h-[52px] flex flex-col justify-center">
+                                                <span>{{ $student->grade_level }}</span>
+                                            </div>
+                                        @endforeach
                                     </td>
-                                    <td class="px-5 py-4 text-right">
-                                        <a href="{{ route('admin.students.show', $student) }}#documents" class="inline-flex h-9 items-center justify-center gap-1 rounded-xl bg-slate-50 border border-slate-200 px-3 text-xs font-bold text-slate-700 hover:bg-slate-100 transition">
-                                            <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-600"></i>
-                                            Verify Files
-                                        </a>
+                                    <td class="px-5 py-3">
+                                        @foreach ($groupStudents as $student)
+                                            @php
+                                                $applicant = $student->applicant;
+                                                $requirements = $applicant ? $reviewService->getRequiredDocuments($applicant) : [];
+                                                $statuses = $applicant->document_statuses ?? [];
+                                            @endphp
+                                            <div class="py-2 border-b border-slate-100 last:border-b-0 min-h-[52px] flex flex-col justify-center">
+                                                @if($applicant)
+                                                    <div class="flex flex-wrap gap-1.5 max-w-xl">
+                                                        @foreach ($requirements as $key => $label)
+                                                            @php $state = $statuses[$key] ?? 'pending'; @endphp
+                                                            <x-badge :color="$docColor[$state] ?? 'gray'">
+                                                                {{ $label }}: {{ \Illuminate\Support\Str::headline($state) }}
+                                                            </x-badge>
+                                                        @endforeach
+                                                    </div>
+                                                @else
+                                                    <span class="text-xs font-bold text-slate-400 italic">No applicant record linked</span>
+                                                @endif
+                                            </div>
+                                        @endforeach
+                                    </td>
+                                    <td class="px-5 py-3 text-center">
+                                        @foreach ($groupStudents as $student)
+                                            @php
+                                                $applicant = $student->applicant;
+                                                $requirements = $applicant ? $reviewService->getRequiredDocuments($applicant) : [];
+                                                $statuses = $applicant->document_statuses ?? [];
+                                                $approved = collect(array_keys($requirements))->filter(fn ($key) => ($statuses[$key] ?? 'pending') === 'approved')->count();
+                                                $totalReq = count($requirements);
+                                                $ready = $totalReq > 0 && $approved === $totalReq;
+                                            @endphp
+                                            <div class="py-2 border-b border-slate-100 last:border-b-0 min-h-[52px] flex flex-col justify-center items-center">
+                                                @if($totalReq > 0)
+                                                    <x-badge :color="$ready ? 'green' : 'yellow'">
+                                                        {{ $approved }}/{{ $totalReq }} Approved
+                                                    </x-badge>
+                                                @else
+                                                    <span class="text-xs font-bold text-slate-400">-</span>
+                                                @endif
+                                            </div>
+                                        @endforeach
+                                    </td>
+                                    <td class="px-5 py-3 text-right no-print">
+                                        @foreach ($groupStudents as $student)
+                                            <div class="py-2 border-b border-slate-100 last:border-b-0 min-h-[52px] flex flex-col justify-center items-end">
+                                                <a href="{{ route('admin.students.show', $student) }}#documents" class="inline-flex h-8 items-center justify-center gap-1 rounded-xl bg-slate-50 border border-slate-200 px-2.5 text-xxs font-bold text-slate-700 hover:bg-slate-100 transition cursor-pointer">
+                                                    <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-600"></i>
+                                                    <span>Verify</span>
+                                                </a>
+                                            </div>
+                                        @endforeach
                                     </td>
                                 </tr>
                             @empty
@@ -136,7 +235,7 @@
                 <!-- Pagination -->
                 <div class="px-4 py-4 sm:px-6 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-slate-50/30">
                     <p class="text-xs font-bold text-slate-500">
-                        Showing {{ $students->firstItem() ?? 0 }}-{{ $students->lastItem() ?? 0 }} of {{ $students->total() }} students
+                        Showing {{ $students->firstItem() ?? 0 }}-{{ $students->lastItem() ?? 0 }} of {{ $students->total() }} records
                     </p>
                     <div class="w-full sm:w-auto">{{ $students->links() }}</div>
                 </div>

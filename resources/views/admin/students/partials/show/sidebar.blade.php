@@ -54,8 +54,40 @@
                 <dt class="font-extrabold uppercase tracking-wider text-slate-400">Classroom Section</dt>
                 <dd class="mt-1 font-semibold text-slate-800 dark:text-slate-200">{{ $student->studentSection->section->name ?? 'No Section' }}</dd>
             </div>
+            <div class="border-t border-slate-100 pt-3.5 dark:border-slate-800 flex flex-col items-center">
+                <dt class="font-extrabold uppercase tracking-wider text-slate-400 self-start">Verification QR Code</dt>
+                <dd class="mt-2.5 p-2 bg-white rounded-xl border border-slate-200 dark:border-slate-700 w-32 h-32 flex items-center justify-center">
+                    <img src="https://quickchart.io/qr?text={{ urlencode('https://amis.edu.ph/v/' . $student->obfuscated_id) }}&margin=1&format=svg" class="w-full h-full object-contain block" alt="QR Code">
+                </dd>
+                <p class="text-[10px] text-slate-400 font-bold mt-2 text-center">Scan to verify student status</p>
+                <a href="#" onclick="downloadQR('{{ $student->obfuscated_id }}', '{{ $student->student_number }}'); return false;" class="text-[10px] text-emerald-600 hover:text-emerald-700 font-extrabold mt-2.5 inline-flex items-center gap-1 transition-transform active:scale-[0.98]">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-download"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                    <span>Download QR Code</span>
+                </a>
+            </div>
         </dl>
     </x-card>
+
+    <script>
+    function downloadQR(obfuscatedId, studentNumber) {
+        const url = 'https://quickchart.io/qr?text=' + encodeURIComponent('https://amis.edu.ph/v/' + obfuscatedId) + '&margin=1&format=png&size=300';
+        fetch(url)
+            .then(response => response.blob())
+            .then(blob => {
+                const blobUrl = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = blobUrl;
+                link.download = 'QR_' + studentNumber + '.png';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(blobUrl);
+            })
+            .catch(err => {
+                window.open(url, '_blank');
+            });
+    }
+    </script>
 
     <!-- Actions Panel -->
     <x-card title="Actions Workspace">
@@ -90,6 +122,17 @@
                 </div>
             </form>
 
+            <!-- Print Workspace -->
+            <div class="border-t border-slate-100 pt-4 mt-4 dark:border-slate-800 space-y-2">
+                <label class="block text-xxs font-extrabold uppercase tracking-wider text-slate-400">Print Workspace</label>
+                <a href="{{ route('admin.students.index', ['search' => $student->student_number, 'print_info' => 1]) }}"
+                   target="_blank"
+                   class="w-full inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98] transition-all duration-200 cursor-pointer">
+                    <i data-lucide="printer" class="h-3.5 w-3.5 text-slate-500"></i>
+                    <span>Print Official Info Sheet</span>
+                </a>
+            </div>
+
             <!-- Credentials Actions -->
             <div class="border-t border-slate-100 pt-4 mt-4 dark:border-slate-800 space-y-2">
                 <label class="block text-xxs font-extrabold uppercase tracking-wider text-slate-400">Credentials & Password Workspace</label>
@@ -104,27 +147,27 @@
                     </button>
                 </form>
 
-                <div class="grid grid-cols-2 gap-2">
-                    <!-- Reset using Birthdate -->
-                    <form method="POST" action="{{ route('admin.students.resend', $student) }}">
-                        @csrf
-                        <input type="hidden" name="reset_format" value="birthdate">
-                        <button type="submit" class="w-full inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-amber-500 px-2 text-[10px] font-extrabold text-white hover:bg-amber-600 active:scale-[0.98] transition-all duration-200 cursor-pointer" title="Reset password to birthdate format (e.g. aug292004)">
-                            <i data-lucide="calendar" class="h-3.5 w-3.5"></i>
-                            <span>Reset to Birthdate</span>
+                <!-- Set Custom Password -->
+                <form method="POST" action="{{ route('admin.students.resend', $student) }}" class="space-y-1.5">
+                    @csrf
+                    <div class="flex gap-2">
+                        <input type="text" name="custom_password" placeholder="Type custom password..." required class="flex-1 h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 outline-none transition focus:border-amber-400 focus:ring-4 focus:ring-amber-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+                        <button type="submit" class="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 px-3 text-xs font-bold text-white active:scale-[0.98] transition-all duration-200 cursor-pointer" title="Set Custom Password">
+                            <i data-lucide="key" class="h-3.5 w-3.5"></i>
+                            <span>Reset</span>
                         </button>
-                    </form>
+                    </div>
+                </form>
 
-                    <!-- Reset using Name -->
-                    <form method="POST" action="{{ route('admin.students.resend', $student) }}">
-                        @csrf
-                        <input type="hidden" name="reset_format" value="name">
-                        <button type="submit" class="w-full inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-amber-600 px-2 text-[10px] font-extrabold text-white hover:bg-amber-700 active:scale-[0.98] transition-all duration-200 cursor-pointer" title="Reset password to name format (e.g. mlingasa)">
-                            <i data-lucide="user" class="h-3.5 w-3.5"></i>
-                            <span>Reset to Name</span>
-                        </button>
-                    </form>
-                </div>
+                <!-- Reset Password to default -->
+                <form method="POST" action="{{ route('admin.students.resend', $student) }}">
+                    @csrf
+                    <input type="hidden" name="reset_format" value="default">
+                    <button type="submit" class="w-full inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-amber-200 bg-amber-50 dark:border-amber-950/20 dark:bg-amber-950/10 px-3 text-xs font-bold text-amber-700 dark:text-amber-400 hover:bg-amber-100/50 active:scale-[0.98] transition-all duration-200 cursor-pointer" title="Reset password to default format (amis12345)">
+                        <i data-lucide="refresh-cw" class="h-3.5 w-3.5"></i>
+                        <span>Reset Password (amis12345)</span>
+                    </button>
+                </form>
             </div>
 
             <!-- Force Teams & License Sync -->

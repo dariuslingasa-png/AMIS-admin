@@ -145,15 +145,16 @@ class MicrosoftGraphService
         }
 
         $response = $this->graph()->post('/users', [
-            'accountEnabled' => true,
-            'displayName' => $displayName,
-            'mailNickname' => $mailNickname,
+            'accountEnabled'    => true,
+            'displayName'       => $displayName,
+            'mailNickname'      => $mailNickname,
             'userPrincipalName' => $upn,
-            'userType' => 'Member',
-            'usageLocation' => 'PH',   // Required for M365 license assignment
-            'passwordProfile' => [
-                'password' => $tempPassword,
-                'forceChangePasswordNextSignIn' => true,
+            'userType'          => 'Member',
+            'usageLocation'     => 'PH',   // Required for M365 license assignment
+            'passwordPolicies'  => 'DisablePasswordExpiration,DisableStrongPassword', // Allow simple passwords
+            'passwordProfile'   => [
+                'password'                      => $tempPassword,
+                'forceChangePasswordNextSignIn' => false, // No reset prompt on first login
             ],
         ]);
 
@@ -486,6 +487,40 @@ class MicrosoftGraphService
 
         if (! $delegatedResponse->successful()) {
             throw new \Exception('Failed to reset password: '.$delegatedResponse->body());
+        }
+    }
+
+    public function resetPasswordSimple(string $upnOrId, string $newPassword): void
+    {
+        try {
+            $resolvedId = $this->resolveUserId($upnOrId);
+        } catch (\Exception $e) {
+            $resolvedId = $upnOrId;
+        }
+
+        $payload = [
+            'passwordProfile' => [
+                'password' => $newPassword,
+                'forceChangePasswordNextSignIn' => false,
+            ],
+        ];
+
+        $response = $this->graph()->patch("/users/{$resolvedId}", $payload);
+
+        if ($response->successful()) {
+            return;
+        }
+
+        Log::warning('Application token password reset (simple) failed; retrying with delegated token', [
+            'user' => $upnOrId,
+            'status' => $response->status(),
+            'body' => $response->body(),
+        ]);
+
+        $delegatedResponse = $this->graphDelegated()->patch("/users/{$resolvedId}", $payload);
+
+        if (! $delegatedResponse->successful()) {
+            throw new \Exception('Failed to reset password (simple): '.$delegatedResponse->body());
         }
     }
 
@@ -1030,10 +1065,37 @@ class MicrosoftGraphService
      */
     public function disablePerUserMfa(string $msUserId): void
     {
-        // Per-user MFA is managed via the legacy strongAuthenticationRequirements API
-        // The recommended approach is Conditional Access — exclude a "Students" group
-        // This method is a placeholder; actual implementation requires beta endpoint
-        Log::info("MFA for user {$msUserId} should be managed via Conditional Access Policy.");
+        try {
+            // 1. Set perUserMfaState = disabled via beta endpoint
+            $res = $this->graphBeta()->patch(
+                "https://graph.microsoft.com/beta/users/{$msUserId}/authentication/requirements",
+                ['perUserMfaState' => 'disabled']
+            );
+            if ($res->successful() || $res->status() === 204) {
+                Log::info("MFA disabled for user {$msUserId}");
+            } else {
+                Log::warning("MFA disable returned {$res->status()} for {$msUserId}: " . $res->body());
+            }
+
+            // 2. Remove any registered Microsoft Authenticator methods
+            $methods = $this->graph()->get("/users/{$msUserId}/authentication/methods")->json()['value'] ?? [];
+            foreach ($methods as $method) {
+                $type = $method['@odata.type'] ?? '';
+                $mid  = $method['id'] ?? '';
+                if (!$mid) continue;
+
+                if (str_contains($type, 'microsoftAuthenticator')) {
+                    $this->graph()->delete("/users/{$msUserId}/authentication/microsoftAuthenticatorMethods/{$mid}");
+                    Log::info("Removed Authenticator method for {$msUserId}");
+                }
+                if (str_contains($type, 'softwareOath')) {
+                    $this->graph()->delete("/users/{$msUserId}/authentication/softwareOathMethods/{$mid}");
+                    Log::info("Removed SoftwareOath method for {$msUserId}");
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::warning("disablePerUserMfa failed for {$msUserId}: " . $e->getMessage());
+        }
     }
 
     /**
@@ -1147,5 +1209,167 @@ class MicrosoftGraphService
             Log::error('Graph deleteChannel error', $response->json());
             throw new \Exception('Failed to delete channel: ' . $response->body());
         }
+    }
+
+    // ── Teams Activity Reports ─────────────────────────────────────────
+
+    /**
+     * Fetch per-user Microsoft Teams activity from the Graph Reports API.
+     * Returns an array keyed by lowercase UPN with activity details.
+     *
+     * Requires: Reports.Read.All permission (application)
+     * Graph endpoint: GET /reports/getTeamsUserActivityUserDetail(period='{period}')
+     * Period options: D7, D30, D90, D180
+     *
+     * Returns array like:
+     * [
+     *   'user@amis.edu.ph' => [
+     *     'last_activity_date'   => '2026-06-25',   // null if never used
+     *     'meetings_attended'    => 5,
+     *     'chat_messages'        => 12,
+     *     'post_messages'        => 3,
+     *     'has_used_teams_app'   => true,
+     *   ]
+     * ]
+     */
+    public function getTeamsUserActivityReport(string $period = 'D30'): array
+    {
+        // The report returns CSV by default. Request JSON with $format=application/json
+        // Note: This endpoint returns CSV — we parse it manually.
+        $response = $this->graph()->withHeaders([
+            'Accept' => 'text/csv',
+        ])->get("/reports/getTeamsUserActivityUserDetail(period='{$period}')");
+
+        if (!$response->successful()) {
+            Log::warning('Graph getTeamsUserActivityReport failed', [
+                'status' => $response->status(),
+                'body'   => substr($response->body(), 0, 300),
+            ]);
+            return [];
+        }
+
+        $csv = $response->body();
+
+        // Strip UTF-8 BOM if present (MS Graph adds it)
+        $csv = ltrim($csv, "\xEF\xBB\xBF");
+
+        // Split on both \r\n and \n
+        $lines = array_values(array_filter(preg_split('/\r?\n/', $csv)));
+
+        if (count($lines) < 2) {
+            return [];
+        }
+
+        // Parse CSV headers — suppress PHP 8.4 deprecation by passing escape=''
+        $headers = str_getcsv(array_shift($lines), ',', '"', '');
+        $headers = array_map('trim', $headers);
+
+        // Build column index map (snake_case, lowercase)
+        $col = [];
+        foreach ($headers as $i => $header) {
+            // Strip BOM from first header just in case
+            $header = ltrim($header, "\xEF\xBB\xBF");
+            $key = strtolower(str_replace([' ', '-', '/'], '_', trim($header)));
+            $col[$key] = $i;
+        }
+
+        // Actual MS Graph column names (from live CSV):
+        // "User Principal Name", "Last Activity Date",
+        // "Meetings Attended Count", "Private Chat Message Count",
+        // "Post Messages", "Call Count"
+        $idxUpn          = $col['user_principal_name']       ?? null;
+        $idxUserId       = $col['user_id']                   ?? null;  // Azure AD Object ID (always real)
+        $idxLastActivity = $col['last_activity_date']        ?? null;
+        $idxMeetings     = $col['meetings_attended_count']   ?? null;
+        $idxChat         = $col['private_chat_message_count']?? null;
+        $idxPost         = $col['post_messages']             ?? null;
+        $idxCall         = $col['call_count']                ?? null;
+
+        if ($idxUpn === null && $idxUserId === null) {
+            Log::warning('getTeamsUserActivityReport: Could not find UPN or UserId column. Headers: ' . implode(', ', $headers));
+            return [];
+        }
+
+        $activity = [];
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (empty($line)) continue;
+
+            $row = str_getcsv($line, ',', '"', '');
+
+            $upn    = $idxUpn    !== null ? strtolower(trim($row[$idxUpn]    ?? '')) : '';
+            $userId = $idxUserId !== null ? strtolower(trim($row[$idxUserId] ?? '')) : '';
+
+            // Skip if neither UPN nor userId is present
+            if (empty($upn) && empty($userId)) continue;
+
+            // Filter by domain when UPN is not anonymized
+            $isAmisDomain = !empty($upn) && str_ends_with($upn, '@amis.edu.ph');
+            // When anonymized, UPN looks like a hex hash — accept all and let sync filter by userId
+            $isAnonymized = !empty($upn) && !str_contains($upn, '@');
+
+            if (!$isAmisDomain && !$isAnonymized && !empty($upn)) continue;
+
+            $lastActivity     = $idxLastActivity !== null ? trim($row[$idxLastActivity] ?? '') : '';
+            $meetingsAttended = $idxMeetings     !== null ? (int) ($row[$idxMeetings]   ?? 0)  : 0;
+            $chatMessages     = $idxChat         !== null ? (int) ($row[$idxChat]       ?? 0)  : 0;
+            $postMessages     = $idxPost         !== null ? (int) ($row[$idxPost]       ?? 0)  : 0;
+            $callCount        = $idxCall         !== null ? (int) ($row[$idxCall]       ?? 0)  : 0;
+
+            $entry = [
+                'last_activity_date' => !empty($lastActivity) ? $lastActivity : null,
+                'meetings_attended'  => $meetingsAttended,
+                'chat_messages'      => $chatMessages,
+                'post_messages'      => $postMessages,
+                'call_count'         => $callCount,
+                'has_used_teams_app' => !empty($lastActivity),
+                'user_id'            => $userId,
+            ];
+
+            // Index by UPN if available and real
+            if ($isAmisDomain) {
+                $activity['upn:' . $upn] = $entry;
+            }
+            // Always index by userId (Azure AD Object ID) — this works even when UPN is anonymized
+            if (!empty($userId) && strlen($userId) > 10) {
+                $activity['id:' . $userId] = $entry;
+            }
+        }
+
+        return $activity;
+    }
+
+    /**
+     * Revoke all active sign-in sessions for a user (force logout).
+     * Call this after resetting a password to ensure the student is logged out.
+     * Requires: User.ReadWrite.All or Directory.ReadWrite.All
+     */
+    public function revokeUserSessions(string $upnOrId): bool
+    {
+        try {
+            $resolvedId = $this->resolveUserId($upnOrId);
+        } catch (\Exception $e) {
+            $resolvedId = $upnOrId;
+        }
+
+        $response = $this->graph()->post("/users/{$resolvedId}/revokeSignInSessions");
+
+        if ($response->successful()) {
+            Log::info("revokeUserSessions: Sessions revoked for {$upnOrId}");
+            return true;
+        }
+
+        // Fallback to delegated
+        $delegated = $this->graphDelegated()->post("/users/{$resolvedId}/revokeSignInSessions");
+        if ($delegated->successful()) {
+            Log::info("revokeUserSessions (delegated): Sessions revoked for {$upnOrId}");
+            return true;
+        }
+
+        Log::warning("revokeUserSessions failed for {$upnOrId}", [
+            'status' => $response->status(),
+            'body'   => $response->body(),
+        ]);
+        return false;
     }
 }
