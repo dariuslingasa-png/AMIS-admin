@@ -43,12 +43,14 @@
 
                         <!-- Empty state placeholder inside table body if no intervals -->
                         <tr x-show="getPreviewIntervals().length === 0">
-                            <td colspan="6" class="p-12 text-center text-slate-400 bg-white">
+                            <td colspan="6" class="p-10 text-center text-slate-400 bg-white">
                                 <div class="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-350 mx-auto mb-3 border border-slate-100">
                                     <i data-lucide="clock" class="w-4.5 h-4.5"></i>
                                 </div>
-                                <span class="text-[10px] font-extrabold text-slate-700 uppercase block mb-1">Enter Schedule Times</span>
-                                <p class="text-[9px] text-slate-400 max-w-[200px] mx-auto leading-normal">Type a **Start** and **End** time on the right to preview your schedule block.</p>
+                                <span class="text-[10px] font-extrabold text-slate-700 uppercase block mb-1"
+                                      x-text="getSectionSchedules().length > 0 ? 'Schedule Loaded' : 'No Schedules Yet'"></span>
+                                <p class="text-[9px] text-slate-400 max-w-[200px] mx-auto leading-normal"
+                                   x-text="getSectionSchedules().length > 0 ? 'Set a Start & End time on the right to preview your new slot alongside existing classes.' : 'Set a Start & End time on the right to preview your schedule block.'"></p>
                             </td>
                         </tr>
                     </tbody>

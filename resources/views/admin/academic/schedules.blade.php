@@ -162,7 +162,8 @@
             return list;
         },
         getSectionSchedules() {
-            return this.schedulesBySection[this.editForm.section_id] || [];
+            let id = String(this.editForm.section_id);
+            return this.schedulesBySection[id] || [];
         },
         getClassCell(day, interval) {
             let schedules = this.getSectionSchedules();
