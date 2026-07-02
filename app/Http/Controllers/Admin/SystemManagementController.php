@@ -447,7 +447,7 @@ class SystemManagementController extends Controller
                 'host' => $config['host'] ?? '—',
                 'port' => $config['port'] ?? '—',
                 'encryption' => $config['encryption'] ?? $config['scheme'] ?? 'none',
-                'username' => $config['username'] ? Str::mask($config['username'], '*', 3) : '—',
+                'username' => !empty($config['username']) ? Str::mask($config['username'], '*', 3) : '—',
                 'is_default' => ($name === $defaultMailer),
             ];
         }
