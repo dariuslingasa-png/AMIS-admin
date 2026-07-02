@@ -198,6 +198,53 @@
                 }
             }
         },
+        getPreviewCellColspan(day, interval) {
+            let daysList = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
+            if (this.isDraftCell(day, interval)) {
+                let dayIndex = daysList.indexOf(day);
+                if (dayIndex > 0) {
+                    let prevDay = daysList[dayIndex - 1];
+                    if (this.isDraftCell(prevDay, interval)) {
+                        return 0;
+                    }
+                }
+                let colspan = 1;
+                for (let i = dayIndex + 1; i < 5; i++) {
+                    let nextDay = daysList[i];
+                    if (this.isDraftCell(nextDay, interval)) {
+                        colspan++;
+                    } else {
+                        break;
+                    }
+                }
+                return colspan;
+            }
+
+            let cell = this.getClassCell(day, interval);
+            if (cell) {
+                let dayIndex = daysList.indexOf(day);
+                if (dayIndex > 0) {
+                    let prevDay = daysList[dayIndex - 1];
+                    let prevCell = this.getClassCell(prevDay, interval);
+                    if (prevCell && prevCell.id === cell.id) {
+                        return 0;
+                    }
+                }
+                let colspan = 1;
+                for (let i = dayIndex + 1; i < 5; i++) {
+                    let nextDay = daysList[i];
+                    let nextCell = this.getClassCell(nextDay, interval);
+                    if (nextCell && nextCell.id === cell.id) {
+                        colspan++;
+                    } else {
+                        break;
+                    }
+                }
+                return colspan;
+            }
+
+            return 1;
+        },
         editId: null,
         editName: '',
         editError: '',
