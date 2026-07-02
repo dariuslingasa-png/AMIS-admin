@@ -171,7 +171,7 @@
                             $isFlex    = str_contains($section->learning_mode ?? '', 'Flexible');
                             $modeBg    = $isFlex ? 'bg-purple-50 text-purple-700' : 'bg-blue-50 text-blue-700';
                             $genderBg  = $section->gender === 'male' ? 'bg-indigo-50 text-indigo-700' : ($section->gender === 'female' ? 'bg-rose-50 text-rose-700' : 'bg-slate-100 text-slate-700');
-                            $genderLbl = $section->gender === 'male' ? 'Boys' : ($section->gender === 'female' ? 'Girls' : 'NA');
+                            $genderLbl = $section->gender === 'male' ? 'Boys' : ($section->gender === 'female' ? 'Girls' : 'Merge');
                             $sectionName = $section->name ?? null;
                         @endphp
                         <div class="flex items-center justify-between gap-3 rounded-xl px-3 py-3 hover:bg-slate-50 transition-colors"
@@ -259,7 +259,7 @@
                 <div x-show="mode !== 'Flexible Online Learning'" class="flex flex-col gap-1" x-transition>
                     <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Gender *</label>
                     <select x-model="genderSingle" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition">
-                        <option value="male">Boys Only</option><option value="female">Girls Only</option><option value="na">N/A</option>
+                        <option value="male">Boys Only</option><option value="female">Girls Only</option><option value="merge">Merge</option>
                     </select>
                 </div>
                 <div x-show="mode === 'Flexible Online Learning'" class="grid grid-cols-2 gap-4" x-transition>
@@ -273,7 +273,7 @@
                         <div class="flex flex-col gap-1.5">
                             <label class="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer"><input type="checkbox" value="male" x-model="genders" class="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"> Boys</label>
                             <label class="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer"><input type="checkbox" value="female" x-model="genders" class="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"> Girls</label>
-                            <label class="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer"><input type="checkbox" value="na" x-model="genders" class="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"> N/A</label>
+                            <label class="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer"><input type="checkbox" value="merge" x-model="genders" class="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"> Merge</label>
                         </div>
                     </div>
                 </div>
@@ -341,7 +341,7 @@
     <script>
     function getFlexibleSections(grade, shifts, genders) {
         let list = [];
-        shifts.forEach(shift => { genders.forEach(gender => { list.push({ grade, shift, gender, name: null, prefix: getGradePrefix(grade), genderLabel: gender === 'male' ? 'Boys' : (gender === 'female' ? 'Girls' : 'NA') }); }); });
+        shifts.forEach(shift => { genders.forEach(gender => { list.push({ grade, shift, gender, name: null, prefix: getGradePrefix(grade), genderLabel: gender === 'male' ? 'Boys' : (gender === 'female' ? 'Girls' : 'Merge') }); }); });
         return list;
     }
     function getGradePrefix(grade) {

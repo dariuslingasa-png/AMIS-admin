@@ -95,7 +95,7 @@ class Section extends Model
         $grade  = $this->grade_level;
         $name   = $this->official_name ?: ($this->name && $this->name !== 'A' ? $this->name : 'General');
         $shift  = $this->shift ?? 'F2F';
-        $gender = ucfirst($this->gender === 'male' ? 'Boys' : ($this->gender === 'female' ? 'Girls' : 'NA'));
+        $gender = ucfirst($this->gender === 'male' ? 'Boys' : ($this->gender === 'female' ? 'Girls' : 'Merge'));
         $year   = $this->school_year;
         return "{$grade} - {$name} {$shift} {$gender} {$year}";
     }

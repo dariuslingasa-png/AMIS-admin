@@ -225,7 +225,7 @@
                         <select name="gender" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition">
                             <option value="male">Boys Only</option>
                             <option value="female">Girls Only</option>
-                            <option value="na">N/A</option>
+                            <option value="merge">Merge</option>
                         </select>
                     </div>
 
@@ -276,7 +276,7 @@
         <script>
         function getFlexibleSections(grade, shifts, genders) {
             let list = [];
-            shifts.forEach(shift => { genders.forEach(gender => { list.push({ grade, shift, gender, name: null, prefix: getGradePrefix(grade), genderLabel: gender === 'male' ? 'Boys' : (gender === 'female' ? 'Girls' : 'NA') }); }); });
+            shifts.forEach(shift => { genders.forEach(gender => { list.push({ grade, shift, gender, name: null, prefix: getGradePrefix(grade), genderLabel: gender === 'male' ? 'Boys' : (gender === 'female' ? 'Girls' : 'Merge') }); }); });
             return list;
         }
         function getGradePrefix(grade) {

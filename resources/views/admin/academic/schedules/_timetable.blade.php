@@ -216,7 +216,7 @@
                             class="px-4 py-2.5 text-xs rounded-xl transition cursor-pointer text-left">
                             <span class="block font-black text-slate-950">{{ $section->official_name ?: $section->name ?: 'General' }}</span>
                             <span class="block text-[9px] opacity-80 font-semibold mt-0.5" :class="activeSectionId === {{ $section->id }} ? 'text-indigo-700' : 'text-slate-400'">
-                                {{ ucfirst($section->gender === 'male' ? 'Boys' : ($section->gender === 'female' ? 'Girls' : 'NA')) }} · {{ $section->formatted_learning_mode }}
+                                {{ ucfirst($section->gender === 'male' ? 'Boys' : ($section->gender === 'female' ? 'Girls' : 'Merge')) }} · {{ $section->formatted_learning_mode }}
                             </span>
                         </button>
                     @endforeach

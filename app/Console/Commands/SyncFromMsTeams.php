@@ -262,8 +262,13 @@ class SyncFromMsTeams extends Command
 
         // 3. Gender check (if specified in team name)
         $parsedGender = $this->parseGender($teamName);
-        if ($parsedGender !== null && $parsedGender !== $section->gender) {
-            return false;
+        if ($parsedGender !== null) {
+            $dbGender   = $section->gender;
+            $normParsed = in_array($parsedGender, ['male', 'female'], true) ? $parsedGender : 'merge';
+            $normDb     = in_array($dbGender, ['male', 'female'], true) ? $dbGender : 'merge';
+            if ($normParsed !== $normDb) {
+                return false;
+            }
         }
 
         // 4. Companion Name check
@@ -343,8 +348,8 @@ class SyncFromMsTeams extends Command
         if (preg_match('/\b(girls|girl)\b/i', $name)) {
             return 'female';
         }
-        if (preg_match('/\b(na|mixed|mix|co-ed|coed)\b/i', $name)) {
-            return 'na';
+        if (preg_match('/\b(na|mixed|mix|co-ed|coed|merge|merged)\b/i', $name)) {
+            return 'merge';
         }
         return null;
     }
