@@ -28,26 +28,10 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule) {
-        $schedulePath = storage_path('app/backup_schedule.json');
-        if (file_exists($schedulePath)) {
-            $config = json_decode(file_get_contents($schedulePath), true);
-            if ($config && !empty($config['time'])) {
-                $time = $config['time'];
-                $frequency = $config['frequency'] ?? 'daily';
-                
-                $event = $schedule->command('amis:backup');
-                
-                if ($frequency === 'daily') {
-                    $event->dailyAt($time);
-                } elseif ($frequency === 'weekly') {
-                    $event->weeklyOn(0, $time); // Sunday
-                } elseif ($frequency === 'monthly') {
-                    $event->monthlyOn(1, $time); // 1st of the month
-                }
-            }
-        } else {
-            $schedule->command('amis:backup')->dailyAt('01:00');
-        }
+        // Run backup twice daily (12:00 AM Midnight and 12:00 PM Noon) in Philippine Time (Asia/Manila)
+        $schedule->command('amis:backup')
+            ->twiceDaily(0, 12)
+            ->timezone('Asia/Manila');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

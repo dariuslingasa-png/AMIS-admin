@@ -117,33 +117,32 @@
                 </x-card>
 
                 <!-- Scheduling Card -->
-                <x-card title="Backup Scheduler" subtitle="Configure automated execution options">
-                    <form method="POST" action="{{ route('admin.system-management.backups.schedule') }}" class="p-6 space-y-4">
-                        @csrf
-                        <div class="grid gap-4 sm:grid-cols-3">
+                <x-card title="Backup Scheduler" subtitle="Automated execution options (Twice-Daily Active)">
+                    <div class="p-6 space-y-4 text-xs font-semibold text-slate-500">
+                        <div class="rounded-2xl bg-indigo-50/50 border border-indigo-100 p-4 space-y-2 text-indigo-900">
+                            <div class="font-extrabold text-sm flex items-center gap-1.5">
+                                <i data-lucide="clock" class="h-4.5 w-4.5 text-indigo-600"></i>
+                                Twice-Daily Sync Active
+                            </div>
+                            <p class="text-xs text-indigo-700/90 leading-relaxed font-medium">
+                                Automated system snapshots are executed twice every day. Snapshots are instantly synced to Google Drive and cleaned locally and in the cloud based on the retention policy.
+                            </p>
+                        </div>
+                        <div class="grid gap-4 sm:grid-cols-3 border-t border-slate-100 pt-4">
                             <div>
-                                <label class="mb-1.5 block text-[10px] font-black uppercase tracking-wider text-slate-500">Execution Time</label>
-                                <input name="time" type="time" value="{{ $schedule['time'] }}" required class="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-semibold text-slate-700 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100">
+                                <span class="block text-[10px] font-black uppercase tracking-widest text-slate-400 text-xs">Execution Times</span>
+                                <span class="text-xs font-bold text-slate-800 mt-1 block">12:00 AM (Midnight) &amp; 12:00 PM (Noon)</span>
                             </div>
                             <div>
-                                <label class="mb-1.5 block text-[10px] font-black uppercase tracking-wider text-slate-500">Frequency</label>
-                                <select name="frequency" class="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-semibold text-slate-700 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100">
-                                    <option value="daily" @selected($schedule['frequency'] === 'daily')>Daily Rotation</option>
-                                    <option value="weekly" @selected($schedule['frequency'] === 'weekly')>Weekly Rotation</option>
-                                    <option value="monthly" @selected($schedule['frequency'] === 'monthly')>Monthly Rotation</option>
-                                </select>
+                                <span class="block text-[10px] font-black uppercase tracking-widest text-slate-400 text-xs">Timezone</span>
+                                <span class="text-xs font-bold text-slate-800 mt-1 block">Philippine Standard Time (Asia/Manila)</span>
                             </div>
                             <div>
-                                <label class="mb-1.5 block text-[10px] font-black uppercase tracking-wider text-slate-500">Notify Email</label>
-                                <input name="notify_email" type="email" value="{{ $schedule['notify_email'] }}" required placeholder="alerts@domain.com" class="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-semibold text-slate-700 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100">
+                                <span class="block text-[10px] font-black uppercase tracking-widest text-slate-400 text-xs">Frequency</span>
+                                <span class="text-xs font-bold text-slate-800 mt-1 block">Daily (Twice per day)</span>
                             </div>
                         </div>
-                        <div class="flex justify-end">
-                            <button type="submit" class="inline-flex h-10 items-center justify-center rounded-xl bg-slate-900 px-6 text-xs font-bold text-white transition hover:bg-slate-800 cursor-pointer">
-                                Update Schedule
-                            </button>
-                        </div>
-                    </form>
+                    </div>
                 </x-card>
             </div>
 
