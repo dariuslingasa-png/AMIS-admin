@@ -77,7 +77,7 @@
                         
                         @php
                             $learningLabel = $section->formatted_learning_mode;
-                            $genderLabel = $section->gender === 'male' ? 'Boys Room' : 'Girls Room';
+                            $genderLabel = $section->gender === 'male' ? 'Boys Room' : ($section->gender === 'female' ? 'Girls Room' : 'Mixed Room');
                             
                             $chipClass = 'inline-flex items-center px-3.5 py-1 text-xs font-semibold bg-white/10 text-emerald-100 rounded-full border border-white/10 backdrop-blur-xs';
                         @endphp

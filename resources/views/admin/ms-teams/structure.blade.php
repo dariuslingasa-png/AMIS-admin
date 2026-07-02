@@ -77,16 +77,17 @@
                             @php
                                 $isFlex     = str_contains($section->learning_mode ?? '', 'Flexible');
                                 $isGirls    = $section->gender === 'female';
+                                $isBoys     = $section->gender === 'male';
                                 $shiftLabel = $section->shift ? ($section->shift === '1st Shift' ? '1st Shift' : '2nd Shift') : null;
                                 $modeBg     = $isFlex
                                     ? 'bg-purple-50 text-purple-700 border-purple-100'
                                     : 'bg-blue-50 text-blue-700 border-blue-100';
                                 $genderBg   = $isGirls
                                     ? 'bg-rose-50 text-rose-700'
-                                    : 'bg-indigo-50 text-indigo-700';
+                                    : ($isBoys ? 'bg-indigo-50 text-indigo-700' : 'bg-slate-100 text-slate-700');
                                 $avatarGrad = $isGirls
                                     ? 'from-rose-400 to-pink-600'
-                                    : 'from-indigo-500 to-blue-700';
+                                    : ($isBoys ? 'from-indigo-500 to-blue-700' : 'from-slate-500 to-slate-700');
                             @endphp
 
                             {{-- Team Card --}}
@@ -149,7 +150,7 @@
                                                     {{ $isFlex ? 'ODL' : 'F2F' }}@if($shiftLabel) &middot; {{ $shiftLabel }}@endif
                                                 </span>
                                                 <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-bold {{ $genderBg }}">
-                                                    {{ $isGirls ? 'Girls' : 'Boys' }}
+                                                    {{ $isGirls ? 'Girls' : ($isBoys ? 'Boys' : 'NA') }}
                                                 </span>
                                                 <span class="inline-flex items-center gap-1 text-[9px] font-mono text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100">
                                                     {{ Str::limit($section->ms_team_id, 8, '') }}…

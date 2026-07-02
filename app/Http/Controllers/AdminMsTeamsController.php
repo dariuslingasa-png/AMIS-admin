@@ -24,14 +24,14 @@ class AdminMsTeamsController extends Controller
             'grade_level'   => 'required|string',
             'learning_mode' => 'required|string',
             'name'          => 'nullable|string|max:255',
-            'gender'        => 'required|in:male,female',
+            'gender'        => 'required|in:male,female,na',
             'shift'         => 'nullable|string',
             'school_year'   => 'required|string',
         ]);
 
         $sectionName = $request->name ?: null;
         $shift       = $request->learning_mode === 'Flexible Online Learning' ? $request->shift : null;
-        $genderLabel = $request->gender === 'male' ? 'Boys' : 'Girls';
+        $genderLabel = $request->gender === 'male' ? 'Boys' : ($request->gender === 'female' ? 'Girls' : 'NA');
 
         // Grade prefix: Kinder 1 → K1, Kinder 2 → K2, etc.
         $grade = $request->grade_level;
@@ -87,13 +87,13 @@ class AdminMsTeamsController extends Controller
             'grade_level'   => 'required|string',
             'learning_mode' => 'required|string',
             'shift'         => 'nullable|string',
-            'gender'        => 'required|in:male,female',
+            'gender'        => 'required|in:male,female,na',
             'name'          => 'nullable|string|max:255',
         ]);
 
         $sectionName = $request->name ?: null;
         $shift       = $request->learning_mode === 'Flexible Online Learning' ? $request->shift : null;
-        $genderLabel = $request->gender === 'male' ? 'Boys' : 'Girls';
+        $genderLabel = $request->gender === 'male' ? 'Boys' : ($request->gender === 'female' ? 'Girls' : 'NA');
 
         // Grade prefix: Kinder 1 → K1, Grade 2 → G2, etc.
         $grade = $request->grade_level;
@@ -154,7 +154,7 @@ class AdminMsTeamsController extends Controller
         elseif ($grade === 'Kinder 2') $prefix = 'K2';
         else $prefix = 'G' . str_replace('Grade ', '', $grade);
 
-        $genderLabel = $section->gender === 'male' ? 'Boys' : 'Girls';
+        $genderLabel = $section->gender === 'male' ? 'Boys' : ($section->gender === 'female' ? 'Girls' : 'NA');
         $shiftLabel  = $section->shift ? ($section->shift === '1st Shift' ? '1st Shift' : '2nd Shift') : 'F2F';
         $namePart    = $section->name ? " - {$section->name}" : '';
         $teamName    = "{$prefix}{$namePart} [{$genderLabel} & {$shiftLabel}]";
@@ -215,7 +215,7 @@ class AdminMsTeamsController extends Controller
         ]);
 
         $sectionName = $request->name ?: null;
-        $genderLabel = $section->gender === 'male' ? 'Boys' : 'Girls';
+        $genderLabel = $section->gender === 'male' ? 'Boys' : ($section->gender === 'female' ? 'Girls' : 'NA');
 
         $grade = $section->grade_level;
         if ($grade === 'Kinder 1') $prefix = 'K1';

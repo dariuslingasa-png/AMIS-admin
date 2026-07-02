@@ -74,8 +74,8 @@
                         @php
                             $isFlex    = str_contains($section->learning_mode ?? '', 'Flexible');
                             $modeBg    = $isFlex ? 'bg-purple-50 text-purple-700' : 'bg-blue-50 text-blue-700';
-                            $genderBg  = $section->gender === 'male' ? 'bg-indigo-50 text-indigo-700' : 'bg-rose-50 text-rose-700';
-                            $genderLbl = $section->gender === 'male' ? 'Boys' : 'Girls';
+                            $genderBg  = $section->gender === 'male' ? 'bg-indigo-50 text-indigo-700' : ($section->gender === 'female' ? 'bg-rose-50 text-rose-700' : 'bg-slate-100 text-slate-700');
+                            $genderLbl = $section->gender === 'male' ? 'Boys' : ($section->gender === 'female' ? 'Girls' : 'NA');
                             $sectionName = $section->name ?? null;
                         @endphp
                         <div class="flex items-center justify-between gap-3 rounded-xl px-3 py-3 hover:bg-slate-50 transition-colors"

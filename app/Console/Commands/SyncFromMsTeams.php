@@ -343,6 +343,9 @@ class SyncFromMsTeams extends Command
         if (preg_match('/\b(girls|girl)\b/i', $name)) {
             return 'female';
         }
+        if (preg_match('/\b(na|mixed|mix|co-ed|coed)\b/i', $name)) {
+            return 'na';
+        }
         return null;
     }
 
