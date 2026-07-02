@@ -101,7 +101,16 @@ class AdminClassScheduleController extends Controller
 
     public function store(ClassScheduleRequest $request)
     {
-        $this->schedules->store($request->validated());
+        $validated = $request->validated();
+        
+        if (!empty($validated['spans_all_days'])) {
+            $this->schedules->store(array_merge($validated, ['day' => 'Sunday', 'spans_all_days' => true]));
+        } else {
+            $days = explode(',', $validated['day']);
+            foreach ($days as $day) {
+                $this->schedules->store(array_merge($validated, ['day' => trim($day), 'spans_all_days' => false]));
+            }
+        }
 
         return back()
             ->with('status', 'Class schedule saved.')
@@ -110,7 +119,14 @@ class AdminClassScheduleController extends Controller
 
     public function update(ClassScheduleRequest $request, ClassSchedule $schedule)
     {
-        $this->schedules->update($schedule, $request->validated());
+        $validated = $request->validated();
+        $days = explode(',', $validated['day']);
+        $singleDay = trim($days[0] ?? 'Sunday');
+
+        $this->schedules->update($schedule, array_merge($validated, [
+            'day' => $singleDay,
+            'spans_all_days' => !empty($validated['spans_all_days']),
+        ]));
 
         return back()
             ->with('status', 'Class schedule updated.')

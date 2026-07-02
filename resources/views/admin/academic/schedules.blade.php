@@ -32,7 +32,9 @@
             teacher_name: '',
             day: 'Sunday',
             start_time: '08:00',
-            end_time: '09:00'
+            end_time: '09:00',
+            spans_all_days: false,
+            selected_days: ['Sunday']
         },
         openAddClass(sectionId) {
             this.editForm = {
@@ -42,9 +44,26 @@
                 teacher_name: '',
                 day: 'Sunday',
                 start_time: '08:00',
-                end_time: '09:00'
+                end_time: '09:00',
+                spans_all_days: false,
+                selected_days: ['Sunday']
             };
             this.addModal = true;
+        },
+        toggleDaySelection(day) {
+            if (this.editForm.selected_days.includes(day)) {
+                if (this.editForm.selected_days.length > 1) {
+                    this.editForm.selected_days = this.editForm.selected_days.filter(d => d !== day);
+                }
+            } else {
+                this.editForm.selected_days.push(day);
+            }
+        },
+        isDaySelected(day) {
+            return this.editForm.spans_all_days || this.editForm.selected_days.includes(day);
+        },
+        getSelectedDaysString() {
+            return this.editForm.selected_days.join(',');
         },
         editId: null,
         editName: '',

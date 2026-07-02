@@ -346,7 +346,7 @@
                             foreach ($intervals as $iIdx => $interval) {
                                 $matchingEntry = null;
                                 foreach ($entries as $entry) {
-                                    if ($entry['day'] !== $day) {
+                                    if ($entry['day'] !== $day && empty($entry['spans_all_days'])) {
                                         continue;
                                     }
                                     $entryStart = $entry['start_minutes'];

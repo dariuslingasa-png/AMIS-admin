@@ -18,9 +18,10 @@ class ClassScheduleRequest extends FormRequest
             'section_id' => ['required', 'integer', 'exists:sections,id'],
             'subject_name' => ['required', 'string', 'max:120'],
             'teacher_name' => ['nullable', 'string', 'max:120'],
-            'day' => ['required', Rule::in(['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'])],
+            'day' => ['required', 'string'],
             'start_time' => ['required', 'date_format:H:i'],
             'end_time' => ['required', 'date_format:H:i'],
+            'spans_all_days' => ['nullable', 'boolean'],
         ];
     }
 }
