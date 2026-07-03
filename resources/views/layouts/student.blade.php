@@ -976,6 +976,15 @@
 <script>
     (function() {
         let currentWebUrl = '';
+
+        function getTeamsWebUrl(webUrl) {
+            const email = "{{ Auth::user()->email }}";
+            if (!email) return webUrl;
+            if (webUrl.includes('login_hint=')) return webUrl;
+
+            const separator = webUrl.includes('?') ? '&' : '?';
+            return webUrl + separator + 'login_hint=' + encodeURIComponent(email);
+        }
         
         window.joinTeams = function(webUrl) {
             currentWebUrl = webUrl;
@@ -988,7 +997,7 @@
             }
             
             if (pref === 'web') {
-                window.open(webUrl, '_blank');
+                window.open(getTeamsWebUrl(webUrl), '_blank');
                 return;
             } else if (pref === 'desktop') {
                 window.location.href = desktopUrl;
@@ -1013,7 +1022,7 @@
                     if (chkRemember && chkRemember.checked) {
                         localStorage.setItem('teams_client_preference', 'web');
                     }
-                    window.open(currentWebUrl, '_blank');
+                    window.open(getTeamsWebUrl(currentWebUrl), '_blank');
                     if (modal) modal.style.display = 'none';
                 });
             }
