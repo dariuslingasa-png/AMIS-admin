@@ -87,49 +87,73 @@
         filter: brightness(0.97);
     }
     
-    /* Colors and Accents */
-    .timetable-grid .cell-quran .timetable-card {
-        background-color: #f0fdf4; /* soft green/emerald */
-        color: #166534;
-        border: 1px solid #bbf7d0;
-        border-left: 4px solid #16a34a;
+    /* ==============================
+       TIMETABLE CELL COLOR PALETTE
+       12 curated, non-random colors
+       ============================== */
+
+    /* 1. Quran — emerald green */
+    .timetable-grid .cell-c1 .timetable-card {
+        background-color: #f0fdf4; color: #166534;
+        border: 1px solid #bbf7d0; border-left: 4px solid #16a34a;
     }
-    
-    .timetable-grid .cell-hadith .timetable-card {
-        background-color: #fffbeb; /* soft amber/yellow */
-        color: #92400e;
-        border: 1px solid #fef08a;
-        border-left: 4px solid #ca8a04;
+    /* 2. Hadith — amber/gold */
+    .timetable-grid .cell-c2 .timetable-card {
+        background-color: #fffbeb; color: #92400e;
+        border: 1px solid #fde68a; border-left: 4px solid #d97706;
     }
-    
-    .timetable-grid .cell-arabic .timetable-card {
-        background-color: #eff6ff; /* soft blue/sky */
-        color: #1e40af;
-        border: 1px solid #bfdbfe;
-        border-left: 4px solid #2563eb;
+    /* 3. Arabic — sky blue */
+    .timetable-grid .cell-c3 .timetable-card {
+        background-color: #eff6ff; color: #1e40af;
+        border: 1px solid #bfdbfe; border-left: 4px solid #2563eb;
     }
-    
-    .timetable-grid .cell-recess .timetable-card {
-        background-color: #fff5f5; /* soft red */
-        color: #9b2c2c;
-        border: 1px solid #feb2b2;
-        border-left: 4px solid #e53e3e;
+    /* 4. Circle / Event — teal */
+    .timetable-grid .cell-c4 .timetable-card {
+        background-color: #f0fdfa; color: #115e59;
+        border: 1px solid #99f6e4; border-left: 4px solid #0d9488;
     }
-    
-    .timetable-grid .cell-academic .timetable-card {
-        background-color: #faf5ff; /* soft purple/violet */
-        color: #6b21a8;
-        border: 1px solid #e9d5ff;
-        border-left: 4px solid #9333ea;
+    /* 5. Assembly / Departure — slate */
+    .timetable-grid .cell-c5 .timetable-card {
+        background-color: #f8fafc; color: #475569;
+        border: 1px solid #e2e8f0; border-left: 4px solid #94a3b8;
     }
-    
-    .timetable-grid .cell-event .timetable-card {
-        background-color: #f0fdfa; /* soft teal */
-        color: #115e59;
-        border: 1px solid #99f6e4;
-        border-left: 4px solid #0d9488;
+    /* 6. Recess / Break — rose */
+    .timetable-grid .cell-c6 .timetable-card {
+        background-color: #fff1f2; color: #9f1239;
+        border: 1px solid #fecdd3; border-left: 4px solid #e11d48;
     }
-    
+    /* 7. Purple / violet */
+    .timetable-grid .cell-c7 .timetable-card {
+        background-color: #faf5ff; color: #6b21a8;
+        border: 1px solid #e9d5ff; border-left: 4px solid #9333ea;
+    }
+    /* 8. Indigo */
+    .timetable-grid .cell-c8 .timetable-card {
+        background-color: #eef2ff; color: #3730a3;
+        border: 1px solid #c7d2fe; border-left: 4px solid #4f46e5;
+    }
+    /* 9. Orange */
+    .timetable-grid .cell-c9 .timetable-card {
+        background-color: #fff7ed; color: #9a3412;
+        border: 1px solid #fed7aa; border-left: 4px solid #ea580c;
+    }
+    /* 10. Pink / fuchsia */
+    .timetable-grid .cell-c10 .timetable-card {
+        background-color: #fdf4ff; color: #86198f;
+        border: 1px solid #f0abfc; border-left: 4px solid #c026d3;
+    }
+    /* 11. Lime / yellow-green */
+    .timetable-grid .cell-c11 .timetable-card {
+        background-color: #f7fee7; color: #3f6212;
+        border: 1px solid #d9f99d; border-left: 4px solid #65a30d;
+    }
+    /* 12. Cyan */
+    .timetable-grid .cell-c12 .timetable-card {
+        background-color: #ecfeff; color: #164e63;
+        border: 1px solid #a5f3fc; border-left: 4px solid #0891b2;
+    }
+
+    /* Empty cell */
     .timetable-grid .cell-empty {
         background-color: #ffffff !important;
         border-bottom: 1px dashed #e2e8f0;
@@ -476,19 +500,25 @@
                                                             'destroy_url' => route('admin.academic.schedules.destroy', $cell['entry']['id']),
                                                         ]));
                                                         $subjectLower = strtolower($cell['entry']['subject_name']);
-                                                        $cellClass = 'cell-academic';
+                                                        $subjectKey   = strtolower(trim($cell['entry']['subject_name']));
+
+                                                        // Specific well-known subjects get fixed colors
                                                         if (str_contains($subjectLower, 'qur')) {
-                                                            $cellClass = 'cell-quran';
+                                                            $cellClass = 'cell-c1'; // emerald — Quran
                                                         } elseif (str_contains($subjectLower, 'hadith')) {
-                                                            $cellClass = 'cell-hadith';
+                                                            $cellClass = 'cell-c2'; // amber — Hadith
                                                         } elseif (str_contains($subjectLower, 'arabic')) {
-                                                            $cellClass = 'cell-arabic';
-                                                        } elseif (str_contains($subjectLower, 'recess')) {
-                                                            $cellClass = 'cell-recess';
-                                                        } elseif (str_contains($subjectLower, 'meeting') || str_contains($subjectLower, 'circle') || str_contains($subjectLower, 'wrap')) {
-                                                            $cellClass = 'cell-event';
-                                                        } elseif (str_contains($subjectLower, 'assembly') || str_contains($subjectLower, 'departure')) {
-                                                            $cellClass = 'cell-empty';
+                                                            $cellClass = 'cell-c3'; // blue — Arabic
+                                                        } elseif (str_contains($subjectLower, 'circle') || str_contains($subjectLower, 'meeting') || str_contains($subjectLower, 'wrap')) {
+                                                            $cellClass = 'cell-c4'; // teal — Events/Circle
+                                                        } elseif (str_contains($subjectLower, 'assembly') || str_contains($subjectLower, 'departure') || str_contains($subjectLower, 'transition')) {
+                                                            $cellClass = 'cell-c5'; // slate — Assembly
+                                                        } elseif (str_contains($subjectLower, 'recess') || str_contains($subjectLower, 'break') || str_contains($subjectLower, 'lunch')) {
+                                                            $cellClass = 'cell-c6'; // rose — Recess
+                                                        } else {
+                                                            // Deterministic hash — same subject always same color (7-12)
+                                                            $hashPalette = ['cell-c7','cell-c8','cell-c9','cell-c10','cell-c11','cell-c12'];
+                                                            $cellClass = $hashPalette[abs(crc32($subjectKey)) % count($hashPalette)];
                                                         }
                                                     @endphp
                                                     <td rowspan="{{ $cell['span'] }}" colspan="{{ $cell['colspan'] }}" class="{{ $cellClass }}">
@@ -501,9 +531,9 @@
                                                             <span class="block font-extrabold text-[11px] leading-tight uppercase tracking-wide font-outfit" style="color: inherit;">
                                                                 {{ $cell['entry']['subject_name'] }}
                                                             </span>
-                                                            @if($cell['entry']['teacher_display'] && $cell['entry']['teacher_display'] !== 'Teacher pending')
-                                                                <span class="block text-[9px] font-semibold uppercase mt-0.5 opacity-70" style="color: inherit;">
-                                                                    {{ $cell['entry']['teacher_display'] }}
+                                                            @if(!empty($cell['entry']['teacher_name']) && $cell['entry']['teacher_name'] !== 'Teacher pending')
+                                                                <span class="block text-[9px] font-semibold mt-0.5 opacity-75" style="color: inherit;">
+                                                                    {{ $cell['entry']['teacher_name'] }}
                                                                 </span>
                                                             @endif
                                                         </div>
