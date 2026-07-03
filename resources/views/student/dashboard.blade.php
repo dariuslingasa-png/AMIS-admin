@@ -1,499 +1,524 @@
-@extends('student.layout', ['heading' => 'Dashboard'])
+<x-student-layout title="Dashboard">
 
-@section('content')
-@php 
-    $applicant = $student->applicant; 
-    $studentName = $applicant ? $applicant->full_name : $student->user->name; 
-    $firstName = $applicant?->first_name ?? $student->user->name; 
-    $fatherName = trim(($applicant->father_first_name ?? '').' '.($applicant->father_middle_name ?? '').' '.($applicant->father_last_name ?? '')); 
-    $motherName = trim(($applicant->mother_first_name ?? '').' '.($applicant->mother_middle_name ?? '').' '.($applicant->mother_last_name ?? '')); 
-    $parentMobile = trim(($applicant->parent_country_code ?? '').' '.($applicant->parent_mobile ?? '')); 
-    $parentEmail = $applicant->parent_email ?? null; 
-    $emergencyName = $applicant->emergency_name ?? null; 
-    $emergencyPhone = trim((string) ($applicant->emergency_phone ?? '')); 
-    $photoUrl = \App\Support\EnrollmentStorage::url($applicant?->photo_2x2_url); 
-    $scheduledSubjects = $subjects->filter(fn ($subject) => trim((string) $subject->schedule) !== '')->count(); 
-    $teamsReady = filled($section?->ms_team_url);
+@php
+    $photo     = $student?->applicant?->photo_2x2_url;
+    $firstName = $student?->applicant?->first_name ?? $user->name;
+    $lastName  = $student?->applicant?->last_name ?? '';
+    $fullName  = $student?->applicant
+        ? $student->applicant->first_name . ' ' . $student->applicant->last_name
+        : $user->name;
+    $account   = $student?->account;
+    $initials  = collect(explode(' ', $fullName))->map(fn($w) => strtoupper($w[0] ?? ''))->take(2)->join('');
+    
+    $learningMode = $student?->applicant?->learning_mode;
+    if ($learningMode) {
+        $learningMode = str_ireplace('Flexible Online Learning', 'ODL', $learningMode);
+        $learningMode = str_ireplace('Face-to-Face', 'F2F', $learningMode);
+    }
 
-    // Eager filter classes scheduled for today
-    $todayName = now()->format('l'); // 'Monday', 'Tuesday', etc.
-    $todaySubjects = $subjects->filter(function ($subj) use ($todayName) {
-        $sched = trim((string) $subj->schedule);
-        if (empty($sched)) {
-            return false;
+    $formatTeacherName = function ($name) {
+        $name = $name ?: 'To Be Assigned';
+        if ($name === 'To Be Assigned') {
+            return $name;
         }
+        $nameTrimmed = trim($name);
+        $nameLower = strtolower($nameTrimmed);
         
-        $parts = explode(' ', $sched);
-        $dayPart = $parts[0] ?? '';
+        $titles = ['tchr', 'teacher', 'ust', 'ustadz', 'ustadh', 'ustadha', 'alim', 'alima', 'alimah'];
         
-        $isM = str_contains($dayPart, 'M');
-        $isW = str_contains($dayPart, 'W');
-        $isF = str_contains($dayPart, 'F');
-        $isTh = str_contains($dayPart, 'Th');
-        $isT = str_contains(str_replace('Th', '', $dayPart), 'T');
-        
-        return match ($todayName) {
-            'Monday' => $isM,
-            'Tuesday' => $isT,
-            'Wednesday' => $isW,
-            'Thursday' => $isTh,
-            'Friday' => $isF,
-            default => false,
-        };
-    })->sortBy(function ($subj) {
-        $sched = trim((string) $subj->schedule);
-        if (empty($sched)) {
-            return PHP_INT_MAX;
-        }
-        $parts = explode(' ', $sched);
-        $timePart = trim(substr($sched, strlen($parts[0] ?? '')));
-        $timeRange = explode('-', $timePart);
-        $startTimeStr = trim($timeRange[0] ?? '');
-        if (!empty($startTimeStr)) {
-            $time = strtotime(date('Y-m-d') . ' ' . $startTimeStr);
-            if ($time !== false) {
-                return $time;
+        $hasTitle = false;
+        foreach ($titles as $title) {
+            if (str_starts_with($nameLower, $title)) {
+                $hasTitle = true;
+                break;
             }
         }
-        return PHP_INT_MAX;
-    });
+        
+        if ($hasTitle) {
+            if (str_starts_with($nameLower, 'teacher ')) {
+                return 'Tchr. ' . ucwords(strtolower(trim(substr($nameTrimmed, 8))));
+            }
+            return ucwords(strtolower($nameTrimmed));
+        }
+        
+        return 'Tchr. ' . ucwords(strtolower($nameTrimmed));
+    };
+
+    // Format weekly schedule string for each subject
+    $subjectSchedules = [];
+    foreach ($schedules as $cs) {
+        $dayAbbrev = substr($cs->day, 0, 3);
+        $timeStr = date('g:i A', strtotime($cs->start_time)) . ' - ' . date('g:i A', strtotime($cs->end_time));
+        $subjectSchedules[$cs->subject_name][$timeStr][] = $dayAbbrev;
+    }
+
+    $formattedSchedules = [];
+    foreach ($subjectSchedules as $subName => $timeSlots) {
+        $parts = [];
+        foreach ($timeSlots as $timeStr => $days) {
+            if (count($days) === 5) {
+                $dayStr = 'Sun-Thu';
+            } else {
+                $dayStr = implode(', ', $days);
+            }
+            $parts[] = $dayStr . ' ' . $timeStr;
+        }
+        $formattedSchedules[$subName] = implode(' | ', $parts);
+    }
+
+    $todayName = now()->format('l');
+    $isSchoolDay = in_array($todayName, ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday']);
+    $defaultViewMode = 'today';
+
+    if ($isSchoolDay) {
+        $targetDayName = $todayName;
+        $todayLabel = "Today's Classes";
+        $todaySub = now()->format('l, F j, Y');
+    } else {
+        $targetDayName = 'Sunday';
+        $todayLabel = "Next School Day (Sunday)";
+        $nextSunday = now()->next('Sunday');
+        $todaySub = "Sunday, " . $nextSunday->format('F j, Y');
+    }
 @endphp
 
-<div class="space-y-6" x-data="{ copied: false, idModalOpen: false }" @keydown.escape.window="idModalOpen = false">
-    {{-- Welcome Hero --}}
-    <section class="dash-welcome">
-        <div class="dash-welcome-body">
-            <div class="flex items-center gap-2 flex-wrap mb-3">
-                <p class="dash-welcome-greeting" style="margin: 0;">Assalamualaikum, {{ $firstName }}</p>
-                <span class="inline-flex rounded-full bg-slate-900 text-white px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider">
-                    {{ $applicant?->student_type ?: 'New' }}
-                </span>
-                <span class="inline-flex rounded-full bg-emerald-600 text-white px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider">
-                    {{ $applicant?->learning_mode ?: 'Face-to-Face' }}
-                </span>
-            </div>
-            <h2 class="dash-welcome-title">Your Student Dashboard</h2>
-            <p class="dash-welcome-sub">Monitor your subjects, class schedule, billing status, and student profile — all in one place.</p>
-            
-            <div class="mt-4 flex flex-wrap items-center gap-3" x-data="{
-                clientTime: '',
-                clientTz: '',
-                phTime: '',
-                updateClocks() {
-                    const now = new Date();
-                    this.clientTime = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
-                    
-                    let tzName = Intl.DateTimeFormat().resolvedOptions().timeZone;
-                    const offsetMin = -now.getTimezoneOffset();
-                    const offsetHrs = Math.floor(Math.abs(offsetMin) / 60);
-                    const offsetRem = Math.abs(offsetMin) % 60;
-                    const sign = offsetMin >= 0 ? '+' : '-';
-                    const offsetStr = `UTC${sign}${offsetHrs}${offsetRem > 0 ? ':' + String(offsetRem).padStart(2, '0') : ''}`;
-                    this.clientTz = `${tzName} (${offsetStr})`;
-                    
-                    this.phTime = now.toLocaleTimeString('en-US', { 
-                        timeZone: 'Asia/Manila', 
-                        hour: 'numeric', 
-                        minute: '2-digit', 
-                        second: '2-digit', 
-                        hour12: true 
-                    });
-                }
-            }" x-init="updateClocks(); setInterval(() => updateClocks(), 1000); $nextTick(() => window.lucide && window.lucide.createIcons())">
-                {{-- Client Local Time Badge --}}
-                <div class="inline-flex items-center gap-2 rounded-xl bg-slate-900/5 px-3 py-1.5 border border-slate-900/10 text-xs font-bold text-slate-700">
-                    <i data-lucide="map-pin" class="w-3.5 h-3.5 text-slate-500"></i>
-                    <span>Local Time:</span>
-                    <span class="font-extrabold text-slate-950" x-text="clientTime">--:--:--</span>
-                    <span class="text-[10px] text-slate-400 font-semibold" x-text="clientTz">Detecting...</span>
-                </div>
+@once
+<style>
+    .sched-tab-btn {
+        border: none !important;
+        border-radius: 8px !important;
+        padding: 0.4rem 0.85rem !important;
+        font-size: 0.75rem !important;
+        font-weight: 850 !important;
+        cursor: pointer !important;
+        transition: all 0.15s ease !important;
+        background: transparent !important;
+        color: #64748b !important;
+    }
+    .sched-tab-btn.active {
+        background: white !important;
+        color: #0d9488 !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08) !important;
+    }
+    @keyframes pulse-dot {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.6; transform: scale(1.05); }
+    }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/lucide@latest"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (window.lucide) {
+            window.lucide.createIcons();
+        }
+    });
+</script>
+@endonce
 
-                {{-- Philippines School Time Badge --}}
-                <div class="inline-flex items-center gap-2 rounded-xl bg-emerald-500/10 px-3 py-1.5 border border-emerald-500/20 text-xs font-bold text-emerald-800">
-                    <span class="flex h-2 w-2 rounded-full bg-emerald-600 animate-pulse"></span>
-                    <span>School Time (PH):</span>
-                    <span class="font-extrabold text-emerald-950" x-text="phTime">--:--:--</span>
-                    <span class="text-[10px] text-emerald-600 font-semibold">Manila (UTC+8)</span>
+{{-- ── 2-col layout: main + right panel ──────────────────────────── --}}
+<div class="s-two-col-grid" x-data="{ viewMode: '{{ $defaultViewMode }}' }">
+
+    {{-- ── LEFT COLUMN ──────────────────────────────────────────────── --}}
+    <div style="display:flex;flex-direction:column;gap:1.5rem;min-width:0;width:100%;">
+
+        @if (session('success'))
+            <div class="student-alert fade-up" style="margin-bottom: 0;">
+                <i data-lucide="check-circle" style="width: 18px; height: 18px; flex-shrink: 0;"></i>
+                <span>{{ session('success') }}</span>
+            </div>
+        @endif
+        @if ($errors->any())
+            <div class="student-error fade-up" style="margin-bottom: 0;">
+                <i data-lucide="alert-circle" style="width: 18px; height: 18px; flex-shrink: 0;"></i>
+                <span>{{ $errors->first() }}</span>
+            </div>
+        @endif
+
+        {{-- Hero Banner --}}
+        <div class="s-dash-hero fade-up">
+            {{-- Dot mesh --}}
+            <div style="position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,0.06) 1px,transparent 1px);background-size:22px 22px;pointer-events:none;"></div>
+            {{-- Glow orb --}}
+            <div style="position:absolute;right:-30px;top:-30px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(52,211,153,0.2),transparent 65%);pointer-events:none;"></div>
+
+            {{-- Avatar --}}
+            <div style="position:relative;width:80px;height:80px;flex-shrink:0;">
+                @if ($photo)
+                    <img src="{{ asset('storage/' . $photo) }}" alt="Photo"
+                         style="width:80px;height:80px;object-fit:cover;border-radius:50%;border:4px solid #ffffff;box-shadow: 0 4px 12px rgba(0,0,0,0.15);display:block;">
+                @else
+                    <div style="width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,0.2);border:4px solid #ffffff;box-shadow: 0 4px 12px rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center;box-sizing:border-box;">
+                        <span style="font-size:1.6rem;font-weight:900;color:white;line-height:1;display:flex;align-items:center;justify-content:center;text-align:center;">{{ $initials }}</span>
+                    </div>
+                @endif
+                <span style="position:absolute;bottom:2px;right:2px;width:14px;height:14px;border-radius:50%;background:#10b981;border:2.5px solid #ffffff;box-shadow:0 2px 4px rgba(0,0,0,0.1);z-index:5;"></span>
+            </div>
+
+            {{-- Text --}}
+            <div style="position:relative;">
+                <div class="s-dash-hero-meta">
+                    {{ $student?->grade_level }}
+                    · {{ strtoupper($student?->applicant?->student_type ?? 'new') }}
+                    @if($learningMode)
+                        · {{ $learningMode }}
+                    @endif
+                    · SY {{ $student?->school_year }}
+                </div>
+                <div style="font-size: 1.1rem !important; font-weight: 800 !important; color: rgba(255, 255, 255, 0.8) !important; margin-bottom: 0.25rem !important; text-transform: uppercase; letter-spacing: 0.05em;">
+                    Assalamualaikum,
+                </div>
+                <h1 class="s-dash-hero-title" style="margin-top: 0 !important; font-size: 2.2rem !important; margin-bottom: 0.5rem !important;">
+                    {{ $fullName }}!
+                </h1>
+                <div class="s-dash-hero-sub">
+                    Student ID: <span style="text-decoration: underline;">{{ $student?->student_number }}</span> · {{ $student?->school_email }}
                 </div>
             </div>
         </div>
-        <img src="{{ asset('images/school_elements_bg.png') }}" class="dash-welcome-pattern" alt="School elements pattern">
-    </section>
 
-    {{-- Stats Grid --}}
-    <section class="dash-stats">
-        <article class="dash-stat dash-stat-green">
-            <span class="dash-stat-icon"><i data-lucide="book-open-check"></i></span>
-            <div>
-                <p class="dash-stat-label">Enrolled Subjects</p>
-                <strong class="dash-stat-value">{{ $subjects->count() }}</strong>
-            </div>
-        </article>
-        <article class="dash-stat dash-stat-blue">
-            <span class="dash-stat-icon"><i data-lucide="calendar-clock"></i></span>
-            <div>
-                <p class="dash-stat-label">Scheduled Classes</p>
-                <strong class="dash-stat-value">{{ $scheduledSubjects }}</strong>
-            </div>
-        </article>
-        <article class="dash-stat dash-stat-violet">
-            <span class="dash-stat-icon"><i data-lucide="calendar-days"></i></span>
-            <div>
-                <p class="dash-stat-label">School Year</p>
-                <strong class="dash-stat-value" style="font-size: 20px; line-height: 1.4;">{{ $student->school_year }}</strong>
-            </div>
-        </article>
-        <article class="dash-stat dash-stat-amber">
-            <span class="dash-stat-icon"><i data-lucide="wallet"></i></span>
-            <div>
-                <p class="dash-stat-label">Remaining Balance</p>
-                <strong class="dash-stat-value">PHP {{ number_format((float) ($student->account->remaining_balance ?? 0), 2) }}</strong>
-            </div>
-        </article>
-    </section>
+        {{-- ── COMING SOON BANNER — F2F Students (Old & New) ─────────── --}}
+        @php
+            $isF2F = str_contains(strtolower($student?->applicant?->learning_mode ?? ''), 'face');
+        @endphp
+        @if($isF2F)
+        <div class="fade-up" style="
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 60%, #fde68a 100%);
+            border: 1.5px solid #f59e0b;
+            border-radius: 20px;
+            padding: 1.75rem 2rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 1.25rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(245,158,11,0.12);
+        ">
+            {{-- Background decoration --}}
+            <div style="position:absolute;right:-20px;bottom:-20px;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,rgba(245,158,11,0.15),transparent 70%);pointer-events:none;"></div>
 
-    {{-- Main Content Grid --}}
-    <div class="dash-grid">
-        <div class="dash-main-col">
-            {{-- Current Classes Panel --}}
-            <div class="dash-panel">
-                <div class="dash-panel-header">
-                    <h2>Today's Schedule ({{ $todayName }})</h2>
-                    <a href="{{ route('student.schedule') }}" class="dash-panel-link">Weekly timetable →</a>
+            {{-- Icon --}}
+            <div style="
+                width: 52px; height: 52px; border-radius: 14px;
+                background: #f59e0b;
+                display: flex; align-items: center; justify-content: center;
+                flex-shrink: 0;
+                box-shadow: 0 4px 12px rgba(245,158,11,0.35);
+            ">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12 6 12 12 16 14"/>
+                </svg>
+            </div>
+
+            {{-- Text content --}}
+            <div style="flex:1; position:relative;">
+                <div style="display:flex; align-items:center; gap:0.625rem; margin-bottom:0.5rem; flex-wrap:wrap;">
+                    <span style="font-size:0.7rem; font-weight:800; color:#92400e; background:#fde68a; border:1.5px solid #f59e0b; padding:0.2rem 0.6rem; border-radius:999px; text-transform:uppercase; letter-spacing:0.08em;">
+                        Face-to-Face
+                    </span>
+                    <span style="font-size:0.7rem; font-weight:800; color:#ffffff; background:#f59e0b; padding:0.2rem 0.6rem; border-radius:999px; text-transform:uppercase; letter-spacing:0.08em;">
+                        {{ strtoupper($student?->applicant?->student_type ?? 'student') }}
+                    </span>
                 </div>
-                
-                @if($todaySubjects->isNotEmpty())
-                    <div class="p-5 space-y-3">
-                        @foreach($todaySubjects as $subject)
-                            @php 
-                                $subjLower = mb_strtolower($subject->subject_name); 
-                                $iconName = 'file-text'; 
-                                if (str_contains($subjLower, 'math')) { $iconName = 'binary'; } 
-                                elseif (str_contains($subjLower, 'science')) { $iconName = 'beaker'; } 
-                                elseif (str_contains($subjLower, 'english') || str_contains($subjLower, 'reading')) { $iconName = 'book-open'; } 
-                                elseif (str_contains($subjLower, 'arabic') || str_contains($subjLower, 'qur') || str_contains($subjLower, 'islamic')) { $iconName = 'book'; } 
-                                elseif (str_contains($subjLower, 'art') || str_contains($subjLower, 'drawing')) { $iconName = 'palette'; } 
-                                elseif (str_contains($subjLower, 'pe') || str_contains($subjLower, 'physical')) { $iconName = 'activity'; } 
-                                elseif (str_contains($subjLower, 'computer') || str_contains($subjLower, 'ict')) { $iconName = 'monitor'; }
+                <h3 style="font-size:1.2rem; font-weight:800; color:#78350f; margin:0 0 0.5rem; letter-spacing:-0.02em;">
+                    🚧 Portal Coming Soon for F2F Students!
+                </h3>
+                <p style="font-size:0.92rem; font-weight:500; color:#92400e; margin:0; line-height:1.7;">
+                    We are currently preparing the online portal for <strong>Face-to-Face</strong> students.
+                    Your schedule, subjects, grades, and other features will be available here very soon.
+                    In the meantime, please coordinate with your class adviser for any concerns.
+                </p>
+                <div style="margin-top:1rem; display:flex; align-items:center; gap:0.5rem;">
+                    <div style="width:8px; height:8px; border-radius:50%; background:#f59e0b; animation: pulse-dot 1.5s infinite;"></div>
+                    <span style="font-size:0.8rem; font-weight:700; color:#b45309;">We'll notify you once your portal is ready.</span>
+                </div>
+            </div>
+        </div>
+        <style>
+            @keyframes pulse-dot {
+                0%, 100% { opacity:1; transform:scale(1); }
+                50% { opacity:0.5; transform:scale(1.4); }
+            }
+        </style>
+        @endif
 
-                                // Class State Tracking
-                                $classState = 'upcoming'; 
-                                $sched = trim((string) $subject->schedule);
-                                $timePart = '';
-                                $isScheduledTomorrow = false;
-                                if (!empty($sched)) {
-                                    $parts = explode(' ', $sched);
-                                    $timePart = trim(substr($sched, strlen($parts[0] ?? '')));
-                                    $timeRange = explode('-', $timePart);
-                                    $startTimeStr = trim($timeRange[0] ?? '');
-                                    $endTimeStr = trim($timeRange[1] ?? '');
-                                    
-                                    if (!empty($startTimeStr) && !empty($endTimeStr)) {
-                                        $startTime = strtotime(date('Y-m-d') . ' ' . $startTimeStr);
-                                        $endTime = strtotime(date('Y-m-d') . ' ' . $endTimeStr);
-                                        if ($startTime !== false && $endTime !== false) {
-                                            $now = time();
-                                            if ($now > $endTime) {
-                                                $classState = 'completed';
-                                            } elseif ($now >= $startTime && $now <= $endTime) {
-                                                $classState = 'live';
-                                            }
-                                        }
+        {{-- Billing / SOA Card (Coming Soon) --}}
+        <div class="fade-up" style="background: white; border: 1.5px solid #e2e8f0; border-radius: 20px; padding: 1.25rem 1.75rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 1rem; min-width: 0;">
+                <div style="width: 42px; height: 42px; border-radius: 12px; background: #f0fdfa; border: 1px solid #ccfbf1; display: flex; align-items: center; justify-content: center; color: #0d9488; flex-shrink: 0;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-wallet"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M16 12a2 2 0 0 0 0 4h5v-4z"/></svg>
+                </div>
+                <div style="min-width: 0; flex: 1;">
+                    <h3 style="font-size: 1.05rem; font-weight: 850; color: #0f172a; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Billing & Statement of Account</h3>
+                    <p style="font-size: 0.8rem; font-weight: 700; color: #64748b; margin: 0.15rem 0 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">View your tuition balance, official receipts, and monthly billing statements.</p>
+                </div>
+            </div>
+            <span style="font-size: 0.725rem; font-weight: 850; color: #0f766e; background: #f0fdfa; border: 1px solid #ccfbf1; padding: 0.25rem 0.65rem; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap;">
+                Coming Soon
+            </span>
+        </div>
+
+        {{-- Schedule Table Section --}}
+        <div class="fade-up" style="display:flex;flex-direction:column;gap:0.85rem;">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;">
+                <div>
+                    <h2 style="font-size:1.35rem;font-weight:900;color:#0f172a;margin:0;letter-spacing:-0.02em;">
+                        <span x-show="viewMode === 'today'">{{ $todayLabel }}</span>
+                        <span x-show="viewMode === 'weekly'">Weekly Schedule</span>
+                    </h2>
+                    <div style="font-size:0.95rem;color:#475569;margin-top:4px;font-weight:700;">
+                        <span x-show="viewMode === 'today'">{{ $todaySub }}</span>
+                        <span x-show="viewMode === 'weekly'">{{ now()->format('l, F j, Y') }}</span>
+                    </div>
+                </div>
+
+                <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+                    @if($student && $student->ms_user_id && str_ends_with(strtolower($student->school_email), '@amis.edu.ph'))
+                        <form method="POST" action="{{ route('student.sync-teams') }}" style="margin: 0; display: inline-block;">
+                            @csrf
+                            <button type="submit" class="sched-tab-btn" style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem !important; padding: 0.45rem 0.85rem !important; background: #059669 !important; color: white !important; border-radius: 8px !important; box-shadow: 0 2px 4px rgba(5,150,105,0.15) !important; cursor: pointer;">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                                Sync MS Teams
+                            </button>
+                        </form>
+                    @endif
+
+                    <!-- Today / Weekly toggle buttons -->
+                    <div style="display:flex;background:#e2e8f0;padding:0.25rem;border-radius:10px;gap:0.25rem;">
+                        <button type="button" @click="viewMode = 'today'; $nextTick(() => window.lucide && window.lucide.createIcons())"
+                                :class="viewMode === 'today' ? 'active' : ''"
+                                class="sched-tab-btn" style="font-size:0.75rem !important;padding:0.35rem 0.85rem !important;">
+                            Today
+                        </button>
+                        <button type="button" @click="viewMode = 'weekly'; $nextTick(() => window.lucide && window.lucide.createIcons())"
+                                :class="viewMode === 'weekly' ? 'active' : ''"
+                                class="sched-tab-btn" style="font-size:0.75rem !important;padding:0.35rem 0.85rem !important;">
+                            Weekly
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Table card --}}
+            <div class="s-table-card" style="background:white; border: 1.5px solid #e2e8f0; border-radius: 20px; overflow:hidden;">
+
+                {{-- TODAY'S CLASSES VIEW --}}
+                <div x-show="viewMode === 'today'">
+                    @php
+                        $todaySchedules = $schedules->filter(fn($cs) => strcasecmp($cs->day, $targetDayName) === 0)->sortBy('start_time');
+                    @endphp
+
+                    @if($todaySchedules->isNotEmpty())
+                        {{-- Table header --}}
+                        <div class="s-table-header" style="grid-template-columns: 1.8fr 1.2fr 1.6fr auto; padding: 0.75rem 1.25rem;">
+                            <div class="s-table-header-label">Subject Name</div>
+                            <div class="s-table-header-label">Teacher</div>
+                            <div class="s-table-header-label">Class Time</div>
+                            <div class="s-table-header-label" style="text-align:right;">Join Link</div>
+                        </div>
+
+                        @php
+                            $colors = ['#059669','#0ea5e9','#8b5cf6','#f59e0b','#ec4899','#14b8a6','#ef4444','#f97316'];
+                            $bgs    = ['#ecfdf5','#eff6ff','#f5f3ff','#fffbeb','#fdf2f8','#f0fdfa','#fef2f2','#fff7ed'];
+                        @endphp
+                        @foreach ($todaySchedules as $i => $sched)
+                            @php
+                                $c = $colors[$i % count($colors)];
+                                $bg = $bgs[$i % count($bgs)];
+                                // Find associated subject to get details
+                                $subj = $subjects->firstWhere('subject_name', $sched->subject_name);
+                                $currentTeacherName = $formatTeacherName($subj ? $subj->teacher_name : null);
+                                $timeStr = date('g:i A', strtotime($sched->start_time)) . ' - ' . date('g:i A', strtotime($sched->end_time));
+                                $teamUrl = $subj->team_url ?? 'https://teams.microsoft.com/';
+                                $isLive = false;
+                                $startTime = strtotime(date('Y-m-d') . ' ' . $sched->start_time);
+                                $endTime = strtotime(date('Y-m-d') . ' ' . $sched->end_time);
+                                if ($startTime !== false && $endTime !== false) {
+                                    $now = time();
+                                    if ($now >= $startTime && $now <= $endTime) {
+                                        $isLive = true;
                                     }
-
-                                    // Check if scheduled tomorrow
-                                    $tomorrowName = now()->addDay()->format('l');
-                                    $dayPart = $parts[0] ?? '';
-                                    $isM = str_contains($dayPart, 'M');
-                                    $isW = str_contains($dayPart, 'W');
-                                    $isF = str_contains($dayPart, 'F');
-                                    $isTh = str_contains($dayPart, 'Th');
-                                    $isT = str_contains(str_replace('Th', '', $dayPart), 'T');
-                                    
-                                    $isScheduledTomorrow = match ($tomorrowName) {
-                                        'Monday' => $isM,
-                                        'Tuesday' => $isT,
-                                        'Wednesday' => $isW,
-                                        'Thursday' => $isTh,
-                                        'Friday' => $isF,
-                                        default => false,
-                                    };
                                 }
                             @endphp
-
-                            <div class="relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl border transition {{ $classState === 'live' ? 'border-emerald-300 bg-emerald-50/30 hover:bg-emerald-50/40 shadow-xs' : ($classState === 'completed' ? 'border-gray-150 bg-gray-50/10' : 'border-gray-150 bg-gray-50/20 hover:bg-gray-50/50') }}">
-                                @if($classState === 'completed')
-                                    <div class="flex items-center justify-between w-full">
-                                        <div class="text-left min-w-0">
-                                            <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Teacher: {{ $subject->teacher_name ?: 'To Be Assigned' }}</p>
-                                            <h4 class="text-sm font-extrabold text-slate-900 mt-1 truncate">{{ $subject->subject_name }}</h4>
-                                        </div>
-                                        <div class="flex flex-col items-end gap-1.5 shrink-0">
-                                            <span class="text-[10px] font-black text-white bg-rose-600 px-3 py-1 rounded-full uppercase tracking-widest shadow-xs">
-                                                END OF CLASS
-                                            </span>
-                                            @if($isScheduledTomorrow)
-                                                <span class="inline-flex items-center gap-1 text-[9px] font-black text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full border border-gray-200 uppercase tracking-widest">
-                                                    <i data-lucide="calendar" class="w-3.5 h-3.5"></i> Tomorrow
-                                                </span>
-                                            @endif
-                                        </div>
-                                    </div>
-                                @else
-                                    <div class="flex items-center gap-3.5 min-w-0">
-                                        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border {{ $classState === 'live' ? 'bg-emerald-500 text-white border-emerald-600' : 'bg-emerald-50 text-emerald-700 border-emerald-100' }}">
-                                            <i data-lucide="{{ $iconName }}" class="h-5 w-5"></i>
-                                        </span>
-                                        <div class="min-w-0">
-                                            <div class="flex items-center gap-2">
-                                                <h4 class="text-sm font-extrabold text-gray-955 truncate" style="margin:0;">{{ $subject->subject_name }}</h4>
-                                                @if($classState === 'live')
-                                                    <span class="inline-flex items-center gap-1 rounded-full bg-rose-500 text-white px-2 py-0.5 text-[8px] font-black uppercase tracking-wider animate-pulse">
-                                                        <span class="h-1.5 w-1.5 rounded-full bg-white"></span> Live
-                                                    </span>
-                                                @endif
-                                            </div>
-                                            <p class="text-xs text-gray-550 mt-0.5 truncate">Teacher: <span class="font-bold text-gray-700">{{ $subject->teacher_name ?: 'To Be Assigned' }}</span></p>
-                                        </div>
-                                    </div>
-                                    <div class="flex items-center justify-between sm:justify-end gap-4 shrink-0">
-                                        <div class="flex flex-col gap-1" x-data="{
-                                            schoolTime: '{{ !empty($timePart) ? $timePart . ' PHT' : ($subject->schedule ?: 'To Be Announced') }}',
-                                            localTime: '',
-                                            hasDifferentTz: false,
-                                            init() {
-                                                const startStr = '{{ $startTimeStr }}';
-                                                const endStr = '{{ $endTimeStr }}';
-                                                if (!startStr || !endStr) return;
-                                                
-                                                const todayStr = new Date().toISOString().split('T')[0];
-                                                const parseTime = (tStr) => {
-                                                    const parts = tStr.match(/(\d+):(\d+)\s*([AP]M)/i);
-                                                    if (!parts) return null;
-                                                    let hrs = parseInt(parts[1], 10);
-                                                    const mins = parseInt(parts[2], 10);
-                                                    const ampm = parts[3].toUpperCase();
-                                                    if (ampm === 'PM' && hrs < 12) hrs += 12;
-                                                    if (ampm === 'AM' && hrs === 12) hrs = 0;
-                                                    return new Date(`${todayStr}T${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:00+08:00`);
-                                                };
-                                                
-                                                const start = parseTime(startStr);
-                                                const end = parseTime(endStr);
-                                                if (start && end) {
-                                                    const manilaOffset = 480;
-                                                    const clientOffset = -new Date().getTimezoneOffset();
-                                                    if (manilaOffset !== clientOffset) {
-                                                        this.hasDifferentTz = true;
-                                                        const opts = { hour: 'numeric', minute: '2-digit', hour12: true };
-                                                        const lStart = start.toLocaleTimeString([], opts);
-                                                        const lEnd = end.toLocaleTimeString([], opts);
-                                                        
-                                                        const offsetHrs = Math.floor(Math.abs(clientOffset) / 60);
-                                                        const sign = clientOffset >= 0 ? '+' : '-';
-                                                        const offsetStr = `UTC${sign}${offsetHrs}`;
-                                                        this.localTime = `${lStart} - ${lEnd} (${offsetStr})`;
-                                                    }
-                                                }
-                                            }
-                                        }">
-                                            <div class="flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-lg border {{ $classState === 'live' ? 'text-emerald-900 bg-emerald-100 border-emerald-200' : 'text-emerald-800 bg-emerald-50 border-emerald-100/30' }}">
-                                                <i data-lucide="clock" class="w-3.5 h-3.5 text-emerald-600"></i>
-                                                <span x-text="schoolTime"></span>
-                                            </div>
-                                            <template x-if="hasDifferentTz">
-                                                <div class="flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded border border-sky-100 bg-sky-50 text-sky-850 justify-center">
-                                                    <i data-lucide="globe" class="w-3.5 h-3.5 text-sky-500 mr-0.5 shrink-0"></i>
-                                                    <span x-text="localTime"></span>
-                                                </div>
-                                            </template>
-                                        </div>
-                                        @if($subject->ms_channel_id && $section?->ms_team_url)
-                                            <a href="{{ $section->ms_team_url }}" target="_blank" class="{{ $classState === 'live' ? 'student-primary-btn' : 'student-outline-btn' }}" style="min-height:32px; padding: 4px 12px; font-size:11.5px; border-radius: 8px;">
-                                                <i data-lucide="video" class="w-3.5 h-3.5 mr-1"></i> Join
-                                            </a>
-                                        @else
-                                            <span class="student-status-pill {{ $subject->schedule ? '' : 'bg-amber-50 text-amber-700 border-amber-100' }}">
-                                                {{ $subject->schedule ? 'Scheduled' : 'Pending' }}
-                                            </span>
-                                        @endif
-                                    </div>
+                            <div class="s-table-row" style="grid-template-columns: 1.8fr 1.2fr 1.6fr auto; padding: 1rem 1.25rem; align-items: center; border-bottom: 1px solid #f1f5f9; position: relative;">
+                                @if($isLive)
+                                    <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: #10b981; border-top-left-radius: 4px; border-bottom-left-radius: 4px;"></div>
                                 @endif
-                            </div>
-                        @endforeach
-                    </div>
-                @else
-                    <div class="dash-empty">
-                        <i data-lucide="calendar"></i>
-                        @if(in_array($todayName, ['Saturday', 'Sunday']))
-                            <p>No classes scheduled for today. Happy Weekend! 🎉</p>
-                        @else
-                            <p>No classes scheduled for today ({{ $todayName }}).</p>
-                        @endif
-                        <a href="{{ route('student.schedule') }}" class="student-outline-btn mt-3" style="font-size: 12px; min-height: 32px; padding: 4px 12px; border-radius: 8px;">
-                            <i data-lucide="calendar-range" class="w-3.5 h-3.5 mr-1"></i> View Weekly Schedule
-                        </a>
-                    </div>
-                @endif
-            </div>
-        </div>
-
-        {{-- Sidebar Column --}}
-        <div class="dash-sidebar-col">
-            {{-- Latest Announcements Panel --}}
-            <div class="dash-panel">
-                <div class="dash-panel-header">
-                    <h2>Latest Announcements</h2>
-                    <a href="{{ route('student.announcements') }}" class="dash-panel-link">All →</a>
-                </div>
-                
-                @if(count($announcements) > 0)
-                    <div class="dash-feed">
-                        @foreach(array_slice($announcements, 0, 3) as $announcement)
-                            @php
-                                $toneClasses = [ 
-                                    'emerald' => 'bg-emerald-50 text-emerald-700 border-emerald-100', 
-                                    'sky' => 'bg-sky-50 text-sky-700 border-sky-100', 
-                                    'amber' => 'bg-amber-50 text-amber-700 border-amber-100', 
-                                ];
-                                $tone = $toneClasses[$announcement['tone']] ?? $toneClasses['emerald'];
-                            @endphp
-                            <div class="dash-feed-item border-b border-gray-150 last:border-b-0" style="padding: 14px 20px;">
-                                <div class="flex items-center justify-between gap-2 mb-1.5">
-                                    <span class="inline-flex rounded-full border px-2 py-0.5 text-[9px] font-black uppercase {{ $tone }}">
-                                        {{ $announcement['type'] }}
-                                    </span>
-                                    <span class="text-[10px] font-semibold text-gray-400 flex items-center gap-1">
-                                        <i data-lucide="calendar" class="w-3 h-3"></i>
-                                        <span>{{ $announcement['date'] }}</span>
+                                <div style="display:flex;align-items:center;gap:0.75rem;min-width:0;">
+                                    <div style="width:8px;height:8px;border-radius:50%;background:{{ $c }};flex-shrink:0;box-shadow: 0 0 0 3px {{ $bg }};"></div>
+                                    <span class="s-table-cell-subject" style="font-weight: 800; color: #0f172a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                        {{ $sched->subject_name }}
+                                        @if($isLive)
+                                            <span style="font-size:0.65rem;font-weight:850;color:white;background:#ef4444;padding:0.1rem 0.35rem;border-radius:5px;text-transform:uppercase;margin-left:0.35rem;display:inline-block;animation: pulse-dot 1.5s infinite;">LIVE</span>
+                                        @endif
                                     </span>
                                 </div>
-                                <h4 class="text-xs font-extrabold text-gray-950 truncate" style="margin:0;">{{ $announcement['title'] }}</h4>
-                                <p class="text-[11px] text-gray-550 mt-1 leading-relaxed">{{ $announcement['summary'] }}</p>
+                                <div style="display:flex;align-items:center;gap:0.5rem;min-width:0;">
+                                    <span class="s-table-cell-teacher" style="font-weight: 750; color: #475569; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $currentTeacherName }}</span>
+                                </div>
+                                <div class="s-table-cell-schedule" style="color:#0d9488; font-weight:800; white-space: nowrap; font-size: 0.78rem;">
+                                    <div style="display:flex;align-items:center;gap:0.3rem;">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                        <span style="letter-spacing: -0.01em;">{{ $timeStr }}</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    @if($subj && $subj->ms_channel_id)
+                                        <a href="{{ $teamUrl }}" target="_blank"
+                                           style="display:inline-flex;align-items:center;gap:0.35rem;font-size:0.75rem;font-weight:900;color:#ffffff;background:#5865f2;padding:0.45rem 0.9rem;border-radius:8px;text-decoration:none;transition:all 0.15s;"
+                                           onmouseover="this.style.background='#4752c4'" onmouseout="this.style.background='#5865f2'">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/></svg>
+                                            <span>Join</span>
+                                        </a>
+                                    @else
+                                        <span style="font-size:0.75rem;color:#94a3b8;font-weight:700;">No Link</span>
+                                    @endif
+                                </div>
                             </div>
                         @endforeach
-                    </div>
-                @else
-                    <div class="dash-empty">
-                        <i data-lucide="megaphone"></i>
-                        <p>No announcements yet.</p>
-                    </div>
-                @endif
-            </div>
-
-            {{-- Digital Student ID Widget --}}
-            <div class="student-panel">
-                <div class="student-panel-header" style="margin-bottom: 0;">
-                    <h2>Digital Student ID</h2>
-                    <button type="button" @click="idModalOpen = true; $nextTick(() => refreshStudentIcons())" class="student-light-btn">
-                        <i data-lucide="maximize-2"></i> Open
-                    </button>
-                </div>
-                <div class="pt-4">
-                    <div class="mx-auto flex max-w-sm flex-col justify-between rounded-2xl border border-emerald-100 bg-white p-5 shadow-sm">
-                        <div class="flex items-center gap-3 border-b border-emerald-50 pb-3">
-                            <img src="{{ asset('images/AMIS_Logo.png') }}" class="h-10 w-10 object-contain" alt="AMIS Logo">
-                            <div>
-                                <p class="text-xs font-black uppercase tracking-wider text-emerald-800">Al Munawwara Islamic School</p>
-                                <p class="text-[10px] font-bold text-slate-400">Student Identification</p>
+                    @else
+                        <div class="s-empty-card" style="padding: 4rem 1.5rem; text-align:center;">
+                            <div class="s-empty-icon-wrapper" style="background: #f0fdfa; display:inline-flex; align-items:center; justify-content:center; width:48px; height:48px; border-radius:50%; margin-bottom: 0.75rem;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0d9488" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
                             </div>
-                        </div>
-                        <div class="mt-5 flex items-center gap-4">
-                            <div class="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-emerald-100 bg-emerald-50">
-                                @if($photoUrl)
-                                    <img src="{{ $photoUrl }}" alt="{{ $studentName }}" class="h-full w-full object-cover">
+                            <h3 class="s-empty-title" style="font-size: 1.15rem; font-weight:800; color:#1e293b; margin:0 0 0.25rem;">No Classes Scheduled Today</h3>
+                            <p class="s-empty-text" style="font-size: 0.85rem; color:#64748b; max-width: 340px; margin: 0 auto; line-height: 1.5;">
+                                @if(in_array($todayName, ['Friday', 'Saturday']))
+                                    Happy weekend! Enjoy your rest and recharge time. ☀️
                                 @else
-                                    <span class="text-3xl font-black text-emerald-800">{{ mb_substr($firstName, 0, 1) }}</span>
+                                    You have no classes scheduled for today. Happy studying! 🎈
                                 @endif
-                            </div>
-                            <div class="min-w-0">
-                                <p class="truncate text-base font-black text-slate-950">{{ $studentName }}</p>
-                                <p class="mt-1 text-xs font-extrabold text-emerald-700">ID: {{ $student->student_number }}</p>
-                                <p class="mt-0.5 truncate text-xs font-semibold text-slate-500">{{ $student->grade_level }} / {{ $section?->official_name ?? 'General' }}</p>
-                            </div>
+                            </p>
                         </div>
-                    </div>
+                    @endif
                 </div>
+
+                {{-- WEEKLY OVERVIEW VIEW --}}
+                <div x-show="viewMode === 'weekly'">
+                    @if($subjects->isNotEmpty())
+                        {{-- Table header --}}
+                        <div class="s-table-header" style="grid-template-columns: 1.8fr 1.4fr 1.6fr auto; padding: 0.75rem 1.25rem;">
+                            <div class="s-table-header-label">Subject Name</div>
+                            <div class="s-table-header-label">Teacher</div>
+                            <div class="s-table-header-label">Weekly Schedule</div>
+                            <div class="s-table-header-label" style="text-align:right;">Join Link</div>
+                        </div>
+
+                        @php
+                            $colors = ['#059669','#0ea5e9','#8b5cf6','#f59e0b','#ec4899','#14b8a6','#ef4444','#f97316'];
+                            $bgs    = ['#ecfdf5','#eff6ff','#f5f3ff','#fffbeb','#fdf2f8','#f0fdfa','#fef2f2','#fff7ed'];
+                        @endphp
+                        @foreach ($subjects as $i => $subject)
+                            @php
+                                $c = $colors[$i % count($colors)];
+                                $bg = $bgs[$i % count($bgs)];
+                                $currentTeacherName = $formatTeacherName($subject->teacher_name);
+                                $schedStr = $formattedSchedules[$subject->subject_name] ?? 'To Be Announced';
+                            @endphp
+                            <div class="s-table-row" style="grid-template-columns: 1.8fr 1.4fr 1.6fr auto; padding: 1rem 1.25rem; align-items: center; border-bottom: 1px solid #f1f5f9;">
+                                <div style="display:flex;align-items:center;gap:0.75rem;min-width:0;">
+                                    <div style="width:8px;height:8px;border-radius:50%;background:{{ $c }};flex-shrink:0;box-shadow: 0 0 0 3px {{ $bg }};"></div>
+                                    <span class="s-table-cell-subject" style="font-weight: 800; color: #0f172a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ $subject->subject_name }}">{{ $subject->subject_name }}</span>
+                                </div>
+                                <div style="display:flex;align-items:center;gap:0.5rem;min-width:0;">
+                                    <span class="s-table-cell-teacher" style="font-weight: 750; color: #475569; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ $currentTeacherName }}">{{ $currentTeacherName }}</span>
+                                </div>
+                                <div class="s-table-cell-schedule" style="color: #0d9488; font-weight: 800; font-size: 0.825rem;">
+                                    <div style="display:flex;align-items:center;gap:0.35rem;">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                        <span title="{{ $schedStr }}">{{ $schedStr }}</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    @if($subject->ms_channel_id)
+                                        <a href="{{ $subject->team_url ?? 'https://teams.microsoft.com' }}" target="_blank"
+                                           style="display:inline-flex;align-items:center;gap:0.35rem;font-size:0.75rem;font-weight:900;color:#ffffff;background:#5865f2;padding:0.45rem 0.9rem;border-radius:8px;text-decoration:none;transition:all 0.15s;"
+                                           onmouseover="this.style.background='#4752c4'" onmouseout="this.style.background='#5865f2'">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/></svg>
+                                            <span>Join</span>
+                                        </a>
+                                    @else
+                                        <span style="font-size:0.75rem;color:#94a3b8;font-weight:700;">No Link</span>
+                                    @endif
+                                </div>
+                            </div>
+                        @endforeach
+                    @else
+                        <div class="s-empty-card" style="padding: 4rem 1.5rem; text-align:center;">
+                            <div class="s-empty-icon-wrapper" style="background: #f0fdfa; display:inline-flex; align-items:center; justify-content:center; width:48px; height:48px; border-radius:50%; margin-bottom: 0.75rem;">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0d9488" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/></svg>
+                            </div>
+                            <h3 class="s-empty-title" style="font-size: 1.15rem; font-weight:800; color:#1e293b; margin:0 0 0.25rem;">No Subjects Assigned Yet</h3>
+                            <p class="s-empty-text" style="font-size: 0.85rem; color:#64748b; max-width: 340px; margin: 0 auto; line-height: 1.5;">
+                                Welcome to your portal! We are currently setting up your sections, schedule, and subjects. Please check back soon! 🎈
+                            </p>
+                        </div>
+                    @endif
+                </div>
+
             </div>
         </div>
+
     </div>
 
-    {{-- Student ID Modal --}}
-    <div id="studentIdModal" class="student-modal-backdrop animate-fade-in" x-cloak x-show="idModalOpen" x-transition.opacity.duration.150ms>
-        <div class="student-modal-card text-left" role="dialog" aria-modal="true" aria-labelledby="idModalTitle">
-            <div class="student-panel-header" style="padding-top: 0; padding-left: 0; padding-right: 0;">
-                <h2 id="idModalTitle">Digital Student ID</h2>
-                <button type="button" @click="idModalOpen = false" class="student-icon-btn" aria-label="Close">
-                    <i data-lucide="x"></i>
-                </button>
+    {{-- ── RIGHT PANEL ───────────────────────────────────────────────── --}}
+    <div style="display:flex;flex-direction:column;gap:1.5rem;" class="fade-up">
+
+        {{-- Announcement Card --}}
+        <div class="s-quick-actions-card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
+                <h3 class="s-quick-actions-title" style="margin-bottom:0 !important;">Announcement</h3>
             </div>
             
-            <div class="bg-emerald-50/30 rounded-xl p-5 sm:p-6 mt-4">
-                <div class="mx-auto grid gap-5 md:grid-cols-2">
-                    <section class="rounded-2xl border border-emerald-100 bg-white p-6 text-gray-800 shadow-sm">
-                        <div class="flex items-center gap-3 border-b border-emerald-50 pb-3">
-                            <img src="{{ asset('images/AMIS_Logo.png') }}" class="h-12 w-12 object-contain" alt="AMIS Logo">
-                            <div>
-                                <h4 class="font-black uppercase tracking-wider text-emerald-800 text-sm">Al Munawwara</h4>
-                                <p class="text-xs font-bold text-gray-400">Islamic School</p>
-                            </div>
-                        </div>
-                        
-                        <div class="mt-6 flex items-center gap-5">
-                            <div class="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-emerald-100 bg-emerald-50">
-                                @if($photoUrl)
-                                    <img src="{{ $photoUrl }}" alt="{{ $studentName }}" class="h-full w-full object-cover">
-                                @else
-                                    <span class="text-4xl font-extrabold text-emerald-800">{{ mb_substr($firstName, 0, 1) }}</span>
+            <div style="display:flex;flex-direction:column;gap:1rem;">
+                @forelse(array_slice($announcements, 0, 3) as $announcement)
+                    @php
+                        $toneColors = [
+                            'emerald' => ['#059669', '#ecfdf5'],
+                            'sky' => ['#0ea5e9', '#f0f9ff'],
+                            'amber' => ['#d97706', '#fffbeb']
+                        ];
+                        $tc = $toneColors[$announcement['tone']] ?? $toneColors['emerald'];
+                    @endphp
+                    <div style="padding: 1rem; border-radius: 12px; background: #f8fafc; border: 1.5px solid #e2e8f0; display:flex; flex-direction:column; gap:0.5rem;">
+                        <div style="display:flex; align-items:center; justify-content: space-between;">
+                            <div style="display:flex; align-items:center; gap:0.375rem;">
+                                <span style="font-size: 0.75rem; font-weight: 850; color: {{ $tc[0] }}; background: {{ $tc[1] }}; padding: 0.2rem 0.5rem; border-radius: 6px; text-transform: uppercase;">
+                                    {{ $announcement['type'] }}
+                                </span>
+                                @if(!$announcement['is_read'])
+                                    <span style="font-size: 0.65rem; font-weight: 850; color: white; background: #ef4444; padding: 0.15rem 0.4rem; border-radius: 5px; text-transform: uppercase; letter-spacing: 0.03em;">
+                                        New
+                                    </span>
                                 @endif
                             </div>
-                            <div class="min-w-0">
-                                <h5 class="truncate text-xl font-black text-gray-900">{{ $studentName }}</h5>
-                                <p class="mt-1 text-sm font-extrabold text-emerald-600">ID: {{ $student->student_number }}</p>
-                                <p class="mt-1 text-sm font-semibold text-gray-500">{{ $student->grade_level }} / {{ $section?->official_name ?? 'General' }}</p>
-                            </div>
+                            <span style="font-size: 0.75rem; font-weight: 700; color: #64748b; display:inline-flex; align-items:center; gap:0.375rem;">
+                                <span>{{ $announcement['date'] }}</span>
+                                <span style="display:inline-flex; align-items:center; gap:0.15rem;">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:#94a3b8; vertical-align:middle;"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                                    {{ $announcement['total_views'] }}
+                                </span>
+                            </span>
                         </div>
-                        
-                        <div class="mt-6 flex items-center justify-between border-t border-emerald-50 pt-3 text-[10px] font-black uppercase tracking-wider text-gray-400">
-                            <span>SY {{ $student->school_year }}</span>
-                            <span class="text-emerald-600">Official ID</span>
-                        </div>
-                    </section>
-                    
-                    <section class="rounded-2xl border border-emerald-100 bg-white p-6 text-gray-800 shadow-sm">
-                        <div class="border-b border-emerald-50 pb-3">
-                            <h4 class="font-black text-emerald-800 text-sm">Parent / Guardian Info</h4>
-                            <p class="text-xs font-bold text-gray-400">For school verification and emergency use</p>
-                        </div>
-                        
-                        <div class="mt-4 grid gap-3 text-xs">
-                            <div class="rounded-xl border border-gray-100 bg-gray-50 px-4 py-2.5">
-                                <p class="text-[9px] font-black uppercase text-gray-400">Father</p>
-                                <p class="truncate font-extrabold text-gray-800 mt-0.5">{{ $fatherName ?: 'Not provided' }}</p>
-                            </div>
-                            <div class="rounded-xl border border-gray-100 bg-gray-50 px-4 py-2.5">
-                                <p class="text-[9px] font-black uppercase text-gray-400">Mother</p>
-                                <p class="truncate font-extrabold text-gray-800 mt-0.5">{{ $motherName ?: 'Not provided' }}</p>
-                            </div>
-                            <div class="rounded-xl border border-emerald-100 bg-emerald-50/60 px-4 py-2.5">
-                                <p class="text-[9px] font-black uppercase text-emerald-700">Parent Contact</p>
-                                <p class="truncate font-extrabold text-gray-800 mt-0.5">{{ $parentMobile ?: 'Not provided' }}</p>
-                                <p class="truncate font-semibold text-gray-500 mt-0.5">{{ $parentEmail ?: 'Email not provided' }}</p>
-                            </div>
-                            <div class="rounded-xl border border-rose-100 bg-rose-50 px-4 py-2.5">
-                                <p class="text-[9px] font-black uppercase text-rose-600">Emergency Contact</p>
-                                <p class="truncate font-extrabold text-gray-800 mt-0.5">{{ $emergencyName ?: 'Not provided' }}</p>
-                                <p class="truncate font-semibold text-gray-500 mt-0.5">{{ $emergencyPhone ?: 'Phone not provided' }}</p>
-                            </div>
-                        </div>
-                    </section>
-                </div>
-            </div>
-            
-            <div class="student-modal-actions mt-5">
-                <button type="button" class="student-outline-btn" @click="idModalOpen = false">Close</button>
+                        <h4 style="font-size: 0.95rem; font-weight: 850; color: #0f172a; margin: 0; line-height: 1.3;">
+                            {{ $announcement['title'] }}
+                        </h4>
+                        <p style="font-size: 0.85rem; font-weight: 650; color: #475569; margin: 0; line-height: 1.5;">
+                            {{ $announcement['summary'] }}
+                        </p>
+                    </div>
+                @empty
+                    <div style="text-align:center;padding:1.5rem;color:#475569;font-weight:700;font-size:0.9rem;">
+                        No announcements yet.
+                    </div>
+                @endforelse
             </div>
         </div>
+
+
+
     </div>
+
 </div>
-@endsection
+
+</x-student-layout>

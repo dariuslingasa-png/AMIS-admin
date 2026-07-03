@@ -1,6 +1,4 @@
-@extends('student.layout', ['heading' => 'Statement of Account'])
-
-@section('content')
+<x-student-layout title="Statement of Account">
 <div class="space-y-8">
     <!-- Top Summary Banner -->
     <div class="student-panel flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
@@ -269,4 +267,4 @@
         </div>
     </div>
 </div>
-@endsection
+</x-student-layout>

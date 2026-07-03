@@ -10,7 +10,7 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body class="student-body">
 @auth
@@ -59,12 +59,21 @@
         ['route' => 'student.billing', 'icon' => 'credit-card', 'label' => 'My Billing (SOA)', 'tone' => 'amber'],
         ['route' => 'student.payments.history', 'icon' => 'receipt-text', 'label' => 'Payment History', 'tone' => 'amber'],
         ['route' => 'student.profile', 'icon' => 'user-round', 'label' => 'My Profile', 'tone' => 'violet'],
-        ['route' => 'student.settings', 'icon' => 'settings', 'label' => 'Settings', 'tone' => 'rose'],
     ];
 @endphp
 <div class="student-shell" x-data="{ sidebarOpen: false }" @keydown.escape.window="sidebarOpen = false">
-    <aside class="student-sidebar">
+    <!-- Sidebar Backdrop for mobile -->
+    <div x-cloak x-show="sidebarOpen" @click="sidebarOpen = false" 
+         class="fixed inset-0 z-30 bg-slate-900/40 backdrop-blur-xs transition-opacity duration-300 lg:hidden"
+         style="display: none;"></div>
+
+    <aside class="student-sidebar" :class="{ 'open': sidebarOpen }">
         <div class="student-sidebar-top">
+            <!-- Mobile close button -->
+            <button type="button" @click="sidebarOpen = false" class="student-mobile-close-btn" aria-label="Close Sidebar" style="display: none; position: absolute; top: 18px; right: 18px; width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--s-border); background: var(--s-surface); align-items: center; justify-content: center; color: var(--t-secondary); cursor: pointer;">
+                <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+            </button>
+
             <a href="{{ route('student.dashboard') }}" class="student-brand">
                 <img src="{{ asset('images/AMIS_Logo.png') }}" alt="AMIS">
                 <div class="student-brand-text">
@@ -117,10 +126,16 @@
     </aside>
 
     <main class="student-main">
-        <header class="student-topbar">
-            <div class="student-topbar-start">
-                <div class="student-topbar-eyebrow">Al Munawwara Islamic School</div>
-                <h1>{{ $heading ?? 'Student Portal' }}</h1>
+        <div class="student-container">
+            <header class="student-topbar" style="display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 24px;">
+            <div class="student-topbar-start" style="display: flex; align-items: center; gap: 12px; min-width: 0;">
+                <button type="button" @click="sidebarOpen = true" class="student-mobile-menu-btn" aria-label="Toggle Sidebar" style="display: none; width: 40px; height: 40px; align-items: center; justify-content: center; border-radius: 12px; border: 1px solid var(--s-border); background: var(--s-surface); color: var(--t-secondary); cursor: pointer; flex-shrink: 0;">
+                    <i data-lucide="menu" style="width: 20px; height: 20px;"></i>
+                </button>
+                <div style="min-width: 0;">
+                    <div class="student-topbar-eyebrow">Al Munawwara Islamic School</div>
+                    <h1 style="margin: 0; font-size: clamp(20px, 4.5vw, 28px); font-weight: 800; color: var(--t-primary); letter-spacing: -0.4px; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $heading ?? 'Student Portal' }}</h1>
+                </div>
             </div>
             <div class="student-topbar-end" x-data="{ notificationsOpen: false, profileOpen: false }" @keydown.escape.window="notificationsOpen = false; profileOpen = false">
                 <!-- Notifications Dropdown -->
@@ -213,6 +228,7 @@
         @endif
 
         @yield('content')
+        </div>
     </main>
 </div>
 @else

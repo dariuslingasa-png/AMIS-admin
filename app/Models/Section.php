@@ -28,6 +28,10 @@ class Section extends Model
 
     public function getOfficialNameAttribute(): ?string
     {
+        if (filled($this->name) && !in_array(strtoupper(trim($this->name)), ['A', 'B', 'C', 'DEFAULT', 'PENDING', 'GENERAL'])) {
+            return $this->name;
+        }
+
         $shift = $this->shift;
         $shiftLower = strtolower((string) $shift);
         if (empty($shift) || str_contains($shiftLower, 'f2f') || str_contains($shiftLower, 'full')) {

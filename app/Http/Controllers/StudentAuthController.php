@@ -84,17 +84,8 @@ class StudentAuthController extends Controller
         $result = $this->authService->handleMicrosoftCallback($request);
 
         if (! $result->successful || ! $result->user) {
-            if ($result->requiresMicrosoftLogout && $result->tenantId && $result->redirectUri) {
-                return $this->logoutMicrosoftAndRedirect(
-                    $result->tenantId,
-                    $result->redirectUri,
-                    (string) $result->errorMessage
-                );
-            }
-
             return redirect()->route('student.login')
-                ->withErrors(['login_id' => $result->errorMessage])
-                ->withoutCookie('microsoft_auth_error');
+                ->withErrors(['login_id' => $result->errorMessage]);
         }
 
         Auth::login($result->user, true);
@@ -110,23 +101,5 @@ class StudentAuthController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('student.login');
-    }
-
-    private function logoutMicrosoftAndRedirect(
-        string $tenantId,
-        string $redirectUri,
-        string $errorMessage
-    ): RedirectResponse {
-        Auth::logout();
-        request()->session()->invalidate();
-        request()->session()->regenerateToken();
-
-        $logoutUrl = "https://login.microsoftonline.com/{$tenantId}/oauth2/v2.0/logout?".http_build_query([
-            'post_logout_redirect_uri' => $redirectUri,
-        ]);
-
-        return redirect()
-            ->away($logoutUrl)
-            ->withCookie(cookie('microsoft_auth_error', $errorMessage, 5));
     }
 }

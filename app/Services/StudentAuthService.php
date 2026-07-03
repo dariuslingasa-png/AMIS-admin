@@ -158,9 +158,9 @@ class StudentAuthService
 
     public function microsoftRedirectUrl(Request $request): ?string
     {
-        $clientId = config('services.azure.client_id');
-        $tenantId = config('services.azure.tenant_id');
-        $redirectUri = config('services.azure.redirect_uri_student');
+        $clientId = config('services.microsoft.client_id');
+        $tenantId = config('services.microsoft.tenant_id');
+        $redirectUri = config('services.microsoft.redirect_uri');
 
         if (! $clientId || ! $tenantId || ! $redirectUri) {
             return null;
@@ -176,6 +176,7 @@ class StudentAuthService
             'response_mode' => 'query',
             'scope' => 'openid profile email User.Read',
             'state' => $state,
+            'prompt' => 'select_account',
         ]);
     }
 
@@ -194,13 +195,13 @@ class StudentAuthService
             );
         }
 
-        $tenantId = (string) config('services.azure.tenant_id');
-        $redirectUri = (string) config('services.azure.redirect_uri_student');
+        $tenantId = (string) config('services.microsoft.tenant_id');
+        $redirectUri = (string) config('services.microsoft.redirect_uri');
         $tokenResponse = Http::asForm()->post(
             "https://login.microsoftonline.com/{$tenantId}/oauth2/v2.0/token",
             [
-                'client_id' => config('services.azure.client_id'),
-                'client_secret' => config('services.azure.client_secret'),
+                'client_id' => config('services.microsoft.client_id'),
+                'client_secret' => config('services.microsoft.client_secret'),
                 'redirect_uri' => $redirectUri,
                 'grant_type' => 'authorization_code',
                 'code' => $request->query('code'),

@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;500;600;700;800;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap");
 @import "tailwindcss";
 @import "flowbite/src/themes/default";
@@ -85,8 +85,22 @@ label { font-size: clamp(0.875rem, 0.84rem + 0.18vw, 1rem); }
 /* Base */
 .student-body, .student-login-body {
   margin: 0; background: var(--s-bg); color: var(--t-primary);
-  font-family: "Inter", "Nunito Sans", ui-sans-serif, system-ui, sans-serif;
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
   font-size: 14px; line-height: 1.6; -webkit-font-smoothing: antialiased;
+}
+
+/* Headings and titles font family */
+h1, h2, h3, h4, h5, h6,
+[class*="-title"],
+[class*="-label"],
+[class*="-name"],
+.student-brand-text strong,
+.student-topbar-title,
+.student-sidebar-section,
+.student-nav-item,
+.student-nav-label,
+.student-nav a {
+  font-family: "Outfit", "Inter", sans-serif !important;
 }
 .student-body *, .student-login-body * { box-sizing: border-box; }
 
@@ -157,6 +171,7 @@ label { font-size: clamp(0.875rem, 0.84rem + 0.18vw, 1rem); }
 
 /* ---- MAIN ---- */
 .student-main { flex: 1; margin-left: 268px; min-width: 0; padding: 32px 36px 48px; min-height: 100vh; }
+.student-container { max-width: 1200px; margin: 0 auto; width: 100%; }
 
 /* Topbar */
 .student-topbar {
@@ -717,21 +732,36 @@ label { font-size: clamp(0.875rem, 0.84rem + 0.18vw, 1rem); }
   .student-assessment-form { grid-template-columns: 1fr 1fr; }
 }
 @media (max-width: 900px) {
-  .student-shell { flex-direction: column; }
   .student-sidebar {
-    position: relative; width: 100%; height: auto; flex-direction: row; flex-wrap: wrap;
-    padding: 10px 12px; gap: 6px; align-items: center; background: #fff;
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    height: 100dvh;
+    width: 268px;
+    transform: translateX(-100%);
+    box-shadow: var(--shadow-xl);
+    background: #ffffff !important;
+    z-index: 50;
+    transition: transform var(--duration) var(--ease);
   }
-  .student-sidebar-top { flex-direction: row; flex-wrap: wrap; gap: 6px; padding: 6px; flex: 1; }
-  .student-nav { flex-direction: row; flex-wrap: wrap; gap: 2px; }
-  .student-nav a { min-height: 44px; padding: 8px 11px; gap: 9px; font-size: 14px; }
-  .student-nav-icon-box { width: 30px; height: 30px; flex-basis: 30px; border-radius: 10px; }
-  .student-nav-icon, .student-nav a svg { width: 18px; height: 18px; flex-basis: 18px; }
-  .student-nav-label { display: none; }
-  .student-sidebar-bottom { padding: 4px 6px; }
-  .student-main { margin-left: 0; padding: 20px 16px 36px; }
-  .dash-welcome { flex-direction: column; align-items: flex-start; padding: 24px 22px; }
-  .student-topbar h1 { font-size: 22px; }
+  .student-sidebar.open {
+    transform: translateX(0);
+  }
+  .student-mobile-menu-btn {
+    display: inline-flex !important;
+  }
+  .student-mobile-close-btn {
+    display: inline-flex !important;
+  }
+  .student-main {
+    margin-left: 0;
+    padding: 20px 16px 36px;
+  }
+  .dash-welcome {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 24px 22px;
+  }
   .student-login { align-items: flex-start; padding: 28px 18px; }
   .student-login-grid { grid-template-columns: 1fr; gap: 26px; }
   .student-login-identity { min-height: auto; padding: 6px 0 0; }
@@ -748,7 +778,30 @@ label { font-size: clamp(0.875rem, 0.84rem + 0.18vw, 1rem); }
 }
 @media (max-width: 600px) {
   .student-main { padding: 14px 12px 28px; }
-  .dash-stats { grid-template-columns: 1fr; }
+  .student-topbar-eyebrow { display: none !important; }
+  .dash-stats {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+  .dash-stat {
+    padding: 12px 14px !important;
+    gap: 10px !important;
+  }
+  .dash-stat-icon {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 8px !important;
+  }
+  .dash-stat-icon svg {
+    width: 16px !important;
+    height: 16px !important;
+  }
+  .dash-stat-value {
+    font-size: 15px !important;
+  }
+  .dash-stat-label {
+    font-size: 9.5px !important;
+  }
   .dash-actions { grid-template-columns: 1fr; }
   .dash-welcome-title { font-size: 22px; }
   .student-form-grid { grid-template-columns: 1fr; }
@@ -763,6 +816,7 @@ label { font-size: clamp(0.875rem, 0.84rem + 0.18vw, 1rem); }
   .student-login-identity p:not(.student-login-arabic) { font-size: 15px; }
 }
 
+
 @media print {
     .student-shell {
         display: block;
@@ -776,3 +830,45 @@ label { font-size: clamp(0.875rem, 0.84rem + 0.18vw, 1rem); }
         background: #fff;
     }
 }
+
+/* Page Transition Loading Overlay */
+#page-transition {
+    z-index: 99999;
+    background: #fff;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    inset: 0;
+    display: none;
+}
+#page-transition.active {
+    display: flex;
+}
+#page-transition img {
+    object-fit: contain;
+    width: 72px;
+    height: 72px;
+}
+#page-transition .dots {
+    gap: .5rem;
+    display: flex;
+}
+#page-transition .dot {
+    background: var(--primary, #059669);
+    border-radius: 50%;
+    width: 8px;
+    height: 8px;
+    animation: 1.4s ease-in-out infinite both dotBounce;
+}
+#page-transition .dot:first-child {
+    animation-delay: -.32s;
+}
+#page-transition .dot:nth-child(2) {
+    animation-delay: -.16s;
+}
+@keyframes dotBounce {
+    0%, 80%, 100% { transform: scale(0); }
+    40% { transform: scale(1); }
+}
+

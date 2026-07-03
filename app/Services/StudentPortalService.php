@@ -124,36 +124,14 @@ class StudentPortalService
 
         return array_merge($teacherAnnouncements, [
             [
-                'title' => 'Welcome to AMIS Student Portal',
+                'title' => 'Welcome to our new AMIS student portal',
                 'type' => 'Portal Update',
                 'date' => now()->format('M d, Y'),
                 'icon' => 'sparkles',
                 'tone' => 'emerald',
-                'summary' => 'Your dashboard, schedule, billing, and Microsoft Teams information are now available in one student portal.',
-                'details' => 'Please review your student profile and class information regularly so you do not miss school updates.',
+                'summary' => 'Welcome to our new AMIS student portal! Monitor your subjects, class schedule, billing status, and student profile all in one place.',
+                'details' => 'Welcome to our new AMIS student portal! Monitor your subjects, class schedule, billing status, and student profile all in one place. Please review your student profile and class information regularly so you do not miss school updates.',
                 'audience' => $student->grade_level ?: 'All Students',
-            ],
-            [
-                'title' => 'Class Schedule Monitoring',
-                'type' => 'Academic',
-                'date' => now()->addDays(1)->format('M d, Y'),
-                'icon' => 'calendar-clock',
-                'tone' => 'sky',
-                'summary' => $subjects->isNotEmpty()
-                    ? 'Your weekly timetable currently lists '.$subjects->count().' enrolled subject(s).'
-                    : 'Your section and subject schedule are still being finalized by the registrar.',
-                'details' => 'Open My Schedule before class days to confirm meeting times, teachers, and Microsoft Teams rooms.',
-                'audience' => $section?->official_name ?: 'Student Body',
-            ],
-            [
-                'title' => 'Payment Verification Reminder',
-                'type' => 'Finance',
-                'date' => now()->addDays(3)->format('M d, Y'),
-                'icon' => 'receipt-text',
-                'tone' => 'amber',
-                'summary' => 'Upload clear proof of payment with the correct transaction reference number after every payment.',
-                'details' => 'Finance will review submitted receipts and update your statement of account once verified.',
-                'audience' => 'Parents and Guardians',
             ],
         ]);
     }

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 @php
     $googleConfigured = filled(config('services.google.client_id')) && filled(config('services.google.client_secret'));
-    $microsoftConfigured = filled(config('services.azure.client_id')) && filled(config('services.azure.client_secret'));
+    $microsoftConfigured = filled(config('services.microsoft.client_id')) && filled(config('services.microsoft.client_secret'));
 @endphp
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
@@ -35,56 +35,30 @@
                 <div class="student-login-brand">
                     <div>
                         <h2>Sign in</h2>
-                        <p>Use your AMIS student account to continue.</p>
+                        <p>Sign in with your official school Microsoft account to continue.</p>
                     </div>
                 </div>
 
                 @if ($errors->any())
-                    <div class="student-error">
-                        <i data-lucide="alert-circle"></i>
+                    <div class="student-error" style="margin-bottom: 20px;">
+                        <i data-lucide="alert-circle" style="width: 18px; height: 18px; flex-shrink: 0;"></i>
                         <span>{{ $errors->first() }}</span>
                     </div>
                 @endif
 
-                <form action="{{ route('student.login.store') }}" method="POST" class="student-form">
-                    @csrf
-                    <label>
-                        <span>School Email or Student ID</span>
-                        <input id="login_id" name="login_id" type="text" value="{{ old('login_id', 'student@amis.edu.ph') }}" required autofocus placeholder="2026-0001 or email@amis.edu.ph">
-                    </label>
-
-                    <label>
-                        <span>Portal Password</span>
-                        <input id="password" name="password" type="password" value="123" required placeholder="Password">
-                    </label>
-
-                    <div class="flex items-center justify-between py-1">
-                        <label class="flex items-center gap-2 font-semibold text-gray-600" style="flex-direction:row; font-size:15px; cursor:pointer;">
-                            <input type="checkbox" name="remember" value="1" class="student-remember-checkbox">
-                            Remember me
-                        </label>
-                    </div>
-
-                    <button type="submit" class="student-primary-btn w-full">
-                        <i data-lucide="log-in" class="w-4 h-4 mr-1"></i> Sign In
-                    </button>
-                </form>
-
-                <div class="student-divider">or continue with</div>
-
-                <div class="space-y-2">
+                <div class="space-y-3" style="margin-top: 10px;">
                     @if($microsoftConfigured)
-                        <a href="{{ route('student.login.microsoft.redirect') }}" class="student-outline-btn w-full flex">
-                            <svg class="h-4 w-4 mr-2" viewBox="0 0 23 23" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <a href="{{ route('student.microsoft.redirect') }}" class="student-primary-btn w-full flex" style="background: #2f2f2f; color: #fff; gap: 10px; height: 50px; font-size: 15px; border-radius: 10px;">
+                            <svg width="18" height="18" viewBox="0 0 23 23" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M0 0h11v11H0z" fill="#f25022"/>
                                 <path d="M12 0h11v11H12z" fill="#7fba00"/>
                                 <path d="M0 12h11v11H0z" fill="#00a4ef"/>
                                 <path d="M12 12h11v11H12z" fill="#ffb900"/>
                             </svg>
-                            Sign in with Microsoft
+                            <span>Sign in with Microsoft</span>
                         </a>
                     @else
-                        <button type="button" disabled class="student-outline-btn w-full flex opacity-50 cursor-not-allowed">
+                        <button type="button" disabled class="student-outline-btn w-full flex opacity-50 cursor-not-allowed" style="height: 50px; border-radius: 10px;">
                             <svg class="h-4 w-4 mr-2" viewBox="0 0 23 23" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M0 0h11v11H0z" fill="#888"/><path d="M12 0h11v11H12z" fill="#888"/>
                                 <path d="M0 12h11v11H0z" fill="#888"/><path d="M12 12h11v11H12z" fill="#888"/>
@@ -92,21 +66,9 @@
                             Microsoft sign-in not configured
                         </button>
                     @endif
-
-                    @if($googleConfigured)
-                        <a href="{{ route('student.login.google.redirect') }}" class="student-outline-btn w-full flex">
-                            <i data-lucide="chrome" class="h-4 w-4 mr-2 text-emerald-600"></i>
-                            Sign in with Google
-                        </a>
-                    @else
-                        <button type="button" disabled class="student-outline-btn w-full flex opacity-50 cursor-not-allowed">
-                            <i data-lucide="chrome" class="h-4 w-4 mr-2"></i>
-                            Google sign-in not configured
-                        </button>
-                    @endif
                 </div>
 
-                <p class="mt-6 border-t border-gray-100 pt-5 text-center text-xs font-semibold text-gray-400">
+                <p class="mt-6 border-t border-gray-100 pt-5 text-center text-xs font-semibold text-gray-400" style="margin-top: 2rem; border-top: 1px solid #f1f5f9; padding-top: 1.25rem;">
                     Need help logging in? Please contact the registrar or school support.
                 </p>
             </div>
