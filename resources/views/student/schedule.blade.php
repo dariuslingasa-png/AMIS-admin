@@ -598,7 +598,7 @@
                                                     </div>
 
                                                     @if($s->ms_channel_id)
-                                                        <a href="{{ $s->team_url ?? 'https://teams.microsoft.com/' }}" target="_blank" style="width: 24px; height: 24px; border-radius: 50%; background: {{ $style['icon_color'] }}; display: inline-flex; align-items: center; justify-content: center; color: white; text-decoration: none;">
+                                                        <a href="{{ $s->team_url ?? 'https://teams.microsoft.com/' }}" onclick="event.preventDefault(); window.joinTeams('{{ $s->team_url ?? 'https://teams.microsoft.com/' }}');" style="width: 24px; height: 24px; border-radius: 50%; background: {{ $style['icon_color'] }}; display: inline-flex; align-items: center; justify-content: center; color: white; text-decoration: none; cursor: pointer;">
                                                             <i data-lucide="video" style="width: 11px; height: 11px;"></i>
                                                         </a>
                                                     @endif
@@ -684,7 +684,7 @@
                                                             </div>
                                                             <div style="display: flex; align-items: center; justify-content: flex-end; margin-top: 0.15rem;">
                                                                 @if($s->ms_channel_id)
-                                                                    <a href="{{ $s->team_url ?? 'https://teams.microsoft.com/' }}" target="_blank" style="width: 18px; height: 18px; border-radius: 50%; background: {{ $style['icon_color'] }}; display: inline-flex; align-items: center; justify-content: center; color: white; transition: background 0.15s; text-decoration: none;">
+                                                                    <a href="{{ $s->team_url ?? 'https://teams.microsoft.com/' }}" onclick="event.preventDefault(); window.joinTeams('{{ $s->team_url ?? 'https://teams.microsoft.com/' }}');" style="width: 18px; height: 18px; border-radius: 50%; background: {{ $style['icon_color'] }}; display: inline-flex; align-items: center; justify-content: center; color: white; transition: background 0.15s; text-decoration: none; cursor: pointer;">
                                                                         <i data-lucide="video" style="width: 8px; height: 8px;"></i>
                                                                     </a>
                                                                 @endif
@@ -802,7 +802,7 @@
                                                     </div>
 
                                                     @if($s->ms_channel_id)
-                                                        <a href="{{ $s->team_url ?? 'https://teams.microsoft.com/' }}" target="_blank" style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem; font-weight: 900; color: white; background: {{ $style['icon_color'] }}; padding: 0.35rem 0.75rem; border-radius: 10px; text-decoration: none;"
+                                                        <a href="{{ $s->team_url ?? 'https://teams.microsoft.com/' }}" onclick="event.preventDefault(); window.joinTeams('{{ $s->team_url ?? 'https://teams.microsoft.com/' }}');" style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem; font-weight: 900; color: white; background: {{ $style['icon_color'] }}; padding: 0.35rem 0.75rem; border-radius: 10px; text-decoration: none; cursor: pointer;"
                                                            onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
                                                             <i data-lucide="video" style="width: 12px; height: 12px;"></i>
                                                             <span>Join Room</span>
@@ -884,7 +884,7 @@
 
                                 <div>
                                     @if($subj->ms_channel_id)
-                                        <a href="{{ $subj->team_url ?? 'https://teams.microsoft.com/' }}" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; font-size: 0.85rem; font-weight: 900; color: white; background: #5865f2; padding: 0.6rem; border-radius: 12px; text-decoration: none; transition: background 0.15s;"
+                                        <a href="{{ $subj->team_url ?? 'https://teams.microsoft.com/' }}" onclick="event.preventDefault(); window.joinTeams('{{ $subj->team_url ?? 'https://teams.microsoft.com/' }}');" style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; font-size: 0.85rem; font-weight: 900; color: white; background: #5865f2; padding: 0.6rem; border-radius: 12px; text-decoration: none; transition: background 0.15s; cursor: pointer;"
                                            onmouseover="this.style.background='#4752c4'" onmouseout="this.style.background='#5865f2'">
                                             <i data-lucide="video" class="w-4 h-4"></i>
                                             <span>Join Class</span>
