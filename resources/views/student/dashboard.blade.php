@@ -420,7 +420,12 @@
                             </p>
                         </div>
                     @endif
-                </                        <div class="s-table-header" style="grid-template-columns: 1.8fr 1.2fr 1.4fr 1.5fr auto; padding: 0.75rem 1.25rem;">
+                </div>
+
+                {{-- WEEKLY OVERVIEW VIEW --}}
+                <div x-show="viewMode === 'weekly'">
+                    @if($subjects->isNotEmpty())
+                        <div class="s-table-header" style="grid-template-columns: 1.8fr 1.2fr 1.4fr 1.5fr auto; padding: 0.75rem 1.25rem;">
                             <div class="s-table-header-label">Subject Name</div>
                             <div class="s-table-header-label">Teacher</div>
                             <div class="s-table-header-label">MS Team & Status</div>
