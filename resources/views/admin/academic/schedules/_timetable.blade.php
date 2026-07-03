@@ -246,31 +246,47 @@
                     </div>
                     <div class="flex flex-wrap items-center gap-2">
                         <x-badge color="indigo">{{ $section->formatted_learning_mode }}</x-badge>
-                        @if($section->ms_team_url)
-                            <a href="{{ $section->ms_team_url }}" target="_blank" class="inline-flex items-center gap-1 bg-indigo-700 hover:bg-indigo-850 text-white font-extrabold text-[10px] px-3 py-1.5 rounded-lg transition ml-1">
-                                <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Teams Class
-                            </a>
-                        @endif
-                        
+
+                        {{-- Draft / Publish Toggle --}}
+                        <form method="POST" action="{{ route('admin.academic.schedules.sections.publish', $section->id) }}" class="inline-block">
+                            @csrf
+                            @method('PATCH')
+                            @if($section->schedule_published)
+                                <button type="submit"
+                                        class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10px] px-3 py-1.5 rounded-lg transition cursor-pointer"
+                                        onclick="return confirm('Move schedule back to Draft? Students will see Coming Soon.')"
+                                >
+                                    <i data-lucide="globe" class="w-3.5 h-3.5"></i> Published
+                                </button>
+                            @else
+                                <button type="submit"
+                                        class="inline-flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-[10px] px-3 py-1.5 rounded-lg transition cursor-pointer"
+                                        onclick="return confirm('Publish this schedule? Students will see it on student.amis.edu.ph.')"
+                                >
+                                    <i data-lucide="send" class="w-3.5 h-3.5"></i> Draft &mdash; Publish?
+                                </button>
+                            @endif
+                        </form>
+
                         {{-- Add Class Button --}}
                         <button type="button" @click="openAddClass({{ $section->id }})"
                                 class="inline-flex items-center gap-1.5 bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-[10px] px-3 py-1.5 rounded-lg transition cursor-pointer">
                             <i data-lucide="plus" class="w-3 h-3"></i> Add Class
                         </button>
-                        
+
                         {{-- Rename Action --}}
                         <button type="button" @click="openEdit({{ $section->id }}, '{{ $section->name ?: '' }}')"
                                 class="inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-[10px] px-3 py-1.5 rounded-lg transition cursor-pointer">
                             <i data-lucide="edit-3" class="w-3.5 h-3.5"></i> Rename
                         </button>
-                        
+
                         {{-- Delete Action --}}
-                        <form method="POST" action="{{ route('admin.ms-teams.destroy', $section->id) }}" 
+                        <form method="POST" action="{{ route('admin.ms-teams.destroy', $section->id) }}"
                               onsubmit="return confirm('Are you sure you want to delete this section? This will delete the MS Team and all associated student section records.')"
                               class="inline-block">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" 
+                            <button type="submit"
                                     class="inline-flex items-center gap-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-extrabold text-[10px] px-3 py-1.5 rounded-lg transition cursor-pointer">
                                 <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Delete
                             </button>
@@ -317,15 +333,14 @@
                             ];
                         }
 
-                        // Helper to format time label (e.g. 7:30-7:40 a.m.)
+                        // Helper to format time label with uppercase AM/PM
                         if (!function_exists('formatTimetableTime')) {
                             function formatTimetableTime($start, $end) {
-                                $startAmPm = date('a', strtotime($start));
-                                $endAmPm = date('a', strtotime($end));
-                                
-                                $startAmPm = str_replace(['am', 'pm'], ['a.m.', 'p.m.'], $startAmPm);
-                                $endAmPm = str_replace(['am', 'pm'], ['a.m.', 'p.m.'], $endAmPm);
-                                
+                                $startH = (int) date('G', strtotime($start));
+                                $endH   = (int) date('G', strtotime($end));
+                                $startAmPm = $startH >= 12 ? 'PM' : 'AM';
+                                $endAmPm   = $endH   >= 12 ? 'PM' : 'AM';
+
                                 if ($startAmPm === $endAmPm) {
                                     return date('g:i', strtotime($start)) . '-' . date('g:i', strtotime($end)) . ' ' . $endAmPm;
                                 }
@@ -481,18 +496,17 @@
                                                             @include('admin.academic.schedules._inline-form')
                                                         </template>
                                                         <template x-if="!(editingCell && editingCell.type === 'edit' && editingCell.id === {{ $cell['entry']['id'] }})">
-                                                            <div class="timetable-card cursor-pointer group"
-                                                                 @click="startInlineEdit({{ json_encode($cell['entry']) }})">
-                                                                <span class="block font-extrabold text-[11px] leading-tight uppercase tracking-wide font-outfit" style="color: inherit;">
-                                                                    {{ $cell['entry']['subject_name'] }}
+                                                         <div class="timetable-card cursor-pointer group"
+                                                             @click="startInlineEdit({{ json_encode($cell['entry']) }})">
+                                                            <span class="block font-extrabold text-[11px] leading-tight uppercase tracking-wide font-outfit" style="color: inherit;">
+                                                                {{ $cell['entry']['subject_name'] }}
+                                                            </span>
+                                                            @if($cell['entry']['teacher_display'] && $cell['entry']['teacher_display'] !== 'Teacher pending')
+                                                                <span class="block text-[9px] font-semibold uppercase mt-0.5 opacity-70" style="color: inherit;">
+                                                                    {{ $cell['entry']['teacher_display'] }}
                                                                 </span>
-                                                                @if($cell['entry']['teacher_name'] && $cell['entry']['teacher_name'] !== 'Teacher pending')
-                                                                    <span class="block text-[9px] font-bold uppercase mt-1 flex items-center justify-center gap-1" style="color: inherit; opacity: 0.85;">
-                                                                        <i data-lucide="user" class="h-3 w-3 opacity-65" style="width: 12px; height: 12px;"></i>
-                                                                        {{ $cell['entry']['teacher_name'] }}
-                                                                    </span>
-                                                                @endif
-                                                            </div>
+                                                            @endif
+                                                        </div>
                                                         </template>
                                                     </td>
                                                 @endif

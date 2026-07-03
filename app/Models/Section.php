@@ -14,6 +14,11 @@ class Section extends Model
         'gender',
         'ms_team_id',
         'ms_team_url',
+        'schedule_published',
+    ];
+
+    protected $casts = [
+        'schedule_published' => 'boolean',
     ];
 
     public function subjects()

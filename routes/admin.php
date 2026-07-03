@@ -262,6 +262,7 @@ Route::name('admin.')->group(function () {
             Route::post('/schedules', [AdminClassScheduleController::class, 'store'])->name('schedules.store');
             Route::patch('/schedules/{schedule}', [AdminClassScheduleController::class, 'update'])->name('schedules.update');
             Route::delete('/schedules/{schedule}', [AdminClassScheduleController::class, 'destroy'])->name('schedules.destroy');
+            Route::patch('/schedules/sections/{section}/publish', [AdminClassScheduleController::class, 'togglePublish'])->name('schedules.sections.publish');
             Route::get('/school-years', [AdminAcademicController::class, 'schoolYears'])->name('school-years');
             Route::get('/calendar', [AdminAcademicController::class, 'calendar'])->name('calendar');
             Route::get('/operations', [AdminAcademicController::class, 'operations'])->name('operations');

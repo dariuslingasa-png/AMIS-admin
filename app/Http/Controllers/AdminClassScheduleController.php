@@ -171,4 +171,15 @@ class AdminClassScheduleController extends Controller
             'teacher_status' => $updated->teacher_status,
         ]);
     }
+
+    public function togglePublish(\App\Models\Section $section): \Illuminate\Http\RedirectResponse
+    {
+        Gate::authorize('manage-academic');
+
+        $section->update(['schedule_published' => ! $section->schedule_published]);
+
+        $status = $section->schedule_published ? 'published' : 'drafted';
+        return back()->with('success', "Schedule {$status} successfully.")
+                     ->with('reopen_add_modal', false);
+    }
 }
