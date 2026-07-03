@@ -165,6 +165,51 @@
 </style>
 
 @php
+    if (!function_exists('formatTeacherShortName')) {
+        function formatTeacherShortName($fullName) {
+            if (is_array($fullName)) {
+                return '';
+            }
+            $fullName = trim((string)$fullName);
+            if (empty($fullName) || strtolower($fullName) === 'teacher pending' || strtolower($fullName) === 'no teacher assigned') {
+                return '';
+            }
+
+            // List of standard prefixes we want to recognize
+            $prefixes = [
+                'teacher'  => ['teacher', 'tchr'],
+                'ustadha'  => ['ustadha', 'ustadza'],
+                'ustadz'   => ['ustadz', 'ustadh', 'ustdz', 'ust'],
+                'sir'      => ['sir'],
+                'maam'     => ['ma\'am', 'maam'],
+                'ms'       => ['ms'],
+                'mrs'      => ['mrs'],
+                'mr'       => ['mr'],
+            ];
+
+            $matchedPrefix = 'TEACHER'; // default prefix if none matched
+            $bareName = $fullName;
+
+            // Check if the full name starts with any of the prefixes
+            foreach ($prefixes as $key => $patterns) {
+                foreach ($patterns as $pattern) {
+                    // Match prefix case-insensitively, allowing optional period and spaces
+                    if (preg_match('/^' . preg_quote($pattern, '/') . '\.?\s+/i', $fullName)) {
+                        $matchedPrefix = strtoupper($key);
+                        $bareName = preg_replace('/^' . preg_quote($pattern, '/') . '\.?\s+/i', '', $fullName);
+                        break 2;
+                    }
+                }
+            }
+
+            // Now get the first name (first word of the remaining name)
+            $words = explode(' ', trim($bareName));
+            $firstName = strtoupper($words[0] ?? '');
+
+            return trim($matchedPrefix . ' ' . $firstName);
+        }
+    }
+
     $sectionsByGrade = $sections->groupBy('grade_level');
     $gradeOrder = [
         'Kinder 1', 'Kinder 2', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 
@@ -532,10 +577,11 @@
                                                                 if (empty($teacherLabel) || $teacherLabel === 'Teacher pending') {
                                                                     $teacherLabel = $cell['entry']['teacher_display'] ?? '';
                                                                 }
+                                                                $formattedTeacher = formatTeacherShortName($teacherLabel);
                                                             @endphp
-                                                            @if(!empty($teacherLabel) && $teacherLabel !== 'Teacher pending')
+                                                            @if(!empty($formattedTeacher))
                                                                 <span class="block text-[9px] font-semibold mt-0.5 opacity-75" style="color: inherit;">
-                                                                    {{ $teacherLabel }}
+                                                                    {{ $formattedTeacher }}
                                                                 </span>
                                                             @else
                                                                 <span class="block text-[8px] italic mt-0.5 opacity-40" style="color: inherit;">
