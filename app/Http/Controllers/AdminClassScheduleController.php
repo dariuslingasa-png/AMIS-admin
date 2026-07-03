@@ -145,7 +145,13 @@ class AdminClassScheduleController extends Controller
     public function destroy(ClassSchedule $schedule)
     {
         Gate::authorize('manage-academic');
-        $schedule->delete();
+
+        // Delete siblings in the same section with same subject, start, and end time
+        ClassSchedule::where('section_id', $schedule->section_id)
+            ->where('subject_name', $schedule->subject_name)
+            ->where('start_time', $schedule->start_time)
+            ->where('end_time', $schedule->end_time)
+            ->delete();
 
         return back()
             ->with('status', 'Class schedule deleted.')

@@ -578,12 +578,21 @@
                                                                     $teacherLabel = $cell['entry']['teacher_display'] ?? '';
                                                                 }
                                                                 $formattedTeacher = formatTeacherShortName($teacherLabel);
+
+                                                                $subjectLower = strtolower($cell['entry']['subject_name']);
+                                                                $isSpecialSlot = false;
+                                                                foreach (['assembly', 'transition', 'circle', 'meeting', 'wrap', 'recess', 'break', 'lunch', 'departure'] as $keyword) {
+                                                                    if (str_contains($subjectLower, $keyword)) {
+                                                                        $isSpecialSlot = true;
+                                                                        break;
+                                                                    }
+                                                                }
                                                             @endphp
                                                             @if(!empty($formattedTeacher))
                                                                 <span class="block text-[9px] font-semibold mt-0.5 opacity-75" style="color: inherit;">
                                                                     {{ $formattedTeacher }}
                                                                 </span>
-                                                            @else
+                                                            @elseif(!$isSpecialSlot)
                                                                 <span class="block text-[8px] italic mt-0.5 opacity-40" style="color: inherit;">
                                                                     No teacher assigned
                                                                 </span>

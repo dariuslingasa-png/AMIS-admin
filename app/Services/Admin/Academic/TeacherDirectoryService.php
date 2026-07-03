@@ -245,12 +245,19 @@ class TeacherDirectoryService
                     $query->orWhere('teacher_display', $teacherName);
                 }
             })
-            ->select('subject_name', 'section_id')
-            ->distinct()
-            ->get();
+            ->get()
+            ->filter(function ($s) {
+                $sub = strtolower($s->subject_name);
+                foreach (['assembly', 'transition', 'circle', 'meeting', 'wrap', 'recess', 'break', 'lunch', 'departure'] as $keyword) {
+                    if (str_contains($sub, $keyword)) {
+                        return false;
+                    }
+                }
+                return true;
+            });
 
         $subjectsList = $assignedSchedules->pluck('subject_name')->unique()->values()->all();
-        $count = $assignedSchedules->count();
+        $count = $assignedSchedules->unique(fn($s) => $s->section_id . '-' . $s->subject_name)->count();
 
         return [
             'subjects' => $subjectsList,

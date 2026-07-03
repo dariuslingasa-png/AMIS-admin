@@ -84,6 +84,11 @@ class ClassScheduleService
 
     public function update(ClassSchedule $schedule, array $data): ClassSchedule
     {
+        $oldSubject = $schedule->subject_name;
+        $oldStart = $schedule->start_time;
+        $oldEnd = $schedule->end_time;
+        $oldSection = $schedule->section_id;
+
         $this->ensureNoConflict($data, $schedule->id);
 
         $rawTeacher = $data['teacher_display'] ?? $schedule->teacher_display ?? '';
@@ -104,6 +109,27 @@ class ClassScheduleService
             'mode'           => $data['mode'] ?? $schedule->mode,
             'school_year'    => $data['school_year'] ?? $schedule->school_year,
         ]);
+
+        // Find and update sibling records on other days that belong to the same week slot
+        ClassSchedule::where('section_id', $oldSection)
+            ->where('subject_name', $oldSubject)
+            ->where('start_time', $oldStart)
+            ->where('end_time', $oldEnd)
+            ->whereKeyNot($schedule->id)
+            ->get()
+            ->each(function ($sibling) use ($schedule) {
+                $sibling->update([
+                    'subject_name'   => $schedule->subject_name,
+                    'teacher_key'    => $schedule->teacher_key,
+                    'teacher_display'=> $schedule->teacher_display,
+                    'teacher_status' => $schedule->teacher_status,
+                    'start_time'     => $schedule->start_time,
+                    'end_time'       => $schedule->end_time,
+                    'color_class'    => $schedule->color_class,
+                    'mode'           => $schedule->mode,
+                    'school_year'    => $schedule->school_year,
+                ]);
+            });
 
         return $schedule->fresh();
     }
