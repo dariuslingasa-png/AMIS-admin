@@ -233,19 +233,28 @@ class TeacherDirectoryService
             ->orderBy('grade_level')
             ->orderBy('name')
             ->get();
-        $activeIds = $this->assignments->activeSubjectIds($teacher['id'] ?? '');
-        $assigned = $allSubjects->whereIn('id', $activeIds)->values();
-        $fallbackNames = collect($teacher['subjects'] ?? [])->filter()->unique()->values();
 
-        if ($assigned->isEmpty() && $fallbackNames->isNotEmpty()) {
-            $assigned = $allSubjects->filter(fn ($subject) => $fallbackNames->contains($subject->name))->values();
-        }
+        $teacherId = $teacher['id'] ?? '';
+        $teacherName = $teacher['name'] ?? '';
 
-        $count = $assigned->count();
+        $assignedSchedules = \App\Models\ClassSchedule::where(function ($query) use ($teacherId, $teacherName) {
+                if (!empty($teacherId)) {
+                    $query->where('teacher_key', $teacherId);
+                }
+                if (!empty($teacherName)) {
+                    $query->orWhere('teacher_display', $teacherName);
+                }
+            })
+            ->select('subject_name', 'section_id')
+            ->distinct()
+            ->get();
+
+        $subjectsList = $assignedSchedules->pluck('subject_name')->unique()->values()->all();
+        $count = $assignedSchedules->count();
 
         return [
-            'subjects' => $assigned->pluck('name')->all(),
-            'subject_ids' => $assigned->pluck('id')->all(),
+            'subjects' => $subjectsList,
+            'subject_ids' => [],
             'subject_options' => $allSubjects->map(fn ($subject) => [
                 'id' => $subject->id,
                 'name' => $subject->name,

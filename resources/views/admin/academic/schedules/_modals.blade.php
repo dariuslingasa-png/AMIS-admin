@@ -78,12 +78,19 @@
             <button type="button" class="text-slate-400 hover:text-slate-655 text-xl font-bold" @click="editModal = false">&times;</button>
         </div>
         @include('admin.academic.schedules._form-fields', ['prefix' => 'edit'])
-        <div class="admin-modal-footer flex justify-end gap-2 pt-3 border-t border-slate-50 mt-2">
-            <button type="button" class="px-4 py-2 text-xs font-bold text-slate-655 hover:bg-slate-50 border border-slate-200 rounded-xl transition cursor-pointer" @click="editModal = false">Cancel</button>
-            <button type="submit" class="relative inline-flex min-w-[130px] items-center justify-center px-4 py-2 text-xs font-bold text-white bg-indigo-700 hover:bg-indigo-600 rounded-xl transition cursor-pointer" :class="isSaving ? 'btn-loading' : ''" :disabled="isSaving">
-                <span class="btn-spinner" x-show="isSaving"></span>
-                <span class="btn-text-content">Update Schedule</span>
-            </button>
+        <div class="admin-modal-footer flex justify-between items-center gap-2 pt-3 border-t border-slate-50 mt-2">
+            <div>
+                <button type="button" @click="editModal = false; deleteAction = `/academic/schedules/${editForm.id}`; deleteModal = true" class="px-4 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 border border-rose-200 rounded-xl transition cursor-pointer flex items-center gap-1.5">
+                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Delete Slot
+                </button>
+            </div>
+            <div class="flex gap-2">
+                <button type="button" class="px-4 py-2 text-xs font-bold text-slate-655 hover:bg-slate-50 border border-slate-200 rounded-xl transition cursor-pointer" @click="editModal = false">Cancel</button>
+                <button type="submit" class="relative inline-flex min-w-[130px] items-center justify-center px-4 py-2 text-xs font-bold text-white bg-indigo-700 hover:bg-indigo-600 rounded-xl transition cursor-pointer" :class="isSaving ? 'btn-loading' : ''" :disabled="isSaving">
+                    <span class="btn-spinner" x-show="isSaving"></span>
+                    <span class="btn-text-content">Update Schedule</span>
+                </button>
+            </div>
         </div>
     </form>
 </div>

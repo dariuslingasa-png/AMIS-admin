@@ -522,11 +522,7 @@
                                                         }
                                                     @endphp
                                                     <td rowspan="{{ $cell['span'] }}" colspan="{{ $cell['colspan'] }}" class="{{ $cellClass }}">
-                                                        <template x-if="editingCell && editingCell.type === 'edit' && editingCell.id === {{ $cell['entry']['id'] }}">
-                                                            @include('admin.academic.schedules._inline-form')
-                                                        </template>
-                                                        <template x-if="!(editingCell && editingCell.type === 'edit' && editingCell.id === {{ $cell['entry']['id'] }})">
-                                                         <div class="timetable-card cursor-pointer group"
+                                                        <div class="timetable-card cursor-pointer group"
                                                              @click="startInlineEdit({{ json_encode($cell['entry']) }})">
                                                             <span class="block font-extrabold text-[11px] leading-tight uppercase tracking-wide font-outfit" style="color: inherit;">
                                                                 {{ $cell['entry']['subject_name'] }}
@@ -547,21 +543,15 @@
                                                                 </span>
                                                             @endif
                                                         </div>
-                                                        </template>
                                                     </td>
                                                 @endif
                                             @else
                                                 <td class="cell-empty">
-                                                    <template x-if="editingCell && editingCell.type === 'create' && editingCell.section_id === {{ $section->id }} && editingCell.day === '{{ $day }}' && editingCell.start_time === '{{ $interval['start_time'] }}'">
-                                                        @include('admin.academic.schedules._inline-form')
-                                                    </template>
-                                                    <template x-if="!(editingCell && editingCell.type === 'create' && editingCell.section_id === {{ $section->id }} && editingCell.day === '{{ $day }}' && editingCell.start_time === '{{ $interval['start_time'] }}')">
-                                                        <button type="button" 
-                                                            @click="startInlineCreate({{ $section->id }}, '{{ $day }}', '{{ $interval['start_time'] }}', '{{ $interval['end_time'] }}')"
-                                                            class="w-full h-full min-h-[55px] cursor-pointer hover:bg-indigo-50/20 transition-colors flex items-center justify-center group rounded-lg">
-                                                            <i data-lucide="plus-circle" class="w-4 h-4 text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity"></i>
-                                                        </button>
-                                                    </template>
+                                                    <button type="button" 
+                                                        @click="startInlineCreate({{ $section->id }}, '{{ $day }}', '{{ $interval['start_time'] }}', '{{ $interval['end_time'] }}')"
+                                                        class="w-full h-full min-h-[55px] cursor-pointer hover:bg-indigo-50/20 transition-colors flex items-center justify-center group rounded-lg">
+                                                        <i data-lucide="plus-circle" class="w-4 h-4 text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                                                    </button>
                                                 </td>
                                             @endif
                                         @endforeach

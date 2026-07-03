@@ -31,7 +31,7 @@
         editingCell: null,
         createModal: false,
         editModal: false,
-        addModal: false,
+        renameSectionModal: false,
         deleteModal: false,
         editAction: '',
         deleteAction: '',
@@ -310,7 +310,7 @@
         mode: 'Face-to-Face',
         grade: 'Kinder 1',
         schoolYear: @js(config('services.school.year')),
-        openEdit(id, name) { this.editId = id; this.editName = name; this.editError = ''; this.editSaving = false; this.editModal = true; },
+        openEdit(id, name) { this.editId = id; this.editName = name; this.editError = ''; this.editSaving = false; this.renameSectionModal = true; },
         async saveEdit() {
             this.editSaving = true; this.editError = '';
             try {
@@ -319,7 +319,7 @@
                     body: JSON.stringify({ name: this.editName.trim() }),
                 });
                 const data = await res.json();
-                if (data.success) { this.editModal = false; location.reload(); }
+                if (data.success) { this.renameSectionModal = false; location.reload(); }
                 else { this.editError = data.message || 'Failed to update'; this.editSaving = false; }
             } catch (e) { this.editError = 'Network error. Try again.'; this.editSaving = false; }
         },
@@ -340,19 +340,23 @@
             this.$nextTick(() => window.lucide?.createIcons?.());
         },
         startInlineEdit(entry) {
-            this.editingCell = {
-                type: 'edit',
+            this.editForm = {
                 id: entry.id,
                 section_id: entry.section_id,
+                subject_name: entry.subject_name,
+                teacher_name: entry.teacher_display || entry.teacher_name || '',
                 day: entry.day,
                 start_time: entry.start_time,
                 end_time: entry.end_time,
-                subject_name: entry.subject_name,
-                teacher_name: entry.teacher_display || entry.teacher_name || ''
+                spans_all_days: entry.spans_all_days ? true : false,
+                selected_days: [entry.day]
             };
-            if (this.editingCell.teacher_name === 'Teacher pending') {
-                this.editingCell.teacher_name = '';
+            if (this.editForm.teacher_name === 'Teacher pending') {
+                this.editForm.teacher_name = '';
             }
+            this.editAction = `/academic/schedules/${entry.id}`;
+            this.editingCell = null;
+            this.editModal = true;
             this.$nextTick(() => window.lucide?.createIcons?.());
         },
         cancelInline() {
@@ -543,11 +547,11 @@
 
         {{-- ═══ RENAME SECTION MODAL ═══ --}}
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 backdrop-blur-sm"
-             x-show="editModal" x-cloak x-transition @click.self="if(!editSaving) editModal = false">
+             x-show="renameSectionModal" x-cloak x-transition @click.self="if(!editSaving) renameSectionModal = false">
             <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 border border-slate-100 overflow-hidden animate-scaleUp">
                 <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
                     <span class="font-extrabold text-slate-900 text-base">Rename Section</span>
-                    <button type="button" class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition" x-show="!editSaving" @click="editModal = false">
+                    <button type="button" class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition" x-show="!editSaving" @click="renameSectionModal = false">
                         <i data-lucide="x" class="w-4 h-4"></i>
                     </button>
                 </div>
@@ -561,7 +565,7 @@
                     </div>
                 </div>
                 <div class="px-6 py-4 border-t border-slate-100 flex justify-end gap-2">
-                    <button type="button" @click="editModal = false" class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 border border-slate-200 rounded-xl transition" :disabled="editSaving">Cancel</button>
+                    <button type="button" @click="renameSectionModal = false" class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 border border-slate-200 rounded-xl transition" :disabled="editSaving">Cancel</button>
                     <button type="button" @click="saveEdit()" class="px-5 py-2 text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 rounded-xl transition disabled:opacity-50" :disabled="editSaving" x-text="editSaving ? 'Saving…' : 'Save Changes'"></button>
                 </div>
             </div>
