@@ -915,68 +915,8 @@
     setTimeout(refreshStudentIcons, 500);
 </script>
 
-{{-- Microsoft Teams Launching Modal --}}
-<div id="teams-launch-modal" style="display: none; position: fixed; inset: 0; z-index: 99999; align-items: center; justify-content: center; padding: 20px; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);">
-    <div style="background: #ffffff; border: 2px solid #0d9488; border-radius: 24px; padding: 2rem; width: 100%; max-width: 520px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -6px rgba(0,0,0,0.04); position: relative; animation: slideUp 0.25s ease-out; font-family: var(--font-main) !important;">
-        <button type="button" onclick="document.getElementById('teams-launch-modal').style.display = 'none';" style="position: absolute; top: 1.25rem; right: 1.25rem; border: none; background: transparent; color: #94a3b8; cursor: pointer; padding: 4px; border-radius: 50%; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.color='#475569';this.style.background='#f1f5f9';" onmouseout="this.style.color='#94a3b8';this.style.background='transparent';">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
-
-        <div style="text-align: center; margin-bottom: 1.5rem;">
-            <div style="display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; border-radius: 16px; background: #e0f2fe; color: #0284c7; margin-bottom: 1rem;">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/></svg>
-            </div>
-            <h3 style="font-size: 1.25rem; font-weight: 800; color: #0f172a; margin: 0 0 0.5rem; letter-spacing: -0.02em; font-family: var(--font-main) !important;">Join Microsoft Teams Class</h3>
-            <p style="font-size: 0.9rem; font-weight: 500; color: #64748b; margin: 0; line-height: 1.5; font-family: var(--font-main) !important;">
-                Logged in as: <strong style="color: #0f172a;">{{ Auth::user()->email }}</strong>
-            </p>
-        </div>
-
-        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 1.15rem; margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 0.75rem;">
-            <div style="display: flex; gap: 0.75rem; align-items: flex-start;">
-                <span style="font-size: 0.75rem; font-weight: 800; color: #0284c7; background: #e0f2fe; width: 20px; height: 20px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">1</span>
-                <p style="font-size: 0.85rem; font-weight: 650; color: #334155; margin: 0; line-height: 1.45; font-family: var(--font-main) !important;">
-                    <strong style="color: #0284c7;">Teams Web (Recommended):</strong> Automatically uses your browser session. Quick, seamless entrance without re-entering credentials.
-                </p>
-            </div>
-            <div style="display: flex; gap: 0.75rem; align-items: flex-start;">
-                <span style="font-size: 0.75rem; font-weight: 800; color: #64748b; background: #cbd5e1; width: 20px; height: 20px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">2</span>
-                <p style="font-size: 0.85rem; font-weight: 650; color: #64748b; margin: 0; line-height: 1.45; font-family: var(--font-main) !important;">
-                    <strong style="color: #475569;">Teams Desktop App:</strong> Requires a one-time sign-in using your <span style="text-decoration: underline;">{{ Auth::user()->email }}</span> account if you are not logged in.
-                </p>
-            </div>
-        </div>
-
-        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-            <button type="button" id="btn-teams-web" style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; width: 100%; height: 46px; background: #059669; color: #ffffff; border: none; border-radius: 12px; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: background 0.15s; font-family: var(--font-main) !important;" onmouseover="this.style.background='#047857'" onmouseout="this.style.background='#059669'">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                Continue on Teams Web (SSO)
-            </button>
-
-            <button type="button" id="btn-teams-desktop" style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; width: 100%; height: 46px; background: transparent; color: #334155; border: 1.5px solid #cbd5e1; border-radius: 12px; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: all 0.15s; font-family: var(--font-main) !important;" onmouseover="this.style.background='#f8fafc';this.style.borderColor='#94a3b8'" onmouseout="this.style.background='transparent';this.style.borderColor='#cbd5e1'">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/></svg>
-                Open Teams Desktop Client
-            </button>
-        </div>
-
-        <div style="margin-top: 1.25rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
-            <input type="checkbox" id="remember-teams-pref" style="width: 16px; height: 16px; accent-color: #0d9488; cursor: pointer;">
-            <label for="remember-teams-pref" style="font-size: 0.8rem; font-weight: 700; color: #64748b; cursor: pointer; font-family: var(--font-main) !important;">Remember my choice on this device</label>
-        </div>
-    </div>
-</div>
-
-<style>
-    @keyframes slideUp {
-        from { transform: translateY(15px); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
-    }
-</style>
-
 <script>
     (function() {
-        let currentWebUrl = '';
-
         function getTeamsWebUrl(webUrl) {
             const email = "{{ Auth::user()->email }}";
             if (!webUrl) return webUrl;
@@ -997,60 +937,8 @@
         }
         
         window.joinTeams = function(webUrl) {
-            currentWebUrl = webUrl;
-            
-            // Check if user has already remembered their preference
-            const pref = localStorage.getItem('teams_client_preference');
-            let desktopUrl = webUrl;
-            if (webUrl.startsWith('https://')) {
-                desktopUrl = webUrl.replace('https://', 'msteams://');
-            }
-            
-            if (pref === 'web') {
-                window.open(getTeamsWebUrl(webUrl), '_blank');
-                return;
-            } else if (pref === 'desktop') {
-                window.location.href = desktopUrl;
-                return;
-            }
-            
-            // Otherwise, show the modal
-            const modal = document.getElementById('teams-launch-modal');
-            if (modal) {
-                modal.style.display = 'flex';
-            }
+            window.open(getTeamsWebUrl(webUrl), '_blank');
         };
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            const modal = document.getElementById('teams-launch-modal');
-            const btnWeb = document.getElementById('btn-teams-web');
-            const btnDesktop = document.getElementById('btn-teams-desktop');
-            const chkRemember = document.getElementById('remember-teams-pref');
-            
-            if (btnWeb) {
-                btnWeb.addEventListener('click', function() {
-                    if (chkRemember && chkRemember.checked) {
-                        localStorage.setItem('teams_client_preference', 'web');
-                    }
-                    window.open(getTeamsWebUrl(currentWebUrl), '_blank');
-                    if (modal) modal.style.display = 'none';
-                });
-            }
-            
-            if (btnDesktop) {
-                btnDesktop.addEventListener('click', function() {
-                    if (chkRemember && chkRemember.checked) {
-                        localStorage.setItem('teams_client_preference', 'desktop');
-                    }
-                    let desktopUrl = currentWebUrl;
-                    if (currentWebUrl.startsWith('https://')) {
-                        desktopUrl = currentWebUrl.replace('https://', 'msteams://');
-                    }
-                    window.location.href = desktopUrl;
-                    if (modal) modal.style.display = 'none';
-                });
-            }
-        });
     })();
 </script>
 </body>
