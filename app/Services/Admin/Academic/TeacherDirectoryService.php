@@ -210,11 +210,7 @@ class TeacherDirectoryService
             ['id' => 'ustadha-saliha', 'name' => 'Ustadha Saliha', 'email' => 'tr.saliha@amis.edu.ph', 'sections' => '', 'dept' => 'Islamic School and Arabic Language Department', 'status' => 'Active', 'photo' => null],
         ])->reject(fn ($item) => in_array($item['id'], $advisoryIds, true));
 
-        $baseSubjectTeachers = collect([
-            ['id' => 'mon-zhairel-lingasa', 'name' => 'Mon Zhairel Lingasa', 'email' => 'tr.mlingasa@amis.edu.ph', 'sections' => '', 'dept' => 'Elementary Department', 'status' => 'Active', 'photo' => null],
-        ])->reject(fn ($item) => in_array($item['id'], $advisoryIds, true));
-
-        return $advisory->merge($baseIsal)->merge($baseSubjectTeachers);
+        return $advisory->merge($baseIsal);
     }
 
     private function normalize(array $data): array
