@@ -979,11 +979,21 @@
 
         function getTeamsWebUrl(webUrl) {
             const email = "{{ Auth::user()->email }}";
-            if (!email) return webUrl;
-            if (webUrl.includes('login_hint=')) return webUrl;
+            if (!webUrl) return webUrl;
 
-            const separator = webUrl.includes('?') ? '&' : '?';
-            return webUrl + separator + 'login_hint=' + encodeURIComponent(email);
+            let separator = webUrl.includes('?') ? '&' : '?';
+            let targetUrl = webUrl;
+
+            if (!targetUrl.includes('prompt=')) {
+                targetUrl += separator + 'prompt=select_account';
+                separator = '&';
+            }
+
+            if (email && !targetUrl.includes('login_hint=')) {
+                targetUrl += separator + 'login_hint=' + encodeURIComponent(email);
+            }
+
+            return targetUrl;
         }
         
         window.joinTeams = function(webUrl) {
