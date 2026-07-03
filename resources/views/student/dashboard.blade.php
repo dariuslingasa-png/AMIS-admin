@@ -340,7 +340,7 @@
                                     }
                                 }
                             @endphp
-                            <div class="s-table-row" style="grid-template-columns: 1.8fr 1.2fr 1.6fr auto; padding: 1rem 1.25rem; align-items: center; border-bottom: 1px solid #f1f5f9; position: relative;">
+                            <div class="s-table-row" style="grid-template-columns: 1.8fr 1.2fr 1.8fr 1.4fr auto; padding: 1rem 1.25rem; align-items: center; border-bottom: 1px solid #f1f5f9; position: relative;">
                                 @if($isLive)
                                     <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: #10b981; border-top-left-radius: 4px; border-bottom-left-radius: 4px;"></div>
                                 @endif
@@ -356,6 +356,26 @@
                                 <div style="display:flex;align-items:center;gap:0.5rem;min-width:0;">
                                     <span class="s-table-cell-teacher" style="font-weight: 750; color: #475569; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $currentTeacherName }}</span>
                                 </div>
+                                
+                                {{-- Microsoft Team Name & Status --}}
+                                <div style="display:flex;flex-direction:column;gap:2px;min-width:0;padding-right:0.5rem;">
+                                     <span style="font-size:0.8rem;font-weight:800;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="{{ $sched->ms_team_name }}">{{ $sched->ms_team_name }}</span>
+                                     <div>
+                                         @if($sched->membership_status === 'enrolled')
+                                             <span style="display:inline-flex;align-items:center;gap:0.25rem;font-size:0.65rem;font-weight:700;color:#15803d;background:#f0fdf4;border:1px solid #bbf7d0;padding:0.1rem 0.4rem;border-radius:5px;white-space:nowrap;">
+                                                 <span style="width:4px;height:4px;background:#16a34a;border-radius:50%;"></span>Enrolled
+                                             </span>
+                                         @elseif($sched->membership_status === 'not_enrolled')
+                                             <span style="display:inline-flex;align-items:center;gap:0.25rem;font-size:0.65rem;font-weight:700;color:#c2410c;background:#fff7ed;border:1px solid #fed7aa;padding:0.1rem 0.4rem;border-radius:5px;white-space:nowrap;" title="Not yet enrolled in Microsoft Teams. Click 'Sync MS Teams' to retry.">
+                                                 <span style="width:4px;height:4px;background:#ea580c;border-radius:50%;"></span>Not Enrolled
+                                             </span>
+                                         @else
+                                             <span style="display:inline-flex;align-items:center;gap:0.25rem;font-size:0.65rem;font-weight:700;color:#b91c1c;background:#fef2f2;border:1px solid #fca5a5;padding:0.1rem 0.4rem;border-radius:5px;white-space:nowrap;" title="Section has no Microsoft Team ID.">
+                                                 <span style="width:4px;height:4px;background:#dc2626;border-radius:50%;"></span>No Team ID
+                                             </span>
+                                         @endif
+                                     </div>
+                                </div>
                                 <div class="s-table-cell-schedule" style="color:#0d9488; font-weight:800; white-space: nowrap; font-size: 0.78rem;">
                                     <div style="display:flex;align-items:center;gap:0.3rem;">
                                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -364,12 +384,21 @@
                                 </div>
                                 <div>
                                     @if($subj && $subj->ms_channel_id)
-                                        <a href="{{ $teamUrl }}" onclick="event.preventDefault(); window.joinTeams('{{ $teamUrl }}');"
-                                           style="display:inline-flex;align-items:center;gap:0.35rem;font-size:0.75rem;font-weight:900;color:#ffffff;background:#5865f2;padding:0.45rem 0.9rem;border-radius:8px;text-decoration:none;transition:all 0.15s;cursor:pointer;"
-                                           onmouseover="this.style.background='#4752c4'" onmouseout="this.style.background='#5865f2'">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/></svg>
-                                            <span>Join</span>
-                                        </a>
+                                        @if($sched->is_joinable)
+                                             <a href="{{ $teamUrl }}" onclick="event.preventDefault(); window.joinTeams('{{ $teamUrl }}');"
+                                                style="display:inline-flex;align-items:center;gap:0.35rem;font-size:0.75rem;font-weight:900;color:#ffffff;background:#5865f2;padding:0.45rem 0.9rem;border-radius:8px;text-decoration:none;transition:all 0.15s;cursor:pointer;"
+                                                onmouseover="this.style.background='#4752c4'" onmouseout="this.style.background='#5865f2'">
+                                                 <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/></svg>
+                                                 <span>Join</span>
+                                             </a>
+                                         @else
+                                             <button type="button" disabled
+                                                style="display:inline-flex;align-items:center;gap:0.35rem;font-size:0.75rem;font-weight:900;color:#94a3b8;background:#f1f5f9;border:1px solid #e2e8f0;padding:0.45rem 0.9rem;border-radius:8px;cursor:not-allowed;opacity:0.8;"
+                                                title="{{ $sched->membership_status_label }}">
+                                                 <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                                 <span>Join</span>
+                                             </button>
+                                         @endif
                                     @else
                                         <span style="font-size:0.75rem;color:#94a3b8;font-weight:700;">No Link</span>
                                     @endif
@@ -391,15 +420,10 @@
                             </p>
                         </div>
                     @endif
-                </div>
-
-                {{-- WEEKLY OVERVIEW VIEW --}}
-                <div x-show="viewMode === 'weekly'">
-                    @if($subjects->isNotEmpty())
-                        {{-- Table header --}}
-                        <div class="s-table-header" style="grid-template-columns: 1.8fr 1.4fr 1.6fr auto; padding: 0.75rem 1.25rem;">
+                </                        <div class="s-table-header" style="grid-template-columns: 1.8fr 1.2fr 1.4fr 1.5fr auto; padding: 0.75rem 1.25rem;">
                             <div class="s-table-header-label">Subject Name</div>
                             <div class="s-table-header-label">Teacher</div>
+                            <div class="s-table-header-label">MS Team & Status</div>
                             <div class="s-table-header-label">Weekly Schedule</div>
                             <div class="s-table-header-label" style="text-align:right;">Join Link</div>
                         </div>
@@ -415,7 +439,7 @@
                                 $currentTeacherName = $formatTeacherName($subject->teacher_name);
                                 $schedStr = $formattedSchedules[$subject->subject_name] ?? 'To Be Announced';
                             @endphp
-                            <div class="s-table-row" style="grid-template-columns: 1.8fr 1.4fr 1.6fr auto; padding: 1rem 1.25rem; align-items: center; border-bottom: 1px solid #f1f5f9;">
+                            <div class="s-table-row" style="grid-template-columns: 1.8fr 1.2fr 1.4fr 1.5fr auto; padding: 1rem 1.25rem; align-items: center; border-bottom: 1px solid #f1f5f9;">
                                 <div style="display:flex;align-items:center;gap:0.75rem;min-width:0;">
                                     <div style="width:8px;height:8px;border-radius:50%;background:{{ $c }};flex-shrink:0;box-shadow: 0 0 0 3px {{ $bg }};"></div>
                                     <span class="s-table-cell-subject" style="font-weight: 800; color: #0f172a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ $subject->subject_name }}">{{ $subject->subject_name }}</span>
@@ -423,6 +447,27 @@
                                 <div style="display:flex;align-items:center;gap:0.5rem;min-width:0;">
                                     <span class="s-table-cell-teacher" style="font-weight: 750; color: #475569; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ $currentTeacherName }}">{{ $currentTeacherName }}</span>
                                 </div>
+                                
+                                {{-- Microsoft Team Name & Status --}}
+                                <div style="display:flex;flex-direction:column;gap:2px;min-width:0;padding-right:0.5rem;">
+                                     <span style="font-size:0.8rem;font-weight:800;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="{{ $subject->ms_team_name }}">{{ $subject->ms_team_name }}</span>
+                                     <div>
+                                         @if($subject->membership_status === 'enrolled')
+                                             <span style="display:inline-flex;align-items:center;gap:0.25rem;font-size:0.65rem;font-weight:700;color:#15803d;background:#f0fdf4;border:1px solid #bbf7d0;padding:0.1rem 0.4rem;border-radius:5px;white-space:nowrap;">
+                                                 <span style="width:4px;height:4px;background:#16a34a;border-radius:50%;"></span>Enrolled
+                                             </span>
+                                         @elseif($subject->membership_status === 'not_enrolled')
+                                             <span style="display:inline-flex;align-items:center;gap:0.25rem;font-size:0.65rem;font-weight:700;color:#c2410c;background:#fff7ed;border:1px solid #fed7aa;padding:0.1rem 0.4rem;border-radius:5px;white-space:nowrap;" title="Not yet enrolled in Microsoft Teams. Click 'Sync MS Teams' to retry.">
+                                                 <span style="width:4px;height:4px;background:#ea580c;border-radius:50%;"></span>Not Enrolled
+                                             </span>
+                                         @else
+                                             <span style="display:inline-flex;align-items:center;gap:0.25rem;font-size:0.65rem;font-weight:700;color:#b91c1c;background:#fef2f2;border:1px solid #fca5a5;padding:0.1rem 0.4rem;border-radius:5px;white-space:nowrap;" title="Section has no Microsoft Team ID.">
+                                                 <span style="width:4px;height:4px;background:#dc2626;border-radius:50%;"></span>No Team ID
+                                             </span>
+                                         @endif
+                                     </div>
+                                </div>
+
                                 <div class="s-table-cell-schedule" style="color: #0d9488; font-weight: 800; font-size: 0.825rem;">
                                     <div style="display:flex;align-items:center;gap:0.35rem;">
                                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -431,12 +476,21 @@
                                 </div>
                                 <div>
                                     @if($subject->ms_channel_id)
-                                        <a href="{{ $subject->team_url ?? 'https://teams.microsoft.com' }}" onclick="event.preventDefault(); window.joinTeams('{{ $subject->team_url ?? 'https://teams.microsoft.com' }}');"
-                                           style="display:inline-flex;align-items:center;gap:0.35rem;font-size:0.75rem;font-weight:900;color:#ffffff;background:#5865f2;padding:0.45rem 0.9rem;border-radius:8px;text-decoration:none;transition:all 0.15s;cursor:pointer;"
-                                           onmouseover="this.style.background='#4752c4'" onmouseout="this.style.background='#5865f2'">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/></svg>
-                                            <span>Join</span>
-                                        </a>
+                                        @if($subject->is_joinable)
+                                             <a href="{{ $subject->team_url ?? 'https://teams.microsoft.com' }}" onclick="event.preventDefault(); window.joinTeams('{{ $subject->team_url ?? 'https://teams.microsoft.com' }}');"
+                                                style="display:inline-flex;align-items:center;gap:0.35rem;font-size:0.75rem;font-weight:900;color:#ffffff;background:#5865f2;padding:0.45rem 0.9rem;border-radius:8px;text-decoration:none;transition:all 0.15s;cursor:pointer;"
+                                                onmouseover="this.style.background='#4752c4'" onmouseout="this.style.background='#5865f2'">
+                                                 <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/></svg>
+                                                 <span>Join</span>
+                                             </a>
+                                        @else
+                                             <button type="button" disabled
+                                                style="display:inline-flex;align-items:center;gap:0.35rem;font-size:0.75rem;font-weight:900;color:#94a3b8;background:#f1f5f9;border:1px solid #e2e8f0;padding:0.45rem 0.9rem;border-radius:8px;cursor:not-allowed;opacity:0.8;"
+                                                title="{{ $subject->membership_status_label }}">
+                                                 <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                                 <span>Join</span>
+                                             </button>
+                                        @endif
                                     @else
                                         <span style="font-size:0.75rem;color:#94a3b8;font-weight:700;">No Link</span>
                                     @endif

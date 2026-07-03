@@ -20,24 +20,49 @@ class StudentDashboardController extends Controller
 
         if ($student) {
             $studentSection = StudentSection::where('student_id', $student->id)
-                ->where('ms_status', 'enrolled')
                 ->with(['section.subjects'])
                 ->first();
 
             if ($studentSection?->section) {
                 $section = $studentSection->section;
+                
+                // Determine Microsoft Teams status
+                $msStatus = $studentSection->ms_status;
+                $hasTeam = !empty($section->ms_team_id);
+                
+                $membershipStatus = 'enrolled';
+                $membershipStatusLabel = 'Enrolled';
+                $isJoinable = true;
+                
+                if (!$hasTeam) {
+                     $membershipStatus = 'no_team';
+                     $membershipStatusLabel = 'Section has no Microsoft Team ID.';
+                     $isJoinable = false;
+                } elseif ($msStatus !== 'enrolled') {
+                     $membershipStatus = 'not_enrolled';
+                     $membershipStatusLabel = 'Not yet enrolled in Microsoft Teams.';
+                     $isJoinable = false;
+                }
 
                 // Load subjects and attach team_url from ms_teams via ms_channel_id
-                $subjects = $section->subjects->map(function ($subject) {
+                $subjects = $section->subjects->map(function ($subject) use ($section, $membershipStatus, $membershipStatusLabel, $isJoinable) {
+                    $subject->membership_status = $membershipStatus;
+                    $subject->membership_status_label = $membershipStatusLabel;
+                    $subject->is_joinable = $isJoinable;
+                    $subject->ms_team_name = $section->official_name ?: 'General';
+                    
                     if ($subject->ms_channel_id) {
                         $channel = \DB::table('ms_team_channels')
                             ->join('ms_teams', 'ms_team_channels.ms_team_id_fk', '=', 'ms_teams.id')
                             ->where('ms_team_channels.ms_channel_id', $subject->ms_channel_id)
-                            ->select('ms_teams.team_url')
+                            ->select('ms_teams.team_url', 'ms_teams.display_name')
                             ->first();
                         $subject->team_url = $channel?->team_url;
+                        if ($channel?->display_name) {
+                            $subject->ms_team_name = $channel->display_name;
+                        }
                     } else {
-                        $subject->team_url = null;
+                        $subject->team_url = $section->ms_team_url;
                     }
                     return $subject;
                 });
@@ -47,6 +72,18 @@ class StudentDashboardController extends Controller
                     ->where('section_id', $section->id)
                     ->orderBy('start_time')
                     ->get();
+                    
+                // Map status on schedules
+                $schedules = $schedules->map(function ($s) use ($section, $subjects, $membershipStatus, $membershipStatusLabel, $isJoinable) {
+                    $s->membership_status = $membershipStatus;
+                    $s->membership_status_label = $membershipStatusLabel;
+                    $s->is_joinable = $isJoinable;
+                    
+                    $subj = $subjects->firstWhere('subject_name', $s->subject_name);
+                    $s->team_url = $subj?->team_url ?: $section->ms_team_url;
+                    $s->ms_team_name = $subj?->ms_team_name ?: ($section->official_name ?: 'General');
+                    return $s;
+                });
             }
         }
 
@@ -71,7 +108,6 @@ class StudentDashboardController extends Controller
         $subjects = collect();
         if ($student) {
             $studentSection = StudentSection::where('student_id', $student->id)
-                ->where('ms_status', 'enrolled')
                 ->with(['section.subjects'])
                 ->first();
 
@@ -99,12 +135,29 @@ class StudentDashboardController extends Controller
 
         if ($student) {
             $studentSection = StudentSection::where('student_id', $student->id)
-                ->where('ms_status', 'enrolled')
                 ->with(['section.subjects'])
                 ->first();
 
             if ($studentSection?->section) {
                 $section = $studentSection->section;
+                
+                // Determine Microsoft Teams status
+                $msStatus = $studentSection->ms_status;
+                $hasTeam = !empty($section->ms_team_id);
+                
+                $membershipStatus = 'enrolled';
+                $membershipStatusLabel = 'Enrolled';
+                $isJoinable = true;
+                
+                if (!$hasTeam) {
+                     $membershipStatus = 'no_team';
+                     $membershipStatusLabel = 'Section has no Microsoft Team ID.';
+                     $isJoinable = false;
+                } elseif ($msStatus !== 'enrolled') {
+                     $membershipStatus = 'not_enrolled';
+                     $membershipStatusLabel = 'Not yet enrolled in Microsoft Teams.';
+                     $isJoinable = false;
+                }
 
                 // Load class_schedules with joined teacher info from section_subjects
                 $schedules = \DB::table('class_schedules as cs')
@@ -123,15 +176,23 @@ class StudentDashboardController extends Controller
                     ->orderBy('cs.start_time')
                     ->get();
 
-                // Resolve Teams URLs for each schedule item
-                $schedules = $schedules->map(function ($s) use ($section) {
+                // Resolve Teams URLs, statuses and Team Names for each schedule item
+                $schedules = $schedules->map(function ($s) use ($section, $membershipStatus, $membershipStatusLabel, $isJoinable) {
+                    $s->membership_status = $membershipStatus;
+                    $s->membership_status_label = $membershipStatusLabel;
+                    $s->is_joinable = $isJoinable;
+                    $s->ms_team_name = $section->official_name ?: 'General';
+                    
                     if ($s->ms_channel_id) {
                         $channel = \DB::table('ms_team_channels')
                             ->join('ms_teams', 'ms_team_channels.ms_team_id_fk', '=', 'ms_teams.id')
                             ->where('ms_team_channels.ms_channel_id', $s->ms_channel_id)
-                            ->select('ms_teams.team_url')
+                            ->select('ms_teams.team_url', 'ms_teams.display_name')
                             ->first();
                         $s->team_url = $channel?->team_url;
+                        if ($channel?->display_name) {
+                            $s->ms_team_name = $channel->display_name;
+                        }
                     } else {
                         $s->team_url = $section->ms_team_url;
                     }
@@ -140,18 +201,15 @@ class StudentDashboardController extends Controller
 
                 $schedulesBySubject = $schedules->groupBy('subject_name');
 
-                // Process subject list with clean schedule strings
-                $subjects = $studentSection->section->subjects->map(function ($subject) use ($section, $schedulesBySubject) {
-                    if ($subject->ms_channel_id) {
-                        $channel = \DB::table('ms_team_channels')
-                            ->join('ms_teams', 'ms_team_channels.ms_team_id_fk', '=', 'ms_teams.id')
-                            ->where('ms_team_channels.ms_channel_id', $subject->ms_channel_id)
-                            ->select('ms_teams.team_url')
-                            ->first();
-                        $subject->team_url = $channel?->team_url;
-                    } else {
-                        $subject->team_url = $section->ms_team_url;
-                    }
+                // Process subject list with clean schedule strings and Teams attributes
+                $subjects = $studentSection->section->subjects->map(function ($subject) use ($section, $schedulesBySubject, $membershipStatus, $membershipStatusLabel, $isJoinable) {
+                    $subject->membership_status = $membershipStatus;
+                    $subject->membership_status_label = $membershipStatusLabel;
+                    $subject->is_joinable = $isJoinable;
+                    
+                    $firstSched = ($schedulesBySubject->get($subject->subject_name) ?? collect())->first();
+                    $subject->team_url = $firstSched?->team_url ?: $section->ms_team_url;
+                    $subject->ms_team_name = $firstSched?->ms_team_name ?: ($section->official_name ?: 'General');
 
                     // Build readable schedule string (e.g. "Sun/Tue 12:40 PM - 1:20 PM")
                     $subjScheds = $schedulesBySubject->get($subject->subject_name) ?? collect();
@@ -189,7 +247,6 @@ class StudentDashboardController extends Controller
 
         if ($student) {
             $studentSection = StudentSection::where('student_id', $student->id)
-                ->where('ms_status', 'enrolled')
                 ->with(['section.subjects'])
                 ->first();
 
@@ -269,7 +326,6 @@ class StudentDashboardController extends Controller
         $section = null;
         if ($student) {
             $studentSection = StudentSection::where('student_id', $student->id)
-                ->where('ms_status', 'enrolled')
                 ->with(['section.subjects'])
                 ->first();
 
@@ -288,7 +344,6 @@ class StudentDashboardController extends Controller
         $section = null;
         if ($student) {
             $studentSection = StudentSection::where('student_id', $student->id)
-                ->where('ms_status', 'enrolled')
                 ->with(['section'])
                 ->first();
 
@@ -317,7 +372,6 @@ class StudentDashboardController extends Controller
 
         // Determine grade level
         $studentSection = StudentSection::where('student_id', $student->id)
-            ->where('ms_status', 'enrolled')
             ->with(['section'])
             ->first();
 
@@ -362,7 +416,6 @@ class StudentDashboardController extends Controller
 
         // Determine grade level
         $studentSection = StudentSection::where('student_id', $student->id)
-            ->where('ms_status', 'enrolled')
             ->with(['section'])
             ->first();
 
@@ -419,7 +472,6 @@ class StudentDashboardController extends Controller
 
         // Determine grade level
         $studentSection = StudentSection::where('student_id', $student->id)
-            ->where('ms_status', 'enrolled')
             ->with(['section'])
             ->first();
 
