@@ -531,9 +531,19 @@
                                                             <span class="block font-extrabold text-[11px] leading-tight uppercase tracking-wide font-outfit" style="color: inherit;">
                                                                 {{ $cell['entry']['subject_name'] }}
                                                             </span>
-                                                            @if(!empty($cell['entry']['teacher_name']) && $cell['entry']['teacher_name'] !== 'Teacher pending')
+                                                            @php
+                                                                $teacherLabel = $cell['entry']['teacher_name'] ?? '';
+                                                                if (empty($teacherLabel) || $teacherLabel === 'Teacher pending') {
+                                                                    $teacherLabel = $cell['entry']['teacher_display'] ?? '';
+                                                                }
+                                                            @endphp
+                                                            @if(!empty($teacherLabel) && $teacherLabel !== 'Teacher pending')
                                                                 <span class="block text-[9px] font-semibold mt-0.5 opacity-75" style="color: inherit;">
-                                                                    {{ $cell['entry']['teacher_name'] }}
+                                                                    {{ $teacherLabel }}
+                                                                </span>
+                                                            @else
+                                                                <span class="block text-[8px] italic mt-0.5 opacity-40" style="color: inherit;">
+                                                                    No teacher assigned
                                                                 </span>
                                                             @endif
                                                         </div>
