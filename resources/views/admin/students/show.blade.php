@@ -22,6 +22,7 @@
             ['Student Type', $student->applicant->student_type], ['Grade Level', $student->grade_level],
             ['School Year', $student->school_year], ['Learning Mode', $student->applicant->learning_mode],
             ['AMIS Student ID', $student->applicant->amis_student_id],
+            ['LRN', $student->applicant->lrn],
         ]],
         ['title' => 'Personal Details', 'icon' => 'id-card', 'fields' => [
             ['First Name', $student->applicant->first_name],
@@ -224,9 +225,16 @@
                 </button>
                 <div>
                     <h2 class="text-3xl font-bold tracking-tight">{{ $displayName }}</h2>
-                    <p class="mt-2 text-sm text-emerald-50/90 flex items-center gap-1.5">
-                        <i data-lucide="mail" class="h-3.5 w-3.5"></i>
-                        {{ $student->school_email ?? '-' }}
+                    <p class="mt-2 text-sm text-emerald-50/90 flex items-center flex-wrap gap-x-4 gap-y-1">
+                        <span class="flex items-center gap-1.5">
+                            <i data-lucide="mail" class="h-3.5 w-3.5"></i>
+                            {{ $student->school_email ?? '-' }}
+                        </span>
+                        <span class="flex items-center gap-1.5">
+                            <i data-lucide="fingerprint" class="h-3.5 w-3.5 opacity-75"></i>
+                            <span class="font-extrabold opacity-75">LRN:</span>
+                            {{ $student->applicant->lrn ?? 'N/A' }}
+                        </span>
                     </p>
                     <div class="applicant-pill-row">
                         <span class="applicant-pill applicant-pill-grade">{{ Str::upper($student->grade_level ?: 'Grade pending') }}</span>
@@ -314,7 +322,7 @@
                     <!-- Academic Details -->
                     <div>
                         <h4 class="text-xs font-extrabold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 mb-3">Academic Info</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
                                 <label class="block text-xs font-bold text-slate-700 dark:text-slate-350 mb-1">Student Type</label>
                                 <input type="text" name="student_type" value="{{ $student->applicant->student_type ?? '' }}" class="w-full rounded-xl border border-slate-250 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-sm font-semibold text-slate-900 dark:text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500">
@@ -334,6 +342,10 @@
                             <div>
                                 <label class="block text-xs font-bold text-slate-700 dark:text-slate-350 mb-1">AMIS Student ID</label>
                                 <input type="text" name="amis_student_id" value="{{ $student->applicant->amis_student_id ?? '' }}" class="w-full rounded-xl border border-slate-250 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-sm font-semibold text-slate-900 dark:text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-350 mb-1">LRN</label>
+                                <input type="text" name="lrn" value="{{ $student->applicant->lrn ?? '' }}" class="w-full rounded-xl border border-slate-250 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-sm font-semibold text-slate-900 dark:text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500">
                             </div>
                         </div>
                     </div>
