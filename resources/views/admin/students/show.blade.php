@@ -70,7 +70,7 @@
         ['label' => Str::headline($displayName), 'href' => null],
     ]"
 >
-    <div class="applicant-page" x-data="{
+    <div x-data="{
          openEditModal: false,
          copySuccess: false,
          activeTab: 'overview',
@@ -209,6 +209,8 @@
             </a>
         </div>
     </div>
+    <!-- Grid Layout Container -->
+    <div class="applicant-page">
         
         <!-- Main Column (Tabs and Details) -->
         <main class="space-y-6">
@@ -290,6 +292,7 @@
         @unless ($isTeacherAdminViewer)
             @include('admin.students.partials.show.sidebar')
         @endunless
+    </div>
 
         <!-- Preview Modal -->
         @include('admin.students.partials.show.modal')
