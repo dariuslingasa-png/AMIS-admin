@@ -70,33 +70,6 @@
         ['label' => Str::headline($displayName), 'href' => null],
     ]"
 >
-    <!-- Page back link -->
-    <div class="mb-5 flex justify-between items-center">
-        <div>
-            <span class="text-xs font-extrabold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">Student Administration</span>
-        </div>
-        <div class="flex items-center gap-2">
-            @unless ($isTeacherAdminViewer)
-            <button @click="openEditModal = true"
-                    class="inline-flex items-center gap-2 rounded-xl border border-transparent bg-emerald-600 px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700 active:scale-[0.98] cursor-pointer">
-                <i data-lucide="edit" class="h-4 w-4"></i>
-                <span>Edit Profile</span>
-            </button>
-            @endunless
-            <a href="{{ route('admin.students.index', ['search' => $student->student_number, 'print_info' => 1]) }}"
-               target="_blank"
-               class="inline-flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2 text-sm font-bold text-slate-700 dark:text-slate-300 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98]">
-                <i data-lucide="printer" class="h-4 w-4 text-slate-500"></i>
-                <span>Print Official Sheet</span>
-            </a>
-            <a href="{{ route('admin.students.index') }}"
-               class="inline-flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2 text-sm font-bold text-slate-700 dark:text-slate-300 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98]">
-                <i data-lucide="chevron-left" class="h-4 w-4"></i>
-                <span>Back to directory</span>
-            </a>
-        </div>
-    </div>
-
     <div class="applicant-page" x-data="{
          openEditModal: false,
          copySuccess: false,
@@ -209,6 +182,33 @@
      @keydown.escape.window="closePreview()"
      @mouseup.window="stopPan()"
      @touchend.window="stopPan()">
+
+    <!-- Page back link -->
+    <div class="mb-5 flex justify-between items-center">
+        <div>
+            <span class="text-xs font-extrabold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">Student Administration</span>
+        </div>
+        <div class="flex items-center gap-2">
+            @unless ($isTeacherAdminViewer)
+            <button @click="openEditModal = true"
+                    class="inline-flex items-center gap-2 rounded-xl border border-transparent bg-emerald-600 px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700 active:scale-[0.98] cursor-pointer">
+                <i data-lucide="edit" class="h-4 w-4"></i>
+                <span>Edit Profile</span>
+            </button>
+            @endunless
+            <a href="{{ route('admin.students.index', ['search' => $student->student_number, 'print_info' => 1]) }}"
+               target="_blank"
+               class="inline-flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2 text-sm font-bold text-slate-700 dark:text-slate-300 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98]">
+                <i data-lucide="printer" class="h-4 w-4 text-slate-500"></i>
+                <span>Print Official Sheet</span>
+            </a>
+            <a href="{{ route('admin.students.index') }}"
+               class="inline-flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2 text-sm font-bold text-slate-700 dark:text-slate-300 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98]">
+                <i data-lucide="chevron-left" class="h-4 w-4"></i>
+                <span>Back to directory</span>
+            </a>
+        </div>
+    </div>
         
         <!-- Main Column (Tabs and Details) -->
         <main class="space-y-6">
