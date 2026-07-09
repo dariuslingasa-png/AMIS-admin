@@ -22,6 +22,9 @@
                             <th class="px-4 py-3 text-right">Amount</th>
                             <th class="px-4 py-3 text-center">Status</th>
                             <th class="px-4 py-3 text-center">Proof</th>
+                            @if (auth()->user()?->canReviewEnrollmentPayments())
+                                <th class="px-4 py-3 text-right">Actions</th>
+                            @endif
                         </tr>
                     </thead>
                     <tbody class="font-semibold text-black">
@@ -64,7 +67,7 @@
                                 </td>
                                 <td class="px-4 py-4 text-center">
                                     @if ($receiptDisplayUrl)
-                                        <button type="button" onclick="openPaymentProofInBreakdown(@js($receiptDisplayUrl))" class="btn-premium btn-view inline-flex items-center gap-2">
+                                        <button type="button" onclick="openPaymentVerifyWorkspace(@js($payment), @js($receiptDisplayUrl))" class="btn-premium btn-view inline-flex items-center gap-2">
                                             <i data-lucide="eye" class="h-4 w-4"></i>
                                             View
                                         </button>
@@ -77,10 +80,26 @@
                                         </a>
                                     @endif
                                 </td>
+                                @if (auth()->user()?->canReviewEnrollmentPayments())
+                                    <td class="px-4 py-4 text-right">
+                                        @if (strtolower($payment->status) === 'pending')
+                                            <div class="flex items-center justify-end gap-2">
+                                                <button type="button" onclick="openPaymentVerifyWorkspace(@js($payment), @js($receiptDisplayUrl), true)" class="btn-premium btn-approve">
+                                                    Verify
+                                                </button>
+                                                <button type="button" onclick="openPaymentVerifyWorkspace(@js($payment), @js($receiptDisplayUrl), false, true)" class="btn-premium btn-reject">
+                                                    Reject
+                                                </button>
+                                            </div>
+                                        @else
+                                            <span class="text-[13.5px] text-slate-400 font-bold italic">Reviewed</span>
+                                        @endif
+                                    </td>
+                                @endif
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="px-4 py-8 text-center text-slate-400 font-bold" style="font-size: 19.5px !important;">
+                                <td colspan="{{ auth()->user()?->canReviewEnrollmentPayments() ? 7 : 6 }}" class="px-4 py-8 text-center text-slate-400 font-bold" style="font-size: 19.5px !important;">
                                     No payment logs recorded.
                                 </td>
                             </tr>

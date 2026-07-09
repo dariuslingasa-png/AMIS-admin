@@ -1,0 +1,10 @@
+:root {
+    --primary-color: #0ea5e9;
+    --primary-hover: #0284c7;
+    --bg-gray-light: #f8fafc;
+    --border-gray: #e2e8f0;
+    --text-dark: #0f172a;
+    --text-muted: #64748b;
+    --radius-lg: 1rem;
+    --radius-md: 0.5rem;
+}

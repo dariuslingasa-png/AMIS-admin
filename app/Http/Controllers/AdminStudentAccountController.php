@@ -25,7 +25,7 @@ class AdminStudentAccountController extends Controller
             $tempPassword = $customPassword;
             $isReset = true;
         } elseif ($resetFormat !== 'none') {
-            $tempPassword = 'amis12345';
+            $tempPassword = 'Amis@12345';
             $isReset = true;
         }
 

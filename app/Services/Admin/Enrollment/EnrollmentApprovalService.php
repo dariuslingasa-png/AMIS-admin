@@ -130,7 +130,7 @@ class EnrollmentApprovalService
                 $graph = new MicrosoftGraphService;
             }
 
-            $this->enrollInTeams($student, $msUserId, $graph);
+            // $this->enrollInTeams($student, $msUserId, $graph);
 
             if ($settings->generate_soa ?? true) {
                 $this->generateSoa($student, $applicant);

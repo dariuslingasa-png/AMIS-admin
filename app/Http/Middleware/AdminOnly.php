@@ -46,6 +46,16 @@ class AdminOnly
         }
 
         $routeName = $request->route()?->getName();
+
+        if (
+            config('services.school.academic_maintenance', false)
+            && !$user->hasRole(['super_admin', 'admin'])
+            && str_starts_with((string) $routeName, 'admin.academic.')
+        ) {
+            return redirect()->route('admin.dashboard')
+                ->with('error', 'The Academic Module is currently under maintenance. Only Administrators can access it at this time.');
+        }
+
         if ($routeName === 'admin.dashboard' && $user->isTeacherAdminViewer()) {
             return redirect()->route($user->adminHomeRouteName());
         }

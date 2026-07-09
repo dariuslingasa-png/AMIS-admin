@@ -21,3 +21,5 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+*.csv
+scratch/local_backup.sql

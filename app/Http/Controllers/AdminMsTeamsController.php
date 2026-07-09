@@ -230,7 +230,7 @@ class AdminMsTeamsController extends Controller
             try {
                 $graph = new MicrosoftGraphService();
                 $graph->renameTeam($section->ms_team_id, $newTeamName);
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 Log::warning("Could not rename MS Team [{$section->ms_team_id}]: " . $e->getMessage());
             }
         }
@@ -642,5 +642,87 @@ class AdminMsTeamsController extends Controller
             Log::error("structureData failed for section {$section->id}: " . $e->getMessage());
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
+    }
+
+    public function searchStudents(Request $request)
+    {
+        $q = trim($request->get('q', ''));
+        if (strlen($q) < 2) {
+            return response()->json([]);
+        }
+
+        $students = Student::with(['applicant', 'studentSection.section'])
+            ->where(function($query) use ($q) {
+                $query->where('student_number', 'like', "%{$q}%")
+                      ->orWhere('school_email', 'like', "%{$q}%")
+                      ->orWhere('ms_email', 'like', "%{$q}%")
+                      ->orWhereHas('applicant', function($qa) use ($q) {
+                          $qa->where('first_name', 'like', "%{$q}%")
+                             ->orWhere('last_name', 'like', "%{$q}%")
+                             ->orWhereRaw("CONCAT(first_name, ' ', last_name) like ?", ["%{$q}%"]);
+                      });
+            })
+            ->limit(15)
+            ->get();
+
+        $results = $students->map(function($s) {
+            $name = $s->applicant ? strtoupper($s->applicant->last_name . ', ' . $s->applicant->first_name) : 'UNREGISTERED';
+            $sectionName = $s->studentSection?->section?->name;
+            $gradeLevel = $s->studentSection?->section?->grade_level;
+            $currSec = $sectionName ? "{$gradeLevel} - {$sectionName}" : null;
+            
+            return [
+                'id' => $s->id,
+                'student_number' => $s->student_number ?? 'N/A',
+                'name' => html_entity_decode($name, ENT_QUOTES, 'UTF-8'),
+                'current_section' => $currSec,
+            ];
+        });
+
+        return response()->json($results);
+    }
+
+    public function assignStudent(Request $request, Section $section)
+    {
+        $request->validate([
+            'student_id' => 'required|exists:students,id',
+        ]);
+
+        $studentId = $request->student_id;
+        $student = Student::findOrFail($studentId);
+
+        // Remove from existing section(s) if any
+        StudentSection::where('student_id', $studentId)->delete();
+
+        // Create new student section record
+        StudentSection::create([
+            'student_id' => $studentId,
+            'section_id' => $section->id,
+            'ms_status' => 'enrolled',
+            'ms_enrolled_at' => now(),
+        ]);
+
+        // Try to auto-enroll them in the MS Team if team id exists
+        if ($section->ms_team_id && $student->ms_user_id) {
+            try {
+                $service = new MsTeamsEnrollmentService(new MicrosoftGraphService());
+                $service->enrollStudent($student);
+            } catch (\Exception $e) {
+                Log::warning("Auto-enroll student {$student->id} to Team failed (non-fatal): " . $e->getMessage());
+            }
+        }
+
+        return redirect()->route('admin.ms-teams.show', $section)
+            ->with('success', "Student successfully assigned to this section.");
+    }
+
+    public function removeStudent(Request $request, Section $section, Student $student)
+    {
+        StudentSection::where('student_id', $student->id)
+            ->where('section_id', $section->id)
+            ->delete();
+
+        return redirect()->route('admin.ms-teams.show', $section)
+            ->with('success', "Student removed from this section.");
     }
 }

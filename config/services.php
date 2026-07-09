@@ -68,6 +68,7 @@ return [
         'invoice_id_offset'     => (int) env('INVOICE_ID_OFFSET', 203),
         'or_prefix'             => env('SCHOOL_OR_PREFIX', 'OR-'),
         'or_excess_suffix'      => env('SCHOOL_OR_EXCESS_SUFFIX', 'OR-EXCESS'),
+        'academic_maintenance'  => env('ACADEMIC_MAINTENANCE', true),
     ],
 
     'facebook' => [

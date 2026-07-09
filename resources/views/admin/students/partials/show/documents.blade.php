@@ -48,7 +48,20 @@
     @php
         $payment = $student->applicant?->payment;
         if (!$payment && $student->applicant) {
-            $payment = \App\Models\Payment::where('user_id', $student->applicant->user_id)
+            $familyUserIds = \App\Models\EnrollmentApplicant::where('user_id', $student->applicant->user_id)
+                ->orWhere(function($q) use ($student) {
+                    if ($student->applicant->family_application_id) {
+                        $q->where('family_application_id', $student->applicant->family_application_id);
+                    } else {
+                        $q->where('id', -1);
+                    }
+                })
+                ->pluck('user_id')
+                ->filter()
+                ->unique()
+                ->toArray();
+
+            $payment = \App\Models\Payment::whereIn('user_id', $familyUserIds)
                 ->whereNotNull('receipt_url')
                 ->whereNotIn('receipt_url', ['', '[]', '[""]'])
                 ->first();

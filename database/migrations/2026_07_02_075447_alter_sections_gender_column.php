@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (Schema::connection(null)->getDriverName() === 'mysql') {
+        if (DB::connection()->getDriverName() === 'mysql') {
             DB::statement("ALTER TABLE sections MODIFY COLUMN gender ENUM('male', 'female', 'na', 'merge') NOT NULL DEFAULT 'male'");
         }
     }
@@ -23,7 +23,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        if (Schema::connection(null)->getDriverName() === 'mysql') {
+        if (DB::connection()->getDriverName() === 'mysql') {
             DB::statement("ALTER TABLE sections MODIFY COLUMN gender ENUM('male', 'female') NOT NULL DEFAULT 'male'");
         }
     }

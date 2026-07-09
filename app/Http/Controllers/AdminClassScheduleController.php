@@ -5,12 +5,17 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Academic\ClassScheduleRequest;
 use App\Models\ClassSchedule;
 use App\Services\Admin\Academic\ClassScheduleService;
+use App\Services\Admin\Academic\SectionSubjectSyncService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 
 class AdminClassScheduleController extends Controller
 {
-    public function __construct(private readonly ClassScheduleService $schedules) {}
+    public function __construct(
+        private readonly ClassScheduleService        $schedules,
+        private readonly SectionSubjectSyncService   $subjectSync,
+    ) {}
 
     public function index(Request $request)
     {
@@ -18,20 +23,28 @@ class AdminClassScheduleController extends Controller
 
         $mode = $request->query('mode', 'f2f');
 
-        $f2fSections    = $this->schedules->f2fSections();
-        $onlineSections = $this->schedules->onlineSections();
-        $sections       = $mode === 'online' ? $onlineSections : $f2fSections;
+        $sections = \App\Models\Section::withCount('students')
+            ->orderByRaw("FIELD(grade_level,'Kinder 1','Kinder 2','Grade 1','Grade 2','Grade 3','Grade 4','Grade 5','Grade 6','Grade 7','Grade 8','Grade 9','Grade 10','Grade 11','Grade 12')")
+            ->get();
+
+        $f2fSections    = $sections->filter(fn($s) => str_contains($s->learning_mode ?? '', 'Face') || str_contains($s->learning_mode ?? '', 'f2f'));
+        $onlineSections = $sections->filter(fn($s) => str_contains($s->learning_mode ?? '', 'Online') || str_contains($s->learning_mode ?? '', 'Flexible'));
 
         $advisories      = $this->schedules->advisories();
         $advisoryByGrade = $advisories->keyBy('grade_level');
         $teachers        = $this->schedules->allTeachersForPicker();
-        $schedulesBySection = $this->schedules->schedulesBySection($sections, $mode);
+
+        $sectionIds = $sections->pluck('id');
+        $schedulesBySection = ClassSchedule::whereIn('section_id', $sectionIds)
+            ->get()
+            ->map(fn (ClassSchedule $s) => $this->schedules->present($s))
+            ->sortBy([['day_index', 'asc'], ['start_minutes', 'asc']])
+            ->groupBy('section_id');
+
         $days            = $this->schedules->days();
         $timeOptions     = $this->schedules->timeOptions();
 
-        // Counts for badges
-        $unmatchedCount = ClassSchedule::where('mode', $mode)
-            ->whereIn('section_id', $sections->pluck('id'))
+        $unmatchedCount = ClassSchedule::whereIn('section_id', $sectionIds)
             ->where('teacher_status', 'unmatched')
             ->count();
 
@@ -185,6 +198,14 @@ class AdminClassScheduleController extends Controller
         $section->update(['schedule_published' => ! $section->schedule_published]);
 
         $status = $section->schedule_published ? 'published' : 'drafted';
+
+        // Auto-sync section_subjects from class_schedules on publish
+        // so the student portal immediately reflects the correct teachers.
+        if ($section->schedule_published) {
+            $result = $this->subjectSync->sync($section);
+            Log::info("SectionSubjectSync [{$section->name}]: created={$result['created']}, kept={$result['kept']}, deleted={$result['deleted']}");
+        }
+
         return back()->with('success', "Schedule {$status} successfully.")
                      ->with('reopen_add_modal', false);
     }

@@ -2,7 +2,9 @@
     /* Timetable Grid Style */
     .timetable-grid-wrap {
         max-height: none !important;
-        overflow: visible !important;
+        overflow-y: visible !important;
+        overflow-x: auto !important;
+        overscroll-behavior: auto !important;
         border: 1px solid #e2e8f0;
         border-radius: 1rem;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
@@ -21,7 +23,7 @@
         font-weight: 800 !important;
         font-family: 'Outfit', sans-serif !important;
         font-size: 11px !important;
-        padding: 14px 10px !important;
+        padding: 10px 8px !important;
         border-bottom: 2px solid #e2e8f0 !important;
         border-right: 1px solid #e2e8f0 !important;
     }
@@ -34,7 +36,7 @@
         border-right: 1px solid #f1f5f9;
         vertical-align: middle;
         text-align: center;
-        padding: 6px !important; /* Premium inner padding */
+        padding: 4px !important; /* Shrunk padding for screen fit */
         background-color: #ffffff;
         position: relative;
     }
@@ -44,23 +46,23 @@
     
     /* Time & Minutes Columns */
     .timetable-grid .col-time {
-        width: 120px;
+        width: 110px;
         background-color: #f8fafc;
         font-family: 'Inter', sans-serif;
         font-weight: 800;
         color: #1e293b;
         font-size: 10px;
-        padding: 12px 8px !important;
+        padding: 8px 6px !important;
         border-right: 2px solid #e2e8f0 !important;
     }
     .timetable-grid .col-minutes {
-        width: 65px;
+        width: 55px;
         background-color: #f8fafc;
         font-family: 'Inter', sans-serif;
         font-weight: 700;
         color: #64748b;
         font-size: 10px;
-        padding: 12px 4px !important;
+        padding: 8px 4px !important;
         border-right: 2px solid #e2e8f0 !important;
     }
     
@@ -72,9 +74,9 @@
         align-items: center;
         width: 100%;
         height: 100%;
-        min-height: 55px;
-        padding: 10px 8px;
-        border-radius: 0.75rem;
+        min-height: 38px; /* Reduced from 55px */
+        padding: 6px 8px; /* Reduced from 10px 8px */
+        border-radius: 0.6rem;
         transition: all 0.2s ease-in-out;
         text-align: center;
         box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
@@ -177,17 +179,19 @@
 
             // List of standard prefixes we want to recognize
             $prefixes = [
-                'teacher'  => ['teacher', 'tchr'],
-                'ustadha'  => ['ustadha', 'ustadza'],
-                'ustadz'   => ['ustadz', 'ustadh', 'ustdz', 'ust'],
-                'sir'      => ['sir'],
-                'maam'     => ['ma\'am', 'maam'],
-                'ms'       => ['ms'],
-                'mrs'      => ['mrs'],
-                'mr'       => ['mr'],
+                'Teacher'  => ['teacher', 'tchr'],
+                'Ustadha'  => ['ustadha', 'ustadza'],
+                'Ustadz'   => ['ustadz', 'ustadh', 'ustdz', 'ust'],
+                'Alim'     => ['alim'],
+                'Alima'    => ['alima'],
+                'Sir'      => ['sir'],
+                'Maam'     => ['ma\'am', 'maam'],
+                'Ms'       => ['ms'],
+                'Mrs'      => ['mrs'],
+                'Mr'       => ['mr'],
             ];
 
-            $matchedPrefix = 'TEACHER'; // default prefix if none matched
+            $matchedPrefix = 'Teacher'; // default prefix if none matched
             $bareName = $fullName;
 
             // Check if the full name starts with any of the prefixes
@@ -195,7 +199,7 @@
                 foreach ($patterns as $pattern) {
                     // Match prefix case-insensitively, allowing optional period and spaces
                     if (preg_match('/^' . preg_quote($pattern, '/') . '\.?\s+/i', $fullName)) {
-                        $matchedPrefix = strtoupper($key);
+                        $matchedPrefix = $key;
                         $bareName = preg_replace('/^' . preg_quote($pattern, '/') . '\.?\s+/i', '', $fullName);
                         break 2;
                     }
@@ -204,7 +208,7 @@
 
             // Now get the first name (first word of the remaining name)
             $words = explode(' ', trim($bareName));
-            $firstName = strtoupper($words[0] ?? '');
+            $firstName = ucfirst(strtolower($words[0] ?? ''));
 
             return trim($matchedPrefix . ' ' . $firstName);
         }
@@ -223,27 +227,14 @@
 @endphp
 
 <div x-show="activeWorkspace === 'schedule'" x-transition class="space-y-6">
-    {{-- Mode Selector Header --}}
+    {{-- Header --}}
     <div class="flex items-center justify-between bg-white border border-gray-150 px-5 py-4 rounded-2xl shadow-xs">
         <span class="text-slate-950 font-extrabold text-sm tracking-wide uppercase font-outfit">Weekly Timetables</span>
-        <div class="flex items-center gap-4">
-            <div class="flex gap-1 bg-slate-100 p-1 border border-slate-200/50 rounded-xl">
-                <a href="{{ route('admin.academic.schedules', ['mode' => 'f2f', 'tab' => 'schedule']) }}" 
-                   class="px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all {{ $mode === 'f2f' ? 'bg-white text-indigo-950 shadow-3xs font-extrabold' : 'text-slate-500 hover:text-slate-955' }}">
-                    Face-to-Face
-                </a>
-                <a href="{{ route('admin.academic.schedules', ['mode' => 'online', 'tab' => 'schedule']) }}" 
-                   class="px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all {{ $mode === 'online' ? 'bg-white text-indigo-950 shadow-3xs font-extrabold' : 'text-slate-500 hover:text-slate-955' }}">
-                    Flexible Online
-                </a>
-            </div>
-            
-            <button type="button" @click="createModal = true"
-                    class="inline-flex items-center gap-1.5 bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-xs px-4 py-2 rounded-xl transition shadow-3xs cursor-pointer">
-                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-                Add Section
-            </button>
-        </div>
+        <button type="button" @click="createModal = true"
+                class="inline-flex items-center gap-1.5 bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-xs px-4 py-2 rounded-xl transition shadow-3xs cursor-pointer">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+            Add Section
+        </button>
     </div>
 
     @if($sections->isEmpty())
@@ -252,43 +243,143 @@
                 <i data-lucide="calendar" class="w-6 h-6"></i>
             </div>
             <div class="font-extrabold text-slate-900 text-sm mb-1">No Active Timetables</div>
-            <p class="text-xs text-slate-500 mb-4">There are no {{ $mode === 'online' ? 'Flexible Online' : 'Face-to-Face' }} sections created for this school year yet.</p>
+            <p class="text-xs text-slate-500 mb-4">There are no sections created for this school year yet.</p>
             <button type="button" @click="activeWorkspace = 'sections'; createModal = true"
                 class="inline-flex items-center gap-2 bg-indigo-750 hover:bg-indigo-900 active:scale-95 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition shadow-3xs cursor-pointer">
                 <i data-lucide="plus" class="w-3.5 h-3.5"></i> Add First Section
             </button>
         </div>
     @else
-        <div class="bg-white rounded-2xl border border-gray-150 p-5 shadow-xs space-y-4">
+        @php
+            $elementaryList = [];
+            $highSchoolList = [];
+            
+            foreach ($sortedGradeLevels as $grade) {
+                if (str_contains($grade, 'Kinder') || preg_match('/Grade [1-6]$/i', $grade)) {
+                    $elementaryList[] = $grade;
+                } else {
+                    $highSchoolList[] = $grade;
+                }
+            }
+        @endphp
+
+        <div class="bg-white rounded-2xl border border-gray-150 p-5 shadow-xs space-y-5">
             <div>
-                <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-2">Select Grade Level</label>
-                <div class="flex flex-wrap gap-1.5">
-                    @foreach($sortedGradeLevels as $grade)
-                        <button type="button" 
-                            @click="activeGradeLevel = '{{ $grade }}'; activeSectionId = (gradeSections['{{ $grade }}'] && gradeSections['{{ $grade }}'][0]) ? gradeSections['{{ $grade }}'][0].id : 0"
-                            :class="activeGradeLevel === '{{ $grade }}' ? 'bg-indigo-700 text-white shadow-xs font-bold' : 'bg-gray-50 text-slate-655 hover:bg-gray-100 hover:text-slate-900'"
-                            class="px-3.5 py-2 text-xs rounded-xl transition cursor-pointer shadow-3xs font-extrabold">
-                            {{ $grade }}
-                        </button>
-                    @endforeach
+                <label class="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-3">Select Grade Level</label>
+                <div class="grid grid-cols-1 gap-4">
+                    @if(!empty($elementaryList))
+                        <div class="bg-slate-50/50 p-3.5 rounded-2xl border border-slate-200/50">
+                            <span class="text-[9px] font-black uppercase tracking-widest text-indigo-800 block mb-2.5">Elementary</span>
+                            <div class="flex flex-wrap gap-1.5">
+                                @foreach($elementaryList as $grade)
+                                    <button type="button" 
+                                        @click="activeGradeLevel = '{{ $grade }}'; 
+                                                let gs = gradeSections['{{ $grade }}'] || [];
+                                                activeSectionId = gs.length > 0 ? gs[0].id : 0;"
+                                        :class="activeGradeLevel === '{{ $grade }}' ? 'bg-indigo-700 text-white shadow-xs font-bold' : 'bg-white text-slate-655 hover:bg-gray-150 hover:text-slate-900 border border-slate-200/70'"
+                                        class="px-3 py-1.5 text-xs rounded-xl transition cursor-pointer font-extrabold shadow-3xs">
+                                        {{ $grade }}
+                                    </button>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
+                    @if(!empty($highSchoolList))
+                        <div class="bg-slate-50/50 p-3.5 rounded-2xl border border-slate-200/50">
+                            <span class="text-[9px] font-black uppercase tracking-widest text-indigo-800 block mb-2.5">High School</span>
+                            <div class="flex flex-wrap gap-1.5">
+                                @foreach($highSchoolList as $grade)
+                                    <button type="button" 
+                                        @click="activeGradeLevel = '{{ $grade }}'; 
+                                                let gs = gradeSections['{{ $grade }}'] || [];
+                                                activeSectionId = gs.length > 0 ? gs[0].id : 0;"
+                                        :class="activeGradeLevel === '{{ $grade }}' ? 'bg-indigo-700 text-white shadow-xs font-bold' : 'bg-white text-slate-655 hover:bg-gray-150 hover:text-slate-900 border border-slate-200/70'"
+                                        class="px-3 py-1.5 text-xs rounded-xl transition cursor-pointer font-extrabold shadow-3xs">
+                                        {{ $grade }}
+                                    </button>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
                 </div>
             </div>
 
-            <div class="border-t border-slate-100 pt-3">
-                <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-2">Select Section / Mode</label>
-                <div class="flex flex-wrap gap-2">
-                    @foreach($sections as $section)
-                        <button type="button" 
-                            x-show="activeGradeLevel === '{{ $section->grade_level }}'"
-                            @click="activeSectionId = {{ $section->id }}"
-                            :class="activeSectionId === {{ $section->id }} ? 'bg-indigo-100 text-indigo-850 shadow-3xs font-extrabold' : 'bg-slate-50 text-slate-600 hover:bg-slate-100/80 shadow-3xs'"
-                            class="px-4 py-2.5 text-xs rounded-xl transition cursor-pointer text-left">
-                            <span class="block font-black text-slate-950">{{ $section->official_name ?: $section->name ?: 'General' }}</span>
-                            <span class="block text-[9px] opacity-80 font-semibold mt-0.5" :class="activeSectionId === {{ $section->id }} ? 'text-indigo-700' : 'text-slate-400'">
-                                {{ ucfirst($section->gender === 'male' ? 'Boys' : ($section->gender === 'female' ? 'Girls' : 'Merge')) }} · {{ $section->formatted_learning_mode }}
-                            </span>
-                        </button>
-                    @endforeach
+            <div class="border-t border-slate-100 pt-4" x-show="activeGradeLevel" x-cloak>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Face-to-Face Column -->
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-2 pb-2 mb-1.5" style="border-bottom: 2px solid #10b981;">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/30"></span>
+                            <span class="text-[10px] font-black uppercase tracking-widest text-emerald-800">Face-to-Face (F2F) Sections</span>
+                        </div>
+                        
+                        @php
+                            $f2fSectionList = $sections->filter(fn($s) => str_contains($s->learning_mode ?? '', 'Face') || str_contains($s->learning_mode ?? '', 'f2f'));
+                        @endphp
+                        @if($f2fSectionList->isEmpty())
+                            <span class="text-[11px] font-bold text-slate-400 italic">No Face-to-Face sections.</span>
+                        @else
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2" x-show="gradeHasMode('f2f')">
+                                @foreach($f2fSectionList as $section)
+                                    <button type="button" 
+                                        x-show="activeGradeLevel === '{{ $section->grade_level }}'"
+                                        @click="activeSectionId = {{ $section->id }}"
+                                        :class="activeSectionId === {{ $section->id }} ? 'bg-emerald-50/70 border-2 border-emerald-600 text-emerald-950 shadow-sm font-extrabold' : 'bg-slate-50/50 hover:bg-slate-50 border border-slate-200/60 text-slate-700'"
+                                        class="px-4 py-3 text-xs rounded-xl transition cursor-pointer text-left flex justify-between items-center w-full">
+                                        <div>
+                                            <span class="block font-black text-slate-900">{{ $section->official_name ?: $section->name ?: 'General' }}</span>
+                                            <span class="block text-[9px] opacity-75 font-semibold mt-0.5 uppercase tracking-wider">
+                                                {{ ucfirst($section->gender === 'male' ? 'Boys' : ($section->gender === 'female' ? 'Girls' : 'Merge')) }}
+                                            </span>
+                                        </div>
+                                        <span class="text-[9px] font-extrabold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md uppercase tracking-wider border border-emerald-200 shadow-3xs">F2F</span>
+                                    </button>
+                                @endforeach
+                            </div>
+                            
+                            <div x-show="!gradeHasMode('f2f')" class="text-[11px] font-bold text-slate-400 italic py-1">
+                                No Face-to-Face sections for this grade.
+                            </div>
+                        @endif
+                    </div>
+
+                    <!-- Flexible Online Column -->
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-2 pb-2 mb-1.5" style="border-bottom: 2px solid #6366f1;">
+                            <span class="w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-sm shadow-indigo-500/30"></span>
+                            <span class="text-[10px] font-black uppercase tracking-widest text-indigo-800">Flexible Online Sections</span>
+                        </div>
+
+                        @php
+                            $onlineSectionList = $sections->filter(fn($s) => str_contains($s->learning_mode ?? '', 'Online') || str_contains($s->learning_mode ?? '', 'Flexible'));
+                        @endphp
+                        @if($onlineSectionList->isEmpty())
+                            <span class="text-[11px] font-bold text-slate-400 italic">No online sections.</span>
+                        @else
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2" x-show="gradeHasMode('online')">
+                                @foreach($onlineSectionList as $section)
+                                    <button type="button" 
+                                        x-show="activeGradeLevel === '{{ $section->grade_level }}'"
+                                        @click="activeSectionId = {{ $section->id }}"
+                                        :class="activeSectionId === {{ $section->id }} ? 'bg-indigo-50 border-2 border-indigo-600 text-indigo-950 shadow-sm font-extrabold' : 'bg-slate-50/50 hover:bg-slate-50 border border-slate-200/60 text-slate-700'"
+                                        class="px-4 py-3 text-xs rounded-xl transition cursor-pointer text-left flex justify-between items-center w-full">
+                                        <div>
+                                            <span class="block font-black text-slate-900">{{ $section->official_name ?: $section->name ?: 'General' }}</span>
+                                            <span class="block text-[9px] opacity-75 font-semibold mt-0.5 uppercase tracking-wider">
+                                                {{ ucfirst($section->gender === 'male' ? 'Boys' : ($section->gender === 'female' ? 'Girls' : 'Merge')) }} @if($section->shift) · {{ $section->shift }} @endif
+                                            </span>
+                                        </div>
+                                        <span class="text-[9px] font-extrabold bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-md uppercase tracking-wider border border-indigo-200 shadow-3xs">Online</span>
+                                    </button>
+                                @endforeach
+                            </div>
+
+                            <div x-show="!gradeHasMode('online')" class="text-[11px] font-bold text-slate-400 italic py-1">
+                                No online sections for this grade.
+                            </div>
+                        @endif
+                    </div>
                 </div>
             </div>
         </div>
@@ -343,8 +434,14 @@
                             <i data-lucide="plus" class="w-3 h-3"></i> Add Class
                         </button>
 
+                        {{-- Manage Students & Channels --}}
+                        <a href="{{ route('admin.ms-teams.show', $section) }}"
+                           class="inline-flex items-center gap-1.5 bg-indigo-700 hover:bg-indigo-850 text-white font-extrabold text-[10px] px-3 py-1.5 rounded-lg transition-all shadow-3xs cursor-pointer">
+                            <i data-lucide="users" class="w-3.5 h-3.5"></i> Students & Teams
+                        </a>
+
                         {{-- Rename Action --}}
-                        <button type="button" @click="openEdit({{ $section->id }}, '{{ $section->name ?: '' }}')"
+                        <button type="button" @click="openEdit({{ $section->id }}, {{ json_encode($section->name ?: '') }})"
                                 class="inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-[10px] px-3 py-1.5 rounded-lg transition cursor-pointer">
                             <i data-lucide="edit-3" class="w-3.5 h-3.5"></i> Rename
                         </button>
@@ -604,7 +701,7 @@
                                                 <td class="cell-empty">
                                                     <button type="button" 
                                                         @click="startInlineCreate({{ $section->id }}, '{{ $day }}', '{{ $interval['start_time'] }}', '{{ $interval['end_time'] }}')"
-                                                        class="w-full h-full min-h-[55px] cursor-pointer hover:bg-indigo-50/20 transition-colors flex items-center justify-center group rounded-lg">
+                                                        class="w-full h-full min-h-[38px] cursor-pointer hover:bg-indigo-50/20 transition-colors flex items-center justify-center group rounded-lg">
                                                         <i data-lucide="plus-circle" class="w-4 h-4 text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity"></i>
                                                     </button>
                                                 </td>

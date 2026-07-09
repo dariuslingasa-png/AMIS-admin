@@ -28,6 +28,7 @@
                 ['Dashboard', 'layout-dashboard', route('admin.students.dashboard'), request()->routeIs('admin.students.dashboard')],
                 ['Student Records', 'user-check', route('admin.students.index'), (request()->routeIs('admin.students.index') || request()->routeIs('admin.students.show')) && !request()->routeIs('admin.students.families')],
                 ['Account Onboarding', 'user-cog', route('admin.students.accounts'), request()->routeIs('admin.students.accounts')],
+                ['CSV Comparison', 'scale', route('admin.students.comparison'), request()->routeIs('admin.students.comparison')],
                 ['Enrollment History', 'history', route('admin.students.history'), request()->routeIs('admin.students.history')],
                 ['Reports & Analytics', 'file-text', route('admin.students.reports'), request()->routeIs('admin.students.reports')],
                 ['Call Attendance', 'calendar-days', route('admin.students.attendance'), request()->routeIs('admin.students.attendance')],

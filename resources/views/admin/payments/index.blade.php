@@ -145,11 +145,29 @@
                     @endforeach
                 </select>
 
-                <div class="flex gap-2">
+                <div class="flex flex-wrap items-center gap-2">
                     <button class="inline-flex h-11 items-center gap-2 rounded-xl bg-emerald-700 px-4 text-sm font-black text-white shadow-sm transition hover:bg-emerald-800">
                         <i data-lucide="filter" class="h-4 w-4"></i>
                         Filter
                     </button>
+                    <a href="{{ route('admin.payments.print-report', array_merge(request()->query(), ['print_all' => 1])) }}" target="_blank" class="inline-flex h-11 items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 text-sm font-black text-emerald-700 hover:bg-emerald-100 transition">
+                        <i data-lucide="printer" class="h-4 w-4"></i>
+                        Print All
+                    </a>
+                    <a href="{{ route('admin.payments.print-report', request()->query()) }}" target="_blank" class="inline-flex h-11 items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 text-sm font-black text-amber-700 hover:bg-amber-100 transition">
+                        <i data-lucide="printer" class="h-4 w-4"></i>
+                        Print Page (20)
+                    </a>
+                    
+                    <form action="{{ route('admin.payments.email-reports') }}" method="POST" class="inline-flex items-center gap-1.5 border-l border-slate-200 pl-2">
+                        @csrf
+                        <input type="email" name="email" value="wcamsar@amis.edu.ph" required placeholder="Email address..." class="h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-700 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100" style="width: 200px;">
+                        <button type="submit" class="inline-flex h-11 items-center gap-2 rounded-xl bg-slate-900 px-4 text-xs font-black uppercase tracking-wider text-white shadow-sm transition hover:bg-slate-800 cursor-pointer">
+                            <i data-lucide="send" class="h-3.5 w-3.5"></i>
+                            Email All PDFs
+                        </button>
+                    </form>
+
                     @if (request()->hasAny(['search', 'status', 'sort', 'direction', 'per_page']))
                         <a href="{{ route('admin.payments.index') }}" class="inline-flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-black text-slate-600 transition hover:bg-slate-50">
                             <i data-lucide="rotate-ccw" class="h-4 w-4"></i>

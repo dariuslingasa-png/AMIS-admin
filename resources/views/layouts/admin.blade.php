@@ -20,14 +20,30 @@
             <main class="p-4 md:p-6">
                 <div class="mx-auto max-w-screen-2xl">
                     @include('partials.flash')
+                    
+                    @if (config('services.school.academic_maintenance', false) && request()->routeIs('admin.academic.*'))
+                        <div class="mb-5 flex items-center justify-between gap-4 p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-amber-800 dark:text-amber-300">
+                            <div class="flex items-center gap-3">
+                                <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center text-amber-700 dark:text-amber-400">
+                                    <i data-lucide="alert-triangle" class="w-4 h-4 animate-bounce"></i>
+                                </div>
+                                <div class="text-xs sm:text-sm font-semibold">
+                                    <span class="font-black uppercase tracking-wider text-[10px] bg-amber-500/25 px-2 py-0.5 rounded-full text-amber-800 dark:text-amber-250 mr-2">Maintenance Mode</span>
+                                    This module is currently undergoing live maintenance. Any edits performed are restricted to Administrators.
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+
                     @include('partials.breadcrumbs')
                     
-                    <div id="adminMainContent">
-                        {{ $slot }}
-                    </div>
+                    <div id="adminMainContent" class="w-full">
+                        <div id="adminSlotContent" class="w-full">
+                            {{ $slot }}
+                        </div>
 
-                    <!-- Global Skeleton Loader (hidden by default) -->
-                    <div id="globalSkeleton" class="space-y-6" style="display: none;">
+                        <!-- Global Skeleton Loader (hidden by default) -->
+                        <div id="globalSkeleton" class="space-y-6 w-full" style="display: none;">
                         <!-- Banner Header Skeleton -->
                         <div class="animate-pulse rounded-3xl bg-slate-200 p-6 h-28">
                             <div class="h-4 w-32 bg-slate-350 rounded mb-3"></div>
@@ -110,17 +126,17 @@
 
             // Delay the main content skeleton loader by 250ms to prevent flickering on fast loads
             skeletonTimer = setTimeout(() => {
-                const mainContent = document.getElementById('adminMainContent');
+                const slotContent = document.getElementById('adminSlotContent');
                 const globalSkeleton = document.getElementById('globalSkeleton');
-                if (mainContent && globalSkeleton) {
-                    mainContent.style.opacity = '0.3';
-                    mainContent.style.transition = 'opacity 0.2s ease';
+                if (slotContent && globalSkeleton) {
+                    slotContent.style.opacity = '0.3';
+                    slotContent.style.transition = 'opacity 0.2s ease';
                     
                     globalSkeleton.style.display = 'block';
                     globalSkeleton.style.opacity = '0';
                     globalSkeleton.style.transition = 'opacity 0.2s ease';
                     setTimeout(() => {
-                        mainContent.style.display = 'none';
+                        slotContent.style.display = 'none';
                         globalSkeleton.style.opacity = '1';
                     }, 50);
                 }
@@ -140,11 +156,11 @@
                 }, 200);
             }
 
-            const mainContent = document.getElementById('adminMainContent');
+            const slotContent = document.getElementById('adminSlotContent');
             const globalSkeleton = document.getElementById('globalSkeleton');
-            if (mainContent && globalSkeleton) {
-                mainContent.style.display = 'block';
-                mainContent.style.opacity = '1';
+            if (slotContent && globalSkeleton) {
+                slotContent.style.display = 'block';
+                slotContent.style.opacity = '1';
                 globalSkeleton.style.display = 'none';
             }
         }

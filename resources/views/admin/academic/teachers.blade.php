@@ -31,10 +31,13 @@
     if (!function_exists('formatTeacherDisplayName')) {
         function formatTeacherDisplayName($name, $isIslamicArabic) {
             $baseName = cleanTeacherPrefixes($name);
+            $words = explode(' ', trim($baseName));
+            $firstName = ucfirst(strtolower($words[0] ?? ''));
+
             if ($isIslamicArabic) {
                 $lower = strtolower(trim($name));
                 if (str_contains($lower, 'ustadha')) {
-                    return 'USTADHA ' . strtoupper($baseName);
+                    return 'Ustadha ' . $firstName;
                 } elseif (str_contains($lower, 'ustadz') || str_contains($lower, 'ustadh') || str_contains($lower, 'ust.')) {
                     $femaleNames = ['silfah', 'raslina', 'saliha'];
                     $isFemale = false;
@@ -45,17 +48,17 @@
                         }
                     }
                     if ($isFemale) {
-                        return 'USTADHA ' . strtoupper($baseName);
+                        return 'Ustadha ' . $firstName;
                     } else {
-                        return 'USTADZ ' . strtoupper($baseName);
+                        return 'Ustadz ' . $firstName;
                     }
                 } elseif (str_contains($lower, 'alim')) {
-                    return 'ALIM ' . strtoupper($baseName);
+                    return 'Alim ' . $firstName;
                 } else {
-                    return strtoupper(trim($name));
+                    return $firstName;
                 }
             } else {
-                return 'TEACHER ' . strtoupper($baseName);
+                return 'Teacher ' . $firstName;
             }
         }
     }
@@ -73,12 +76,69 @@
         }
         $hasPhoto = !empty($photoPath);
 
+        // Parse prefix and full_name
+        $name = $teacher['name'] ?? '';
+        $prefix = 'TEACHER';
+        $fullName = $name;
+        $prefixes = ['TEACHER', 'USTADZ', 'USTADHA', 'ALIM', 'ALIMA', 'SIR', 'MS', 'MRS', 'MR'];
+        foreach ($prefixes as $p) {
+            if (str_starts_with(strtoupper($name), $p . ' ')) {
+                $prefix = $p;
+                $fullName = substr($name, strlen($p) + 1);
+                break;
+            }
+        }
+
+        $cleanNameRemainder = trim($fullName);
+        $firstName = $teacher['first_name'] ?? '';
+        $middleName = $teacher['middle_name'] ?? '';
+        $lastName = $teacher['last_name'] ?? '';
+
+        if (empty($firstName) && empty($lastName) && !empty($cleanNameRemainder)) {
+            $parts = explode(' ', $cleanNameRemainder);
+            if (count($parts) === 1) {
+                $firstName = $parts[0];
+            } elseif (count($parts) === 2) {
+                $firstName = $parts[0];
+                $lastName = $parts[1];
+            } else {
+                $firstName = $parts[0];
+                if (strlen($parts[1]) <= 2) {
+                    $middleName = $parts[1];
+                    $lastName = implode(' ', array_slice($parts, 2));
+                } else {
+                    $lastName = implode(' ', array_slice($parts, 1));
+                }
+            }
+        }
+
+        $toTitleCase = function ($str) {
+            return mb_convert_case(mb_strtolower($str), MB_CASE_TITLE, "UTF-8");
+        };
+
+        $prefixTitle = $toTitleCase($prefix);
+        $firstTitle = $toTitleCase($firstName);
+        $middleTitle = $toTitleCase($middleName);
+        $lastTitle = $toTitleCase($lastName);
+
+        $parts = [];
+        if (!empty($prefixTitle)) $parts[] = $prefixTitle;
+        if (!empty($firstTitle)) $parts[] = $firstTitle;
+        if (!empty($middleTitle)) $parts[] = $middleTitle;
+        if (!empty($lastTitle)) $parts[] = $lastTitle;
+
+        $reconstructedName = implode(' ', $parts);
+        if (empty($firstName) && empty($lastName)) {
+            $reconstructedName = $toTitleCase($teacher['name']);
+        }
+
         return [
             'id' => $teacher['id'],
-            'name' => $teacher['name'],
-            'first_name' => $teacher['first_name'] ?? '',
-            'middle_name' => $teacher['middle_name'] ?? '',
-            'last_name' => $teacher['last_name'] ?? '',
+            'name' => $reconstructedName,
+            'prefix' => $prefix,
+            'first_name' => $firstName,
+            'middle_name' => $middleName,
+            'last_name' => $lastName,
             'gender' => $teacher['gender'] ?? 'Male',
             'birthdate' => $teacher['birthdate'] ?? '',
             'contact_number' => $teacher['contact_number'] ?? '',
@@ -111,6 +171,7 @@
     $blankTeacherPayload = [
         'id' => '',
         'name' => '',
+        'prefix' => 'TEACHER',
         'first_name' => '',
         'middle_name' => '',
         'last_name' => '',
@@ -140,6 +201,10 @@
         $selectedTeacherPayload = array_merge($selectedTeacherPayload ?? $blankTeacherPayload, [
             'id' => old('id', $selectedTeacherPayload['id'] ?? ''),
             'name' => old('name', $selectedTeacherPayload['name'] ?? ''),
+            'prefix' => old('prefix', $selectedTeacherPayload['prefix'] ?? 'TEACHER'),
+            'first_name' => old('first_name', $selectedTeacherPayload['first_name'] ?? ''),
+            'middle_name' => old('middle_name', $selectedTeacherPayload['middle_name'] ?? ''),
+            'last_name' => old('last_name', $selectedTeacherPayload['last_name'] ?? ''),
             'email' => old('email', $selectedTeacherPayload['email'] ?? ''),
             'dept' => old('dept', $selectedTeacherPayload['dept'] ?? ''),
             'sections' => old('sections', $selectedTeacherPayload['sections'] ?? ''),
@@ -163,7 +228,10 @@
         viewModalOpen: false,
         viewTeacher: @js($blankTeacherPayload),
         registerEmail: @js(old('form') === 'create' ? old('email', '') : ''),
-        registerName: @js(old('form') === 'create' ? old('name', '') : ''),
+        registerPrefix: @js(old('form') === 'create' ? old('prefix', 'TEACHER') : 'TEACHER'),
+        registerFirstName: @js(old('form') === 'create' ? old('first_name', '') : ''),
+        registerMiddleName: @js(old('form') === 'create' ? old('middle_name', '') : ''),
+        registerLastName: @js(old('form') === 'create' ? old('last_name', '') : ''),
         isEmailValid(email) {
             if (!email) return false;
             const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -211,7 +279,10 @@
         openTeacherCreator() {
             this.clearTeacherPhotoPreview();
             this.registerEmail = '';
-            this.registerName = '';
+            this.registerPrefix = 'TEACHER';
+            this.registerFirstName = '';
+            this.registerMiddleName = '';
+            this.registerLastName = '';
             this.isRegistering = false;
             this.addModal = true;
             this.$nextTick(() => window.lucide?.createIcons?.());
@@ -443,7 +514,7 @@
 
                                             <!-- Teacher Name & Email -->
                                             <div class="min-w-0">
-                                                <h3 class="text-sm font-black text-slate-950 tracking-tight leading-tight line-clamp-2 uppercase">
+                                                <h3 class="text-sm font-black text-slate-950 tracking-tight leading-tight line-clamp-2">
                                                     {{ formatTeacherDisplayName($t['name'], $isIslamicArabic) }}
                                                 </h3>
                                                 <p class="mt-1 truncate text-xs font-semibold text-slate-500 font-mono">{{ $t['email'] }}</p>
@@ -506,17 +577,22 @@
                                         </div>
 
                                         <!-- Action Buttons -->
-                                        <div class="mt-4 flex flex-wrap items-center justify-end gap-1.5 border-t border-slate-100 pt-3">
-                                            <a href="{{ route('admin.academic.teachers.view', $t['id']) }}#subject-load" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xxs font-bold text-emerald-700 hover:bg-emerald-50 rounded-lg border border-emerald-150 transition cursor-pointer shadow-3xs">
-                                                <i data-lucide="activity" class="h-3.5 w-3.5"></i>
-                                                Subject Load
+                                        <div class="mt-4 flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
+                                            <a href="{{ route('admin.academic.teachers.view', $t['id']) }}#subject-load" title="Subject Load" class="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition cursor-pointer shadow-3xs border border-emerald-100">
+                                                <i data-lucide="activity" class="h-4 w-4"></i>
                                             </a>
-                                            <button type="button" data-teacher="{{ $editPayload }}" @click.prevent="openTeacherViewerPayload($el.dataset.teacher)" class="inline-flex px-3 py-1.5 text-xxs font-bold text-indigo-700 hover:bg-indigo-50 rounded-lg border border-indigo-150 transition cursor-pointer shadow-3xs">View</button>
-                                            <a href="{{ route('admin.academic.teachers', ['edit' => $t['id']]) }}" data-teacher="{{ $editPayload }}" @click.prevent="openTeacherEditorPayload($el.dataset.teacher)" class="inline-flex px-3 py-1.5 text-xxs font-bold text-slate-700 hover:bg-slate-100 rounded-lg border border-slate-200 transition cursor-pointer shadow-3xs">Edit</a>
-                                            <form method="POST" action="{{ route('admin.academic.teachers.destroy', $t['id']) }}" onsubmit="return confirm('Are you sure you want to delete this teacher? This will permanently delete their account, subject assignments, and portal access.')">
+                                            <button type="button" data-teacher="{{ $editPayload }}" @click.prevent="openTeacherViewerPayload($el.dataset.teacher)" title="View Details" class="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 transition cursor-pointer shadow-3xs border border-indigo-100">
+                                                <i data-lucide="eye" class="h-4 w-4"></i>
+                                            </button>
+                                            <a href="{{ route('admin.academic.teachers', ['edit' => $t['id']]) }}" data-teacher="{{ $editPayload }}" @click.prevent="openTeacherEditorPayload($el.dataset.teacher)" title="Edit" class="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 transition cursor-pointer shadow-3xs border border-slate-200">
+                                                <i data-lucide="edit-3" class="h-4 w-4"></i>
+                                            </a>
+                                            <form method="POST" action="{{ route('admin.academic.teachers.destroy', $t['id']) }}" onsubmit="return confirm('Are you sure you want to delete this teacher? This will permanently delete their account, subject assignments, and portal access.')" class="inline">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="inline-flex px-3 py-1.5 text-xxs font-bold text-rose-700 hover:bg-rose-50 rounded-lg border border-rose-150 transition cursor-pointer shadow-3xs">Delete</button>
+                                                <button type="submit" title="Delete" class="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 transition cursor-pointer shadow-3xs border border-rose-100">
+                                                    <i data-lucide="trash-2" class="h-4 w-4"></i>
+                                                </button>
                                             </form>
                                         </div>
                                     </div>
@@ -575,10 +651,39 @@
                     </div>
 
                     <div class="grid gap-4">
-                        <label class="block">
-                            <span class="mb-1 block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Full Name *</span>
-                            <input type="text" name="name" value="{{ old('name', $selectedTeacherPayload['name'] ?? '') }}" x-model="editTeacher.name" required class="w-full rounded-xl border border-gray-300 bg-gray-50 px-3 py-2 text-sm font-bold text-gray-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20">
-                        </label>
+                        <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                            <label class="block sm:col-span-1">
+                                <span class="mb-1 block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Title *</span>
+                                <select name="prefix" x-model="editTeacher.prefix" class="w-full rounded-xl border border-gray-300 bg-gray-50 px-3 py-2 text-sm font-bold text-gray-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20">
+                                    <option value="TEACHER">TEACHER</option>
+                                    <option value="USTADZ">USTADZ</option>
+                                    <option value="USTADHA">USTADHA</option>
+                                    <option value="ALIM">ALIM</option>
+                                    <option value="ALIMA">ALIMA</option>
+                                    <option value="SIR">SIR</option>
+                                    <option value="MS">MS</option>
+                                    <option value="MRS">MRS</option>
+                                    <option value="MR">MR</option>
+                                </select>
+                            </label>
+
+                            <label class="block sm:col-span-3">
+                                <span class="mb-1 block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">First Name *</span>
+                                <input type="text" name="first_name" value="{{ old('first_name', $selectedTeacherPayload['first_name'] ?? '') }}" x-model="editTeacher.first_name" required class="w-full rounded-xl border border-gray-300 bg-gray-50 px-3 py-2 text-sm font-bold text-gray-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20">
+                            </label>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <label class="block">
+                                <span class="mb-1 block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Middle Name</span>
+                                <input type="text" name="middle_name" value="{{ old('middle_name', $selectedTeacherPayload['middle_name'] ?? '') }}" x-model="editTeacher.middle_name" placeholder="Optional" class="w-full rounded-xl border border-gray-300 bg-gray-50 px-3 py-2 text-sm font-bold text-gray-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20">
+                            </label>
+
+                            <label class="block">
+                                <span class="mb-1 block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Last Name *</span>
+                                <input type="text" name="last_name" value="{{ old('last_name', $selectedTeacherPayload['last_name'] ?? '') }}" x-model="editTeacher.last_name" required class="w-full rounded-xl border border-gray-300 bg-gray-50 px-3 py-2 text-sm font-bold text-gray-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20">
+                            </label>
+                        </div>
 
                         <label class="block">
                             <span class="mb-1 block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Email *</span>
@@ -599,11 +704,11 @@
                                     </template>
                                 </div>
                             </div>
-                            <template x-if="editTeacher.name && editTeacher.email !== suggestEmail(editTeacher.name)">
+                            <template x-if="editTeacher.first_name && editTeacher.email !== suggestEmail(editTeacher.first_name + ' ' + editTeacher.last_name)">
                                 <div class="mt-1.5 text-xxs font-bold text-slate-500">
                                     Suggested school email: 
-                                    <button type="button" @click="editTeacher.email = suggestEmail(editTeacher.name)" class="text-indigo-600 hover:underline select-none">
-                                        <span x-text="suggestEmail(editTeacher.name)"></span>
+                                    <button type="button" @click="editTeacher.email = suggestEmail(editTeacher.first_name + ' ' + editTeacher.last_name)" class="text-indigo-600 hover:underline select-none">
+                                        <span x-text="suggestEmail(editTeacher.first_name + ' ' + editTeacher.last_name)"></span>
                                     </button>
                                 </div>
                             </template>
@@ -692,10 +797,39 @@
                     </div>
 
                     <div class="grid gap-4">
-                        <label class="block">
-                            <span class="mb-1 block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Full Name *</span>
-                            <input type="text" name="name" value="{{ old('form') === 'create' ? old('name') : '' }}" x-model="registerName" required placeholder="e.g. Ust. Bilal Al-Madani" class="w-full rounded-xl border border-gray-300 bg-gray-50 px-3 py-2 text-sm font-bold text-gray-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20">
-                        </label>
+                        <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                            <label class="block sm:col-span-1">
+                                <span class="mb-1 block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Title *</span>
+                                <select name="prefix" x-model="registerPrefix" class="w-full rounded-xl border border-gray-300 bg-gray-50 px-3 py-2 text-sm font-bold text-gray-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20">
+                                    <option value="TEACHER">TEACHER</option>
+                                    <option value="USTADZ">USTADZ</option>
+                                    <option value="USTADHA">USTADHA</option>
+                                    <option value="ALIM">ALIM</option>
+                                    <option value="ALIMA">ALIMA</option>
+                                    <option value="SIR">SIR</option>
+                                    <option value="MS">MS</option>
+                                    <option value="MRS">MRS</option>
+                                    <option value="MR">MR</option>
+                                </select>
+                            </label>
+
+                            <label class="block sm:col-span-3">
+                                <span class="mb-1 block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">First Name *</span>
+                                <input type="text" name="first_name" value="{{ old('form') === 'create' ? old('first_name') : '' }}" x-model="registerFirstName" required placeholder="First Name" class="w-full rounded-xl border border-gray-300 bg-gray-50 px-3 py-2 text-sm font-bold text-gray-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20">
+                            </label>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <label class="block">
+                                <span class="mb-1 block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Middle Name</span>
+                                <input type="text" name="middle_name" value="{{ old('form') === 'create' ? old('middle_name') : '' }}" x-model="registerMiddleName" placeholder="Optional" class="w-full rounded-xl border border-gray-300 bg-gray-50 px-3 py-2 text-sm font-bold text-gray-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20">
+                            </label>
+
+                            <label class="block">
+                                <span class="mb-1 block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Last Name *</span>
+                                <input type="text" name="last_name" value="{{ old('form') === 'create' ? old('last_name') : '' }}" x-model="registerLastName" required placeholder="Last Name" class="w-full rounded-xl border border-gray-300 bg-gray-50 px-3 py-2 text-sm font-bold text-gray-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20">
+                            </label>
+                        </div>
 
                         <label class="block">
                             <span class="mb-1 block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Email *</span>
@@ -705,7 +839,7 @@
                                        :class="isEmailValid(registerEmail) ? 'border-emerald-500 focus:border-emerald-600 focus:ring-emerald-500/20' : 'border-rose-300 focus:border-rose-500 focus:ring-rose-500/20'">
                                 <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                                     <template x-if="isEmailValid(registerEmail)">
-                                        <svg class="h-5 w-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <svg class="h-5 w-5 text-emerald-650" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
                                         </svg>
                                     </template>
@@ -716,11 +850,11 @@
                                     </template>
                                 </div>
                             </div>
-                            <template x-if="registerName && registerEmail !== suggestEmail(registerName)">
+                            <template x-if="registerFirstName && registerEmail !== suggestEmail(registerFirstName + ' ' + registerLastName)">
                                 <div class="mt-1.5 text-xxs font-bold text-slate-500">
                                     Suggested school email: 
-                                    <button type="button" @click="registerEmail = suggestEmail(registerName)" class="text-indigo-600 hover:underline select-none">
-                                        <span x-text="suggestEmail(registerName)"></span>
+                                    <button type="button" @click="registerEmail = suggestEmail(registerFirstName + ' ' + registerLastName)" class="text-indigo-600 hover:underline select-none">
+                                        <span x-text="suggestEmail(registerFirstName + ' ' + registerLastName)"></span>
                                     </button>
                                 </div>
                             </template>

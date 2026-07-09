@@ -14,6 +14,25 @@
 @import "./form-controls.css";
 @import "./review-panel.css";
 @import "./smart-image.css";
+@import "./base/variables.css";
+@import "./base/reset.css";
+@import "./base/typography.css";
+@import "./layouts/admin-layout.css";
+@import "./layouts/sidebar.css";
+@import "./layouts/topbar.css";
+@import "./components/buttons.css";
+@import "./components/cards.css";
+@import "./components/forms.css";
+@import "./components/tables.css";
+@import "./components/modals.css";
+@import "./components/badges.css";
+@import "./components/alerts.css";
+@import "./pages/academic/dashboard.css";
+@import "./pages/academic/school-years.css";
+@import "./pages/academic/grade-levels.css";
+@import "./pages/academic/sections.css";
+@import "./pages/academic/subjects.css";
+@import "./pages/academic/schedules.css";
 
 @theme {
     --color-primary-50: #ecfdf5;

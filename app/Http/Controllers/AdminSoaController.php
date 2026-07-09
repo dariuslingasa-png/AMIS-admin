@@ -87,9 +87,41 @@ class AdminSoaController extends Controller
         return view('admin.soa.show', compact('account', 'breadcrumbs'));
     }
 
-    public function verifyPayment(StudentAccountPayment $payment)
+    public function verifyPayment(Request $request, StudentAccountPayment $payment)
     {
-        $payment->update(['status' => 'verified', 'verified_at' => now()]);
+        $validated = $request->validate([
+            'amount' => 'nullable|numeric|min:0.01',
+            'method' => 'nullable|string|in:cash,gcash,maya,bdo',
+            'reference_no' => 'nullable|string|max:100',
+            'or_number' => 'required|string|max:100',
+        ]);
+
+        $orNumber = trim($validated['or_number']);
+
+        // Prevent duplicate OR numbers across this student's ledger
+        $orExistsForStudent = StudentAccountPayment::where('student_id', $payment->student_id)
+            ->where('id', '!=', $payment->id)
+            ->whereRaw('LOWER(or_number) = ?', [mb_strtolower($orNumber)])
+            ->exists();
+        $orExistsOnEnrollmentPayment = Payment::where('enrollment_applicant_id', $payment->studentAccount->enrollment_applicant_id)
+            ->whereRaw('LOWER(or_number) = ?', [mb_strtolower($orNumber)])
+            ->exists();
+
+        if ($orExistsForStudent || $orExistsOnEnrollmentPayment) {
+            throw ValidationException::withMessages([
+                'or_number' => 'This OR number already exists for this student.',
+            ]);
+        }
+
+        $payment->update([
+            'status' => 'verified',
+            'amount' => $request->filled('amount') ? $request->amount : $payment->amount,
+            'method' => $request->filled('method') ? $request->method : $payment->method,
+            'reference_no' => $request->filled('reference_no') ? $request->reference_no : $payment->reference_no,
+            'or_number' => $orNumber,
+            'verified_at' => now(),
+            'paid_at' => $payment->paid_at ?? now(),
+        ]);
 
         // Mark the monthly billing as paid if linked
         if ($payment->soa_monthly_billing_id) {

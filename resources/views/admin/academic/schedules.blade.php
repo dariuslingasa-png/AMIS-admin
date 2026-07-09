@@ -21,7 +21,7 @@
         activeWorkspace: 'schedule',
         activeSectionId: @js($activeSectionId),
         activeGradeLevel: @js($activeGradeLevel),
-        gradeSections: @js($sections->groupBy('grade_level')->map(fn($group) => $group->map(fn($s) => ['id' => $s->id])->values())),
+        gradeSections: @js($sections->groupBy('grade_level')->map(fn($group) => $group->map(fn($s) => ['id' => $s->id, 'learning_mode' => $s->learning_mode])->values())),
         schedulesBySection: @js($schedulesBySection),
         syncModal: false,
         addModal: @js((bool) $reopenAddModal),
@@ -45,6 +45,13 @@
             end_time: '',
             spans_all_days: false,
             selected_days: []
+        },
+        gradeHasMode(mode) {
+            let list = this.gradeSections[this.activeGradeLevel] || [];
+            if (mode === 'f2f') {
+                return list.some(s => s.learning_mode.toLowerCase().includes('face') || s.learning_mode.toLowerCase().includes('f2f'));
+            }
+            return list.some(s => s.learning_mode.toLowerCase().includes('online') || s.learning_mode.toLowerCase().includes('flexible'));
         },
         openAddClass(sectionId) {
             let draftKey = 'schedule_draft_' + sectionId;
@@ -177,6 +184,7 @@
         getClassCell(day, interval) {
             let schedules = this.getSectionSchedules();
             return schedules.find(s => {
+                if (this.editForm && this.editForm.id && s.id == this.editForm.id) return false;
                 let sDay = s.day || s.payload?.day;
                 if (sDay !== day && !s.spans_all_days) return false;
                 return s.start_minutes <= interval.start_minutes && s.end_minutes >= interval.end_minutes;
@@ -218,30 +226,33 @@
         },
         clickPreviewCell(day, interval) {
             let schedule = this.getClassCell(day, interval);
-            if (!schedule) {
-                if (this.isDraftCell(day, interval)) {
-                    this.toggleDaySelection(day);
-                    return;
-                }
+            if (schedule) {
+                this.startInlineEdit(schedule);
+                return;
+            }
 
-                if (!this.editForm.start_time || !this.editForm.end_time) {
-                    this.editForm.day = day;
-                    this.editForm.selected_days = [day];
-                    this.editForm.start_time = interval.start_time;
-                    this.editForm.end_time = interval.end_time;
-                    return;
-                }
+            if (this.isDraftCell(day, interval)) {
+                this.toggleDaySelection(day);
+                return;
+            }
 
-                let [startH, startM] = this.editForm.start_time.split(':').map(Number);
-                let startMin = startH * 60 + startM;
-                if (interval.start_minutes === startMin) {
-                    this.toggleDaySelection(day);
-                } else {
-                    this.editForm.day = day;
-                    this.editForm.selected_days = [day];
-                    this.editForm.start_time = interval.start_time;
-                    this.editForm.end_time = interval.end_time;
-                }
+            if (!this.editForm.start_time || !this.editForm.end_time) {
+                this.editForm.day = day;
+                this.editForm.selected_days = [day];
+                this.editForm.start_time = interval.start_time;
+                this.editForm.end_time = interval.end_time;
+                return;
+            }
+
+            let [startH, startM] = this.editForm.start_time.split(':').map(Number);
+            let startMin = startH * 60 + startM;
+            if (interval.start_minutes === startMin) {
+                this.toggleDaySelection(day);
+            } else {
+                this.editForm.day = day;
+                this.editForm.selected_days = [day];
+                this.editForm.start_time = interval.start_time;
+                this.editForm.end_time = interval.end_time;
             }
         },
         getPreviewCellColspan(day, interval) {
@@ -349,7 +360,7 @@
                 start_time: entry.start_time,
                 end_time: entry.end_time,
                 spans_all_days: entry.spans_all_days ? true : false,
-                selected_days: [entry.day]
+                selected_days: entry.day ? entry.day.split(',') : []
             };
             if (this.editForm.teacher_name === 'Teacher pending') {
                 this.editForm.teacher_name = '';

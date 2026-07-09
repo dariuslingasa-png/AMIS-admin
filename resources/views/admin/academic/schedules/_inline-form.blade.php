@@ -10,8 +10,12 @@
     </div>
     <div class="flex flex-col gap-1">
         <label class="text-[9px] font-black uppercase text-slate-400 tracking-wide text-left">Teacher</label>
-        <input type="text" x-model="editingCell.teacher_name" list="schedule-teachers" placeholder="Teacher Name" 
-            class="w-full bg-slate-50 border border-slate-200 text-slate-850 text-xs rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition text-left">
+        <select x-model="editingCell.teacher_name" class="w-full bg-slate-50 border border-slate-200 text-slate-850 text-xs rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition text-left">
+            <option value="">Teacher pending</option>
+            @foreach($teachers as $teacher)
+                <option value="{{ $teacher['name'] }}">{{ formatTeacherShortName($teacher['name']) }}</option>
+            @endforeach
+        </select>
     </div>
     <div class="flex flex-col gap-1">
         <label class="text-[9px] font-black uppercase text-slate-400 tracking-wide text-left">End Time *</label>

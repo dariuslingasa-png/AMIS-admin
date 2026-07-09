@@ -29,6 +29,9 @@ class TeacherMatcherService
         '/^ustdz\.?\s+/i',
         '/^ustadza\s+/i',
         '/^ustadha\s+/i',
+        '/^ustadz\.?\s+/i',
+        '/^alim\.?\s+/i',
+        '/^alima\.?\s+/i',
         '/^sir\.?\s+/i',
         '/^ma\'?am\.?\s+/i',
         '/^maam\.?\s+/i',
@@ -59,10 +62,66 @@ class TeacherMatcherService
         $teachers = $this->allTeachers();
 
         $matches = [];
+        // Exact Match (with title stripped from both query and database name)
         foreach ($teachers as $teacher) {
-            $teacherNormalized = $this->normalize($teacher['name']);
+            $teacherBare = $this->stripTitle($teacher['name']);
+            $teacherNormalized = $this->normalize($teacherBare);
             if ($teacherNormalized === $normalized) {
                 $matches[] = $teacher;
+            }
+        }
+
+        // Fallback: If no exact match, try matching by first name, slug, or substring
+        if (empty($matches)) {
+            // Pass 1: Match by exact first name, compact name, or word match in first name
+            foreach ($teachers as $teacher) {
+                $firstName = $teacher['first_name'] ?? '';
+                if (empty($firstName)) {
+                    $nameWithoutTitle = $this->stripTitle($teacher['name']);
+                    $parts = explode(' ', $nameWithoutTitle);
+                    $firstName = $parts[0] ?? '';
+                }
+                
+                $normalizedFirstName = $this->normalize($firstName);
+                $normalizedId = str_replace('-', ' ', $this->normalize($teacher['id']));
+                
+                $compactNormalized = str_replace(' ', '', $normalized);
+                $compactFirstName = str_replace(' ', '', $normalizedFirstName);
+                $compactId = str_replace(' ', '', $normalizedId);
+
+                // Handle special spelling variations (e.g., Normayla matching Normylah)
+                $isNormaMatch = (str_starts_with($compactNormalized, 'norma') || str_starts_with($compactNormalized, 'normy')) && 
+                               (str_starts_with($compactId, 'teachernormylah') || str_starts_with($compactId, 'normylah'));
+
+                $firstNameWords = explode(' ', $normalizedFirstName);
+                $idWords = explode(' ', $normalizedId);
+
+                if (
+                    $normalizedFirstName === $normalized ||
+                    $compactFirstName === $compactNormalized ||
+                    $normalizedId === $normalized ||
+                    $compactId === $compactNormalized ||
+                    in_array($normalized, $firstNameWords) ||
+                    in_array($normalized, $idWords) ||
+                    $isNormaMatch
+                ) {
+                    $matches[] = $teacher;
+                }
+            }
+
+            // Pass 2: Looser substring match (only if no matches found in Pass 1)
+            if (empty($matches)) {
+                foreach ($teachers as $teacher) {
+                    $normalizedName = $this->normalize($teacher['name']);
+                    $compactName = str_replace(' ', '', $normalizedName);
+
+                    if (
+                        str_contains($normalizedName, $normalized) ||
+                        str_contains($compactName, $compactNormalized)
+                    ) {
+                        $matches[] = $teacher;
+                    }
+                }
             }
         }
 
@@ -120,22 +179,73 @@ class TeacherMatcherService
             ->map(fn ($row) => [
                 'id'   => Str::slug(Str::of($row['teacher'] ?? '')->ascii()),
                 'name' => $row['teacher'] ?? '',
+                'first_name' => explode(' ', str_replace(['TEACHER ', 'USTADZ ', 'USTADHA ', 'ALIM '], '', $row['teacher'] ?? ''))[0] ?? '',
             ]);
 
         // Teachers from overrides JSON
         $fromOverrides = collect($overrides)->map(fn ($data, $id) => [
             'id'   => $id,
             'name' => $data['name'] ?? '',
+            'first_name' => $data['first_name'] ?? '',
         ])->values();
+
+        // Teachers from database
+        $dbTeachers = \App\Models\User::where('role', 'teacher')
+            ->get()
+            ->map(fn ($u) => [
+                'id'   => $u->username ?: Str::slug(Str::of($u->name)->ascii()),
+                'name' => $u->name,
+                'first_name' => explode(' ', str_replace(['TEACHER ', 'USTADZ ', 'USTADHA ', 'ALIM '], '', $u->name))[0] ?? '',
+            ]);
 
         $this->teacherList = $advisory
             ->merge($fromOverrides)
+            ->merge($dbTeachers)
             ->filter(fn ($t) => filled($t['name']))
-            ->unique('id')
+            ->sortByDesc(fn ($t) => str_contains($t['id'], '-') ? 0 : 1)
+            ->unique(fn ($t) => $this->getShortName($t['name']))
+            ->sortBy('name', SORT_NATURAL | SORT_FLAG_CASE)
             ->values()
             ->all();
 
         return $this->teacherList;
+    }
+
+    /**
+     * Helper to format full name to standard short display name format (matched with blade helper).
+     */
+    private function getShortName(string $fullName): string
+    {
+        $fullName = trim($fullName);
+        if (empty($fullName)) {
+            return '';
+        }
+        $bareName = $fullName;
+        $matchedPrefix = 'Teacher';
+
+        foreach (self::TITLE_PATTERNS as $pattern) {
+            if (preg_match($pattern, $fullName)) {
+                if (preg_match('/^ust/i', $fullName)) $matchedPrefix = 'Ustadz';
+                elseif (preg_match('/^ustadh/i', $fullName)) $matchedPrefix = 'Ustadz';
+                elseif (preg_match('/^ustadza/i', $fullName)) $matchedPrefix = 'Ustadha';
+                elseif (preg_match('/^ustadha/i', $fullName)) $matchedPrefix = 'Ustadha';
+                elseif (preg_match('/^alim/i', $fullName)) $matchedPrefix = 'Alim';
+                elseif (preg_match('/^alima/i', $fullName)) $matchedPrefix = 'Alima';
+                elseif (preg_match('/^sir/i', $fullName)) $matchedPrefix = 'Sir';
+                elseif (preg_match('/^ma/i', $fullName)) $matchedPrefix = 'Maam';
+                elseif (preg_match('/^ms/i', $fullName)) $matchedPrefix = 'Ms';
+                elseif (preg_match('/^mrs/i', $fullName)) $matchedPrefix = 'Mrs';
+                elseif (preg_match('/^mr/i', $fullName)) $matchedPrefix = 'Mr';
+
+                $bareName = preg_replace($pattern, '', $fullName);
+                break;
+            }
+        }
+
+        $words = explode(' ', trim($bareName));
+        $firstName = ucfirst(strtolower($words[0] ?? ''));
+
+        return trim($matchedPrefix . ' ' . $firstName);
     }
 
     /**

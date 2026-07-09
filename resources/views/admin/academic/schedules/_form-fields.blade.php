@@ -124,7 +124,12 @@
 
         <label class="flex flex-col gap-1">
             <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Teacher</span>
-            <input type="text" name="teacher_name" x-model="editForm.teacher_name" list="schedule-teachers" placeholder="Teacher name" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl px-3 py-2 outline-none">
+            <select name="teacher_name" x-model="editForm.teacher_name" class="w-full bg-slate-50 border border-gray-300 text-gray-900 text-sm rounded-xl px-3 py-2.5 outline-none">
+                <option value="">Teacher pending</option>
+                @foreach($teachers as $teacher)
+                    <option value="{{ $teacher['name'] }}">{{ formatTeacherShortName($teacher['name']) }}</option>
+                @endforeach
+            </select>
         </label>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">

@@ -32,7 +32,7 @@ class LogSentEmail
             $subject = $message->getSubject() ?? '';
 
             // Extract message ID
-            $messageId = $message->getMessageId() ?? null;
+            $messageId = $event->sent->getMessageId() ?? null;
 
             // Determine mailer name from event data
             $mailer = $event->data['mailer'] ?? config('mail.default', 'smtp');

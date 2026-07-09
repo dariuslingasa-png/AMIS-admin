@@ -166,6 +166,135 @@ class AdminPaymentController extends Controller
     }
 
     /**
+     * Display a printable family payments report.
+     */
+    public function printFamilyReport(Request $request)
+    {
+        $query = Payment::with('applicant.user')->latest();
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $familyRows = $this->paymentFamilyRows($query->get());
+
+        $search = trim((string) $request->input('search', ''));
+        if ($search !== '') {
+            $needle = mb_strtolower($search);
+            $familyRows = $familyRows->filter(function ($family) use ($needle) {
+                $childrenText = $family['children']
+                    ->map(fn ($child) => collect([
+                        $child->full_name,
+                        $child->first_name,
+                        $child->last_name,
+                        $child->grade_level,
+                        $child->school_year,
+                        $child->user?->email,
+                    ])->filter()->join(' '))
+                    ->join(' ');
+
+                $paymentsText = $family['payments']
+                    ->map(fn ($payment) => collect([
+                        $payment->reference_no,
+                        $payment->or_number,
+                        $payment->method,
+                        $payment->status,
+                    ])->filter()->join(' '))
+                    ->join(' ');
+
+                $haystack = mb_strtolower(collect([
+                    $family['family_label'],
+                    $family['family_no'],
+                    $family['methods']->join(' '),
+                    $childrenText,
+                    $paymentsText,
+                ])->filter()->join(' '));
+
+                return str_contains($haystack, $needle);
+            })->values();
+        }
+
+        // We only want families that have uploaded payments
+        $families = $familyRows->filter(function ($family) {
+            return $family['payments']->isNotEmpty();
+        })->values();
+
+        // Sort families
+        $sort = (string) $request->input('sort', 'number');
+        $direction = $request->input('direction') === 'asc' ? 'asc' : 'desc';
+
+        $families = ($sort === 'family'
+            ? $families->sortBy(fn ($row) => $row['family_label'], SORT_NATURAL | SORT_FLAG_CASE, $direction === 'desc')
+            : $families->sortBy(fn ($row) => $row['family_no'], SORT_REGULAR, $direction === 'desc')
+        )->values();
+
+        if ($request->input('print_all') == '1') {
+            $pageInfo = [
+                'current' => 1,
+                'last' => 1,
+                'total' => $families->count(),
+                'is_paginated' => false,
+            ];
+            return view('admin.payments.print-report', [
+                'families' => $families,
+                'pageInfo' => $pageInfo,
+            ]);
+        }
+
+        $perPage = 20;
+        $page = \Illuminate\Pagination\LengthAwarePaginator::resolveCurrentPage();
+
+        $paginatedFamilies = new \Illuminate\Pagination\LengthAwarePaginator(
+            $families->forPage($page, $perPage)->values(),
+            $families->count(),
+            $perPage,
+            $page,
+            [
+                'path' => \Illuminate\Pagination\LengthAwarePaginator::resolveCurrentPath(),
+                'query' => $request->query(),
+            ]
+        );
+
+        $pageInfo = [
+            'current' => $paginatedFamilies->currentPage(),
+            'last' => $paginatedFamilies->lastPage(),
+            'total' => $paginatedFamilies->total(),
+            'is_paginated' => true,
+        ];
+
+        return view('admin.payments.print-report', [
+            'families' => $paginatedFamilies,
+            'pageInfo' => $pageInfo,
+        ]);
+    }
+
+    /**
+     * Trigger sending batch PDF reports via email.
+     */
+    public function emailReports(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        $email = $request->email;
+
+        // Increase maximum execution time to 5 minutes
+        set_time_limit(300);
+
+        try {
+            \Illuminate\Support\Facades\Artisan::call('finance:send-reports', [
+                'email' => $email,
+            ]);
+
+            return back()->with('success', 'All finance reports have been generated and sent to ' . $email . ' successfully!');
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Failed to generate/email finance reports: " . $e->getMessage());
+            return back()->with('error', 'Failed to send reports: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Display details and invoice review worksheet for a specific enrollment payment.
      */
     public function show(Payment $payment)

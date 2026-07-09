@@ -288,10 +288,75 @@
 
             <!-- Right Column: Enrolled Students Roster -->
             <div class="admin-card bg-white border border-slate-150 rounded-2xl shadow-xs p-5 space-y-4">
-                <div class="border-b border-slate-100 pb-3">
-                    <span class="admin-card-title text-slate-900 font-extrabold text-sm tracking-wide">Enrolled Students</span>
-                    <span class="badge badge-green font-bold text-xxs bg-emerald-50 text-emerald-805 border border-emerald-100 mt-1 block w-max">{{ $enrollments->count() }} active</span>
+                <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
+                    <div>
+                        <span class="admin-card-title text-slate-900 font-extrabold text-sm tracking-wide">Enrolled Students</span>
+                        <span class="badge badge-green font-bold text-xxs bg-emerald-50 text-emerald-805 border border-emerald-100 mt-1 block w-max">{{ $enrollments->count() }} active</span>
+                    </div>
                 </div>
+
+                <!-- Manual Student Assigner -->
+                <div x-data="studentAssigner()" class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-3">
+                    <span class="text-xs font-black uppercase tracking-wider text-slate-500 block">Assign Student Manually</span>
+                    <div class="relative">
+                        <input 
+                            type="text" 
+                            x-model="searchQuery" 
+                            @input.debounce.300ms="searchStudents()"
+                            placeholder="Type student name or ID..."
+                            class="w-full bg-white border border-slate-200 text-xs rounded-xl pl-3 pr-8 py-2 outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-semibold"
+                        >
+                        <div x-show="searching" class="absolute right-3 top-1/2 -translate-y-1/2" x-cloak>
+                            <svg class="animate-spin h-3.5 w-3.5 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Search Results Dropdown -->
+                    <div x-show="searchResults.length > 0" class="bg-white border border-slate-200 rounded-xl shadow-lg max-h-48 overflow-y-auto divide-y divide-slate-100" x-cloak>
+                        <template x-for="student in searchResults" :key="student.id">
+                            <div class="p-2.5 hover:bg-slate-50 flex items-center justify-between gap-2 transition-colors">
+                                <div class="min-w-0">
+                                    <div class="font-extrabold text-[11px] text-slate-800 uppercase truncate" x-text="student.name"></div>
+                                    <div class="text-[9px] text-slate-400 font-mono" x-text="'ID: ' + student.student_number"></div>
+                                    <template x-if="student.current_section">
+                                        <div class="text-[9px] font-bold text-amber-600 mt-0.5" x-text="'Current: ' + student.current_section"></div>
+                                    </template>
+                                </div>
+                                <button 
+                                    type="button" 
+                                    @click="selectStudent(student)"
+                                    class="px-2.5 py-1 text-[10px] font-bold bg-emerald-50 hover:bg-emerald-600 hover:text-white text-emerald-800 rounded-lg transition"
+                                >
+                                    Select
+                                </button>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- Selected Student Preview -->
+                    <div x-show="selectedStudent" class="flex items-center justify-between bg-emerald-50/50 border border-emerald-100 rounded-xl p-2.5" x-cloak>
+                        <div class="min-w-0">
+                            <div class="font-extrabold text-[11px] text-emerald-950 uppercase truncate" x-text="selectedStudent?.name"></div>
+                            <div class="text-[9px] text-emerald-600 font-mono" x-text="'Selected ID: ' + selectedStudent?.student_number"></div>
+                        </div>
+                        <button type="button" @click="selectedStudent = null" class="text-slate-400 hover:text-rose-600 transition">
+                            <i data-lucide="x" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+
+                    <!-- Submit Form -->
+                    <form x-show="selectedStudent" method="POST" action="{{ route('admin.ms-teams.students.assign', $section) }}" x-cloak>
+                        @csrf
+                        <input type="hidden" name="student_id" :value="selectedStudent?.id">
+                        <button type="submit" class="w-full py-2 bg-emerald-800 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs rounded-xl shadow-xs transition">
+                            Confirm Assignment
+                        </button>
+                    </form>
+                </div>
+
                 <div class="divide-y divide-slate-100 max-h-96 overflow-y-auto space-y-1 p-1">
                     @forelse($enrollments as $e)
                         @php
@@ -309,7 +374,15 @@
                                     <div class="text-[9px] text-slate-400 font-mono tracking-wide mt-0.5">{{ $e->student->student_number }}</div>
                                 </div>
                             </div>
-                            <span class="badge badge-green text-[9px] font-bold">Active</span>
+                            <div class="flex items-center gap-2">
+                                <span class="badge badge-green text-[9px] font-bold">Active</span>
+                                <form method="POST" action="{{ route('admin.ms-teams.students.remove', [$section, $e->student]) }}" x-on:submit.prevent="if(confirm('Remove {{ addslashes($first) }} {{ addslashes($last) }} from this section?')) $el.submit()">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="text-slate-350 hover:text-rose-600 transition-colors p-1" title="Remove from section">
+                                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     @empty
                         <div class="admin-empty py-6 text-center text-slate-400">
@@ -539,6 +612,35 @@
                 
                 slugify(str) {
                     return str.toLowerCase().replace(/[^a-z0-9]/g, '-');
+                }
+            }));
+
+            Alpine.data('studentAssigner', () => ({
+                searchQuery: '',
+                searchResults: [],
+                searching: false,
+                selectedStudent: null,
+                
+                async searchStudents() {
+                    if (this.searchQuery.trim().length < 2) {
+                        this.searchResults = [];
+                        return;
+                    }
+                    this.searching = true;
+                    try {
+                        const res = await fetch(`{{ route("admin.ms-teams.students.search") }}?q=${encodeURIComponent(this.searchQuery)}`);
+                        const data = await res.json();
+                        this.searchResults = data;
+                    } catch (e) {
+                        console.error('Error searching students:', e);
+                    }
+                    this.searching = false;
+                },
+                
+                selectStudent(student) {
+                    this.selectedStudent = student;
+                    this.searchResults = [];
+                    this.searchQuery = '';
                 }
             }));
         });

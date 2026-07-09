@@ -88,6 +88,10 @@
                     <i data-lucide="user-cog" class="h-4 w-4"></i>
                     Account Onboarding
                 </a>
+                <a href="{{ route('admin.students.comparison') }}" class="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 transition hover:bg-slate-50">
+                    <i data-lucide="scale" class="h-4 w-4 text-slate-500"></i>
+                    CSV Comparison
+                </a>
                 <a href="{{ route('admin.students.history') }}" class="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 transition hover:bg-slate-50">
                     <i data-lucide="history" class="h-4 w-4"></i>
                     Enrollment History

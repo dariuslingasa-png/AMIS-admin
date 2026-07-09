@@ -40,28 +40,19 @@ class MsTeamsEnrollmentService
 
         $modeBase = $isFlexible ? 'Flexible Online Learning' : 'Face-to-Face';
 
-        // Find or auto-create section — DB lock prevents duplicate creation
-        $section = DB::transaction(function () use ($student, $modeBase, $shift, $gender, &$results) {
-            $found = Section::where('grade_level', $student->grade_level)
-                ->where('gender', $gender)
-                ->where('learning_mode', $modeBase)
-                ->where('shift', $shift)
-                ->lockForUpdate()
-                ->first();
+        // Find section — do NOT auto-create
+        $section = Section::where('grade_level', $student->grade_level)
+            ->where('gender', $gender)
+            ->where('learning_mode', $modeBase)
+            ->where('shift', $shift)
+            ->first();
 
-            if ($found) return $found;
-
-            try {
-                return $this->autoCreateSection($student, $modeBase, $shift, $gender);
-            } catch (\Exception $e) {
-                Log::error("Failed to auto-create section for {$student->student_number}: " . $e->getMessage());
-                $results['failed']++;
-                $results['errors'][] = 'Auto-create section failed: ' . $e->getMessage();
-                return null;
-            }
-        });
-
-        if (!$section) return $results;
+        if (!$section) {
+            $results['failed']++;
+            $results['errors'][] = "No matching section found for {$student->grade_level} ({$gender} · {$modeBase} · {$shift}). Please create it manually.";
+            Log::warning("MsTeamsEnrollmentService: No section found for student {$student->student_number} ({$student->grade_level} · {$gender} · {$modeBase} · {$shift})");
+            return $results;
+        }
 
         if (!$section->ms_team_id) {
             $results['failed']++;
@@ -114,76 +105,4 @@ class MsTeamsEnrollmentService
         return $results;
     }
 
-    /**
-     * Auto-create a section + MS Team.
-     * Uses the exact same naming convention as AdminMsTeamsController::storeSingle().
-     * Posts welcome card to General channel after creation.
-     * Creates the DB record even if MS Team API fails (admin can retry).
-     */
-    private function autoCreateSection(Student $student, string $modeBase, ?string $shift, string $gender): Section
-    {
-        $grade       = $student->grade_level;
-        $genderLabel = $gender === 'male' ? 'Boys' : 'Girls';
-        $shiftLabel  = $shift ? ($shift === '1st Shift' ? '1st Shift' : '2nd Shift') : 'F2F';
-
-        if ($grade === 'Kinder 1') $prefix = 'K1';
-        elseif ($grade === 'Kinder 2') $prefix = 'K2';
-        else $prefix = 'G' . str_replace('Grade ', '', $grade);
-
-        $teamName = "{$prefix} [{$genderLabel} & {$shiftLabel}]";
-
-        // Race-condition guard — check once more inside the transaction
-        $existing = Section::where('grade_level', $grade)
-            ->where('gender', $gender)
-            ->where('learning_mode', $modeBase)
-            ->where('shift', $shift)
-            ->first();
-
-        if ($existing) {
-            Log::info("Section already exists (race condition avoided): {$teamName}");
-            return $existing;
-        }
-
-        Log::info("Auto-creating MS Team: {$teamName}");
-
-        $msTeamId  = null;
-        $msTeamUrl = null;
-
-        try {
-            $result    = $this->graph->createTeam($teamName, "AMIS auto-created team for {$grade}");
-            $msTeamId  = $result['id'];
-            $msTeamUrl = "https://teams.microsoft.com/l/team/{$msTeamId}";
-
-            // Wait for team to be ready in Azure (same as storeSingle)
-            $this->graph->waitForTeam($msTeamId);
-
-            // Post welcome card to General channel (same as storeSingle)
-            $generalChannelId = $this->graph->getGeneralChannelId($msTeamId);
-            if ($generalChannelId) {
-                $this->graph->postWelcomeCard($msTeamId, $generalChannelId, [
-                    'grade_level'   => $grade,
-                    'learning_mode' => $modeBase,
-                    'shift'         => $shift,
-                    'gender'        => $gender,
-                ]);
-            }
-        } catch (\Exception $e) {
-            Log::error("MS Team creation failed [{$teamName}]: " . $e->getMessage());
-            // Fall through — still save the section so admin can retry team creation
-        }
-
-        $section = Section::create([
-            'name'          => null,
-            'grade_level'   => $grade,
-            'learning_mode' => $modeBase,
-            'shift'         => $shift,
-            'gender'        => $gender,
-            'ms_team_id'    => $msTeamId,
-            'ms_team_url'   => $msTeamUrl,
-        ]);
-
-        Log::info("Section {$section->id} created" . ($msTeamId ? " with MS Team {$msTeamId}" : " (no MS Team yet — retry via admin)"));
-
-        return $section;
-    }
 }
