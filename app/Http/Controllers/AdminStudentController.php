@@ -721,4 +721,601 @@ class AdminStudentController extends Controller
         return redirect()->route('admin.students.index')
             ->with('success', "Student {$name} deleted from portal and Microsoft 365.");
     }
+
+    public function comparison(Request $request)
+    {
+        $csvPaths = [
+            'f2f' => base_path('../AMIS_F2F_Verification_Database_Latest.csv'),
+            'main' => base_path('../AMIS_Verification_Database_Latest.csv'),
+        ];
+
+        // 1. Read student numbers from CSV files
+        $csvNumbers = [];
+        foreach ($csvPaths as $key => $path) {
+            if (file_exists($path) && ($handle = fopen($path, 'r')) !== false) {
+                $headers = fgetcsv($handle);
+                $studentIdIdx = array_search('Student_ID', $headers);
+                if ($studentIdIdx !== false) {
+                    while (($row = fgetcsv($handle)) !== false) {
+                        if (isset($row[$studentIdIdx]) && trim($row[$studentIdIdx]) !== '') {
+                            $csvNumbers[trim($row[$studentIdIdx])] = $key;
+                        }
+                    }
+                }
+                fclose($handle);
+            }
+        }
+
+        // 2. Pre-process pasted official list to collect matched student IDs if present
+        $officialList = $request->input('official_list', '');
+        $matchedStudentNumbers = [];
+        $hasPastedList = !empty(trim($officialList));
+
+        if ($hasPastedList) {
+            $lines = explode("\n", $officialList);
+            foreach ($lines as $line) {
+                $line = trim($line);
+                if (empty($line)) continue;
+
+                $matches = collect();
+
+                if (str_contains($line, ',')) {
+                    $parts = explode(',', $line);
+                    $lastNamePart = trim($parts[0]);
+                    $firstNamePart = trim($parts[1]);
+
+                    $firstNames = array_filter(explode(' ', $firstNamePart));
+                    $firstNameWord = count($firstNames) > 0 ? $firstNames[0] : '';
+
+                    if (!empty($lastNamePart) && !empty($firstNameWord)) {
+                        $matches = Student::with('applicant')
+                            ->whereHas('applicant', function($q) use ($lastNamePart, $firstNameWord) {
+                                $q->where('last_name', 'like', "%{$lastNamePart}%")
+                                  ->where('first_name', 'like', "%{$firstNameWord}%");
+                            })
+                            ->get();
+                    }
+                }
+
+                if ($matches->isEmpty()) {
+                    $cleanName = str_replace([',', '.'], ' ', $line);
+                    $terms = array_filter(explode(' ', $cleanName));
+
+                    $query = Student::with('applicant');
+                    if (count($terms) > 0) {
+                        $query->whereHas('applicant', function($q) use ($terms) {
+                            $q->where(function($sub) use ($terms) {
+                                foreach ($terms as $term) {
+                                    $sub->where(function($sub2) use ($term) {
+                                        $sub2->where('first_name', 'like', "%{$term}%")
+                                             ->orWhere('last_name', 'like', "%{$term}%")
+                                             ->orWhere('middle_name', 'like', "%{$term}%");
+                                    });
+                                }
+                            });
+                        });
+                        $matches = $query->get();
+                    }
+                }
+
+                foreach ($matches as $match) {
+                    $matchedStudentNumbers[] = $match->student_number;
+                }
+            }
+        }
+
+        // 3. Query database students (limit to matched student numbers if pasted list is provided)
+        $studentsQuery = Student::with('applicant');
+        if ($hasPastedList) {
+            $studentsQuery->whereIn('student_number', $matchedStudentNumbers);
+        }
+        $students = $studentsQuery->get();
+
+        $comparisonList = [];
+        foreach ($students as $student) {
+            $studentNumber = $student->student_number;
+            $applicant = $student->applicant;
+            if (!$applicant) continue;
+
+            $fullName = trim($applicant->first_name . ' ' . ($applicant->middle_name ?? '') . ' ' . $applicant->last_name . ($applicant->suffix ? ' ' . $applicant->suffix : ''));
+            $learningMode = $applicant->learning_mode ?? 'Face-to-Face';
+            $grade = $student->grade_level;
+
+            // Check if student number exists in CSV list
+            $foundInCsv = isset($csvNumbers[$studentNumber]);
+            $csvType = $foundInCsv ? $csvNumbers[$studentNumber] : null;
+
+            $comparisonList[] = [
+                'id' => $student->id,
+                'student_number' => $studentNumber,
+                'full_name' => mb_strtoupper($fullName),
+                'grade_level' => $grade,
+                'learning_mode' => $learningMode,
+                'found_in_csv' => $foundInCsv,
+                'csv_type' => $csvType,
+                'remarks' => $this->cleanReviewRemarks($applicant->review_remarks),
+            ];
+        }
+
+        // Apply filters
+        $search = trim($request->input('search'));
+        if ($search !== '') {
+            $comparisonList = array_filter($comparisonList, function($item) use ($search) {
+                return str_contains(strtolower($item['full_name']), strtolower($search)) || 
+                       str_contains(strtolower($item['student_number']), strtolower($search));
+            });
+        }
+
+        $filter = $request->input('filter', 'all');
+        if ($filter === 'missing') {
+            $comparisonList = array_filter($comparisonList, function($item) {
+                return !$item['found_in_csv'];
+            });
+        } elseif ($filter === 'insync') {
+            $comparisonList = array_filter($comparisonList, function($item) {
+                return $item['found_in_csv'];
+            });
+        }
+
+        $modeFilter = $request->input('mode', 'all');
+        if ($modeFilter === 'f2f') {
+            $comparisonList = array_filter($comparisonList, function($item) {
+                return str_contains(strtolower($item['learning_mode']), 'face') || str_contains(strtolower($item['learning_mode']), 'f2f');
+            });
+        } elseif ($modeFilter === 'online') {
+            $comparisonList = array_filter($comparisonList, function($item) {
+                return !str_contains(strtolower($item['learning_mode']), 'face') && !str_contains(strtolower($item['learning_mode']), 'f2f');
+            });
+        }
+
+        // Sort by Grade Level and Name
+        $gradeOrder = [
+            'Kinder 1' => 1, 'Kinder 2' => 2,
+            'Grade 1' => 3, 'Grade 2' => 4, 'Grade 3' => 5, 'Grade 4' => 6, 'Grade 5' => 7, 'Grade 6' => 8,
+            'Grade 7' => 9, 'Grade 8' => 10, 'Grade 9' => 11, 'Grade 10' => 12, 'Grade 11' => 13, 'Grade 12' => 14
+        ];
+        usort($comparisonList, function($a, $b) use ($gradeOrder) {
+            $gradeA = $gradeOrder[$a['grade_level']] ?? 99;
+            $gradeB = $gradeOrder[$b['grade_level']] ?? 99;
+            if ($gradeA !== $gradeB) {
+                return $gradeA - $gradeB;
+            }
+            return strcmp($a['full_name'], $b['full_name']);
+        });
+
+        // Totals (calculate globally so stats at the top remain overall database stats)
+        $totalDb = Student::count();
+        $totalInCsv = Student::whereIn('student_number', array_keys($csvNumbers))->count();
+        $missingCount = $totalDb - $totalInCsv;
+
+        // 4. Process pasted official student list (using pre-parsed lines)
+        $trackedStudents = [];
+
+        if (!empty(trim($officialList))) {
+            $lines = explode("\n", $officialList);
+            foreach ($lines as $line) {
+                $line = trim($line);
+                if (empty($line)) continue;
+                $matches = collect();
+
+                // If name has a comma (e.g. DUALAN, ALJAMIR MANKO), match by split parts
+                if (str_contains($line, ',')) {
+                    $parts = explode(',', $line);
+                    $lastNamePart = trim($parts[0]);
+                    $firstNamePart = trim($parts[1]);
+
+                    $firstNames = array_filter(explode(' ', $firstNamePart));
+                    $firstNameWord = count($firstNames) > 0 ? $firstNames[0] : '';
+
+                    if (!empty($lastNamePart) && !empty($firstNameWord)) {
+                        $matches = Student::with('applicant')
+                            ->whereHas('applicant', function($q) use ($lastNamePart, $firstNameWord) {
+                                $q->where('last_name', 'like', "%{$lastNamePart}%")
+                                  ->where('first_name', 'like', "%{$firstNameWord}%");
+                            })
+                            ->get();
+                    }
+                }
+
+                // Fallback to token matching if no match found
+                if ($matches->isEmpty()) {
+                    $cleanName = str_replace([',', '.'], ' ', $line);
+                    $terms = array_filter(explode(' ', $cleanName));
+
+                    $query = Student::with('applicant');
+                    if (count($terms) > 0) {
+                        $query->whereHas('applicant', function($q) use ($terms) {
+                            $q->where(function($sub) use ($terms) {
+                                foreach ($terms as $term) {
+                                    $sub->where(function($sub2) use ($term) {
+                                        $sub2->where('first_name', 'like', "%{$term}%")
+                                             ->orWhere('last_name', 'like', "%{$term}%")
+                                             ->orWhere('middle_name', 'like', "%{$term}%");
+                                    });
+                                }
+                            });
+                        });
+                        $matches = $query->get();
+                    }
+                }
+
+                if ($matches->isEmpty()) {
+                    $trackedStudents[] = [
+                        'input_name' => $line,
+                        'found' => false,
+                        'student_id' => null,
+                        'full_name' => null,
+                        'grade_level' => null,
+                        'learning_mode' => null,
+                        'has_lrn' => false,
+                        'has_photo' => false,
+                        'has_parents' => false,
+                        'has_address' => false,
+                        'has_documents' => false,
+                        'details_url' => null,
+                    ];
+                } else {
+                    foreach ($matches as $match) {
+                        $appl = $match->applicant;
+                        
+                        $hasLrn = !empty($appl->lrn) && strtoupper($appl->lrn) !== 'N/A' && strtoupper($appl->lrn) !== 'NA';
+                        $hasPhoto = !empty($appl->photo_2x2_url);
+                        
+                        $fatherFull = trim(($appl->father_first_name ?? '') . ' ' . ($appl->father_last_name ?? ''));
+                        $motherFull = trim(($appl->mother_first_name ?? '') . ' ' . ($appl->mother_last_name ?? ''));
+                        $hasParents = !empty($fatherFull) || !empty($motherFull) || (!empty($appl->emergency_name) && strtolower(trim($appl->emergency_name)) !== 'emergency contact');
+
+                        $hasAddress = !empty($appl->street_address) || !empty($appl->home_address) || !empty($appl->address);
+                        $hasDocs = !empty($appl->birth_cert_url) || !empty($appl->report_card_url) || !empty($appl->marriage_contract_url) || !empty($appl->medical_record_url) || !empty($appl->affidavit_url);
+
+                        $fullName = trim($appl->first_name . ' ' . ($appl->middle_name ?? '') . ' ' . $appl->last_name . ($appl->suffix ? ' ' . $appl->suffix : ''));
+
+                        $trackedStudents[] = [
+                            'input_name' => $line,
+                            'found' => true,
+                            'student_id' => $match->student_number,
+                            'full_name' => mb_strtoupper($fullName),
+                            'grade_level' => $match->grade_level,
+                            'learning_mode' => $appl->learning_mode ?? 'Face-to-Face',
+                            'has_lrn' => $hasLrn,
+                            'has_photo' => $hasPhoto,
+                            'has_parents' => $hasParents,
+                            'has_address' => $hasAddress,
+                            'has_documents' => $hasDocs,
+                            'remarks' => $this->cleanReviewRemarks($appl->review_remarks),
+                            'details_url' => route('admin.students.show', $match->id),
+                        ];
+                    }
+                }
+            }
+        }
+
+        // 4. Query only students with active review remarks from the current pasted tracked list
+        $remindersList = [];
+        foreach ($trackedStudents as $tracked) {
+            if ($tracked['found'] && !empty(trim($tracked['remarks']))) {
+                $remindersList[] = [
+                    'student_number' => $tracked['student_id'],
+                    'full_name' => $tracked['full_name'],
+                    'grade_level' => $tracked['grade_level'],
+                    'learning_mode' => $tracked['learning_mode'],
+                    'remarks' => $tracked['remarks'],
+                    'details_url' => $tracked['details_url'],
+                    'has_photo' => $tracked['has_photo'],
+                    'has_lrn' => $tracked['has_lrn'],
+                    'has_parents' => $tracked['has_parents'],
+                    'has_address' => $tracked['has_address'],
+                    'has_documents' => $tracked['has_documents'],
+                ];
+            }
+        }
+
+        return view('admin.students.comparison', [
+            'comparisonList' => $comparisonList,
+            'totalDb' => $totalDb,
+            'totalInCsv' => $totalInCsv,
+            'missingCount' => $missingCount,
+            'filter' => $filter,
+            'search' => $search,
+            'modeFilter' => $modeFilter,
+            'officialList' => $officialList,
+            'trackedStudents' => $trackedStudents,
+            'remindersList' => $remindersList,
+        ]);
+    }
+
+    public function updateField(Request $request)
+    {
+        $studentNumber = $request->input('student_number');
+        $field = $request->input('field'); // 'status', 'photo', 'lrn', 'parents', 'address', 'docs'
+        $value = $request->input('value'); // 1 or 0
+
+        $student = Student::where('student_number', $studentNumber)->first();
+        if (!$student) {
+            return response()->json(['success' => false, 'message' => 'Student not found'], 404);
+        }
+
+        $applicant = $student->applicant;
+        if (!$applicant) {
+            return response()->json(['success' => false, 'message' => 'Applicant profile not found'], 404);
+        }
+
+        switch ($field) {
+            case 'remarks':
+                $applicant->review_remarks = $value;
+                break;
+
+            case 'status':
+                $applicant->status = $value ? 'approved' : 'under_review';
+                break;
+
+            case 'photo':
+                if (!$value) {
+                    $applicant->photo_2x2_url = null;
+                } else {
+                    $applicant->photo_2x2_url = $applicant->photo_2x2_url ?: 'storage/uploads/photo_placeholder.jpg';
+                }
+                break;
+
+            case 'lrn':
+                if (!$value) {
+                    $applicant->lrn = 'NA';
+                } else {
+                    $applicant->lrn = ($applicant->lrn && strtoupper($applicant->lrn) !== 'NA' && strtoupper($applicant->lrn) !== 'N/A') ? $applicant->lrn : '466000000000';
+                }
+                break;
+
+            case 'parents':
+                if (!$value) {
+                    $applicant->father_first_name = null;
+                    $applicant->father_last_name = null;
+                    $applicant->mother_first_name = null;
+                    $applicant->mother_last_name = null;
+                    $applicant->emergency_name = 'Emergency Contact';
+                } else {
+                    $applicant->father_first_name = $applicant->father_first_name ?: 'FATHER';
+                    $applicant->father_last_name = $applicant->father_last_name ?: $applicant->last_name;
+                }
+                break;
+
+            case 'address':
+                if (!$value) {
+                    $applicant->address = '';
+                    $applicant->street_address = '';
+                    $applicant->home_address = '';
+                } else {
+                    $applicant->address = $applicant->address ?: 'DAVAO CITY';
+                }
+                break;
+
+            case 'docs':
+                if (!$value) {
+                    $applicant->birth_cert_url = '';
+                    $applicant->report_card_url = '';
+                    $applicant->affidavit_url = '';
+                } else {
+                    $applicant->birth_cert_url = $applicant->birth_cert_url ?: 'storage/uploads/birth_placeholder.pdf';
+                }
+                break;
+        }
+
+        $applicant->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Field updated successfully',
+            'has_lrn' => !empty($applicant->lrn) && strtoupper($applicant->lrn) !== 'N/A' && strtoupper($applicant->lrn) !== 'NA',
+            'has_photo' => !empty($applicant->photo_2x2_url),
+            'has_parents' => !empty($applicant->father_first_name) || !empty($applicant->mother_first_name) || (!empty($applicant->emergency_name) && strtolower(trim($applicant->emergency_name)) !== 'emergency contact'),
+            'has_address' => !empty($applicant->street_address) || !empty($applicant->home_address) || !empty($applicant->address),
+            'has_documents' => !empty($applicant->birth_cert_url) || !empty($applicant->report_card_url) || !empty($applicant->affidavit_url)
+        ]);
+    }
+
+    public function syncComparisonCsv(Request $request)
+    {
+        $gradeOrder = [
+            'Kinder 1', 'Kinder 2',
+            'Grade 1','Grade 2','Grade 3','Grade 4','Grade 5','Grade 6',
+            'Grade 7','Grade 8','Grade 9','Grade 10','Grade 11','Grade 12',
+        ];
+
+        // 1. Fetch all students
+        $students = Student::with('applicant')
+            ->whereHas('applicant')
+            ->leftJoin('enrollment_applicants as sort_ea', 'sort_ea.id', '=', 'students.enrollment_applicant_id')
+            ->select('students.*')
+            ->orderByRaw("FIELD(students.grade_level, " . implode(',', array_fill(0, count($gradeOrder), '?')) . ")", $gradeOrder)
+            ->orderBy('sort_ea.last_name', 'asc')
+            ->orderBy('sort_ea.first_name', 'asc')
+            ->get();
+
+        $f2fPath = base_path('../AMIS_F2F_Verification_Database_Latest.csv');
+        $mainPath = base_path('../AMIS_Verification_Database_Latest.csv');
+
+        // Let's create both CSV streams
+        $f2fFile = fopen($f2fPath, 'w');
+        $mainFile = fopen($mainPath, 'w');
+
+        $headers = [
+            'Photo_URL',
+            'Student_ID',
+            'Last_Name',
+            'Full_Name',
+            'QR_Code_URL',
+            'LRN',
+            'Grade_Level',
+            'Parent_Full_Name',
+            'Contact_No',
+            'Address',
+        ];
+
+        fputcsv($f2fFile, $headers);
+        fputcsv($mainFile, $headers);
+
+        foreach ($students as $student) {
+            $applicant = $student->applicant;
+            if (!$applicant) continue;
+
+            $learningMode = strtolower($applicant->learning_mode ?? 'Face-to-Face');
+            $isF2f = str_contains($learningMode, 'face') || str_contains($learningMode, 'f2f');
+
+            $lastName   = mb_strtoupper(trim($applicant->last_name   ?? ''));
+            $fullName   = mb_strtoupper(trim($applicant->first_name . ' ' . ($applicant->middle_name ?? '') . ' ' . $applicant->last_name . ($applicant->suffix ? ' ' . $applicant->suffix : '')));
+            
+            $lrn         = trim($applicant->lrn ?? '');
+            if (empty($lrn) || strtoupper($lrn) === 'N/A' || strtoupper($lrn) === 'NA') {
+                $lrn = 'NA';
+            }
+
+            // Guardian: father full name first, fallback to mother
+            $fatherFirst  = mb_strtoupper(trim($applicant->father_first_name  ?? ''));
+            $fatherMiddle = mb_strtoupper(trim($applicant->father_middle_name ?? ''));
+            $fatherLast   = mb_strtoupper(trim($applicant->father_last_name   ?? ''));
+            $fatherMI     = $fatherMiddle !== '' ? mb_substr($fatherMiddle, 0, 1) . '.' : '';
+            $fatherFull   = trim(implode(' ', array_filter([$fatherFirst, $fatherMI, $fatherLast])));
+
+            $motherFirst  = mb_strtoupper(trim($applicant->mother_first_name  ?? ''));
+            $motherMiddle = mb_strtoupper(trim($applicant->mother_middle_name ?? ''));
+            $motherLast   = mb_strtoupper(trim($applicant->mother_last_name   ?? ''));
+            $motherMI     = $motherMiddle !== '' ? mb_substr($motherMiddle, 0, 1) . '.' : '';
+            $motherFull   = trim(implode(' ', array_filter([$motherFirst, $motherMI, $motherLast])));
+
+            $guardianName = $fatherFull ?: $motherFull;
+            if (empty($guardianName) && !empty($applicant->emergency_name) && strtolower(trim($applicant->emergency_name)) !== 'emergency contact') {
+                $guardianName = trim($applicant->emergency_name);
+            }
+            $guardianName = mb_strtoupper($guardianName);
+
+            // Contact number
+            $contactNo   = ($applicant->parent_mobile ?? null) ?: (($applicant->mobile_number ?? null) ?: ($applicant->emergency_phone ?? null));
+            $address = trim($applicant->address ?? $applicant->home_address ?? '');
+
+            $studentNumber = $student->student_number;
+            $hash = base64_encode((int)$studentNumber + 987654);
+
+            $photoUrl = $student->photo_2x2_url ? route('public.student.photo', ['hash' => $hash]) : 'https://amis.edu.ph/student-photo/' . $hash . '.jpg';
+            $qrCodeUrl = 'https://quickchart.io/qr?text=' . urlencode('https://amis.edu.ph/v/' . $hash) . '&dark=000000&light=ffffff&margin=1&format=png&size=300';
+
+            $rowData = [
+                $photoUrl,
+                $studentNumber,
+                $lastName,
+                $fullName,
+                $qrCodeUrl,
+                $lrn,
+                $student->grade_level,
+                $guardianName,
+                $contactNo,
+                $address,
+            ];
+
+            if ($isF2f) {
+                fputcsv($f2fFile, $rowData);
+            } else {
+                fputcsv($mainFile, $rowData);
+            }
+        }
+
+        fclose($f2fFile);
+        fclose($mainFile);
+
+        return redirect()->route('admin.students.comparison')
+            ->with('success', 'Verification CSV Fallback databases generated and synced successfully!');
+    }
+
+    private function cleanReviewRemarks(?string $remarks): string
+    {
+        if (blank($remarks)) {
+            return '';
+        }
+        
+        $cleaned = str_replace('Approved with missing/pending documents: ', '', $remarks);
+        $cleaned = str_replace('. Please follow up and complete document verification.', '', $cleaned);
+        $cleaned = str_replace('Please follow up and complete document verification.', '', $cleaned);
+        return rtrim(trim($cleaned), '.');
+    }
+
+    public function updateProfile(Request $request, Student $student)
+    {
+        abort_if(auth()->user()?->isTeacherAdminViewer(), 403);
+
+        $request->validate([
+            'student_type' => 'nullable|string',
+            'grade_level' => 'nullable|string',
+            'learning_mode' => 'nullable|string',
+            'amis_student_id' => 'nullable|string',
+            'first_name' => 'required|string|max:255',
+            'middle_name' => 'nullable|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'suffix' => 'nullable|string|max:50',
+            'gender' => 'nullable|string|max:50',
+            'date_of_birth' => 'nullable|date',
+            'place_of_birth' => 'nullable|string|max:255',
+            'religion' => 'nullable|string|max:255',
+            'ethnicity' => 'nullable|string|max:255',
+            'email' => 'nullable|email|max:255',
+            'mobile' => 'nullable|string|max:50',
+            'parent_email' => 'nullable|email|max:255',
+            'parent_mobile' => 'nullable|string|max:50',
+            'address' => 'nullable|string',
+            'father_name' => 'nullable|string|max:255',
+            'mother_name' => 'nullable|string|max:255',
+            'emergency_name' => 'nullable|string|max:255',
+            'emergency_relationship' => 'nullable|string|max:255',
+            'emergency_phone' => 'nullable|string|max:50',
+            'lrn' => 'nullable|string|max:50',
+        ]);
+
+        DB::transaction(function () use ($request, $student) {
+            $student->update([
+                'grade_level' => $request->grade_level,
+            ]);
+
+            if ($student->applicant) {
+                $applicant = $student->applicant;
+                $applicant->update([
+                    'student_type' => $request->student_type,
+                    'grade_level' => $request->grade_level,
+                    'learning_mode' => $request->learning_mode,
+                    'amis_student_id' => $request->amis_student_id,
+                    'first_name' => $request->first_name,
+                    'middle_name' => $request->middle_name,
+                    'last_name' => $request->last_name,
+                    'suffix' => $request->suffix,
+                    'gender' => $request->gender,
+                    'date_of_birth' => $request->date_of_birth,
+                    'place_of_birth' => $request->place_of_birth,
+                    'religion' => $request->religion,
+                    'ethnicity' => $request->ethnicity,
+                    'email' => $request->email,
+                    'mobile_number' => $request->mobile,
+                    'parent_email' => $request->parent_email,
+                    'parent_mobile' => $request->parent_mobile,
+                    'address' => $request->address,
+                    'street_address' => $request->address,
+                    'home_address' => $request->address,
+                    'emergency_name' => $request->emergency_name,
+                    'emergency_relationship' => $request->emergency_relationship,
+                    'emergency_phone' => $request->emergency_phone,
+                    'lrn' => $request->lrn ?: 'NA',
+                ]);
+
+                // Split father's and mother's names if possible
+                if ($request->filled('father_name')) {
+                    $parts = explode(' ', trim($request->father_name));
+                    $applicant->father_last_name = array_pop($parts);
+                    $applicant->father_first_name = implode(' ', $parts) ?: 'FATHER';
+                }
+                if ($request->filled('mother_name')) {
+                    $parts = explode(' ', trim($request->mother_name));
+                    $applicant->mother_last_name = array_pop($parts);
+                    $applicant->mother_first_name = implode(' ', $parts) ?: 'MOTHER';
+                }
+                $applicant->save();
+            }
+        });
+
+        return back()->with('success', 'Student record updated successfully.');
+    }
 }

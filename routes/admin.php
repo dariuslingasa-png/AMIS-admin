@@ -129,11 +129,15 @@ Route::name('admin.')->group(function () {
         Route::redirect('/students/families', '/students')->name('students.families');
         Route::get('/students/export-canva', [AdminStudentController::class, 'exportCanva'])->name('students.export-canva');
         Route::get('/students/export-verification-db', [AdminStudentController::class, 'exportVerificationDatabase'])->name('students.export-verification-db');
+        Route::get('/students/comparison', [AdminStudentController::class, 'comparison'])->name('students.comparison');
+        Route::post('/students/comparison/sync', [AdminStudentController::class, 'syncComparisonCsv'])->name('students.comparison.sync');
+        Route::post('/students/comparison/update-field', [AdminStudentController::class, 'updateField'])->name('students.comparison.update-field');
         Route::post('/students/bulk-print-list', [AdminStudentController::class, 'bulkPrintList'])->name('students.bulk-print-list');
         Route::get('/students/{student}', [AdminStudentController::class, 'show'])->name('students.show');
         Route::post('/students/{student}/resend', [AdminStudentAccountController::class, 'resendCredentials'])->name('students.resend');
         Route::post('/students/{student}/status', [AdminStudentAccountController::class, 'updateStatus'])->name('students.update-status');
         Route::post('/students/{student}/update-email', [AdminStudentAccountController::class, 'updateEmail'])->name('students.update-email');
+        Route::post('/students/{student}/update-profile', [AdminStudentController::class, 'updateProfile'])->name('students.update-profile');
         Route::delete('/students/{student}', [AdminStudentController::class, 'destroy'])->name('students.destroy');
 
         Route::get('/soa', [AdminSoaController::class, 'index'])->name('soa.index');
@@ -143,6 +147,8 @@ Route::name('admin.')->group(function () {
         Route::post('/soa/{account}/payments', [AdminSoaController::class, 'addPayment'])->name('soa.payments.add');
 
         Route::get('/payments', [AdminPaymentController::class, 'index'])->name('payments.index');
+        Route::get('/payments/print-report', [AdminPaymentController::class, 'printFamilyReport'])->name('payments.print-report');
+        Route::post('/payments/email-reports', [AdminPaymentController::class, 'emailReports'])->name('payments.email-reports');
         Route::get('/finance', [AdminPaymentController::class, 'dashboard'])->name('finance.dashboard');
         Route::get('/finance/fees', [AdminPaymentController::class, 'fees'])->name('finance.fees');
         Route::get('/finance/masters-list', [\App\Http\Controllers\AdminFinanceMasterController::class, 'index'])->name('finance.masters-list');
@@ -247,7 +253,7 @@ Route::name('admin.')->group(function () {
             Route::patch('/subjects/{subject}/archive', [AdminAcademicSubjectController::class, 'archive'])->name('subjects.archive');
             Route::patch('/subjects/{subject}/restore', [AdminAcademicSubjectController::class, 'restore'])->name('subjects.restore');
             Route::get('/curriculum', [AdminAcademicController::class, 'curriculum'])->name('curriculum');
-            Route::get('/grade-levels', [AdminAcademicController::class, 'curriculum'])->name('grade-levels');
+            Route::get('/grade-levels', [\App\Http\Controllers\Academic\GradeLevelController::class, 'index'])->name('grade-levels');
             Route::get('/class-advisory', [AdminAcademicController::class, 'classAdvisory'])->name('class-advisory');
             Route::post('/class-advisory', [AdminAcademicController::class, 'assignClassAdvisory'])->name('class-advisory.store');
             Route::get('/teachers', [AdminAcademicTeacherController::class, 'index'])->name('teachers');
@@ -263,9 +269,26 @@ Route::name('admin.')->group(function () {
             Route::patch('/schedules/{schedule}', [AdminClassScheduleController::class, 'update'])->name('schedules.update');
             Route::delete('/schedules/{schedule}', [AdminClassScheduleController::class, 'destroy'])->name('schedules.destroy');
             Route::patch('/schedules/sections/{section}/publish', [AdminClassScheduleController::class, 'togglePublish'])->name('schedules.sections.publish');
-            Route::get('/school-years', [AdminAcademicController::class, 'schoolYears'])->name('school-years');
+            Route::get('/school-years', [\App\Http\Controllers\Academic\SchoolYearController::class, 'index'])->name('school-years');
             Route::get('/calendar', [AdminAcademicController::class, 'calendar'])->name('calendar');
             Route::get('/operations', [AdminAcademicController::class, 'operations'])->name('operations');
+
+            // School Years CRUD (Decoupled Refactored Architecture)
+            Route::get('/school-years-list', [\App\Http\Controllers\Academic\SchoolYearController::class, 'index'])->name('school-years.index');
+            Route::get('/school-years-list/create', [\App\Http\Controllers\Academic\SchoolYearController::class, 'create'])->name('school-years.create');
+            Route::post('/school-years-list', [\App\Http\Controllers\Academic\SchoolYearController::class, 'store'])->name('school-years.store');
+            Route::get('/school-years-list/{school_year}/edit', [\App\Http\Controllers\Academic\SchoolYearController::class, 'edit'])->name('school-years.edit');
+            Route::post('/school-years-list/{school_year}', [\App\Http\Controllers\Academic\SchoolYearController::class, 'update'])->name('school-years.update');
+            Route::post('/school-years-list/{school_year}/toggle-active', [\App\Http\Controllers\Academic\SchoolYearController::class, 'toggleActive'])->name('school-years.toggle-active');
+            Route::post('/school-years-list/{school_year}/toggle-status', [\App\Http\Controllers\Academic\SchoolYearController::class, 'toggleStatus'])->name('school-years.toggle-status');
+
+            // Grade Levels CRUD (Decoupled Refactored Architecture)
+            Route::get('/grade-levels-list', [\App\Http\Controllers\Academic\GradeLevelController::class, 'index'])->name('grade-levels.index');
+            Route::get('/grade-levels-list/create', [\App\Http\Controllers\Academic\GradeLevelController::class, 'create'])->name('grade-levels.create');
+            Route::post('/grade-levels-list', [\App\Http\Controllers\Academic\GradeLevelController::class, 'store'])->name('grade-levels.store');
+            Route::get('/grade-levels-list/{grade_level}/edit', [\App\Http\Controllers\Academic\GradeLevelController::class, 'edit'])->name('grade-levels.edit');
+            Route::post('/grade-levels-list/{grade_level}', [\App\Http\Controllers\Academic\GradeLevelController::class, 'update'])->name('grade-levels.update');
+            Route::post('/grade-levels-list/{grade_level}/toggle-active', [\App\Http\Controllers\Academic\GradeLevelController::class, 'toggleActive'])->name('grade-levels.toggle-active');
         });
 
         Route::prefix('ms-teams')->name('ms-teams.')->group(function () {
@@ -278,6 +301,9 @@ Route::name('admin.')->group(function () {
             Route::post('/fix-team-ownership', [AdminMsTeamsController::class, 'fixTeamOwnership'])->name('fix-ownership');
             Route::post('/fix-guest-students', [AdminMsTeamsController::class, 'fixGuestStudents'])->name('fix-guests');
             Route::post('/students/{student}/enroll', [AdminMsTeamsController::class, 'enrollStudent'])->name('enroll');
+            Route::get('/students/search', [AdminMsTeamsController::class, 'searchStudents'])->name('students.search');
+            Route::post('/{section}/students/assign', [AdminMsTeamsController::class, 'assignStudent'])->name('students.assign');
+            Route::delete('/{section}/students/{student}', [AdminMsTeamsController::class, 'removeStudent'])->name('students.remove');
             Route::patch('/subjects/{subject}', [AdminMsTeamsController::class, 'updateSubject'])->name('subjects.update');
             Route::post('/subjects/{subject}/update', [AdminMsTeamsController::class, 'updateSubject'])->name('subjects.update-post');
             Route::delete('/subjects/{subject}', [AdminMsTeamsController::class, 'destroySubject'])->name('subjects.destroy');
