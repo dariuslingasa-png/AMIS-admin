@@ -17,7 +17,7 @@
     <x-card title="Student Profile" subtitle="Core demographics and contact info">
         <div class="detail-section-stack">
             @foreach ($studentSections as $section)
-                <x-applicant.detail-section :title="$section['title']" :icon="$section['icon']" :fields="$section['fields']" />
+                <x-applicant.detail-section :title="$section['title']" :icon="$section['icon']" :sectionKey="$section['key']" :fields="$section['fields']" />
             @endforeach
         </div>
     </x-card>
@@ -26,7 +26,7 @@
         <x-card title="Residential Info" subtitle="Residence details from enrollment form">
             <div class="detail-section-stack">
                 @foreach ($addressSections as $section)
-                    <x-applicant.detail-section :title="$section['title']" :icon="$section['icon']" :fields="$section['fields']" />
+                    <x-applicant.detail-section :title="$section['title']" :icon="$section['icon']" :sectionKey="$section['key']" :fields="$section['fields']" />
                 @endforeach
             </div>
         </x-card>
@@ -34,7 +34,7 @@
         <x-card title="Parent / Guardian Details" subtitle="Grouped parent contacts and home addresses">
             <div class="detail-section-stack">
                 @foreach ($guardianSections as $section)
-                    <x-applicant.detail-section :title="$section['title']" :icon="$section['icon']" :fields="$section['fields']" />
+                    <x-applicant.detail-section :title="$section['title']" :icon="$section['icon']" :sectionKey="$section['key']" :fields="$section['fields']" />
                 @endforeach
             </div>
 

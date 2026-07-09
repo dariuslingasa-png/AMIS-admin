@@ -18,13 +18,13 @@
 
     // B. Reusable layout sections mapping (using same components for absolute consistency)
     $studentSections = [
-        ['title' => 'Academic Profile', 'icon' => 'graduation-cap', 'fields' => [
+        ['title' => 'Academic Profile', 'icon' => 'graduation-cap', 'key' => 'academic', 'fields' => [
             ['Student Type', $student->applicant->student_type], ['Grade Level', $student->grade_level],
             ['School Year', $student->school_year], ['Learning Mode', $student->applicant->learning_mode],
             ['AMIS Student ID', $student->applicant->amis_student_id],
             ['LRN', $student->applicant->lrn],
         ]],
-        ['title' => 'Personal Details', 'icon' => 'id-card', 'fields' => [
+        ['title' => 'Personal Details', 'icon' => 'id-card', 'key' => 'personal', 'fields' => [
             ['First Name', $student->applicant->first_name],
             ['Middle Name', $student->applicant->middle_name],
             ['Last Name', $student->applicant->last_name],
@@ -33,18 +33,18 @@
             ['Place of Birth', $student->applicant->place_of_birth], ['Religion', $student->applicant->religion],
             ['Ethnicity', $student->applicant->ethnicity],
         ]],
-        ['title' => 'Student Contact', 'icon' => 'mail', 'fields' => [['Email', $student->school_email], ['Mobile', $studentMobile]]],
+        ['title' => 'Student Contact', 'icon' => 'mail', 'key' => 'contact', 'fields' => [['Email', $student->school_email], ['Mobile', $studentMobile]]],
     ];
 
     $addressSections = [
-        ['title' => 'Residence Address', 'icon' => 'map', 'fields' => [['Full Address', $studentAddress ?: $student->applicant->address]]],
+        ['title' => 'Residence Address', 'icon' => 'map', 'key' => 'contact', 'fields' => [['Full Address', $studentAddress ?: $student->applicant->address]]],
     ];
 
     $guardianSections = [
-        ['title' => "Father's Details", 'icon' => 'user', 'fields' => [["Father's Full Name", trim(($student->applicant->father_first_name ?? '').' '.($student->applicant->father_last_name ?? '')), 'Occupation', $student->applicant->father_occupation]]],
-        ['title' => "Mother's Details", 'icon' => 'user-round', 'fields' => [["Mother's Full Name", trim(($student->applicant->mother_first_name ?? '').' '.($student->applicant->mother_last_name ?? '')), 'Occupation', $student->applicant->mother_occupation]]],
-        ['title' => 'Parent Contact', 'icon' => 'phone', 'fields' => [['Parent Email', $student->applicant->parent_email], ['Parent Mobile', $parentMobile]]],
-        ['title' => 'Home Address', 'icon' => 'map-pin', 'fields' => [['Full Home Address', $homeAddress ?: $student->applicant->home_address]]],
+        ['title' => "Father's Details", 'icon' => 'user', 'key' => 'parents', 'fields' => [["Father's Full Name", trim(($student->applicant->father_first_name ?? '').' '.($student->applicant->father_last_name ?? '')), 'Occupation', $student->applicant->father_occupation]]],
+        ['title' => "Mother's Details", 'icon' => 'user-round', 'key' => 'parents', 'fields' => [["Mother's Full Name", trim(($student->applicant->mother_first_name ?? '').' '.($student->applicant->mother_last_name ?? '')), 'Occupation', $student->applicant->mother_occupation]]],
+        ['title' => 'Parent Contact', 'icon' => 'phone', 'key' => 'parents', 'fields' => [['Parent Email', $student->applicant->parent_email], ['Parent Mobile', $parentMobile]]],
+        ['title' => 'Home Address', 'icon' => 'map-pin', 'key' => 'parents', 'fields' => [['Full Home Address', $homeAddress ?: $student->applicant->home_address]]],
     ];
 
     $hasMedicalConcern = (bool) $student->applicant->medical_has_concern;
@@ -72,6 +72,7 @@
 >
     <div x-data="{
          openEditModal: false,
+         editSection: 'all',
          copySuccess: false,
          activeTab: 'overview',
          preview: false,
@@ -190,7 +191,7 @@
         </div>
         <div class="flex items-center gap-2">
             @unless ($isTeacherAdminViewer)
-            <button @click="openEditModal = true"
+            <button @click="openEditModal = true; editSection = 'all'"
                     class="inline-flex items-center gap-2 rounded-xl border border-transparent bg-emerald-600 px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700 active:scale-[0.98] cursor-pointer">
                 <i data-lucide="edit" class="h-4 w-4"></i>
                 <span>Edit Profile</span>
@@ -311,7 +312,7 @@
                 <div class="flex items-center justify-between px-6 py-4 border-b border-slate-150 dark:border-slate-800">
                     <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                         <i data-lucide="edit" class="h-5 w-5 text-emerald-600"></i>
-                        <span>Edit Student Profile</span>
+                        <span x-text="editSection === 'all' ? 'Edit Student Profile' : (editSection === 'academic' ? 'Edit Academic Profile' : (editSection === 'personal' ? 'Edit Personal Details' : (editSection === 'contact' ? 'Edit Contact & Address' : 'Edit Parent & Emergency Info')))">Edit Student Profile</span>
                     </h3>
                     <button @click="openEditModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
                         <i data-lucide="x" class="h-5 w-5"></i>
@@ -323,7 +324,7 @@
                     @csrf
                     
                     <!-- Academic Details -->
-                    <div>
+                    <div x-show="editSection === 'all' || editSection === 'academic'">
                         <h4 class="text-xs font-extrabold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 mb-3">Academic Info</h4>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
@@ -353,10 +354,10 @@
                         </div>
                     </div>
 
-                    <hr class="border-slate-100 dark:border-slate-800">
+                    <hr x-show="editSection === 'all'" class="border-slate-100 dark:border-slate-800">
 
                     <!-- Personal Info -->
-                    <div>
+                    <div x-show="editSection === 'all' || editSection === 'personal'">
                         <h4 class="text-xs font-extrabold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 mb-3">Personal Details</h4>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
@@ -404,10 +405,10 @@
                         </div>
                     </div>
 
-                    <hr class="border-slate-100 dark:border-slate-800">
+                    <hr x-show="editSection === 'all'" class="border-slate-100 dark:border-slate-800">
 
                     <!-- Contact & Address -->
-                    <div>
+                    <div x-show="editSection === 'all' || editSection === 'contact'">
                         <h4 class="text-xs font-extrabold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 mb-3">Contact & Address</h4>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
@@ -425,10 +426,10 @@
                         </div>
                     </div>
 
-                    <hr class="border-slate-100 dark:border-slate-800">
+                    <hr x-show="editSection === 'all'" class="border-slate-100 dark:border-slate-800">
 
                     <!-- Parent & Emergency -->
-                    <div>
+                    <div x-show="editSection === 'all' || editSection === 'parents'">
                         <h4 class="text-xs font-extrabold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 mb-3">Parent & Emergency Info</h4>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
@@ -464,8 +465,6 @@
                             </div>
                         </div>
                     </div>
-
-
 
                     <!-- Footer Buttons -->
                     <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-150 dark:border-slate-800">

@@ -12,7 +12,8 @@ tar -czf $ARCHIVE_NAME \
     app/Http/Controllers/AdminStudentController.php \
     routes/admin.php \
     resources/views/admin/students/show.blade.php \
-    resources/views/components/applicant/detail-section.blade.php
+    resources/views/components/applicant/detail-section.blade.php \
+    resources/views/admin/students/partials/show/overview.blade.php
 
 echo "=== 2. Uploading bundle to production server ==="
 scp -o StrictHostKeyChecking=no -P $REMOTE_PORT $ARCHIVE_NAME $REMOTE_USER@$REMOTE_HOST:$REMOTE_PATH/
