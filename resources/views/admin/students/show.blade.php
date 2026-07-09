@@ -49,7 +49,7 @@
 
     $hasMedicalConcern = (bool) $student->applicant->medical_has_concern;
     $medicalSections = [
-        ['title' => 'Emergency Contact', 'icon' => 'shield-alert', 'fields' => [
+        ['title' => 'Emergency Contact', 'icon' => 'shield-alert', 'key' => 'parents', 'fields' => [
             ['Contact Person', $student->applicant->emergency_name], ['Relationship', $student->applicant->emergency_relationship],
             ['Emergency Phone', $student->applicant->emergency_phone],
         ]],

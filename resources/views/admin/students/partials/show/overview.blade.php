@@ -89,7 +89,7 @@
         <x-card title="Medical Background" subtitle="Health info and emergency response contacts">
             <div class="detail-section-stack">
                 @foreach ($medicalSections as $section)
-                    <x-applicant.detail-section :title="$section['title']" :icon="$section['icon']" :fields="$section['fields']" />
+                    <x-applicant.detail-section :title="$section['title']" :icon="$section['icon']" :sectionKey="$section['key'] ?? ''" :fields="$section['fields']" />
                 @endforeach
             </div>
         </x-card>
