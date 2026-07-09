@@ -1275,28 +1275,28 @@ class AdminStudentController extends Controller
             if ($student->applicant) {
                 $applicant = $student->applicant;
                 $applicant->update([
-                    'student_type' => $request->student_type,
+                    'student_type' => $request->student_type ? mb_strtoupper($request->student_type) : null,
                     'grade_level' => $request->grade_level,
-                    'learning_mode' => $request->learning_mode,
-                    'amis_student_id' => $request->amis_student_id,
-                    'first_name' => $request->first_name,
-                    'middle_name' => $request->middle_name,
-                    'last_name' => $request->last_name,
-                    'suffix' => $request->suffix,
-                    'gender' => $request->gender,
+                    'learning_mode' => $request->learning_mode ? mb_strtoupper($request->learning_mode) : null,
+                    'amis_student_id' => $request->amis_student_id ? mb_strtoupper($request->amis_student_id) : null,
+                    'first_name' => mb_strtoupper($request->first_name),
+                    'middle_name' => $request->middle_name ? mb_strtoupper($request->middle_name) : null,
+                    'last_name' => mb_strtoupper($request->last_name),
+                    'suffix' => $request->suffix ? mb_strtoupper($request->suffix) : null,
+                    'gender' => $request->gender ? mb_strtoupper($request->gender) : null,
                     'date_of_birth' => $request->date_of_birth,
-                    'place_of_birth' => $request->place_of_birth,
-                    'religion' => $request->religion,
-                    'ethnicity' => $request->ethnicity,
-                    'email' => $request->email,
+                    'place_of_birth' => $request->place_of_birth ? mb_strtoupper($request->place_of_birth) : null,
+                    'religion' => $request->religion ? mb_strtoupper($request->religion) : null,
+                    'ethnicity' => $request->ethnicity ? mb_strtoupper($request->ethnicity) : null,
+                    'email' => $request->email ? strtolower($request->email) : null,
                     'mobile_number' => $request->mobile,
-                    'parent_email' => $request->parent_email,
+                    'parent_email' => $request->parent_email ? strtolower($request->parent_email) : null,
                     'parent_mobile' => $request->parent_mobile,
-                    'address' => $request->address,
-                    'street_address' => $request->address,
-                    'home_address' => $request->address,
-                    'emergency_name' => $request->emergency_name,
-                    'emergency_relationship' => $request->emergency_relationship,
+                    'address' => $request->address ? mb_strtoupper($request->address) : null,
+                    'street_address' => $request->address ? mb_strtoupper($request->address) : null,
+                    'home_address' => $request->address ? mb_strtoupper($request->address) : null,
+                    'emergency_name' => $request->emergency_name ? mb_strtoupper($request->emergency_name) : null,
+                    'emergency_relationship' => $request->emergency_relationship ? mb_strtoupper($request->emergency_relationship) : null,
                     'emergency_phone' => $request->emergency_phone,
                     'lrn' => $request->lrn ?: 'NA',
                 ]);
@@ -1304,13 +1304,13 @@ class AdminStudentController extends Controller
                 // Split father's and mother's names if possible
                 if ($request->filled('father_name')) {
                     $parts = explode(' ', trim($request->father_name));
-                    $applicant->father_last_name = array_pop($parts);
-                    $applicant->father_first_name = implode(' ', $parts) ?: 'FATHER';
+                    $applicant->father_last_name = mb_strtoupper(array_pop($parts));
+                    $applicant->father_first_name = mb_strtoupper(implode(' ', $parts)) ?: 'FATHER';
                 }
                 if ($request->filled('mother_name')) {
                     $parts = explode(' ', trim($request->mother_name));
-                    $applicant->mother_last_name = array_pop($parts);
-                    $applicant->mother_first_name = implode(' ', $parts) ?: 'MOTHER';
+                    $applicant->mother_last_name = mb_strtoupper(array_pop($parts));
+                    $applicant->mother_first_name = mb_strtoupper(implode(' ', $parts)) ?: 'MOTHER';
                 }
                 $applicant->save();
             }
