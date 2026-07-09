@@ -462,18 +462,7 @@
                         </div>
                     </div>
 
-                    <hr class="border-slate-100 dark:border-slate-800">
 
-                    <!-- LRN -->
-                    <div>
-                        <h4 class="text-xs font-extrabold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 mb-3">Verification Details</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-350 mb-1">LRN (Learner Reference Number)</label>
-                                <input type="text" name="lrn" value="{{ $student->applicant->lrn ?? '' }}" class="w-full rounded-xl border border-slate-250 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-sm font-semibold text-slate-900 dark:text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500">
-                            </div>
-                        </div>
-                    </div>
 
                     <!-- Footer Buttons -->
                     <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-150 dark:border-slate-800">
