@@ -17,7 +17,7 @@ class StudentPaymentRepository
     public function getAccountWithBillingsAndPayments(int $studentId): ?StudentAccount
     {
         return StudentAccount::where('student_id', $studentId)
-            ->with(['monthlyBillings', 'payments' => function (Builder $query): void {
+            ->with(['monthlyBillings', 'payments' => function ($query): void {
                 $query->orderBy('created_at', 'desc');
             }])
             ->first();
@@ -26,7 +26,7 @@ class StudentPaymentRepository
     public function getAccountWithPayments(int $studentId): ?StudentAccount
     {
         return StudentAccount::where('student_id', $studentId)
-            ->with(['payments' => function (Builder $query): void {
+            ->with(['payments' => function ($query): void {
                 $query->with('monthlyBilling')->latest('created_at');
             }])
             ->first();

@@ -20,18 +20,17 @@ class SubmitPaymentRequest extends FormRequest
     {
         $student = Student::where('user_id', Auth::id())->first();
         $account = $student ? StudentAccount::where('student_id', $student->id)->first() : null;
-        $maxAmount = $account ? ((float) $account->remaining_balance + 10000) : 999999;
+        $maxAmount = $account ? ((float) $account->remaining_balance + 50000) : 999999; // Allow family buffer amount
 
         return [
             'amount' => ['required', 'numeric', 'min:1', "max:{$maxAmount}"],
             'method' => ['required', 'string', Rule::in(PaymentMethod::values())],
             'reference_no' => 'required|string|max:100',
-            'soa_monthly_billing_id' => [
-                'nullable',
-                Rule::exists('soa_monthly_billings', 'id')
-                    ->where('student_account_id', $account?->id),
-            ],
-            'receipt' => ['required', 'file', 'image', 'mimes:jpg,jpeg,png', 'max:5120'],
+            'receipt' => ['required', 'file', 'image', 'mimes:jpg,jpeg,png', 'max:10240'],
+            'pay_mode' => ['required', 'string', 'in:single,family'],
+            'student_ids' => ['nullable', 'array'],
+            'student_ids.*' => ['integer', 'exists:students,id'],
+            'custom_remarks' => ['nullable', 'string', 'max:1000'],
         ];
     }
 }

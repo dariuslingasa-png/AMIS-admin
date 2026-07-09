@@ -52,32 +52,41 @@
     };
 
     $teacherName = function ($subject): string {
-        $name = $subject->teacher_name ?: 'To Be Assigned';
-        if ($name === 'To Be Assigned') {
-            return $name;
-        }
-        $nameTrimmed = trim($name);
-        $nameLower = strtolower($nameTrimmed);
-        
-        $titles = ['tchr', 'teacher', 'ust', 'ustadz', 'ustadh', 'ustadha', 'alim', 'alima', 'alimah'];
-        
-        $hasTitle = false;
-        foreach ($titles as $title) {
-            if (str_starts_with($nameLower, $title)) {
-                $hasTitle = true;
-                break;
+        // Prefer teacher_display from class_schedules (already matched), fall back to teacher_name from section_subjects
+        $raw = !empty($subject->teacher_display) ? $subject->teacher_display : ($subject->teacher_name ?? null);
+        if (!$raw) return '—';
+
+        $nameTrimmed = trim($raw);
+        $nameLower   = strtolower($nameTrimmed);
+
+        // Title → Short prefix + first name only
+        $titleMap = [
+            'teacher '  => 'Tchr.',
+            'tchr. '    => 'Tchr.',
+            'tchr '     => 'Tchr.',
+            'ustadha '  => 'Ustadha',
+            'ustadh '   => 'Ustadh',
+            'ustadz '   => 'Ustadz',
+            'ust. '     => 'Ust.',
+            'ust '      => 'Ust.',
+            'alimah '   => 'Alimah',
+            'alima '    => 'Alima',
+            'alim '     => 'Alim',
+        ];
+
+        foreach ($titleMap as $prefix => $shortTitle) {
+            if (str_starts_with($nameLower, $prefix)) {
+                $rest      = trim(substr($nameTrimmed, strlen($prefix)));
+                $firstName = ucfirst(strtolower(explode(' ', $rest)[0]));
+                return $shortTitle . ' ' . $firstName;
             }
         }
-        
-        if ($hasTitle) {
-            if (str_starts_with($nameLower, 'teacher ')) {
-                return 'Tchr. ' . ucwords(strtolower(trim(substr($nameTrimmed, 8))));
-            }
-            return ucwords(strtolower($nameTrimmed));
-        }
-        
-        return 'Tchr. ' . ucwords(strtolower($nameTrimmed));
+
+        // No title — just first name with Tchr. prefix
+        $firstName = ucfirst(strtolower(explode(' ', $nameTrimmed)[0]));
+        return 'Tchr. ' . $firstName;
     };
+
 
     foreach ($days as $day => $classes) {
         usort($classes, fn ($a, $b) => $timeSortValue($a['time']) <=> $timeSortValue($b['time']));
@@ -138,8 +147,20 @@
         if (str_contains($subjectLower, 'english') || str_contains($subjectLower, 'reading')) {
             return ['bg' => '#e0f2fe', 'border' => '#bae6fd', 'text' => '#0c4a6e', 'icon_bg' => '#bae6fd', 'icon_color' => '#0c4a6e'];
         }
-        if (str_contains($subjectLower, 'arabic') || str_contains($subjectLower, 'qur') || str_contains($subjectLower, 'islamic') || str_contains($subjectLower, 'shaf')) {
-            return ['bg' => '#f0fdf4', 'border' => '#bbf7d0', 'text' => '#14532d', 'icon_bg' => '#bbf7d0', 'icon_color' => '#14532d'];
+        if (str_contains($subjectLower, 'quran') || str_contains($subjectLower, 'qur')) {
+            return ['bg' => '#f0fdf4', 'border' => '#86efac', 'text' => '#14532d', 'icon_bg' => '#86efac', 'icon_color' => '#14532d'];
+        }
+        if (str_contains($subjectLower, 'arabic')) {
+            return ['bg' => '#ecfdf5', 'border' => '#6ee7b7', 'text' => '#064e3b', 'icon_bg' => '#6ee7b7', 'icon_color' => '#064e3b'];
+        }
+        if (str_contains($subjectLower, 'hadith') || str_contains($subjectLower, 'islamic') || str_contains($subjectLower, 'shaf')) {
+            return ['bg' => '#f0fdf4', 'border' => '#bbf7d0', 'text' => '#166534', 'icon_bg' => '#bbf7d0', 'icon_color' => '#166534'];
+        }
+        if (str_contains($subjectLower, 'circle time') || str_contains($subjectLower, 'circle')) {
+            return ['bg' => '#f0fdfa', 'border' => '#99f6e4', 'text' => '#134e4a', 'icon_bg' => '#99f6e4', 'icon_color' => '#0f766e'];
+        }
+        if (str_contains($subjectLower, 'ct ') || $subjectLower === 'ct 2' || $subjectLower === 'ct 1' || str_starts_with($subjectLower, 'ct ')) {
+            return ['bg' => '#eef2ff', 'border' => '#c7d2fe', 'text' => '#3730a3', 'icon_bg' => '#c7d2fe', 'icon_color' => '#4338ca'];
         }
         if (str_contains($subjectLower, 'filipino')) {
             return ['bg' => '#fef3c7', 'border' => '#fde68a', 'text' => '#78350f', 'icon_bg' => '#fde68a', 'icon_color' => '#78350f'];

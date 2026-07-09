@@ -87,6 +87,11 @@ class User extends Authenticatable
         return $this->hasMany(EnrollmentApplicant::class);
     }
 
+    public function student(): HasOne
+    {
+        return $this->hasOne(Student::class);
+    }
+
     public function hasAdminPortalAccess(): bool
     {
         return in_array($this->role, self::ADMIN_PORTAL_ROLES, true);

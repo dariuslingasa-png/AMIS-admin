@@ -19,12 +19,18 @@ tar -czf $ARCHIVE_NAME \
     resources/views/student/billing.blade.php \
     resources/css/app.css \
     app/Http/Controllers/StudentDashboardController.php \
+    app/Http/Controllers/StudentEbookController.php \
+    app/Http/Controllers/StudentScheduleController.php \
+    app/Http/Controllers/StudentTeacherController.php \
     app/Http/Controllers/Controller.php \
     app/Http/Controllers/StudentPaymentController.php \
+    app/Services/StudentAnnouncementService.php \
     app/Services/StudentPaymentService.php \
+    app/Services/GeminiService.php \
     app/Repositories/StudentRepository.php \
     app/Repositories/StudentPaymentRepository.php \
     app/Http/Requests/SubmitPaymentRequest.php \
+    app/Models/*.php \
     public/build
 
 echo "Uploading bundle to student portal production server..."

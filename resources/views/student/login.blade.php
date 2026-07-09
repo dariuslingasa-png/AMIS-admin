@@ -48,14 +48,14 @@
 
                 <div class="space-y-3" style="margin-top: 10px;">
                     @if($microsoftConfigured)
-                        <a href="{{ route('student.microsoft.redirect') }}" class="student-primary-btn w-full flex" style="background: #2f2f2f; color: #fff; gap: 10px; height: 50px; font-size: 15px; border-radius: 10px;">
+                        <a href="{{ route('student.microsoft.redirect') }}" class="student-primary-btn w-full flex" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); color: #fff; gap: 10px; height: 50px; font-size: 15px; border-radius: 10px; border: none; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25); transition: all 0.2s;" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 16px rgba(5, 150, 105, 0.4)';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 4px 12px rgba(5, 150, 105, 0.25)';">
                             <svg width="18" height="18" viewBox="0 0 23 23" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M0 0h11v11H0z" fill="#f25022"/>
                                 <path d="M12 0h11v11H12z" fill="#7fba00"/>
                                 <path d="M0 12h11v11H0z" fill="#00a4ef"/>
                                 <path d="M12 12h11v11H12z" fill="#ffb900"/>
                             </svg>
-                            <span>Sign in with Microsoft</span>
+                            <span style="font-weight: 700;">Sign in with Microsoft</span>
                         </a>
                     @else
                         <button type="button" disabled class="student-outline-btn w-full flex opacity-50 cursor-not-allowed" style="height: 50px; border-radius: 10px;">

@@ -3,6 +3,9 @@
 use App\Http\Controllers\StudentAuthController;
 use App\Http\Controllers\StudentDashboardController;
 use App\Http\Controllers\StudentPaymentController;
+use App\Http\Controllers\StudentScheduleController;
+use App\Http\Controllers\StudentTeacherController;
+use App\Http\Controllers\StudentEbookController;
 use App\Http\Controllers\SupportTicketController;
 use App\Http\Controllers\ChatbotController;
 use Illuminate\Support\Facades\Route;
@@ -26,16 +29,17 @@ Route::middleware(['auth', 'student'])->group(function () {
     Route::post('/dashboard/sync-teams', [StudentDashboardController::class, 'syncTeams'])->name('student.sync-teams');
     Route::get('/soa',       [StudentPaymentController::class, 'billing'])->name('student.billing');
     Route::post('/soa/pay',  [StudentPaymentController::class, 'submitPayment'])->name('student.billing.pay');
+    Route::post('/soa/ocr-scan', [StudentPaymentController::class, 'ocrScan'])->name('student.billing.ocr');
     
     Route::get('/announcements', [StudentDashboardController::class, 'announcements'])->name('student.announcements');
-    Route::get('/schedule',      [StudentDashboardController::class, 'schedule'])->name('student.schedule');
-    Route::get('/teachers',      [StudentDashboardController::class, 'teachers'])->name('student.teachers');
+    Route::get('/schedule',      [StudentScheduleController::class, 'schedule'])->name('student.schedule');
+    Route::get('/teachers',      [StudentTeacherController::class, 'teachers'])->name('student.teachers');
     Route::get('/grades',        [StudentDashboardController::class, 'grades'])->name('student.grades');
     Route::get('/profile',       [StudentDashboardController::class, 'profile'])->name('student.profile');
     Route::get('/settings',      [StudentDashboardController::class, 'settings'])->name('student.settings');
-    Route::get('/ebooks',        [StudentDashboardController::class, 'ebooks'])->name('student.ebooks');
-    Route::get('/ebooks/read/{id}', [StudentDashboardController::class, 'readEbook'])->name('student.ebooks.read');
-    Route::get('/ebooks/stream/{id}', [StudentDashboardController::class, 'streamEbook'])->name('student.ebooks.stream');
+    Route::get('/ebooks',        [StudentEbookController::class, 'ebooks'])->name('student.ebooks');
+    Route::get('/ebooks/read/{id}', [StudentEbookController::class, 'readEbook'])->name('student.ebooks.read');
+    Route::get('/ebooks/stream/{id}', [StudentEbookController::class, 'streamEbook'])->name('student.ebooks.stream');
 });
 
 // Chatbot api

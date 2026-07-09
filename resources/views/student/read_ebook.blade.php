@@ -626,7 +626,10 @@
                     
                     pdfjsLib.GlobalWorkerOptions.workerSrc = config.workerUrl;
                     
-                    pdfjsLib.getDocument(streamUrl).promise.then((pdf) => {
+                    pdfjsLib.getDocument({
+                        url: streamUrl,
+                        withCredentials: true
+                    }).promise.then((pdf) => {
                         pdfDoc = pdf;
                         const pdfPageCount = pdf.numPages;
                         this.totalPages = pdfPageCount;
