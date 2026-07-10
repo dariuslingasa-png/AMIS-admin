@@ -66,38 +66,9 @@ class SendPaymentReminders extends Command
         // 4. Handle Actual Sending
         $actuallySend = $this->option('send');
         if ($actuallySend) {
-            if ($totalRecipients === 0) {
-                $this->warn("No recipient emails found to send to.");
-                return Command::FAILURE;
-            }
-
-            if (!$this->option('force')) {
-                if (!$this->confirm("Are you absolutely sure you want to send this payment reminder to ALL {$totalRecipients} recipients?")) {
-                    $this->info("Operation cancelled.");
-                    return Command::SUCCESS;
-                }
-            }
-
-            $this->info("Starting bulk email dispatch...");
-            $successCount = 0;
-            $failCount = 0;
-
-            foreach ($allEmails as $email) {
-                try {
-                    Mail::to($email)->send(new PaymentReminderMail());
-                    $this->info("Sent reminder to: {$email}");
-                    $successCount++;
-                } catch (\Exception $e) {
-                    $this->error("Failed to send to {$email}: " . $e->getMessage());
-                    $failCount++;
-                }
-            }
-
-            $this->info("--------------------------------------------------");
-            $this->info("Bulk Dispatch Completed!");
-            $this->info("Success: {$successCount} | Failed: {$failCount}");
-            $this->info("--------------------------------------------------");
-            return Command::SUCCESS;
+            $this->error("Bulk payment reminders via SMTP have been disabled to prevent exceeding the server's hourly sending limits (max 500/hour).");
+            $this->info("Please use the single-student payment reminder feature on the aging report page instead.");
+            return Command::FAILURE;
         }
 
         // 5. Default: Dry Run Mode
