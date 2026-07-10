@@ -28,7 +28,62 @@
         return 'Tchr. ' . ucwords(strtolower($nameTrimmed));
     };
 
-    $getPhotoUrl = function ($teacherPhoto) {
+    $getPhotoUrl = function ($teacherPhoto, $teacherKey = null, $teacherName = '') {
+        if (empty($teacherKey)) {
+            if (!empty($teacherPhoto)) {
+                $teacherKey = pathinfo($teacherPhoto, PATHINFO_FILENAME);
+                $teacherKey = str_replace('teacher-', '', $teacherKey);
+            } elseif (!empty($teacherName)) {
+                $cleanName = trim((string)$teacherName);
+                while (preg_match('/^(TEACHER|TCHR\.?|UST\.?|USTADZ|USTADH|USTADHA|ALIM|SIR|MA\'AM|MAAM)\s+/i', $cleanName, $matches)) {
+                    $cleanName = trim(substr($cleanName, strlen($matches[0])));
+                }
+                $teacherKey = \Illuminate\Support\Str::slug($cleanName);
+            }
+        }
+
+        if (empty($teacherKey)) {
+            if (empty($teacherPhoto)) return null;
+            if (str_starts_with($teacherPhoto, 'http://') || str_starts_with($teacherPhoto, 'https://')) {
+                return $teacherPhoto;
+            }
+            return 'https://admin.amis.edu.ph/' . ltrim($teacherPhoto, '/');
+        }
+
+        $adminPath = '/home2/amisdavc/admin.amis.edu.ph';
+        if (!file_exists($adminPath)) {
+            $adminPath = base_path('../amis_admin');
+        }
+
+        $overrides = [];
+        $overridesJsonPath = $adminPath . '/storage/app/academic_teacher_overrides.json';
+        if (file_exists($overridesJsonPath)) {
+            $overrides = json_decode(file_get_contents($overridesJsonPath), true) ?? [];
+        }
+
+        $photoPath = $overrides[$teacherKey]['photo'] ?? null;
+
+        if (empty($photoPath)) {
+            $possiblePaths = [
+                "images/teachers/{$teacherKey}.jpg",
+                "images/teachers/teacher-{$teacherKey}.jpg",
+                "images/teachers/{$teacherKey}.png",
+                "images/teachers/teacher-{$teacherKey}.png",
+                "images/teachers/{$teacherKey}.jpeg",
+                "images/teachers/teacher-{$teacherKey}.jpeg",
+            ];
+            foreach ($possiblePaths as $path) {
+                if (file_exists($adminPath . '/public/' . $path)) {
+                    $photoPath = $path;
+                    break;
+                }
+            }
+        }
+
+        if ($photoPath) {
+            return 'https://admin.amis.edu.ph/' . ltrim($photoPath, '/');
+        }
+
         if (empty($teacherPhoto)) return null;
         if (str_starts_with($teacherPhoto, 'http://') || str_starts_with($teacherPhoto, 'https://')) {
             return $teacherPhoto;
@@ -41,14 +96,17 @@
     $teacherEmails = [];
     foreach ($subjects as $subj) {
         $tName = $subj->teacher_name ?: 'To Be Assigned';
-        if (!isset($teacherPhotos[$tName]) && $subj->teacher_photo) {
-            $teacherPhotos[$tName] = $subj->teacher_photo;
+        if (!isset($teacherPhotos[$tName])) {
+            $teacherPhotos[$tName] = [
+                'photo' => $subj->teacher_photo,
+                'key' => $subj->teacher_key,
+            ];
         }
         if (!isset($teacherEmails[$tName]) && $subj->teacher_email) {
             $teacherEmails[$tName] = $subj->teacher_email;
         }
     }
-    $teacherAvatar = fn (string $name) => $getPhotoUrl($teacherPhotos[$name] ?? null);
+    $teacherAvatar = fn (string $name) => isset($teacherPhotos[$name]) ? $getPhotoUrl($teacherPhotos[$name]['photo'], $teacherPhotos[$name]['key'], $name) : null;
 
 
     $teachersList = [];
@@ -95,7 +153,7 @@
                         <span>Official Advisor</span>
                     </div>
                     <div class="s-quick-actions-card" style="background: white; border-radius: 20px; border: 1.5px solid #e2e8f0; padding: 1.75rem; display: flex; align-items: center; gap: 2rem; flex-wrap: wrap;">
-                        <div @if($adviser['photo']) @click="previewPhoto = { url: '{{ $getPhotoUrl($adviser['photo']) }}', name: '{{ $formatTeacherName($adviser['name']) }}', role: 'Official Advisor' }" @endif
+                        <div @if($adviser['photo']) @click="previewPhoto = { url: '{{ $getPhotoUrl($adviser['photo'], null, $adviser['name']) }}', name: '{{ $formatTeacherName($adviser['name']) }}', role: 'Official Advisor' }" @endif
                              style="width: 80px; height: 80px; border-radius: 20px; background: #ecfdf5; border: 2px solid #a7f3d0; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; @if($adviser['photo']) cursor: pointer; transition: transform 0.15s, border-color 0.15s; @endif"
                              @if($adviser['photo'])
                              onmouseover="this.style.transform='scale(1.05)'; this.style.borderColor='#059669'"
@@ -103,7 +161,7 @@
                              title="Click to preview profile picture"
                              @endif>
                             @if($adviser['photo'])
-                                <img src="{{ $getPhotoUrl($adviser['photo']) }}" alt="{{ $adviser['name'] }}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;">
+                                <img src="{{ $getPhotoUrl($adviser['photo'], null, $adviser['name']) }}" alt="{{ $adviser['name'] }}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;">
                             @else
                                 @php
                                     $initials = collect(explode(' ', str_ireplace('TEACHER ', '', $adviser['name'])))

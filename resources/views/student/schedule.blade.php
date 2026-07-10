@@ -177,7 +177,62 @@
         return ['bg' => '#f8fafc', 'border' => '#e2e8f0', 'text' => '#334155', 'icon_bg' => '#e2e8f0', 'icon_color' => '#475569'];
     };
 
-    $getPhotoUrl = function ($teacherPhoto) {
+    $getPhotoUrl = function ($teacherPhoto, $teacherKey = null, $teacherName = '') {
+        if (empty($teacherKey)) {
+            if (!empty($teacherPhoto)) {
+                $teacherKey = pathinfo($teacherPhoto, PATHINFO_FILENAME);
+                $teacherKey = str_replace('teacher-', '', $teacherKey);
+            } elseif (!empty($teacherName)) {
+                $cleanName = trim((string)$teacherName);
+                while (preg_match('/^(TEACHER|TCHR\.?|UST\.?|USTADZ|USTADH|USTADHA|ALIM|SIR|MA\'AM|MAAM)\s+/i', $cleanName, $matches)) {
+                    $cleanName = trim(substr($cleanName, strlen($matches[0])));
+                }
+                $teacherKey = \Illuminate\Support\Str::slug($cleanName);
+            }
+        }
+
+        if (empty($teacherKey)) {
+            if (empty($teacherPhoto)) return null;
+            if (str_starts_with($teacherPhoto, 'http://') || str_starts_with($teacherPhoto, 'https://')) {
+                return $teacherPhoto;
+            }
+            return 'https://admin.amis.edu.ph/' . ltrim($teacherPhoto, '/');
+        }
+
+        $adminPath = '/home2/amisdavc/admin.amis.edu.ph';
+        if (!file_exists($adminPath)) {
+            $adminPath = base_path('../amis_admin');
+        }
+
+        $overrides = [];
+        $overridesJsonPath = $adminPath . '/storage/app/academic_teacher_overrides.json';
+        if (file_exists($overridesJsonPath)) {
+            $overrides = json_decode(file_get_contents($overridesJsonPath), true) ?? [];
+        }
+
+        $photoPath = $overrides[$teacherKey]['photo'] ?? null;
+
+        if (empty($photoPath)) {
+            $possiblePaths = [
+                "images/teachers/{$teacherKey}.jpg",
+                "images/teachers/teacher-{$teacherKey}.jpg",
+                "images/teachers/{$teacherKey}.png",
+                "images/teachers/teacher-{$teacherKey}.png",
+                "images/teachers/{$teacherKey}.jpeg",
+                "images/teachers/teacher-{$teacherKey}.jpeg",
+            ];
+            foreach ($possiblePaths as $path) {
+                if (file_exists($adminPath . '/public/' . $path)) {
+                    $photoPath = $path;
+                    break;
+                }
+            }
+        }
+
+        if ($photoPath) {
+            return 'https://admin.amis.edu.ph/' . ltrim($photoPath, '/');
+        }
+
         if (empty($teacherPhoto)) return null;
         if (str_starts_with($teacherPhoto, 'http://') || str_starts_with($teacherPhoto, 'https://')) {
             return $teacherPhoto;
@@ -592,7 +647,7 @@
                                         @else
                                             @php
                                                 $currentTeacherName = $teacherName($s);
-                                                $photoUrl = $getPhotoUrl($s->teacher_photo);
+                                                $photoUrl = $getPhotoUrl($s->teacher_photo, $s->teacher_key, $s->teacher_display ?: $s->teacher_name);
                                                 $style = $getSubjectStyle($s->subject_name);
                                             @endphp
                                             <div class="calendar-class-card {{ $classState === 'completed' ? 'class-completed' : ($classState === 'live' ? 'class-live' : '') }}"
@@ -684,7 +739,7 @@
                                                 @else
                                                     @php
                                                         $currentTeacherName = $teacherName($s);
-                                                        $photoUrl = $getPhotoUrl($s->teacher_photo);
+                                                        $photoUrl = $getPhotoUrl($s->teacher_photo, $s->teacher_key, $s->teacher_display ?: $s->teacher_name);
                                                         $style = $getSubjectStyle($s->subject_name);
                                                     @endphp
                                                     <div class="calendar-class-card {{ $classState === 'completed' ? 'class-completed' : ($classState === 'live' ? 'class-live' : '') }}"
@@ -809,7 +864,7 @@
                                         @else
                                             @php
                                                 $currentTeacherName = $teacherName($s);
-                                                $photoUrl = $getPhotoUrl($s->teacher_photo);
+                                                $photoUrl = $getPhotoUrl($s->teacher_photo, $s->teacher_key, $s->teacher_display ?: $s->teacher_name);
                                                 $style = $getSubjectStyle($s->subject_name);
                                             @endphp
                                             <div class="calendar-class-card {{ $classState === 'completed' ? 'class-completed' : ($classState === 'live' ? 'class-live' : '') }}" 
@@ -888,7 +943,7 @@
                     @foreach($subjects as $subj)
                         @php
                             $currentTeacherName = $teacherName($subj);
-                            $listPhotoUrl = $getPhotoUrl($subj->teacher_photo);
+                            $listPhotoUrl = $getPhotoUrl($subj->teacher_photo, $subj->teacher_key, $subj->teacher_name);
                         @endphp
                         <article class="s-quick-actions-card" style="background: white; border-radius: 20px; border: 1.5px solid #e2e8f0; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; min-height: 230px; padding: 0;">
                             <div class="teacher-strip" style="background: #f8fafc; border-bottom: 1.5px solid #e2e8f0; height: 110px; display: grid; grid-template-columns: 90px 1fr;">
