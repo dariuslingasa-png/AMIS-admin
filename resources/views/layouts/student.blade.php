@@ -642,7 +642,24 @@
         : Auth::user()->name;
     $photo    = $student?->applicant?->photo_2x2_url;
     $studentNo= $student?->student_number ?? '';
+    
     $grade    = $student?->grade_level ?? '';
+    $testerSections = [];
+    if (auth()->check() && (auth()->user()->email === 'mon.lingasa@amis.edu.ph' || auth()->user()->username === '260000')) {
+        $testerSections = \Illuminate\Support\Facades\DB::table('sections')
+            ->orderBy('grade_level')
+            ->orderBy('name')
+            ->get(['id', 'name', 'grade_level', 'learning_mode'])
+            ->groupBy('grade_level');
+
+        if (session()->has('tester_override_section_id')) {
+            $overriddenSec = \Illuminate\Support\Facades\DB::table('sections')->where('id', session('tester_override_section_id'))->first();
+            if ($overriddenSec) {
+                $grade = $overriddenSec->grade_level . ' (' . $overriddenSec->name . ')';
+            }
+        }
+    }
+    
     $initials = collect(explode(' ', $fullName))->map(fn($w) => strtoupper($w[0] ?? ''))->take(2)->join('');
 @endphp
 
@@ -890,6 +907,29 @@
                                 </div>
                             </div>
                             <div style="padding:0.375rem;">
+                                @if(count($testerSections) > 0)
+                                    <form method="POST" action="{{ route('student.tester-override-section') }}" id="tester-override-form">
+                                        @csrf
+                                        <div style="padding: 0.5rem 0.85rem;">
+                                            <label style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #0d9488; letter-spacing: 0.05em; display: block; margin-bottom: 0.25rem;">Tester: Switch Section</label>
+                                            <select name="section_id" onchange="document.getElementById('tester-override-form').submit()" 
+                                                    style="width: 100%; border: 1.5px solid #ccfbf1; border-radius: 8px; padding: 0.25rem; font-size: 11px; font-weight: 700; color: #0f766e; background: #f0fdfa; outline: none; cursor: pointer;">
+                                                <option value="">Default (K2 - 260000)</option>
+                                                @foreach($testerSections as $gradeLevel => $secList)
+                                                    <optgroup label="{{ $gradeLevel }}" style="font-weight: 800; font-size: 10px;">
+                                                        @foreach($secList as $sec)
+                                                            <option value="{{ $sec->id }}" {{ session('tester_override_section_id') == $sec->id ? 'selected' : '' }}>
+                                                                {{ $sec->name }} ({{ str_contains(strtolower($sec->learning_mode), 'face') ? 'F2F' : 'Online' }})
+                                                            </option>
+                                                        @endforeach
+                                                    </optgroup>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </form>
+                                    <div style="height:1px;background:#f3f4f6;margin:0.375rem 0;"></div>
+                                @endif
+
                                 <a href="{{ route('student.profile') }}" class="s-dropdown-item">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="10" r="3"/><path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"/></svg>
                                     Profile

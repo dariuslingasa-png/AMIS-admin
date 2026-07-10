@@ -25,6 +25,18 @@ Route::get('/auth/microsoft/callback', [StudentAuthController::class, 'callbackM
 
 // Student protected routes
 Route::middleware(['auth', 'student'])->group(function () {
+    Route::post('/tester-override-section', function (\Illuminate\Http\Request $request) {
+        if (auth()->check() && (auth()->user()->email === 'mon.lingasa@amis.edu.ph' || auth()->user()->username === '260000')) {
+            $sectionId = $request->input('section_id');
+            if (empty($sectionId)) {
+                session()->forget('tester_override_section_id');
+            } else {
+                session(['tester_override_section_id' => (int) $sectionId]);
+            }
+        }
+        return back();
+    })->name('student.tester-override-section');
+
     Route::get('/dashboard', [StudentDashboardController::class, 'index'])->name('student.dashboard');
     Route::post('/dashboard/sync-teams', [StudentDashboardController::class, 'syncTeams'])->name('student.sync-teams');
     Route::get('/soa',       [StudentPaymentController::class, 'billing'])->name('student.billing');
