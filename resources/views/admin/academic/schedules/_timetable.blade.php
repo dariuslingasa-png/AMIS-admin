@@ -214,6 +214,47 @@
         }
     }
 
+    if (!function_exists('getTeacherPhotoUrl')) {
+        function getTeacherPhotoUrl($teacherKey, $teacherName = '') {
+            if (empty($teacherKey)) {
+                if (empty($teacherName)) {
+                    return null;
+                }
+                $cleanName = trim((string)$teacherName);
+                while (preg_match('/^(TEACHER|TCHR\.?|UST\.?|USTADZ|USTADH|USTADHA|ALIM|SIR|MA\'AM|MAAM)\s+/i', $cleanName, $matches)) {
+                    $cleanName = trim(substr($cleanName, strlen($matches[0])));
+                }
+                $teacherKey = \Illuminate\Support\Str::slug($cleanName);
+            }
+
+            $repo = app(\App\Repositories\TeacherRepository::class);
+            $overrides = $repo->overrides();
+            $photoPath = $overrides[$teacherKey]['photo'] ?? null;
+
+            if (empty($photoPath)) {
+                $possiblePaths = [
+                    "images/teachers/{$teacherKey}.jpg",
+                    "images/teachers/teacher-{$teacherKey}.jpg",
+                    "images/teachers/{$teacherKey}.png",
+                    "images/teachers/teacher-{$teacherKey}.png",
+                    "images/teachers/{$teacherKey}.jpeg",
+                    "images/teachers/teacher-{$teacherKey}.jpeg",
+                ];
+                foreach ($possiblePaths as $path) {
+                    if (file_exists(public_path($path))) {
+                        $photoPath = $path;
+                        break;
+                    }
+                }
+            }
+
+            if ($photoPath) {
+                return str_contains($photoPath, 'images/teachers/') ? asset($photoPath) : asset(\App\Support\ImageHelper::thumb($photoPath, 'medium'));
+            }
+            return null;
+        }
+    }
+
     $sectionsByGrade = $sections->groupBy('grade_level');
     $gradeOrder = [
         'Kinder 1', 'Kinder 2', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 
@@ -686,9 +727,27 @@
                                                                 }
                                                             @endphp
                                                             @if(!empty($formattedTeacher))
-                                                                <span class="block text-[9px] font-semibold mt-0.5 opacity-75" style="color: inherit;">
-                                                                    {{ $formattedTeacher }}
-                                                                </span>
+                                                                @php
+                                                                    $photoUrl = getTeacherPhotoUrl($cell['entry']['teacher_key'], $cell['entry']['teacher_display']);
+                                                                @endphp
+                                                                <div class="flex items-center justify-center gap-1.5 mt-1.5 opacity-90 group-hover:opacity-100 transition-opacity">
+                                                                    @if($photoUrl)
+                                                                        <img src="{{ $photoUrl }}" class="w-4.5 h-4.5 rounded-full object-cover shrink-0 border border-slate-200/50 shadow-3xs" alt="{{ $formattedTeacher }}">
+                                                                    @else
+                                                                        @php
+                                                                            $clean = preg_replace('/^(teacher|ust\.|ustadz\.?|ustadh\.?|sir\.?|ma\'am\.?|maam\.?|ms\.?|mrs\.?|mr\.?)\s+/i', '', strtolower($formattedTeacher));
+                                                                            $parts = explode(' ', trim($clean));
+                                                                            $initials = strtoupper(substr($parts[0] ?? '?', 0, 1) . substr($parts[1] ?? '', 0, 1));
+                                                                            if(empty($initials) || $initials === '?') $initials = substr(strtoupper($formattedTeacher), 0, 2);
+                                                                        @endphp
+                                                                        <div class="w-4.5 h-4.5 rounded-full bg-white/40 border border-current flex items-center justify-center text-[7px] font-black shrink-0 uppercase" style="color: inherit;">
+                                                                            {{ $initials }}
+                                                                        </div>
+                                                                    @endif
+                                                                    <span class="text-[9px] font-bold tracking-tight" style="color: inherit;">
+                                                                        {{ $formattedTeacher }}
+                                                                    </span>
+                                                                </div>
                                                             @elseif(!$isSpecialSlot)
                                                                 <span class="block text-[8px] italic mt-0.5 opacity-40" style="color: inherit;">
                                                                     No teacher assigned
