@@ -256,7 +256,5 @@
         box-shadow: none !important;
     }
 </style>
-@once
 <script src="https://cdn.jsdelivr.net/npm/lucide@latest"></script>
-@endonce
 @endonce
