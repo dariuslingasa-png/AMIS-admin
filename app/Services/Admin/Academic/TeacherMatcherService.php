@@ -198,6 +198,35 @@ class TeacherMatcherService
                 'first_name' => explode(' ', str_replace(['TEACHER ', 'USTADZ ', 'USTADHA ', 'ALIM '], '', $u->name))[0] ?? '',
             ]);
 
+        $getPhotoUrl = function ($id, $name) use ($overrides) {
+            $photoPath = $overrides[$id]['photo'] ?? null;
+            if (empty($photoPath)) {
+                $cleanName = trim($name);
+                while (preg_match('/^(TEACHER|TCHR\.?|UST\.?|USTADZ|USTADH|USTADHA|ALIM|SIR|MA\'AM|MAAM)\s+/i', $cleanName, $matches)) {
+                    $cleanName = trim(substr($cleanName, strlen($matches[0])));
+                }
+                $teacherKey = Str::slug($cleanName);
+                $possiblePaths = [
+                    "images/teachers/{$teacherKey}.jpg",
+                    "images/teachers/teacher-{$teacherKey}.jpg",
+                    "images/teachers/{$teacherKey}.png",
+                    "images/teachers/teacher-{$teacherKey}.png",
+                    "images/teachers/{$teacherKey}.jpeg",
+                    "images/teachers/teacher-{$teacherKey}.jpeg",
+                ];
+                foreach ($possiblePaths as $path) {
+                    if (file_exists(public_path($path))) {
+                        $photoPath = $path;
+                        break;
+                    }
+                }
+            }
+            if ($photoPath) {
+                return str_contains($photoPath, 'images/teachers/') ? asset($photoPath) : asset(\App\Support\ImageHelper::thumb($photoPath, 'medium'));
+            }
+            return null;
+        };
+
         $this->teacherList = $advisory
             ->merge($fromOverrides)
             ->merge($dbTeachers)
@@ -206,6 +235,11 @@ class TeacherMatcherService
             ->unique(fn ($t) => $this->getShortName($t['name']))
             ->sortBy('name', SORT_NATURAL | SORT_FLAG_CASE)
             ->values()
+            ->map(function ($t) use ($getPhotoUrl) {
+                $t['photo_url'] = $getPhotoUrl($t['id'], $t['name']);
+                $t['short_name'] = $this->getShortName($t['name']);
+                return $t;
+            })
             ->all();
 
         return $this->teacherList;

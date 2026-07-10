@@ -28,6 +28,18 @@
         isSaving: false,
         isDeleting: false,
         isSyncing: false,
+        teachers: @js($teachers),
+        teacherSearch: '',
+        teacherDropdownOpen: false,
+        getSelectedTeacher() {
+            return this.teachers.find(t => t.name === this.editForm.teacher_name);
+        },
+        getInitials(name) {
+            if (!name) return '??';
+            let clean = name.replace(/^(teacher|ust\.|ustadz\.?|ustadh\.?|sir\.?|ma'am\.?|maam\.?|ms\.?|mrs\.?|mr\.?)\s+/i, '');
+            let parts = clean.split(' ').filter(p => p.trim());
+            return parts.map(p => p[0]).slice(0, 2).join('').toUpperCase();
+        },
         editingCell: null,
         createModal: false,
         editModal: false,

@@ -122,15 +122,102 @@
             <input type="text" name="subject_name" x-model="editForm.subject_name" placeholder="e.g. Science" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl px-3 py-2 outline-none">
         </label>
 
-        <label class="flex flex-col gap-1">
+        <div class="flex flex-col gap-1 relative" @click.away="teacherDropdownOpen = false">
             <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Teacher</span>
-            <select name="teacher_name" x-model="editForm.teacher_name" class="w-full bg-slate-50 border border-gray-300 text-gray-900 text-sm rounded-xl px-3 py-2.5 outline-none">
-                <option value="">Teacher pending</option>
-                @foreach($teachers as $teacher)
-                    <option value="{{ $teacher['name'] }}">{{ formatTeacherShortName($teacher['name']) }}</option>
-                @endforeach
-            </select>
-        </label>
+            <input type="hidden" name="teacher_name" :value="editForm.teacher_name">
+            
+            <!-- Dropdown Trigger Button -->
+            <button type="button" 
+                @click="teacherDropdownOpen = !teacherDropdownOpen; teacherSearch = ''" 
+                class="w-full bg-slate-50 border border-gray-300 hover:border-gray-400 text-gray-950 text-sm rounded-xl px-3 py-2 flex items-center justify-between outline-none transition duration-150 cursor-pointer h-10 select-none">
+                
+                <div class="flex items-center gap-2 min-w-0">
+                    <!-- Selected Teacher Profile Pic -->
+                    <template x-if="getSelectedTeacher()">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <template x-if="getSelectedTeacher().photo_url">
+                                <img :src="getSelectedTeacher().photo_url" class="w-6.5 h-6.5 rounded-full object-cover shrink-0 border border-slate-200">
+                            </template>
+                            <template x-if="!getSelectedTeacher().photo_url">
+                                <div class="w-6.5 h-6.5 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-[9px] font-black text-indigo-700 shrink-0 uppercase" x-text="getInitials(getSelectedTeacher().name)"></div>
+                            </template>
+                            <span class="font-bold truncate text-slate-900" x-text="getSelectedTeacher().short_name"></span>
+                        </div>
+                    </template>
+                    <template x-if="!getSelectedTeacher()">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <div class="w-6.5 h-6.5 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 shrink-0">
+                                <i data-lucide="user" class="w-3.5 h-3.5"></i>
+                            </div>
+                            <span class="font-bold text-slate-400">Teacher pending</span>
+                        </div>
+                    </template>
+                </div>
+                
+                <!-- Chevron Icon -->
+                <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 transition-transform duration-150" :class="teacherDropdownOpen ? 'rotate-180' : ''"></i>
+            </button>
+            
+            <!-- Dropdown Content Card -->
+            <div x-show="teacherDropdownOpen" 
+                x-transition:enter="transition ease-out duration-100"
+                x-transition:enter-start="opacity-0 scale-95"
+                x-transition:enter-end="opacity-100 scale-100"
+                x-transition:leave="transition ease-in duration-75"
+                x-transition:leave-start="opacity-100 scale-100"
+                x-transition:leave-end="opacity-0 scale-95"
+                class="absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-xl shadow-xl z-50 flex flex-col max-h-72 overflow-hidden" 
+                x-cloak>
+                
+                <!-- Search Input Header -->
+                <div class="p-2 border-b border-slate-150 bg-slate-50/50">
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                            <i data-lucide="search" class="w-3.5 h-3.5"></i>
+                        </span>
+                        <input type="search" 
+                            x-model="teacherSearch" 
+                            placeholder="Search teacher..." 
+                            class="w-full bg-white border border-slate-200 text-xs rounded-lg pl-8.5 pr-3 py-1.5 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition">
+                    </div>
+                </div>
+                
+                <!-- Options Roster List -->
+                <div class="flex-1 overflow-y-auto py-1 divide-y divide-slate-100/50">
+                    <!-- Default Pending Option -->
+                    <button type="button" 
+                        @click="editForm.teacher_name = ''; teacherDropdownOpen = false" 
+                        class="w-full px-3 py-2 flex items-center gap-2 hover:bg-slate-50 text-left transition select-none cursor-pointer">
+                        <div class="w-6.5 h-6.5 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 shrink-0">
+                            <i data-lucide="user" class="w-3.5 h-3.5"></i>
+                        </div>
+                        <span class="text-xs font-bold text-slate-400">Teacher pending</span>
+                    </button>
+                    
+                    <!-- Loop Mapped Teachers -->
+                    <template x-for="t in teachers.filter(t => !teacherSearch || t.name.toLowerCase().includes(teacherSearch.toLowerCase()) || t.short_name.toLowerCase().includes(teacherSearch.toLowerCase()))" :key="t.id">
+                        <button type="button" 
+                            @click="editForm.teacher_name = t.name; teacherDropdownOpen = false" 
+                            class="w-full px-3 py-2 flex items-center gap-2.5 hover:bg-indigo-50/50 text-left transition select-none cursor-pointer group"
+                            :class="editForm.teacher_name === t.name ? 'bg-indigo-50/30' : ''">
+                            
+                            <!-- Profile image / initials -->
+                            <template x-if="t.photo_url">
+                                <img :src="t.photo_url" class="w-7 h-7 rounded-full object-cover shrink-0 border border-slate-200 shadow-3xs">
+                            </template>
+                            <template x-if="!t.photo_url">
+                                <div class="w-7 h-7 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-[10px] font-black text-indigo-700 shrink-0 uppercase shadow-3xs" x-text="getInitials(t.name)"></div>
+                            </template>
+                            
+                            <div class="min-w-0">
+                                <span class="block text-xs font-black text-slate-900 group-hover:text-indigo-900" x-text="t.short_name"></span>
+                                <span class="block text-[9px] font-bold text-slate-400 mt-0.5 uppercase tracking-wide truncate" x-text="t.name"></span>
+                            </div>
+                        </button>
+                    </template>
+                </div>
+            </div>
+        </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <label class="flex flex-col gap-1">
