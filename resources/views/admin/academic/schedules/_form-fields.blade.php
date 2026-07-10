@@ -136,17 +136,17 @@
                     <template x-if="getSelectedTeacher()">
                         <div class="flex items-center gap-2 min-w-0">
                             <template x-if="getSelectedTeacher().photo_url">
-                                <img :src="getSelectedTeacher().photo_url" class="w-6.5 h-6.5 rounded-full object-cover shrink-0 border border-slate-200">
+                                <img :src="getSelectedTeacher().photo_url" class="rounded-full object-cover shrink-0 border border-slate-200" style="width: 26px; height: 26px;">
                             </template>
                             <template x-if="!getSelectedTeacher().photo_url">
-                                <div class="w-6.5 h-6.5 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-[9px] font-black text-indigo-700 shrink-0 uppercase" x-text="getInitials(getSelectedTeacher().name)"></div>
+                                <div class="rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-[9px] font-black text-indigo-700 shrink-0 uppercase" style="width: 26px; height: 26px;" x-text="getInitials(getSelectedTeacher().name)"></div>
                             </template>
                             <span class="font-bold truncate text-slate-900" x-text="getSelectedTeacher().short_name"></span>
                         </div>
                     </template>
                     <template x-if="!getSelectedTeacher()">
                         <div class="flex items-center gap-2 min-w-0">
-                            <div class="w-6.5 h-6.5 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 shrink-0">
+                            <div class="rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 shrink-0" style="width: 26px; height: 26px;">
                                 <i data-lucide="user" class="w-3.5 h-3.5"></i>
                             </div>
                             <span class="font-bold text-slate-400">Teacher pending</span>
@@ -188,7 +188,7 @@
                     <button type="button" 
                         @click="editForm.teacher_name = ''; teacherDropdownOpen = false" 
                         class="w-full px-3 py-2 flex items-center gap-2 hover:bg-slate-50 text-left transition select-none cursor-pointer">
-                        <div class="w-6.5 h-6.5 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 shrink-0">
+                        <div class="rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 shrink-0" style="width: 26px; height: 26px;">
                             <i data-lucide="user" class="w-3.5 h-3.5"></i>
                         </div>
                         <span class="text-xs font-bold text-slate-400">Teacher pending</span>
@@ -203,10 +203,10 @@
                             
                             <!-- Profile image / initials -->
                             <template x-if="t.photo_url">
-                                <img :src="t.photo_url" class="w-7 h-7 rounded-full object-cover shrink-0 border border-slate-200 shadow-3xs">
+                                <img :src="t.photo_url" class="rounded-full object-cover shrink-0 border border-slate-200 shadow-3xs" style="width: 28px; height: 28px;">
                             </template>
                             <template x-if="!t.photo_url">
-                                <div class="w-7 h-7 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-[10px] font-black text-indigo-700 shrink-0 uppercase shadow-3xs" x-text="getInitials(t.name)"></div>
+                                <div class="rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-[10px] font-black text-indigo-700 shrink-0 uppercase shadow-3xs" style="width: 28px; height: 28px;" x-text="getInitials(t.name)"></div>
                             </template>
                             
                             <div class="min-w-0">
