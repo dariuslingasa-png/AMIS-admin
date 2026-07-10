@@ -766,29 +766,29 @@
                                                             @endif
                                                         </div>
 
-                                                        <!-- Right: Subject details -->
-                                                        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; height: 100%;">
-                                                            <div>
-                                                                <h4 style="font-size: 15px; font-weight: 800; line-height: 1.25; color: {{ $style['text'] }} !important; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ $s->subject_name }}">
+                                                        <!-- Right: Details -->
+                                                        <div style="flex: 1; min-width: 0; display: flex; align-items: center; justify-content: space-between;">
+                                                            <div style="min-width: 0; display: flex; flex-direction: column; justify-content: center; text-align: left;">
+                                                                <h4 style="font-size: 15px; font-weight: 800; line-height: 1.25; color: {{ $style['text'] }} !important; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left;" title="{{ $s->subject_name }}">
                                                                      {{ $s->subject_name }}
-                                                                 </h4>
-                                                                 <p style="font-size: 13px; font-weight: 600; line-height: 1.35; color: {{ $style['text'] }} !important; opacity: 0.9; margin: 0.05rem 0 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ $currentTeacherName }}">
+                                                                </h4>
+                                                                <p style="font-size: 13px; font-weight: 600; line-height: 1.35; color: {{ $style['text'] }} !important; opacity: 0.9; margin: 0.05rem 0 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left;" title="{{ $currentTeacherName }}">
                                                                      {{ $currentTeacherName }}
-                                                                 </p>
+                                                                </p>
                                                             </div>
-                                                            <div style="display: flex; align-items: center; justify-content: flex-end; margin-top: 0.15rem;">
-                                                                 @if($s->ms_channel_id)
+                                                            @if($s->ms_channel_id)
+                                                                <div style="display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-left: 0.25rem;">
                                                                     @if($s->is_joinable)
-                                                                        <a href="{{ $s->team_url ?? 'https://teams.microsoft.com/' }}" onclick="event.preventDefault(); window.joinTeams('{{ $s->team_url ?? 'https://teams.microsoft.com/' }}');" style="width: 18px; height: 18px; border-radius: 50%; background: {{ $style['icon_color'] }}; display: inline-flex; align-items: center; justify-content: center; color: white; transition: background 0.15s; text-decoration: none; cursor: pointer;" title="Join Class">
-                                                                            <i data-lucide="video" style="width: 8px; height: 8px;"></i>
+                                                                        <a href="{{ $s->team_url ?? 'https://teams.microsoft.com/' }}" onclick="event.preventDefault(); window.joinTeams('{{ $s->team_url ?? 'https://teams.microsoft.com/' }}');" style="width: 20px; height: 20px; border-radius: 50%; background: {{ $style['icon_color'] }}; display: inline-flex; align-items: center; justify-content: center; color: white; transition: background 0.15s; text-decoration: none; cursor: pointer;" title="Join Class">
+                                                                            <i data-lucide="video" style="width: 9px; height: 9px;"></i>
                                                                         </a>
                                                                     @else
-                                                                        <button type="button" disabled style="width: 18px; height: 18px; border-radius: 50%; background: #cbd5e1; border: none; display: inline-flex; align-items: center; justify-content: center; color: #64748b; cursor: not-allowed;" title="{{ $s->membership_status_label }}">
-                                                                            <i data-lucide="lock" style="width: 8px; height: 8px;"></i>
+                                                                        <button type="button" disabled style="width: 20px; height: 20px; border-radius: 50%; background: #cbd5e1; border: none; display: inline-flex; align-items: center; justify-content: center; color: #64748b; cursor: not-allowed;" title="{{ $s->membership_status_label }}">
+                                                                            <i data-lucide="lock" style="width: 9px; height: 9px;"></i>
                                                                         </button>
                                                                     @endif
-                                                                @endif
-                                                            </div>
+                                                                </div>
+                                                            @endif
                                                         </div>
                                                     </div>
                                                 @endif
