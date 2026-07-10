@@ -46,6 +46,16 @@
             ],
         ],
         [
+            'active' => request()->routeIs('admin.attendance.*'),
+            'icon' => 'calendar-check', 'iconClass' => 'text-cyan-600', 'headerClass' => 'text-cyan-700', 'activeClass' => 'sidebar-link-active-cyan', 'title' => 'Attendance',
+            'links' => [
+                ['Overview', 'layout-dashboard', route('admin.attendance.index'), request()->routeIs('admin.attendance.index')],
+                ['Live QR Scanner', 'qr-code', route('admin.attendance.scanner'), request()->routeIs('admin.attendance.scanner')],
+                ['Manual Entry', 'edit-3', route('admin.attendance.manual'), request()->routeIs('admin.attendance.manual')],
+                ['Attendance Reports', 'file-text', route('admin.attendance.reports'), request()->routeIs('admin.attendance.reports')],
+            ],
+        ],
+        [
             'active' => request()->routeIs('admin.ebook.*'),
             'icon' => 'book-open', 'iconClass' => 'text-teal-600', 'headerClass' => 'text-teal-700', 'activeClass' => 'sidebar-link-active-teal', 'title' => 'eBook',
             'links' => [

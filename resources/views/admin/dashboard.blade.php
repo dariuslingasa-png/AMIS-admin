@@ -67,7 +67,7 @@
                 :disabled="$academicMaintenance" 
             />
             <x-dashboard.module-card :href="route('admin.ebook.index')" icon="book-open" name="eBook Library" owner="LMS" summary="Manage digital textbooks, uploads, grade assignment, and public catalog access" accent="teal" shape="soft" />
-            <x-dashboard.module-card icon="calendar-check" name="Attendance" owner="Academic Office" summary="QR, manual attendance, reports" accent="cyan" shape="circle" status="Coming Soon" disabled />
+            <x-dashboard.module-card :href="route('admin.attendance.index')" icon="calendar-check" name="Attendance" owner="Academic Office" summary="QR, manual attendance, reports" accent="cyan" shape="circle" />
             <x-dashboard.module-card icon="graduation-cap" name="Grades" owner="Faculty Office" summary="Encoding, assessment, report cards" accent="blue" shape="arch" status="Coming Soon" disabled />
             <x-dashboard.module-card :href="route('admin.finance.dashboard')" icon="wallet" name="Finance Management" :owner="config('services.school.finance_reviewer_name', 'Finance Office')" summary="Enrollment payment review, SOA, fees, and receipts" accent="amber" shape="soft" />
             <x-dashboard.module-card icon="chart-no-axes-combined" name="Analytics" owner="Admin Analytics" summary="Charts, insights, performance reports" accent="orange" shape="circle" status="Coming Soon" disabled />

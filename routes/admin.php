@@ -60,6 +60,15 @@ Route::name('admin.')->group(function () {
     Route::middleware(['auth', 'admin'])->group(function () {
         Route::get('/dashboard', DashboardController::class)->name('dashboard');
 
+        Route::prefix('attendance')->name('attendance.')->group(function () {
+            Route::get('/', [App\Http\Controllers\Admin\AttendanceController::class, 'index'])->name('index');
+            Route::get('/scanner', [App\Http\Controllers\Admin\AttendanceController::class, 'scanner'])->name('scanner');
+            Route::post('/scan', [App\Http\Controllers\Admin\AttendanceController::class, 'scan'])->name('scan');
+            Route::get('/manual', [App\Http\Controllers\Admin\AttendanceController::class, 'manual'])->name('manual');
+            Route::post('/manual', [App\Http\Controllers\Admin\AttendanceController::class, 'storeManual'])->name('manual.store');
+            Route::get('/reports', [App\Http\Controllers\Admin\AttendanceController::class, 'reports'])->name('reports');
+        });
+
         Route::prefix('ebook')->name('ebook.')->group(function () {
             Route::get('/', [AdminEbookController::class, 'index'])->name('index');
             Route::get('/create', [AdminEbookController::class, 'create'])->name('create');
