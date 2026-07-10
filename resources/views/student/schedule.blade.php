@@ -609,10 +609,10 @@
                             <div class="calendar-grid-row">
                                 <!-- Time column cell -->
                                 <div class="calendar-time-block">
-                                    <span style="font-size: 13px; font-weight: 500; line-height: 18px;">{{ date('g:i A', strtotime($row['slot']['start'])) }}</span>
-                                    <span style="font-size: 12px; font-weight: 600; line-height: 16px; color: #64748b; margin: 0.1rem 0;">to</span>
-                                    <span style="font-size: 13px; font-weight: 500; line-height: 18px;">{{ date('g:i A', strtotime($row['slot']['end'])) }}</span>
-                                </div>
+                                     <span style="font-size: 14px; font-weight: 800; color: #0f172a; line-height: 1.2;">{{ date('g:i A', strtotime($row['slot']['start'])) }}</span>
+                                     <span style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin: 0.15rem 0; letter-spacing: 0.05em;">to</span>
+                                     <span style="font-size: 14px; font-weight: 800; color: #0f172a; line-height: 1.2;">{{ date('g:i A', strtotime($row['slot']['end'])) }}</span>
+                                 </div>
 
                                 @if($allSame)
                                     <!-- MERGED CELL SPANNING 5 COLUMNS -->
