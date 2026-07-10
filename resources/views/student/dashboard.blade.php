@@ -580,98 +580,29 @@
             </div>
         </div>
 
-        {{-- Payment & Sibling Finance Card --}}
-        <div class="s-quick-actions-card">
-            <h3 class="s-quick-actions-title" style="margin-bottom: 1.25rem !important;">Finance & Payments</h3>
+        {{-- Digital Student ID Card --}}
+        <div class="s-quick-actions-card" style="background: linear-gradient(135deg, #0d9488 0%, #115e59 100%); color: white; border: none; padding: 1.5rem; position: relative; overflow: hidden; border-radius: 20px; box-shadow: 0 10px 25px -5px rgba(13, 148, 136, 0.3);">
+            {{-- Subtle background decoration --}}
+            <div style="position: absolute; right: -20px; bottom: -20px; width: 120px; height: 120px; border-radius: 50%; background: rgba(255, 255, 255, 0.08); pointer-events: none;"></div>
             
-            <div style="display:flex; flex-direction:column; gap:1.25rem;">
-                
-                {{-- Balance Box --}}
-                <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 16px; padding: 1.15rem; display: flex; align-items: center; justify-content: space-between;">
-                    <div>
-                        <span style="font-size: 0.65rem; font-weight: 850; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em;">Remaining Balance</span>
-                        <div style="font-size: 1.25rem; font-weight: 900; color: #0f172a; margin-top: 2px;">
-                            PHP {{ number_format((float) ($account->remaining_balance ?? 0), 2) }}
-                        </div>
-                    </div>
-                    <a href="{{ route('student.billing') }}?upload=1" style="display:inline-flex; align-items:center; gap:0.25rem; font-size:0.75rem; font-weight:900; color:white; background:#10b981; padding:0.5rem 0.85rem; border-radius:8px; text-decoration:none; box-shadow:0 2px 8px rgba(16,185,129,0.2); transition: all 0.2s;" onmouseover="this.style.background='#059669'" onmouseout="this.style.background='#10b981'">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><polyline points="16 16 12 12 8 16"/></svg>
-                        <span>Upload Proof</span>
-                    </a>
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(255, 255, 255, 0.15); display: flex; align-items: center; justify-content: center; color: white;">
+                    <i data-lucide="contact" style="width: 20px; height: 20px;"></i>
                 </div>
-
-                {{-- Sibling List (if any) --}}
-                @if($siblings->isNotEmpty())
-                    <div style="display:flex; flex-direction:column; gap:0.5rem;">
-                        <span style="font-size: 0.65rem; font-weight: 850; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 2px;">Family Accounts / Siblings</span>
-                        <div style="display:flex; flex-direction:column; gap:0.4rem;">
-                            @foreach($siblings as $sib)
-                                <div style="display:flex; align-items:center; justify-content:space-between; padding:0.6rem 0.85rem; background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; font-size:0.8rem;">
-                                    <div style="min-width:0; flex:1;">
-                                        <div style="font-weight:800; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="{{ $sib->applicant?->first_name }} {{ $sib->applicant?->last_name }}">
-                                            {{ $sib->applicant?->first_name }} {{ $sib->applicant?->last_name }}
-                                        </div>
-                                        <div style="font-size:0.68rem; font-weight:600; color:#64748b; margin-top:1px;">
-                                            {{ $sib->grade_level }} · ID: {{ $sib->student_number }}
-                                        </div>
-                                    </div>
-                                    <div style="text-align:right; flex-shrink:0;">
-                                        <div style="font-weight:900; color:#0f172a;">
-                                            PHP {{ number_format((float) ($sib->account?->remaining_balance ?? 0), 2) }}
-                                        </div>
-                                        <div style="margin-top:1px;">
-                                            @if(($sib->account?->remaining_balance ?? 0) <= 0)
-                                                <span style="font-size:0.6rem; font-weight:800; color:#16a34a; background:#f0fdf4; padding:0.05rem 0.3rem; border-radius:4px; text-transform:uppercase;">Fully Paid</span>
-                                            @else
-                                                <span style="font-size:0.6rem; font-weight:800; color:#ea580c; background:#fff7ed; padding:0.05rem 0.3rem; border-radius:4px; text-transform:uppercase;">Unpaid</span>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
-
-                {{-- Recent Payments list --}}
-                <div style="display:flex; flex-direction:column; gap:0.5rem;">
-                    <span style="font-size: 0.65rem; font-weight: 850; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 2px;">Recent Payments</span>
-                    
-                    <div style="display:flex; flex-direction:column; gap:0.5rem;">
-                        @forelse($payments->take(3) as $pay)
-                            <div style="padding:0.75rem; border-radius:12px; background:#f8fafc; border:1px solid #e2e8f0; font-size:0.8rem; display:flex; flex-direction:column; gap:0.35rem;">
-                                <div style="display:flex; align-items:center; justify-content:space-between; gap:0.5rem;">
-                                    <div style="font-weight:800; color:#0f172a; text-transform:capitalize; display:flex; align-items:center; gap:0.35rem;">
-                                        <span>{{ $pay->method }}</span>
-                                        @if($pay->receipt_url)
-                                            <a href="{{ asset('storage/' . $pay->receipt_url) }}" target="_blank" style="font-size:0.6rem; background:#ecfdf5; color:#065f46; font-weight:800; padding:0.05rem 0.25rem; border-radius:3px; text-decoration:none;">Receipt</a>
-                                        @endif
-                                    </div>
-                                    <span style="font-weight:900; color:#0f172a;">PHP {{ number_format((float) $pay->amount, 2) }}</span>
-                                </div>
-                                
-                                <div style="display:flex; align-items:center; justify-content:space-between; font-size:0.68rem; font-weight:600; color:#64748b;">
-                                    <span>{{ $pay->paid_at ? $pay->paid_at->format('M d, Y') : $pay->created_at->format('M d, Y') }}</span>
-                                    <div>
-                                        @if($pay->status === 'verified')
-                                            <span style="font-size:0.6rem; font-weight:800; color:#16a34a; background:#f0fdf4; border:1px solid #bbf7d0; padding:0.05rem 0.3rem; border-radius:4px; text-transform:uppercase;">Verified</span>
-                                        @elseif($pay->status === 'rejected')
-                                            <span style="font-size:0.6rem; font-weight:800; color:#dc2626; background:#fef2f2; border:1px solid #fca5a5; padding:0.05rem 0.3rem; border-radius:4px; text-transform:uppercase;">Rejected</span>
-                                        @else
-                                            <span style="font-size:0.6rem; font-weight:800; color:#d97706; background:#fffbeb; border:1px solid #fef3c7; padding:0.05rem 0.3rem; border-radius:4px; text-transform:uppercase;">Pending</span>
-                                        @endif
-                                    </div>
-                                </div>
-                            </div>
-                        @empty
-                            <div style="text-align:center; padding:1.25rem; color:#64748b; font-weight:700; font-size:0.75rem; border:1.5px dashed #e2e8f0; border-radius:12px;">
-                                No recent payments uploaded.
-                            </div>
-                        @endforelse
-                    </div>
-                </div>
-
+                <h3 style="font-size: 1.15rem; font-weight: 850; color: white; margin: 0; letter-spacing: -0.01em;">Digital Student ID</h3>
             </div>
+            
+            <p style="font-size: 0.85rem; font-weight: 600; line-height: 1.5; color: rgba(255, 255, 255, 0.9); margin: 0 0 1.25rem;">
+                Use Digital ID? Can't find your physical ID card? Instantly access your official digital student ID.
+            </p>
+            
+            <a href="https://amis.edu.ph/id" target="_blank" 
+               style="display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem; font-size: 0.75rem; font-weight: 850; color: #0f766e; background: white; padding: 0.55rem 1.15rem; border-radius: 10px; text-decoration: none; width: 100%; text-align: center; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); transition: all 0.2s;"
+               onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 15px rgba(0, 0, 0, 0.15)';"
+               onmouseout="this.style.transform='none';this.style.boxShadow='0 4px 12px rgba(0, 0, 0, 0.1)';">
+                <i data-lucide="qr-code" style="width: 14px; height: 14px;"></i>
+                <span>View Digital ID</span>
+            </a>
         </div>
 
     </div>
