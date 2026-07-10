@@ -104,6 +104,42 @@
         0%, 100% { opacity: 1; transform: scale(1); }
         50% { opacity: 0.6; transform: scale(1.05); }
     }
+
+    /* 3D Card Flip styling for Digital ID */
+    .perspective-1000 {
+        perspective: 1200px;
+    }
+    .card-inner {
+        transform-style: preserve-3d;
+        transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        height: 100%;
+        width: 100%;
+    }
+    .card-front, .card-back {
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
+    }
+    .card-back {
+        transform: rotateY(180deg);
+    }
+    .is-flipped {
+        transform: rotateY(180deg);
+    }
+    .holo-overlay {
+        background: linear-gradient(135deg, 
+            rgba(255,255,255,0) 0%, 
+            rgba(255,255,255,0) 40%, 
+            rgba(255, 255, 255, 0.3) 50%, 
+            rgba(255,255,255,0) 60%, 
+            rgba(255,255,255,0) 100%
+        );
+        background-size: 250% 250%;
+        background-position: 0% 0%;
+        transition: background-position 0.6s ease;
+    }
+    .holo-card:hover .holo-overlay {
+        background-position: 100% 100%;
+    }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/lucide@latest"></script>
 <script>
@@ -116,7 +152,7 @@
 @endonce
 
 {{-- ── 2-col layout: main + right panel ──────────────────────────── --}}
-<div class="s-two-col-grid" x-data="{ viewMode: '{{ $defaultViewMode }}' }">
+<div class="s-two-col-grid" x-data="{ viewMode: '{{ $defaultViewMode }}', showIdModal: false, isFlipped: false }">
 
     {{-- ── LEFT COLUMN ──────────────────────────────────────────────── --}}
     <div style="display:flex;flex-direction:column;gap:1.5rem;min-width:0;width:100%;">
@@ -596,17 +632,190 @@
                 Use Digital ID? Can't find your physical ID card? Instantly access your official digital student ID.
             </p>
             
-            <a href="https://amis.edu.ph/id" target="_blank" 
-               style="display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem; font-size: 0.75rem; font-weight: 850; color: #0f766e; background: white; padding: 0.55rem 1.15rem; border-radius: 10px; text-decoration: none; width: 100%; text-align: center; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); transition: all 0.2s;"
+            <button type="button" @click="showIdModal = true; isFlipped = false" 
+               style="display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem; font-size: 0.75rem; font-weight: 850; color: #0f766e; background: white; border: none; padding: 0.55rem 1.15rem; border-radius: 10px; text-decoration: none; width: 100%; text-align: center; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); transition: all 0.2s; cursor: pointer;"
                onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 15px rgba(0, 0, 0, 0.15)';"
                onmouseout="this.style.transform='none';this.style.boxShadow='0 4px 12px rgba(0, 0, 0, 0.1)';">
                 <i data-lucide="qr-code" style="width: 14px; height: 14px;"></i>
                 <span>View Digital ID</span>
-            </a>
+            </button>
         </div>
 
     </div>
 
+</div>
+
+{{-- Digital ID Modal Overlay --}}
+<div x-show="showIdModal" 
+     class="fixed inset-0 z-[99999] flex items-center justify-center p-4"
+     x-transition:enter="transition ease-out duration-300"
+     x-transition:enter-start="opacity-0"
+     x-transition:enter-end="opacity-100"
+     x-transition:leave="transition ease-in duration-200"
+     x-transition:leave-start="opacity-100"
+     x-transition:leave-end="opacity-0"
+     style="display: none;">
+    
+    {{-- Backdrop blur overlay --}}
+    <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs" @click="showIdModal = false"></div>
+    
+    {{-- Modal Content Card --}}
+    <div class="relative bg-white/95 backdrop-blur-md rounded-3xl p-6 shadow-2xl max-w-sm w-full mx-auto flex flex-col items-center gap-5 border border-white/20 z-10"
+         x-transition:enter="transition ease-out duration-300 transform"
+         x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+         x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+         x-transition:leave="transition ease-in duration-200 transform"
+         x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+         x-transition:leave-end="opacity-0 scale-95 translate-y-4">
+        
+        {{-- Close button --}}
+        <button type="button" @click="showIdModal = false" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 p-1.5 rounded-full transition cursor-pointer border-none" style="display: flex; align-items: center; justify-content: center;">
+            <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+        </button>
+
+        {{-- Verification Status --}}
+        <div class="w-full flex items-center gap-3 bg-emerald-50/80 border border-emerald-100/50 p-3 rounded-2xl" style="display: flex; flex-direction: row; text-align: left;">
+            <div class="h-9 w-9 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-600 flex-shrink-0">
+                <i data-lucide="shield-check" style="width: 18px; height: 18px;"></i>
+            </div>
+            <div>
+                <h4 class="text-xs font-extrabold text-slate-800 uppercase tracking-wider" style="margin: 0;">Officially Enrolled</h4>
+                <p class="text-[10px] font-bold text-emerald-700 uppercase tracking-wider mt-0.5" style="margin: 0;">Active AMIS ID</p>
+            </div>
+        </div>
+
+        {{-- 3D Flipping Card Container --}}
+        <div class="perspective-1000 w-[290px] h-[450px] cursor-pointer"
+             @click="isFlipped = !isFlipped">
+            
+            <div class="card-inner w-full h-full relative"
+                 :class="isFlipped ? 'is-flipped' : ''">
+                
+                {{-- FRONT OF THE ID CARD --}}
+                <div class="card-front holo-card absolute inset-0 w-full h-full rounded-[24px] bg-gradient-to-br from-emerald-800 via-emerald-700 to-teal-900 shadow-2xl p-5 border border-emerald-600/30 text-white flex flex-col justify-between overflow-hidden" style="box-sizing: border-box; text-align: center;">
+                    <div class="absolute inset-0 holo-overlay opacity-30 mix-blend-overlay"></div>
+                    
+                    {{-- Header --}}
+                    <div class="flex items-center gap-2 border-b border-emerald-500/30 pb-2.5 relative z-10" style="display: flex; flex-direction: row; text-align: left;">
+                        <img src="{{ asset('images/AMIS_Logo.png') }}" alt="AMIS Logo" class="h-9 w-auto bg-white/10 p-1 rounded-lg">
+                        <div>
+                            <span class="font-bold text-[9px] tracking-wider block uppercase opacity-85 leading-tight">AL-MUNAWWARAH</span>
+                            <span class="text-[10px] font-extrabold tracking-wider block text-emerald-300 uppercase leading-none">International School</span>
+                        </div>
+                    </div>
+
+                    {{-- Student Photo & ID Info --}}
+                    <div class="flex flex-col items-center my-3 relative z-10" style="display: flex; align-items: center; justify-content: center;">
+                        <div class="h-[120px] w-[120px] rounded-2xl overflow-hidden border-2 border-emerald-400/40 shadow-inner bg-slate-900/50 flex items-center justify-center">
+                            @if($photo)
+                                <img src="{{ asset('storage/' . $photo) }}" alt="Student Photo" class="h-full w-full object-cover">
+                            @else
+                                <div style="display: flex; align-items: center; justify-content: center; height: 100%; width: 100%; background: rgba(255,255,255,0.05);">
+                                    <span style="font-size: 2.25rem; font-weight: 900; color: white;">{{ $initials }}</span>
+                                </div>
+                            @endif
+                        </div>
+                        
+                        {{-- Holo Badge Seal --}}
+                        <div class="absolute top-[85px] right-[45px] h-8 w-8 rounded-full bg-gradient-to-tr from-cyan-400 via-pink-400 to-yellow-300 opacity-60 border border-white/20 flex items-center justify-center shadow-lg mix-blend-screen animate-pulse">
+                            <img src="{{ asset('images/AMIS_Logo.png') }}" alt="Seal" class="h-5 w-auto opacity-75">
+                        </div>
+                    </div>
+
+                    {{-- Student Details --}}
+                    <div class="text-center relative z-10 flex-grow flex flex-col justify-center" style="display: flex; flex-direction: column; align-items: center;">
+                        <span class="text-[8px] uppercase tracking-widest text-emerald-300 font-bold block mb-0.5">Student Name</span>
+                        <div class="px-1">
+                            <h3 class="text-base font-extrabold tracking-tight truncate leading-tight" style="margin: 0;">{{ mb_strtoupper($fullName) }}</h3>
+                        </div>
+                        
+                        <div class="mt-2.5 grid grid-cols-2 gap-2 border-t border-emerald-500/20 pt-2 mx-auto w-full" style="display: grid; grid-template-columns: 1fr 1fr; width: 100%;">
+                            <div>
+                                <span class="text-[7px] uppercase tracking-wider text-emerald-300 font-bold block opacity-75">Grade Level</span>
+                                <span class="text-[11px] font-bold">{{ $student?->grade_level }}</span>
+                            </div>
+                            <div>
+                                <span class="text-[7px] uppercase tracking-wider text-emerald-300 font-bold block opacity-75">School Year</span>
+                                <span class="text-[11px] font-bold">{{ $student?->school_year }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Footer & QR Code --}}
+                    <div class="flex items-end justify-between border-t border-emerald-500/30 pt-2.5 relative z-10 mt-auto" style="display: flex; flex-direction: row; align-items: flex-end; text-align: left;">
+                        <div class="text-left">
+                            <span class="text-[7px] uppercase tracking-widest text-emerald-300 font-bold block opacity-85">Student Number</span>
+                            @php
+                                $displayId = $student?->student_number;
+                                if (is_numeric($displayId) && strlen($displayId) >= 6) {
+                                    $year = '20' . substr($displayId, 0, 2);
+                                    $seq = (int) substr($displayId, 2);
+                                    $displayId = 'AMIS-' . $year . '-' . str_pad($seq, 6, '0', STR_PAD_LEFT);
+                                }
+                            @endphp
+                            <span class="text-xs font-extrabold tracking-wider text-white">{{ $displayId }}</span>
+                        </div>
+                        <div class="bg-white p-1 rounded-lg shadow-md border border-white/10 flex-shrink-0" style="display: flex; align-items: center; justify-content: center;">
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?data={{ urlencode('https://amis.edu.ph/id?id=' . ($student?->student_number ?? '')) }}&size=150x150&color=000000&light=ffffff&margin=1&format=png&size=300" alt="QR Verification" class="h-9 w-9">
+                        </div>
+                    </div>
+                </div>
+
+                {{-- BACK OF THE ID CARD --}}
+                <div class="card-back absolute inset-0 w-full h-full rounded-[24px] bg-gradient-to-br from-slate-900 to-slate-800 shadow-2xl p-5 border border-slate-700/50 text-white flex flex-col justify-between overflow-hidden" style="box-sizing: border-box;">
+                    
+                    {{-- Header Info --}}
+                    <div class="text-center border-b border-slate-700/60 pb-2">
+                        <h4 class="text-[9px] font-bold text-emerald-400 uppercase tracking-widest" style="margin: 0;">Student Information & Security</h4>
+                    </div>
+
+                    {{-- Back Card Details --}}
+                    @php
+                        $father = trim(($student?->applicant?->father_first_name ?? '') . ' ' . ($student?->applicant?->father_last_name ?? ''));
+                        $mother = trim(($student?->applicant?->mother_first_name ?? '') . ' ' . ($student?->applicant?->mother_last_name ?? ''));
+                        $parent = $father ?: ($mother ?: ($student?->applicant?->emergency_name ?? 'Registrar Office'));
+                        $address = $student?->applicant?->address ?: ($student?->applicant?->home_address ?: ($student?->applicant?->street_address ?? 'Davao City, Philippines'));
+                    @endphp
+                    <div class="space-y-3.5 my-3 flex-grow flex flex-col justify-center text-left" style="display: flex; flex-direction: column; text-align: left;">
+                        <div>
+                            <span class="text-[7px] uppercase tracking-widest text-slate-400 font-bold block mb-0.5">Parent / Guardian</span>
+                            <span class="text-[11px] font-semibold block text-slate-200">{{ $parent }}</span>
+                        </div>
+
+                        <div>
+                            <span class="text-[7px] uppercase tracking-widest text-slate-400 font-bold block mb-0.5">Home Address</span>
+                            <span class="text-[11px] font-semibold block text-slate-200 leading-relaxed max-w-[240px]">{{ $address }}</span>
+                        </div>
+
+                        <div class="bg-slate-900/40 border border-slate-800 p-2 rounded-xl text-[8px] text-slate-400 leading-relaxed text-center">
+                            This card is non-transferable and must be worn at all times while on school premises. Loss must be reported to the registrar office immediately.
+                        </div>
+                    </div>
+
+                    {{-- Barcode & Contacts --}}
+                    <div class="border-t border-slate-700/60 pt-3 flex flex-col items-center gap-2" style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                        {{-- Simulated Barcode --}}
+                        <div class="bg-white p-1.5 rounded-md w-full flex items-center justify-center">
+                            <div class="flex items-stretch justify-center h-8 w-full bg-slate-900 max-w-[180px]" style="background: repeating-linear-gradient(90deg, #0f172a 0px, #0f172a 2px, #ffffff 2px, #ffffff 5px, #0f172a 5px, #0f172a 7px);"></div>
+                        </div>
+                        <div class="text-center text-[7px] text-slate-400">
+                            <span>registrar@amis.edu.ph</span>
+                            <span class="mx-1">•</span>
+                            <span>+63 900 000 0000</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        {{-- Manual Flip Action Helper --}}
+        <button type="button" @click="isFlipped = !isFlipped"
+                class="inline-flex items-center gap-1.5 px-4 py-2 border border-slate-200 hover:border-slate-300 text-slate-600 font-bold text-xs rounded-xl hover:bg-slate-50 transition-all duration-200 cursor-pointer shadow-sm bg-white" style="display: inline-flex; align-items: center; justify-content: center;">
+            <i data-lucide="refresh-cw" style="width: 12px; height: 12px; color: #64748b;"></i>
+            <span>Flip ID Card</span>
+        </button>
+    </div>
 </div>
 
 </x-student-layout>
