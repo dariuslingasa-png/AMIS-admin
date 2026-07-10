@@ -18,7 +18,7 @@
 
     $formatTeacherName = function ($name) {
         $name = $name ?: 'To Be Assigned';
-        if ($name === 'To Be Assigned') {
+        if ($name === 'To Be Assigned' || $name === '—') {
             return $name;
         }
         $nameTrimmed = trim($name);
@@ -327,7 +327,13 @@
                                 $bg = $bgs[$i % count($bgs)];
                                 // Find associated subject to get details
                                 $subj = $subjects->firstWhere('subject_name', $sched->subject_name);
-                                $currentTeacherName = $formatTeacherName($subj ? $subj->teacher_name : null);
+                                $isSpecial = str_contains(strtolower($sched->subject_name), 'transition') || 
+                                             str_contains(strtolower($sched->subject_name), 'recess') || 
+                                             str_contains(strtolower($sched->subject_name), 'break') || 
+                                             str_contains(strtolower($sched->subject_name), 'general assembly') ||
+                                             str_contains(strtolower($sched->subject_name), 'homeroom');
+                                $rawTeacher = $isSpecial ? '—' : (!empty($sched->teacher_display) ? $sched->teacher_display : ($subj ? $subj->teacher_name : null));
+                                $currentTeacherName = $formatTeacherName($rawTeacher);
                                 $timeStr = date('g:i A', strtotime($sched->start_time)) . ' - ' . date('g:i A', strtotime($sched->end_time));
                                 $teamUrl = $subj->team_url ?? 'https://teams.microsoft.com/';
                                 $isLive = false;
