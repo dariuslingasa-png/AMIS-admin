@@ -643,8 +643,6 @@
 
     </div>
 
-</div>
-
 {{-- Digital ID Modal Overlay --}}
 <div x-show="showIdModal" 
      class="fixed inset-0 z-[99999] flex items-center justify-center p-4"
@@ -818,4 +816,5 @@
     </div>
 </div>
 
+</div>
 </x-student-layout>
