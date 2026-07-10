@@ -118,6 +118,11 @@
     .card-front, .card-back {
         backface-visibility: hidden;
         -webkit-backface-visibility: hidden;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
     }
     .card-back {
         transform: rotateY(180deg);
@@ -139,6 +144,127 @@
     }
     .holo-card:hover .holo-overlay {
         background-position: 100% 100%;
+    }
+
+    /* Digital ID Modal Custom Classes */
+    .id-modal-overlay {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        z-index: 99999 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 1rem !important;
+        box-sizing: border-box !important;
+    }
+    .id-modal-backdrop {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        background: rgba(15, 23, 42, 0.6) !important;
+        backdrop-filter: blur(4px) !important;
+        -webkit-backdrop-filter: blur(4px) !important;
+        z-index: 1 !important;
+    }
+    .id-modal-card {
+        position: relative !important;
+        background: rgba(255, 255, 255, 0.95) !important;
+        backdrop-filter: blur(16px) !important;
+        -webkit-backdrop-filter: blur(16px) !important;
+        border-radius: 24px !important;
+        padding: 1.75rem !important;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+        max-width: 340px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 1.25rem !important;
+        border: 1px solid rgba(255, 255, 255, 0.4) !important;
+        z-index: 2 !important;
+        text-align: center !important;
+    }
+    .id-modal-close-btn {
+        position: absolute !important;
+        top: 1rem !important;
+        right: 1rem !important;
+        border: none !important;
+        background: #f1f5f9 !important;
+        color: #64748b !important;
+        width: 28px !important;
+        height: 28px !important;
+        border-radius: 50% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+        padding: 0 !important;
+    }
+    .id-modal-close-btn:hover {
+        background: #e2e8f0 !important;
+        color: #334155 !important;
+    }
+    .id-status-badge {
+        width: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.75rem !important;
+        background: #f0fdf4 !important;
+        border: 1px solid #dcfce7 !important;
+        padding: 0.75rem 1rem !important;
+        border-radius: 16px !important;
+        box-sizing: border-box !important;
+        text-align: left !important;
+    }
+    .id-status-icon {
+        width: 36px !important;
+        height: 36px !important;
+        border-radius: 50% !important;
+        background: rgba(16, 185, 129, 0.1) !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        color: #10b981 !important;
+        flex-shrink: 0 !important;
+    }
+    .id-card-front-content {
+        background: linear-gradient(135deg, #064e3b 0%, #0d9488 50%, #115e59 100%) !important;
+        box-sizing: border-box !important;
+        width: 100% !important;
+        height: 100% !important;
+        border-radius: 20px !important;
+        padding: 1.25rem !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3) !important;
+        color: white !important;
+        position: relative !important;
+        overflow: hidden !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-between !important;
+    }
+    .id-card-back-content {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
+        box-sizing: border-box !important;
+        width: 100% !important;
+        height: 100% !important;
+        border-radius: 20px !important;
+        padding: 1.25rem !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3) !important;
+        color: white !important;
+        position: relative !important;
+        overflow: hidden !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-between !important;
     }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/lucide@latest"></script>
@@ -645,7 +771,7 @@
 
 {{-- Digital ID Modal Overlay --}}
 <div x-show="showIdModal" 
-     class="fixed inset-0 z-[99999] flex items-center justify-center p-4"
+     class="id-modal-overlay"
      x-transition:enter="transition ease-out duration-300"
      x-transition:enter-start="opacity-0"
      x-transition:enter-end="opacity-100"
@@ -655,10 +781,10 @@
      style="display: none;">
     
     {{-- Backdrop blur overlay --}}
-    <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs" @click="showIdModal = false"></div>
+    <div class="id-modal-backdrop" @click="showIdModal = false"></div>
     
     {{-- Modal Content Card --}}
-    <div class="relative bg-white/95 backdrop-blur-md rounded-3xl p-6 shadow-2xl max-w-sm w-full mx-auto flex flex-col items-center gap-5 border border-white/20 z-10"
+    <div class="id-modal-card"
          x-transition:enter="transition ease-out duration-300 transform"
          x-transition:enter-start="opacity-0 scale-95 translate-y-4"
          x-transition:enter-end="opacity-100 scale-100 translate-y-0"
@@ -667,82 +793,83 @@
          x-transition:leave-end="opacity-0 scale-95 translate-y-4">
         
         {{-- Close button --}}
-        <button type="button" @click="showIdModal = false" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 p-1.5 rounded-full transition cursor-pointer border-none" style="display: flex; align-items: center; justify-content: center;">
+        <button type="button" @click="showIdModal = false" class="id-modal-close-btn">
             <i data-lucide="x" style="width: 16px; height: 16px;"></i>
         </button>
 
         {{-- Verification Status --}}
-        <div class="w-full flex items-center gap-3 bg-emerald-50/80 border border-emerald-100/50 p-3 rounded-2xl" style="display: flex; flex-direction: row; text-align: left;">
-            <div class="h-9 w-9 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-600 flex-shrink-0">
+        <div class="id-status-badge">
+            <div class="id-status-icon">
                 <i data-lucide="shield-check" style="width: 18px; height: 18px;"></i>
             </div>
             <div>
-                <h4 class="text-xs font-extrabold text-slate-800 uppercase tracking-wider" style="margin: 0;">Officially Enrolled</h4>
-                <p class="text-[10px] font-bold text-emerald-700 uppercase tracking-wider mt-0.5" style="margin: 0;">Active AMIS ID</p>
+                <h4 style="font-size: 0.75rem; font-weight: 800; color: #1e293b; text-transform: uppercase; letter-spacing: 0.05em; margin: 0;">Officially Enrolled</h4>
+                <p style="font-size: 0.625rem; font-weight: 700; color: #047857; text-transform: uppercase; letter-spacing: 0.05em; margin: 2px 0 0 0;">Active AMIS ID</p>
             </div>
         </div>
 
         {{-- 3D Flipping Card Container --}}
         <div class="perspective-1000 w-[290px] h-[450px] cursor-pointer"
-             @click="isFlipped = !isFlipped">
+             @click="isFlipped = !isFlipped"
+             style="width: 290px; height: 450px; cursor: pointer;">
             
-            <div class="card-inner w-full h-full relative"
+            <div class="card-inner"
                  :class="isFlipped ? 'is-flipped' : ''">
                 
                 {{-- FRONT OF THE ID CARD --}}
-                <div class="card-front holo-card absolute inset-0 w-full h-full rounded-[24px] bg-gradient-to-br from-emerald-800 via-emerald-700 to-teal-900 shadow-2xl p-5 border border-emerald-600/30 text-white flex flex-col justify-between overflow-hidden" style="box-sizing: border-box; text-align: center;">
+                <div class="card-front id-card-front-content holo-card">
                     <div class="absolute inset-0 holo-overlay opacity-30 mix-blend-overlay"></div>
                     
                     {{-- Header --}}
-                    <div class="flex items-center gap-2 border-b border-emerald-500/30 pb-2.5 relative z-10" style="display: flex; flex-direction: row; text-align: left;">
-                        <img src="{{ asset('images/AMIS_Logo.png') }}" alt="AMIS Logo" class="h-9 w-auto bg-white/10 p-1 rounded-lg">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; border-bottom: 1px solid rgba(16, 185, 129, 0.3); padding-bottom: 0.625rem; position: relative; z-index: 10; text-align: left; width: 100%; box-sizing: border-box;">
+                        <img src="{{ asset('images/AMIS_Logo.png') }}" alt="AMIS Logo" style="height: 36px; width: auto; background: rgba(255, 255, 255, 0.1); padding: 4px; border-radius: 8px;">
                         <div>
-                            <span class="font-bold text-[9px] tracking-wider block uppercase opacity-85 leading-tight">AL-MUNAWWARAH</span>
-                            <span class="text-[10px] font-extrabold tracking-wider block text-emerald-300 uppercase leading-none">International School</span>
+                            <span style="font-weight: 700; font-size: 9px; letter-spacing: 0.05em; display: block; text-transform: uppercase; opacity: 0.85; line-height: 1.2;">AL-MUNAWWARAH</span>
+                            <span style="font-size: 10px; font-weight: 800; letter-spacing: 0.05em; display: block; color: #a7f3d0; text-transform: uppercase; line-height: 1;">International School</span>
                         </div>
                     </div>
 
                     {{-- Student Photo & ID Info --}}
-                    <div class="flex flex-col items-center my-3 relative z-10" style="display: flex; align-items: center; justify-content: center;">
-                        <div class="h-[120px] w-[120px] rounded-2xl overflow-hidden border-2 border-emerald-400/40 shadow-inner bg-slate-900/50 flex items-center justify-center">
+                    <div style="display: flex; flex-direction: column; align-items: center; margin: 0.75rem 0; position: relative; z-index: 10; width: 100%;">
+                        <div style="height: 120px; width: 120px; border-radius: 16px; overflow: hidden; border: 2.5px solid rgba(52, 211, 153, 0.4); box-shadow: inset 0 2px 4px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; background: rgba(15, 23, 42, 0.5);">
                             @if($photo)
-                                <img src="{{ asset('storage/' . $photo) }}" alt="Student Photo" class="h-full w-full object-cover">
+                                <img src="{{ asset('storage/' . $photo) }}" alt="Student Photo" style="height: 100%; width: 100%; object-fit: cover;">
                             @else
-                                <div style="display: flex; align-items: center; justify-content: center; height: 100%; width: 100%; background: rgba(255,255,255,0.05);">
+                                <div style="display: flex; align-items: center; justify-content: center; height: 100%; width: 100%; background: rgba(255, 255, 255, 0.05);">
                                     <span style="font-size: 2.25rem; font-weight: 900; color: white;">{{ $initials }}</span>
                                 </div>
                             @endif
                         </div>
                         
                         {{-- Holo Badge Seal --}}
-                        <div class="absolute top-[85px] right-[45px] h-8 w-8 rounded-full bg-gradient-to-tr from-cyan-400 via-pink-400 to-yellow-300 opacity-60 border border-white/20 flex items-center justify-center shadow-lg mix-blend-screen animate-pulse">
-                            <img src="{{ asset('images/AMIS_Logo.png') }}" alt="Seal" class="h-5 w-auto opacity-75">
+                        <div style="position: absolute; bottom: -8px; right: 65px; height: 32px; width: 32px; border-radius: 50%; background: linear-gradient(45deg, #22d3ee, #f472b6, #facc15); opacity: 0.6; border: 1px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.15); mix-blend-mode: screen; animation: pulse-dot 2s infinite ease-in-out;">
+                            <img src="{{ asset('images/AMIS_Logo.png') }}" alt="Seal" style="height: 20px; width: auto; opacity: 0.75;">
                         </div>
                     </div>
 
                     {{-- Student Details --}}
-                    <div class="text-center relative z-10 flex-grow flex flex-col justify-center" style="display: flex; flex-direction: column; align-items: center;">
-                        <span class="text-[8px] uppercase tracking-widest text-emerald-300 font-bold block mb-0.5">Student Name</span>
-                        <div class="px-1">
-                            <h3 class="text-base font-extrabold tracking-tight truncate leading-tight" style="margin: 0;">{{ mb_strtoupper($fullName) }}</h3>
+                    <div style="text-align: center; position: relative; z-index: 10; flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%;">
+                        <span style="font-size: 8px; text-transform: uppercase; letter-spacing: 0.1em; color: #a7f3d0; font-weight: 700; display: block; margin-bottom: 2px;">Student Name</span>
+                        <div style="padding: 0 4px; width: 100%; box-sizing: border-box;">
+                            <h3 style="font-size: 1rem; font-weight: 800; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0; line-height: 1.2; color: #ffffff;">{{ mb_strtoupper($fullName) }}</h3>
                         </div>
                         
-                        <div class="mt-2.5 grid grid-cols-2 gap-2 border-t border-emerald-500/20 pt-2 mx-auto w-full" style="display: grid; grid-template-columns: 1fr 1fr; width: 100%;">
+                        <div style="margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid rgba(16, 185, 129, 0.2); padding-top: 8px; width: 100%; box-sizing: border-box;">
                             <div>
-                                <span class="text-[7px] uppercase tracking-wider text-emerald-300 font-bold block opacity-75">Grade Level</span>
-                                <span class="text-[11px] font-bold">{{ $student?->grade_level }}</span>
+                                <span style="font-size: 7px; text-transform: uppercase; letter-spacing: 0.05em; color: #a7f3d0; font-weight: 700; display: block; opacity: 0.75;">Grade Level</span>
+                                <span style="font-size: 11px; font-weight: 700; color: #ffffff; display: block; margin-top: 2px;">{{ $student?->grade_level }}</span>
                             </div>
                             <div>
-                                <span class="text-[7px] uppercase tracking-wider text-emerald-300 font-bold block opacity-75">School Year</span>
-                                <span class="text-[11px] font-bold">{{ $student?->school_year }}</span>
+                                <span style="font-size: 7px; text-transform: uppercase; letter-spacing: 0.05em; color: #a7f3d0; font-weight: 700; display: block; opacity: 0.75;">School Year</span>
+                                <span style="font-size: 11px; font-weight: 700; color: #ffffff; display: block; margin-top: 2px;">{{ $student?->school_year }}</span>
                             </div>
                         </div>
                     </div>
 
                     {{-- Footer & QR Code --}}
-                    <div class="flex items-end justify-between border-t border-emerald-500/30 pt-2.5 relative z-10 mt-auto" style="display: flex; flex-direction: row; align-items: flex-end; text-align: left;">
-                        <div class="text-left">
-                            <span class="text-[7px] uppercase tracking-widest text-emerald-300 font-bold block opacity-85">Student Number</span>
+                    <div style="display: flex; align-items: flex-end; justify-content: space-between; border-top: 1px solid rgba(16, 185, 129, 0.3); padding-top: 10px; position: relative; z-index: 10; margin-top: auto; width: 100%; box-sizing: border-box; text-align: left;">
+                        <div>
+                            <span style="font-size: 7px; text-transform: uppercase; letter-spacing: 0.1em; color: #a7f3d0; font-weight: 700; display: block; opacity: 0.85;">Student Number</span>
                             @php
                                 $displayId = $student?->student_number;
                                 if (is_numeric($displayId) && strlen($displayId) >= 6) {
@@ -751,20 +878,20 @@
                                     $displayId = 'AMIS-' . $year . '-' . str_pad($seq, 6, '0', STR_PAD_LEFT);
                                 }
                             @endphp
-                            <span class="text-xs font-extrabold tracking-wider text-white">{{ $displayId }}</span>
+                            <span style="font-size: 12px; font-weight: 800; letter-spacing: 0.05em; color: #ffffff;">{{ $displayId }}</span>
                         </div>
-                        <div class="bg-white p-1 rounded-lg shadow-md border border-white/10 flex-shrink-0" style="display: flex; align-items: center; justify-content: center;">
-                            <img src="https://api.qrserver.com/v1/create-qr-code/?data={{ urlencode('https://amis.edu.ph/id?id=' . ($student?->student_number ?? '')) }}&size=150x150&color=000000&light=ffffff&margin=1&format=png&size=300" alt="QR Verification" class="h-9 w-9">
+                        <div style="background: white; padding: 4px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?data={{ urlencode('https://amis.edu.ph/id?id=' . ($student?->student_number ?? '')) }}&size=150x150&color=000000&light=ffffff&margin=1&format=png&size=300" alt="QR Verification" style="height: 36px; width: 36px;">
                         </div>
                     </div>
                 </div>
 
                 {{-- BACK OF THE ID CARD --}}
-                <div class="card-back absolute inset-0 w-full h-full rounded-[24px] bg-gradient-to-br from-slate-900 to-slate-800 shadow-2xl p-5 border border-slate-700/50 text-white flex flex-col justify-between overflow-hidden" style="box-sizing: border-box;">
+                <div class="card-back id-card-back-content">
                     
                     {{-- Header Info --}}
-                    <div class="text-center border-b border-slate-700/60 pb-2">
-                        <h4 class="text-[9px] font-bold text-emerald-400 uppercase tracking-widest" style="margin: 0;">Student Information & Security</h4>
+                    <div style="text-align: center; border-bottom: 1px solid rgba(255,255,255,0.15); padding-bottom: 8px; width: 100%; box-sizing: border-box;">
+                        <h4 style="font-size: 9px; font-weight: 700; color: #34d399; text-transform: uppercase; letter-spacing: 0.1em; margin: 0;">Student Information & Security</h4>
                     </div>
 
                     {{-- Back Card Details --}}
@@ -774,31 +901,31 @@
                         $parent = $father ?: ($mother ?: ($student?->applicant?->emergency_name ?? 'Registrar Office'));
                         $address = $student?->applicant?->address ?: ($student?->applicant?->home_address ?: ($student?->applicant?->street_address ?? 'Davao City, Philippines'));
                     @endphp
-                    <div class="space-y-3.5 my-3 flex-grow flex flex-col justify-center text-left" style="display: flex; flex-direction: column; text-align: left;">
+                    <div style="display: flex; flex-direction: column; gap: 12px; margin: 12px 0; flex-grow: 1; justify-content: center; text-align: left; width: 100%; box-sizing: border-box;">
                         <div>
-                            <span class="text-[7px] uppercase tracking-widest text-slate-400 font-bold block mb-0.5">Parent / Guardian</span>
-                            <span class="text-[11px] font-semibold block text-slate-200">{{ $parent }}</span>
+                            <span style="font-size: 7px; text-transform: uppercase; letter-spacing: 0.1em; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 2px;">Parent / Guardian</span>
+                            <span style="font-size: 11px; font-weight: 600; display: block; color: #e2e8f0;">{{ $parent }}</span>
                         </div>
 
                         <div>
-                            <span class="text-[7px] uppercase tracking-widest text-slate-400 font-bold block mb-0.5">Home Address</span>
-                            <span class="text-[11px] font-semibold block text-slate-200 leading-relaxed max-w-[240px]">{{ $address }}</span>
+                            <span style="font-size: 7px; text-transform: uppercase; letter-spacing: 0.1em; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 2px;">Home Address</span>
+                            <span style="font-size: 10px; font-weight: 600; display: block; color: #e2e8f0; line-height: 1.4; max-width: 240px; word-wrap: break-word;">{{ $address }}</span>
                         </div>
 
-                        <div class="bg-slate-900/40 border border-slate-800 p-2 rounded-xl text-[8px] text-slate-400 leading-relaxed text-center">
+                        <div style="background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255, 255, 255, 0.05); padding: 8px; border-radius: 12px; font-size: 8px; color: #94a3b8; line-height: 1.4; text-align: center; box-sizing: border-box; width: 100%;">
                             This card is non-transferable and must be worn at all times while on school premises. Loss must be reported to the registrar office immediately.
                         </div>
                     </div>
 
                     {{-- Barcode & Contacts --}}
-                    <div class="border-t border-slate-700/60 pt-3 flex flex-col items-center gap-2" style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                    <div style="border-top: 1px solid rgba(255,255,255,0.15); padding-top: 10px; display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; box-sizing: border-box;">
                         {{-- Simulated Barcode --}}
-                        <div class="bg-white p-1.5 rounded-md w-full flex items-center justify-center">
-                            <div class="flex items-stretch justify-center h-8 w-full bg-slate-900 max-w-[180px]" style="background: repeating-linear-gradient(90deg, #0f172a 0px, #0f172a 2px, #ffffff 2px, #ffffff 5px, #0f172a 5px, #0f172a 7px);"></div>
+                        <div style="background: white; padding: 6px; border-radius: 6px; width: 100%; display: flex; align-items: center; justify-content: center; box-sizing: border-box;">
+                            <div style="display: flex; align-items: stretch; justify-content: center; height: 32px; width: 100%; max-width: 180px; background: repeating-linear-gradient(90deg, #0f172a 0px, #0f172a 2px, #ffffff 2px, #ffffff 5px, #0f172a 5px, #0f172a 7px);"></div>
                         </div>
-                        <div class="text-center text-[7px] text-slate-400">
+                        <div style="text-align: center; font-size: 7.5px; color: #94a3b8; display: flex; align-items: center; gap: 6px;">
                             <span>registrar@amis.edu.ph</span>
-                            <span class="mx-1">•</span>
+                            <span>•</span>
                             <span>+63 900 000 0000</span>
                         </div>
                     </div>
@@ -809,7 +936,7 @@
 
         {{-- Manual Flip Action Helper --}}
         <button type="button" @click="isFlipped = !isFlipped"
-                class="inline-flex items-center gap-1.5 px-4 py-2 border border-slate-200 hover:border-slate-300 text-slate-600 font-bold text-xs rounded-xl hover:bg-slate-50 transition-all duration-200 cursor-pointer shadow-sm bg-white" style="display: inline-flex; align-items: center; justify-content: center;">
+                class="inline-flex items-center gap-1.5 px-4 py-2 border border-slate-200 hover:border-slate-300 text-slate-600 font-bold text-xs rounded-xl hover:bg-slate-50 transition-all duration-200 cursor-pointer shadow-sm bg-white" style="display: inline-flex; align-items: center; justify-content: center; border: 1px solid #e2e8f0;">
             <i data-lucide="refresh-cw" style="width: 12px; height: 12px; color: #64748b;"></i>
             <span>Flip ID Card</span>
         </button>
