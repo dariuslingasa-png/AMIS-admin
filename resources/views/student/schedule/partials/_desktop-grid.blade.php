@@ -98,8 +98,8 @@
                                 $photoUrl = $getPhotoUrl($s->teacher_photo, $s->teacher_key, $s->teacher_display ?: $s->teacher_name);
                                 $style = $getSubjectStyle($s->subject_name);
                             @endphp
-                            <div class="calendar-class-card {{ $classState === 'completed' ? 'class-completed' : ($classState === 'live' ? 'class-live' : '') }}"
-                                 style="background: {{ $style['bg'] }} !important; border-color: {{ $style['border'] }} !important; color: {{ $style['text'] }} !important; display: flex; flex-direction: row; gap: 0.75rem; align-items: center; padding: 0.65rem 1rem;">
+                             <div class="calendar-class-card {{ $classState === 'completed' ? 'class-completed' : ($classState === 'live' ? 'class-live' : '') }}"
+                                 style="background: {{ $style['bg'] }} !important; border-color: {{ $style['border'] }} !important; color: {{ $style['text'] }} !important; display: flex; flex-direction: row; gap: 0.75rem; align-items: center; justify-content: center; text-align: center; padding: 0.65rem 1rem;">
                                 
                                 <!-- Left: Teacher photo in squircle (border-radius: 12px) -->
                                 <div @if($photoUrl) @click="previewPhoto = { url: '{{ $photoUrl }}', name: '{{ $currentTeacherName }}', role: 'Official Teacher', subject: '{{ $s->subject_name }}', time: '{{ date('g:i A', strtotime($s->start_time)) }} - {{ date('g:i A', strtotime($s->end_time)) }}', day: 'Sunday - Thursday' }" @endif
@@ -119,17 +119,17 @@
                                 </div>
 
                                 <!-- Right: Details -->
-                                <div style="flex: 1; min-width: 0; display: flex; align-items: center; justify-content: space-between;">
-                                    <div>
-                                        <h4 style="font-size: 15px; font-weight: 800; line-height: 1.25; color: {{ $style['text'] }} !important; margin: 0;">
-                                            {{ $s->subject_name }}
-                                        </h4>
-                                        <p style="font-size: 13px; font-weight: 600; line-height: 1.35; color: {{ $style['text'] }} !important; opacity: 0.9; margin: 0.05rem 0 0;">
-                                            {{ $currentTeacherName }}
-                                        </p>
-                                    </div>
+                                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
+                                    <h4 style="font-size: 15px; font-weight: 800; line-height: 1.25; color: {{ $style['text'] }} !important; margin: 0; text-align: center;">
+                                        {{ $s->subject_name }}
+                                    </h4>
+                                    <p style="font-size: 13px; font-weight: 600; line-height: 1.35; color: {{ $style['text'] }} !important; opacity: 0.9; margin: 0.05rem 0 0; text-align: center;">
+                                        {{ $currentTeacherName }}
+                                    </p>
+                                </div>
 
-                                    @if($s->ms_channel_id)
+                                @if($s->ms_channel_id)
+                                     <div style="margin-left: 0.5rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                                          @if($s->is_joinable)
                                              <a href="{{ $s->team_url ?? 'https://teams.microsoft.com/' }}" onclick="event.preventDefault(); window.joinTeams('{{ $s->team_url ?? 'https://teams.microsoft.com/' }}');" style="width: 24px; height: 24px; border-radius: 50%; background: {{ $style['icon_color'] }}; display: inline-flex; align-items: center; justify-content: center; color: white; text-decoration: none; cursor: pointer;" title="Join Class">
                                                  <i data-lucide="video" style="width: 11px; height: 11px;"></i>
@@ -139,8 +139,8 @@
                                                  <i data-lucide="lock" style="width: 11px; height: 11px;"></i>
                                              </button>
                                          @endif
-                                     @endif
-                                </div>
+                                     </div>
+                                 @endif
                             </div>
                         @endif
                     </div>
