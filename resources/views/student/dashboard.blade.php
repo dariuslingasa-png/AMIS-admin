@@ -9,6 +9,45 @@
         : $user->name;
     $account   = $student?->account;
     $initials  = collect(explode(' ', $fullName))->map(fn($w) => strtoupper($w[0] ?? ''))->take(2)->join('');
+
+    // Digital ID Card configuration variables
+    $studentIdRaw = $student?->student_number;
+    $displayStudentId = $studentIdRaw;
+    if (is_numeric($studentIdRaw) && strlen($studentIdRaw) >= 6) {
+        $year = '20' . substr($studentIdRaw, 0, 2);
+        $seq = (int) substr($studentIdRaw, 2);
+        $displayStudentId = 'AMIS-' . $year . '-' . str_pad($seq, 6, '0', STR_PAD_LEFT);
+    }
+    $badgeStudentId = $studentIdRaw;
+    if (str_starts_with(strtoupper($displayStudentId), 'AMIS-')) {
+        $parts = explode('-', $displayStudentId);
+        $badgeStudentId = substr($parts[1], 2, 2) . str_pad((int)$parts[2], 4, '0', STR_PAD_LEFT);
+    }
+
+    $father = trim(($student?->applicant?->father_first_name ?? '') . ' ' . ($student?->applicant?->father_last_name ?? ''));
+    $mother = trim(($student?->applicant?->mother_first_name ?? '') . ' ' . ($student?->applicant?->mother_last_name ?? ''));
+    $parent = $father ?: ($mother ?: ($student?->applicant?->emergency_name ?? ''));
+    $contactNo = ($student?->applicant?->emergency_phone ?? null) ?: (($student?->applicant?->parent_mobile ?? null) ?: ($student?->applicant?->mobile_number ?? ''));
+    $address = $student?->applicant?->address ?: ($student?->applicant?->home_address ?? '');
+
+    $isParentMissing = empty(trim($parent)) || strtolower(trim($parent)) === 'emergency contact';
+    $isAddressMissing = empty(trim($address)) || strtolower(trim($address)) === 'davao city, philippines';
+    $isEmergencyMissing = $isParentMissing || $isAddressMissing;
+
+    $hash = base64_encode((int)$student->student_number + 987654);
+    $qrCodeUrl = 'https://quickchart.io/qr?text=' . urlencode('https://amis.edu.ph/v/' . $hash) . '&dark=000000&light=ffffff&margin=1&format=png&size=300';
+    $fallbackPhoto = 'https://amis.edu.ph/student-photo/' . $hash . '.jpg';
+
+    $getGradeColor = function ($grade) {
+        if (!$grade) return '#6d28d9';
+        $g = strtoupper($grade);
+        if (str_contains($g, 'NURSERY') || str_contains($g, 'KINDER') || str_contains($g, 'PRE-')) return '#ea580c';
+        if (str_contains($g, 'GRADE 1') || str_contains($g, 'GRADE 2') || str_contains($g, 'GRADE 3')) return '#0284c7';
+        if (str_contains($g, 'GRADE 4') || str_contains($g, 'GRADE 5') || str_contains($g, 'GRADE 6')) return '#7c3aed';
+        if (str_contains($g, 'GRADE 7') || str_contains($g, 'GRADE 8') || str_contains($g, 'GRADE 9') || str_contains($g, 'GRADE 10')) return '#dc2626';
+        if (str_contains($g, 'GRADE 11') || str_contains($g, 'GRADE 12') || str_contains($g, 'GRADE XI') || str_contains($g, 'GRADE XII')) return '#4f46e5';
+        return '#6d28d9';
+    };
     
     $learningMode = $student?->applicant?->learning_mode;
     if ($learningMode) {
@@ -83,6 +122,7 @@
 @endphp
 
 @once
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
 <style>
     .sched-tab-btn {
         border: none !important;
@@ -809,126 +849,119 @@
         </div>
 
         {{-- 3D Flipping Card Container --}}
-        <div class="perspective-1000 w-[290px] h-[450px] cursor-pointer"
+        <div class="perspective-1000"
              @click="isFlipped = !isFlipped"
-             style="width: 290px; height: 450px; cursor: pointer;">
+             style="width: 340px; height: 538px; cursor: pointer; position: relative; border-radius: 24px;">
             
             <div class="card-inner"
-                 :class="isFlipped ? 'is-flipped' : ''">
+                 :class="isFlipped ? 'is-flipped' : ''"
+                 style="width: 100%; height: 100%; position: relative;">
                 
                 {{-- FRONT OF THE ID CARD --}}
-                <div class="card-front id-card-front-content holo-card">
-                    <div class="absolute inset-0 holo-overlay opacity-30 mix-blend-overlay"></div>
-                    
-                    {{-- Header --}}
-                    <div style="display: flex; align-items: center; gap: 0.5rem; border-bottom: 1px solid rgba(16, 185, 129, 0.3); padding-bottom: 0.625rem; position: relative; z-index: 10; text-align: left; width: 100%; box-sizing: border-box;">
-                        <img src="{{ asset('images/AMIS_Logo.png') }}" alt="AMIS Logo" style="height: 36px; width: auto; background: rgba(255, 255, 255, 0.1); padding: 4px; border-radius: 8px;">
-                        <div>
-                            <span style="font-weight: 700; font-size: 9px; letter-spacing: 0.05em; display: block; text-transform: uppercase; opacity: 0.85; line-height: 1.2;">AL-MUNAWWARAH</span>
-                            <span style="font-size: 10px; font-weight: 800; letter-spacing: 0.05em; display: block; color: #a7f3d0; text-transform: uppercase; line-height: 1;">International School</span>
-                        </div>
+                <div class="card-front" style="width: 340px; height: 538px; position: absolute; left: 0; top: 0; border-radius: 24px; overflow: hidden; background: #064e3b; box-shadow: 0 15px 35px rgba(0,0,0,0.3);">
+                    <img src="{{ asset('assets/amis-id-template.png') }}?v=3" crossorigin="anonymous" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; border-radius: 24px;" alt="AMIS ID Template">
+
+                    <!-- Student Photo Overlay -->
+                    <img src="{{ $photo ? asset('storage/' . $photo) : $fallbackPhoto }}"
+                         id="photo-img-front"
+                         crossorigin="anonymous"
+                         style="position: absolute; left: 81px; top: 114px; width: 178px; height: 172px; overflow: hidden; border-radius: 14px; z-index: 10; object-fit: cover;"
+                         onerror="this.style.display='none'; document.getElementById('photo-warning-front').style.display='flex';"
+                         alt="Student Photo">
+
+                    <!-- Yellow Photo Warning Stamp (Anti-edit) -->
+                    <div id="photo-warning-front"
+                         class="absolute" 
+                         style="position: absolute; left: 81px; top: 114px; width: 178px; height: 172px; z-index: 10; border-radius: 14px; background: #fef08a; border: 2.5px dashed #ca8a04; box-sizing: border-box; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 12px;">
+                        <svg class="text-amber-600 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" style="width: 24px; height: 24px; margin: 0 auto 4px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <span style="font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 10.5px; color: #451a03; text-transform: uppercase; line-height: 1.2; display: block;">Warning</span>
+                        <span style="font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 8.5px; color: #78350f; text-transform: uppercase; line-height: 1.2; display: block; margin-top: 2px;">Incomplete ID Data</span>
+                        <span style="font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 8px; color: #92400e; line-height: 1.3; display: block; margin-top: 6px;">Photo is missing.<br>Please re-upload.</span>
                     </div>
 
-                    {{-- Student Photo & ID Info --}}
-                    <div style="display: flex; flex-direction: column; align-items: center; margin: 0.75rem 0; position: relative; z-index: 10; width: 100%;">
-                        <div style="height: 120px; width: 120px; border-radius: 16px; overflow: hidden; border: 2.5px solid rgba(52, 211, 153, 0.4); box-shadow: inset 0 2px 4px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; background: rgba(15, 23, 42, 0.5);">
-                            @if($photo)
-                                <img src="{{ asset('storage/' . $photo) }}" alt="Student Photo" style="height: 100%; width: 100%; object-fit: cover;">
-                            @else
-                                <div style="display: flex; align-items: center; justify-content: center; height: 100%; width: 100%; background: rgba(255, 255, 255, 0.05);">
-                                    <span style="font-size: 2.25rem; font-weight: 900; color: white;">{{ $initials }}</span>
-                                </div>
-                            @endif
-                        </div>
-                        
-                        {{-- Holo Badge Seal --}}
-                        <div style="position: absolute; bottom: -8px; right: 65px; height: 32px; width: 32px; border-radius: 50%; background: linear-gradient(45deg, #22d3ee, #f472b6, #facc15); opacity: 0.6; border: 1px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.15); mix-blend-mode: screen; animation: pulse-dot 2s infinite ease-in-out;">
-                            <img src="{{ asset('images/AMIS_Logo.png') }}" alt="Seal" style="height: 20px; width: auto; opacity: 0.75;">
-                        </div>
+                    <!-- Student ID Badge text overlay -->
+                    <div style="position: absolute; left: 121px; top: 295px; width: 95px; height: 15px; z-index: 10; background: transparent; line-height: 1; text-align: center; display: flex; align-items: center; justify-content: center; font-family: 'Outfit', sans-serif; font-weight: 900; letter-spacing: 0.05em; font-size: 12.5px; color: white;">
+                        {{ $badgeStudentId }}
                     </div>
 
-                    {{-- Student Details --}}
-                    <div style="text-align: center; position: relative; z-index: 10; flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%;">
-                        <span style="font-size: 8px; text-transform: uppercase; letter-spacing: 0.1em; color: #a7f3d0; font-weight: 700; display: block; margin-bottom: 2px;">Student Name</span>
-                        <div style="padding: 0 4px; width: 100%; box-sizing: border-box;">
-                            <h3 style="font-size: 1rem; font-weight: 800; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0; line-height: 1.2; color: #ffffff;">{{ mb_strtoupper($fullName) }}</h3>
-                        </div>
-                        
-                        <div style="margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid rgba(16, 185, 129, 0.2); padding-top: 8px; width: 100%; box-sizing: border-box;">
-                            <div>
-                                <span style="font-size: 7px; text-transform: uppercase; letter-spacing: 0.05em; color: #a7f3d0; font-weight: 700; display: block; opacity: 0.75;">Grade Level</span>
-                                <span style="font-size: 11px; font-weight: 700; color: #ffffff; display: block; margin-top: 2px;">{{ $student?->grade_level }}</span>
-                            </div>
-                            <div>
-                                <span style="font-size: 7px; text-transform: uppercase; letter-spacing: 0.05em; color: #a7f3d0; font-weight: 700; display: block; opacity: 0.75;">School Year</span>
-                                <span style="font-size: 11px; font-weight: 700; color: #ffffff; display: block; margin-top: 2px;">{{ $student?->school_year }}</span>
-                            </div>
-                        </div>
+                    <!-- Last Name Overlay -->
+                    <div style="position: absolute; left: 15px; top: 334px; width: 310px; height: 32px; z-index: 10; text-align: center; display: flex; flex-direction: column; justify-content: center; padding: 0 16px; box-sizing: border-box;">
+                        <h3 style="font-family: 'Outfit', sans-serif; font-weight: 900; text-transform: uppercase; color: #0f172a; margin: 0; line-height: 1; letter-spacing: -0.5px;
+                                   {{ strlen($lastName) > 20 ? 'font-size: 16px;' : (strlen($lastName) > 15 ? 'font-size: 19px;' : (strlen($lastName) > 10 ? 'font-size: 23px;' : 'font-size: 26px;')) }}">
+                            {{ $lastName }}
+                        </h3>
                     </div>
 
-                    {{-- Footer & QR Code --}}
-                    <div style="display: flex; align-items: flex-end; justify-content: space-between; border-top: 1px solid rgba(16, 185, 129, 0.3); padding-top: 10px; position: relative; z-index: 10; margin-top: auto; width: 100%; box-sizing: border-box; text-align: left;">
-                        <div>
-                            <span style="font-size: 7px; text-transform: uppercase; letter-spacing: 0.1em; color: #a7f3d0; font-weight: 700; display: block; opacity: 0.85;">Student Number</span>
-                            @php
-                                $displayId = $student?->student_number;
-                                if (is_numeric($displayId) && strlen($displayId) >= 6) {
-                                    $year = '20' . substr($displayId, 0, 2);
-                                    $seq = (int) substr($displayId, 2);
-                                    $displayId = 'AMIS-' . $year . '-' . str_pad($seq, 6, '0', STR_PAD_LEFT);
-                                }
-                            @endphp
-                            <span style="font-size: 12px; font-weight: 800; letter-spacing: 0.05em; color: #ffffff;">{{ $displayId }}</span>
+                    <!-- First Name Overlay -->
+                    <div style="position: absolute; left: 15px; top: 366px; width: 310px; height: 22px; z-index: 10; text-align: center; display: flex; flex-direction: column; justify-content: center; padding: 0 16px; box-sizing: border-box;">
+                        <h4 style="font-family: 'Outfit', sans-serif; font-weight: 700; text-transform: uppercase; color: #334155; margin: 0; line-height: 1;
+                                   {{ strlen($firstName) > 25 ? 'font-size: 11px;' : (strlen($firstName) > 18 ? 'font-size: 13px;' : 'font-size: 15px;') }}">
+                            {{ $firstName }}
+                        </h4>
+                    </div>
+
+                    <!-- Grade Level -->
+                    @php
+                        $displayGrade = $section ? ($section->grade_level ?? $student?->grade_level) : $student?->grade_level;
+                    @endphp
+                    <div style="position: absolute; left: 15px; top: 406px; width: 310px; height: 30px; z-index: 10; text-align: center; display: flex; flex-direction: column; justify-content: center; padding: 0 16px; box-sizing: border-box;">
+                        <span style="font-family: 'Outfit', sans-serif; font-size: 26px; font-weight: 900; line-height: 1; letter-spacing: 0.5px; text-transform: uppercase; text-shadow: 0 1px 1px rgba(0,0,0,0.05); color: {{ $getGradeColor($displayGrade) }};">
+                            {{ $displayGrade }}
+                        </span>
+                    </div>
+
+                    <!-- LRN Overlay -->
+                    @if($student?->applicant?->lrn && !in_array(strtoupper($student->applicant->lrn), ['N/A', 'NA', 'EMPTY', '']))
+                        <div style="position: absolute; font-family: 'Outfit', sans-serif; font-size: 15.5px; font-weight: 700; z-index: 10; right: 8px; top: 405px; width: 22px; height: 130px; display: flex; align-items: center; justify-content: center; transform: rotate(-90deg); transform-origin: center; white-space: nowrap; letter-spacing: 0.05em; color: #1e293b;">
+                            LRN: <span style="margin-left: 4px;">{{ $student->applicant->lrn }}</span>
                         </div>
-                        <div style="background: white; padding: 4px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                            <img src="https://api.qrserver.com/v1/create-qr-code/?data={{ urlencode('https://amis.edu.ph/id?id=' . ($student?->student_number ?? '')) }}&size=150x150&color=000000&light=ffffff&margin=1&format=png&size=300" alt="QR Verification" style="height: 36px; width: 36px;">
-                        </div>
+                    @endif
+
+                    <!-- QR Code -->
+                    <div style="position: absolute; left: 134.5px; top: 458px; width: 71px; height: 71px; z-index: 10; padding: 2.5px; border-radius: 2px; background: white; box-sizing: border-box;">
+                        <img src="{{ $qrCodeUrl }}" crossorigin="anonymous" style="width: 100%; height: 100%; object-fit: contain;" alt="QR Verification">
                     </div>
                 </div>
 
                 {{-- BACK OF THE ID CARD --}}
-                <div class="card-back id-card-back-content">
-                    
-                    {{-- Header Info --}}
-                    <div style="text-align: center; border-bottom: 1px solid rgba(255,255,255,0.15); padding-bottom: 8px; width: 100%; box-sizing: border-box;">
-                        <h4 style="font-size: 9px; font-weight: 700; color: #34d399; text-transform: uppercase; letter-spacing: 0.1em; margin: 0;">Student Information & Security</h4>
+                <div class="card-back" style="width: 340px; height: 538px; position: absolute; left: 0; top: 0; border-radius: 24px; overflow: hidden; background: #0f172a; box-shadow: 0 15px 35px rgba(0,0,0,0.3);">
+                    <img src="{{ asset('assets/amis-id-template-back.png') }}?v=3" crossorigin="anonymous" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; border-radius: 24px;" alt="AMIS ID Template Back">
+
+                    <!-- Parent Name Overlay -->
+                    <div style="position: absolute; left: 15px; top: 85px; width: 310px; height: 28px; z-index: 10; text-align: center; display: flex; flex-direction: column; justify-content: center; padding: 0 16px; box-sizing: border-box;">
+                        <h3 style="font-family: 'Outfit', sans-serif; font-weight: 900; text-transform: uppercase; color: #0f172a; margin: 0; line-height: 1.1;
+                                   {{ strlen($parent) > 20 ? 'font-size: 18px;' : (strlen($parent) > 14 ? 'font-size: 21px;' : 'font-size: 25px;') }}">
+                            {{ $parent }}
+                        </h3>
                     </div>
 
-                    {{-- Back Card Details --}}
-                    @php
-                        $father = trim(($student?->applicant?->father_first_name ?? '') . ' ' . ($student?->applicant?->father_last_name ?? ''));
-                        $mother = trim(($student?->applicant?->mother_first_name ?? '') . ' ' . ($student?->applicant?->mother_last_name ?? ''));
-                        $parent = $father ?: ($mother ?: ($student?->applicant?->emergency_name ?? 'Registrar Office'));
-                        $address = $student?->applicant?->address ?: ($student?->applicant?->home_address ?: ($student?->applicant?->street_address ?? 'Davao City, Philippines'));
-                    @endphp
-                    <div style="display: flex; flex-direction: column; gap: 12px; margin: 12px 0; flex-grow: 1; justify-content: center; text-align: left; width: 100%; box-sizing: border-box;">
-                        <div>
-                            <span style="font-size: 7px; text-transform: uppercase; letter-spacing: 0.1em; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 2px;">Parent / Guardian</span>
-                            <span style="font-size: 11px; font-weight: 600; display: block; color: #e2e8f0;">{{ $parent }}</span>
-                        </div>
-
-                        <div>
-                            <span style="font-size: 7px; text-transform: uppercase; letter-spacing: 0.1em; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 2px;">Home Address</span>
-                            <span style="font-size: 10px; font-weight: 600; display: block; color: #e2e8f0; line-height: 1.4; max-width: 240px; word-wrap: break-word;">{{ $address }}</span>
-                        </div>
-
-                        <div style="background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255, 255, 255, 0.05); padding: 8px; border-radius: 12px; font-size: 8px; color: #94a3b8; line-height: 1.4; text-align: center; box-sizing: border-box; width: 100%;">
-                            This card is non-transferable and must be worn at all times while on school premises. Loss must be reported to the registrar office immediately.
-                        </div>
+                    <!-- Contact Number Overlay -->
+                    <div style="position: absolute; left: 15px; top: 118px; width: 310px; height: 20px; z-index: 10; text-align: center; display: flex; flex-direction: column; justify-content: center; padding: 0 16px; box-sizing: border-box;">
+                        <h4 style="font-family: 'Outfit', sans-serif; font-size: 17px; font-weight: 700; color: #1e293b; margin: 0; line-height: 1;">
+                            {{ $contactNo }}
+                        </h4>
                     </div>
 
-                    {{-- Barcode & Contacts --}}
-                    <div style="border-top: 1px solid rgba(255,255,255,0.15); padding-top: 10px; display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; box-sizing: border-box;">
-                        {{-- Simulated Barcode --}}
-                        <div style="background: white; padding: 6px; border-radius: 6px; width: 100%; display: flex; align-items: center; justify-content: center; box-sizing: border-box;">
-                            <div style="display: flex; align-items: stretch; justify-content: center; height: 32px; width: 100%; max-width: 180px; background: repeating-linear-gradient(90deg, #0f172a 0px, #0f172a 2px, #ffffff 2px, #ffffff 5px, #0f172a 5px, #0f172a 7px);"></div>
-                        </div>
-                        <div style="text-align: center; font-size: 7.5px; color: #94a3b8; display: flex; align-items: center; gap: 6px;">
-                            <span>registrar@amis.edu.ph</span>
-                            <span>•</span>
-                            <span>+63 900 000 0000</span>
-                        </div>
+                    <!-- Address Overlay -->
+                    <div style="position: absolute; left: 20px; top: 144px; width: 300px; height: 42px; z-index: 10; text-align: center; display: flex; flex-direction: column; justify-content: center; padding: 0 20px; box-sizing: border-box;">
+                        <p style="font-family: 'Outfit', sans-serif; font-weight: 700; text-transform: uppercase; color: #475569; margin: 0; line-height: 1.25;
+                                   {{ strlen($address) > 60 ? 'font-size: 10.5px;' : (strlen($address) > 40 ? 'font-size: 12px;' : 'font-size: 13.5px;') }}">
+                            {{ $address }}
+                        </p>
                     </div>
+
+                    <!-- Yellow Back Warning Stamp (Anti-edit / Missing Label) -->
+                    @if($isEmergencyMissing)
+                        <div style="position: absolute; left: 15px; top: 83px; width: 310px; height: 104px; z-index: 15; border-radius: 12px; box-sizing: border-box; background: rgba(254, 243, 199, 0.95); border: 2px dashed #f59e0b; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 12px;">
+                            <svg class="text-amber-600 mb-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" style="width: 20px; height: 20px; margin-bottom: 2px;">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                            <span style="font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 11px; color: #451a03; text-transform: uppercase; tracking-spacing: 0.05em;">MISSING</span>
+                            <span style="font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 8.5px; color: #78350f; line-height: 1.3; margin-top: 4px;">Emergency details are missing.<br>Please update student profile.</span>
+                        </div>
+                    @endif
                 </div>
 
             </div>
