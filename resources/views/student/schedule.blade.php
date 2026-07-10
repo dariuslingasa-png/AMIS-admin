@@ -658,7 +658,7 @@
                                                  style="background: {{ $style['bg'] }} !important; border-color: {{ $style['border'] }} !important; color: {{ $style['text'] }} !important; display: flex; flex-direction: row; gap: 0.75rem; align-items: center; padding: 0.65rem 1rem;">
                                                 
                                                 <!-- Left: Teacher photo in squircle (border-radius: 12px) -->
-                                                <div @if($photoUrl) @click="previewPhoto = { url: '{{ $photoUrl }}', name: '{{ $currentTeacherName }}', role: 'Official Teacher' }" @endif
+                                                <div @if($photoUrl) @click="previewPhoto = { url: '{{ $photoUrl }}', name: '{{ $currentTeacherName }}', role: 'Official Teacher', subject: '{{ $s->subject_name }}', time: '{{ date('g:i A', strtotime($s->start_time)) }} - {{ date('g:i A', strtotime($s->end_time)) }}', day: 'Sunday - Thursday' }" @endif
                                                      style="width: 44px; height: 44px; border-radius: 10px; background: white; border: 1px solid {{ $style['border'] }} !important; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer;"
                                                      title="Click to view teacher photo">
                                                     @if($photoUrl)
@@ -750,7 +750,7 @@
                                                          style="background: {{ $style['bg'] }} !important; border-color: {{ $style['border'] }} !important; color: {{ $style['text'] }} !important; display: flex; flex-direction: row; gap: 0.5rem; align-items: center;">
                                                         
                                                         <!-- Left: Teacher photo in circle -->
-                                                        <div @if($photoUrl) @click="previewPhoto = { url: '{{ $photoUrl }}', name: '{{ $currentTeacherName }}', role: 'Official Teacher' }" @endif
+                                                        <div @if($photoUrl) @click="previewPhoto = { url: '{{ $photoUrl }}', name: '{{ $currentTeacherName }}', role: 'Official Teacher', subject: '{{ $s->subject_name }}', time: '{{ date('g:i A', strtotime($s->start_time)) }} - {{ date('g:i A', strtotime($s->end_time)) }}', day: '{{ $day }}' }" @endif
                                                              style="width: 44px; height: 44px; border-radius: 50%; background: white; border: 1.5px solid {{ $style['border'] }} !important; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer;"
                                                              title="Click to view teacher photo">
                                                             @if($photoUrl)
@@ -875,7 +875,7 @@
                                                  style="min-height: 85px; background: {{ $style['bg'] }} !important; border-color: {{ $style['border'] }} !important; color: {{ $style['text'] }} !important; display: flex; flex-direction: row; gap: 0.5rem; align-items: center;">
                                                 
                                                 <!-- Left: Teacher photo in circle -->
-                                                <div @if($photoUrl) @click="previewPhoto = { url: '{{ $photoUrl }}', name: '{{ $currentTeacherName }}', role: 'Official Teacher' }" @endif
+                                                <div @if($photoUrl) @click="previewPhoto = { url: '{{ $photoUrl }}', name: '{{ $currentTeacherName }}', role: 'Official Teacher', subject: '{{ $s->subject_name }}', time: '{{ date('g:i A', strtotime($s->start_time)) }} - {{ date('g:i A', strtotime($s->end_time)) }}', day: '{{ $dayName }}' }" @endif
                                                      style="width: 38px; height: 38px; border-radius: 50%; background: white; border: 1.5px solid {{ $style['border'] }} !important; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer;">
                                                     @if($photoUrl)
                                                         <img src="{{ $photoUrl }}" alt="{{ $currentTeacherName }}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
@@ -1045,6 +1045,7 @@
     <!-- Image Preview Modal Overlay -->
     <div x-show="previewPhoto" 
          x-cloak 
+         x-init="$watch('previewPhoto', v => v && $nextTick(() => window.lucide && window.lucide.createIcons()))"
          @keydown.escape.window="previewPhoto = null"
          style="position: fixed !important; inset: 0 !important; z-index: 9999 !important; display: flex !important; align-items: center !important; justify-content: center !important; padding: 1.5rem !important; background: rgba(15, 23, 42, 0.75) !important; backdrop-filter: blur(4px) !important;"
          x-transition:enter="transition ease-out duration-250"
@@ -1084,6 +1085,27 @@
                   <h3 style="font-size: 1.25rem; font-weight: 900; color: #0f172a; margin: 0;" x-text="previewPhoto?.name"></h3>
                   <p style="font-size: 0.8rem; font-weight: 850; color: #059669; margin: 0.25rem 0 0; text-transform: uppercase; letter-spacing: 0.05em;" x-text="previewPhoto?.role"></p>
               </div>
+
+              <!-- Subject & Schedule Details -->
+              <template x-if="previewPhoto?.subject">
+                  <div style="padding: 0.85rem 1rem; background: #f0fdfa; border: 1.5px solid #ccfbf1; border-radius: 16px; width: 100%; box-sizing: border-box; text-align: left; display: flex; flex-direction: column; gap: 0.45rem;">
+                      <div style="display: flex; align-items: center; gap: 0.5rem;">
+                          <i data-lucide="book-open" style="width: 14px; height: 14px; color: #0f766e;"></i>
+                          <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #0d9488; letter-spacing: 0.05em;">Subject Details</span>
+                      </div>
+                      <div style="font-size: 14px; font-weight: 800; color: #0f172a;" x-text="previewPhoto.subject"></div>
+                      <div style="margin-top: 0.15rem; display: flex; align-items: center; gap: 0.75rem; border-top: 1px dashed #ccfbf1; padding-top: 0.45rem;">
+                          <div style="display: flex; align-items: center; gap: 0.3rem;">
+                              <i data-lucide="calendar" style="width: 12px; height: 12px; color: #0f766e;"></i>
+                              <span style="font-size: 12px; font-weight: 700; color: #0f766e;" x-text="previewPhoto.day"></span>
+                          </div>
+                          <div style="display: flex; align-items: center; gap: 0.3rem;">
+                              <i data-lucide="clock" style="width: 12px; height: 12px; color: #0f766e;"></i>
+                              <span style="font-size: 12px; font-weight: 700; color: #0f766e;" x-text="previewPhoto.time"></span>
+                          </div>
+                      </div>
+                  </div>
+              </template>
          </div>
     </div>
 </div>
