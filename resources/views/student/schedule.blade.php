@@ -282,16 +282,20 @@
         min-width: 1000px;
     }
     .calendar-grid-header {
-        font-size: 18px !important;
-        font-weight: 700 !important;
-        line-height: 24px !important;
+        font-size: 15px !important;
+        font-weight: 800 !important;
+        line-height: 1.2 !important;
         text-transform: uppercase;
         color: white;
         background: #0d9488;
         padding: 0.85rem 0.5rem;
-        text-align: center;
         border-radius: 12px;
         letter-spacing: 0.05em;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-align: center !important;
+        min-height: 52px !important;
     }
     .calendar-time-header {
         background: #115e59;
@@ -641,7 +645,7 @@
                                             <div class="calendar-class-card class-special" style="width: 100%;" title="{{ $s->subject_name }}">
                                                 <div style="display: flex; align-items: center; gap: 0.5rem; justify-content: center;">
                                                     <i data-lucide="coffee" style="width: 16px; height: 16px; color: #64748b; flex-shrink: 0;"></i>
-                                                    <p class="class-special-title" style="font-size: 18px !important; font-weight: 700 !important; line-height: 24px !important;">{{ $s->subject_name }}</p>
+                                                    <p class="class-special-title" style="font-size: 15px !important; font-weight: 800 !important; line-height: 1.25 !important;">{{ $s->subject_name }}</p>
                                                 </div>
                                             </div>
                                         @else
@@ -673,10 +677,10 @@
                                                 <!-- Right: Details -->
                                                 <div style="flex: 1; min-width: 0; display: flex; align-items: center; justify-content: space-between;">
                                                     <div>
-                                                        <h4 style="font-size: 18px; font-weight: 700; line-height: 24px; color: {{ $style['text'] }} !important; margin: 0;">
+                                                        <h4 style="font-size: 15px; font-weight: 800; line-height: 1.25; color: {{ $style['text'] }} !important; margin: 0;">
                                                             {{ $s->subject_name }}
                                                         </h4>
-                                                        <p style="font-size: 14px; font-weight: 500; line-height: 20px; color: {{ $style['text'] }} !important; opacity: 0.85; margin: 0.05rem 0 0;">
+                                                        <p style="font-size: 13px; font-weight: 600; line-height: 1.35; color: {{ $style['text'] }} !important; opacity: 0.9; margin: 0.05rem 0 0;">
                                                             {{ $currentTeacherName }}
                                                         </p>
                                                     </div>
@@ -733,7 +737,7 @@
                                                     <div class="calendar-class-card class-special" title="{{ $s->subject_name }}">
                                                         <div style="display: flex; align-items: center; gap: 0.35rem; justify-content: center; text-align: center;">
                                                             <i data-lucide="coffee" style="width: 14px; height: 14px; color: #94a3b8; flex-shrink: 0;"></i>
-                                                            <p class="class-special-title" style="font-size: 18px !important; font-weight: 700 !important; line-height: 24px !important;">{{ $s->subject_name }}</p>
+                                                            <p class="class-special-title" style="font-size: 15px !important; font-weight: 800 !important; line-height: 1.25 !important;">{{ $s->subject_name }}</p>
                                                         </div>
                                                     </div>
                                                 @else
@@ -765,12 +769,12 @@
                                                         <!-- Right: Subject details -->
                                                         <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; height: 100%;">
                                                             <div>
-                                                                <h4 style="font-size: 18px; font-weight: 700; line-height: 24px; color: {{ $style['text'] }} !important; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ $s->subject_name }}">
-                                                                    {{ $s->subject_name }}
-                                                                </h4>
-                                                                <p style="font-size: 14px; font-weight: 500; line-height: 20px; color: {{ $style['text'] }} !important; opacity: 0.85; margin: 0.05rem 0 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ $currentTeacherName }}">
-                                                                    {{ $currentTeacherName }}
-                                                                </p>
+                                                                <h4 style="font-size: 15px; font-weight: 800; line-height: 1.25; color: {{ $style['text'] }} !important; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ $s->subject_name }}">
+                                                                     {{ $s->subject_name }}
+                                                                 </h4>
+                                                                 <p style="font-size: 13px; font-weight: 600; line-height: 1.35; color: {{ $style['text'] }} !important; opacity: 0.9; margin: 0.05rem 0 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ $currentTeacherName }}">
+                                                                     {{ $currentTeacherName }}
+                                                                 </p>
                                                             </div>
                                                             <div style="display: flex; align-items: center; justify-content: flex-end; margin-top: 0.15rem;">
                                                                  @if($s->ms_channel_id)
