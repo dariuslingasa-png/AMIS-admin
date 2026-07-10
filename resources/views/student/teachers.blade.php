@@ -28,6 +28,14 @@
         return 'Tchr. ' . ucwords(strtolower($nameTrimmed));
     };
 
+    $getPhotoUrl = function ($teacherPhoto) {
+        if (empty($teacherPhoto)) return null;
+        if (str_starts_with($teacherPhoto, 'http://') || str_starts_with($teacherPhoto, 'https://')) {
+            return $teacherPhoto;
+        }
+        return 'https://admin.amis.edu.ph/' . ltrim($teacherPhoto, '/');
+    };
+
     // Build teachersList grouped by name with real photo/email from section_subjects
     $teacherPhotos = [];
     $teacherEmails = [];
@@ -40,7 +48,7 @@
             $teacherEmails[$tName] = $subj->teacher_email;
         }
     }
-    $teacherAvatar = fn (string $name) => $teacherPhotos[$name] ?? null;
+    $teacherAvatar = fn (string $name) => $getPhotoUrl($teacherPhotos[$name] ?? null);
 
 
     $teachersList = [];
@@ -87,7 +95,7 @@
                         <span>Official Advisor</span>
                     </div>
                     <div class="s-quick-actions-card" style="background: white; border-radius: 20px; border: 1.5px solid #e2e8f0; padding: 1.75rem; display: flex; align-items: center; gap: 2rem; flex-wrap: wrap;">
-                        <div @if($adviser['photo']) @click="previewPhoto = { url: '{{ asset($adviser['photo']) }}', name: '{{ $formatTeacherName($adviser['name']) }}', role: 'Official Advisor' }" @endif
+                        <div @if($adviser['photo']) @click="previewPhoto = { url: '{{ $getPhotoUrl($adviser['photo']) }}', name: '{{ $formatTeacherName($adviser['name']) }}', role: 'Official Advisor' }" @endif
                              style="width: 80px; height: 80px; border-radius: 20px; background: #ecfdf5; border: 2px solid #a7f3d0; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; @if($adviser['photo']) cursor: pointer; transition: transform 0.15s, border-color 0.15s; @endif"
                              @if($adviser['photo'])
                              onmouseover="this.style.transform='scale(1.05)'; this.style.borderColor='#059669'"
@@ -95,7 +103,7 @@
                              title="Click to preview profile picture"
                              @endif>
                             @if($adviser['photo'])
-                                <img src="{{ asset($adviser['photo']) }}" alt="{{ $adviser['name'] }}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;">
+                                <img src="{{ $getPhotoUrl($adviser['photo']) }}" alt="{{ $adviser['name'] }}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;">
                             @else
                                 @php
                                     $initials = collect(explode(' ', str_ireplace('TEACHER ', '', $adviser['name'])))

@@ -176,6 +176,14 @@
         }
         return ['bg' => '#f8fafc', 'border' => '#e2e8f0', 'text' => '#334155', 'icon_bg' => '#e2e8f0', 'icon_color' => '#475569'];
     };
+
+    $getPhotoUrl = function ($teacherPhoto) {
+        if (empty($teacherPhoto)) return null;
+        if (str_starts_with($teacherPhoto, 'http://') || str_starts_with($teacherPhoto, 'https://')) {
+            return $teacherPhoto;
+        }
+        return 'https://admin.amis.edu.ph/' . ltrim($teacherPhoto, '/');
+    };
 @endphp
 
 @once
@@ -584,7 +592,7 @@
                                         @else
                                             @php
                                                 $currentTeacherName = $teacherName($s);
-                                                $photoUrl = !empty($s->teacher_photo) ? asset($s->teacher_photo) : null;
+                                                $photoUrl = $getPhotoUrl($s->teacher_photo);
                                                 $style = $getSubjectStyle($s->subject_name);
                                             @endphp
                                             <div class="calendar-class-card {{ $classState === 'completed' ? 'class-completed' : ($classState === 'live' ? 'class-live' : '') }}"
@@ -676,7 +684,7 @@
                                                 @else
                                                     @php
                                                         $currentTeacherName = $teacherName($s);
-                                                        $photoUrl = !empty($s->teacher_photo) ? asset($s->teacher_photo) : null;
+                                                        $photoUrl = $getPhotoUrl($s->teacher_photo);
                                                         $style = $getSubjectStyle($s->subject_name);
                                                     @endphp
                                                     <div class="calendar-class-card {{ $classState === 'completed' ? 'class-completed' : ($classState === 'live' ? 'class-live' : '') }}"
@@ -801,7 +809,7 @@
                                         @else
                                             @php
                                                 $currentTeacherName = $teacherName($s);
-                                                $photoUrl = !empty($s->teacher_photo) ? asset($s->teacher_photo) : null;
+                                                $photoUrl = $getPhotoUrl($s->teacher_photo);
                                                 $style = $getSubjectStyle($s->subject_name);
                                             @endphp
                                             <div class="calendar-class-card {{ $classState === 'completed' ? 'class-completed' : ($classState === 'live' ? 'class-live' : '') }}" 
@@ -880,7 +888,7 @@
                     @foreach($subjects as $subj)
                         @php
                             $currentTeacherName = $teacherName($subj);
-                            $listPhotoUrl = !empty($subj->teacher_photo) ? asset($subj->teacher_photo) : null;
+                            $listPhotoUrl = $getPhotoUrl($subj->teacher_photo);
                         @endphp
                         <article class="s-quick-actions-card" style="background: white; border-radius: 20px; border: 1.5px solid #e2e8f0; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; min-height: 230px; padding: 0;">
                             <div class="teacher-strip" style="background: #f8fafc; border-bottom: 1.5px solid #e2e8f0; height: 110px; display: grid; grid-template-columns: 90px 1fr;">
