@@ -294,7 +294,7 @@
         letter-spacing: 0.05em;
     }
     .calendar-time-header {
-        background: #1e293b;
+        background: #115e59;
     }
     .calendar-grid-row {
         display: contents;
