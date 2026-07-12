@@ -52,254 +52,264 @@
         .id-card-item { display: flex; flex-direction: column; align-items: center; }
         .id-card-side-label { font-size: 7px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.05em; }
         
-        /* ID-1 Standard Plastic Card Size in CSS */
-        .id-card {
-            width: 85.6mm;
-            height: 54mm;
-            border-radius: 3.2mm;
-            border: 1px solid #cbd5e1;
+        .id-card-print-wrapper {
+            width: 54mm;
+            height: 85.6mm;
             position: relative;
             overflow: hidden;
+            border: 1px solid #cbd5e1;
+            border-radius: 3.2mm;
             box-shadow: 0 4px 10px rgba(15, 23, 42, 0.04);
-            background: #fff;
-            text-align: left;
-            font-family: Arial, sans-serif;
-            page-break-inside: avoid;
-            break-inside: avoid;
+            background: #ffffff;
         }
         
-        /* Front Card Graphic Design */
-        .id-card-front {
-            background: linear-gradient(135deg, #022c22 0%, #064e3b 45%, #059669 75%, #022c22 100%);
-            color: #fff;
-        }
-        .id-card-front::after {
-            content: "";
+        .id-card-scaler {
+            width: 340px;
+            height: 538px;
             position: absolute;
-            bottom: 0;
-            right: 0;
-            width: 60%;
-            height: 100%;
-            background: radial-gradient(circle at bottom right, rgba(234, 179, 8, 0.22) 0%, transparent 70%);
-            pointer-events: none;
-            z-index: 1;
+            top: 0;
+            left: 0;
+            transform: scale(0.6);
+            transform-origin: top left;
         }
-        .id-card-header {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 8px;
-            background: rgba(255, 255, 255, 0.06);
-            border-bottom: 0.5px solid rgba(255, 255, 255, 0.1);
-            height: 32px;
+        
+        .id-card-container {
+            width: 340px;
+            height: 538px;
             position: relative;
-            z-index: 2;
-        }
-        .id-card-logo {
-            width: 22px;
-            height: 22px;
-            object-fit: contain;
-            flex-shrink: 0;
-        }
-        .id-card-school-name {
-            font-size: 6.5px;
-            font-weight: 900;
-            letter-spacing: 0.2px;
-            text-transform: uppercase;
-            line-height: 1.1;
-            color: #ffffff;
-        }
-        .id-card-school-sub {
-            font-size: 4.5px;
-            font-weight: 700;
-            color: #eab308;
-            text-transform: uppercase;
-            line-height: 1;
-            margin-top: 0.5px;
-        }
-        .id-card-body {
-            display: flex;
-            padding: 8px 10px;
-            gap: 10px;
-            height: calc(54mm - 44px);
-            align-items: center;
-            position: relative;
-            z-index: 2;
-        }
-        .id-card-photo-box {
-            width: 20mm;
-            height: 26mm;
-            border-radius: 4px;
-            border: 1.5px solid #eab308;
-            background: #022c22;
             overflow: hidden;
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            border-radius: 24px;
+            background: #064e3b;
         }
-        .id-card-photo {
-            width: 100%;
-            height: 100%;
+        
+        .student-photo {
+            position: absolute;
+            left: 81px;
+            top: 114px;
+            width: 178px;
+            height: 172px;
+            overflow: hidden;
+            border-radius: 14px;
+            z-index: 10;
             object-fit: cover;
         }
-        .id-card-details {
-            flex: 1;
+        
+        .photo-placeholder {
+            position: absolute;
+            left: 81px;
+            top: 114px;
+            width: 178px;
+            height: 172px;
+            z-index: 10;
+            border-radius: 14px;
+            background: #f1f5f9;
+            border: 2px dashed #cbd5e1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #64748b;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+        
+        .student-id {
+            position: absolute;
+            left: 121px;
+            top: 295px;
+            width: 95px;
+            height: 15px;
+            z-index: 10;
+            background: transparent;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 900;
+            letter-spacing: 0.05em;
+            font-size: 12.5px;
+            color: white;
+            text-align: center;
+            line-height: 15px;
+        }
+        
+        .student-last-name {
+            position: absolute;
+            left: 15px;
+            top: 334px;
+            width: 310px;
+            height: 32px;
+            z-index: 10;
+            text-align: center;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            min-width: 0;
-            gap: 3.5px;
-        }
-        .id-card-name {
-            font-size: 11px;
-            font-weight: 900;
-            color: #ffffff;
-            text-transform: uppercase;
-            line-height: 1.1;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            border-bottom: 0.5px solid rgba(234, 179, 8, 0.4);
-            padding-bottom: 2.5px;
-            margin-bottom: 2px;
-        }
-        .id-card-field {
-            display: flex;
-            font-size: 8.5px;
-            line-height: 1.2;
-        }
-        .id-card-label {
-            width: 46px;
-            color: #a7f3d0;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-        .id-card-value {
-            flex: 1;
-            font-weight: bold;
-            color: #ffffff;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .id-card-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 3px 8px;
-            background: #ffffff;
-            color: #064e3b;
-            font-size: 7px;
-            font-weight: 950;
-            height: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            position: relative;
-            z-index: 2;
-            border-top: 0.5px solid rgba(6, 78, 59, 0.15);
+            padding: 0 16px;
         }
         
-        /* Back Card Rules & Contacts */
-        .id-card-back {
-            background: #f8fafc;
-            color: #1e293b;
+        .student-last-name h3 {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 900;
+            text-transform: uppercase;
+            color: #0f172a;
+            margin: 0;
+            line-height: 1;
+            letter-spacing: -0.5px;
+        }
+        
+        .student-first-name {
+            position: absolute;
+            left: 15px;
+            top: 366px;
+            width: 310px;
+            height: 22px;
+            z-index: 10;
+            text-align: center;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            justify-content: center;
+            padding: 0 16px;
         }
-        .id-card-back-header {
-            background: #064e3b;
-            color: #fff;
-            font-size: 6px;
-            font-weight: bold;
-            text-align: center;
-            padding: 3px 0;
+        
+        .student-first-name h4 {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
             text-transform: uppercase;
+            color: #334155;
+            margin: 0;
+            line-height: 1;
+        }
+        
+        .student-grade {
+            position: absolute;
+            left: 15px;
+            top: 406px;
+            width: 310px;
+            height: 30px;
+            z-index: 10;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 0 16px;
+        }
+        
+        .student-grade span {
+            font-family: 'Outfit', sans-serif;
+            font-size: 26px;
+            font-weight: 900;
+            line-height: 1;
             letter-spacing: 0.5px;
-            height: 12px;
+            text-transform: uppercase;
+            text-shadow: 0 1px 1px rgba(0,0,0,0.05);
         }
-        .id-card-back-body {
-            padding: 6px 8px;
-            font-size: 5px;
-            line-height: 1.3;
-            flex: 1;
+        
+        .student-lrn {
+            position: absolute;
+            font-family: 'Outfit', sans-serif;
+            font-size: 15.5px;
+            font-weight: 700;
+            z-index: 10;
+            right: 8px;
+            top: 405px;
+            width: 22px;
+            height: 130px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: rotate(-90deg);
+            transform-origin: center;
+            white-space: nowrap;
+            letter-spacing: 0.05em;
+            color: #1e293b;
+        }
+        
+        .student-qr {
+            position: absolute;
+            left: 134.5px;
+            top: 458px;
+            width: 71px;
+            height: 71px;
+            z-index: 10;
+            padding: 2.5px;
+            border-radius: 2px;
+            background: white;
+        }
+        
+        .student-qr img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+        
+        /* Back Card Styles */
+        .parent-name {
+            position: absolute;
+            left: 15px;
+            top: 85px;
+            width: 310px;
+            height: 28px;
+            z-index: 10;
+            text-align: center;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            justify-content: center;
+            padding: 0 16px;
         }
-        .id-card-back-title {
-            font-weight: bold;
-            color: #064e3b;
-            margin-bottom: 2px;
+        
+        .parent-name h3 {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 900;
             text-transform: uppercase;
-            font-size: 5px;
+            color: #0f172a;
+            margin: 0;
+            line-height: 1.1;
         }
-        .id-card-back-terms {
-            color: #64748b;
-            margin-bottom: 4px;
-        }
-        .id-card-back-contact-box {
-            background: #f1f5f9;
-            border: 0.5px solid #cbd5e1;
-            border-radius: 4px;
-            padding: 3px 5px;
-        }
-        .id-card-back-row {
-            display: flex;
-            margin-bottom: 1px;
-        }
-        .id-card-back-row:last-child {
-            margin-bottom: 0;
-        }
-        .id-card-back-label {
-            width: 32px;
-            font-weight: bold;
-            color: #64748b;
-            text-transform: uppercase;
-        }
-        .id-card-back-value {
-            flex: 1;
-            font-weight: bold;
-            color: #1e293b;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .id-card-back-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            padding: 4px 8px;
-            border-top: 0.5px solid #e2e8f0;
-            height: 18px;
-            background: #ffffff;
-        }
-        .barcode-mock {
-            display: flex;
-            align-items: flex-end;
-            height: 10px;
-            gap: 0.75px;
-        }
-        .barcode-line {
-            background: #000;
-            height: 100%;
-        }
-        .barcode-line.thin { width: 0.4px; }
-        .barcode-line.med { width: 0.9px; }
-        .barcode-line.thick { width: 1.8px; }
-        .id-card-back-sig-line {
+        
+        .contact-number {
+            position: absolute;
+            left: 15px;
+            top: 118px;
+            width: 310px;
+            height: 20px;
+            z-index: 10;
             text-align: center;
-            font-size: 3.5px;
-            font-weight: bold;
-            color: #64748b;
-            text-transform: uppercase;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 0 16px;
         }
-        .sig-placeholder {
-            width: 50px;
-            height: 8px;
-            border-bottom: 0.5px solid #94a3b8;
-            margin-bottom: 1.5px;
+        
+        .contact-number h4 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 17px;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 0;
+            line-height: 1;
+        }
+        
+        .address-box {
+            position: absolute;
+            left: 20px;
+            top: 144px;
+            width: 300px;
+            height: 42px;
+            z-index: 10;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 0 20px;
+        }
+        
+        .address-box p {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #475569;
+            margin: 0;
+            line-height: 1.25;
         }
         
         @media print {
@@ -401,6 +411,11 @@
             $cardNotice = $isOdl 
                 ? 'This card is non-transferable and remains property of Al Munawwara Islamic School. Must be presented for official transactions.'
                 : 'This card is non-transferable and remains property of Al Munawwara Islamic School. Must be worn inside campus at all times.';
+            
+            $badgeStudentId = $student->student_number;
+            $displayGrade = $student->grade_level;
+            $hash = base64_encode((int)$student->student_number + 987654);
+            $qrCodeUrl = 'https://quickchart.io/qr?text=' . urlencode('https://amis.edu.ph/v/' . $hash) . '&dark=000000&light=ffffff&margin=1&format=png&size=300';
         @endphp
         <main class="page">
             <div>
@@ -593,88 +608,57 @@
                     <!-- ID Front -->
                     <div class="id-card-item">
                         <span class="id-card-side-label">Front Side</span>
-                        <div class="id-card id-card-front">
-                            <!-- Premium Background Design Shapes -->
-                            <!-- Large semi-transparent watermark logo half-cropped -->
-                            <img src="{{ asset('images/AMIS_Logo.png') }}" style="position: absolute; right: -15mm; top: 3mm; width: 48mm; height: 48mm; object-fit: contain; opacity: 0.08; pointer-events: none; z-index: 1;" alt="AMIS Watermark Logo">
-                            
-                            <!-- Gold Glowing Orbs -->
-                            <div style="position: absolute; top: -5mm; right: -5mm; width: 35mm; height: 35mm; border-radius: 50%; background: radial-gradient(circle, rgba(234, 179, 8, 0.12) 0%, transparent 70%); pointer-events: none; z-index: 1;"></div>
-                            <div style="position: absolute; bottom: -10mm; left: -10mm; width: 45mm; height: 45mm; border-radius: 50%; background: radial-gradient(circle, rgba(234, 179, 8, 0.1) 0%, transparent 70%); pointer-events: none; z-index: 1;"></div>
-                            
-                            <!-- Elegant Abstract Curved Waves -->
-                            <svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; opacity: 0.15;" viewBox="0 0 85.6 54">
-                                <path d="M -10 54 L -10 40 C 15 35, 30 50, 50 42 C 68 34, 75 46, 95 36 L 95 54 Z" fill="url(#frontGoldGradient)" />
-                                <path d="M -10 54 L -10 43 C 18 38, 32 46, 52 38 C 70 31, 78 41, 95 32 L 95 54 Z" fill="#022c22" opacity="0.6" />
-                                <defs>
-                                    <linearGradient id="frontGoldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                                        <stop offset="0%" stop-color="#eab308" />
-                                        <stop offset="50%" stop-color="#ca8a04" />
-                                        <stop offset="100%" stop-color="#fef08a" />
-                                    </linearGradient>
-                                </defs>
-                            </svg>
-                            
-                            <!-- Subtle geometric pattern lines overlay -->
-                            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: repeating-linear-gradient(30deg, transparent, transparent 4px, rgba(255, 255, 255, 0.015) 4px, rgba(255, 255, 255, 0.015) 8px); pointer-events: none; z-index: 1;"></div>
-
-
-
-                            <div class="id-card-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                                <div style="display: flex; align-items: center; gap: 6px;">
-                                    <img class="id-card-logo" src="{{ asset('images/AMIS_Logo.png') }}" alt="AMIS Logo">
-                                    <div>
-                                        <div class="id-card-school-name">Al Munawwara Islamic School</div>
-                                        <div class="id-card-school-sub">OFFICIAL AMIS STUDENT ID</div>
-                                    </div>
-                                </div>
-                                <div style="font-family: 'Times New Roman', serif; font-size: 7px; font-weight: bold; color: #ffffff; direction: rtl; text-align: right; margin-right: 4px; line-height: 1;">
-                                    المدرسة المنورة الإسلامية
-                                </div>
-                            </div>
-                            
-                            <div class="id-card-body" style="display: flex; padding: 6px 8px; gap: 6px; height: calc(54mm - 44px); align-items: center; justify-content: space-between;">
-                                <div class="id-card-photo-box" style="width: 18mm; height: 23.4mm; border-radius: 3px; border: 1.2px solid #eab308; background: #022c22; overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
-                                    @if($photoUrl)
-                                        <img src="{{ $photoUrl }}" alt="Photo" class="id-card-photo">
-                                    @else
-                                        <span style="font-size: 8px; font-weight: bold; color: #ef4444; text-align: center; text-transform: uppercase; line-height: 1.2; padding: 2px;">MISSING PHOTO</span>
-                                    @endif
-                                </div>
-                                <div class="id-card-details" style="flex: 1; display: flex; flex-direction: column; justify-content: center; min-width: 0; gap: 3px;">
-                                    <div class="id-card-name" title="{{ $fullName }}" style="font-size: {{ $nameFontSize }}; font-weight: 900; color: #ffffff; text-transform: uppercase; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-bottom: 0.5px solid rgba(234, 179, 8, 0.4); padding-bottom: 1.5px; margin-bottom: 1px;">{{ $displayName }}</div>
-                                    <div class="id-card-field" style="display: flex; font-size: 8.5px; line-height: 1.1;">
-                                        <div class="id-card-label" style="width: 46px; color: #a7f3d0; font-weight: bold; text-transform: uppercase; flex-shrink: 0;">ID No:</div>
-                                        <div class="id-card-value font-mono" style="flex: 1; font-weight: bold; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $student->student_number }}</div>
-                                    </div>
-                                    <div class="id-card-field" style="display: flex; font-size: 8.5px; line-height: 1.1;">
-                                        <div class="id-card-label" style="width: 46px; color: #a7f3d0; font-weight: bold; text-transform: uppercase; flex-shrink: 0;">LRN:</div>
-                                        <div class="id-card-value font-mono" style="flex: 1; font-weight: bold; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $applicant->lrn ?: 'N/A' }}</div>
-                                    </div>
-                                    <div class="id-card-field" style="display: flex; font-size: 8.5px; line-height: 1.1;">
-                                        <div class="id-card-label" style="width: 46px; color: #a7f3d0; font-weight: bold; text-transform: uppercase; flex-shrink: 0;">Grade:</div>
-                                        <div class="id-card-value" style="flex: 1; font-weight: bold; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $student->grade_level }}</div>
-                                    </div>
-                                    <div class="id-card-field" style="display: flex; font-size: 8.5px; line-height: 1.1;">
-                                        <div class="id-card-label" style="width: 46px; color: #a7f3d0; font-weight: bold; text-transform: uppercase; flex-shrink: 0;">Adviser:</div>
-                                        <div class="id-card-value" title="{{ $advisorName }}" style="flex: 1; font-weight: bold; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $advisorName }}</div>
-                                    </div>
-                                </div>
-                                <div style="flex-shrink: 0; display: flex; align-items: center; justify-content: center; position: relative; padding: 2.5px; width: 13.5mm; height: 13.5mm; background: transparent;">
-                                    <!-- Corner brackets -->
-                                    <div style="position: absolute; top: 0; left: 0; width: 3.5mm; height: 3.5mm; border-top: 1.2px solid #ffffff; border-left: 1.2px solid #ffffff; border-top-left-radius: 2px;"></div>
-                                    <div style="position: absolute; top: 0; right: 0; width: 3.5mm; height: 3.5mm; border-top: 1.2px solid #ffffff; border-right: 1.2px solid #ffffff; border-top-right-radius: 2px;"></div>
-                                    <div style="position: absolute; bottom: 0; left: 0; width: 3.5mm; height: 3.5mm; border-bottom: 1.2px solid #ffffff; border-left: 1.2px solid #ffffff; border-bottom-left-radius: 2px;"></div>
-                                    <div style="position: absolute; bottom: 0; right: 0; width: 3.5mm; height: 3.5mm; border-bottom: 1.2px solid #ffffff; border-right: 1.2px solid #ffffff; border-bottom-right-radius: 2px;"></div>
+                        <div class="id-card-print-wrapper">
+                            <div class="id-card-scaler">
+                                <div class="id-card-container">
+                                    <!-- Background Template Image -->
+                                    <img src="{{ asset('assets/amis-id-template.png') }}?v=3" class="id-template" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1;" alt="AMIS ID Template">
                                     
-                                    <!-- QR Code Image -->
-                                    <img src="https://quickchart.io/qr?text={{ urlencode('https://amis.edu.ph/v/' . $student->obfuscated_id) }}&dark=ffffff&light=0000&margin=1&format=svg" style="width: 100%; height: 100%; object-fit: contain; display: block;" alt="QR Code">
+                                    <!-- Student Photo -->
+                                    @if($photoUrl)
+                                        <img src="{{ $photoUrl }}" class="student-photo" style="z-index: 10;">
+                                    @else
+                                        <div class="photo-placeholder">Photo Missing</div>
+                                    @endif
+
+                                    <!-- Student ID Badge text -->
+                                    <div class="student-id">{{ $badgeStudentId }}</div>
+
+                                    <!-- Last Name -->
+                                    @php
+                                        $lastNameLen = strlen($lastName);
+                                        $lastNameFontSize = $lastNameLen > 20 ? '16px' : ($lastNameLen > 15 ? '19px' : ($lastNameLen > 10 ? '23px' : '26px'));
+                                    @endphp
+                                    <div class="student-last-name">
+                                        <h3 style="font-size: {{ $lastNameFontSize }};">{{ $lastName }}</h3>
+                                    </div>
+
+                                    <!-- First Name -->
+                                    @php
+                                        $firstNameLen = strlen($firstName);
+                                        $firstNameFontSize = $firstNameLen > 25 ? '11px' : ($firstNameLen > 18 ? '13px' : '15px');
+                                    @endphp
+                                    <div class="student-first-name">
+                                        <h4 style="font-size: {{ $firstNameFontSize }};">{{ $firstName }}</h4>
+                                    </div>
+
+                                    <!-- Grade Level -->
+                                    <div class="student-grade">
+                                        <span style="color: {{ $getGradeColor($displayGrade) }};">{{ $displayGrade }}</span>
+                                    </div>
+
+                                    <!-- LRN -->
+                                    @if($applicant->lrn && !in_array(strtoupper($applicant->lrn), ['N/A', 'NA', 'EMPTY', '']))
+                                        <div class="student-lrn">
+                                            LRN: <span style="margin-left: 4px;">{{ $applicant->lrn }}</span>
+                                        </div>
+                                    @endif
+
+                                    <!-- QR Code -->
+                                    <div class="student-qr">
+                                        <img src="{{ $qrCodeUrl }}" alt="QR Verification">
+                                    </div>
                                 </div>
-                            </div>
-                            
-                            <div class="id-card-footer" style="background: #ffffff; color: #064e3b;">
-                                <span>Student</span>
-                                <span>S.Y. {{ $student->school_year }}</span>
                             </div>
                         </div>
                     </div>
@@ -682,58 +666,33 @@
                     <!-- ID Back -->
                     <div class="id-card-item">
                         <span class="id-card-side-label">Back Side</span>
-                        <div class="id-card id-card-back">
-                            <div class="id-card-back-header">
-                                Important School Notice
-                            </div>
-                            
-                            <div class="id-card-back-body">
-                                <div class="id-card-back-title">Rules & Regulations</div>
-                                <div class="id-card-back-terms" style="margin-bottom: 2px;">
-                                    {{ $cardNotice }}
-                                </div>
-                                
-                                <div class="id-card-back-contact-box" style="margin-bottom: 3px; padding: 3px 5px;">
-                                    <table style="width: 100%; border-collapse: collapse; border: none; table-layout: auto;">
-                                        <tr style="line-height: 1.25;">
-                                            <td style="width: 1%; white-space: nowrap; font-weight: bold; color: #64748b; text-transform: uppercase; font-size: 7.5px; padding: 0.5px 6px 0.5px 0; vertical-align: top;">IN CASE OF EMERGENCY:</td>
-                                            <td style="font-weight: 900; color: #064e3b; text-transform: uppercase; font-size: 7.5px; padding: 0.5px 0; vertical-align: top;">{{ $emergencyName }}</td>
-                                        </tr>
-                                        <tr style="line-height: 1.25;">
-                                            <td style="width: 1%; white-space: nowrap; font-weight: bold; color: #64748b; text-transform: uppercase; font-size: 7.5px; padding: 0.5px 6px 0.5px 0; vertical-align: top;">CONTACT NO:</td>
-                                            <td class="font-mono" style="font-weight: 900; color: #064e3b; font-size: 7.5px; padding: 0.5px 0; vertical-align: top; white-space: nowrap;">{{ $emergencyPhone }}</td>
-                                        </tr>
-                                        <tr style="line-height: 1.25;">
-                                            <td style="width: 1%; white-space: nowrap; font-weight: bold; color: #64748b; text-transform: uppercase; font-size: 7.5px; padding: 0.5px 6px 0.5px 0; vertical-align: top;">ADDRESS:</td>
-                                            <td style="white-space: normal; line-height: 1.15; font-size: 6.5px; text-transform: uppercase; padding: 0.5px 0; vertical-align: top; color: #1e293b; font-weight: bold;" title="{{ $homeAddress }}">{{ \Illuminate\Support\Str::upper($homeAddress) }}</td>
-                                        </tr>
-                                    </table>
-                                </div>
+                        <div class="id-card-print-wrapper">
+                            <div class="id-card-scaler">
+                                <div class="id-card-container">
+                                    <!-- Background Template Image -->
+                                    <img src="{{ asset('assets/amis-id-template-back.png') }}?v=3" class="id-template" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1;" alt="AMIS ID Template Back">
 
-                                <!-- School Details & Quote -->
-                                <div style="border-top: 0.5px solid #cbd5e1; padding-top: 2.5px; text-align: center; line-height: 1.2;">
-                                    <div style="font-size: 4.5px; color: #475569; font-weight: bold;">
-                                        Don Julian Rodriguez Avenue, Ma-a, Davao City, Philippines, 8000
+                                    <!-- Parent Name -->
+                                    @php
+                                        $parentNameLen = strlen($emergencyName);
+                                        $parentNameFontSize = $parentNameLen > 20 ? '18px' : ($parentNameLen > 14 ? '21px' : '25px');
+                                    @endphp
+                                    <div class="parent-name">
+                                        <h3 style="font-size: {{ $parentNameFontSize }};">{{ $emergencyName }}</h3>
                                     </div>
-                                    <div style="font-size: 4.5px; font-style: italic; font-weight: 800; color: #059669; margin-top: 1px;">
-                                        "Enabling Our Students To Learn in Fid Dunya Wal Akhira"
+
+                                    <!-- Contact Number -->
+                                    <div class="contact-number">
+                                        <h4>{{ $emergencyPhone }}</h4>
                                     </div>
-                                    <div style="font-size: 5px; font-weight: bold; color: #064e3b; text-transform: uppercase; margin-top: 2px; letter-spacing: 0.3px;">
-                                        Valid until March 31, 2027
-                                    </div>
-                                    <div style="margin-top: 2.5px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5px;">
-                                        <img src="https://bwipjs-api.metafloor.com/?bcid=code128&text={{ urlencode($student->student_number) }}&scale=2&height=6" style="height: 5.5mm; max-width: 45mm; object-fit: contain;" alt="Barcode">
-                                        <span style="font-size: 4px; font-family: monospace; font-weight: bold; color: #1e293b; letter-spacing: 0.5px;">{{ $student->student_number }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="id-card-back-footer" style="padding: 2px 8px; height: 20px; display: flex; justify-content: center; align-items: center; background: #ffffff;">
-                                <div style="display: flex; align-items: center; gap: 6px;">
-                                    <img src="{{ asset('images/AMIS_Logo.png') }}" alt="AMIS Logo" style="height: 15px; width: auto; object-fit: contain;">
-                                    <div style="display: flex; flex-direction: column; line-height: 1.1; text-align: left;">
-                                        <span style="font-size: 6px; font-weight: 900; color: #064e3b; font-family: 'Times New Roman', serif; direction: rtl;">المدرسة المنورة الإسلامية</span>
-                                        <span style="font-size: 5px; font-weight: 800; color: #64748b; text-transform: uppercase;">Al Munawwara Islamic School</span>
+
+                                    <!-- Address -->
+                                    @php
+                                        $addressLen = strlen($homeAddress);
+                                        $addressFontSize = $addressLen > 60 ? '10.5px' : ($addressLen > 40 ? '12px' : '13.5px');
+                                    @endphp
+                                    <div class="address-box">
+                                        <p style="font-size: {{ $addressFontSize }};">{{ $homeAddress }}</p>
                                     </div>
                                 </div>
                             </div>
