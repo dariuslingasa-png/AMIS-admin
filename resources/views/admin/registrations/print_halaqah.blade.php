@@ -101,6 +101,7 @@
                         $address = $details['Address'] ?? '';
                         $msTeams = $details['MS Teams Account'] ?? '';
                         $level = $details['Learning Level'] ?? '';
+                        $gradeLevel = $details['Grade Level'] ?? '';
                         
                         $msgParts = explode('--- Halaqah Registration Details ---', $reg->message);
                         $actualMessage = trim($msgParts[0]);
@@ -122,6 +123,9 @@
                         <td>
                             @if($level)
                                 <div style="font-weight: bold; color: #0369a1; text-transform: uppercase;">{{ $level }}</div>
+                            @endif
+                            @if($gradeLevel)
+                                <div style="margin-top: 2px; font-size: 8.5px; color: #334155; font-weight: 800; text-transform: uppercase;">Grade: {{ $gradeLevel }}</div>
                             @endif
                             @if($msTeams)
                                 <div style="margin-top: 2px; font-size: 8px; color: #475569;">Teams UPN: <code style="background: #f1f5f9; padding: 2px 4px; border-radius: 4px; font-family: monospace;">{{ $msTeams }}</code></div>

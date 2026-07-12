@@ -134,6 +134,7 @@
                             $address = $details['Address'] ?? '';
                             $msTeams = $details['MS Teams Account'] ?? '';
                             $level = $details['Learning Level'] ?? '';
+                            $gradeLevel = $details['Grade Level'] ?? '';
                             
                             $msgParts = explode('--- Halaqah Registration Details ---', $reg->message);
                             $actualMessage = trim($msgParts[0]);
@@ -175,9 +176,17 @@
                                         $isBeginner = str_contains(strtolower($level), 'beginner');
                                         $badgeColor = $isBeginner ? 'amber' : 'indigo';
                                     @endphp
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-{{ $badgeColor }}-50 text-{{ $badgeColor }}-700 border border-{{ $badgeColor }}-100 mb-1.5">
-                                        {{ $level }}
-                                    </span>
+                                    <div class="mb-1.5">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-{{ $badgeColor }}-50 text-{{ $badgeColor }}-700 border border-{{ $badgeColor }}-100">
+                                            {{ $level }}
+                                        </span>
+                                    </div>
+                                @endif
+                                @if($gradeLevel)
+                                    <div class="text-xs text-slate-650 font-semibold flex items-center gap-1.5 mb-1.5">
+                                        <span class="text-[10px] font-bold uppercase text-slate-400">Grade:</span>
+                                        <span class="text-slate-800 font-extrabold text-[11px] uppercase tracking-wide">{{ $gradeLevel }}</span>
+                                    </div>
                                 @endif
                                 @if($msTeams)
                                     <div class="text-xs text-slate-500 font-medium flex items-center gap-1.5">
