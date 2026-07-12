@@ -81,6 +81,11 @@
                             <i data-lucide="table" class="h-3.5 w-3.5 text-indigo-500"></i>
                             <span>Export Verification Database (by Grade &amp; Gender)</span>
                         </a>
+                        <div class="my-1 border-t border-slate-100"></div>
+                        <a href="{{ route('admin.students.download-docs-zip', request()->all()) }}" class="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-50">
+                            <i data-lucide="file-archive" class="h-3.5 w-3.5 text-rose-550"></i>
+                            <span>Download Student Documents (ZIP)</span>
+                        </a>
                     </div>
                 </div>
 

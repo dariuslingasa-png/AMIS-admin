@@ -595,6 +595,131 @@ class AdminStudentController extends Controller
     }
 
 
+    public function downloadDocumentsZip(Request $request)
+    {
+        set_time_limit(300);
+        ini_set('memory_limit', '512M');
+
+        $isTeacherAdminViewer = $request->user()?->isTeacherAdminViewer() ?? false;
+        $visibleGrades = $isTeacherAdminViewer ? $request->user()->adminVisibleGradeLevels() : [];
+        $teacherGradeScope = null;
+        if ($isTeacherAdminViewer && ! empty($visibleGrades)) {
+            $teacherGradeScope = $visibleGrades[0];
+            if ($request->filled('grade') && in_array((string) $request->input('grade'), $visibleGrades, true)) {
+                $teacherGradeScope = (string) $request->input('grade');
+            } elseif ($request->filled('grade')) {
+                $teacherGradeScope = null;
+            }
+        }
+
+        $applyFilters = function ($query) use ($request, $isTeacherAdminViewer, $teacherGradeScope) {
+            if ($isTeacherAdminViewer) {
+                $teacherGradeScope === null
+                    ? $query->whereRaw('1 = 0')
+                    : $query->where('students.grade_level', $teacherGradeScope);
+            }
+
+            if ($request->filled('search')) {
+                $s = trim($request->search);
+                $terms = array_filter(explode(' ', $s));
+                $query->where(function ($q) use ($terms) {
+                    foreach ($terms as $term) {
+                        $q->where(function ($sub) use ($term) {
+                            $sub->where('students.student_number', 'like', "%{$term}%")
+                                ->orWhere('students.school_email', 'like', "%{$term}%")
+                                ->orWhereHas('applicant', function ($a) use ($term) {
+                                    $a->where('first_name', 'like', "%{$term}%")
+                                      ->orWhere('middle_name', 'like', "%{$term}%")
+                                      ->orWhere('last_name', 'like', "%{$term}%");
+                                });
+                        });
+                    }
+                });
+            }
+
+            if ($request->filled('grade')) {
+                $query->where('students.grade_level', $request->grade);
+            }
+
+            if ($request->filled('gender')) {
+                $gender = strtolower((string) $request->gender);
+                if (in_array($gender, ['male', 'female'], true)) {
+                    $query->whereHas('applicant', fn($q) => $q->whereRaw('LOWER(gender) = ?', [$gender]));
+                }
+            }
+
+            if ($request->filled('type')) {
+                $type = strtolower((string) $request->type);
+                if (in_array($type, ['new', 'old', 'transferee'], true)) {
+                    $query->whereHas('applicant', fn($q) => $q->whereRaw('LOWER(student_type) LIKE ?', ["%{$type}%"]));
+                }
+            }
+
+            if ($request->filled('mode')) {
+                $mode = $request->mode;
+                $query->whereHas('applicant', fn($q) =>
+                    $q->where('learning_mode', 'like', "%{$mode}%")
+                );
+            }
+
+            return $query;
+        };
+
+        $students = $applyFilters(Student::with('applicant'))->get();
+
+        if ($students->isEmpty()) {
+            return back()->with('error', 'No student records found matching the selected filters.');
+        }
+
+        $zip = new \ZipArchive();
+        $fileName = 'AMIS_Student_Documents_' . ($request->filled('grade') ? str_replace(' ', '_', $request->grade) : 'All_Grades') . '_' . date('Ymd_His') . '.zip';
+        $tempFile = tempnam(sys_get_temp_dir(), 'zip');
+
+        if ($zip->open($tempFile, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+            return back()->with('error', 'Could not initialize ZIP archive creation.');
+        }
+
+        $filesAdded = 0;
+        foreach ($students as $student) {
+            $appl = $student->applicant;
+            if (!$appl) continue;
+
+            $fullName = trim(($appl->first_name ?? '').' '.($appl->middle_name ?? '').' '.($appl->last_name ?? ''));
+            $cleanName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $student->student_number . '_' . $fullName);
+            
+            $docTypes = [
+                '2x2_Photo' => $appl->photo_2x2_url,
+                'Birth_Certificate' => $appl->birth_cert_url,
+                'Report_Card' => $appl->report_card_url,
+                'Marriage_Contract' => $appl->marriage_contract_url,
+                'Medical_Record' => $appl->medical_record_url,
+                'Affidavit' => $appl->affidavit_url,
+            ];
+
+            foreach ($docTypes as $label => $relativeUrl) {
+                if (empty($relativeUrl)) continue;
+
+                $absolutePath = \App\Support\EnrollmentStorage::getAbsolutePath($relativeUrl);
+                if ($absolutePath && file_exists($absolutePath)) {
+                    $ext = pathinfo($absolutePath, PATHINFO_EXTENSION);
+                    $zipPath = $cleanName . '/' . $label . ($ext ? '.' . $ext : '');
+                    $zip->addFile($absolutePath, $zipPath);
+                    $filesAdded++;
+                }
+            }
+        }
+
+        $zip->close();
+
+        if ($filesAdded === 0) {
+            @unlink($tempFile);
+            return back()->with('error', 'No document files exist on the storage server for the matched students.');
+        }
+
+        return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
+    }
+
+
     private static function buildVerifRowData(Student $student, string $grade, string $gender): array
     {
         $applicant = $student->applicant;
