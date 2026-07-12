@@ -834,18 +834,13 @@
     
     {{-- Modal Content Card --}}
     <div class="id-modal-card"
-         @click.stop=""
+         @click.stop
          x-transition:enter="transition ease-out duration-300 transform"
          x-transition:enter-start="opacity-0 scale-95 translate-y-4"
          x-transition:enter-end="opacity-100 scale-100 translate-y-0"
          x-transition:leave="transition ease-in duration-200 transform"
          x-transition:leave-start="opacity-100 scale-100 translate-y-0"
          x-transition:leave-end="opacity-0 scale-95 translate-y-4">
-        
-        {{-- Close button --}}
-        <button type="button" @click="showIdModal = false" class="id-modal-close-btn">
-            <i data-lucide="x" style="width: 16px; height: 16px;"></i>
-        </button>
 
         {{-- Verification Status --}}
         <div class="id-status-badge">
@@ -982,6 +977,11 @@
                 class="inline-flex items-center gap-1.5 px-4 py-2 border border-slate-200 hover:border-slate-300 text-slate-600 font-bold text-xs rounded-xl hover:bg-slate-50 transition-all duration-200 cursor-pointer shadow-sm bg-white" style="display: inline-flex; align-items: center; justify-content: center; border: 1px solid #e2e8f0;">
             <i data-lucide="refresh-cw" style="width: 12px; height: 12px; color: #64748b;"></i>
             <span>Flip ID Card</span>
+        </button>
+
+        {{-- Close button --}}
+        <button type="button" @click="showIdModal = false" class="id-modal-close-btn">
+            <i data-lucide="x" style="width: 16px; height: 16px;"></i>
         </button>
     </div>
 </div>
