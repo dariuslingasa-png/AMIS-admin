@@ -87,7 +87,7 @@
             <select name="status" class="table-control h-10 rounded-xl border border-slate-200 focus:border-emerald-500 outline-none transition text-xs font-semibold px-3 bg-white cursor-pointer">
                 <option value="">All Status</option>
                 <option value="new" {{ $status === 'new' ? 'selected' : '' }}>New</option>
-                <option value="contacted" {{ $status === 'contacted' ? 'selected' : '' }}>Contacted</option>
+                <option value="approved" {{ $status === 'approved' ? 'selected' : '' }}>Approved</option>
             </select>
             <div class="flex items-center gap-2">
                 <button type="submit" class="bg-emerald-650 hover:bg-emerald-800 active:scale-95 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl transition shadow-sm cursor-pointer h-10">
@@ -196,10 +196,10 @@
 
                             <!-- Status -->
                             <td class="px-5 py-4">
-                                @if($reg->status === 'contacted')
+                                @if($reg->status === 'approved')
                                     <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100">
                                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                                        Contacted
+                                        Approved
                                     </span>
                                     @if($reg->responded_at)
                                         <div class="text-[9px] text-slate-400 font-medium mt-0.5">On {{ date('M d, Y', strtotime($reg->responded_at)) }}</div>
@@ -219,15 +219,15 @@
                                     <form method="POST" action="{{ route('admin.registrations.halaqah.toggle', ['id' => $reg->id, 'source' => $reg->source]) }}" class="inline">
                                         @csrf
                                         @method('PATCH')
-                                        @if($reg->status === 'contacted')
-                                            <button type="submit" class="inline-flex items-center gap-1 px-3 py-1.5 border border-slate-200 hover:bg-slate-50 text-slate-600 font-bold text-xs rounded-xl transition cursor-pointer" title="Mark as New">
+                                        @if($reg->status === 'approved')
+                                            <button type="submit" class="inline-flex items-center gap-1 px-3 py-1.5 border border-slate-200 hover:bg-slate-50 text-slate-600 font-bold text-xs rounded-xl transition cursor-pointer" title="Undo Approval">
                                                 <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
-                                                Mark New
+                                                Undo Approval
                                             </button>
                                         @else
-                                            <button type="submit" class="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-800 text-white font-bold text-xs rounded-xl transition shadow-3xs cursor-pointer" title="Mark as Contacted">
+                                            <button type="submit" class="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-800 text-white font-bold text-xs rounded-xl transition shadow-3xs cursor-pointer" title="Approve Registration">
                                                 <i data-lucide="check" class="w-3.5 h-3.5 text-white"></i>
-                                                Mark Contacted
+                                                Approve
                                             </button>
                                         @endif
                                     </form>

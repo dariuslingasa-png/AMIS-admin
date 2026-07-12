@@ -99,11 +99,11 @@ class RegistrationController extends Controller
             return back()->with('error', 'Registration not found.');
         }
 
-        $newStatus = $submission->status === 'contacted' ? 'new' : 'contacted';
+        $newStatus = $submission->status === 'approved' ? 'new' : 'approved';
         
         DB::table($table)->where('id', $id)->update([
             'status' => $newStatus,
-            'responded_at' => $newStatus === 'contacted' ? now() : null,
+            'responded_at' => $newStatus === 'approved' ? now() : null,
         ]);
 
         return back()->with('status', 'Registration status updated successfully.');

@@ -168,35 +168,164 @@ foreach ($students as $index => $student) {
     }
 
     // 3. Credentials
-    $credentialsContent = "AL MUNAWWARA ISLAMIC SCHOOL\nSTUDENT ACCOUNT CREDENTIALS\n===========================\n\n";
-    $credentialsContent .= "Student ID: " . $student->student_number . "\n";
-    $credentialsContent .= "Student Name: " . $fullName . "\n";
-    $credentialsContent .= "Grade & Section: " . $student->grade_level . " - " . $sectionFolder . "\n";
-    $credentialsContent .= "School Email: " . ($student->school_email ?: 'N/A') . "\n";
-    $credentialsContent .= "Temporary Password: " . ($student->temp_password ?: 'Password already changed or set') . "\n";
-    $credentialsContent .= "Microsoft Teams Email: " . ($student->ms_email ?: 'N/A') . "\n";
-    $credentialsContent .= "Teams Sync Status: " . ($student->ms_license_active ? 'Active' : 'Inactive') . "\n";
-    $zip->addFromString($basePath . '/03 - Account Credentials/AMIS_' . $student->student_number . '_Credentials.txt', $credentialsContent);
+    $credentialsHtml = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head>
+    <title>Student Account Credentials</title>
+    <style>
+        body { font-family: Arial, sans-serif; font-size: 11pt; color: #334155; line-height: 1.5; }
+        .header { text-align: center; border-bottom: 2px solid #059669; padding-bottom: 15px; margin-bottom: 30px; }
+        .school-name { font-size: 16pt; font-weight: bold; color: #0f172a; margin: 0; text-transform: uppercase; }
+        .doc-title { font-size: 12pt; font-weight: bold; color: #059669; text-transform: uppercase; margin: 5px 0 0 0; }
+        .card { border: 1px solid #e2e8f0; padding: 20px; border-radius: 8px; background-color: #f8fafc; }
+        .field { margin-bottom: 12px; }
+        .label { font-weight: bold; color: #64748b; font-size: 9pt; text-transform: uppercase; }
+        .value { font-size: 11pt; color: #0f172a; font-weight: bold; }
+        .highlight { background-color: #fef08a; padding: 2px 5px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class=\"header\">
+        <div class=\"school-name\">Al Munawwara Islamic School</div>
+        <div class=\"doc-title\">Student Account Credentials</div>
+    </div>
+    <div class=\"card\">
+        <div class=\"field\"><span class=\"label\">Student ID:</span><br><span class=\"value\">" . htmlspecialchars($student->student_number) . "</span></div>
+        <div class=\"field\"><span class=\"label\">Student Name:</span><br><span class=\"value\">" . htmlspecialchars($fullName) . "</span></div>
+        <div class=\"field\"><span class=\"label\">Grade & Section:</span><br><span class=\"value\">" . htmlspecialchars($student->grade_level . ' - ' . $sectionFolder) . "</span></div>
+        <div class=\"field\"><span class=\"label\">School Email:</span><br><span class=\"value\">" . htmlspecialchars($student->school_email ?: 'N/A') . "</span></div>
+        <div class=\"field\"><span class=\"label\">Temporary Password:</span><br><span class=\"value highlight\">" . htmlspecialchars($student->temp_password ?: 'Password already changed or set') . "</span></div>
+        <div class=\"field\"><span class=\"label\">Microsoft Teams Email:</span><br><span class=\"value\">" . htmlspecialchars($student->ms_email ?: 'N/A') . "</span></div>
+        <div class=\"field\"><span class=\"label\">Teams Sync Status:</span><br><span class=\"value\">" . htmlspecialchars($student->ms_license_active ? 'Active' : 'Inactive') . "</span></div>
+    </div>
+</body>
+</html>";
+    $zip->addFromString($basePath . '/03 - Account Credentials/AMIS_' . $student->student_number . '_Credentials.doc', $credentialsHtml);
     $filesAdded++;
 
     // 4. Enrollment Record
-    $enrollmentContent = "AL MUNAWWARA ISLAMIC SCHOOL\nOFFICIAL STUDENT ENROLLMENT RECORD SHEET\n=======================================\n\n";
-    $enrollmentContent .= "Student ID: " . $student->student_number . "\nLRN: " . ($appl->lrn ?: 'N/A') . "\nFull Name: " . $fullName . "\nGrade Level: " . $student->grade_level . "\nSection: " . $sectionFolder . "\nGrade Adviser: " . $advisorName . "\n";
-    $enrollmentContent .= "Home Address: " . $homeAddress . "\nParent Mobile: " . $parentMobile . "\nEmergency Contact: " . $emergencyName . " (" . $emergencyPhone . ")\n";
-    $zip->addFromString($basePath . '/04 - Enrollment Records/AMIS_' . $student->student_number . '_Enrollment_Record.txt', $enrollmentContent);
+    $medicalHistoryHtml = '';
+    if ($appl->medical_has_concern) {
+        $medicalHistoryHtml = "<tr><td class=\"label\">Medical History/Concerns</td><td class=\"value\">" . htmlspecialchars($appl->health_conditions ?: 'Has documented concern') . "</td></tr>";
+    }
+
+    $enrollmentHtml = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head>
+    <title>Official Enrollment Record Sheet</title>
+    <style>
+        body { font-family: Arial, sans-serif; font-size: 10pt; color: #334155; line-height: 1.4; }
+        .header { text-align: center; border-bottom: 2px solid #059669; padding-bottom: 15px; margin-bottom: 25px; }
+        .school-name { font-size: 16pt; font-weight: bold; color: #0f172a; margin: 0; text-transform: uppercase; }
+        .doc-title { font-size: 12pt; font-weight: bold; color: #059669; text-transform: uppercase; margin: 5px 0 0 0; }
+        .section-header { font-size: 11pt; font-weight: bold; color: #ffffff; background-color: #059669; padding: 6px 12px; margin-top: 20px; margin-bottom: 10px; text-transform: uppercase; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        td { padding: 6px 10px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+        .label { font-weight: bold; color: #64748b; width: 35%; }
+        .value { color: #0f172a; }
+    </style>
+</head>
+<body>
+    <div class=\"header\">
+        <div class=\"school-name\">Al Munawwara Islamic School</div>
+        <div class=\"doc-title\">Official Student Enrollment Record Sheet</div>
+    </div>
+    
+    <div class=\"section-header\">Student Information</div>
+    <table>
+        <tr><td class=\"label\">Student ID</td><td class=\"value\">" . htmlspecialchars($student->student_number) . "</td></tr>
+        <tr><td class=\"label\">LRN</td><td class=\"value\">" . htmlspecialchars($appl->lrn ?: 'N/A') . "</td></tr>
+        <tr><td class=\"label\">Full Name</td><td class=\"value\">" . htmlspecialchars($fullName) . "</td></tr>
+        <tr><td class=\"label\">Grade Level</td><td class=\"value\">" . htmlspecialchars($student->grade_level) . "</td></tr>
+        <tr><td class=\"label\">Section</td><td class=\"value\">" . htmlspecialchars($sectionFolder) . "</td></tr>
+        <tr><td class=\"label\">Grade Advisor</td><td class=\"value\">" . htmlspecialchars($advisorName) . "</td></tr>
+        <tr><td class=\"label\">School Year</td><td class=\"value\">" . htmlspecialchars($student->school_year) . "</td></tr>
+        <tr><td class=\"label\">Learning Mode</td><td class=\"value\">" . htmlspecialchars($appl->learning_mode ?: 'N/A') . "</td></tr>
+        <tr><td class=\"label\">Student Type</td><td class=\"value\">" . htmlspecialchars($appl->student_type ?: 'N/A') . "</td></tr>
+        <tr><td class=\"label\">Gender</td><td class=\"value\">" . htmlspecialchars($appl->gender ?: 'N/A') . "</td></tr>
+        <tr><td class=\"label\">Date of Birth</td><td class=\"value\">" . htmlspecialchars($appl->date_of_birth ?: 'N/A') . "</td></tr>
+        <tr><td class=\"label\">Place of Birth</td><td class=\"value\">" . htmlspecialchars($appl->place_of_birth ?: 'N/A') . "</td></tr>
+        <tr><td class=\"label\">Religion</td><td class=\"value\">" . htmlspecialchars($appl->religion ?: 'N/A') . "</td></tr>
+        <tr><td class=\"label\">Nationality/Ethnicity</td><td class=\"value\">" . htmlspecialchars($appl->ethnicity ?: 'N/A') . "</td></tr>
+        <tr><td class=\"label\">Student Mobile</td><td class=\"value\">" . htmlspecialchars($studentMobile) . "</td></tr>
+        <tr><td class=\"label\">School Email</td><td class=\"value\">" . htmlspecialchars($student->school_email ?: 'N/A') . "</td></tr>
+        <tr><td class=\"label\">Residence Address</td><td class=\"value\">" . htmlspecialchars($appl->address ?: $appl->home_address ?: 'N/A') . "</td></tr>
+    </table>
+
+    <div class=\"section-header\">Parent & Guardian Information</div>
+    <table>
+        <tr><td class=\"label\">Father's Name</td><td class=\"value\">" . htmlspecialchars($fatherName) . "</td></tr>
+        <tr><td class=\"label\">Father's Occupation</td><td class=\"value\">" . htmlspecialchars($appl->father_occupation ?: 'N/A') . "</td></tr>
+        <tr><td class=\"label\">Mother's Name</td><td class=\"value\">" . htmlspecialchars($motherName) . "</td></tr>
+        <tr><td class=\"label\">Mother's Occupation</td><td class=\"value\">" . htmlspecialchars($appl->mother_occupation ?: 'N/A') . "</td></tr>
+        <tr><td class=\"label\">Parent Email</td><td class=\"value\">" . htmlspecialchars($appl->parent_email ?: 'N/A') . "</td></tr>
+        <tr><td class=\"label\">Parent Mobile</td><td class=\"value\">" . htmlspecialchars($parentMobile) . "</td></tr>
+        <tr><td class=\"label\">Home Address</td><td class=\"value\">" . htmlspecialchars($homeAddress) . "</td></tr>
+    </table>
+
+    <div class=\"section-header\">Emergency Contact Details</div>
+    <table>
+        <tr><td class=\"label\">Contact Person</td><td class=\"value\">" . htmlspecialchars($emergencyName) . "</td></tr>
+        <tr><td class=\"label\">Relationship</td><td class=\"value\">" . htmlspecialchars($appl->emergency_relationship ?: 'N/A') . "</td></tr>
+        <tr><td class=\"label\">Contact Number</td><td class=\"value\">" . htmlspecialchars($emergencyPhone) . "</td></tr>
+        " . $medicalHistoryHtml . "
+    </table>
+</body>
+</html>";
+    $zip->addFromString($basePath . '/04 - Enrollment Records/AMIS_' . $student->student_number . '_Enrollment_Record.doc', $enrollmentHtml);
     $filesAdded++;
 
     // 5. Academic Subjects
-    $academicContent = "AL MUNAWWARA ISLAMIC SCHOOL\nSTUDENT ACADEMIC SUBJECT LIST\n=============================\n\n";
-    $academicContent .= "Student ID: " . $student->student_number . "\nStudent Name: " . $fullName . "\n\nSubjects:\n";
+    $subjectsRowsHtml = '';
     if ($student->studentSection && $student->studentSection->section && $student->studentSection->section->subjects && $student->studentSection->section->subjects->isNotEmpty()) {
         foreach ($student->studentSection->section->subjects as $secSubject) {
-            $academicContent .= "- " . $secSubject->subject_name . " (Teacher: " . ($secSubject->teacher_name ?: 'N/A') . ")\n";
+            $subjectsRowsHtml .= "<tr><td>" . htmlspecialchars($secSubject->subject_name) . "</td><td>" . htmlspecialchars($secSubject->teacher_name ?: 'N/A') . "</td></tr>";
         }
     } else {
-        $academicContent .= "No subjects assigned.\n";
+        $subjectsRowsHtml = "<tr><td colspan=\"2\" style=\"text-align: center; color: #64748b;\">No subjects currently enrolled or assigned.</td></tr>";
     }
-    $zip->addFromString($basePath . '/05 - Academic Records/AMIS_' . $student->student_number . '_Academic_Records.txt', $academicContent);
+
+    $academicHtml = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head>
+    <title>Student Academic Subject List</title>
+    <style>
+        body { font-family: Arial, sans-serif; font-size: 11pt; color: #334155; line-height: 1.5; }
+        .header { text-align: center; border-bottom: 2px solid #059669; padding-bottom: 15px; margin-bottom: 30px; }
+        .school-name { font-size: 16pt; font-weight: bold; color: #0f172a; margin: 0; text-transform: uppercase; }
+        .doc-title { font-size: 12pt; font-weight: bold; color: #059669; text-transform: uppercase; margin: 5px 0 0 0; }
+        .student-info { margin-bottom: 20px; font-size: 11pt; }
+        .info-row { margin-bottom: 5px; }
+        .info-label { font-weight: bold; color: #64748b; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th { background-color: #059669; color: #ffffff; text-align: left; padding: 8px 12px; font-weight: bold; font-size: 10pt; text-transform: uppercase; }
+        td { padding: 10px 12px; border-bottom: 1px solid #cbd5e1; font-size: 10pt; color: #0f172a; }
+        tr:nth-child(even) { background-color: #f8fafc; }
+    </style>
+</head>
+<body>
+    <div class=\"header\">
+        <div class=\"school-name\">Al Munawwara Islamic School</div>
+        <div class=\"doc-title\">Student Academic Subject List</div>
+    </div>
+    
+    <div class=\"student-info\">
+        <div class=\"info-row\"><span class=\"info-label\">Student ID:</span> <span>" . htmlspecialchars($student->student_number) . "</span></div>
+        <div class=\"info-row\"><span class=\"info-label\">Student Name:</span> <span>" . htmlspecialchars($fullName) . "</span></div>
+        <div class=\"info-row\"><span class=\"info-label\">Grade & Section:</span> <span>" . htmlspecialchars($student->grade_level . ' - ' . $sectionFolder) . "</span></div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th style=\"width: 50%;\">Subject Name</th>
+                <th style=\"width: 50%;\">Subject Teacher</th>
+            </tr>
+        </thead>
+        <tbody>
+            " . $subjectsRowsHtml . "
+        </tbody>
+    </table>
+</body>
+</html>";
+    $zip->addFromString($basePath . '/05 - Academic Records/AMIS_' . $student->student_number . '_Academic_Records.doc', $academicHtml);
     $filesAdded++;
 
     if (($index + 1) % 100 === 0) {
