@@ -666,7 +666,7 @@ class AdminStudentController extends Controller
         };
 
         // Eager load relations to prevent N+1 queries during ZIP creation
-        $students = $applyFilters(Student::with(['applicant', 'studentSection.section', 'subjects']))->get();
+        $students = $applyFilters(Student::with(['applicant', 'studentSection.section.subjects']))->get();
 
         if ($students->isEmpty()) {
             return back()->with('error', 'No student records found matching the selected filters.');
@@ -889,9 +889,9 @@ class AdminStudentController extends Controller
             $academicContent .= "ENROLLED SUBJECTS:\n";
             $academicContent .= "------------------\n";
             
-            if ($student->subjects && $student->subjects->isNotEmpty()) {
-                foreach ($student->subjects as $subject) {
-                    $academicContent .= "- " . $subject->name . " (S.Y. " . ($subject->pivot->school_year ?? '2026-2027') . ")\n";
+            if ($student->studentSection && $student->studentSection->section && $student->studentSection->section->subjects && $student->studentSection->section->subjects->isNotEmpty()) {
+                foreach ($student->studentSection->section->subjects as $secSubject) {
+                    $academicContent .= "- " . $secSubject->subject_name . " (Teacher: " . ($secSubject->teacher_name ?: 'N/A') . ")\n";
                 }
             } else {
                 $academicContent .= "No subjects currently enrolled or assigned.\n";
