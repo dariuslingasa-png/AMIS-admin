@@ -597,8 +597,8 @@ class AdminStudentController extends Controller
 
     public function downloadDocumentsZip(Request $request)
     {
-        set_time_limit(300);
-        ini_set('memory_limit', '512M');
+        ini_set('max_execution_time', 300);
+        ini_set('memory_limit', '1024M');
 
         $isTeacherAdminViewer = $request->user()?->isTeacherAdminViewer() ?? false;
         $visibleGrades = $isTeacherAdminViewer ? $request->user()->adminVisibleGradeLevels() : [];
@@ -665,14 +665,15 @@ class AdminStudentController extends Controller
             return $query;
         };
 
-        $students = $applyFilters(Student::with('applicant'))->get();
+        // Eager load relations to prevent N+1 queries during ZIP creation
+        $students = $applyFilters(Student::with(['applicant', 'studentSection.section', 'subjects']))->get();
 
         if ($students->isEmpty()) {
             return back()->with('error', 'No student records found matching the selected filters.');
         }
 
         $zip = new \ZipArchive();
-        $fileName = 'AMIS_Student_Documents_' . ($request->filled('grade') ? str_replace(' ', '_', $request->grade) : 'All_Grades') . '_' . date('Ymd_His') . '.zip';
+        $fileName = 'Official_Student_Records_SY_2026-2027_' . ($request->filled('grade') ? str_replace(' ', '_', $request->grade) : 'All_Grades') . '_' . date('Ymd_His') . '.zip';
         $tempFile = tempnam(sys_get_temp_dir(), 'zip');
 
         if ($zip->open($tempFile, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
@@ -680,13 +681,65 @@ class AdminStudentController extends Controller
         }
 
         $filesAdded = 0;
+        $rootFolder = 'Official Student Records - SY 2026-2027';
+
         foreach ($students as $student) {
             $appl = $student->applicant;
             if (!$appl) continue;
 
-            $fullName = trim(($appl->first_name ?? '').' '.($appl->middle_name ?? '').' '.($appl->last_name ?? ''));
-            $cleanName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $student->student_number . '_' . $fullName);
+            $firstName = trim($appl->first_name ?? '');
+            $middleName = trim($appl->middle_name ?? '');
+            $lastName = trim($appl->last_name ?? '');
             
+            $middleInitial = '';
+            if ($middleName !== '') {
+                $firstChar = mb_strtoupper(mb_substr($middleName, 0, 1));
+                $middleInitial = ($firstChar === '.') ? '.' : $firstChar . '.';
+            }
+            
+            $fullNameParts = array_filter([$firstName, $middleInitial, $lastName], function($val) {
+                return $val !== '';
+            });
+            $fullName = html_entity_decode(implode(' ', $fullNameParts), ENT_QUOTES, 'UTF-8');
+            if (empty($fullName)) {
+                $fullName = 'Unnamed Student';
+            }
+
+            // Path components determination
+            $schoolYear = trim($student->school_year ?? '');
+            $isArchived = ($schoolYear !== '' && $schoolYear !== '2026-2027');
+
+            $formattedId = str_starts_with($student->student_number, 'AMIS-') 
+                ? $student->student_number 
+                : 'AMIS-' . str_pad($student->student_number, 6, '0', STR_PAD_LEFT);
+
+            $studentFolder = $formattedId . ' - ' . $fullName;
+            
+            if ($isArchived) {
+                // Group archived/inactive students under Archived category
+                $gradeFolder = trim($student->grade_level ?: 'Unassigned Grade');
+                $sectionFolder = $student->studentSection->section->name ?? ($student->section ?: 'No Section');
+                $basePath = $rootFolder . '/Archived or Inactive Students/' . $gradeFolder . '/' . $sectionFolder . '/' . $studentFolder;
+            } else {
+                // Determine Mode (ODL vs F2F)
+                $learningMode = strtolower($appl->learning_mode ?? '');
+                $modeFolder = 'F2F';
+                if (str_contains($learningMode, 'online') || str_contains($learningMode, 'odl') || str_contains($learningMode, 'distance')) {
+                    $modeFolder = 'ODL';
+                }
+
+                // Determine Shift
+                $shiftFolder = '1st Shift';
+                if (str_contains($learningMode, '2nd') || str_contains($learningMode, 'second') || str_contains($learningMode, 'shift 2')) {
+                    $shiftFolder = '2nd Shift';
+                }
+
+                $gradeFolder = trim($student->grade_level ?: 'Unassigned Grade');
+                $sectionFolder = $student->studentSection->section->name ?? ($student->section ?: 'No Section');
+                $basePath = $rootFolder . '/' . $modeFolder . '/' . $shiftFolder . '/' . $gradeFolder . '/' . $sectionFolder . '/' . $studentFolder;
+            }
+
+            // 1. 01 - Student Documents
             $docTypes = [
                 '2x2_Photo' => $appl->photo_2x2_url,
                 'Birth_Certificate' => $appl->birth_cert_url,
@@ -702,18 +755,156 @@ class AdminStudentController extends Controller
                 $absolutePath = \App\Support\EnrollmentStorage::getAbsolutePath($relativeUrl);
                 if ($absolutePath && file_exists($absolutePath)) {
                     $ext = pathinfo($absolutePath, PATHINFO_EXTENSION);
-                    $zipPath = $cleanName . '/' . $label . ($ext ? '.' . $ext : '');
+                    $zipPath = $basePath . '/01 - Student Documents/' . $label . ($ext ? '.' . $ext : '');
                     $zip->addFile($absolutePath, $zipPath);
                     $filesAdded++;
                 }
             }
+
+            // 2. 02 - Student ID
+            try {
+                $htmlId = view('admin.students.partials.index.print_id', ['students' => [$student]])->render();
+                $zip->addFromString($basePath . '/02 - Student ID/AMIS_' . $student->student_number . '_ID.html', $htmlId);
+                $filesAdded++;
+            } catch (\Exception $e) {
+                // If rendering ID template fails, write details as text fallback
+                $fallbackIdText = "Student ID Card Details\n====================\nID: " . $student->student_number . "\nName: " . $fullName;
+                $zip->addFromString($basePath . '/02 - Student ID/AMIS_' . $student->student_number . '_ID_Details.txt', $fallbackIdText);
+                $filesAdded++;
+            }
+
+            // Prepare common variables for texts
+            $homeAddress = implode(', ', array_filter([$appl->home_street_address, $appl->home_city, $appl->home_state_province]));
+            if (empty($homeAddress)) {
+                $homeAddress = $appl->home_address ?: '-';
+            }
+            
+            $emergencyName = $appl->emergency_name ?: '-';
+            if (empty($emergencyName) || strtolower($emergencyName) === 'emergency contact') {
+                $emergencyName = trim(($appl->father_first_name ?? '') . ' ' . ($appl->father_last_name ?? '')) ?: (trim(($appl->mother_first_name ?? '') . ' ' . ($appl->mother_last_name ?? '')) ?: 'Registrar Office');
+            }
+            
+            $emergencyPhone = $appl->emergency_phone ?: '-';
+            if (empty($emergencyPhone)) {
+                $emergencyPhone = $appl->parent_mobile ?: ($appl->mobile_number ?: '+63 900 000 0000');
+            }
+
+            $studentMobile = trim(($appl->mobile_country_code ?? '').' '.($appl->mobile_number ?? '')) ?: '-';
+            $parentMobile = trim(($appl->parent_country_code ?? '').' '.($appl->parent_mobile ?? '')) ?: '-';
+            
+            $fatherName = trim(($appl->father_first_name ?? '').' '.($appl->father_last_name ?? '')) ?: '-';
+            $motherName = trim(($appl->mother_first_name ?? '').' '.($appl->mother_last_name ?? '')) ?: '-';
+            
+            $advisorObj = $student->studentSection->section?->grade_advisor ?? null;
+            $advisorName = $advisorObj ? html_entity_decode(trim($advisorObj->teacher_name), ENT_QUOTES, 'UTF-8') : 'N/A';
+            if (empty($advisorName) || $advisorName === 'N/A') {
+                $advisories = config('class_advisories') ?? [];
+                $allAdvisories = array_merge($advisories['elementary'] ?? [], $advisories['high_school'] ?? []);
+                $targetGrade = strtolower(trim($student->grade_level ?? ''));
+                foreach ($allAdvisories as $adv) {
+                    $advGradeLower = strtolower($adv['grade_level'] ?? '');
+                    $advKeyLower = strtolower($adv['grade'] ?? '');
+                    if ($targetGrade !== '' && (
+                        str_contains($targetGrade, $advGradeLower) || 
+                        str_contains($advGradeLower, $targetGrade) || 
+                        $targetGrade === $advKeyLower
+                    )) {
+                        $advisorName = $adv['teacher'];
+                        break;
+                    }
+                }
+            }
+            if (empty($advisorName)) {
+                $advisorName = 'N/A';
+            }
+
+            // 3. 03 - Account Credentials
+            $credentialsContent = "AL MUNAWWARA ISLAMIC SCHOOL\n";
+            $credentialsContent .= "STUDENT ACCOUNT CREDENTIALS\n";
+            $credentialsContent .= "===========================\n\n";
+            $credentialsContent .= "Student ID: " . $student->student_number . "\n";
+            $credentialsContent .= "Student Name: " . $fullName . "\n";
+            $credentialsContent .= "Grade & Section: " . $student->grade_level . " - " . $sectionFolder . "\n";
+            $credentialsContent .= "School Email: " . ($student->school_email ?: 'N/A') . "\n";
+            $credentialsContent .= "Temporary Password: " . ($student->temp_password ?: 'Password already changed or set') . "\n";
+            $credentialsContent .= "Microsoft Teams Email: " . ($student->ms_email ?: 'N/A') . "\n";
+            $credentialsContent .= "Teams Sync Status: " . ($student->ms_license_active ? 'Active License' : 'Inactive License') . "\n";
+            $credentialsContent .= "Temporary Password Set At: " . ($student->temp_password_set_at ? $student->temp_password_set_at->format('Y-m-d H:i:s') : 'N/A') . "\n";
+            $zip->addFromString($basePath . '/03 - Account Credentials/AMIS_' . $student->student_number . '_Credentials.txt', $credentialsContent);
+            $filesAdded++;
+
+            // 4. 04 - Enrollment Records
+            $enrollmentContent = "AL MUNAWWARA ISLAMIC SCHOOL\n";
+            $enrollmentContent .= "OFFICIAL STUDENT ENROLLMENT RECORD SHEET\n";
+            $enrollmentContent .= "=======================================\n\n";
+            $enrollmentContent .= "STUDENT INFORMATION\n";
+            $enrollmentContent .= "-------------------\n";
+            $enrollmentContent .= "Student ID: " . $student->student_number . "\n";
+            $enrollmentContent .= "LRN: " . ($appl->lrn ?: 'N/A') . "\n";
+            $enrollmentContent .= "Full Name: " . $fullName . "\n";
+            $enrollmentContent .= "Grade Level: " . $student->grade_level . "\n";
+            $enrollmentContent .= "Section: " . $sectionFolder . "\n";
+            $enrollmentContent .= "Grade Advisor: " . $advisorName . "\n";
+            $enrollmentContent .= "School Year: " . $student->school_year . "\n";
+            $enrollmentContent .= "Learning Mode: " . ($appl->learning_mode ?: 'N/A') . "\n";
+            $enrollmentContent .= "Student Type: " . ($appl->student_type ?: 'N/A') . "\n";
+            $enrollmentContent .= "Gender: " . ($appl->gender ?: 'N/A') . "\n";
+            $enrollmentContent .= "Date of Birth: " . ($appl->date_of_birth ?: 'N/A') . "\n";
+            $enrollmentContent .= "Place of Birth: " . ($appl->place_of_birth ?: 'N/A') . "\n";
+            $enrollmentContent .= "Religion: " . ($appl->religion ?: 'N/A') . "\n";
+            $enrollmentContent .= "Nationality/Ethnicity: " . ($appl->ethnicity ?: 'N/A') . "\n";
+            $enrollmentContent .= "Student Mobile: " . $studentMobile . "\n";
+            $enrollmentContent .= "School Email: " . ($student->school_email ?: 'N/A') . "\n";
+            $enrollmentContent .= "Residence Address: " . ($appl->address ?: $appl->home_address ?: 'N/A') . "\n\n";
+            
+            $enrollmentContent .= "PARENT & GUARDIAN INFORMATION\n";
+            $enrollmentContent .= "-----------------------------\n";
+            $enrollmentContent .= "Father's Name: " . $fatherName . "\n";
+            $enrollmentContent .= "Father's Occupation: " . ($appl->father_occupation ?: 'N/A') . "\n";
+            $motherNameFull = $motherName;
+            $enrollmentContent .= "Mother's Name: " . $motherNameFull . "\n";
+            $enrollmentContent .= "Mother's Occupation: " . ($appl->mother_occupation ?: 'N/A') . "\n";
+            $enrollmentContent .= "Parent Email: " . ($appl->parent_email ?: 'N/A') . "\n";
+            $enrollmentContent .= "Parent Mobile: " . $parentMobile . "\n";
+            $enrollmentContent .= "Home Address: " . $homeAddress . "\n\n";
+            
+            $enrollmentContent .= "EMERGENCY CONTACT DETAILS\n";
+            $enrollmentContent .= "-------------------------\n";
+            $enrollmentContent .= "Contact Person: " . $emergencyName . "\n";
+            $enrollmentContent .= "Relationship: " . ($appl->emergency_relationship ?: 'N/A') . "\n";
+            $enrollmentContent .= "Contact Number: " . $emergencyPhone . "\n";
+            if ($appl->medical_has_concern) {
+                $enrollmentContent .= "Medical History/Concerns: " . ($appl->health_conditions ?: 'Has documented concern') . "\n";
+            }
+            $zip->addFromString($basePath . '/04 - Enrollment Records/AMIS_' . $student->student_number . '_Enrollment_Record.txt', $enrollmentContent);
+            $filesAdded++;
+
+            // 5. 05 - Academic Records
+            $academicContent = "AL MUNAWWARA ISLAMIC SCHOOL\n";
+            $academicContent .= "STUDENT ACADEMIC SUBJECT LIST\n";
+            $academicContent .= "=============================\n\n";
+            $academicContent .= "Student ID: " . $student->student_number . "\n";
+            $academicContent .= "Student Name: " . $fullName . "\n";
+            $academicContent .= "Grade & Section: " . $student->grade_level . " - " . $sectionFolder . "\n\n";
+            $academicContent .= "ENROLLED SUBJECTS:\n";
+            $academicContent .= "------------------\n";
+            
+            if ($student->subjects && $student->subjects->isNotEmpty()) {
+                foreach ($student->subjects as $subject) {
+                    $academicContent .= "- " . $subject->name . " (S.Y. " . ($subject->pivot->school_year ?? '2026-2027') . ")\n";
+                }
+            } else {
+                $academicContent .= "No subjects currently enrolled or assigned.\n";
+            }
+            $zip->addFromString($basePath . '/05 - Academic Records/AMIS_' . $student->student_number . '_Academic_Records.txt', $academicContent);
+            $filesAdded++;
         }
 
         $zip->close();
 
         if ($filesAdded === 0) {
             @unlink($tempFile);
-            return back()->with('error', 'No document files exist on the storage server for the matched students.');
+            return back()->with('error', 'No document files or data could be compiled for the matched students.');
         }
 
         return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
