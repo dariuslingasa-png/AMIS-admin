@@ -201,7 +201,7 @@
         width: 100vw !important;
         height: 100vh !important;
         z-index: 99999 !important;
-        display: flex !important;
+        display: flex;
         align-items: center !important;
         justify-content: center !important;
         padding: 1rem !important;
