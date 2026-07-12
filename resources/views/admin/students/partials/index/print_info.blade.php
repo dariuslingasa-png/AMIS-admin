@@ -325,6 +325,19 @@
         <button type="button" onclick="window.print()">Print / Save PDF</button>
     </div>
 
+    @php
+        $getGradeColor = function($grade) {
+            if (!$grade) return '#6d28d9';
+            $g = strtoupper($grade);
+            if (str_contains($g, 'NURSERY') || str_contains($g, 'KINDER') || str_contains($g, 'PRE-')) return '#ea580c';
+            if (str_contains($g, 'GRADE 1') || str_contains($g, 'GRADE 2') || str_contains($g, 'GRADE 3')) return '#0284c7';
+            if (str_contains($g, 'GRADE 4') || str_contains($g, 'GRADE 5') || str_contains($g, 'GRADE 6')) return '#7c3aed';
+            if (str_contains($g, 'GRADE 7') || str_contains($g, 'GRADE 8') || str_contains($g, 'GRADE 9') || str_contains($g, 'GRADE 10')) return '#dc2626';
+            if (str_contains($g, 'GRADE 11') || str_contains($g, 'GRADE 12') || str_contains($g, 'GRADE XI') || str_contains($g, 'GRADE XII')) return '#4f46e5';
+            return '#6d28d9';
+        };
+    @endphp
+
     @foreach ($students as $student)
         @php
             $applicant = $student->applicant;
