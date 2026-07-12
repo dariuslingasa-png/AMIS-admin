@@ -216,7 +216,7 @@
                             <td class="px-5 py-4 text-right print-hide">
                                 <div class="flex items-center justify-end gap-2">
                                     <!-- Toggle Status Button -->
-                                    <form method="POST" action="{{ route('admin.registrations.halaqah.toggle', $reg->id) }}" class="inline">
+                                    <form method="POST" action="{{ route('admin.registrations.halaqah.toggle', ['id' => $reg->id, 'source' => $reg->source]) }}" class="inline">
                                         @csrf
                                         @method('PATCH')
                                         @if($reg->status === 'contacted')
@@ -233,7 +233,7 @@
                                     </form>
 
                                     <!-- Delete Button -->
-                                    <form method="POST" action="{{ route('admin.registrations.halaqah.destroy', $reg->id) }}" class="inline" onsubmit="return confirm('Are you sure you want to delete this registration?');">
+                                    <form method="POST" action="{{ route('admin.registrations.halaqah.destroy', ['id' => $reg->id, 'source' => $reg->source]) }}" class="inline" onsubmit="return confirm('Are you sure you want to delete this registration?');">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="inline-flex items-center justify-center p-2 text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-100 rounded-xl transition cursor-pointer" title="Delete Registration">
