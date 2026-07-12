@@ -37,6 +37,7 @@
     $hash = base64_encode((int)$student->student_number + 987654);
     $qrCodeUrl = 'https://quickchart.io/qr?text=' . urlencode('https://amis.edu.ph/v/' . $hash) . '&dark=000000&light=ffffff&margin=1&format=png&size=300';
     $fallbackPhoto = 'https://amis.edu.ph/student-photo/' . $hash . '.jpg';
+    $photoUrl = \App\Support\EnrollmentStorage::url($photo);
 
     $getGradeColor = function ($grade) {
         if (!$grade) return '#6d28d9';
@@ -105,19 +106,29 @@
         $formattedSchedules[$subName] = implode(' | ', $parts);
     }
 
-    $todayName = now()->format('l');
+    $nowManila = \Carbon\Carbon::now('Asia/Manila');
+    $todayName = $nowManila->format('l');
+    $countdownItems = $schedules
+        ->filter(fn($item) => strcasecmp((string) $item->day, $todayName) === 0)
+        ->sortBy('start_time')
+        ->map(fn($item) => [
+            'subject' => (string) $item->subject_name,
+            'teacher' => $formatTeacherName($item->teacher_display ?? $item->teacher_name ?? null),
+            'start' => substr((string) $item->start_time, 0, 5),
+            'end' => substr((string) $item->end_time, 0, 5),
+        ])->values();
     $isSchoolDay = in_array($todayName, ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday']);
     $defaultViewMode = 'today';
 
     if ($isSchoolDay) {
         $targetDayName = $todayName;
         $todayLabel = "Today's Classes";
-        $todaySub = now()->format('l, F j, Y');
+        $todaySub = $nowManila->format('l, F j, Y') . ' (PST)';
     } else {
         $targetDayName = 'Sunday';
         $todayLabel = "Next School Day (Sunday)";
-        $nextSunday = now()->next('Sunday');
-        $todaySub = "Sunday, " . $nextSunday->format('F j, Y');
+        $nextSunday = $nowManila->copy()->next('Sunday');
+        $todaySub = "Sunday, " . $nextSunday->format('F j, Y') . ' (PST)';
     }
 @endphp
 
@@ -317,6 +328,43 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/lucide@latest"></script>
 <script>
+    window.scheduleCountdown = function(items) {
+        return {
+            viewMode: '{{ $defaultViewMode }}', showIdModal: false, isFlipped: false,
+            items, activeClass: null, nextClass: null, phase: 'loading', remaining: '--:--', timer: null,
+            init() {
+                this.tick();
+                this.timer = window.setInterval(() => this.tick(), 1000);
+            },
+            toDate(time) {
+                const [hours, minutes] = time.split(':').map(Number);
+                const date = new Date();
+                date.setHours(hours, minutes, 0, 0);
+                return date;
+            },
+            tick() {
+                const now = new Date();
+                const classes = this.items.map(item => ({ ...item, startsAt: this.toDate(item.start), endsAt: this.toDate(item.end) }));
+                this.activeClass = classes.find(item => now >= item.startsAt && now < item.endsAt) || null;
+                this.nextClass = classes.find(item => now < item.startsAt) || null;
+                let target = null;
+                if (!classes.length) this.phase = 'empty';
+                else if (this.activeClass) { this.phase = 'active'; target = this.activeClass.endsAt; }
+                else if (this.nextClass) { this.phase = 'upcoming'; target = this.nextClass.startsAt; }
+                else this.phase = 'finished';
+                if (target) {
+                    const seconds = Math.max(0, Math.floor((target - now) / 1000));
+                    const hours = Math.floor(seconds / 3600);
+                    const minutes = Math.floor((seconds % 3600) / 60);
+                    const secs = seconds % 60;
+                    this.remaining = `${hours ? String(hours).padStart(2,'0') + ':' : ''}${String(minutes).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+                } else this.remaining = '--:--';
+            },
+            formatTime(time) {
+                return this.toDate(time).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+            }
+        };
+    };
     document.addEventListener('DOMContentLoaded', function() {
         if (window.lucide) {
             window.lucide.createIcons();
@@ -326,7 +374,7 @@
 @endonce
 
 {{-- ── 2-col layout: main + right panel ──────────────────────────── --}}
-<div class="s-two-col-grid" x-data="{ viewMode: '{{ $defaultViewMode }}', showIdModal: false, isFlipped: false }">
+<div class="s-two-col-grid" x-data="scheduleCountdown(@js($countdownItems))">
 
     {{-- ── LEFT COLUMN ──────────────────────────────────────────────── --}}
     <div style="display:flex;flex-direction:column;gap:1.5rem;min-width:0;width:100%;">
@@ -344,6 +392,32 @@
             </div>
         @endif
 
+        {{-- Live class countdown --}}
+        <section class="class-countdown-banner fade-up" aria-live="polite">
+            <div class="class-countdown-icon"><i data-lucide="timer"></i></div>
+            <div class="class-countdown-copy">
+                <template x-if="phase === 'active'">
+                    <div><p class="class-countdown-label">Class in progress · ends in</p><h2 x-text="activeClass?.subject"></h2><p><span x-text="activeClass?.teacher"></span> · <span x-text="formatTime(activeClass?.start)"></span>–<span x-text="formatTime(activeClass?.end)"></span></p></div>
+                </template>
+                <template x-if="phase === 'upcoming'">
+                    <div><p class="class-countdown-label">Next class starts in</p><h2 x-text="nextClass?.subject"></h2><p><span x-text="nextClass?.teacher"></span> · starts <span x-text="formatTime(nextClass?.start)"></span></p></div>
+                </template>
+                <template x-if="phase === 'finished'"><div><p class="class-countdown-label">Schedule complete</p><h2>Classes finished for today</h2><p>Great work—see you on the next school day.</p></div></template>
+                <template x-if="phase === 'empty'"><div><p class="class-countdown-label">Today</p><h2>No classes scheduled</h2><p>Your next published schedule will appear here automatically.</p></div></template>
+            </div>
+            <div class="class-countdown-clock" x-show="phase === 'active' || phase === 'upcoming'">
+                <strong x-text="remaining">--:--</strong><span x-text="phase === 'active' ? 'remaining' : 'until class'"></span>
+            </div>
+        </section>
+        <style>
+            .class-countdown-banner{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:1rem;overflow:hidden;border:1px solid #a7f3d0;border-radius:20px;background:linear-gradient(135deg,#064e3b 0%,#047857 55%,#0d9488 100%);padding:1.25rem 1.4rem;color:#fff;box-shadow:0 12px 28px rgba(5,150,105,.14)}
+            .class-countdown-banner:after{content:'';position:absolute;right:-35px;top:-55px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.08)}
+            .class-countdown-icon{display:flex;width:48px;height:48px;align-items:center;justify-content:center;border-radius:14px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.18)}.class-countdown-icon svg{width:24px;height:24px}
+            .class-countdown-copy{position:relative;z-index:1;min-width:0}.class-countdown-copy h2{margin:.12rem 0;color:#fff;font-size:1.15rem;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.class-countdown-copy p{margin:0;color:#d1fae5;font-size:.78rem;font-weight:700}.class-countdown-copy .class-countdown-label{color:#a7f3d0;font-size:.65rem;font-weight:900;text-transform:uppercase;letter-spacing:.1em}
+            .class-countdown-clock{position:relative;z-index:1;min-width:120px;border-radius:15px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);padding:.7rem 1rem;text-align:center}.class-countdown-clock strong{display:block;font-variant-numeric:tabular-nums;font-size:1.45rem;font-weight:950;letter-spacing:.03em}.class-countdown-clock span{display:block;margin-top:.1rem;color:#a7f3d0;font-size:.6rem;font-weight:850;text-transform:uppercase;letter-spacing:.08em}
+            @media(max-width:640px){.class-countdown-banner{grid-template-columns:auto minmax(0,1fr);padding:1rem}.class-countdown-clock{grid-column:1/-1;width:100%}.class-countdown-copy h2{font-size:1rem}}
+        </style>
+
         {{-- Hero Banner --}}
         <div class="s-dash-hero fade-up">
             {{-- Dot mesh --}}
@@ -353,11 +427,16 @@
 
             {{-- Avatar --}}
             <div style="position:relative;width:80px;height:80px;flex-shrink:0;">
-                @if ($photo)
-                    <img src="{{ asset('storage/' . $photo) }}" alt="Photo"
-                         style="width:80px;height:80px;object-fit:cover;border-radius:50%;border:4px solid #ffffff;box-shadow: 0 4px 12px rgba(0,0,0,0.15);display:block;">
+                @if ($photoUrl)
+                    <img src="{{ $photoUrl }}" alt="{{ $fullName }}"
+                         onerror="if (!this.dataset.fallback) { this.dataset.fallback='1'; this.src='{{ $fallbackPhoto }}'; } else { this.style.display='none'; this.nextElementSibling.style.display='flex'; }"
+                         style="width:80px;height:80px;object-fit:cover;border-radius:50%;border:4px solid #ffffff;box-shadow:0 4px 12px rgba(0,0,0,0.15);display:block;"
+                         loading="eager" decoding="async">
+                    <div style="width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,0.2);border:4px solid #ffffff;box-shadow:0 4px 12px rgba(0,0,0,0.15);display:none;align-items:center;justify-content:center;box-sizing:border-box;">
+                        <span style="font-size:1.6rem;font-weight:900;color:white;line-height:1;text-align:center;">{{ $initials }}</span>
+                    </div>
                 @else
-                    <div style="width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,0.2);border:4px solid #ffffff;box-shadow: 0 4px 12px rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center;box-sizing:border-box;">
+                    <div style="width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,0.2);border:4px solid #ffffff;box-shadow:0 4px 12px rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center;box-sizing:border-box;">
                         <span style="font-size:1.6rem;font-weight:900;color:white;line-height:1;display:flex;align-items:center;justify-content:center;text-align:center;">{{ $initials }}</span>
                     </div>
                 @endif
@@ -478,7 +557,7 @@
                     </h2>
                     <div style="font-size:0.95rem;color:#475569;margin-top:4px;font-weight:700;">
                         <span x-show="viewMode === 'today'">{{ $todaySub }}</span>
-                        <span x-show="viewMode === 'weekly'">{{ now()->format('l, F j, Y') }}</span>
+                        <span x-show="viewMode === 'weekly'">{{ \Carbon\Carbon::now('Asia/Manila')->format('l, F j, Y') }} (PST)</span>
                     </div>
                 </div>
 
@@ -520,11 +599,10 @@
 
                     @if($todaySchedules->isNotEmpty())
                         {{-- Table header --}}
-                        <div class="s-table-header" style="grid-template-columns: 1.8fr 1.2fr 1.6fr auto; padding: 0.75rem 1.25rem;">
+                        <div class="s-table-header" style="grid-template-columns: 1.8fr 1.2fr 1.3fr; padding: 0.75rem 1.25rem;">
                             <div class="s-table-header-label">Subject Name</div>
                             <div class="s-table-header-label">Teacher</div>
                             <div class="s-table-header-label">Class Time</div>
-                            <div class="s-table-header-label" style="text-align:right;">Join Link</div>
                         </div>
 
                         @php
@@ -547,77 +625,40 @@
                                 $timeStr = date('g:i A', strtotime($sched->start_time)) . ' - ' . date('g:i A', strtotime($sched->end_time));
                                 $teamUrl = $subj->team_url ?? 'https://teams.microsoft.com/';
                                 $isLive = false;
-                                $startTime = strtotime(date('Y-m-d') . ' ' . $sched->start_time);
-                                $endTime = strtotime(date('Y-m-d') . ' ' . $sched->end_time);
-                                if ($startTime !== false && $endTime !== false) {
-                                    $now = time();
-                                    if ($now >= $startTime && $now <= $endTime) {
+                                $isEnded = false;
+                                if ($isSchoolDay) {
+                                    $nowManila = \Carbon\Carbon::now('Asia/Manila');
+                                    $startTime = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $nowManila->format('Y-m-d') . ' ' . $sched->start_time, 'Asia/Manila');
+                                    $endTime = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $nowManila->format('Y-m-d') . ' ' . $sched->end_time, 'Asia/Manila');
+                                    if ($nowManila->between($startTime, $endTime)) {
                                         $isLive = true;
+                                    } elseif ($nowManila->greaterThan($endTime)) {
+                                        $isEnded = true;
                                     }
                                 }
                             @endphp
-                            <div class="s-table-row" style="grid-template-columns: 1.8fr 1.2fr 1.8fr 1.4fr auto; padding: 1rem 1.25rem; align-items: center; border-bottom: 1px solid #f1f5f9; position: relative;">
+                            <div class="s-table-row" style="grid-template-columns: 1.8fr 1.2fr 1.3fr; padding: 1rem 1.25rem; align-items: center; border-bottom: 1px solid #f1f5f9; position: relative; {{ $isEnded ? 'opacity: 0.55; background: #f8fafc;' : '' }}">
                                 @if($isLive)
                                     <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: #10b981; border-top-left-radius: 4px; border-bottom-left-radius: 4px;"></div>
                                 @endif
                                 <div style="display:flex;align-items:center;gap:0.75rem;min-width:0;">
-                                    <div style="width:8px;height:8px;border-radius:50%;background:{{ $c }};flex-shrink:0;box-shadow: 0 0 0 3px {{ $bg }};"></div>
-                                    <span class="s-table-cell-subject" style="font-weight: 800; color: #0f172a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                    <div style="width:8px;height:8px;border-radius:50%;background:{{ $isEnded ? '#94a3b8' : $c }};flex-shrink:0;box-shadow: 0 0 0 3px {{ $isEnded ? '#f1f5f9' : $bg }};"></div>
+                                    <span class="s-table-cell-subject" style="font-weight: 800; color: {{ $isEnded ? '#64748b' : '#0f172a' }}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; {{ $isEnded ? 'text-decoration: line-through;' : '' }}">
                                         {{ $sched->subject_name }}
-                                        @if($isLive)
-                                            <span style="font-size:0.65rem;font-weight:850;color:white;background:#ef4444;padding:0.1rem 0.35rem;border-radius:5px;text-transform:uppercase;margin-left:0.35rem;display:inline-block;animation: pulse-dot 1.5s infinite;">LIVE</span>
+                                        @if($isEnded)
+                                            <span style="font-size:0.6rem;font-weight:850;color:#64748b;background:#f1f5f9;border:1px solid #cbd5e1;padding:0.1rem 0.35rem;border-radius:5px;text-transform:uppercase;margin-left:0.35rem;display:inline-block;">Ended</span>
                                         @endif
                                     </span>
                                 </div>
                                 <div style="display:flex;align-items:center;gap:0.5rem;min-width:0;">
-                                    <span class="s-table-cell-teacher" style="font-weight: 750; color: #475569; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $currentTeacherName }}</span>
+                                    <span class="s-table-cell-teacher" style="font-weight: 750; color: {{ $isEnded ? '#94a3b8' : '#475569' }}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $currentTeacherName }}</span>
                                 </div>
                                 
-                                {{-- Microsoft Team Name & Status --}}
-                                <div style="display:flex;flex-direction:column;gap:2px;min-width:0;padding-right:0.5rem;">
-                                     <span style="font-size:0.8rem;font-weight:800;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="{{ $sched->ms_team_name }}">{{ $sched->ms_team_name }}</span>
-                                     <div>
-                                         @if($sched->membership_status === 'enrolled')
-                                             <span style="display:inline-flex;align-items:center;gap:0.25rem;font-size:0.65rem;font-weight:700;color:#15803d;background:#f0fdf4;border:1px solid #bbf7d0;padding:0.1rem 0.4rem;border-radius:5px;white-space:nowrap;">
-                                                 <span style="width:4px;height:4px;background:#16a34a;border-radius:50%;"></span>Enrolled
-                                             </span>
-                                         @elseif($sched->membership_status === 'not_enrolled')
-                                             <span style="display:inline-flex;align-items:center;gap:0.25rem;font-size:0.65rem;font-weight:700;color:#c2410c;background:#fff7ed;border:1px solid #fed7aa;padding:0.1rem 0.4rem;border-radius:5px;white-space:nowrap;" title="Not yet enrolled in Microsoft Teams. Click 'Sync MS Teams' to retry.">
-                                                 <span style="width:4px;height:4px;background:#ea580c;border-radius:50%;"></span>Not Enrolled
-                                             </span>
-                                         @else
-                                             <span style="display:inline-flex;align-items:center;gap:0.25rem;font-size:0.65rem;font-weight:700;color:#b91c1c;background:#fef2f2;border:1px solid #fca5a5;padding:0.1rem 0.4rem;border-radius:5px;white-space:nowrap;" title="Section has no Microsoft Team ID.">
-                                                 <span style="width:4px;height:4px;background:#dc2626;border-radius:50%;"></span>No Team ID
-                                             </span>
-                                         @endif
-                                     </div>
-                                </div>
-                                <div class="s-table-cell-schedule" style="color:#0d9488; font-weight:800; white-space: nowrap; font-size: 0.78rem;">
+                                <div class="s-table-cell-schedule" style="color:{{ $isEnded ? '#94a3b8' : '#0d9488' }}; font-weight:800; white-space: nowrap; font-size: 0.78rem;">
                                     <div style="display:flex;align-items:center;gap:0.3rem;">
                                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                                         <span style="letter-spacing: -0.01em;">{{ $timeStr }}</span>
                                     </div>
-                                </div>
-                                <div>
-                                    @if($subj && $subj->ms_channel_id)
-                                        @if($sched->is_joinable)
-                                             <a href="{{ $teamUrl }}" onclick="event.preventDefault(); window.joinTeams('{{ $teamUrl }}');"
-                                                style="display:inline-flex;align-items:center;gap:0.35rem;font-size:0.75rem;font-weight:900;color:#ffffff;background:#5865f2;padding:0.45rem 0.9rem;border-radius:8px;text-decoration:none;transition:all 0.15s;cursor:pointer;"
-                                                onmouseover="this.style.background='#4752c4'" onmouseout="this.style.background='#5865f2'">
-                                                 <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/></svg>
-                                                 <span>Join</span>
-                                             </a>
-                                         @else
-                                             <button type="button" disabled
-                                                style="display:inline-flex;align-items:center;gap:0.35rem;font-size:0.75rem;font-weight:900;color:#94a3b8;background:#f1f5f9;border:1px solid #e2e8f0;padding:0.45rem 0.9rem;border-radius:8px;cursor:not-allowed;opacity:0.8;"
-                                                title="{{ $sched->membership_status_label }}">
-                                                 <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                                                 <span>Join</span>
-                                             </button>
-                                         @endif
-                                    @else
-                                        <span style="font-size:0.75rem;color:#94a3b8;font-weight:700;">No Link</span>
-                                    @endif
                                 </div>
                             </div>
                         @endforeach
@@ -641,12 +682,10 @@
                 {{-- WEEKLY OVERVIEW VIEW --}}
                 <div x-show="viewMode === 'weekly'">
                     @if($subjects->isNotEmpty())
-                        <div class="s-table-header" style="grid-template-columns: 1.8fr 1.2fr 1.4fr 1.5fr auto; padding: 0.75rem 1.25rem;">
+                        <div class="s-table-header" style="grid-template-columns: 1.8fr 1.2fr 1.8fr; padding: 0.75rem 1.25rem;">
                             <div class="s-table-header-label">Subject Name</div>
                             <div class="s-table-header-label">Teacher</div>
-                            <div class="s-table-header-label">MS Team & Status</div>
                             <div class="s-table-header-label">Weekly Schedule</div>
-                            <div class="s-table-header-label" style="text-align:right;">Join Link</div>
                         </div>
 
                         @php
@@ -660,7 +699,7 @@
                                 $currentTeacherName = $formatTeacherName($subject->teacher_name);
                                 $schedStr = $formattedSchedules[$subject->subject_name] ?? 'To Be Announced';
                             @endphp
-                            <div class="s-table-row" style="grid-template-columns: 1.8fr 1.2fr 1.4fr 1.5fr auto; padding: 1rem 1.25rem; align-items: center; border-bottom: 1px solid #f1f5f9;">
+                            <div class="s-table-row" style="grid-template-columns: 1.8fr 1.2fr 1.8fr; padding: 1rem 1.25rem; align-items: center; border-bottom: 1px solid #f1f5f9;">
                                 <div style="display:flex;align-items:center;gap:0.75rem;min-width:0;">
                                     <div style="width:8px;height:8px;border-radius:50%;background:{{ $c }};flex-shrink:0;box-shadow: 0 0 0 3px {{ $bg }};"></div>
                                     <span class="s-table-cell-subject" style="font-weight: 800; color: #0f172a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ $subject->subject_name }}">{{ $subject->subject_name }}</span>
@@ -669,52 +708,12 @@
                                     <span class="s-table-cell-teacher" style="font-weight: 750; color: #475569; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ $currentTeacherName }}">{{ $currentTeacherName }}</span>
                                 </div>
                                 
-                                {{-- Microsoft Team Name & Status --}}
-                                <div style="display:flex;flex-direction:column;gap:2px;min-width:0;padding-right:0.5rem;">
-                                     <span style="font-size:0.8rem;font-weight:800;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="{{ $subject->ms_team_name }}">{{ $subject->ms_team_name }}</span>
-                                     <div>
-                                         @if($subject->membership_status === 'enrolled')
-                                             <span style="display:inline-flex;align-items:center;gap:0.25rem;font-size:0.65rem;font-weight:700;color:#15803d;background:#f0fdf4;border:1px solid #bbf7d0;padding:0.1rem 0.4rem;border-radius:5px;white-space:nowrap;">
-                                                 <span style="width:4px;height:4px;background:#16a34a;border-radius:50%;"></span>Enrolled
-                                             </span>
-                                         @elseif($subject->membership_status === 'not_enrolled')
-                                             <span style="display:inline-flex;align-items:center;gap:0.25rem;font-size:0.65rem;font-weight:700;color:#c2410c;background:#fff7ed;border:1px solid #fed7aa;padding:0.1rem 0.4rem;border-radius:5px;white-space:nowrap;" title="Not yet enrolled in Microsoft Teams. Click 'Sync MS Teams' to retry.">
-                                                 <span style="width:4px;height:4px;background:#ea580c;border-radius:50%;"></span>Not Enrolled
-                                             </span>
-                                         @else
-                                             <span style="display:inline-flex;align-items:center;gap:0.25rem;font-size:0.65rem;font-weight:700;color:#b91c1c;background:#fef2f2;border:1px solid #fca5a5;padding:0.1rem 0.4rem;border-radius:5px;white-space:nowrap;" title="Section has no Microsoft Team ID.">
-                                                 <span style="width:4px;height:4px;background:#dc2626;border-radius:50%;"></span>No Team ID
-                                             </span>
-                                         @endif
-                                     </div>
-                                </div>
 
                                 <div class="s-table-cell-schedule" style="color: #0d9488; font-weight: 800; font-size: 0.825rem;">
                                     <div style="display:flex;align-items:center;gap:0.35rem;">
                                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                                         <span title="{{ $schedStr }}">{{ $schedStr }}</span>
                                     </div>
-                                </div>
-                                <div>
-                                    @if($subject->ms_channel_id)
-                                        @if($subject->is_joinable)
-                                             <a href="{{ $subject->team_url ?? 'https://teams.microsoft.com' }}" onclick="event.preventDefault(); window.joinTeams('{{ $subject->team_url ?? 'https://teams.microsoft.com' }}');"
-                                                style="display:inline-flex;align-items:center;gap:0.35rem;font-size:0.75rem;font-weight:900;color:#ffffff;background:#5865f2;padding:0.45rem 0.9rem;border-radius:8px;text-decoration:none;transition:all 0.15s;cursor:pointer;"
-                                                onmouseover="this.style.background='#4752c4'" onmouseout="this.style.background='#5865f2'">
-                                                 <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/></svg>
-                                                 <span>Join</span>
-                                             </a>
-                                        @else
-                                             <button type="button" disabled
-                                                style="display:inline-flex;align-items:center;gap:0.35rem;font-size:0.75rem;font-weight:900;color:#94a3b8;background:#f1f5f9;border:1px solid #e2e8f0;padding:0.45rem 0.9rem;border-radius:8px;cursor:not-allowed;opacity:0.8;"
-                                                title="{{ $subject->membership_status_label }}">
-                                                 <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                                                 <span>Join</span>
-                                             </button>
-                                        @endif
-                                    @else
-                                        <span style="font-size:0.75rem;color:#94a3b8;font-weight:700;">No Link</span>
-                                    @endif
                                 </div>
                             </div>
                         @endforeach
@@ -867,11 +866,11 @@
                     <img src="{{ asset('assets/amis-id-template.png') }}?v=3" crossorigin="anonymous" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; border-radius: 24px;" alt="AMIS ID Template">
 
                     <!-- Student Photo Overlay -->
-                    <img src="{{ $photo ? asset('storage/' . $photo) : $fallbackPhoto }}"
+                    <img src="{{ $photoUrl ?: $fallbackPhoto }}"
                          id="photo-img-front"
                          crossorigin="anonymous"
                          style="position: absolute; left: 81px; top: 114px; width: 178px; height: 172px; overflow: hidden; border-radius: 14px; z-index: 10; object-fit: cover;"
-                         onerror="this.style.display='none'; document.getElementById('photo-warning-front').style.display='flex';"
+                         onerror="if (!this.dataset.fallback && this.src !== '{{ $fallbackPhoto }}') { this.dataset.fallback='1'; this.src='{{ $fallbackPhoto }}'; } else { this.style.display='none'; document.getElementById('photo-warning-front').style.display='flex'; }"
                          alt="Student Photo">
 
                     <!-- Yellow Photo Warning Stamp (Anti-edit) -->
