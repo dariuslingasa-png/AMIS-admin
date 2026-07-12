@@ -154,18 +154,25 @@
         transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         height: 100%;
         width: 100%;
+        position: relative;
     }
     .card-front, .card-back {
-        backface-visibility: hidden;
-        -webkit-backface-visibility: hidden;
         position: absolute;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
+        transform-style: preserve-3d;
+    }
+    .card-front {
+        transform: rotateY(0deg);
+        z-index: 2;
     }
     .card-back {
         transform: rotateY(180deg);
+        z-index: 1;
     }
     .is-flipped {
         transform: rotateY(180deg);
@@ -234,6 +241,7 @@
         position: absolute !important;
         top: 1rem !important;
         right: 1rem !important;
+        z-index: 50 !important;
         border: none !important;
         background: #f1f5f9 !important;
         color: #64748b !important;
@@ -812,6 +820,7 @@
 {{-- Digital ID Modal Overlay --}}
 <div x-show="showIdModal" 
      class="id-modal-overlay"
+     @click="showIdModal = false"
      x-transition:enter="transition ease-out duration-300"
      x-transition:enter-start="opacity-0"
      x-transition:enter-end="opacity-100"
@@ -821,10 +830,11 @@
      style="display: none;">
     
     {{-- Backdrop blur overlay --}}
-    <div class="id-modal-backdrop" @click="showIdModal = false"></div>
+    <div class="id-modal-backdrop"></div>
     
     {{-- Modal Content Card --}}
     <div class="id-modal-card"
+         @click.stop=""
          x-transition:enter="transition ease-out duration-300 transform"
          x-transition:enter-start="opacity-0 scale-95 translate-y-4"
          x-transition:enter-end="opacity-100 scale-100 translate-y-0"
