@@ -330,7 +330,7 @@
 <script>
     window.scheduleCountdown = function(items) {
         return {
-            viewMode: '{{ $defaultViewMode }}', showIdModal: false, isFlipped: false,
+            viewMode: '{{ $defaultViewMode }}', showIdModal: false, isFlipped: false, showEnded: false, countdownOpen: true,
             items, activeClass: null, nextClass: null, phase: 'loading', remaining: '--:--', timer: null,
             init() {
                 this.tick();
@@ -392,29 +392,13 @@
             </div>
         @endif
 
-        {{-- Live class countdown --}}
-        <section class="class-countdown-banner fade-up" aria-live="polite">
-            <div class="class-countdown-icon"><i data-lucide="timer"></i></div>
-            <div class="class-countdown-copy">
-                <template x-if="phase === 'active'">
-                    <div><p class="class-countdown-label">Class in progress · ends in</p><h2 x-text="activeClass?.subject"></h2><p><span x-text="activeClass?.teacher"></span> · <span x-text="formatTime(activeClass?.start)"></span>–<span x-text="formatTime(activeClass?.end)"></span></p></div>
-                </template>
-                <template x-if="phase === 'upcoming'">
-                    <div><p class="class-countdown-label">Next class starts in</p><h2 x-text="nextClass?.subject"></h2><p><span x-text="nextClass?.teacher"></span> · starts <span x-text="formatTime(nextClass?.start)"></span></p></div>
-                </template>
-                <template x-if="phase === 'finished'"><div><p class="class-countdown-label">Schedule complete</p><h2>Classes finished for today</h2><p>Great work—see you on the next school day.</p></div></template>
-                <template x-if="phase === 'empty'"><div><p class="class-countdown-label">Today</p><h2>No classes scheduled</h2><p>Your next published schedule will appear here automatically.</p></div></template>
-            </div>
-            <div class="class-countdown-clock" x-show="phase === 'active' || phase === 'upcoming'">
-                <strong x-text="remaining">--:--</strong><span x-text="phase === 'active' ? 'remaining' : 'until class'"></span>
-            </div>
-        </section>
         <style>
             .class-countdown-banner{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:1rem;overflow:hidden;border:1px solid #a7f3d0;border-radius:20px;background:linear-gradient(135deg,#064e3b 0%,#047857 55%,#0d9488 100%);padding:1.25rem 1.4rem;color:#fff;box-shadow:0 12px 28px rgba(5,150,105,.14)}
             .class-countdown-banner:after{content:'';position:absolute;right:-35px;top:-55px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.08)}
             .class-countdown-icon{display:flex;width:48px;height:48px;align-items:center;justify-content:center;border-radius:14px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.18)}.class-countdown-icon svg{width:24px;height:24px}
             .class-countdown-copy{position:relative;z-index:1;min-width:0}.class-countdown-copy h2{margin:.12rem 0;color:#fff;font-size:1.15rem;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.class-countdown-copy p{margin:0;color:#d1fae5;font-size:.78rem;font-weight:700}.class-countdown-copy .class-countdown-label{color:#a7f3d0;font-size:.65rem;font-weight:900;text-transform:uppercase;letter-spacing:.1em}
             .class-countdown-clock{position:relative;z-index:1;min-width:120px;border-radius:15px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);padding:.7rem 1rem;text-align:center}.class-countdown-clock strong{display:block;font-variant-numeric:tabular-nums;font-size:1.45rem;font-weight:950;letter-spacing:.03em}.class-countdown-clock span{display:block;margin-top:.1rem;color:#a7f3d0;font-size:.6rem;font-weight:850;text-transform:uppercase;letter-spacing:.08em}
+            .class-countdown-inline{border-width:0 0 1px;border-radius:0;padding:1rem 1.25rem;box-shadow:inset 4px 0 0 #34d399}
             @media(max-width:640px){.class-countdown-banner{grid-template-columns:auto minmax(0,1fr);padding:1rem}.class-countdown-clock{grid-column:1/-1;width:100%}.class-countdown-copy h2{font-size:1rem}}
         </style>
 
@@ -451,7 +435,6 @@
                     @if($learningMode)
                         · {{ $learningMode }}
                     @endif
-                    · SY {{ $student?->school_year }}
                 </div>
                 <div style="font-size: 1.1rem !important; font-weight: 800 !important; color: rgba(255, 255, 255, 0.8) !important; margin-bottom: 0.25rem !important; text-transform: uppercase; letter-spacing: 0.05em;">
                     Assalamualaikum,
@@ -552,12 +535,10 @@
             <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;">
                 <div>
                     <h2 style="font-size:1.35rem;font-weight:900;color:#0f172a;margin:0;letter-spacing:-0.02em;">
-                        <span x-show="viewMode === 'today'">{{ $todayLabel }}</span>
-                        <span x-show="viewMode === 'weekly'">Weekly Schedule</span>
+                        {{ $todayLabel }}
                     </h2>
                     <div style="font-size:0.95rem;color:#475569;margin-top:4px;font-weight:700;">
-                        <span x-show="viewMode === 'today'">{{ $todaySub }}</span>
-                        <span x-show="viewMode === 'weekly'">{{ \Carbon\Carbon::now('Asia/Manila')->format('l, F j, Y') }} (PST)</span>
+                        {{ $todaySub }}
                     </div>
                 </div>
 
@@ -571,20 +552,6 @@
                             </button>
                         </form>
                     @endif
-
-                    <!-- Today / Weekly toggle buttons -->
-                    <div style="display:flex;background:#e2e8f0;padding:0.25rem;border-radius:10px;gap:0.25rem;">
-                        <button type="button" @click="viewMode = 'today'; $nextTick(() => window.lucide && window.lucide.createIcons())"
-                                :class="viewMode === 'today' ? 'active' : ''"
-                                class="sched-tab-btn" style="font-size:0.75rem !important;padding:0.35rem 0.85rem !important;">
-                            Today
-                        </button>
-                        <button type="button" @click="viewMode = 'weekly'; $nextTick(() => window.lucide && window.lucide.createIcons())"
-                                :class="viewMode === 'weekly' ? 'active' : ''"
-                                class="sched-tab-btn" style="font-size:0.75rem !important;padding:0.35rem 0.85rem !important;">
-                            Weekly
-                        </button>
-                    </div>
                 </div>
             </div>
 
@@ -592,12 +559,29 @@
             <div class="s-table-card" style="background:white; border: 1.5px solid #e2e8f0; border-radius: 20px; overflow:hidden;">
 
                 {{-- TODAY'S CLASSES VIEW --}}
-                <div x-show="viewMode === 'today'">
+                <div>
                     @php
                         $todaySchedules = $schedules->filter(fn($cs) => strcasecmp($cs->day, $targetDayName) === 0)->sortBy('start_time');
+                        $nowForCollapse = \Carbon\Carbon::now('Asia/Manila');
+                        $endedCount = $isSchoolDay
+                            ? $todaySchedules->filter(function ($item) use ($nowForCollapse) {
+                                $end = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $nowForCollapse->format('Y-m-d').' '.$item->end_time, 'Asia/Manila');
+                                return $nowForCollapse->greaterThanOrEqualTo($end);
+                            })->count()
+                            : 0;
                     @endphp
 
                     @if($todaySchedules->isNotEmpty())
+                        @if($endedCount > 0)
+                            <button type="button" @click="showEnded = !showEnded" class="completed-subjects-toggle">
+                                <span class="completed-subjects-toggle-icon"><i data-lucide="circle-check-big"></i></span>
+                                <span class="completed-subjects-toggle-copy">
+                                    <strong>{{ $endedCount }} completed {{ \Illuminate\Support\Str::plural('subject', $endedCount) }}</strong>
+                                    <small x-text="showEnded ? 'Hide completed classes' : 'Tap to review completed classes'"></small>
+                                </span>
+                                <i data-lucide="chevron-down" class="completed-subjects-chevron" :class="showEnded ? 'is-open' : ''"></i>
+                            </button>
+                        @endif
                         {{-- Table header --}}
                         <div class="s-table-header" style="grid-template-columns: 1.8fr 1.2fr 1.3fr; padding: 0.75rem 1.25rem;">
                             <div class="s-table-header-label">Subject Name</div>
@@ -637,7 +621,7 @@
                                     }
                                 }
                             @endphp
-                            <div class="s-table-row" style="grid-template-columns: 1.8fr 1.2fr 1.3fr; padding: 1rem 1.25rem; align-items: center; border-bottom: 1px solid #f1f5f9; position: relative; {{ $isEnded ? 'opacity: 0.55; background: #f8fafc;' : '' }}">
+                            <div class="s-table-row" @if($isEnded) x-show="showEnded" x-transition.opacity.duration.150ms @endif @if($isLive) @click="countdownOpen = !countdownOpen" @endif style="grid-template-columns: 1.8fr 1.2fr 1.3fr; padding: 1rem 1.25rem; align-items: center; border-bottom: 1px solid #f1f5f9; position: relative; {{ $isEnded ? 'opacity: 0.55; background: #f8fafc;' : '' }} {{ $isLive ? 'cursor:pointer;' : '' }}">
                                 @if($isLive)
                                     <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: #10b981; border-top-left-radius: 4px; border-bottom-left-radius: 4px;"></div>
                                 @endif
@@ -649,6 +633,9 @@
                                             <span style="font-size:0.6rem;font-weight:850;color:#64748b;background:#f1f5f9;border:1px solid #cbd5e1;padding:0.1rem 0.35rem;border-radius:5px;text-transform:uppercase;margin-left:0.35rem;display:inline-block;">Ended</span>
                                         @endif
                                     </span>
+                                    @if($isLive)
+                                        <i data-lucide="chevron-down" style="width:15px;height:15px;color:#059669;flex-shrink:0;transition:transform .2s;" :style="countdownOpen ? 'transform:rotate(180deg)' : ''"></i>
+                                    @endif
                                 </div>
                                 <div style="display:flex;align-items:center;gap:0.5rem;min-width:0;">
                                     <span class="s-table-cell-teacher" style="font-weight: 750; color: {{ $isEnded ? '#94a3b8' : '#475569' }}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $currentTeacherName }}</span>
@@ -661,6 +648,17 @@
                                     </div>
                                 </div>
                             </div>
+                            @if($isLive)
+                                <section x-show="countdownOpen" x-transition.opacity.duration.150ms class="class-countdown-banner class-countdown-inline" aria-live="polite">
+                                    <div class="class-countdown-icon"><i data-lucide="timer"></i></div>
+                                    <div class="class-countdown-copy">
+                                        <p class="class-countdown-label">Class in progress · ends in</p>
+                                        <h2 x-text="activeClass?.subject ?? @js($sched->subject_name)"></h2>
+                                        <p><span x-text="activeClass?.teacher ?? @js($currentTeacherName)"></span> · {{ $timeStr }}</p>
+                                    </div>
+                                    <div class="class-countdown-clock"><strong x-text="remaining">--:--</strong><span>remaining</span></div>
+                                </section>
+                            @endif
                         @endforeach
                     @else
                         <div class="s-empty-card" style="padding: 4rem 1.5rem; text-align:center;">
@@ -679,59 +677,12 @@
                     @endif
                 </div>
 
-                {{-- WEEKLY OVERVIEW VIEW --}}
-                <div x-show="viewMode === 'weekly'">
-                    @if($subjects->isNotEmpty())
-                        <div class="s-table-header" style="grid-template-columns: 1.8fr 1.2fr 1.8fr; padding: 0.75rem 1.25rem;">
-                            <div class="s-table-header-label">Subject Name</div>
-                            <div class="s-table-header-label">Teacher</div>
-                            <div class="s-table-header-label">Weekly Schedule</div>
-                        </div>
-
-                        @php
-                            $colors = ['#059669','#0ea5e9','#8b5cf6','#f59e0b','#ec4899','#14b8a6','#ef4444','#f97316'];
-                            $bgs    = ['#ecfdf5','#eff6ff','#f5f3ff','#fffbeb','#fdf2f8','#f0fdfa','#fef2f2','#fff7ed'];
-                        @endphp
-                        @foreach ($subjects as $i => $subject)
-                            @php
-                                $c = $colors[$i % count($colors)];
-                                $bg = $bgs[$i % count($bgs)];
-                                $currentTeacherName = $formatTeacherName($subject->teacher_name);
-                                $schedStr = $formattedSchedules[$subject->subject_name] ?? 'To Be Announced';
-                            @endphp
-                            <div class="s-table-row" style="grid-template-columns: 1.8fr 1.2fr 1.8fr; padding: 1rem 1.25rem; align-items: center; border-bottom: 1px solid #f1f5f9;">
-                                <div style="display:flex;align-items:center;gap:0.75rem;min-width:0;">
-                                    <div style="width:8px;height:8px;border-radius:50%;background:{{ $c }};flex-shrink:0;box-shadow: 0 0 0 3px {{ $bg }};"></div>
-                                    <span class="s-table-cell-subject" style="font-weight: 800; color: #0f172a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ $subject->subject_name }}">{{ $subject->subject_name }}</span>
-                                </div>
-                                <div style="display:flex;align-items:center;gap:0.5rem;min-width:0;">
-                                    <span class="s-table-cell-teacher" style="font-weight: 750; color: #475569; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ $currentTeacherName }}">{{ $currentTeacherName }}</span>
-                                </div>
-                                
-
-                                <div class="s-table-cell-schedule" style="color: #0d9488; font-weight: 800; font-size: 0.825rem;">
-                                    <div style="display:flex;align-items:center;gap:0.35rem;">
-                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                                        <span title="{{ $schedStr }}">{{ $schedStr }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach
-                    @else
-                        <div class="s-empty-card" style="padding: 4rem 1.5rem; text-align:center;">
-                            <div class="s-empty-icon-wrapper" style="background: #f0fdfa; display:inline-flex; align-items:center; justify-content:center; width:48px; height:48px; border-radius:50%; margin-bottom: 0.75rem;">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0d9488" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/></svg>
-                            </div>
-                            <h3 class="s-empty-title" style="font-size: 1.15rem; font-weight:800; color:#1e293b; margin:0 0 0.25rem;">No Subjects Assigned Yet</h3>
-                            <p class="s-empty-text" style="font-size: 0.85rem; color:#64748b; max-width: 340px; margin: 0 auto; line-height: 1.5;">
-                                Welcome to your portal! We are currently setting up your sections, schedule, and subjects. Please check back soon! 🎈
-                            </p>
-                        </div>
-                    @endif
-                </div>
-
             </div>
         </div>
+
+        <style>
+            .completed-subjects-toggle{display:flex;width:100%;align-items:center;gap:.75rem;border:0;border-bottom:1px solid #e2e8f0;background:#f8fafc;padding:.8rem 1.25rem;text-align:left;color:#475569;cursor:pointer;transition:background .15s ease}.completed-subjects-toggle:hover{background:#f1f5f9}.completed-subjects-toggle-icon{display:flex;width:32px;height:32px;flex:0 0 32px;align-items:center;justify-content:center;border-radius:10px;background:#dcfce7;color:#16a34a}.completed-subjects-toggle-icon svg{width:16px;height:16px}.completed-subjects-toggle-copy{display:flex;min-width:0;flex:1;flex-direction:column}.completed-subjects-toggle-copy strong{font-size:.78rem;font-weight:900;color:#334155}.completed-subjects-toggle-copy small{margin-top:1px;font-size:.66rem;font-weight:700;color:#94a3b8}.completed-subjects-chevron{width:16px;height:16px;transition:transform .2s ease}.completed-subjects-chevron.is-open{transform:rotate(180deg)}
+        </style>
 
     </div>
 
@@ -805,17 +756,19 @@
                 Use Digital ID? Can't find your physical ID card? Instantly access your official digital student ID.
             </p>
             
-            <button type="button" @click="showIdModal = true; isFlipped = false" 
+            <a href="{{ route('student.digital-id') }}"
                style="display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem; font-size: 0.75rem; font-weight: 850; color: #0f766e; background: white; border: none; padding: 0.55rem 1.15rem; border-radius: 10px; text-decoration: none; width: 100%; text-align: center; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); transition: all 0.2s; cursor: pointer;"
                onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 15px rgba(0, 0, 0, 0.15)';"
                onmouseout="this.style.transform='none';this.style.boxShadow='0 4px 12px rgba(0, 0, 0, 0.1)';">
                 <i data-lucide="qr-code" style="width: 14px; height: 14px;"></i>
-                <span>View Digital ID</span>
-            </button>
+                <span>View Verified Digital ID</span>
+            </a>
         </div>
 
     </div>
 
+{{-- Legacy in-page ID preview disabled: the verified public ID route is faster and authoritative. --}}
+@if(false)
 {{-- Digital ID Modal Overlay --}}
 <div x-show="showIdModal" 
      class="id-modal-overlay"
@@ -984,6 +937,7 @@
         </button>
     </div>
 </div>
+@endif
 
 </div>
 </x-student-layout>

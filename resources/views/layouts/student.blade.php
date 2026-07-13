@@ -698,6 +698,11 @@
                 <div>
                     <div class="student-sidebar-brand-name">AMIS</div>
                     <div class="student-sidebar-brand-sub">Student Portal</div>
+                    @if($student && $student->school_year)
+                        <div style="font-size: 0.65rem; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 1px;">
+                            SY {{ $student->school_year }}
+                        </div>
+                    @endif
                 </div>
             </div>
 
@@ -838,7 +843,12 @@
                     </button>
                     <div style="min-width:0;">
                         <div style="font-size:1.25rem;font-weight:800;color:#1a1d23;letter-spacing:-0.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $title ?? 'Dashboard' }}</div>
-                        <div class="date-hide-mobile" style="font-size:0.75rem;color:#9ca3af;margin-top:2px;font-weight:500;">{{ now()->format('l, F j, Y') }}</div>
+                        <div class="date-hide-mobile" style="font-size:0.75rem;color:#9ca3af;margin-top:2px;font-weight:500;">
+                            {{ now()->format('l, F j, Y') }}
+                            @if($student && $student->school_year)
+                                 &middot; School Year {{ $student->school_year }}
+                            @endif
+                        </div>
                     </div>
                 </div>
                 <div style="display:flex;align-items:center;gap:0.75rem;">
