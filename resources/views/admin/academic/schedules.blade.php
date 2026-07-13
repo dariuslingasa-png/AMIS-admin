@@ -56,7 +56,8 @@
             start_time: '',
             end_time: '',
             spans_all_days: false,
-            selected_days: []
+            selected_days: [],
+            is_subject: true
         },
         gradeHasMode(mode) {
             let list = this.gradeSections[this.activeGradeLevel] || [];
@@ -90,7 +91,8 @@
                     start_time: latestEnd,
                     end_time: '',
                     spans_all_days: false,
-                    selected_days: []
+                    selected_days: [],
+                    is_subject: true
                 };
             }
             this.addModal = true;
@@ -357,12 +359,15 @@
                 start_time: startTime,
                 end_time: endTime,
                 spans_all_days: false,
-                selected_days: [day]
+                selected_days: [day],
+                is_subject: true
             };
             this.addModal = true;
             this.$nextTick(() => window.lucide?.createIcons?.());
         },
         startInlineEdit(entry) {
+            let subjName = entry.subject_name || '';
+            let isSubj = !['recess', 'transition', 'general assembly', 'lunch', 'break', 'homeroom', 'club'].some(w => subjName.toLowerCase().includes(w));
             this.editForm = {
                 id: entry.id,
                 section_id: entry.section_id,
@@ -372,7 +377,8 @@
                 start_time: entry.start_time,
                 end_time: entry.end_time,
                 spans_all_days: entry.spans_all_days ? true : false,
-                selected_days: entry.day ? entry.day.split(',') : []
+                selected_days: entry.day ? entry.day.split(',') : [],
+                is_subject: isSubj
             };
             if (this.editForm.teacher_name === 'Teacher pending') {
                 this.editForm.teacher_name = '';

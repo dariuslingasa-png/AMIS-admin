@@ -117,12 +117,31 @@
             </select>
         </label>
 
+        <!-- Subject Type Selector Toggle Buttons -->
+        <div class="space-y-1.5">
+            <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Schedule Type *</span>
+            <div class="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-xl">
+                <button type="button"
+                    @click="editForm.is_subject = true"
+                    :class="editForm.is_subject ? 'bg-indigo-700 text-white shadow-3xs font-black' : 'text-slate-655 font-bold hover:bg-slate-200/60'"
+                    class="text-xs text-center py-2 rounded-lg transition cursor-pointer select-none">
+                    Subject
+                </button>
+                <button type="button"
+                    @click="editForm.is_subject = false; editForm.teacher_name = '';"
+                    :class="!editForm.is_subject ? 'bg-indigo-700 text-white shadow-3xs font-black' : 'text-slate-655 font-bold hover:bg-slate-200/60'"
+                    class="text-xs text-center py-2 rounded-lg transition cursor-pointer select-none">
+                    Non-Subject
+                </button>
+            </div>
+        </div>
+
         <label class="flex flex-col gap-1">
-            <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Subject Name *</span>
-            <input type="text" name="subject_name" x-model="editForm.subject_name" placeholder="e.g. Science" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl px-3 py-2 outline-none">
+            <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Subject / Label Name *</span>
+            <input type="text" name="subject_name" x-model="editForm.subject_name" placeholder="e.g. Science or Recess" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl px-3 py-2 outline-none">
         </label>
 
-        <div class="flex flex-col gap-1 relative" @click.away="teacherDropdownOpen = false">
+        <div class="flex flex-col gap-1 relative" x-show="editForm.is_subject" x-transition @click.away="teacherDropdownOpen = false">
             <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Teacher</span>
             <input type="hidden" name="teacher_name" :value="editForm.teacher_name">
             
