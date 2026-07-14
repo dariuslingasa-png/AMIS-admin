@@ -868,6 +868,8 @@
                             if (str_contains($g, 'GRADE 11') || str_contains($g, 'GRADE 12') || str_contains($g, 'GRADE XI') || str_contains($g, 'GRADE XII')) return '#4f46e5';
                             return '#6d28d9';
                         };
+                        $lastNameLen = strlen($lastName);
+                        $lastNameFontSize = $lastNameLen > 20 ? '12px' : ($lastNameLen > 15 ? '15px' : ($lastNameLen > 10 ? '19px' : '26px'));
                     @endphp
 
                     <!-- Front Side Card -->
@@ -888,17 +890,17 @@
                             <div class="absolute text-white font-black tracking-wide text-center uppercase" style="left: 0; top: 243px; width: 280px; height: 12px; z-index: 10; font-size: 10px;">{{ $studentNumber }}</div>
 
                             <!-- Last Name -->
-                            <div class="absolute text-center font-black text-[#0f172a] uppercase tracking-tight leading-none flex flex-col justify-center animate-fade-in" style="left: 12px; top: 275px; width: 256px; height: 26px; z-index: 10; font-size: 18px;">{{ $lastName }}</div>
+                            <div class="absolute text-center font-black text-[#0f172a] uppercase tracking-tight flex flex-col justify-center items-center animate-fade-in" style="left: 12px; top: 271px; width: 256px; height: 32px; z-index: 10; font-size: {{ $lastNameFontSize }}; line-height: 1.1;">{{ $lastName }}</div>
 
                             <!-- First Name -->
-                            <div class="absolute text-center font-bold text-[#334155] uppercase leading-none flex flex-col justify-center animate-fade-in" style="left: 12px; top: 301px; width: 256px; height: 18px; z-index: 10; font-size: 12px;">{{ $firstName }}</div>
+                            <div class="absolute text-center font-bold text-[#334155] uppercase leading-none flex flex-col justify-center items-center animate-fade-in" style="left: 12px; top: 304px; width: 256px; height: 18px; z-index: 10; font-size: 12px;">{{ $firstName }}</div>
 
                             <!-- Grade Level -->
-                            <div class="absolute text-center font-black uppercase tracking-wide flex flex-col justify-center animate-fade-in" style="left: 12px; top: 334px; width: 256px; height: 24px; z-index: 10; font-size: 20px; color: {{ $getGradeColor($displayGrade) }};">{{ $displayGrade }}</div>
+                            <div class="absolute text-center font-black uppercase tracking-wide flex flex-col justify-center items-center animate-fade-in" style="left: 12px; top: 334px; width: 256px; height: 24px; z-index: 10; font-size: 20px; color: {{ $getGradeColor($displayGrade) }};">{{ $displayGrade }}</div>
 
                             <!-- LRN -->
                             @if($student->applicant->lrn && !in_array(strtoupper($student->applicant->lrn), ['N/A', 'NA', 'EMPTY', '']))
-                                <div class="absolute font-bold text-[#1e293b] whitespace-nowrap" style="right: 6px; top: 333px; z-index: 10; font-size: 12px; transform: rotate(-90deg); transform-origin: center; width: 18px; height: 107px; display: flex; align-items: center; justify-content: center; translate: 48px 25px;">
+                                <div class="absolute font-bold text-[#1e293b] whitespace-nowrap" style="right: 4px; top: 333px; z-index: 10; font-size: 12px; transform: rotate(-90deg); transform-origin: right center; width: 18px; height: 107px; display: flex; align-items: center; justify-content: center;">
                                     LRN: <span>{{ $student->applicant->lrn }}</span>
                                 </div>
                             @endif

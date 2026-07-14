@@ -183,6 +183,7 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
+            align-items: center;
             padding: 0 16px;
         }
         
@@ -202,7 +203,7 @@
             font-size: 15.5px;
             font-weight: 700;
             z-index: 10;
-            right: -15px;
+            right: 4px;
             top: 405px;
             width: 22px;
             height: 130px;
@@ -210,7 +211,7 @@
             align-items: center;
             justify-content: center;
             transform: rotate(-90deg);
-            transform-origin: center;
+            transform-origin: right center;
             white-space: nowrap;
             letter-spacing: 0.05em;
             color: #1e293b;
