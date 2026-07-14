@@ -1,5 +1,4 @@
-<!-- Right Sidebar (Review Panel style) -->
-<aside class="review-panel space-y-6">
+<aside class="review-panel space-y-6" style="max-height: none; overflow: visible; position: relative;">
     <!-- Onboarding Checklist -->
     <x-card title="Onboarding Checklist">
         <div class="space-y-3">
