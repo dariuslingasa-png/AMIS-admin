@@ -204,7 +204,7 @@
             font-weight: 700;
             z-index: 10;
             right: 4px;
-            top: 405px;
+            top: 350px;
             width: 22px;
             height: 130px;
             display: flex;
