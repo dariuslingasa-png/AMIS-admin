@@ -148,6 +148,7 @@ Route::name('admin.')->group(function () {
         Route::post('/students/{student}/status', [AdminStudentAccountController::class, 'updateStatus'])->name('students.update-status');
         Route::post('/students/{student}/update-email', [AdminStudentAccountController::class, 'updateEmail'])->name('students.update-email');
         Route::post('/students/{student}/update-profile', [AdminStudentController::class, 'updateProfile'])->name('students.update-profile');
+        Route::post('/students/{student}/update-photo', [AdminStudentController::class, 'updatePhoto'])->name('students.update-photo');
         Route::delete('/students/{student}', [AdminStudentController::class, 'destroy'])->name('students.destroy');
 
         Route::get('/soa', [AdminSoaController::class, 'index'])->name('soa.index');

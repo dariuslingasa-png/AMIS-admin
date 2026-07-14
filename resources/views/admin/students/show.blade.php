@@ -218,14 +218,25 @@
             <!-- Dynamic Profile Header Card -->
             <section class="applicant-profile-card relative {{ $accentClass }}">
                 <span class="application-number-pill">Student ID #{{ $student->student_number ?? 'Pending' }}</span>
-                <button type="button" class="applicant-photo" @if ($photoUrl) @click="openPreview('{{ $photoUrl }}', '2x2 Photo', false)" @endif>
-                    @if ($photoUrl)
-                        <img src="{{ $photoUrl }}" alt="2x2 Photo" class="w-full h-full object-cover block" loading="eager" decoding="async" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-                        <span class="w-full h-full items-center justify-center text-xs font-extrabold" style="display:none">NO PHOTO</span>
-                    @else
-                        NO PHOTO
+                <div class="relative group flex items-center justify-center">
+                    <button type="button" class="applicant-photo overflow-hidden" @if ($photoUrl) @click="openPreview('{{ $photoUrl }}', '2x2 Photo', false)" @endif>
+                        @if ($photoUrl)
+                            <img src="{{ $photoUrl }}" alt="2x2 Photo" class="w-full h-full object-cover block" loading="eager" decoding="async" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                            <span class="w-full h-full items-center justify-center text-xs font-extrabold" style="display:none">NO PHOTO</span>
+                        @else
+                            NO PHOTO
+                        @endif
+                    </button>
+                    @if (auth()->user()?->hasRole('super_admin'))
+                        <button type="button" onclick="document.getElementById('student-photo-input').click()" 
+                                class="absolute inset-0 m-0.5 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center text-white text-[10px] uppercase tracking-wider font-extrabold rounded-2xl cursor-pointer"
+                                style="width: calc(6rem - 4px); height: calc(6rem - 4px);">
+                            <i data-lucide="camera" class="w-5 h-5 mb-1 text-white"></i>
+                            <span>Change</span>
+                        </button>
+                        <input type="file" id="student-photo-input" name="photo" accept="image/*" class="hidden" onchange="uploadStudentPhoto(this)">
                     @endif
-                </button>
+                </div>
                 <div>
                     <h2 class="text-3xl font-bold tracking-tight">{{ $displayName }}</h2>
                     <p class="mt-2 text-sm text-emerald-50/90 flex items-center flex-wrap gap-x-4 gap-y-1">
@@ -483,4 +494,62 @@
         @endunless
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    @if (auth()->user()?->hasRole('super_admin'))
+    <script>
+        async function uploadStudentPhoto(input) {
+            if (!input.files || !input.files[0]) return;
+            
+            const file = input.files[0];
+            const formData = new FormData();
+            formData.append('photo', file);
+            formData.append('_token', '{{ csrf_token() }}');
+            
+            const container = input.closest('.relative');
+            const img = container.querySelector('img');
+            const placeholder = container.querySelector('span');
+            const overlay = container.querySelector('button[onclick*="student-photo-input"]');
+            
+            const originalOverlayHtml = overlay.innerHTML;
+            overlay.innerHTML = '<i data-lucide="loader-2" class="w-5 h-5 mb-1 text-white animate-spin"></i><span class="text-[9px]">Uploading...</span>';
+            if (window.lucide) window.lucide.createIcons();
+            
+            try {
+                const response = await fetch('{{ route('admin.students.update-photo', $student) }}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                
+                const result = await response.json();
+                if (response.ok && result.success) {
+                    if (img) {
+                        img.src = result.photo_url;
+                        img.style.display = 'block';
+                        if (placeholder) placeholder.style.display = 'none';
+                        
+                        // Also update the main preview button click handler
+                        const previewBtn = container.querySelector('button.applicant-photo');
+                        if (previewBtn) {
+                            previewBtn.setAttribute('@click', `openPreview('${result.photo_url}', '2x2 Photo', false)`);
+                        }
+                    } else {
+                        location.reload();
+                        return;
+                    }
+                } else {
+                    alert(result.message || 'Failed to upload photo.');
+                }
+            } catch (e) {
+                console.error(e);
+                alert('An error occurred while uploading photo.');
+            } finally {
+                overlay.innerHTML = originalOverlayHtml;
+                if (window.lucide) window.lucide.createIcons();
+                input.value = '';
+            }
+        }
+    </script>
+    @endif
 </x-admin-layout>

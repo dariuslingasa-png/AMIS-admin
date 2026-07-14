@@ -1715,4 +1715,47 @@ class AdminStudentController extends Controller
 
         return back()->with('success', 'Student record updated successfully.');
     }
+
+    public function updatePhoto(Request $request, Student $student)
+    {
+        abort_unless(auth()->user()?->hasRole('super_admin'), 403);
+
+        $request->validate([
+            'photo' => 'required|image|mimes:jpeg,jpg,png|max:5120', // max 5MB
+        ]);
+
+        if ($request->hasFile('photo') && $request->file('photo')->isValid()) {
+            // Store photo in public disk
+            $path = $request->file('photo')->store('optimized', 'public');
+            
+            if ($student->applicant) {
+                $student->applicant->update([
+                    'photo_2x2_url' => $path,
+                ]);
+                
+                // Write audit log
+                \App\Models\AdminAuditLog::create([
+                    'user_id' => auth()->id(),
+                    'action' => 'update_student_photo',
+                    'message' => 'Super Administrator updated profile photo for student UPN: ' . $student->school_email,
+                    'metadata' => [
+                        'student_id' => $student->id,
+                        'school_email' => $student->school_email,
+                        'photo_path' => $path,
+                    ],
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Profile photo updated successfully.',
+                    'photo_url' => \App\Support\EnrollmentStorage::url($path),
+                ]);
+            }
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to upload photo.',
+        ], 400);
+    }
 }
