@@ -287,11 +287,14 @@ class AdminStudentController extends Controller
             ->latest()
             ->get();
 
+        $sections = \App\Models\Section::orderBy('grade_level')->orderBy('name')->get();
+
         return view('admin.students.show', [
             'student'      => $student,
             'siblings'     => $siblings,
             'statusLabels' => $statusLabels,
             'auditLogs'    => $auditLogs,
+            'sections'     => $sections,
         ]);
     }
 
@@ -1757,5 +1760,79 @@ class AdminStudentController extends Controller
             'success' => false,
             'message' => 'Failed to upload photo.',
         ], 400);
+    }
+
+    public function updateSection(Request $request, Student $student)
+    {
+        abort_if(auth()->user()?->isTeacherAdminViewer(), 403);
+
+        $request->validate([
+            'section_id' => 'nullable|exists:sections,id',
+        ]);
+
+        $sectionId = $request->section_id;
+        $oldSectionId = $student->studentSection->section_id ?? null;
+
+        DB::transaction(function () use ($student, $sectionId) {
+            if (empty($sectionId)) {
+                \App\Models\StudentSection::where('student_id', $student->id)->delete();
+            } else {
+                \App\Models\StudentSection::updateOrCreate(
+                    ['student_id' => $student->id],
+                    [
+                        'section_id' => $sectionId,
+                        'ms_status' => 'pending',
+                    ]
+                );
+            }
+        });
+
+        // Sync to MS Teams and photo
+        if ($student->ms_user_id) {
+            try {
+                $graph = new MicrosoftGraphService();
+                $service = new \App\Services\MsTeamsEnrollmentService($graph);
+
+                // 1. Remove from old team
+                if ($oldSectionId && $oldSectionId != $sectionId) {
+                    $oldSection = \App\Models\Section::find($oldSectionId);
+                    if ($oldSection && $oldSection->ms_team_id) {
+                        try {
+                            $members = $graph->listTeamMembers($oldSection->ms_team_id);
+                            $membershipId = null;
+                            foreach ($members as $m) {
+                                if (isset($m['userId']) && strtolower($m['userId']) === strtolower($student->ms_user_id)) {
+                                    $membershipId = $m['id'];
+                                    break;
+                                }
+                            }
+                            if ($membershipId) {
+                                $graph->removeTeamMember($oldSection->ms_team_id, $membershipId);
+                            }
+                        } catch (\Exception $removeEx) {
+                            Log::warning("Could not remove student {$student->id} from old Team: " . $removeEx->getMessage());
+                        }
+                    }
+                }
+
+                // 2. Enroll in new team
+                if ($sectionId) {
+                    $newSection = \App\Models\Section::find($sectionId);
+                    if ($newSection && $newSection->ms_team_id) {
+                        $service->enrollStudent($student);
+                    }
+                }
+
+                // 3. Sync photo
+                if ($student->applicant) {
+                    app(\App\Services\Admin\Enrollment\EnrollmentApprovalService::class)->backfillMicrosoftPhoto($student->applicant);
+                }
+            } catch (\Exception $e) {
+                Log::warning("Microsoft Teams/Photo sync during section update failed: " . $e->getMessage());
+                return back()->with('success', 'Student section updated in portal database, but M365 sync failed: ' . $e->getMessage());
+            }
+        }
+
+        return back()->with('success', 'Student section updated and Microsoft Teams memberships synchronized successfully.');
     }
 }

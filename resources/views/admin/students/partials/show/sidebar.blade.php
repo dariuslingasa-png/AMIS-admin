@@ -117,6 +117,13 @@
                 <i data-lucide="qr-code" class="h-4 w-4 text-slate-500"></i>
                 <span>Print Verification QR Code</span>
             </button>
+
+            <!-- 7. Download Documents ZIP -->
+            <a href="{{ route('admin.students.download-docs-zip', ['search' => $student->student_number]) }}"
+               class="w-full inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98] transition cursor-pointer">
+                <i data-lucide="folder-archive" class="h-4 w-4 text-slate-500"></i>
+                <span>Download Documents ZIP</span>
+            </a>
         </div>
     </x-card>
 
@@ -152,6 +159,27 @@
                     </button>
                 </div>
             </form>
+
+            <!-- Classroom Section Form -->
+            @unless ($isTeacherAdminViewer)
+            <form method="POST" action="{{ route('admin.students.update-section', $student) }}" class="border-b border-slate-100 pb-4 mb-4 dark:border-slate-800">
+                @csrf
+                <label class="block text-xxs font-extrabold uppercase tracking-wider text-slate-400 mb-1.5">Classroom Section</label>
+                <div class="flex gap-2">
+                    <select name="section_id" class="flex-1 h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+                        <option value="">No Section</option>
+                        @foreach($sections as $s)
+                            <option value="{{ $s->id }}" @selected(($student->studentSection->section_id ?? null) === $s->id)>
+                                {{ $s->grade_level }} - {{ $s->name ?? 'Unnamed' }} ({{ $s->learning_mode }})
+                            </option>
+                        @endforeach
+                    </select>
+                    <button type="submit" class="inline-flex h-10 items-center justify-center rounded-xl bg-emerald-600 px-4 text-xs font-bold text-white hover:bg-emerald-700 active:scale-[0.98] transition-all duration-200 cursor-pointer" title="Save Section">
+                        Assign
+                    </button>
+                </div>
+            </form>
+            @endunless
 
 
 
