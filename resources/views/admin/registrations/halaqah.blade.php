@@ -77,6 +77,37 @@
         </div>
     @endif
 
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6 print-hide">
+        <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl border border-slate-200/70 dark:border-gray-700/50 shadow-sm flex items-center justify-between">
+            <div>
+                <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Total Registrations</span>
+                <span class="text-2xl font-black text-slate-900 dark:text-white font-outfit mt-1 block">{{ $totalCount }}</span>
+            </div>
+            <div class="p-3 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 rounded-xl">
+                <i data-lucide="users" class="w-6 h-6"></i>
+            </div>
+        </div>
+        <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl border border-slate-200/70 dark:border-gray-700/50 shadow-sm flex items-center justify-between">
+            <div>
+                <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">New Submissions</span>
+                <span class="text-2xl font-black text-slate-900 dark:text-white font-outfit mt-1 block">{{ $newCount }}</span>
+            </div>
+            <div class="p-3 bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 rounded-xl">
+                <i data-lucide="user-plus" class="w-6 h-6"></i>
+            </div>
+        </div>
+        <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl border border-slate-200/70 dark:border-gray-700/50 shadow-sm flex items-center justify-between">
+            <div>
+                <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Approved</span>
+                <span class="text-2xl font-black text-slate-900 dark:text-white font-outfit mt-1 block">{{ $approvedCount }}</span>
+            </div>
+            <div class="p-3 bg-indigo-50 dark:bg-indigo-950/30 text-indigo-650 dark:text-indigo-400 rounded-xl">
+                <i data-lucide="user-check" class="w-6 h-6"></i>
+            </div>
+        </div>
+    </div>
+
     <!-- Toolbar Filters -->
     <div class="bg-white dark:bg-gray-800 rounded-2xl border border-slate-200/70 dark:border-gray-700/50 p-5 shadow-sm mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 print-hide">
         <form method="GET" action="{{ route('admin.registrations.halaqah') }}" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
