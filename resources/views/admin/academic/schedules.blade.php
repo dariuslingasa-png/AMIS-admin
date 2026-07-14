@@ -128,6 +128,13 @@
                 return s.start_minutes <= interval.start && s.end_minutes >= interval.end;
             });
         },
+        getPreviewCellClass(day, interval) {
+            const cell = this.getPreviewCell(day, interval);
+            if (!cell) return '';
+            return cell.is_special 
+                ? 'bg-rose-50 text-rose-800 border-rose-100 border-l-4 border-l-rose-500' 
+                : 'bg-indigo-50 text-indigo-800 border-indigo-100 border-l-4 border-l-indigo-500';
+        },
         teachers: @js($teachers),
         teacherSearch: '',
         teacherDropdownOpen: false,
@@ -776,10 +783,10 @@
                                                 <template x-for="day in daysList">
                                                     <td class="p-1 border border-slate-100 min-w-[120px]">
                                                         <template x-if="getPreviewCell(day, interval)">
-                                                            <div :class="getPreviewCell(day, interval).is_special ? 'bg-rose-50 text-rose-800 border-rose-100 border-l-4 border-l-rose-500' : 'bg-indigo-50 text-indigo-800 border-indigo-100 border-l-4 border-l-indigo-500'"
+                                                            <div :class="getPreviewCellClass(day, interval)"
                                                                 class="p-1.5 rounded-lg text-[10px] leading-tight font-extrabold text-center shadow-3xs">
-                                                                <span class="block uppercase tracking-wider" x-text="getPreviewCell(day, interval).subject_name"></span>
-                                                                <span x-show="getPreviewCell(day, interval).teacher_display" class="block opacity-75 text-[8px] font-medium mt-0.5" x-text="getPreviewCell(day, interval).teacher_display"></span>
+                                                                <span class="block uppercase tracking-wider" x-text="getPreviewCell(day, interval)?.subject_name || ''"></span>
+                                                                <span x-show="getPreviewCell(day, interval)?.teacher_display" class="block opacity-75 text-[8px] font-medium mt-0.5" x-text="getPreviewCell(day, interval)?.teacher_display || ''"></span>
                                                             </div>
                                                         </template>
                                                     </td>
