@@ -301,10 +301,10 @@
                     </button>
                     @if (auth()->user()?->hasRole('super_admin'))
                         <button type="button" onclick="event.stopPropagation(); document.getElementById('student-photo-input').click()" 
-                                class="absolute bottom-1 right-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full p-1 shadow-lg border border-white/20 transition active:scale-95 cursor-pointer z-20 flex items-center justify-center"
-                                style="width: 24px; height: 24px;"
+                                class="absolute bg-emerald-600 hover:bg-emerald-700 text-white rounded-full shadow-lg border border-white/20 transition active:scale-95 cursor-pointer z-20 flex items-center justify-center"
+                                style="width: 28px; height: 28px; bottom: 4px; right: 4px;"
                                 title="Change Profile Photo">
-                            <i data-lucide="camera" class="w-3 h-3"></i>
+                            <i data-lucide="camera" class="w-3.5 h-3.5 text-white"></i>
                         </button>
                         <input type="file" id="student-photo-input" name="photo" accept="image/*" class="hidden" onchange="uploadStudentPhoto(this)">
                     @endif
