@@ -1,5 +1,9 @@
 <x-admin-layout title="Halaqah Online Registrations">
     <style>
+        .premium-table-wrap {
+            max-height: none !important;
+            overflow: visible !important;
+        }
         @media print {
             body {
                 background: white !important;
