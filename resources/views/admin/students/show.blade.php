@@ -6,7 +6,18 @@
     $accentClasses = ['accent-green', 'accent-blue', 'accent-amber', 'accent-violet', 'accent-rose'];
     $accentClass = $accentClasses[$familyNo % 5];
 
-    $name = html_entity_decode(trim(($student->applicant->first_name ?? '').' '.($student->applicant->middle_name ?? '').' '.($student->applicant->last_name ?? '')), ENT_QUOTES, 'UTF-8');
+    $firstName = trim($student->applicant->first_name ?? '');
+    $middleName = trim($student->applicant->middle_name ?? '');
+    $lastName = trim($student->applicant->last_name ?? '');
+
+    $middleInitial = '';
+    if ($middleName !== '') {
+        $firstChar = mb_substr($middleName, 0, 1, 'UTF-8');
+        $middleInitial = ($firstChar === '.') ? '.' : $firstChar . '.';
+    }
+
+    $nameParts = array_filter([$firstName, $middleInitial, $lastName], fn($v) => $v !== '');
+    $name = html_entity_decode(implode(' ', $nameParts), ENT_QUOTES, 'UTF-8');
     $displayName = $name ? Str::upper($name) : 'STUDENT PROFILE';
     $isTeacherAdminViewer = auth()->user()?->isTeacherAdminViewer() ?? false;
     
@@ -493,62 +504,154 @@
         </div>
         @endunless
     </div>
+
+    <!-- Photo Cropping Modal -->
+    @if (auth()->user()?->hasRole('super_admin'))
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
+    <div id="photo-crop-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800 flex flex-col">
+            <!-- Header -->
+            <div class="flex items-center justify-between px-5 py-4 border-b border-slate-150 dark:border-slate-800">
+                <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <i data-lucide="crop" class="h-4.5 w-4.5 text-emerald-600"></i>
+                    <span>Crop Student Photo (1:1 Ratio)</span>
+                </h3>
+                <button type="button" onclick="closeCropModal()" class="text-slate-400 hover:text-slate-655 dark:hover:text-slate-200 transition-colors">
+                    <i data-lucide="x" class="h-5 w-5"></i>
+                </button>
+            </div>
+            <!-- Body -->
+            <div class="p-5 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950/20">
+                <div class="w-full max-h-[45vh] overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-center bg-slate-100 dark:bg-slate-900">
+                    <img id="crop-image-preview" src="" alt="Source image for cropping" class="max-w-full max-h-[45vh] block">
+                </div>
+                <p class="text-[11px] text-slate-400 mt-3 font-semibold">Drag and adjust the square selection to crop the 2x2 photo.</p>
+            </div>
+            <!-- Footer -->
+            <div class="flex items-center justify-end gap-3 px-5 py-4 border-t border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900">
+                <button type="button" onclick="closeCropModal()" class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-850 active:scale-[0.98] cursor-pointer">
+                    Cancel
+                </button>
+                <button type="button" id="crop-save-btn" onclick="saveCroppedPhoto()" class="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 text-xs font-bold shadow-md transition active:scale-[0.98] cursor-pointer flex items-center gap-1.5">
+                    <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                    <span>Crop & Save</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    @endif
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     @if (auth()->user()?->hasRole('super_admin'))
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
     <script>
-        async function uploadStudentPhoto(input) {
+        let cropper = null;
+        let selectedFile = null;
+
+        function uploadStudentPhoto(input) {
             if (!input.files || !input.files[0]) return;
             
-            const file = input.files[0];
-            const formData = new FormData();
-            formData.append('photo', file);
-            formData.append('_token', '{{ csrf_token() }}');
+            selectedFile = input.files[0];
+            const reader = new FileReader();
             
-            const container = input.closest('.relative');
-            const img = container.querySelector('img');
-            const placeholder = container.querySelector('span');
-            const overlay = container.querySelector('button[onclick*="student-photo-input"]');
+            reader.onload = function(e) {
+                const cropImg = document.getElementById('crop-image-preview');
+                cropImg.src = e.target.result;
+                
+                // Show Crop Modal
+                const cropModal = document.getElementById('photo-crop-modal');
+                cropModal.classList.remove('hidden');
+                
+                // Initialize Cropper after modal is shown
+                if (cropper) {
+                    cropper.destroy();
+                }
+                
+                cropper = new Cropper(cropImg, {
+                    aspectRatio: 1,
+                    viewMode: 1,
+                    dragMode: 'move',
+                    background: false,
+                    autoCropArea: 0.9,
+                    responsive: true,
+                    checkOrientation: false
+                });
+            };
             
-            const originalOverlayHtml = overlay.innerHTML;
-            overlay.innerHTML = '<i data-lucide="loader-2" class="w-5 h-5 mb-1 text-white animate-spin"></i><span class="text-[9px]">Uploading...</span>';
+            reader.readAsDataURL(selectedFile);
+        }
+
+        function closeCropModal() {
+            const cropModal = document.getElementById('photo-crop-modal');
+            cropModal.classList.add('hidden');
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
+            document.getElementById('student-photo-input').value = '';
+        }
+
+        async function saveCroppedPhoto() {
+            if (!cropper) return;
+            
+            const saveBtn = document.getElementById('crop-save-btn');
+            const originalHtml = saveBtn.innerHTML;
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> Saving...';
             if (window.lucide) window.lucide.createIcons();
             
-            try {
-                const response = await fetch('{{ route('admin.students.update-photo', $student) }}', {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                });
+            // Get 400x400 cropped canvas
+            const canvas = cropper.getCroppedCanvas({
+                width: 400,
+                height: 400
+            });
+            
+            canvas.toBlob(async function(blob) {
+                const formData = new FormData();
+                formData.append('photo', blob, 'photo.jpg');
+                formData.append('_token', '{{ csrf_token() }}');
                 
-                const result = await response.json();
-                if (response.ok && result.success) {
-                    if (img) {
-                        img.src = result.photo_url;
-                        img.style.display = 'block';
-                        if (placeholder) placeholder.style.display = 'none';
-                        
-                        // Also update the main preview button click handler
-                        const previewBtn = container.querySelector('button.applicant-photo');
-                        if (previewBtn) {
-                            previewBtn.setAttribute('@click', `openPreview('${result.photo_url}', '2x2 Photo', false)`);
+                try {
+                    const response = await fetch('{{ route('admin.students.update-photo', $student) }}', {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
                         }
+                    });
+                    
+                    const result = await response.json();
+                    if (response.ok && result.success) {
+                        const img = document.querySelector('button.applicant-photo img');
+                        const placeholder = document.querySelector('button.applicant-photo span');
+                        if (img) {
+                            img.src = result.photo_url;
+                            img.style.display = 'block';
+                            if (placeholder) placeholder.style.display = 'none';
+                            
+                            // Also update the main preview button click handler
+                            const previewBtn = document.querySelector('button.applicant-photo');
+                            if (previewBtn) {
+                                previewBtn.setAttribute('@click', `openPreview('${result.photo_url}', '2x2 Photo', false)`);
+                            }
+                        } else {
+                            location.reload();
+                            return;
+                        }
+                        
+                        closeCropModal();
                     } else {
-                        location.reload();
-                        return;
+                        alert(result.message || 'Failed to upload photo.');
                     }
-                } else {
-                    alert(result.message || 'Failed to upload photo.');
+                } catch (e) {
+                    console.error(e);
+                    alert('An error occurred while uploading photo.');
+                } finally {
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = originalHtml;
+                    if (window.lucide) window.lucide.createIcons();
                 }
-            } catch (e) {
-                console.error(e);
-                alert('An error occurred while uploading photo.');
-            } finally {
-                overlay.innerHTML = originalOverlayHtml;
-                if (window.lucide) window.lucide.createIcons();
-                input.value = '';
-            }
+            }, 'image/jpeg', 0.9);
         }
     </script>
     @endif
