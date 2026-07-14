@@ -202,7 +202,7 @@
             font-size: 15.5px;
             font-weight: 700;
             z-index: 10;
-            right: 8px;
+            right: -15px;
             top: 405px;
             width: 22px;
             height: 130px;
@@ -437,11 +437,16 @@
 
                     <!-- Parent Name -->
                     @php
-                        $parentNameLen = strlen($emergencyName);
-                        $parentNameFontSize = $parentNameLen > 20 ? '18px' : ($parentNameLen > 14 ? '21px' : '25px');
+                        $relationship = trim($applicant->emergency_relationship ?? '');
+                        $displayNameText = $emergencyName;
+                        if (!empty($relationship)) {
+                            $displayNameText .= ' (' . $relationship . ')';
+                        }
+                        $parentNameLen = strlen($displayNameText);
+                        $parentNameFontSize = $parentNameLen > 24 ? '15px' : ($parentNameLen > 18 ? '18px' : '22px');
                     @endphp
                     <div class="parent-name">
-                        <h3 style="font-size: {{ $parentNameFontSize }};">{{ $emergencyName }}</h3>
+                        <h3 style="font-size: {{ $parentNameFontSize }};">{{ $displayNameText }}</h3>
                     </div>
 
                     <!-- Contact Number -->

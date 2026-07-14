@@ -844,6 +844,11 @@
                             $emergencyName = trim(($student->applicant->father_first_name ?? '') . ' ' . ($student->applicant->father_last_name ?? '')) ?: (trim(($student->applicant->mother_first_name ?? '') . ' ' . ($student->applicant->mother_last_name ?? '')) ?: 'Registrar Office');
                         }
                         
+                        $relationship = trim($student->applicant->emergency_relationship ?? '');
+                        if (!empty($relationship)) {
+                            $emergencyName .= ' (' . $relationship . ')';
+                        }
+                        
                         $emergencyPhone = $student->applicant->emergency_phone ?: '-';
                         if (empty($emergencyPhone)) {
                             $emergencyPhone = $student->applicant->parent_mobile ?: ($student->applicant->mobile_number ?: '+63 900 000 0000');
@@ -893,7 +898,7 @@
 
                             <!-- LRN -->
                             @if($student->applicant->lrn && !in_array(strtoupper($student->applicant->lrn), ['N/A', 'NA', 'EMPTY', '']))
-                                <div class="absolute font-bold text-[#1e293b] whitespace-nowrap" style="right: 6px; top: 333px; z-index: 10; font-size: 12px; transform: rotate(-90deg); transform-origin: center; width: 18px; height: 107px; display: flex; align-items: center; justify-content: center; translate: 40px 25px;">
+                                <div class="absolute font-bold text-[#1e293b] whitespace-nowrap" style="right: 6px; top: 333px; z-index: 10; font-size: 12px; transform: rotate(-90deg); transform-origin: center; width: 18px; height: 107px; display: flex; align-items: center; justify-content: center; translate: 48px 25px;">
                                     LRN: <span>{{ $student->applicant->lrn }}</span>
                                 </div>
                             @endif
@@ -913,7 +918,11 @@
                             <img src="{{ asset('assets/amis-id-template-back.png') }}?v=3" class="absolute inset-0 w-full h-full object-cover" style="z-index: 1; pointer-events: none;" alt="AMIS ID Template Back">
 
                             <!-- Emergency Name -->
-                            <div class="absolute text-center font-black text-[#0f172a] uppercase leading-tight flex flex-col justify-center" style="left: 12px; top: 70px; width: 256px; height: 23px; z-index: 10; font-size: 16px;">{{ $emergencyName }}</div>
+                            @php
+                                $parentNameLen = strlen($emergencyName);
+                                $parentNameFontSize = $parentNameLen > 24 ? '11px' : ($parentNameLen > 18 ? '13px' : '15px');
+                            @endphp
+                            <div class="absolute text-center font-black text-[#0f172a] uppercase leading-tight flex flex-col justify-center" style="left: 12px; top: 70px; width: 256px; height: 23px; z-index: 10; font-size: {{ $parentNameFontSize }};">{{ $emergencyName }}</div>
 
                             <!-- Emergency Contact -->
                             <div class="absolute text-center font-bold text-[#1e293b] leading-none flex flex-col justify-center" style="left: 12px; top: 97px; width: 256px; height: 16px; z-index: 10; font-size: 12.5px;">{{ $emergencyPhone }}</div>
