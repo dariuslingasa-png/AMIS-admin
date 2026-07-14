@@ -28,6 +28,25 @@
         isSaving: false,
         isDeleting: false,
         isSyncing: false,
+        jsonModal: false,
+        jsonText: '',
+        jsonSectionId: 0,
+        jsonLoading: false,
+        async openJsonModal(sectionId) {
+            this.jsonSectionId = sectionId;
+            this.jsonText = '';
+            this.jsonLoading = true;
+            this.jsonModal = true;
+            try {
+                const res = await fetch(`/academic/schedules/sections/${sectionId}/json`);
+                const data = await res.json();
+                this.jsonText = JSON.stringify(data, null, 2);
+            } catch(e) {
+                this.jsonText = '[]';
+            }
+            this.jsonLoading = false;
+            this.$nextTick(() => window.lucide?.createIcons?.());
+        },
         teachers: @js($teachers),
         teacherSearch: '',
         teacherDropdownOpen: false,
@@ -597,6 +616,49 @@
                     <button type="button" @click="renameSectionModal = false" class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 border border-slate-200 rounded-xl transition" :disabled="editSaving">Cancel</button>
                     <button type="button" @click="saveEdit()" class="px-5 py-2 text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 rounded-xl transition disabled:opacity-50" :disabled="editSaving" x-text="editSaving ? 'Saving…' : 'Save Changes'"></button>
                 </div>
+            </div>
+        </div>
+
+        {{-- ═══ JSON IMPORT/EXPORT MODAL ═══ --}}
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 backdrop-blur-sm"
+             x-show="jsonModal" x-cloak x-transition @click.self="jsonModal = false">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 border border-slate-100 overflow-hidden animate-scaleUp">
+                <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+                    <span class="font-extrabold text-slate-900 text-base">Schedule JSON Editor</span>
+                    <button type="button" class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition" @click="jsonModal = false">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <form method="POST" :action="`/academic/schedules/sections/${jsonSectionId}/json`" class="px-6 py-5 space-y-4">
+                    @csrf
+                    <input type="hidden" name="section_id" :value="jsonSectionId">
+
+                    <p class="text-xs text-slate-500 font-light">
+                        View, copy, or paste the weekly class schedule in JSON format. Saving will overwrite the section's current timetable.
+                    </p>
+
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">JSON Payload</label>
+                        <div x-show="jsonLoading" class="text-xs text-indigo-750 font-bold animate-pulse">Loading schedule JSON...</div>
+                        <textarea name="schedule_json" x-model="jsonText" rows="12" required
+                            class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-xs font-mono rounded-xl p-3 outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition"
+                            placeholder="[ ... ]"></textarea>
+                    </div>
+
+                    <div class="pt-4 border-t border-slate-100 flex justify-between items-center">
+                        <button type="button" @click="navigator.clipboard.writeText(jsonText); alert('JSON copied to clipboard!');" 
+                            class="px-4 py-2 text-xs font-bold text-slate-750 hover:bg-slate-50 border border-slate-200 rounded-xl transition">
+                            Copy to Clipboard
+                        </button>
+                        <div class="flex gap-2">
+                            <button type="button" @click="jsonModal = false" class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 border border-slate-200 rounded-xl transition">Cancel</button>
+                            <button type="submit" class="px-5 py-2 text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 rounded-xl transition"
+                                onclick="return confirm('Are you sure you want to save? This will completely overwrite the existing timetable for this section.')">
+                                Save Schedule
+                            </button>
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
 

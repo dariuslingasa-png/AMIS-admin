@@ -279,6 +279,8 @@ Route::name('admin.')->group(function () {
             Route::patch('/schedules/{schedule}', [AdminClassScheduleController::class, 'update'])->name('schedules.update');
             Route::delete('/schedules/{schedule}', [AdminClassScheduleController::class, 'destroy'])->name('schedules.destroy');
             Route::patch('/schedules/sections/{section}/publish', [AdminClassScheduleController::class, 'togglePublish'])->name('schedules.sections.publish');
+            Route::get('/schedules/sections/{section}/json', [AdminClassScheduleController::class, 'exportJson'])->name('schedules.sections.json.get');
+            Route::post('/schedules/sections/{section}/json', [AdminClassScheduleController::class, 'importJson'])->name('schedules.sections.json');
             Route::get('/school-years', [\App\Http\Controllers\Academic\SchoolYearController::class, 'index'])->name('school-years');
             Route::get('/calendar', [AdminAcademicController::class, 'calendar'])->name('calendar');
             Route::get('/operations', [AdminAcademicController::class, 'operations'])->name('operations');

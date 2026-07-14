@@ -475,6 +475,12 @@
                             <i data-lucide="plus" class="w-3 h-3"></i> Add Class
                         </button>
 
+                        {{-- JSON Import/Export Button --}}
+                        <button type="button" @click="openJsonModal({{ $section->id }})"
+                                class="inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-[10px] px-3 py-1.5 rounded-lg transition cursor-pointer">
+                            <i data-lucide="code" class="w-3.5 h-3.5 text-indigo-650"></i> Import/Export JSON
+                        </button>
+
                         {{-- Manage Students & Channels --}}
                         <a href="{{ route('admin.ms-teams.show', $section) }}"
                            class="inline-flex items-center gap-1.5 bg-indigo-700 hover:bg-indigo-850 text-white font-extrabold text-[10px] px-3 py-1.5 rounded-lg transition-all shadow-3xs cursor-pointer">

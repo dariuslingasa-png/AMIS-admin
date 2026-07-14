@@ -209,4 +209,132 @@ class AdminClassScheduleController extends Controller
         return back()->with('success', "Schedule {$status} successfully.")
                      ->with('reopen_add_modal', false);
     }
+
+    public function exportJson($sectionId)
+    {
+        Gate::authorize('manage-academic');
+
+        $schedules = ClassSchedule::where('section_id', $sectionId)->get();
+
+        // Group by subject, times, teacher, spans, is_special to combine days into comma-separated lists
+        $grouped = [];
+        foreach ($schedules as $s) {
+            $key = md5(implode('|', [
+                $s->subject_name,
+                $s->teacher_display,
+                $s->start_time,
+                $s->end_time,
+                $s->spans_all_days ? '1' : '0',
+                $s->is_special ? '1' : '0'
+            ]));
+
+            if (!isset($grouped[$key])) {
+                $grouped[$key] = [
+                    'subject_name' => $s->subject_name,
+                    'teacher_display' => $s->teacher_display ?? '',
+                    'days' => [],
+                    'start_time' => substr($s->start_time, 0, 5),
+                    'end_time' => substr($s->end_time, 0, 5),
+                    'spans_all_days' => (bool)$s->spans_all_days,
+                    'is_special' => (bool)$s->is_special,
+                ];
+            }
+            $grouped[$key]['days'][] = $s->day;
+        }
+
+        $formatted = [];
+        foreach ($grouped as $item) {
+            $formatted[] = [
+                'subject_name' => $item['subject_name'],
+                'teacher_display' => $item['teacher_display'],
+                'day' => implode(', ', $item['days']),
+                'start_time' => $item['start_time'],
+                'end_time' => $item['end_time'],
+                'spans_all_days' => $item['spans_all_days'],
+                'is_special' => $item['is_special'],
+            ];
+        }
+
+        return response()->json($formatted, 200, [], JSON_PRETTY_PRINT);
+    }
+
+    public function importJson(Request $request, $sectionId)
+    {
+        Gate::authorize('manage-academic');
+
+        $request->validate([
+            'schedule_json' => 'required|string',
+        ]);
+
+        $jsonStr = $request->schedule_json;
+        $items = json_decode($jsonStr, true);
+
+        if (!is_array($items)) {
+            return back()->withErrors(['schedule_json' => 'Invalid JSON format. Must be a JSON array of schedule objects.']);
+        }
+
+        foreach ($items as $index => $item) {
+            if (empty($item['subject_name'])) {
+                return back()->withErrors(['schedule_json' => "Item at index {$index} is missing 'subject_name'."]);
+            }
+            if (empty($item['start_time']) || empty($item['end_time'])) {
+                return back()->withErrors(['schedule_json' => "Item at index {$index} ('{$item['subject_name']}') is missing 'start_time' or 'end_time'."]);
+            }
+            if (empty($item['day']) && empty($item['spans_all_days'])) {
+                return back()->withErrors(['schedule_json' => "Item at index {$index} ('{$item['subject_name']}') is missing 'day'."]);
+            }
+        }
+
+        $section = \App\Models\Section::findOrFail($sectionId);
+
+        // Delete existing schedules for this section
+        ClassSchedule::where('section_id', $sectionId)->delete();
+
+        foreach ($items as $item) {
+            if (!empty($item['spans_all_days'])) {
+                $this->schedules->store([
+                    'section_id' => $sectionId,
+                    'subject_name' => $item['subject_name'],
+                    'teacher_display' => $item['teacher_display'] ?? '',
+                    'day' => 'Sunday',
+                    'start_time' => $item['start_time'],
+                    'end_time' => $item['end_time'],
+                    'spans_all_days' => true,
+                    'is_special' => !empty($item['is_special']),
+                    'mode' => str_contains($section->learning_mode ?? '', 'Face') || str_contains($section->learning_mode ?? '', 'f2f') ? 'f2f' : 'online',
+                    'school_year' => config('services.school.year', '2026-2027'),
+                ]);
+            } else {
+                $days = explode(',', $item['day']);
+                foreach ($days as $day) {
+                    $dayTrimmed = trim($day);
+                    if (empty($dayTrimmed)) continue;
+
+                    $this->schedules->store([
+                        'section_id' => $sectionId,
+                        'subject_name' => $item['subject_name'],
+                        'teacher_display' => $item['teacher_display'] ?? '',
+                        'day' => $dayTrimmed,
+                        'start_time' => $item['start_time'],
+                        'end_time' => $item['end_time'],
+                        'spans_all_days' => false,
+                        'is_special' => !empty($item['is_special']),
+                        'mode' => str_contains($section->learning_mode ?? '', 'Face') || str_contains($section->learning_mode ?? '', 'f2f') ? 'f2f' : 'online',
+                        'school_year' => config('services.school.year', '2026-2027'),
+                    ]);
+                }
+            }
+        }
+
+        // Auto-sync section_subjects from class_schedules on publish
+        if ($section->schedule_published) {
+            $result = $this->subjectSync->sync($section);
+            Log::info("SectionSubjectSync JSON Import [{$section->name}]: created={$result['created']}, kept={$result['kept']}, deleted={$result['deleted']}");
+        }
+
+        return back()
+            ->with('status', 'Class schedule imported from JSON successfully.')
+            ->with('schedule_workspace', 'schedule')
+            ->with('active_section_id', $sectionId);
+    }
 }
