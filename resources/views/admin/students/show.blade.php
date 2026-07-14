@@ -371,35 +371,35 @@
 
             <!-- Beautiful Flowbite Segmented Tabs Navigation -->
             <div class="bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl">
-                <nav class="flex flex-col sm:flex-row gap-1 text-sm font-bold" aria-label="Tabs">
+                <nav class="flex flex-col sm:flex-row gap-1.5 text-sm font-bold" aria-label="Tabs">
                     <button @click="activeTab = 'overview'" 
-                            :class="activeTab === 'overview' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-900/50'" 
+                            :class="activeTab === 'overview' ? 'bg-emerald-600 text-white shadow-sm' : 'bg-white/50 dark:bg-slate-900/30 text-slate-650 hover:text-slate-950 dark:text-slate-400 dark:hover:text-white hover:bg-white/80 dark:hover:bg-slate-900/60 shadow-xs'" 
                             class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 focus:outline-none flex-1 cursor-pointer">
                         <i data-lucide="user" class="h-4 w-4"></i>
                         <span>Overview Details</span>
                     </button>
                     <button @click="activeTab = 'academic'" 
-                            :class="activeTab === 'academic' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-900/50'" 
+                            :class="activeTab === 'academic' ? 'bg-emerald-600 text-white shadow-sm' : 'bg-white/50 dark:bg-slate-900/30 text-slate-650 hover:text-slate-950 dark:text-slate-400 dark:hover:text-white hover:bg-white/80 dark:hover:bg-slate-900/60 shadow-xs'" 
                             class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 focus:outline-none flex-1 cursor-pointer">
                         <i data-lucide="graduation-cap" class="h-4 w-4"></i>
                         <span>Academic & History</span>
                     </button>
                     @unless ($isTeacherAdminViewer)
                     <button @click="activeTab = 'documents'" 
-                            :class="activeTab === 'documents' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-900/50'" 
+                            :class="activeTab === 'documents' ? 'bg-emerald-600 text-white shadow-sm' : 'bg-white/50 dark:bg-slate-900/30 text-slate-650 hover:text-slate-950 dark:text-slate-400 dark:hover:text-white hover:bg-white/80 dark:hover:bg-slate-900/60 shadow-xs'" 
                             class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 focus:outline-none flex-1 cursor-pointer">
                         <i data-lucide="shield-check" class="h-4 w-4"></i>
                         <span>Documents & Verification</span>
                     </button>
                     @endunless
                     <button @click="activeTab = 'grades'" 
-                            :class="activeTab === 'grades' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-900/50'" 
+                            :class="activeTab === 'grades' ? 'bg-emerald-600 text-white shadow-sm' : 'bg-white/50 dark:bg-slate-900/30 text-slate-650 hover:text-slate-950 dark:text-slate-400 dark:hover:text-white hover:bg-white/80 dark:hover:bg-slate-900/60 shadow-xs'" 
                             class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 focus:outline-none flex-1 cursor-pointer">
                         <i data-lucide="award" class="h-4 w-4"></i>
                         <span>Grades</span>
                     </button>
                     <button @click="activeTab = 'account'" 
-                            :class="activeTab === 'account' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-900/50'" 
+                            :class="activeTab === 'account' ? 'bg-emerald-600 text-white shadow-sm' : 'bg-white/50 dark:bg-slate-900/30 text-slate-650 hover:text-slate-950 dark:text-slate-400 dark:hover:text-white hover:bg-white/80 dark:hover:bg-slate-900/60 shadow-xs'" 
                             class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 focus:outline-none flex-1 cursor-pointer">
                         <i data-lucide="key-round" class="h-4 w-4"></i>
                         <span>Account Summary</span>
