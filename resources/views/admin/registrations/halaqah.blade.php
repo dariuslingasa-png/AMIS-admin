@@ -78,10 +78,10 @@
     @endif
 
     <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6 print-hide">
+    <div class="grid grid-cols-1 sm:grid-cols-5 gap-4 mt-6 print-hide">
         <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl border border-slate-200/70 dark:border-gray-700/50 shadow-sm flex items-center justify-between">
             <div>
-                <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Total Registrations</span>
+                <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Total</span>
                 <span class="text-2xl font-black text-slate-900 dark:text-white font-outfit mt-1 block">{{ $totalCount }}</span>
             </div>
             <div class="p-3 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 rounded-xl">
@@ -90,7 +90,7 @@
         </div>
         <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl border border-slate-200/70 dark:border-gray-700/50 shadow-sm flex items-center justify-between">
             <div>
-                <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">New Submissions</span>
+                <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">New</span>
                 <span class="text-2xl font-black text-slate-900 dark:text-white font-outfit mt-1 block">{{ $newCount }}</span>
             </div>
             <div class="p-3 bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 rounded-xl">
@@ -104,6 +104,24 @@
             </div>
             <div class="p-3 bg-indigo-50 dark:bg-indigo-950/30 text-indigo-650 dark:text-indigo-400 rounded-xl">
                 <i data-lucide="user-check" class="w-6 h-6"></i>
+            </div>
+        </div>
+        <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl border border-slate-200/70 dark:border-gray-700/50 shadow-sm flex items-center justify-between">
+            <div>
+                <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Cannot Read</span>
+                <span class="text-2xl font-black text-slate-900 dark:text-white font-outfit mt-1 block">{{ $cannotReadCount }}</span>
+            </div>
+            <div class="p-3 bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-450 rounded-xl">
+                <i data-lucide="book-x" class="w-6 h-6"></i>
+            </div>
+        </div>
+        <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl border border-slate-200/70 dark:border-gray-700/50 shadow-sm flex items-center justify-between">
+            <div>
+                <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Can Read</span>
+                <span class="text-2xl font-black text-slate-900 dark:text-white font-outfit mt-1 block">{{ $canReadCount }}</span>
+            </div>
+            <div class="p-3 bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 rounded-xl">
+                <i data-lucide="book-open" class="w-6 h-6"></i>
             </div>
         </div>
     </div>

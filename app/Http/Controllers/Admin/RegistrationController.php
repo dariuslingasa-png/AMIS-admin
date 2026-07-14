@@ -133,6 +133,8 @@ class RegistrationController extends Controller
         $totalCount = $baseStatsQuery->count();
         $newCount = (clone $baseStatsQuery)->where('status', 'new')->count();
         $approvedCount = (clone $baseStatsQuery)->where('status', 'approved')->count();
+        $cannotReadCount = (clone $baseStatsQuery)->where('message', 'like', '%Cannot read%')->count();
+        $canReadCount = (clone $baseStatsQuery)->where('message', 'like', '%Can read%')->count();
 
         if ($status) {
             $query1->where('status', $status);
@@ -149,7 +151,7 @@ class RegistrationController extends Controller
             return view('admin.registrations.print_halaqah', compact('registrations'));
         }
 
-        $registrations = $finalQuery->orderBy('created_at', 'desc')->paginate(15)->withQueryString();
+        $registrations = $finalQuery->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
 
         return view('admin.registrations.halaqah', compact(
             'registrations', 
@@ -157,7 +159,9 @@ class RegistrationController extends Controller
             'status', 
             'totalCount', 
             'newCount', 
-            'approvedCount'
+            'approvedCount',
+            'cannotReadCount',
+            'canReadCount'
         ));
     }
 
