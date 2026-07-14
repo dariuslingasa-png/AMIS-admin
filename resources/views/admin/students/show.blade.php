@@ -121,6 +121,7 @@
 >
     <div x-data="{
          openEditModal: false,
+         showIdPreview: false,
          editSection: 'all',
          copySuccess: false,
          activeTab: 'overview',
@@ -252,12 +253,11 @@
                 <i data-lucide="printer" class="h-4 w-4 text-slate-500"></i>
                 <span>Print Official Sheet</span>
             </a>
-            <a href="{{ route('admin.students.index', ['search' => $student->student_number, 'print_id' => 1]) }}"
-               target="_blank"
-               class="inline-flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2 text-sm font-bold text-slate-700 dark:text-slate-300 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98]">
+            <button type="button" @click="showIdPreview = true"
+               class="inline-flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2 text-sm font-bold text-slate-700 dark:text-slate-300 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98] cursor-pointer">
                 <i data-lucide="contact" class="h-4 w-4 text-slate-500"></i>
                 <span>Print ID Card</span>
-            </a>
+            </button>
             <a href="{{ route('admin.students.index') }}"
                class="inline-flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2 text-sm font-bold text-slate-700 dark:text-slate-300 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98]">
                 <i data-lucide="chevron-left" class="h-4 w-4"></i>
@@ -290,8 +290,8 @@
                     </span>
                 </div>
                 
-                <div class="relative group flex items-center justify-center">
-                    <button type="button" class="applicant-photo overflow-hidden" @if ($photoUrl) @click="openPreview('{{ $photoUrl }}', '2x2 Photo', false)" @endif>
+                <div class="relative flex items-center justify-center">
+                    <button type="button" class="applicant-photo overflow-hidden hover:brightness-95 transition-all duration-200 cursor-zoom-in" @if ($photoUrl) @click="openPreview('{{ $photoUrl }}', '2x2 Photo', false)" @endif>
                         @if ($photoUrl)
                             <img src="{{ $photoUrl }}" alt="2x2 Photo" class="w-full h-full object-cover block" loading="eager" decoding="async" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
                             <span class="w-full h-full items-center justify-center text-xs font-extrabold" style="display:none">NO PHOTO</span>
@@ -300,11 +300,11 @@
                         @endif
                     </button>
                     @if (auth()->user()?->hasRole('super_admin'))
-                        <button type="button" onclick="document.getElementById('student-photo-input').click()" 
-                                class="absolute inset-0 m-0.5 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center text-white text-[10px] uppercase tracking-wider font-extrabold rounded-2xl cursor-pointer"
-                                style="width: calc(6rem - 4px); height: calc(6rem - 4px);">
-                            <i data-lucide="camera" class="w-5 h-5 mb-1 text-white"></i>
-                            <span>Change</span>
+                        <button type="button" onclick="event.stopPropagation(); document.getElementById('student-photo-input').click()" 
+                                class="absolute bottom-1 right-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full p-1 shadow-lg border border-white/20 transition active:scale-95 cursor-pointer z-20 flex items-center justify-center"
+                                style="width: 24px; height: 24px;"
+                                title="Change Profile Photo">
+                            <i data-lucide="camera" class="w-3 h-3"></i>
                         </button>
                         <input type="file" id="student-photo-input" name="photo" accept="image/*" class="hidden" onchange="uploadStudentPhoto(this)">
                     @endif
@@ -410,6 +410,151 @@
 
         <!-- Preview Modal -->
         @include('admin.students.partials.show.modal')
+
+        <!-- ID Card Preview Modal -->
+        <div x-show="showIdPreview" x-cloak
+             class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-fade-in"
+             @click.self="showIdPreview = false">
+            <div class="bg-slate-100 dark:bg-slate-950 rounded-3xl max-w-3xl w-full overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col"
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 scale-95"
+                 x-transition:enter-end="opacity-100 scale-100">
+                <!-- Header -->
+                <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-850 bg-white dark:bg-slate-900">
+                    <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <i data-lucide="contact" class="h-4.5 w-4.5 text-emerald-600"></i>
+                        <span>Official ID Card Preview</span>
+                    </h3>
+                    <button @click="showIdPreview = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                        <i data-lucide="x" class="h-5 w-5"></i>
+                    </button>
+                </div>
+                <!-- Body -->
+                <div class="p-6 overflow-y-auto max-h-[70vh] flex flex-col md:flex-row items-center justify-center gap-8 bg-slate-50 dark:bg-slate-950/20">
+                    
+                    @php
+                        // Resolve ID card variables
+                        $firstName = trim($student->applicant->first_name ?? '');
+                        $middleName = trim($student->applicant->middle_name ?? '');
+                        $lastName = trim($student->applicant->last_name ?? '');
+                        $middleInitial = '';
+                        if ($middleName !== '') {
+                            $firstChar = mb_strtoupper(mb_substr($middleName, 0, 1));
+                            $middleInitial = ($firstChar === '.') ? '.' : $firstChar . '.';
+                        }
+                        
+                        $fullNameParts = array_filter([$firstName, $middleInitial, $lastName], fn($val) => $val !== '');
+                        $fullName = html_entity_decode(implode(' ', $fullNameParts), ENT_QUOTES, 'UTF-8');
+                        $displayGrade = $student->grade_level;
+
+                        $homeAddress = implode(', ', array_filter([$student->applicant->home_street_address, $student->applicant->home_city, $student->applicant->home_state_province]));
+                        if (empty($homeAddress)) {
+                            $homeAddress = $student->applicant->home_address ?: '-';
+                        }
+                        
+                        $emergencyName = $student->applicant->emergency_name ?: '-';
+                        if (empty($emergencyName) || strtolower($emergencyName) === 'emergency contact') {
+                            $emergencyName = trim(($student->applicant->father_first_name ?? '') . ' ' . ($student->applicant->father_last_name ?? '')) ?: (trim(($student->applicant->mother_first_name ?? '') . ' ' . ($student->applicant->mother_last_name ?? '')) ?: 'Registrar Office');
+                        }
+                        
+                        $emergencyPhone = $student->applicant->emergency_phone ?: '-';
+                        if (empty($emergencyPhone)) {
+                            $emergencyPhone = $student->applicant->parent_mobile ?: ($student->applicant->mobile_number ?: '+63 900 000 0000');
+                        }
+
+                        $studentNumber = $student->student_number;
+                        $hash = base64_encode((int)$studentNumber + 987654);
+                        $qrCodeUrl = 'https://quickchart.io/qr?text=' . urlencode('https://amis.edu.ph/v/' . $hash) . '&dark=000000&light=ffffff&margin=1&format=png&size=300';
+                        
+                        $getGradeColor = function($grade) {
+                            if (!$grade) return '#6d28d9';
+                            $g = strtoupper($grade);
+                            if (str_contains($g, 'NURSERY') || str_contains($g, 'KINDER') || str_contains($g, 'PRE-')) return '#ea580c';
+                            if (str_contains($g, 'GRADE 1') || str_contains($g, 'GRADE 2') || str_contains($g, 'GRADE 3')) return '#0284c7';
+                            if (str_contains($g, 'GRADE 4') || str_contains($g, 'GRADE 5') || str_contains($g, 'GRADE 6')) return '#7c3aed';
+                            if (str_contains($g, 'GRADE 7') || str_contains($g, 'GRADE 8') || str_contains($g, 'GRADE 9') || str_contains($g, 'GRADE 10')) return '#dc2626';
+                            if (str_contains($g, 'GRADE 11') || str_contains($g, 'GRADE 12') || str_contains($g, 'GRADE XI') || str_contains($g, 'GRADE XII')) return '#4f46e5';
+                            return '#6d28d9';
+                        };
+                    @endphp
+
+                    <!-- Front Side Card -->
+                    <div class="flex flex-col items-center gap-2">
+                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Front Side</span>
+                        <div class="relative w-[280px] h-[443px] rounded-2xl overflow-hidden shadow-lg bg-[#064e3b] border border-slate-200 dark:border-slate-800">
+                            <!-- Background template image -->
+                            <img src="{{ asset('assets/amis-id-template.png') }}?v=3" class="absolute inset-0 w-full h-full object-cover z-1 pointer-events-none" alt="AMIS ID Template">
+                            
+                            <!-- Student Photo -->
+                            @if($photoUrl)
+                                <img src="{{ $photoUrl }}" class="absolute left-[67px] top-[94px] w-[146px] h-[142px] object-cover rounded-lg z-10 border border-white/20">
+                            @else
+                                <div class="absolute left-[67px] top-[94px] w-[146px] h-[142px] z-10 rounded-lg bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-400 border border-dashed border-slate-300">NO PHOTO</div>
+                            @endif
+
+                            <!-- Student ID -->
+                            <div class="absolute left-[100px] top-[243px] w-[80px] h-[12px] z-10 text-white font-black text-[10px] tracking-wide text-center uppercase">{{ $studentNumber }}</div>
+
+                            <!-- Last Name -->
+                            <div class="absolute left-[12px] top-[275px] w-[256px] z-10 text-center font-black text-[#0f172a] text-[18px] uppercase tracking-tight leading-none">{{ $lastName }}</div>
+
+                            <!-- First Name -->
+                            <div class="absolute left-[12px] top-[301px] w-[256px] z-10 text-center font-bold text-[#334155] text-[12px] uppercase leading-none">{{ $firstName }}</div>
+
+                            <!-- Grade Level -->
+                            <div class="absolute left-[12px] top-[334px] w-[256px] z-10 text-center font-black text-[20px] uppercase tracking-wide" style="color: {{ $getGradeColor($displayGrade) }};">{{ $displayGrade }}</div>
+
+                            <!-- LRN -->
+                            @if($student->applicant->lrn && !in_array(strtoupper($student->applicant->lrn), ['N/A', 'NA', 'EMPTY', '']))
+                                <div class="absolute right-[6px] top-[333px] z-10 text-[12px] font-bold text-[#1e293b] origin-center rotate-[-90deg] whitespace-nowrap translate-y-[25px] translate-x-[40px]">
+                                    LRN: <span>{{ $student->applicant->lrn }}</span>
+                                </div>
+                            @endif
+
+                            <!-- QR Code -->
+                            <div class="absolute left-[111px] top-[377px] w-[58px] h-[58px] z-10 p-0.5 rounded bg-white">
+                                <img src="{{ $qrCodeUrl }}" alt="QR Verification" class="w-full h-full object-contain">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Back Side Card -->
+                    <div class="flex flex-col items-center gap-2">
+                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Back Side</span>
+                        <div class="relative w-[280px] h-[443px] rounded-2xl overflow-hidden shadow-lg bg-[#064e3b] border border-slate-200 dark:border-slate-800">
+                            <!-- Background template image -->
+                            <img src="{{ asset('assets/amis-id-template-back.png') }}?v=3" class="absolute inset-0 w-full h-full object-cover z-1 pointer-events-none" alt="AMIS ID Template Back">
+
+                            <!-- Emergency Name -->
+                            <div class="absolute left-[12px] top-[70px] w-[256px] z-10 text-center font-black text-[#0f172a] text-[16px] uppercase leading-tight">{{ $emergencyName }}</div>
+
+                            <!-- Emergency Contact -->
+                            <div class="absolute left-[12px] top-[97px] w-[256px] z-10 text-center font-bold text-[#1e293b] text-[12.5px] leading-none">{{ $emergencyPhone }}</div>
+
+                            <!-- Home Address -->
+                            <div class="absolute left-[16px] top-[119px] w-[248px] z-10 text-center font-bold text-[#475569] text-[9px] uppercase leading-tight">{{ $homeAddress }}</div>
+                        </div>
+                    </div>
+
+                </div>
+                <!-- Footer -->
+                <div class="flex items-center justify-between px-6 py-4 border-t border-slate-200 dark:border-slate-855 bg-white dark:bg-slate-900">
+                    <p class="text-xs text-slate-400 font-medium">Verify all details before printing the physical card.</p>
+                    <div class="flex items-center gap-3">
+                        <button type="button" @click="showIdPreview = false" class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-850 active:scale-[0.98] cursor-pointer">
+                            Close
+                        </button>
+                        <a href="{{ route('admin.students.index', ['search' => $student->student_number, 'print_id' => 1]) }}"
+                           target="_blank"
+                           class="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 text-xs font-bold shadow-md transition active:scale-[0.98] cursor-pointer flex items-center gap-1.5">
+                            <i data-lucide="printer" class="w-4 h-4"></i>
+                            <span>Print ID Card</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Edit Profile Modal -->
         @unless ($isTeacherAdminViewer)
         <div x-show="openEditModal" x-cloak
