@@ -481,38 +481,38 @@
                     <!-- Front Side Card -->
                     <div class="flex flex-col items-center gap-2">
                         <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Front Side</span>
-                        <div class="relative w-[280px] h-[443px] rounded-2xl overflow-hidden shadow-lg bg-[#064e3b] border border-slate-200 dark:border-slate-800">
+                        <div class="relative rounded-2xl overflow-hidden shadow-lg border border-slate-200 dark:border-slate-800" style="width: 280px; height: 443px; background-color: #064e3b;">
                             <!-- Background template image -->
-                            <img src="{{ asset('assets/amis-id-template.png') }}?v=3" class="absolute inset-0 w-full h-full object-cover z-1 pointer-events-none" alt="AMIS ID Template">
+                            <img src="{{ asset('assets/amis-id-template.png') }}?v=3" class="absolute inset-0 w-full h-full object-cover" style="z-index: 1; pointer-events: none;" alt="AMIS ID Template">
                             
                             <!-- Student Photo -->
                             @if($photoUrl)
-                                <img src="{{ $photoUrl }}" class="absolute left-[67px] top-[94px] w-[146px] h-[142px] object-cover rounded-lg z-10 border border-white/20">
+                                <img src="{{ $photoUrl }}" class="absolute object-cover rounded-lg border border-white/20" style="left: 67px; top: 94px; width: 146px; height: 142px; z-index: 10;">
                             @else
-                                <div class="absolute left-[67px] top-[94px] w-[146px] h-[142px] z-10 rounded-lg bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-400 border border-dashed border-slate-300">NO PHOTO</div>
+                                <div class="absolute rounded-lg bg-slate-100 flex items-center justify-center text-center border border-dashed border-slate-300" style="left: 67px; top: 94px; width: 146px; height: 142px; z-index: 10; font-size: 10px; font-weight: bold; color: #94a3b8;">NO PHOTO</div>
                             @endif
 
                             <!-- Student ID -->
-                            <div class="absolute left-[100px] top-[243px] w-[80px] h-[12px] z-10 text-white font-black text-[10px] tracking-wide text-center uppercase">{{ $studentNumber }}</div>
+                            <div class="absolute text-white font-black tracking-wide text-center uppercase" style="left: 100px; top: 243px; width: 80px; height: 12px; z-index: 10; font-size: 10px;">{{ $studentNumber }}</div>
 
                             <!-- Last Name -->
-                            <div class="absolute left-[12px] top-[275px] w-[256px] z-10 text-center font-black text-[#0f172a] text-[18px] uppercase tracking-tight leading-none">{{ $lastName }}</div>
+                            <div class="absolute text-center font-black text-[#0f172a] uppercase tracking-tight leading-none flex flex-col justify-center animate-fade-in" style="left: 12px; top: 275px; width: 256px; height: 26px; z-index: 10; font-size: 18px;">{{ $lastName }}</div>
 
                             <!-- First Name -->
-                            <div class="absolute left-[12px] top-[301px] w-[256px] z-10 text-center font-bold text-[#334155] text-[12px] uppercase leading-none">{{ $firstName }}</div>
+                            <div class="absolute text-center font-bold text-[#334155] uppercase leading-none flex flex-col justify-center animate-fade-in" style="left: 12px; top: 301px; width: 256px; height: 18px; z-index: 10; font-size: 12px;">{{ $firstName }}</div>
 
                             <!-- Grade Level -->
-                            <div class="absolute left-[12px] top-[334px] w-[256px] z-10 text-center font-black text-[20px] uppercase tracking-wide" style="color: {{ $getGradeColor($displayGrade) }};">{{ $displayGrade }}</div>
+                            <div class="absolute text-center font-black uppercase tracking-wide flex flex-col justify-center animate-fade-in" style="left: 12px; top: 334px; width: 256px; height: 24px; z-index: 10; font-size: 20px; color: {{ $getGradeColor($displayGrade) }};">{{ $displayGrade }}</div>
 
                             <!-- LRN -->
                             @if($student->applicant->lrn && !in_array(strtoupper($student->applicant->lrn), ['N/A', 'NA', 'EMPTY', '']))
-                                <div class="absolute right-[6px] top-[333px] z-10 text-[12px] font-bold text-[#1e293b] origin-center rotate-[-90deg] whitespace-nowrap translate-y-[25px] translate-x-[40px]">
+                                <div class="absolute font-bold text-[#1e293b] whitespace-nowrap" style="right: 6px; top: 333px; z-index: 10; font-size: 12px; transform: rotate(-90deg); transform-origin: center; width: 18px; height: 107px; display: flex; align-items: center; justify-content: center; translate: 40px 25px;">
                                     LRN: <span>{{ $student->applicant->lrn }}</span>
                                 </div>
                             @endif
 
                             <!-- QR Code -->
-                            <div class="absolute left-[111px] top-[377px] w-[58px] h-[58px] z-10 p-0.5 rounded bg-white">
+                            <div class="absolute p-0.5 rounded bg-white" style="left: 111px; top: 377px; width: 58px; height: 58px; z-index: 10;">
                                 <img src="{{ $qrCodeUrl }}" alt="QR Verification" class="w-full h-full object-contain">
                             </div>
                         </div>
@@ -521,22 +521,21 @@
                     <!-- Back Side Card -->
                     <div class="flex flex-col items-center gap-2">
                         <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Back Side</span>
-                        <div class="relative w-[280px] h-[443px] rounded-2xl overflow-hidden shadow-lg bg-[#064e3b] border border-slate-200 dark:border-slate-800">
+                        <div class="relative rounded-2xl overflow-hidden shadow-lg border border-slate-200 dark:border-slate-800" style="width: 280px; height: 443px; background-color: #064e3b;">
                             <!-- Background template image -->
-                            <img src="{{ asset('assets/amis-id-template-back.png') }}?v=3" class="absolute inset-0 w-full h-full object-cover z-1 pointer-events-none" alt="AMIS ID Template Back">
+                            <img src="{{ asset('assets/amis-id-template-back.png') }}?v=3" class="absolute inset-0 w-full h-full object-cover" style="z-index: 1; pointer-events: none;" alt="AMIS ID Template Back">
 
                             <!-- Emergency Name -->
-                            <div class="absolute left-[12px] top-[70px] w-[256px] z-10 text-center font-black text-[#0f172a] text-[16px] uppercase leading-tight">{{ $emergencyName }}</div>
+                            <div class="absolute text-center font-black text-[#0f172a] uppercase leading-tight flex flex-col justify-center" style="left: 12px; top: 70px; width: 256px; height: 23px; z-index: 10; font-size: 16px;">{{ $emergencyName }}</div>
 
                             <!-- Emergency Contact -->
-                            <div class="absolute left-[12px] top-[97px] w-[256px] z-10 text-center font-bold text-[#1e293b] text-[12.5px] leading-none">{{ $emergencyPhone }}</div>
+                            <div class="absolute text-center font-bold text-[#1e293b] leading-none flex flex-col justify-center" style="left: 12px; top: 97px; width: 256px; height: 16px; z-index: 10; font-size: 12.5px;">{{ $emergencyPhone }}</div>
 
                             <!-- Home Address -->
-                            <div class="absolute left-[16px] top-[119px] w-[248px] z-10 text-center font-bold text-[#475569] text-[9px] uppercase leading-tight">{{ $homeAddress }}</div>
+                            <div class="absolute text-center font-bold text-[#475569] uppercase leading-tight flex flex-col justify-center" style="left: 16px; top: 119px; width: 248px; height: 35px; z-index: 10; font-size: 9px; padding: 0 16px;">{{ $homeAddress }}</div>
                         </div>
-                    </div>
+                    </div></div>
 
-                </div>
                 <!-- Footer -->
                 <div class="flex items-center justify-between px-6 py-4 border-t border-slate-200 dark:border-slate-855 bg-white dark:bg-slate-900">
                     <p class="text-xs text-slate-400 font-medium">Verify all details before printing the physical card.</p>
