@@ -110,9 +110,9 @@
         
         .student-id {
             position: absolute;
-            left: 121px;
+            left: 0;
             top: 295px;
-            width: 95px;
+            width: 340px;
             height: 15px;
             z-index: 10;
             background: transparent;

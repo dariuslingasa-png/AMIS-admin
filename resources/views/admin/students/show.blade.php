@@ -885,7 +885,7 @@
                             @endif
 
                             <!-- Student ID -->
-                            <div class="absolute text-white font-black tracking-wide text-center uppercase" style="left: 100px; top: 243px; width: 80px; height: 12px; z-index: 10; font-size: 10px;">{{ $studentNumber }}</div>
+                            <div class="absolute text-white font-black tracking-wide text-center uppercase" style="left: 0; top: 243px; width: 280px; height: 12px; z-index: 10; font-size: 10px;">{{ $studentNumber }}</div>
 
                             <!-- Last Name -->
                             <div class="absolute text-center font-black text-[#0f172a] uppercase tracking-tight leading-none flex flex-col justify-center animate-fade-in" style="left: 12px; top: 275px; width: 256px; height: 26px; z-index: 10; font-size: 18px;">{{ $lastName }}</div>
