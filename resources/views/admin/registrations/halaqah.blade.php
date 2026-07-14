@@ -78,7 +78,7 @@
     @endif
 
     <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-5 gap-4 mt-6 print-hide">
+    <div class="grid gap-4 mt-6 print-hide" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem;">
         <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl border border-slate-200/70 dark:border-gray-700/50 shadow-sm flex items-center justify-between">
             <div>
                 <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Total</span>
@@ -157,8 +157,16 @@
 
     <!-- Data List -->
     <div class="bg-white dark:bg-gray-800 rounded-2xl border border-slate-200/70 dark:border-gray-700/50 shadow-sm mt-6 overflow-hidden">
-        <div class="premium-table-wrap">
-            <table class="premium-table w-full">
+        <div class="premium-table-wrap" style="overflow-x: visible;">
+            <table class="premium-table w-full" style="width: 100%; table-layout: fixed;">
+                <colgroup>
+                    <col style="width: 13%;">
+                    <col style="width: 25%;">
+                    <col style="width: 20%;">
+                    <col style="width: 22%;">
+                    <col style="width: 10%;">
+                    <col style="width: 10%;">
+                </colgroup>
                 <thead>
                     <tr>
                         <th class="px-5 py-3.5">Registration Date</th>
@@ -201,7 +209,7 @@
                                     {{ $reg->name }}
                                 </span>
                                 <div class="flex flex-col gap-0.5 mt-1">
-                                    <span class="text-xs text-slate-500 font-medium flex items-center gap-1.5">
+                                    <span class="text-xs text-slate-500 font-medium flex items-center gap-1.5 break-all">
                                         <i data-lucide="mail" class="w-3.5 h-3.5 text-slate-400 print-hide"></i>
                                         {{ $reg->email }}
                                     </span>
@@ -210,7 +218,7 @@
                                         {{ $reg->phone }}
                                     </span>
                                     @if($address)
-                                        <span class="text-[10px] text-slate-400 font-semibold uppercase flex items-center gap-1.5 mt-0.5">
+                                        <span class="text-[10px] text-slate-400 font-semibold uppercase flex items-center gap-1.5 mt-0.5" style="white-space: normal; word-break: break-word;">
                                             <i data-lucide="map-pin" class="w-3 h-3 text-slate-450 print-hide"></i>
                                             {{ $address }}
                                         </span>
@@ -246,7 +254,7 @@
                             </td>
 
                             <!-- Message -->
-                            <td class="px-5 py-4 max-w-xs">
+                            <td class="px-5 py-4" style="white-space: normal; word-break: break-word;">
                                 <span class="text-xs text-slate-600 font-medium line-clamp-3" title="{{ $actualMessage }}">
                                     {{ $actualMessage ?: '-' }}
                                 </span>
