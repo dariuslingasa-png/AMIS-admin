@@ -13,13 +13,27 @@
         <div class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
             <h4 class="text-xxs font-extrabold uppercase tracking-wider text-slate-400">Microsoft AD Identity</h4>
             <p class="mt-1 text-xxs font-mono text-slate-600 overflow-x-auto select-all">{{ $student->ms_user_id ?? 'No AD object mapped' }}</p>
-            <div class="mt-2">
+            <div class="mt-2 flex items-center justify-between">
                 @php
                     $msStatus = $student->studentSection?->ms_status ?? 'pending';
                     $badgeColor = match($msStatus) { 'enrolled' => 'green', 'failed' => 'red', default => 'yellow' };
                     $badgeLabel = match($msStatus) { 'enrolled' => 'Synced', 'failed' => 'Failed', default => 'Pending' };
                 @endphp
-                <x-badge :color="$badgeColor">MS Sync: {{ $badgeLabel }}</x-badge>
+                <div>
+                    <x-badge :color="$badgeColor">MS Sync: {{ $badgeLabel }}</x-badge>
+                </div>
+
+                @if($student->ms_user_id && !auth()->user()?->isTeacherAdminViewer())
+                    <form method="POST" action="{{ route('admin.ms-sync.student', $student) }}" class="m-0">
+                        @csrf
+                        <button type="submit" class="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-emerald-600 hover:text-emerald-700 active:scale-95 transition cursor-pointer" title="Sync Microsoft Account & Teams Now">
+                            <svg class="h-3.5 w-3.5 animate-spin-hover" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"></path>
+                            </svg>
+                            <span>Sync Now</span>
+                        </button>
+                    </form>
+                @endif
             </div>
         </div>
     </div>
