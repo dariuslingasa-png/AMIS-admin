@@ -487,6 +487,68 @@
                             </div>
                         </div>
                     </dl>
+                    <!-- Divider -->
+                    <div class="border-t border-slate-200/60 dark:border-slate-800/60 my-6"></div>
+
+                    <!-- Moved: Credentials & Password Workspace -->
+                    <div class="space-y-4">
+                        <h4 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <i data-lucide="key" class="h-4.5 w-4.5 text-amber-500"></i>
+                            <span>Credentials & Password Workspace</span>
+                        </h4>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Reset student portal passwords or resend account credentials via email.</p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
+                            <!-- Resend Credentials -->
+                            <div class="bg-slate-50 dark:bg-slate-900/40 p-4 rounded-2xl border border-slate-100 dark:border-slate-855 flex flex-col justify-between gap-3">
+                                <div>
+                                    <h5 class="text-xs font-bold text-slate-850 dark:text-slate-200">Email Credentials</h5>
+                                    <p class="text-[11px] text-slate-400 font-semibold mt-1">Send the student's username and temporary password to their registered email address.</p>
+                                </div>
+                                <form method="POST" action="{{ route('admin.students.resend', $student) }}" class="m-0">
+                                    @csrf
+                                    <input type="hidden" name="reset_format" value="none">
+                                    <button type="submit" class="w-full inline-flex h-9.5 items-center justify-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98] transition cursor-pointer">
+                                        <i data-lucide="mail" class="h-4 w-4 text-slate-500"></i>
+                                        <span>Send Email</span>
+                                    </button>
+                                </form>
+                            </div>
+
+                            <!-- Set Custom Password -->
+                            <div class="bg-slate-50 dark:bg-slate-900/40 p-4 rounded-2xl border border-slate-100 dark:border-slate-855 flex flex-col justify-between gap-3">
+                                <div>
+                                    <h5 class="text-xs font-bold text-slate-850 dark:text-slate-200">Set Custom Password</h5>
+                                    <p class="text-[11px] text-slate-400 font-semibold mt-1">Change the student's portal login credentials to a custom password.</p>
+                                </div>
+                                <form method="POST" action="{{ route('admin.students.resend', $student) }}" class="m-0">
+                                    @csrf
+                                    <div class="flex gap-2">
+                                        <input type="text" name="custom_password" placeholder="Type password..." required class="flex-1 h-9.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none transition focus:border-amber-400 focus:ring-4 focus:ring-amber-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+                                        <button type="submit" class="inline-flex h-9.5 items-center justify-center rounded-xl bg-amber-500 hover:bg-amber-600 px-3 text-xs font-bold text-white active:scale-[0.98] transition cursor-pointer" title="Set Custom Password">
+                                            <span>Reset</span>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <!-- Reset to Default (Amis@12345) -->
+                            <div class="bg-slate-50 dark:bg-slate-900/40 p-4 rounded-2xl border border-slate-100 dark:border-slate-855 flex flex-col justify-between gap-3">
+                                <div>
+                                    <h5 class="text-xs font-bold text-slate-850 dark:text-slate-200">Reset to Default</h5>
+                                    <p class="text-[11px] text-slate-400 font-semibold mt-1">Reset password to the system default format (Amis@12345).</p>
+                                </div>
+                                <form method="POST" action="{{ route('admin.students.resend', $student) }}" class="m-0">
+                                    @csrf
+                                    <input type="hidden" name="reset_format" value="default">
+                                    <button type="submit" class="w-full inline-flex h-9.5 items-center justify-center gap-2 rounded-xl border border-amber-250 bg-amber-50 dark:border-amber-950/20 dark:bg-amber-950/10 px-3 text-xs font-bold text-amber-700 dark:text-amber-400 hover:bg-amber-100/50 active:scale-[0.98] transition cursor-pointer" title="Reset password to default format (Amis@12345)">
+                                        <i data-lucide="refresh-cw" class="h-3.5 w-3.5"></i>
+                                        <span>Reset Default</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
                 </x-card>
             </div>
         </main>

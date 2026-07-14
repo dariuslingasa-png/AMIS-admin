@@ -118,42 +118,7 @@
                 </a>
             </div>
 
-            <!-- Credentials Actions -->
-            <div class="border-t border-slate-100 pt-4 mt-4 dark:border-slate-800 space-y-2">
-                <label class="block text-xxs font-extrabold uppercase tracking-wider text-slate-400">Credentials & Password Workspace</label>
-                
-                <!-- Resend Current Credentials -->
-                <form method="POST" action="{{ route('admin.students.resend', $student) }}">
-                    @csrf
-                    <input type="hidden" name="reset_format" value="none">
-                    <button type="submit" class="w-full inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 px-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98] transition-all duration-200 cursor-pointer">
-                        <i data-lucide="mail" class="h-3.5 w-3.5"></i>
-                        <span>Email Current Credentials</span>
-                    </button>
-                </form>
 
-                <!-- Set Custom Password -->
-                <form method="POST" action="{{ route('admin.students.resend', $student) }}" class="space-y-1.5">
-                    @csrf
-                    <div class="flex gap-2">
-                        <input type="text" name="custom_password" placeholder="Type custom password..." required class="flex-1 h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 outline-none transition focus:border-amber-400 focus:ring-4 focus:ring-amber-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
-                        <button type="submit" class="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 px-3 text-xs font-bold text-white active:scale-[0.98] transition-all duration-200 cursor-pointer" title="Set Custom Password">
-                            <i data-lucide="key" class="h-3.5 w-3.5"></i>
-                            <span>Reset</span>
-                        </button>
-                    </div>
-                </form>
-
-                <!-- Reset Password to default -->
-                <form method="POST" action="{{ route('admin.students.resend', $student) }}">
-                    @csrf
-                    <input type="hidden" name="reset_format" value="default">
-                    <button type="submit" class="w-full inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-amber-200 bg-amber-50 dark:border-amber-950/20 dark:bg-amber-950/10 px-3 text-xs font-bold text-amber-700 dark:text-amber-400 hover:bg-amber-100/50 active:scale-[0.98] transition-all duration-200 cursor-pointer" title="Reset password to default format (Amis@12345)">
-                        <i data-lucide="refresh-cw" class="h-3.5 w-3.5"></i>
-                        <span>Reset Password (Amis@12345)</span>
-                    </button>
-                </form>
-            </div>
 
             <!-- Force Teams & License Sync -->
             @if($student->ms_user_id)
