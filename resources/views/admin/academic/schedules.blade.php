@@ -32,11 +32,20 @@
         jsonText: '',
         jsonSectionId: 0,
         jsonLoading: false,
+        jsonTab: 'edit',
+        daysList: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'],
+        previewSchedules: [],
+        previewIntervals: [],
+        previewError: '',
         async openJsonModal(sectionId) {
             this.jsonSectionId = sectionId;
             this.jsonText = '';
             this.jsonLoading = true;
             this.jsonModal = true;
+            this.jsonTab = 'edit';
+            this.previewSchedules = [];
+            this.previewIntervals = [];
+            this.previewError = '';
             try {
                 const res = await fetch(`/academic/schedules/sections/${sectionId}/json`);
                 const data = await res.json();
@@ -46,6 +55,78 @@
             }
             this.jsonLoading = false;
             this.$nextTick(() => window.lucide?.createIcons?.());
+        },
+        runPreview() {
+            this.previewError = '';
+            this.previewSchedules = [];
+            this.previewIntervals = [];
+            try {
+                const items = JSON.parse(this.jsonText);
+                if (!Array.isArray(items)) {
+                    this.previewError = 'Invalid JSON: Must be an array of schedule objects.';
+                    return;
+                }
+                const expanded = [];
+                const timeBoundaries = [];
+                items.forEach((item, idx) => {
+                    if (!item.subject_name) throw new Error(`Item ${idx + 1} is missing 'subject_name'.`);
+                    if (!item.start_time || !item.end_time) throw new Error(`Item ${idx + 1} ('${item.subject_name}') is missing 'start_time' or 'end_time'.`);
+                    const days = item.spans_all_days ? ['Sunday'] : (item.day ? item.day.split(',').map(d => d.trim()) : []);
+                    if (days.length === 0) throw new Error(`Item ${idx + 1} ('${item.subject_name}') is missing 'day' or 'spans_all_days'.`);
+                    
+                    const [sh, sm] = item.start_time.split(':').map(Number);
+                    const [eh, em] = item.end_time.split(':').map(Number);
+                    const startMin = sh * 60 + sm;
+                    const endMin = eh * 60 + em;
+                    if (isNaN(startMin) || isNaN(endMin) || startMin >= endMin) {
+                        throw new Error(`Item ${idx + 1} ('${item.subject_name}') has invalid time range: ${item.start_time} - ${item.end_time}.`);
+                    }
+                    timeBoundaries.push(startMin, endMin);
+                    days.forEach(day => {
+                        expanded.push({
+                            subject_name: item.subject_name,
+                            teacher_display: item.teacher_display || '',
+                            day: day,
+                            start_time: item.start_time,
+                            end_time: item.end_time,
+                            start_minutes: startMin,
+                            end_minutes: endMin,
+                            spans_all_days: !!item.spans_all_days,
+                            is_special: !!item.is_special
+                        });
+                    });
+                });
+                this.previewSchedules = expanded;
+                const uniqueBoundaries = [...new Set(timeBoundaries)].sort((a, b) => a - b);
+                const intervals = [];
+                for (let i = 0; i < uniqueBoundaries.length - 1; i++) {
+                    const start = uniqueBoundaries[i];
+                    const end = uniqueBoundaries[i+1];
+                    const sh = Math.floor(start / 60);
+                    const sm = start % 60;
+                    const eh = Math.floor(end / 60);
+                    const em = end % 60;
+                    const sStr = `${String(sh).padStart(2,'0')}:${String(sm).padStart(2,'0')}`;
+                    const eStr = `${String(eh).padStart(2,'0')}:${String(em).padStart(2,'0')}`;
+                    intervals.push({
+                        start: start,
+                        end: end,
+                        start_time: sStr,
+                        end_time: eStr,
+                        minutes: end - start,
+                        label: this.formatTimeIntervalLabel(sStr, eStr)
+                    });
+                }
+                this.previewIntervals = intervals;
+            } catch (e) {
+                this.previewError = e.message;
+            }
+        },
+        getPreviewCell(day, interval) {
+            return this.previewSchedules.find(s => {
+                if (s.day !== day && !s.spans_all_days) return false;
+                return s.start_minutes <= interval.start && s.end_minutes >= interval.end;
+            });
         },
         teachers: @js($teachers),
         teacherSearch: '',
@@ -622,36 +703,103 @@
         {{-- ═══ JSON IMPORT/EXPORT MODAL ═══ --}}
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 backdrop-blur-sm"
              x-show="jsonModal" x-cloak x-transition @click.self="jsonModal = false">
-            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 border border-slate-100 overflow-hidden animate-scaleUp">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl mx-4 border border-slate-100 overflow-hidden animate-scaleUp">
                 <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
                     <span class="font-extrabold text-slate-900 text-base">Schedule JSON Editor</span>
                     <button type="button" class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition" @click="jsonModal = false">
                         <i data-lucide="x" class="w-4 h-4"></i>
                     </button>
                 </div>
+
+                {{-- Modal Tabs --}}
+                <div class="px-6 pt-3 bg-slate-50 border-b border-slate-100 flex gap-4">
+                    <button type="button" @click="jsonTab = 'edit'"
+                        :class="jsonTab === 'edit' ? 'border-b-2 border-indigo-650 text-indigo-950 font-black' : 'text-slate-500 font-bold'"
+                        class="pb-2.5 text-xs transition cursor-pointer">
+                        Edit JSON
+                    </button>
+                    <button type="button" @click="runPreview(); jsonTab = 'preview'"
+                        :class="jsonTab === 'preview' ? 'border-b-2 border-indigo-650 text-indigo-950 font-black' : 'text-slate-500 font-bold'"
+                        class="pb-2.5 text-xs transition cursor-pointer">
+                        Visual Preview
+                    </button>
+                </div>
+
                 <form method="POST" :action="`/academic/schedules/sections/${jsonSectionId}/json`" class="px-6 py-5 space-y-4">
                     @csrf
                     <input type="hidden" name="section_id" :value="jsonSectionId">
 
-                    <p class="text-xs text-slate-500 font-light">
-                        View, copy, or paste the weekly class schedule in JSON format. Saving will overwrite the section's current timetable.
-                    </p>
+                    {{-- Edit JSON Tab Panel --}}
+                    <div x-show="jsonTab === 'edit'" class="space-y-4">
+                        <p class="text-xs text-slate-500 font-light">
+                            View, copy, or paste the weekly class schedule in JSON format. Saving will overwrite the section's current timetable.
+                        </p>
 
-                    <div class="flex flex-col gap-1.5">
-                        <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">JSON Payload</label>
-                        <div x-show="jsonLoading" class="text-xs text-indigo-750 font-bold animate-pulse">Loading schedule JSON...</div>
-                        <textarea name="schedule_json" x-model="jsonText" rows="12" required
-                            class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-xs font-mono rounded-xl p-3 outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition"
-                            placeholder="[ ... ]"></textarea>
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">JSON Payload</label>
+                            <div x-show="jsonLoading" class="text-xs text-indigo-750 font-bold animate-pulse">Loading schedule JSON...</div>
+                            <textarea name="schedule_json" x-model="jsonText" rows="12" required
+                                class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-xs font-mono rounded-xl p-3 outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition"
+                                placeholder="[ ... ]"></textarea>
+                        </div>
                     </div>
 
+                    {{-- Visual Preview Tab Panel --}}
+                    <div x-show="jsonTab === 'preview'" class="space-y-4">
+                        <div x-show="previewError" class="rounded-xl bg-rose-50 border border-rose-100 px-4 py-3 text-xs font-bold text-rose-800" x-text="previewError"></div>
+                        
+                        <div x-show="!previewError && previewIntervals.length === 0" class="text-xs text-slate-400 font-bold py-6 text-center">
+                            No schedule data to preview. Add some JSON entries first.
+                        </div>
+
+                        <div x-show="!previewError && previewIntervals.length > 0" class="space-y-2">
+                            <p class="text-xs text-slate-500 font-light">
+                                This is a draft preview of what the timetable grid will look like with the current JSON payload.
+                            </p>
+                            
+                            <div class="overflow-x-auto max-h-[350px] border border-slate-200 rounded-xl bg-white shadow-3xs">
+                                <table class="w-full text-center border-collapse text-xs">
+                                    <thead>
+                                        <tr class="bg-slate-50 text-[10px] uppercase font-black text-slate-400 border-b border-slate-200">
+                                            <th class="p-2.5 text-center font-extrabold">Time</th>
+                                            <th class="p-2.5 text-center font-extrabold">Min</th>
+                                            <template x-for="day in daysList">
+                                                <th class="p-2.5 text-center font-extrabold" x-text="day"></th>
+                                            </template>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <template x-for="interval in previewIntervals">
+                                            <tr class="border-b border-slate-100">
+                                                <td class="p-2 font-bold text-slate-700 bg-slate-50/50" x-text="interval.label"></td>
+                                                <td class="p-2 text-slate-500 bg-slate-50/50" x-text="interval.minutes"></td>
+                                                <template x-for="day in daysList">
+                                                    <td class="p-1 border border-slate-100 min-w-[120px]">
+                                                        <template x-if="getPreviewCell(day, interval)">
+                                                            <div :class="getPreviewCell(day, interval).is_special ? 'bg-rose-50 text-rose-800 border-rose-100 border-l-4 border-l-rose-500' : 'bg-indigo-50 text-indigo-800 border-indigo-100 border-l-4 border-l-indigo-500'"
+                                                                class="p-1.5 rounded-lg text-[10px] leading-tight font-extrabold text-center shadow-3xs">
+                                                                <span class="block uppercase tracking-wider" x-text="getPreviewCell(day, interval).subject_name"></span>
+                                                                <span x-show="getPreviewCell(day, interval).teacher_display" class="block opacity-75 text-[8px] font-medium mt-0.5" x-text="getPreviewCell(day, interval).teacher_display"></span>
+                                                            </div>
+                                                        </template>
+                                                    </td>
+                                                </template>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Footer Actions --}}
                     <div class="pt-4 border-t border-slate-100 flex justify-between items-center">
                         <button type="button" @click="navigator.clipboard.writeText(jsonText); alert('JSON copied to clipboard!');" 
-                            class="px-4 py-2 text-xs font-bold text-slate-750 hover:bg-slate-50 border border-slate-200 rounded-xl transition">
+                            class="px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 border border-slate-200 rounded-xl transition">
                             Copy to Clipboard
                         </button>
                         <div class="flex gap-2">
-                            <button type="button" @click="jsonModal = false" class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 border border-slate-200 rounded-xl transition">Cancel</button>
+                            <button type="button" @click="jsonModal = false" class="px-4 py-2 text-xs font-bold text-slate-655 hover:bg-slate-50 border border-slate-200 rounded-xl transition">Cancel</button>
                             <button type="submit" class="px-5 py-2 text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 rounded-xl transition"
                                 onclick="return confirm('Are you sure you want to save? This will completely overwrite the existing timetable for this section.')">
                                 Save Schedule
