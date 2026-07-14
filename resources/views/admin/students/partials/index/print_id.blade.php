@@ -200,11 +200,11 @@
         .student-lrn {
             position: absolute;
             font-family: 'Outfit', sans-serif;
-            font-size: 15.5px;
+            font-size: 17.5px;
             font-weight: 700;
             z-index: 10;
             right: 4px;
-            top: 350px;
+            top: 330px;
             width: 22px;
             height: 130px;
             display: flex;
