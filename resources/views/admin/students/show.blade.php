@@ -5,6 +5,44 @@
     $familyNo = $student->applicant->family_application_id ?? $student->id;
     $accentClasses = ['accent-green', 'accent-blue', 'accent-amber', 'accent-violet', 'accent-rose'];
     $accentClass = $accentClasses[$familyNo % 5];
+ 
+    // Country Flag code mapping
+    $countryName = trim(strtolower($student->applicant->country ?? ''));
+    $countryCode = null;
+    if ($countryName !== '') {
+        $countryMap = [
+            'philippines' => 'ph',
+            'phil' => 'ph',
+            'saudi arabia' => 'sa',
+            'saudi' => 'sa',
+            'united arab emirates' => 'ae',
+            'uae' => 'ae',
+            'kuwait' => 'kw',
+            'qatar' => 'qa',
+            'oman' => 'om',
+            'indonesia' => 'id',
+            'bahrain' => 'bh',
+            'canada' => 'ca',
+            'australia' => 'au',
+            'afghanistan' => 'af',
+            'iran' => 'ir',
+            'iran, islamic republic of persian gulf' => 'ir',
+            'egypt' => 'eg',
+            'india' => 'in',
+            'czech republic' => 'cz',
+            'angola' => 'ao',
+            'pakistan' => 'pk',
+            'mexico' => 'mx',
+            'united states' => 'us',
+            'usa' => 'us',
+        ];
+        foreach ($countryMap as $key => $code) {
+            if (str_contains($countryName, $key)) {
+                $countryCode = $code;
+                break;
+            }
+        }
+    }
 
     $firstName = trim($student->applicant->first_name ?? '');
     $middleName = trim($student->applicant->middle_name ?? '');
@@ -227,8 +265,17 @@
         <!-- Main Column (Tabs and Details) -->
         <main class="space-y-6">
             <!-- Dynamic Profile Header Card -->
-            <section class="applicant-profile-card relative {{ $accentClass }}">
-                <div class="absolute top-4 right-4 flex items-center gap-2 print-hide">
+            <section class="applicant-profile-card relative overflow-hidden {{ $accentClass }}">
+                @if ($countryCode)
+                    <div class="absolute right-0 top-0 bottom-0 h-full w-1/3 overflow-hidden pointer-events-none opacity-20 select-none print-hide" style="mask-image: linear-gradient(to left, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%); -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%);">
+                        <img src="https://flagcdn.com/w640/{{ $countryCode }}.png" 
+                             alt="Country Flag" 
+                             class="h-full w-full object-cover object-right animate-pulse"
+                             style="filter: url(#wavy-flag-filter); transform: scale(1.15); transform-origin: right center; animation-duration: 4s;">
+                    </div>
+                @endif
+
+                <div class="absolute top-4 right-4 flex items-center gap-2 print-hide" style="z-index: 10;">
                     <span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-white/10 text-white border border-white/25 uppercase tracking-wider">
                         SY {{ $student->school_year ?? '-' }}
                     </span>
@@ -277,7 +324,7 @@
                     </div>
                     
                     <!-- Metadata Rows -->
-                    <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1.5 text-xs text-white/90">
+                    <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1.5 text-xs text-white/90 relative" style="z-index: 10;">
                         <div class="flex items-center gap-2">
                             <i data-lucide="mail" class="w-4 h-4 opacity-75"></i>
                             <span class="font-medium tracking-wide">{{ $student->school_email ?? '-' }}</span>
@@ -286,7 +333,18 @@
                             <i data-lucide="fingerprint" class="w-4 h-4 opacity-75"></i>
                             <span class="font-medium tracking-wide"><span class="font-bold opacity-75">LRN:</span> {{ $student->applicant->lrn ?? 'N/A' }}</span>
                         </div>
-                        <div class="flex items-center gap-2 md:col-span-2">
+                        @if ($student->applicant->country)
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="globe" class="w-4 h-4 opacity-75"></i>
+                            <span class="font-medium tracking-wide flex items-center gap-1.5">
+                                @if ($countryCode)
+                                    <img src="https://flagcdn.com/16x12/{{ $countryCode }}.png" class="inline rounded-xs shadow-xs" alt="{{ $student->applicant->country }}">
+                                @endif
+                                {{ $student->applicant->country }}
+                            </span>
+                        </div>
+                        @endif
+                        <div class="flex items-center gap-2 {{ $student->applicant->country ? '' : 'md:col-span-2' }}">
                             <i data-lucide="monitor" class="w-4 h-4 opacity-75"></i>
                             <span class="font-medium tracking-wide">{{ $student->applicant->learning_mode ?: 'Learning Mode Pending' }}</span>
                         </div>
@@ -692,4 +750,14 @@
         }
     </script>
     @endif
+
+    <!-- SVG Wavy Flag Filter -->
+    <svg class="hidden" width="0" height="0">
+        <defs>
+            <filter id="wavy-flag-filter">
+                <feTurbulence type="fractalNoise" baseFrequency="0.012 0.04" numOctaves="2" result="noise" />
+                <feDisplacementMap in="SourceGraphic" in2="noise" scale="22" xChannelSelector="R" yChannelSelector="G" />
+            </filter>
+        </defs>
+    </svg>
 </x-admin-layout>
