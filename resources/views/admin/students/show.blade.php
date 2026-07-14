@@ -392,6 +392,12 @@
                         <span>Documents & Verification</span>
                     </button>
                     @endunless
+                    <button @click="activeTab = 'account'" 
+                            :class="activeTab === 'account' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-900/50'" 
+                            class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 focus:outline-none flex-1 sm:flex-initial cursor-pointer">
+                        <i data-lucide="key-round" class="h-4 w-4"></i>
+                        <span>Account Summary</span>
+                    </button>
                 </nav>
             </div>
 
@@ -401,6 +407,88 @@
             @unless ($isTeacherAdminViewer)
                 @include('admin.students.partials.show.documents')
             @endunless
+
+            <!-- Account Summary Tab -->
+            <div x-show="activeTab === 'account'" class="space-y-6" x-cloak>
+                <x-card title="Account Summary" subtitle="Student portal credentials and identity verification details">
+                    <dl class="space-y-6 text-sm mt-2">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Left Details -->
+                            <div class="space-y-4">
+                                <div class="pb-3 border-b border-slate-100 dark:border-slate-800/80">
+                                    <dt class="font-extrabold uppercase tracking-wider text-slate-400 text-xs">Student ID Number</dt>
+                                    <dd class="mt-1.5 font-extrabold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+                                        <span>{{ $student->student_number ?? 'Pending' }}</span>
+                                        <button @click="navigator.clipboard.writeText('{{ $student->student_number }}'); copySuccess = true; setTimeout(() => copySuccess = false, 2000)" class="text-slate-400 hover:text-emerald-600 focus:outline-none transition-colors" title="Copy Student ID">
+                                            <i data-lucide="copy" class="h-4 w-4" x-show="!copySuccess"></i>
+                                            <i data-lucide="check" class="h-4 w-4 text-emerald-600" x-show="copySuccess"></i>
+                                        </button>
+                                    </dd>
+                                </div>
+                                <div class="pb-3 border-b border-slate-100 dark:border-slate-800/80">
+                                    <dt class="font-extrabold uppercase tracking-wider text-slate-400 text-xs">School Email / Username</dt>
+                                    <dd class="mt-1 font-semibold text-slate-800 dark:text-slate-200 select-all break-all text-base">{{ $student->school_email ?? '-' }}</dd>
+                                </div>
+                                <div class="pb-3 border-b border-slate-100 dark:border-slate-800/80">
+                                    <dt class="font-extrabold uppercase tracking-wider text-slate-400 text-xs">Temporary Password</dt>
+                                    <dd class="mt-1 select-all break-all">
+                                        @php
+                                            $isHashed = str_starts_with($student->temp_password ?? '', '$');
+                                        @endphp
+                                        @if ($isHashed || blank($student->temp_password))
+                                            <span class="text-slate-500 font-semibold">-</span>
+                                        @else
+                                            <span class="font-mono bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded border border-slate-200 dark:border-slate-700 text-sm text-slate-800 dark:text-slate-200">{{ $student->temp_password }}</span>
+                                        @endif
+                                    </dd>
+                                </div>
+                                <div class="pb-3 border-b border-slate-100 dark:border-slate-800/80">
+                                    <div class="flex justify-between items-center">
+                                        <dt class="font-extrabold uppercase tracking-wider text-slate-400 text-xs">Password Status</dt>
+                                        <button type="button" @click="openPasswordModal = true" class="text-slate-400 hover:text-slate-600 transition-colors cursor-pointer" title="Credential & Password Settings">
+                                            <i data-lucide="settings" class="h-3.5 w-3.5"></i>
+                                        </button>
+                                    </div>
+                                    <dd class="mt-1.5 flex flex-wrap items-center gap-1.5">
+                                        @if ($student->password_changed_at)
+                                            <span class="inline-flex items-center gap-1 rounded bg-emerald-50 px-2 py-0.5 text-[10px] font-extrabold text-emerald-700 ring-1 ring-emerald-100 uppercase">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check inline-block"><path d="M20 6 9 17l-5-5"/></svg>
+                                                Changed / Set by Student
+                                            </span>
+                                            <span class="text-[10px] text-slate-400 font-bold">on {{ $student->password_changed_at->format('M d, Y h:i A') }}</span>
+                                        @elseif ($student->ms_user_id)
+                                            <span class="inline-flex items-center rounded bg-amber-50 px-2 py-0.5 text-[10px] font-extrabold text-amber-700 ring-1 ring-amber-100 uppercase">
+                                                Still Temporary
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center rounded bg-slate-100 px-2 py-0.5 text-[10px] font-extrabold text-slate-500 ring-1 ring-slate-200 uppercase">
+                                                No Account
+                                            </span>
+                                        @endif
+                                    </dd>
+                                </div>
+                                <div class="pb-3 border-b border-slate-100 dark:border-slate-800/80">
+                                    <dt class="font-extrabold uppercase tracking-wider text-slate-400 text-xs">Classroom Section</dt>
+                                    <dd class="mt-1 font-semibold text-slate-800 dark:text-slate-200">{{ $student->studentSection->section->name ?? 'No Section' }}</dd>
+                                </div>
+                            </div>
+
+                            <!-- Right Details (QR Verification) -->
+                            <div class="flex flex-col items-center justify-center p-6 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800/60">
+                                <dt class="font-extrabold uppercase tracking-wider text-slate-400 text-xs mb-3">Verification QR Code</dt>
+                                <dd class="p-3 bg-white rounded-2xl border border-slate-200 dark:border-slate-700 w-40 h-40 flex items-center justify-center shadow-xs">
+                                    <img src="https://quickchart.io/qr?text={{ urlencode('https://amis.edu.ph/v/' . $student->obfuscated_id) }}&margin=1&format=svg" class="w-full h-full object-contain block" alt="QR Code">
+                                </dd>
+                                <p class="text-[11px] text-slate-400 font-bold mt-3 text-center">Scan to verify student status</p>
+                                <a href="#" onclick="downloadQR('{{ $student->obfuscated_id }}', '{{ $student->student_number }}'); return false;" class="text-xs text-emerald-600 hover:text-emerald-700 font-extrabold mt-3.5 inline-flex items-center gap-1.5 transition-transform active:scale-[0.98] cursor-pointer">
+                                    <i data-lucide="download" class="w-4 h-4"></i>
+                                    <span>Download QR Code</span>
+                                </a>
+                            </div>
+                        </div>
+                    </dl>
+                </x-card>
+            </div>
         </main>
 
         <!-- Right Sidebar -->
@@ -1057,6 +1145,25 @@
                 </html>
             `);
             printWindow.document.close();
+        }
+
+        function downloadQR(obfuscatedId, studentNumber) {
+            const url = 'https://quickchart.io/qr?text=' + encodeURIComponent('https://amis.edu.ph/v/' + obfuscatedId) + '&margin=1&format=png&size=300';
+            fetch(url)
+                .then(response => response.blob())
+                .then(blob => {
+                    const blobUrl = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = blobUrl;
+                    link.download = 'QR_' + studentNumber + '.png';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(blobUrl);
+                })
+                .catch(err => {
+                    window.open(url, '_blank');
+                });
         }
     </script>
 
