@@ -522,8 +522,10 @@
             </div>
             <!-- Body -->
             <div class="p-5 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950/20">
-                <div class="w-full max-h-[45vh] overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-center bg-slate-100 dark:bg-slate-900">
-                    <img id="crop-image-preview" src="" alt="Source image for cropping" class="max-w-full max-h-[45vh] block">
+                <div class="w-full max-h-[45vh] overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-center bg-slate-100 dark:bg-slate-900 p-4">
+                    <div style="max-width: 100%; max-height: 35vh; width: 100%; display: block;">
+                        <img id="crop-image-preview" src="" alt="Source image for cropping" style="max-width: 100%; max-height: 35vh; display: block; margin: 0 auto;">
+                    </div>
                 </div>
                 <p class="text-[11px] text-slate-400 mt-3 font-semibold">Drag and adjust the square selection to crop the 2x2 photo.</p>
             </div>
@@ -556,26 +558,34 @@
             
             reader.onload = function(e) {
                 const cropImg = document.getElementById('crop-image-preview');
-                cropImg.src = e.target.result;
                 
-                // Show Crop Modal
+                // Show Crop Modal first to establish layout dimensions
                 const cropModal = document.getElementById('photo-crop-modal');
                 cropModal.classList.remove('hidden');
                 
-                // Initialize Cropper after modal is shown
-                if (cropper) {
-                    cropper.destroy();
-                }
+                cropImg.onload = function() {
+                    if (cropper) {
+                        cropper.destroy();
+                        cropper = null;
+                    }
+                    cropper = new Cropper(cropImg, {
+                        aspectRatio: 1,
+                        viewMode: 1,
+                        dragMode: 'move',
+                        background: false,
+                        autoCropArea: 0.8,
+                        responsive: true,
+                        checkOrientation: false,
+                        modal: true,
+                        guides: true,
+                        highlight: true,
+                        cropBoxMovable: true,
+                        cropBoxResizable: true,
+                        toggleDragModeOnDblclick: false
+                    });
+                };
                 
-                cropper = new Cropper(cropImg, {
-                    aspectRatio: 1,
-                    viewMode: 1,
-                    dragMode: 'move',
-                    background: false,
-                    autoCropArea: 0.9,
-                    responsive: true,
-                    checkOrientation: false
-                });
+                cropImg.src = e.target.result;
             };
             
             reader.readAsDataURL(selectedFile);
