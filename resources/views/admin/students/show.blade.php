@@ -896,11 +896,11 @@
                             <div class="absolute text-center font-bold text-[#334155] uppercase leading-none flex flex-col justify-center items-center animate-fade-in" style="left: 12px; top: 304px; width: 256px; height: 18px; z-index: 10; font-size: 12px;">{{ $firstName }}</div>
 
                             <!-- Grade Level -->
-                            <div class="absolute text-center font-black uppercase tracking-wide flex flex-col justify-center items-center animate-fade-in" style="left: 12px; top: 334px; width: 256px; height: 24px; z-index: 10; font-size: 20px; color: {{ $getGradeColor($displayGrade) }};">{{ $displayGrade }}</div>
+                            <div class="absolute text-center font-black uppercase tracking-wide flex flex-col justify-center items-center animate-fade-in" style="left: 12px; top: 340px; width: 256px; height: 24px; z-index: 10; font-size: 20px; color: {{ $getGradeColor($displayGrade) }};">{{ $displayGrade }}</div>
 
                             <!-- LRN -->
                             @if($student->applicant->lrn && !in_array(strtoupper($student->applicant->lrn), ['N/A', 'NA', 'EMPTY', '']))
-                                <div class="absolute font-bold text-[#1e293b] whitespace-nowrap" style="right: 4px; top: 270px; z-index: 10; font-size: 14px; transform: rotate(-90deg); transform-origin: right center; width: 18px; height: 107px; display: flex; align-items: center; justify-content: center;">
+                                <div class="absolute font-bold text-[#1e293b] whitespace-nowrap" style="right: 1px; top: 283px; z-index: 10; font-size: 12.5px; transform: rotate(-90deg); transform-origin: right center; width: 18px; height: 107px; display: flex; align-items: center; justify-content: center;">
                                     LRN: <span>{{ $student->applicant->lrn }}</span>
                                 </div>
                             @endif

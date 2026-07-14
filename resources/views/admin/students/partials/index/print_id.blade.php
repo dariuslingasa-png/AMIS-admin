@@ -175,7 +175,7 @@
         .student-grade {
             position: absolute;
             left: 15px;
-            top: 406px;
+            top: 414px;
             width: 310px;
             height: 30px;
             z-index: 10;
@@ -200,11 +200,11 @@
         .student-lrn {
             position: absolute;
             font-family: 'Outfit', sans-serif;
-            font-size: 17.5px;
+            font-size: 15.5px;
             font-weight: 700;
             z-index: 10;
-            right: 4px;
-            top: 330px;
+            right: 1px;
+            top: 345px;
             width: 22px;
             height: 130px;
             display: flex;
