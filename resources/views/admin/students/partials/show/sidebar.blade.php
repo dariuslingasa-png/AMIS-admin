@@ -70,38 +70,6 @@
                     @endif
                 </div>
             </div>
-            
-            <div class="border-t border-slate-100 dark:border-slate-800 pt-3 mt-3 space-y-2">
-                <span class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">Checklist Actions</span>
-                
-                <!-- 1. Print Enrollment Confirmation -->
-                <a href="{{ route('admin.students.index', ['search' => $student->student_number, 'print_info' => 1]) }}" target="_blank"
-                   class="w-full inline-flex h-9 items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98] transition cursor-pointer">
-                    <i data-lucide="file-check" class="h-3.5 w-3.5 text-slate-500"></i>
-                    <span>Print Enrollment Confirmation</span>
-                </a>
-
-                <!-- 2. Print Account Credentials Slip -->
-                <a href="{{ route('admin.students.index', ['search' => $student->student_number, 'print_credentials' => 1]) }}" target="_blank"
-                   class="w-full inline-flex h-9 items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98] transition cursor-pointer">
-                    <i data-lucide="key" class="h-3.5 w-3.5 text-slate-500"></i>
-                    <span>Print Credentials Slip</span>
-                </a>
-
-                <!-- 3. Print Document Checklist -->
-                <button type="button" onclick="printDocumentChecklist()"
-                   class="w-full inline-flex h-9 items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98] transition cursor-pointer">
-                    <i data-lucide="clipboard-list" class="h-3.5 w-3.5 text-slate-500"></i>
-                    <span>Print Document Checklist</span>
-                </button>
-
-                <!-- 4. Print Verification QR Code -->
-                <button type="button" onclick="printQrCode('{{ $student->obfuscated_id }}', '{{ $student->student_number }}')"
-                   class="w-full inline-flex h-9 items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98] transition cursor-pointer">
-                    <i data-lucide="qr-code" class="h-3.5 w-3.5 text-slate-500"></i>
-                    <span>Print Verification QR Code</span>
-                </button>
-            </div>
         </div>
     </x-card>
 
