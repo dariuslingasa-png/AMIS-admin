@@ -122,6 +122,7 @@
     <div x-data="{
          openEditModal: false,
          showIdPreview: false,
+         openPasswordModal: false,
          editSection: 'all',
          copySuccess: false,
          activeTab: 'overview',
@@ -554,6 +555,67 @@
             </div>
         </div>
 
+        <!-- Password Settings Modal -->
+        <div x-show="openPasswordModal" x-cloak
+             class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-fade-in"
+             @click.self="openPasswordModal = false">
+            <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800 flex flex-col"
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 scale-95"
+                 x-transition:enter-end="opacity-100 scale-100">
+                <!-- Header -->
+                <div class="flex items-center justify-between px-6 py-4 border-b border-slate-150 dark:border-slate-800">
+                    <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <i data-lucide="key" class="h-4.5 w-4.5 text-amber-500"></i>
+                        <span>Credential Settings</span>
+                    </h3>
+                    <button @click="openPasswordModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                        <i data-lucide="x" class="h-5 w-5"></i>
+                    </button>
+                </div>
+                <!-- Body -->
+                <div class="p-6 space-y-6 bg-slate-50 dark:bg-slate-950/20">
+                    <!-- Reset default form -->
+                    <form method="POST" action="{{ route('admin.students.resend', $student) }}" class="space-y-2">
+                        @csrf
+                        <input type="hidden" name="reset_format" value="default">
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-350">Quick Reset</label>
+                        <button type="submit" class="w-full inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-amber-250 bg-amber-50 dark:border-amber-950/20 dark:bg-amber-950/10 px-3 text-xs font-bold text-amber-700 dark:text-amber-400 hover:bg-amber-100/50 active:scale-[0.98] transition cursor-pointer">
+                            <i data-lucide="refresh-cw" class="h-3.5 w-3.5"></i>
+                            <span>Reset Password to Amis@12345</span>
+                        </button>
+                    </form>
+
+                    <div class="border-t border-slate-150 dark:border-slate-800 my-4"></div>
+
+                    <!-- Reset custom password form -->
+                    <form method="POST" action="{{ route('admin.students.resend', $student) }}" class="space-y-3">
+                        @csrf
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-350">Set Custom Password</label>
+                        <div class="flex gap-2">
+                            <input type="text" name="custom_password" placeholder="Type custom password..." required class="flex-1 h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none transition focus:border-amber-400 focus:ring-4 focus:ring-amber-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+                            <button type="submit" class="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 px-4 text-xs font-bold text-white active:scale-[0.98] transition cursor-pointer">
+                                <span>Reset</span>
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="border-t border-slate-150 dark:border-slate-800 my-4"></div>
+
+                    <!-- Email credentials form -->
+                    <form method="POST" action="{{ route('admin.students.resend', $student) }}" class="space-y-2">
+                        @csrf
+                        <input type="hidden" name="reset_format" value="none">
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-350">Notification</label>
+                        <button type="submit" class="w-full inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 px-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98] transition cursor-pointer">
+                            <i data-lucide="mail" class="h-3.5 w-3.5"></i>
+                            <span>Email Current Credentials</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
         <!-- Edit Profile Modal -->
         @unless ($isTeacherAdminViewer)
         <div x-show="openEditModal" x-cloak
@@ -900,6 +962,103 @@
         }
     </script>
     @endif
+
+    <script>
+        function printQrCode(obfuscatedId, studentNumber) {
+            const qrUrl = 'https://quickchart.io/qr?text=' + encodeURIComponent('https://amis.edu.ph/v/' + obfuscatedId) + '&margin=1&format=png&size=400';
+            const printWindow = window.open('', '_blank', 'width=500,height=500');
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>QR Code - ${studentNumber}</title>
+                    <style>
+                        body { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: sans-serif; }
+                        img { width: 300px; height: 300px; }
+                        h2 { margin-top: 20px; font-size: 20px; color: #333; }
+                        p { font-size: 14px; color: #666; margin: 5px 0 0 0; }
+                    </style>
+                </head>
+                <body>
+                    <img src="${qrUrl}" onload="window.print(); window.close();" />
+                    <h2>Student ID #${studentNumber}</h2>
+                    <p>Verification QR Code</p>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+        }
+
+        function printDocumentChecklist() {
+            const printWindow = window.open('', '_blank', 'width=700,height=800');
+            
+            const docs = [
+                { label: '2x2 Photo ID', status: '{{ $student->applicant->photo_2x2_url ? "VERIFIED" : "MISSING" }}' },
+                { label: 'Birth Certificate', status: '{{ $student->applicant->birth_cert_url ? "VERIFIED" : "MISSING" }}' },
+                { label: 'Report Card / Form 138', status: '{{ $student->applicant->report_card_url ? "VERIFIED" : "MISSING" }}' },
+                { label: 'Marriage Contract', status: '{{ $student->applicant->marriage_contract_url ? "VERIFIED" : "MISSING" }}' },
+                { label: 'Medical History Records', status: '{{ $student->applicant->medical_record_url ? "VERIFIED" : "MISSING" }}' },
+                { label: 'Temporary Proof (Affidavit)', status: '{{ $student->applicant->affidavit_url ? "VERIFIED" : "MISSING" }}' }
+            ];
+            
+            let rowsHtml = '';
+            docs.forEach(doc => {
+                const color = doc.status === 'VERIFIED' ? '#047857' : '#b91c1c';
+                const check = doc.status === 'VERIFIED' ? '✓' : '✗';
+                rowsHtml += `
+                    <tr>
+                        <td>${doc.label}</td>
+                        <td style="color: ${color}; font-weight: bold; text-align: center;">[ ${check} ] ${doc.status}</td>
+                    </tr>
+                `;
+            });
+
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>Document Checklist - {{ $student->student_number }}</title>
+                    <style>
+                        body { font-family: system-ui, sans-serif; padding: 40px; color: #1e293b; }
+                        .header { border-bottom: 2px solid #cbd5e1; padding-bottom: 20px; margin-bottom: 30px; }
+                        h1 { margin: 0; font-size: 24px; }
+                        p { margin: 5px 0 0 0; color: #64748b; font-size: 14px; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                        th, td { border: 1px solid #e2e8f0; padding: 12px 16px; text-align: left; font-size: 14px; }
+                        th { background-color: #f8fafc; font-weight: bold; }
+                        .footer { margin-top: 50px; border-top: 1px solid #e2e8f0; padding-top: 20px; font-size: 12px; color: #94a3b8; text-align: center; }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>AMIS Document Verification Checklist</h1>
+                        <p>Student Name: <strong>{{ $displayName }}</strong> | ID: <strong>{{ $student->student_number }}</strong></p>
+                        <p>Date Generated: ${new Date().toLocaleDateString()}</p>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Requirement Document</th>
+                                <th style="width: 180px; text-align: center;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rowsHtml}
+                        </tbody>
+                    </table>
+                    <div class="footer">
+                        Al Munawwara Islamic School Registrar Office
+                    </div>
+                    <script>
+                        window.onload = function() {
+                            window.print();
+                            window.close();
+                        }
+                    <\/script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+        }
+    </script>
 
     <!-- SVG Wavy Flag Filter -->
     <svg class="hidden" width="0" height="0">

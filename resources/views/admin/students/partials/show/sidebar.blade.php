@@ -70,6 +70,38 @@
                     @endif
                 </div>
             </div>
+            
+            <div class="border-t border-slate-100 dark:border-slate-800 pt-3 mt-3 space-y-2">
+                <span class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">Checklist Actions</span>
+                
+                <!-- 1. Print Enrollment Confirmation -->
+                <a href="{{ route('admin.students.index', ['search' => $student->student_number, 'print_info' => 1]) }}" target="_blank"
+                   class="w-full inline-flex h-9 items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98] transition cursor-pointer">
+                    <i data-lucide="file-check" class="h-3.5 w-3.5 text-slate-500"></i>
+                    <span>Print Enrollment Confirmation</span>
+                </a>
+
+                <!-- 2. Print Account Credentials Slip -->
+                <a href="{{ route('admin.students.index', ['search' => $student->student_number, 'print_credentials' => 1]) }}" target="_blank"
+                   class="w-full inline-flex h-9 items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98] transition cursor-pointer">
+                    <i data-lucide="key" class="h-3.5 w-3.5 text-slate-500"></i>
+                    <span>Print Credentials Slip</span>
+                </a>
+
+                <!-- 3. Print Document Checklist -->
+                <button type="button" onclick="printDocumentChecklist()"
+                   class="w-full inline-flex h-9 items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98] transition cursor-pointer">
+                    <i data-lucide="clipboard-list" class="h-3.5 w-3.5 text-slate-500"></i>
+                    <span>Print Document Checklist</span>
+                </button>
+
+                <!-- 4. Print Verification QR Code -->
+                <button type="button" onclick="printQrCode('{{ $student->obfuscated_id }}', '{{ $student->student_number }}')"
+                   class="w-full inline-flex h-9 items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98] transition cursor-pointer">
+                    <i data-lucide="qr-code" class="h-3.5 w-3.5 text-slate-500"></i>
+                    <span>Print Verification QR Code</span>
+                </button>
+            </div>
         </div>
     </x-card>
 
@@ -104,7 +136,12 @@
                 </dd>
             </div>
             <div class="border-t border-slate-100 pt-3.5 dark:border-slate-800">
-                <dt class="font-extrabold uppercase tracking-wider text-slate-400">Password Status</dt>
+                <div class="flex justify-between items-center">
+                    <dt class="font-extrabold uppercase tracking-wider text-slate-400">Password Status</dt>
+                    <button type="button" @click="openPasswordModal = true" class="text-slate-400 hover:text-slate-600 transition-colors cursor-pointer" title="Credential & Password Settings">
+                        <i data-lucide="settings" class="h-3.5 w-3.5"></i>
+                    </button>
+                </div>
                 <dd class="mt-1.5 flex flex-wrap items-center gap-1.5">
                     @if ($student->password_changed_at)
                         <span class="inline-flex items-center gap-1 rounded bg-emerald-50 px-2 py-0.5 text-[10px] font-extrabold text-emerald-700 ring-1 ring-emerald-100 uppercase">
