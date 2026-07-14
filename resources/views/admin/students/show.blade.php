@@ -228,7 +228,15 @@
         <main class="space-y-6">
             <!-- Dynamic Profile Header Card -->
             <section class="applicant-profile-card relative {{ $accentClass }}">
-                <span class="application-number-pill">Student ID #{{ $student->student_number ?? 'Pending' }}</span>
+                <div class="absolute top-4 right-4 flex items-center gap-2 print-hide">
+                    <span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-white/10 text-white border border-white/25 uppercase tracking-wider">
+                        SY {{ $student->school_year ?? '-' }}
+                    </span>
+                    <span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-white/10 text-white border border-white/25 uppercase tracking-wider">
+                        ID #{{ $student->student_number ?? 'Pending' }}
+                    </span>
+                </div>
+                
                 <div class="relative group flex items-center justify-center">
                     <button type="button" class="applicant-photo overflow-hidden" @if ($photoUrl) @click="openPreview('{{ $photoUrl }}', '2x2 Photo', false)" @endif>
                         @if ($photoUrl)
@@ -248,31 +256,50 @@
                         <input type="file" id="student-photo-input" name="photo" accept="image/*" class="hidden" onchange="uploadStudentPhoto(this)">
                     @endif
                 </div>
-                <div>
-                    <h2 class="text-3xl font-bold tracking-tight">{{ $displayName }}</h2>
-                    <p class="mt-2 text-sm text-emerald-50/90 flex items-center flex-wrap gap-x-4 gap-y-1">
-                        <span class="flex items-center gap-1.5">
-                            <i data-lucide="mail" class="h-3.5 w-3.5"></i>
-                            {{ $student->school_email ?? '-' }}
-                        </span>
-                        <span class="flex items-center gap-1.5">
-                            <i data-lucide="fingerprint" class="h-3.5 w-3.5 opacity-75"></i>
-                            <span class="font-extrabold opacity-75">LRN:</span>
-                            {{ $student->applicant->lrn ?? 'N/A' }}
-                        </span>
-                    </p>
-                    <div class="applicant-pill-row">
-                        <span class="applicant-pill applicant-pill-grade">{{ Str::upper($student->grade_level ?: 'Grade pending') }}</span>
-                        <span class="applicant-pill applicant-pill-type">{{ Str::upper($student->applicant->student_type ?: 'Student') }}</span>
-                        <span class="applicant-pill applicant-pill-mode">{{ Str::upper($student->applicant->learning_mode ?: 'Learning mode pending') }}</span>
-                        <span class="applicant-pill applicant-pill-year">SY {{ $student->school_year ?? '-' }}</span>
+                
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <h2 class="text-3xl font-black tracking-tight font-outfit uppercase">{{ $displayName }}</h2>
                         @if (!$student->applicant || $student->applicant->completion_percentage < 100)
                             @php
                                 $missingList = $student->applicant ? implode(', ', $student->applicant->incomplete_fields) : 'No profile';
                             @endphp
-                            <span class="applicant-pill bg-amber-500/20 text-amber-200 border border-amber-500/30 font-extrabold cursor-help" title="Missing: {{ $missingList }}">INCOMPLETE</span>
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-200 border border-amber-500/30 cursor-help uppercase tracking-wider animate-pulse" title="Missing: {{ $missingList }}">
+                                <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                                Incomplete
+                            </span>
+                        @else
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 uppercase tracking-wider">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                                Active
+                            </span>
                         @endif
-
+                    </div>
+                    
+                    <!-- Metadata Rows -->
+                    <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1.5 text-xs text-white/90">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="mail" class="w-4 h-4 opacity-75"></i>
+                            <span class="font-medium tracking-wide">{{ $student->school_email ?? '-' }}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="fingerprint" class="w-4 h-4 opacity-75"></i>
+                            <span class="font-medium tracking-wide"><span class="font-bold opacity-75">LRN:</span> {{ $student->applicant->lrn ?? 'N/A' }}</span>
+                        </div>
+                        <div class="flex items-center gap-2 md:col-span-2">
+                            <i data-lucide="monitor" class="w-4 h-4 opacity-75"></i>
+                            <span class="font-medium tracking-wide">{{ $student->applicant->learning_mode ?: 'Learning Mode Pending' }}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Academic Info Badges -->
+                    <div class="mt-4 flex items-center gap-2 flex-wrap">
+                        <span class="inline-flex items-center px-3 py-1 rounded-xl text-xs font-black bg-white/15 text-white border border-white/20 uppercase tracking-wider">
+                            {{ $student->grade_level ?: 'Grade pending' }}
+                        </span>
+                        <span class="inline-flex items-center px-3 py-1 rounded-xl text-xs font-black bg-white/15 text-white border border-white/20 uppercase tracking-wider">
+                            {{ $student->applicant->student_type ?: 'Student' }}
+                        </span>
                     </div>
                 </div>
             </section>
