@@ -430,7 +430,7 @@
                     </button>
                 </div>
                 <!-- Body -->
-                <div class="p-6 overflow-y-auto max-h-[70vh] flex flex-col md:flex-row items-center justify-center gap-8 bg-slate-50 dark:bg-slate-950/20">
+                <div class="p-6 overflow-y-auto max-h-[70vh] flex flex-col md:flex-row items-center justify-center bg-slate-50 dark:bg-slate-950/20" style="gap: 24px;">
                     
                     @php
                         // Resolve ID card variables
