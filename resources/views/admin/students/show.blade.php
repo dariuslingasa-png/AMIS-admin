@@ -900,7 +900,7 @@
 
                             <!-- LRN -->
                             @if($student->applicant->lrn && !in_array(strtoupper($student->applicant->lrn), ['N/A', 'NA', 'EMPTY', '']))
-                                <div class="absolute font-bold text-[#1e293b] whitespace-nowrap" style="right: 1px; top: 283px; z-index: 10; font-size: 12.5px; transform: rotate(-90deg); transform-origin: right center; width: 18px; height: 107px; display: flex; align-items: center; justify-content: center;">
+                                <div class="absolute font-bold text-[#1e293b] whitespace-nowrap" style="left: 200px; top: 303px; width: 140px; height: 18px; z-index: 10; font-size: 12.5px; transform: rotate(-90deg); transform-origin: center; display: flex; align-items: center; justify-content: flex-start; letter-spacing: 0.05em;">
                                     LRN: <span>{{ $student->applicant->lrn }}</span>
                                 </div>
                             @endif
