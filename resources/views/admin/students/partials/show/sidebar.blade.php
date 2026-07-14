@@ -73,6 +73,38 @@
         </div>
     </x-card>
 
+    <!-- Print & Action Checklist -->
+    <x-card title="Print & Action Checklist">
+        <div class="space-y-2">
+            <!-- 1. Print Enrollment Confirmation -->
+            <a href="{{ route('admin.students.index', ['search' => $student->student_number, 'print_info' => 1]) }}" target="_blank"
+               class="w-full inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98] transition cursor-pointer">
+                <i data-lucide="file-check" class="h-4 w-4 text-slate-500"></i>
+                <span>Print Enrollment Confirmation</span>
+            </a>
+
+            <!-- 2. Print Account Credentials Slip -->
+            <a href="{{ route('admin.students.index', ['search' => $student->student_number, 'print_credentials' => 1]) }}" target="_blank"
+               class="w-full inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98] transition cursor-pointer">
+                <i data-lucide="key" class="h-4 w-4 text-slate-500"></i>
+                <span>Print Credentials Slip</span>
+            </a>
+
+            <!-- 3. Print Document Checklist -->
+            <button type="button" onclick="printDocumentChecklist()"
+               class="w-full inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98] transition cursor-pointer">
+                <i data-lucide="clipboard-list" class="h-4 w-4 text-slate-500"></i>
+                <span>Print Document Checklist</span>
+            </button>
+
+            <!-- 4. Print Verification QR Code -->
+            <button type="button" onclick="printQrCode('{{ $student->obfuscated_id }}', '{{ $student->student_number }}')"
+               class="w-full inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98] transition cursor-pointer">
+                <i data-lucide="qr-code" class="h-4 w-4 text-slate-500"></i>
+                <span>Print Verification QR Code</span>
+            </button>
+        </div>
+    </x-card>
 
     <!-- Actions Panel -->
     <x-card title="Actions Workspace">
@@ -106,17 +138,6 @@
                     </button>
                 </div>
             </form>
-
-            <!-- Print Workspace -->
-            <div class="border-t border-slate-100 pt-4 mt-4 dark:border-slate-800 space-y-2">
-                <label class="block text-xxs font-extrabold uppercase tracking-wider text-slate-400">Print Workspace</label>
-                <a href="{{ route('admin.students.index', ['search' => $student->student_number, 'print_info' => 1]) }}"
-                   target="_blank"
-                   class="w-full inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98] transition-all duration-200 cursor-pointer">
-                    <i data-lucide="printer" class="h-3.5 w-3.5 text-slate-500"></i>
-                    <span>Print Official Info Sheet</span>
-                </a>
-            </div>
 
 
 

@@ -471,40 +471,6 @@
                                     <dt class="font-extrabold uppercase tracking-wider text-slate-400 text-xs">Classroom Section</dt>
                                     <dd class="mt-1 font-semibold text-slate-800 dark:text-slate-200">{{ $student->studentSection->section->name ?? 'No Section' }}</dd>
                                 </div>
-
-                                <!-- Print Checklist Actions -->
-                                <div class="pt-4 border-t border-slate-100 dark:border-slate-800/80 space-y-2">
-                                    <dt class="font-extrabold uppercase tracking-wider text-slate-450 dark:text-slate-500 text-xs mb-2">Print & Action Checklist</dt>
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                        <!-- 1. Print Enrollment Confirmation -->
-                                        <a href="{{ route('admin.students.index', ['search' => $student->student_number, 'print_info' => 1]) }}" target="_blank"
-                                           class="inline-flex h-9.5 items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98] transition cursor-pointer">
-                                            <i data-lucide="file-check" class="h-4 w-4 text-slate-500"></i>
-                                            <span>Print Enrollment Confirmation</span>
-                                        </a>
-
-                                        <!-- 2. Print Account Credentials Slip -->
-                                        <a href="{{ route('admin.students.index', ['search' => $student->student_number, 'print_credentials' => 1]) }}" target="_blank"
-                                           class="inline-flex h-9.5 items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98] transition cursor-pointer">
-                                            <i data-lucide="key" class="h-4 w-4 text-slate-500"></i>
-                                            <span>Print Credentials Slip</span>
-                                        </a>
-
-                                        <!-- 3. Print Document Checklist -->
-                                        <button type="button" onclick="printDocumentChecklist()"
-                                           class="inline-flex h-9.5 items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98] transition cursor-pointer">
-                                            <i data-lucide="clipboard-list" class="h-4 w-4 text-slate-500"></i>
-                                            <span>Print Document Checklist</span>
-                                        </button>
-
-                                        <!-- 4. Print Verification QR Code -->
-                                        <button type="button" onclick="printQrCode('{{ $student->obfuscated_id }}', '{{ $student->student_number }}')"
-                                           class="inline-flex h-9.5 items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98] transition cursor-pointer">
-                                            <i data-lucide="qr-code" class="h-4 w-4 text-slate-500"></i>
-                                            <span>Print Verification QR Code</span>
-                                        </button>
-                                    </div>
-                                </div>
                             </div>
 
                             <!-- Right Details (QR Verification) -->
@@ -536,13 +502,13 @@
                             <!-- Resend Credentials -->
                             <div class="bg-slate-50 dark:bg-slate-900/40 p-4 rounded-2xl border border-slate-100 dark:border-slate-855 flex flex-col justify-between gap-3">
                                 <div>
-                                    <h5 class="text-xs font-bold text-slate-850 dark:text-slate-200">Email Credentials</h5>
+                                    <h5 class="text-xs font-bold text-slate-855 dark:text-slate-200">Email Credentials</h5>
                                     <p class="text-[11px] text-slate-400 font-semibold mt-1">Send the student's username and temporary password to their registered email address.</p>
                                 </div>
                                 <form method="POST" action="{{ route('admin.students.resend', $student) }}" class="m-0">
                                     @csrf
                                     <input type="hidden" name="reset_format" value="none">
-                                    <button type="submit" class="w-full inline-flex h-9.5 items-center justify-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98] transition cursor-pointer">
+                                    <button type="submit" class="w-full inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98] transition cursor-pointer">
                                         <i data-lucide="mail" class="h-4 w-4 text-slate-500"></i>
                                         <span>Send Email</span>
                                     </button>
@@ -552,14 +518,14 @@
                             <!-- Set Custom Password -->
                             <div class="bg-slate-50 dark:bg-slate-900/40 p-4 rounded-2xl border border-slate-100 dark:border-slate-855 flex flex-col justify-between gap-3">
                                 <div>
-                                    <h5 class="text-xs font-bold text-slate-850 dark:text-slate-200">Set Custom Password</h5>
+                                    <h5 class="text-xs font-bold text-slate-855 dark:text-slate-200">Set Custom Password</h5>
                                     <p class="text-[11px] text-slate-400 font-semibold mt-1">Change the student's portal login credentials to a custom password.</p>
                                 </div>
                                 <form method="POST" action="{{ route('admin.students.resend', $student) }}" class="m-0">
                                     @csrf
                                     <div class="flex gap-2">
-                                        <input type="text" name="custom_password" placeholder="Type password..." required class="flex-1 h-9.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none transition focus:border-amber-400 focus:ring-4 focus:ring-amber-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
-                                        <button type="submit" class="inline-flex h-9.5 items-center justify-center rounded-xl bg-amber-500 hover:bg-amber-600 px-3 text-xs font-bold text-white active:scale-[0.98] transition cursor-pointer" title="Set Custom Password">
+                                        <input type="text" name="custom_password" placeholder="Type password..." required class="flex-1 h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none transition focus:border-amber-400 focus:ring-4 focus:ring-amber-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+                                        <button type="submit" class="inline-flex h-10 items-center justify-center rounded-xl bg-amber-500 hover:bg-amber-600 px-3 text-xs font-bold text-white active:scale-[0.98] transition cursor-pointer" title="Set Custom Password">
                                             <span>Reset</span>
                                         </button>
                                     </div>
@@ -569,13 +535,13 @@
                             <!-- Reset to Default (Amis@12345) -->
                             <div class="bg-slate-50 dark:bg-slate-900/40 p-4 rounded-2xl border border-slate-100 dark:border-slate-855 flex flex-col justify-between gap-3">
                                 <div>
-                                    <h5 class="text-xs font-bold text-slate-850 dark:text-slate-200">Reset to Default</h5>
+                                    <h5 class="text-xs font-bold text-slate-855 dark:text-slate-200">Reset to Default</h5>
                                     <p class="text-[11px] text-slate-400 font-semibold mt-1">Reset password to the system default format (Amis@12345).</p>
                                 </div>
                                 <form method="POST" action="{{ route('admin.students.resend', $student) }}" class="m-0">
                                     @csrf
                                     <input type="hidden" name="reset_format" value="default">
-                                    <button type="submit" class="w-full inline-flex h-9.5 items-center justify-center gap-2 rounded-xl border border-amber-250 bg-amber-50 dark:border-amber-950/20 dark:bg-amber-950/10 px-3 text-xs font-bold text-amber-700 dark:text-amber-400 hover:bg-amber-100/50 active:scale-[0.98] transition cursor-pointer" title="Reset password to default format (Amis@12345)">
+                                    <button type="submit" class="w-full inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-amber-250 bg-amber-50 dark:border-amber-950/20 dark:bg-amber-950/10 px-3 text-xs font-bold text-amber-700 dark:text-amber-400 hover:bg-amber-100/50 active:scale-[0.98] transition cursor-pointer" title="Reset password to default format (Amis@12345)">
                                         <i data-lucide="refresh-cw" class="h-3.5 w-3.5"></i>
                                         <span>Reset Default</span>
                                     </button>
