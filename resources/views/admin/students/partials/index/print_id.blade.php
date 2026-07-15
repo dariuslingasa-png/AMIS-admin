@@ -382,11 +382,12 @@
 
                             <!-- First Name -->
                             @php
-                                $firstNameLen = strlen($firstName);
-                                $firstNameFontSize = $firstNameLen > 25 ? '11px' : ($firstNameLen > 18 ? '13px' : '15px');
+                                $displayFirstName = trim($firstName . ' ' . $middleInitial);
+                                $firstNameLen = strlen($displayFirstName);
+                                $firstNameFontSize = $firstNameLen > 25 ? '14px' : ($firstNameLen > 18 ? '16px' : '18px');
                             @endphp
                             <div class="student-first-name">
-                                <h4 style="font-size: {{ $firstNameFontSize }};">{{ $firstName }}</h4>
+                                <h4 style="font-size: {{ $firstNameFontSize }};">{{ $displayFirstName }}</h4>
                             </div>
 
                             <!-- Grade Level -->

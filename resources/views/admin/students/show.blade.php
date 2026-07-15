@@ -890,7 +890,12 @@
                             <div class="absolute text-center font-black text-[#0f172a] uppercase tracking-tight flex flex-col justify-center items-center animate-fade-in" style="left: 12px; top: 271px; width: 256px; height: 32px; z-index: 10; font-size: {{ $lastNameFontSize }}; line-height: 1.1;">{{ $lastName }}</div>
 
                             <!-- First Name -->
-                            <div class="absolute text-center font-bold text-[#334155] uppercase leading-none flex flex-col justify-center items-center animate-fade-in" style="left: 12px; top: 304px; width: 256px; height: 18px; z-index: 10; font-size: 12px;">{{ $firstName }}</div>
+                             @php
+                                 $displayFirstName = trim($firstName . ' ' . $middleInitial);
+                                 $displayFirstNameLen = strlen($displayFirstName);
+                                 $displayFirstNameFontSize = $displayFirstNameLen > 25 ? '11.5px' : ($displayFirstNameLen > 18 ? '13px' : '15px');
+                             @endphp
+                             <div class="absolute text-center font-bold text-[#334155] uppercase leading-none flex flex-col justify-center items-center animate-fade-in" style="left: 12px; top: 304px; width: 256px; height: 18px; z-index: 10; font-size: {{ $displayFirstNameFontSize }};">{{ $displayFirstName }}</div>
 
                             <!-- Grade Level -->
                             <div class="absolute text-center font-black uppercase tracking-wide flex flex-col justify-center items-center animate-fade-in" style="left: 12px; top: 340px; width: 256px; height: 24px; z-index: 10; font-size: 20px; color: {{ $getGradeColor($displayGrade) }};">{{ $displayGrade }}</div>
