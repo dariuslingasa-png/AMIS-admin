@@ -60,10 +60,10 @@
         
         .id-pair-container {
             display: flex;
-            flex-direction: row;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            gap: 15mm;
+            gap: 10mm;
             page-break-inside: avoid;
         }
         
