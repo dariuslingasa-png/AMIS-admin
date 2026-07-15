@@ -282,21 +282,34 @@
                 </div>
                 
                 <div class="relative flex items-center justify-center">
-                    <button type="button" class="applicant-photo overflow-hidden hover:brightness-95 transition-all duration-200 cursor-zoom-in" @if ($photoUrl) @click="openPreview('{{ $photoUrl }}', '2x2 Photo', false)" @endif>
+                    <div class="relative group flex items-center justify-center overflow-hidden rounded-2xl border-2 border-white/45 bg-white/12 text-emerald-100 cursor-zoom-in" 
+                         style="width: 96px; height: 96px;"
+                         @if ($photoUrl) @click="openPreview('{{ $photoUrl }}', '2x2 Photo', false)" @endif>
                         @if ($photoUrl)
-                            <img src="{{ $photoUrl }}" alt="2x2 Photo" class="w-full h-full object-cover block" loading="eager" decoding="async" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-                            <span class="w-full h-full items-center justify-center text-xs font-extrabold" style="display:none">NO PHOTO</span>
+                            <img src="{{ $photoUrl }}" alt="2x2 Photo" class="w-full h-full object-cover block transition duration-300 group-hover:scale-105 group-hover:brightness-75">
                         @else
-                            NO PHOTO
+                            <span class="text-xs font-extrabold uppercase text-center text-slate-300">NO PHOTO</span>
                         @endif
-                    </button>
+
+                        @if (auth()->user()?->hasRole('super_admin'))
+                            <!-- Hover Action Overlay -->
+                            <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1.5 transition-opacity duration-200 text-white p-1" onclick="event.stopPropagation()">
+                                <button type="button" 
+                                        onclick="document.getElementById('student-photo-input').click()" 
+                                        class="w-full py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[8px] font-black uppercase tracking-wider flex items-center justify-center gap-1 transition active:scale-95 shadow cursor-pointer">
+                                    <i data-lucide="upload-cloud" class="w-2.5 h-2.5"></i> New
+                                </button>
+                                @if($photoUrl)
+                                    <button type="button" 
+                                            onclick="adjustExistingPhoto('{{ $photoUrl }}')" 
+                                            class="w-full py-1 bg-slate-750 hover:bg-slate-650 text-white rounded text-[8px] font-black uppercase tracking-wider flex items-center justify-center gap-1 transition active:scale-95 shadow cursor-pointer">
+                                        <i data-lucide="crop" class="w-2.5 h-2.5"></i> Crop
+                                    </button>
+                                @endif
+                            </div>
+                        @endif
+                    </div>
                     @if (auth()->user()?->hasRole('super_admin'))
-                        <button type="button" onclick="event.stopPropagation(); document.getElementById('student-photo-input').click()" 
-                                class="absolute bg-emerald-600 hover:bg-emerald-700 text-white rounded-full shadow-lg border border-white/20 transition active:scale-95 cursor-pointer z-20 flex items-center justify-center"
-                                style="width: 28px; height: 28px; bottom: 4px; right: 4px;"
-                                title="Change Profile Photo">
-                            <i data-lucide="camera" class="w-3.5 h-3.5 text-white"></i>
-                        </button>
                         <input type="file" id="student-photo-input" name="photo" accept="image/*" class="hidden" onchange="uploadStudentPhoto(this)">
                     @endif
                 </div>
@@ -893,11 +906,8 @@
                             
                             <!-- Student Photo with Edit Overlay (Super Admins Only) -->
                             @if(auth()->user()?->hasRole('super_admin'))
-                                <button type="button" 
-                                        onclick="event.stopPropagation(); document.getElementById('student-photo-input').click()" 
-                                        class="absolute group overflow-hidden rounded-lg border border-white/20 hover:border-emerald-500 transition-all duration-200 cursor-pointer" 
-                                        style="left: 67px; top: 94px; width: 146px; height: 142px; z-index: 10;"
-                                        title="Click to change or adjust photo">
+                                <div class="absolute group overflow-hidden rounded-lg border border-white/20 hover:border-emerald-500 transition-all duration-200" 
+                                     style="left: 67px; top: 94px; width: 146px; height: 142px; z-index: 10;">
                                     @if($photoUrl)
                                         <img id="id-preview-photo" src="{{ $photoUrl }}" class="w-full h-full object-cover transition duration-300 group-hover:scale-105 group-hover:brightness-75">
                                     @else
@@ -907,11 +917,26 @@
                                         </div>
                                     @endif
                                     <!-- Edit Hover Overlay -->
-                                    <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1 transition-opacity duration-200 text-white">
-                                        <i data-lucide="camera" class="w-5 h-5"></i>
-                                        <span class="text-[9px] font-black tracking-widest uppercase">Change Photo</span>
+                                    <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-2 transition-opacity duration-200 text-white p-2">
+                                        <span class="text-[9px] font-black tracking-wider uppercase text-center mb-1">Edit Photo</span>
+                                        <div class="flex gap-1.5 w-full justify-center">
+                                            <!-- Upload New button -->
+                                            <button type="button" 
+                                                    onclick="document.getElementById('student-photo-input').click()" 
+                                                    class="flex-1 py-1.5 px-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[8px] font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition active:scale-95 shadow cursor-pointer">
+                                                <i data-lucide="upload-cloud" class="w-3 h-3"></i> New
+                                            </button>
+                                            @if($photoUrl)
+                                                <!-- Adjust Existing button -->
+                                                <button type="button" 
+                                                        onclick="adjustExistingPhoto('{{ $photoUrl }}')" 
+                                                        class="flex-1 py-1.5 px-1 bg-slate-700 hover:bg-slate-600 text-white rounded text-[8px] font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition active:scale-95 shadow cursor-pointer">
+                                                    <i data-lucide="crop" class="w-3 h-3"></i> Crop
+                                                </button>
+                                            @endif
+                                        </div>
                                     </div>
-                                </button>
+                                </div>
                             @else
                                 <!-- Non-admin read-only image -->
                                 @if($photoUrl)
@@ -1354,6 +1379,42 @@
     <script>
         let cropper = null;
         let selectedFile = null;
+
+        function adjustExistingPhoto(url) {
+            if (!url) return;
+            
+            const cropImg = document.getElementById('crop-image-preview');
+            
+            // Show Crop Modal first to establish layout dimensions
+            const cropModal = document.getElementById('photo-crop-modal');
+            cropModal.classList.remove('hidden');
+            
+            cropImg.onload = function() {
+                if (cropper) {
+                    cropper.destroy();
+                    cropper = null;
+                }
+                cropper = new Cropper(cropImg, {
+                    aspectRatio: 178 / 172,
+                    viewMode: 1,
+                    dragMode: 'move',
+                    background: false,
+                    autoCropArea: 0.9,
+                    responsive: true,
+                    checkOrientation: false,
+                    modal: true,
+                    guides: false,
+                    center: false,
+                    highlight: false,
+                    cropBoxMovable: false,
+                    cropBoxResizable: false,
+                    toggleDragModeOnDblclick: false
+                });
+            };
+            
+            cropImg.crossOrigin = 'anonymous';
+            cropImg.src = url;
+        }
 
         function uploadStudentPhoto(input) {
             if (!input.files || !input.files[0]) return;
