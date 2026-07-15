@@ -901,13 +901,13 @@
                     <div class="flex flex-col items-center gap-2">
                         <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Front Side</span>
                         <div class="relative rounded-2xl overflow-hidden shadow-lg border border-slate-200 dark:border-slate-800" style="width: 280px; height: 443px; background-color: #064e3b;">
-                            <!-- Background template image -->
-                            <img src="{{ asset('assets/amis-id-template.png') }}?v=3" class="absolute inset-0 w-full h-full object-cover" style="z-index: 1; pointer-events: none;" alt="AMIS ID Template">
+                            <!-- Background template image (Top Layer) -->
+                            <img src="{{ asset('assets/amis-id-template.png') }}?v=3" class="absolute inset-0 w-full h-full object-cover" style="z-index: 10; pointer-events: none;" alt="AMIS ID Template">
                             
                             <!-- Student Photo with Edit Overlay (Super Admins Only) -->
                             @if(auth()->user()?->hasRole('super_admin'))
                                 <div class="photo-clip group" 
-                                     style="left: 67px; top: 94px; width: 146px; height: 142px; border-radius: 12px; z-index: 10;">
+                                     style="left: 67px; top: 94px; width: 146px; height: 142px; border-radius: 12px; z-index: 5;">
                                     @if($photoUrl)
                                         <img id="id-preview-photo" src="{{ $photoUrl }}" class="transition duration-300 group-hover:scale-105 group-hover:brightness-75">
                                     @else
@@ -936,27 +936,23 @@
                                             @endif
                                         </div>
                                     </div>
-                                    <!-- Existing Green Photo Frame / Border (Top Layer) -->
-                                    <div class="green-frame-overlay" style="border: 3.5px solid #054f3b; border-radius: 12px;"></div>
                                 </div>
                             @else
                                 <!-- Non-admin read-only image -->
-                                <div class="photo-clip" style="left: 67px; top: 94px; width: 146px; height: 142px; border-radius: 12px; z-index: 10;">
+                                <div class="photo-clip" style="left: 67px; top: 94px; width: 146px; height: 142px; border-radius: 12px; z-index: 5;">
                                     @if($photoUrl)
                                         <img id="id-preview-photo" src="{{ $photoUrl }}">
                                     @else
                                         <div class="absolute inset-0 bg-slate-100 flex items-center justify-center text-center border border-dashed border-slate-300 text-[10px] font-bold text-slate-400 z-1">NO PHOTO</div>
                                     @endif
-                                    <!-- Existing Green Photo Frame / Border (Top Layer) -->
-                                    <div class="green-frame-overlay" style="border: 3.5px solid #054f3b; border-radius: 12px;"></div>
                                 </div>
                             @endif
 
                             <!-- Student ID -->
-                            <div class="absolute text-white font-black tracking-wide text-center uppercase" style="left: 0; top: 243px; width: 280px; height: 12px; z-index: 10; font-size: 10px;">{{ $studentNumber }}</div>
+                            <div class="absolute text-white font-black tracking-wide text-center uppercase" style="left: 0; top: 243px; width: 280px; height: 12px; z-index: 20; font-size: 10px;">{{ $studentNumber }}</div>
 
                             <!-- Last Name -->
-                            <div class="absolute text-center font-black text-[#0f172a] uppercase tracking-tight flex flex-col justify-center items-center animate-fade-in" style="left: 12px; top: 271px; width: 256px; height: 32px; z-index: 10; font-size: {{ $lastNameFontSize }}; {{ $lastNameStyle }} line-height: 1.1;">{{ $lastName }}</div>
+                            <div class="absolute text-center font-black text-[#0f172a] uppercase tracking-tight flex flex-col justify-center items-center animate-fade-in" style="left: 12px; top: 271px; width: 256px; height: 32px; z-index: 20; font-size: {{ $lastNameFontSize }}; {{ $lastNameStyle }} line-height: 1.1;">{{ $lastName }}</div>
 
                             <!-- First Name -->
                              @php
@@ -964,20 +960,20 @@
                                  $displayFirstNameLen = strlen($displayFirstName);
                                  $displayFirstNameFontSize = $displayFirstNameLen > 25 ? '11.5px' : ($displayFirstNameLen > 18 ? '13px' : '15px');
                              @endphp
-                             <div class="absolute text-center font-bold text-[#334155] uppercase leading-none flex flex-col justify-center items-center animate-fade-in" style="left: 12px; top: 304px; width: 256px; height: 18px; z-index: 10; font-size: {{ $displayFirstNameFontSize }};">{{ $displayFirstName }}</div>
+                             <div class="absolute text-center font-bold text-[#334155] uppercase leading-none flex flex-col justify-center items-center animate-fade-in" style="left: 12px; top: 304px; width: 256px; height: 18px; z-index: 20; font-size: {{ $displayFirstNameFontSize }};">{{ $displayFirstName }}</div>
 
                             <!-- Grade Level -->
-                             <div class="absolute text-center font-black uppercase tracking-wide flex flex-col justify-center items-center animate-fade-in" style="left: 12px; top: 340px; width: 256px; height: 24px; z-index: 10; font-size: 25px; color: {{ $getGradeColor($displayGrade) }};">{{ $displayGrade }}</div>
+                             <div class="absolute text-center font-black uppercase tracking-wide flex flex-col justify-center items-center animate-fade-in" style="left: 12px; top: 340px; width: 256px; height: 24px; z-index: 20; font-size: 25px; color: {{ $getGradeColor($displayGrade) }};">{{ $displayGrade }}</div>
 
                             <!-- LRN -->
                             @if($student->applicant->lrn && !in_array(strtoupper($student->applicant->lrn), ['N/A', 'NA', 'EMPTY', '']))
-                                <div class="absolute font-bold text-[#1e293b] whitespace-nowrap" style="left: 197px; top: 323px; width: 140px; height: 18px; z-index: 10; font-size: 12.5px; transform: rotate(-90deg); transform-origin: center; display: flex; align-items: center; justify-content: flex-start; letter-spacing: 0.05em;">
+                                <div class="absolute font-bold text-[#1e293b] whitespace-nowrap" style="left: 197px; top: 323px; width: 140px; height: 18px; z-index: 20; font-size: 12.5px; transform: rotate(-90deg); transform-origin: center; display: flex; align-items: center; justify-content: flex-start; letter-spacing: 0.05em;">
                                     LRN: <span>{{ $student->applicant->lrn }}</span>
                                 </div>
                             @endif
 
                             <!-- QR Code -->
-                            <div class="absolute p-0.5 rounded bg-white" style="left: 111px; top: 377px; width: 58px; height: 58px; z-index: 10;">
+                            <div class="absolute p-0.5 rounded bg-white" style="left: 111px; top: 377px; width: 58px; height: 58px; z-index: 20;">
                                 <img src="{{ $qrCodeUrl }}" alt="QR Verification" class="w-full h-full object-contain">
                             </div>
                         </div>

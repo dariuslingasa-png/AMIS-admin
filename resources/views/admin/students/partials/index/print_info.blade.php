@@ -139,11 +139,11 @@
         
         .student-id {
             position: absolute;
-            left: 121px;
+            left: 0;
             top: 295px;
-            width: 95px;
+            width: 340px;
             height: 15px;
-            z-index: 10;
+            z-index: 20;
             background: transparent;
             font-family: 'Outfit', sans-serif;
             font-weight: 900;
@@ -160,7 +160,7 @@
             top: 334px;
             width: 310px;
             height: 32px;
-            z-index: 10;
+            z-index: 20;
             text-align: center;
             display: flex;
             flex-direction: column;
@@ -184,7 +184,7 @@
             top: 366px;
             width: 310px;
             height: 22px;
-            z-index: 10;
+            z-index: 20;
             text-align: center;
             display: flex;
             flex-direction: column;
@@ -207,7 +207,7 @@
             top: 406px;
             width: 310px;
             height: 30px;
-            z-index: 10;
+            z-index: 20;
             text-align: center;
             display: flex;
             flex-direction: column;
@@ -230,7 +230,7 @@
             font-family: 'Outfit', sans-serif;
             font-size: 15.5px;
             font-weight: 700;
-            z-index: 10;
+            z-index: 20;
             right: 8px;
             top: 405px;
             width: 22px;
@@ -251,7 +251,7 @@
             top: 458px;
             width: 71px;
             height: 71px;
-            z-index: 10;
+            z-index: 20;
             padding: 2.5px;
             border-radius: 2px;
             background: white;
@@ -647,7 +647,7 @@
                             <div class="id-card-scaler">
                                 <div class="id-card-container">
                                     <!-- Background Template Image -->
-                                    <img src="{{ asset('assets/amis-id-template.png') }}?v=3" class="id-template" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1;" alt="AMIS ID Template">
+                                    <img src="{{ asset('assets/amis-id-template.png') }}?v=3" class="id-template" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 10; pointer-events: none;" alt="AMIS ID Template">
                                     
                                     <!-- Student Photo Container (Middle Layer) -->
                                     @if($photoUrl)
@@ -657,9 +657,6 @@
                                     @else
                                         <div class="photo-placeholder">Photo Missing</div>
                                     @endif
-
-                                    <!-- Existing Green Photo Frame / Border (Top Layer) -->
-                                    <div class="green-frame-overlay"></div>
 
                                     <!-- Student ID Badge text -->
                                     <div class="student-id">{{ $badgeStudentId }}</div>
