@@ -891,11 +891,34 @@
                             <!-- Background template image -->
                             <img src="{{ asset('assets/amis-id-template.png') }}?v=3" class="absolute inset-0 w-full h-full object-cover" style="z-index: 1; pointer-events: none;" alt="AMIS ID Template">
                             
-                            <!-- Student Photo -->
-                            @if($photoUrl)
-                                <img src="{{ $photoUrl }}" class="absolute object-cover rounded-lg border border-white/20" style="left: 67px; top: 94px; width: 146px; height: 142px; z-index: 10;">
+                            <!-- Student Photo with Edit Overlay (Super Admins Only) -->
+                            @if(auth()->user()?->hasRole('super_admin'))
+                                <button type="button" 
+                                        onclick="event.stopPropagation(); document.getElementById('student-photo-input').click()" 
+                                        class="absolute group overflow-hidden rounded-lg border border-white/20 hover:border-emerald-500 transition-all duration-200 cursor-pointer" 
+                                        style="left: 67px; top: 94px; width: 146px; height: 142px; z-index: 10;"
+                                        title="Click to change or adjust photo">
+                                    @if($photoUrl)
+                                        <img id="id-preview-photo" src="{{ $photoUrl }}" class="w-full h-full object-cover transition duration-300 group-hover:scale-105 group-hover:brightness-75">
+                                    @else
+                                        <div class="w-full h-full bg-slate-100 flex flex-col items-center justify-center text-center border border-dashed border-slate-300 text-[10px] font-bold text-slate-450 gap-1">
+                                            <i data-lucide="camera" class="w-5 h-5 text-slate-400"></i>
+                                            <span>UPLOAD</span>
+                                        </div>
+                                    @endif
+                                    <!-- Edit Hover Overlay -->
+                                    <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1 transition-opacity duration-200 text-white">
+                                        <i data-lucide="camera" class="w-5 h-5"></i>
+                                        <span class="text-[9px] font-black tracking-widest uppercase">Change Photo</span>
+                                    </div>
+                                </button>
                             @else
-                                <div class="absolute rounded-lg bg-slate-100 flex items-center justify-center text-center border border-dashed border-slate-300" style="left: 67px; top: 94px; width: 146px; height: 142px; z-index: 10; font-size: 10px; font-weight: bold; color: #94a3b8;">NO PHOTO</div>
+                                <!-- Non-admin read-only image -->
+                                @if($photoUrl)
+                                    <img src="{{ $photoUrl }}" class="absolute object-cover rounded-lg border border-white/20" style="left: 67px; top: 94px; width: 146px; height: 142px; z-index: 10;">
+                                @else
+                                    <div class="absolute rounded-lg bg-slate-100 flex items-center justify-center text-center border border-dashed border-slate-300" style="left: 67px; top: 94px; width: 146px; height: 142px; z-index: 10; font-size: 10px; font-weight: bold; color: #94a3b8;">NO PHOTO</div>
+                                @endif
                             @endif
 
                             <!-- Student ID -->
@@ -1275,7 +1298,7 @@
             background-color: #f1f5f9;
         }
     </style>
-    <div id="photo-crop-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+    <div id="photo-crop-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
         <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800 flex flex-col">
             <!-- Header -->
             <div class="flex items-center justify-between px-5 py-4 border-b border-slate-150 dark:border-slate-800">
@@ -1426,6 +1449,12 @@
                             const previewBtn = document.querySelector('button.applicant-photo');
                             if (previewBtn) {
                                 previewBtn.setAttribute('@click', `openPreview('${result.photo_url}', '2x2 Photo', false)`);
+                            }
+
+                            // Also update the ID preview modal photo if open
+                            const idPreviewPhoto = document.getElementById('id-preview-photo');
+                            if (idPreviewPhoto) {
+                                idPreviewPhoto.src = result.photo_url;
                             }
                         } else {
                             location.reload();
