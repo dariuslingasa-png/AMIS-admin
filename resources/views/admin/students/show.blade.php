@@ -307,55 +307,52 @@
                     </span>
                 </div>
                 
-                <div class="relative flex items-center justify-center">
-                    <div class="relative group flex items-center justify-center overflow-hidden rounded-2xl border-2 border-white/45 bg-white/12 text-emerald-100 cursor-zoom-in" 
-                         style="width: 96px; height: 96px;"
-                         @if ($photoUrl) @click="openPreview('{{ $photoUrl }}', '2x2 Photo', false)" @endif>
+                <div class="relative" style="width: 96px; height: 96px;">
+                    <!-- Inner avatar block with overflow hidden for the photo clip -->
+                    <div class="w-full h-full relative group flex items-center justify-center overflow-hidden rounded-2xl border-2 border-white/45 bg-white/12 text-emerald-100 cursor-zoom-in" 
+                          @if ($photoUrl) @click="openPreview('{{ $photoUrl }}', '2x2 Photo', false)" @endif>
                         @if ($photoUrl)
-                            <img src="{{ $photoUrl }}" alt="2x2 Photo" class="w-full h-full object-cover block transition duration-300 group-hover:scale-105 group-hover:brightness-75">
+                            <img src="{{ $photoUrl }}" alt="2x2 Photo" class="w-full h-full object-cover block transition duration-300 group-hover:scale-105 group-hover:brightness-95">
                         @else
                             <span class="text-xs font-extrabold uppercase text-center text-slate-300">NO PHOTO</span>
                         @endif
-
-                        @if (auth()->user()?->hasRole('super_admin'))
-                            <!-- Hover Action Overlay -->
-                            <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1.5 transition-opacity duration-200 text-white p-1" onclick="event.stopPropagation()">
+                    </div>
+                    
+                    @if (auth()->user()?->hasRole('super_admin'))
+                        <!-- Camera edit button placed in the outer relative wrapper, so it does not get cut off by overflow-hidden -->
+                        <div class="absolute -bottom-1.5 -right-1.5 z-30 group/edit" onclick="event.stopPropagation()">
+                            <button type="button" 
+                                    class="w-7 h-7 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full flex items-center justify-center shadow-md border-2 border-white transition active:scale-90 cursor-pointer">
+                                <i data-lucide="camera" class="w-3.5 h-3.5"></i>
+                            </button>
+                            
+                            <!-- Dropdown menu -->
+                            <div class="absolute right-0 top-full mt-1 w-28 bg-slate-900 border border-slate-700 rounded-lg shadow-xl py-1 opacity-0 pointer-events-none group-hover/edit:opacity-100 group-hover/edit:pointer-events-auto transition duration-200 flex flex-col gap-0.5 z-40">
                                 <button type="button" 
                                         onclick="document.getElementById('student-photo-input').click()" 
-                                        class="w-full py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[8px] font-black uppercase tracking-wider flex items-center justify-center gap-1 transition active:scale-95 shadow cursor-pointer">
-                                    <i data-lucide="upload-cloud" class="w-2.5 h-2.5"></i> New
+                                        class="w-full px-2.5 py-1.5 hover:bg-slate-800 text-white text-[10px] font-bold uppercase tracking-wider text-left flex items-center gap-1.5 transition">
+                                    <i data-lucide="upload-cloud" class="w-3 h-3 text-emerald-500"></i> New Photo
                                 </button>
                                 <button type="button" 
                                         onclick="syncMicrosoftPhoto()" 
-                                        class="w-full py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[8px] font-black uppercase tracking-wider flex items-center justify-center gap-1 transition active:scale-95 shadow cursor-pointer">
-                                    <i data-lucide="refresh-cw" class="w-2.5 h-2.5"></i> M365 Sync
+                                        class="w-full px-2.5 py-1.5 hover:bg-slate-800 text-white text-[10px] font-bold uppercase tracking-wider text-left flex items-center gap-1.5 transition">
+                                    <i data-lucide="refresh-cw" class="w-3 h-3 text-blue-400"></i> M365 Sync
                                 </button>
                                 @if($photoUrl)
                                     <button type="button" 
                                             onclick="adjustExistingPhoto('{{ $photoUrl }}')" 
-                                            class="w-full py-1 bg-slate-750 hover:bg-slate-650 text-white rounded text-[8px] font-black uppercase tracking-wider flex items-center justify-center gap-1 transition active:scale-95 shadow cursor-pointer">
-                                        <i data-lucide="crop" class="w-2.5 h-2.5"></i> Crop
+                                            class="w-full px-2.5 py-1.5 hover:bg-slate-800 text-white text-[10px] font-bold uppercase tracking-wider text-left flex items-center gap-1.5 transition">
+                                        <i data-lucide="crop" class="w-3 h-3 text-slate-400"></i> Crop
                                     </button>
                                     <button type="button" 
                                             onclick="deleteStudentPhoto()" 
-                                            class="w-full py-1 bg-rose-650 hover:bg-rose-750 text-white rounded text-[8px] font-black uppercase tracking-wider flex items-center justify-center gap-1 transition active:scale-95 shadow cursor-pointer">
-                                        <i data-lucide="trash-2" class="w-2.5 h-2.5"></i> Reset
+                                            class="w-full px-2.5 py-1.5 hover:bg-rose-950/40 text-rose-400 text-[10px] font-bold uppercase tracking-wider text-left flex items-center gap-1.5 transition">
+                                        <i data-lucide="trash-2" class="w-3 h-3"></i> Reset
                                     </button>
                                 @endif
                             </div>
-                        @endif
-                    </div>
-                    @if (auth()->user()?->hasRole('super_admin'))
-                        <input type="file" id="student-photo-input" name="photo" accept="image/*" class="hidden" onchange="uploadStudentPhoto(this)">
-                        <!-- Bottom-right camera edit button -->
-                        <div class="absolute -bottom-1.5 -right-1.5 z-30">
-                            <button type="button" 
-                                    onclick="document.getElementById('student-photo-input').click()" 
-                                    class="w-7 h-7 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full flex items-center justify-center shadow-md border-2 border-white transition active:scale-90 cursor-pointer"
-                                    title="Upload New Photo">
-                                <i data-lucide="camera" class="w-3.5 h-3.5"></i>
-                            </button>
                         </div>
+                        <input type="file" id="student-photo-input" name="photo" accept="image/*" class="hidden" onchange="uploadStudentPhoto(this)">
                     @endif
                 </div>
                 
