@@ -331,6 +331,11 @@
                                             class="w-full py-1 bg-slate-750 hover:bg-slate-650 text-white rounded text-[8px] font-black uppercase tracking-wider flex items-center justify-center gap-1 transition active:scale-95 shadow cursor-pointer">
                                         <i data-lucide="crop" class="w-2.5 h-2.5"></i> Crop
                                     </button>
+                                    <button type="button" 
+                                            onclick="deleteStudentPhoto()" 
+                                            class="w-full py-1 bg-rose-650 hover:bg-rose-750 text-white rounded text-[8px] font-black uppercase tracking-wider flex items-center justify-center gap-1 transition active:scale-95 shadow cursor-pointer">
+                                        <i data-lucide="trash-2" class="w-2.5 h-2.5"></i> Reset
+                                    </button>
                                 @endif
                             </div>
                         @endif
@@ -958,6 +963,12 @@
                                                         onclick="adjustExistingPhoto('{{ $photoUrl }}')" 
                                                         class="flex-1 py-1.5 px-1 bg-slate-700 hover:bg-slate-600 text-white rounded text-[8px] font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition active:scale-95 shadow cursor-pointer">
                                                     <i data-lucide="crop" class="w-3 h-3"></i> Crop
+                                                </button>
+                                                <!-- Reset Photo button -->
+                                                <button type="button" 
+                                                        onclick="deleteStudentPhoto()" 
+                                                        class="flex-1 py-1.5 px-1 bg-rose-650 hover:bg-rose-750 text-white rounded text-[8px] font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition active:scale-95 shadow cursor-pointer">
+                                                    <i data-lucide="trash-2" class="w-3 h-3"></i> Reset
                                                 </button>
                                             @endif
                                         </div>
@@ -1591,6 +1602,29 @@
                     if (window.lucide) window.lucide.createIcons();
                 }
             }, 'image/jpeg', 0.9);
+        }
+        async function deleteStudentPhoto() {
+            if (!confirm('Are you sure you want to delete this photo and reset to default?')) return;
+            
+            try {
+                const response = await fetch('{{ route('admin.students.delete-photo', $student) }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                });
+                
+                const result = await response.json();
+                if (response.ok && result.success) {
+                    location.reload();
+                } else {
+                    alert(result.message || 'Failed to delete photo.');
+                }
+            } catch (e) {
+                console.error(e);
+                alert('An error occurred while deleting photo.');
+            }
         }
     </script>
     @endif

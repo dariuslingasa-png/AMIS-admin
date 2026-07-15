@@ -1765,6 +1765,42 @@ class AdminStudentController extends Controller
         ], 400);
     }
 
+    public function deletePhoto(Request $request, Student $student)
+    {
+        abort_unless(auth()->user()?->hasRole('super_admin'), 403);
+
+        if ($student->applicant) {
+            $student->applicant->update([
+                'photo_2x2_url' => null,
+            ]);
+            
+            // Write audit log
+            \App\Models\AdminAuditLog::create([
+                'user_id' => auth()->id(),
+                'event' => 'delete_student_photo',
+                'ip_address' => request()->ip(),
+                'user_agent' => \Illuminate\Support\Str::limit((string) request()->userAgent(), 1000, ''),
+                'successful' => true,
+                'message' => 'Super Administrator deleted/reset profile photo for student UPN: ' . $student->school_email,
+                'metadata' => [
+                    'student_id' => $student->id,
+                    'school_email' => $student->school_email,
+                ],
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Profile photo reset to default successfully.',
+                'photo_url' => null,
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to reset photo.',
+        ], 400);
+    }
+
     public function updateSection(Request $request, Student $student)
     {
         abort_if(auth()->user()?->isTeacherAdminViewer(), 403);
