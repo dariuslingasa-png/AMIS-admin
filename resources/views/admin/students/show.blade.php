@@ -922,7 +922,7 @@
                         <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Front Side</span>
                         <div class="relative rounded-2xl overflow-hidden shadow-lg border border-slate-200 dark:border-slate-800" style="width: 280px; height: 443px; background-color: #064e3b;">
                             <!-- Background template image (Top Layer) -->
-                            <img src="{{ asset('assets/amis-id-template.png') }}?v={{ filemtime(public_path('assets/amis-id-template.png')) }}" class="absolute inset-0 w-full h-full object-cover" style="z-index: 10; pointer-events: none;" alt="AMIS ID Template">
+                            <img src="{{ asset('images/id/amis_frontid.png') }}?v={{ filemtime(public_path('images/id/amis_frontid.png')) }}" class="absolute inset-0 w-full h-full object-cover" style="z-index: 10; pointer-events: none;" alt="AMIS ID Template">
                             
                             <!-- Student Photo with Edit Overlay (Super Admins Only) -->
                             @if(auth()->user()?->hasRole('super_admin'))

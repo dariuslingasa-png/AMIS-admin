@@ -368,7 +368,7 @@
                     <div class="id-card-scaler">
                         <div class="id-card">
                              <!-- Background Template Image (Top Layer) -->
-                             <img src="{{ asset('assets/amis-id-template.png') }}?v={{ filemtime(public_path('assets/amis-id-template.png')) }}" class="id-template" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 10; pointer-events: none;" alt="AMIS ID Template">
+                             <img src="{{ asset('images/id/amis_frontid.png') }}?v={{ filemtime(public_path('images/id/amis_frontid.png')) }}" class="id-template" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 10; pointer-events: none;" alt="AMIS ID Template">
                              
                              <!-- Student Photo Container (Middle Layer) -->
                               @if($photoUrl)
