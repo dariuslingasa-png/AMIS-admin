@@ -906,12 +906,12 @@
                             
                             <!-- Student Photo with Edit Overlay (Super Admins Only) -->
                             @if(auth()->user()?->hasRole('super_admin'))
-                                <div class="absolute group overflow-hidden" 
-                                     style="left: 67px; top: 94px; width: 146px; height: 142px; z-index: 10; border-radius: 12px;">
+                                <div class="photo-clip group" 
+                                     style="left: 67px; top: 94px; width: 146px; height: 142px; border-radius: 12px; z-index: 10;">
                                     @if($photoUrl)
-                                        <img id="id-preview-photo" src="{{ $photoUrl }}" class="w-full h-full object-cover transition duration-300 group-hover:scale-105 group-hover:brightness-75">
+                                        <img id="id-preview-photo" src="{{ $photoUrl }}" class="transition duration-300 group-hover:scale-105 group-hover:brightness-75">
                                     @else
-                                        <div class="w-full h-full bg-slate-150 flex flex-col items-center justify-center text-center border border-dashed border-slate-300 text-[10px] font-bold text-slate-450 gap-1">
+                                        <div class="absolute inset-0 bg-slate-150 flex flex-col items-center justify-center text-center border border-dashed border-slate-300 text-[10px] font-bold text-slate-450 gap-1 z-1">
                                             <i data-lucide="camera" class="w-5 h-5 text-slate-400"></i>
                                             <span>UPLOAD</span>
                                         </div>
@@ -936,20 +936,20 @@
                                             @endif
                                         </div>
                                     </div>
+                                    <!-- Existing Green Photo Frame / Border (Top Layer) -->
+                                    <div class="green-frame-overlay" style="border: 3.5px solid #054f3b; border-radius: 12px;"></div>
                                 </div>
-                                <!-- Existing Green Photo Frame / Border (Top Layer) -->
-                                <div class="absolute rounded-lg border-[3.5px] border-[#054f3b] pointer-events-none" style="left: 67px; top: 94px; width: 146px; height: 142px; z-index: 15; border-radius: 12px; box-sizing: border-box;"></div>
                             @else
                                 <!-- Non-admin read-only image -->
-                                <div class="absolute overflow-hidden" style="left: 67px; top: 94px; width: 146px; height: 142px; z-index: 10; border-radius: 12px;">
+                                <div class="photo-clip" style="left: 67px; top: 94px; width: 146px; height: 142px; border-radius: 12px; z-index: 10;">
                                     @if($photoUrl)
-                                        <img id="id-preview-photo" src="{{ $photoUrl }}" class="w-full h-full object-cover">
+                                        <img id="id-preview-photo" src="{{ $photoUrl }}">
                                     @else
-                                        <div class="w-full h-full bg-slate-100 flex items-center justify-center text-center border border-dashed border-slate-300 text-[10px] font-bold text-slate-400">NO PHOTO</div>
+                                        <div class="absolute inset-0 bg-slate-100 flex items-center justify-center text-center border border-dashed border-slate-300 text-[10px] font-bold text-slate-400 z-1">NO PHOTO</div>
                                     @endif
+                                    <!-- Existing Green Photo Frame / Border (Top Layer) -->
+                                    <div class="green-frame-overlay" style="border: 3.5px solid #054f3b; border-radius: 12px;"></div>
                                 </div>
-                                <!-- Existing Green Photo Frame / Border (Top Layer) -->
-                                <div class="absolute rounded-lg border-[3.5px] border-[#054f3b] pointer-events-none" style="left: 67px; top: 94px; width: 146px; height: 142px; z-index: 15; border-radius: 12px; box-sizing: border-box;"></div>
                             @endif
 
                             <!-- Student ID -->
@@ -1307,6 +1307,30 @@
         @endunless
     </div>
 
+    <style>
+        .photo-clip {
+            position: absolute;
+            overflow: hidden;
+            background: transparent;
+            border-radius: 14px;
+        }
+        .photo-clip img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            z-index: 1;
+        }
+        .green-frame-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            pointer-events: none;
+            box-sizing: border-box;
+        }
+    </style>
     <!-- Photo Cropping Modal -->
     @if (auth()->user()?->hasRole('super_admin'))
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">

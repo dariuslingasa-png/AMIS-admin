@@ -82,17 +82,28 @@
             background: #064e3b;
         }
         
-        .student-photo-container {
+        .photo-clip {
             position: absolute;
             left: 81px;
             top: 114px;
             width: 178px;
             height: 172px;
             overflow: hidden;
+            background: transparent;
             border-radius: 14px;
         }
         
-        .student-photo-frame {
+        .photo-clip img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            z-index: 1;
+        }
+        
+        .green-frame-overlay {
             position: absolute;
             left: 81px;
             top: 114px;
@@ -100,6 +111,7 @@
             height: 172px;
             border: 4.5px solid #054f3b;
             border-radius: 14px;
+            z-index: 2;
             pointer-events: none;
             box-sizing: border-box;
         }
@@ -110,7 +122,7 @@
             top: 114px;
             width: 178px;
             height: 172px;
-            z-index: 10;
+            z-index: 1;
             border-radius: 14px;
             background: #f1f5f9;
             border: 2px dashed #cbd5e1;
@@ -639,15 +651,15 @@
                                     
                                     <!-- Student Photo Container (Middle Layer) -->
                                     @if($photoUrl)
-                                        <div class="student-photo-container" style="z-index: 10;">
-                                            <img src="{{ $photoUrl }}" class="student-photo-img" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+                                        <div class="photo-clip">
+                                            <img src="{{ $photoUrl }}" alt="Student Photo">
                                         </div>
                                     @else
-                                        <div class="photo-placeholder" style="z-index: 10;">Photo Missing</div>
+                                        <div class="photo-placeholder">Photo Missing</div>
                                     @endif
 
                                     <!-- Existing Green Photo Frame / Border (Top Layer) -->
-                                    <div class="student-photo-frame" style="z-index: 15;"></div>
+                                    <div class="green-frame-overlay"></div>
 
                                     <!-- Student ID Badge text -->
                                     <div class="student-id">{{ $badgeStudentId }}</div>
