@@ -6,7 +6,7 @@
             <div class="preview-head gap-3">
                 <strong x-text="label"></strong>
                 <div class="ml-auto flex items-center gap-2">
-                    <div class="flex items-center gap-2" x-show="!pdf">
+                    <div class="flex items-center gap-2" x-show="!pdf && label !== '2x2 Photo'">
                         <button type="button" class="rounded-full border border-slate-200 bg-white px-3 py-1 text-sm font-black text-slate-700 shadow-sm transition hover:bg-slate-100" @click="zoomOut()">-</button>
                         <span class="min-w-14 rounded-full bg-slate-100 px-3 py-1 text-center text-xs font-black text-slate-700" x-text="Math.round(zoom * 100) + '%'"></span>
                         <button type="button" class="rounded-full border border-slate-200 bg-white px-3 py-1 text-sm font-black text-slate-700 shadow-sm transition hover:bg-slate-100" @click="zoomIn()">+</button>
@@ -25,7 +25,13 @@
                  @touchstart.passive="startPan($event)"
                  @touchmove="movePan($event)">
                 <template x-if="!pdf">
-                    <img :src="src" :alt="label" class="transition-all duration-150" :style="'max-width: none; width: ' + (zoom * 100) + '%; height: auto;'">
+                    <img :src="src" 
+                         :alt="label" 
+                         class="transition-all duration-150" 
+                         :class="label === '2x2 Photo' ? 'rounded-xl shadow-lg border-4 border-white' : ''" 
+                         :style="label === '2x2 Photo' 
+                             ? 'margin: auto; max-width: 280px; max-height: 280px; width: auto; height: auto; object-fit: contain;' 
+                             : 'max-width: none; width: ' + (zoom * 100) + '%; height: auto;'">
                 </template>
                 <template x-if="pdf"><iframe :src="src"></iframe></template>
             </div>
