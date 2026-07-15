@@ -1256,13 +1256,32 @@
     <!-- Photo Cropping Modal -->
     @if (auth()->user()?->hasRole('super_admin'))
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
+    <style>
+        #photo-crop-modal .cropper-view-box,
+        #photo-crop-modal .cropper-face {
+            border-radius: 14px;
+            box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.72);
+        }
+        #photo-crop-modal .cropper-view-box {
+            outline: 4px solid #047857; /* Emerald green matching school ID theme */
+            outline-offset: -1px;
+        }
+        #photo-crop-modal .cropper-line,
+        #photo-crop-modal .cropper-point {
+            display: none !important; /* Hide resizing points since the cropbox is fixed */
+        }
+        #photo-crop-modal .cropper-bg {
+            background-image: none !important;
+            background-color: #f1f5f9;
+        }
+    </style>
     <div id="photo-crop-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
         <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800 flex flex-col">
             <!-- Header -->
             <div class="flex items-center justify-between px-5 py-4 border-b border-slate-150 dark:border-slate-800">
                 <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                     <i data-lucide="crop" class="h-4.5 w-4.5 text-emerald-600"></i>
-                    <span>Crop Student Photo (1:1 Ratio)</span>
+                    <span>Position & Scale Photo</span>
                 </h3>
                 <button type="button" onclick="closeCropModal()" class="text-slate-400 hover:text-slate-655 dark:hover:text-slate-200 transition-colors">
                     <i data-lucide="x" class="h-5 w-5"></i>
@@ -1275,17 +1294,32 @@
                         <img id="crop-image-preview" src="" alt="Source image for cropping" style="max-width: 100%; max-height: 35vh; display: block; margin: 0 auto;">
                     </div>
                 </div>
-                <p class="text-[11px] text-slate-400 mt-3 font-semibold">Drag and adjust the square selection to crop the 2x2 photo.</p>
+                <p class="text-[11px] text-slate-400 mt-3 font-semibold">Drag to pan the photo and scroll or use the buttons below to zoom.</p>
             </div>
             <!-- Footer -->
-            <div class="flex items-center justify-end gap-3 px-5 py-4 border-t border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900">
-                <button type="button" onclick="closeCropModal()" class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-850 active:scale-[0.98] cursor-pointer">
-                    Cancel
-                </button>
-                <button type="button" id="crop-save-btn" onclick="saveCroppedPhoto()" class="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 text-xs font-bold shadow-md transition active:scale-[0.98] cursor-pointer flex items-center gap-1.5">
-                    <i data-lucide="check" class="w-3.5 h-3.5"></i>
-                    <span>Crop & Save</span>
-                </button>
+            <div class="flex items-center justify-between gap-3 px-5 py-4 border-t border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900">
+                <!-- Action Controls -->
+                <div class="flex items-center gap-1.5">
+                    <button type="button" onclick="if(cropper) cropper.zoom(0.1)" class="p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition active:scale-95 cursor-pointer" title="Zoom In">
+                        <i data-lucide="zoom-in" class="w-4 h-4"></i>
+                    </button>
+                    <button type="button" onclick="if(cropper) cropper.zoom(-0.1)" class="p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition active:scale-95 cursor-pointer" title="Zoom Out">
+                        <i data-lucide="zoom-out" class="w-4 h-4"></i>
+                    </button>
+                    <button type="button" onclick="if(cropper) cropper.reset()" class="p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition active:scale-95 cursor-pointer" title="Reset Image">
+                        <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <!-- Save / Cancel -->
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="closeCropModal()" class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-850 active:scale-[0.98] cursor-pointer">
+                        Cancel
+                    </button>
+                    <button type="button" id="crop-save-btn" onclick="saveCroppedPhoto()" class="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 text-xs font-bold shadow-md transition active:scale-[0.98] cursor-pointer flex items-center gap-1.5">
+                        <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                        <span>Crop & Save</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -1317,18 +1351,19 @@
                         cropper = null;
                     }
                     cropper = new Cropper(cropImg, {
-                        aspectRatio: 1,
+                        aspectRatio: 178 / 172,
                         viewMode: 1,
                         dragMode: 'move',
                         background: false,
-                        autoCropArea: 0.8,
+                        autoCropArea: 0.9,
                         responsive: true,
                         checkOrientation: false,
                         modal: true,
-                        guides: true,
-                        highlight: true,
-                        cropBoxMovable: true,
-                        cropBoxResizable: true,
+                        guides: false,
+                        center: false,
+                        highlight: false,
+                        cropBoxMovable: false,
+                        cropBoxResizable: false,
                         toggleDragModeOnDblclick: false
                     });
                 };
@@ -1358,10 +1393,10 @@
             saveBtn.innerHTML = '<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> Saving...';
             if (window.lucide) window.lucide.createIcons();
             
-            // Get 400x400 cropped canvas
+            // Get cropped canvas matching card photo frame aspect ratio (178:172)
             const canvas = cropper.getCroppedCanvas({
-                width: 400,
-                height: 400
+                width: 356,
+                height: 344
             });
             
             canvas.toBlob(async function(blob) {
