@@ -906,18 +906,18 @@
                             
                             <!-- Student Photo with Edit Overlay (Super Admins Only) -->
                             @if(auth()->user()?->hasRole('super_admin'))
-                                <div class="absolute group overflow-hidden rounded-lg border border-white/20 hover:border-emerald-500 transition-all duration-200" 
-                                     style="left: 67px; top: 94px; width: 146px; height: 142px; z-index: 10;">
+                                <div class="absolute group overflow-hidden" 
+                                     style="left: 67px; top: 94px; width: 146px; height: 142px; z-index: 10; border-radius: 12px;">
                                     @if($photoUrl)
                                         <img id="id-preview-photo" src="{{ $photoUrl }}" class="w-full h-full object-cover transition duration-300 group-hover:scale-105 group-hover:brightness-75">
                                     @else
-                                        <div class="w-full h-full bg-slate-100 flex flex-col items-center justify-center text-center border border-dashed border-slate-300 text-[10px] font-bold text-slate-450 gap-1">
+                                        <div class="w-full h-full bg-slate-150 flex flex-col items-center justify-center text-center border border-dashed border-slate-300 text-[10px] font-bold text-slate-450 gap-1">
                                             <i data-lucide="camera" class="w-5 h-5 text-slate-400"></i>
                                             <span>UPLOAD</span>
                                         </div>
                                     @endif
                                     <!-- Edit Hover Overlay -->
-                                    <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-2 transition-opacity duration-200 text-white p-2">
+                                    <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-2 transition-opacity duration-200 text-white p-2" style="z-index: 20;">
                                         <span class="text-[9px] font-black tracking-wider uppercase text-center mb-1">Edit Photo</span>
                                         <div class="flex gap-1.5 w-full justify-center">
                                             <!-- Upload New button -->
@@ -937,13 +937,19 @@
                                         </div>
                                     </div>
                                 </div>
+                                <!-- Existing Green Photo Frame / Border (Top Layer) -->
+                                <div class="absolute rounded-lg border-[3.5px] border-[#054f3b] pointer-events-none" style="left: 67px; top: 94px; width: 146px; height: 142px; z-index: 15; border-radius: 12px; box-sizing: border-box;"></div>
                             @else
                                 <!-- Non-admin read-only image -->
-                                @if($photoUrl)
-                                    <img src="{{ $photoUrl }}" class="absolute object-cover rounded-lg border border-white/20" style="left: 67px; top: 94px; width: 146px; height: 142px; z-index: 10;">
-                                @else
-                                    <div class="absolute rounded-lg bg-slate-100 flex items-center justify-center text-center border border-dashed border-slate-300" style="left: 67px; top: 94px; width: 146px; height: 142px; z-index: 10; font-size: 10px; font-weight: bold; color: #94a3b8;">NO PHOTO</div>
-                                @endif
+                                <div class="absolute overflow-hidden" style="left: 67px; top: 94px; width: 146px; height: 142px; z-index: 10; border-radius: 12px;">
+                                    @if($photoUrl)
+                                        <img id="id-preview-photo" src="{{ $photoUrl }}" class="w-full h-full object-cover">
+                                    @else
+                                        <div class="w-full h-full bg-slate-100 flex items-center justify-center text-center border border-dashed border-slate-300 text-[10px] font-bold text-slate-400">NO PHOTO</div>
+                                    @endif
+                                </div>
+                                <!-- Existing Green Photo Frame / Border (Top Layer) -->
+                                <div class="absolute rounded-lg border-[3.5px] border-[#054f3b] pointer-events-none" style="left: 67px; top: 94px; width: 146px; height: 142px; z-index: 15; border-radius: 12px; box-sizing: border-box;"></div>
                             @endif
 
                             <!-- Student ID -->
@@ -1320,7 +1326,10 @@
         }
         #photo-crop-modal .cropper-bg {
             background-image: none !important;
-            background-color: #f1f5f9;
+            background-color: #090d16 !important;
+        }
+        #photo-crop-modal .cropper-container {
+            background-color: #090d16 !important;
         }
     </style>
     <div id="photo-crop-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">

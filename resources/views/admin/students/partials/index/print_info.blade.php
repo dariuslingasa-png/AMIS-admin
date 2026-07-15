@@ -82,7 +82,7 @@
             background: #064e3b;
         }
         
-        .student-photo {
+        .student-photo-container {
             position: absolute;
             left: 81px;
             top: 114px;
@@ -90,8 +90,18 @@
             height: 172px;
             overflow: hidden;
             border-radius: 14px;
-            z-index: 10;
-            object-fit: cover;
+        }
+        
+        .student-photo-frame {
+            position: absolute;
+            left: 81px;
+            top: 114px;
+            width: 178px;
+            height: 172px;
+            border: 4.5px solid #054f3b;
+            border-radius: 14px;
+            pointer-events: none;
+            box-sizing: border-box;
         }
         
         .photo-placeholder {
@@ -627,12 +637,17 @@
                                     <!-- Background Template Image -->
                                     <img src="{{ asset('assets/amis-id-template.png') }}?v=3" class="id-template" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1;" alt="AMIS ID Template">
                                     
-                                    <!-- Student Photo -->
+                                    <!-- Student Photo Container (Middle Layer) -->
                                     @if($photoUrl)
-                                        <img src="{{ $photoUrl }}" class="student-photo" style="z-index: 10;">
+                                        <div class="student-photo-container" style="z-index: 10;">
+                                            <img src="{{ $photoUrl }}" class="student-photo-img" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+                                        </div>
                                     @else
-                                        <div class="photo-placeholder">Photo Missing</div>
+                                        <div class="photo-placeholder" style="z-index: 10;">Photo Missing</div>
                                     @endif
+
+                                    <!-- Existing Green Photo Frame / Border (Top Layer) -->
+                                    <div class="student-photo-frame" style="z-index: 15;"></div>
 
                                     <!-- Student ID Badge text -->
                                     <div class="student-id">{{ $badgeStudentId }}</div>
