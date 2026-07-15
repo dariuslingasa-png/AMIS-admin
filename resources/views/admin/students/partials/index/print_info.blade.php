@@ -85,7 +85,7 @@
         .photo-clip {
             position: absolute;
             left: 81px;
-            top: 114px;
+            top: 134px;
             width: 178px;
             height: 172px;
             overflow: hidden;
@@ -106,7 +106,7 @@
         .green-frame-overlay {
             position: absolute;
             left: 81px;
-            top: 114px;
+            top: 134px;
             width: 178px;
             height: 172px;
             border: 4.5px solid #054f3b;
@@ -119,7 +119,7 @@
         .photo-placeholder {
             position: absolute;
             left: 81px;
-            top: 114px;
+            top: 134px;
             width: 178px;
             height: 172px;
             z-index: 1;
@@ -140,7 +140,7 @@
         .student-id {
             position: absolute;
             left: 0;
-            top: 295px;
+            top: 315px;
             width: 340px;
             height: 15px;
             z-index: 20;
