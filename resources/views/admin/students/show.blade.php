@@ -128,7 +128,10 @@
         const cropModal = document.getElementById('photo-crop-modal');
         const cropOpen = cropModal && !cropModal.classList.contains('hidden');
 
-        if (alpineModalOpen || cropOpen) {
+        const optionsModal = document.getElementById('photo-options-modal');
+        const optionsOpen = optionsModal && !optionsModal.classList.contains('hidden');
+
+        if (alpineModalOpen || cropOpen || optionsOpen) {
             document.body.style.overflow = 'hidden';
             document.body.classList.add('overflow-hidden');
         } else {
@@ -831,8 +834,7 @@
 
         <!-- ID Card Preview Modal -->
         <div x-show="showIdPreview" x-cloak
-             class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-fade-in"
-             @click.self="showIdPreview = false">
+             class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-fade-in">
             <div class="bg-slate-100 dark:bg-slate-950 rounded-3xl max-w-3xl w-full overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col"
                  x-transition:enter="transition ease-out duration-200"
                  x-transition:enter-start="opacity-0 scale-95"
@@ -1110,8 +1112,7 @@
 
         <!-- Password Settings Modal -->
         <div x-show="openPasswordModal" x-cloak
-             class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-fade-in"
-             @click.self="openPasswordModal = false">
+             class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-fade-in">
             <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800 flex flex-col"
                  x-transition:enter="transition ease-out duration-200"
                  x-transition:enter-start="opacity-0 scale-95"
@@ -1172,8 +1173,7 @@
         <!-- Edit Profile Modal -->
         @unless ($isTeacherAdminViewer)
         <div x-show="openEditModal" x-cloak
-             class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-fade-in"
-             @click.self="openEditModal = false">
+             class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-fade-in">
             
             <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto shadow-2xl border border-slate-100 dark:border-slate-800 flex flex-col"
                  x-transition:enter="transition ease-out duration-200"
@@ -1796,7 +1796,7 @@
             const modal = document.getElementById('photo-options-modal');
             if (modal) {
                 modal.classList.remove('hidden');
-                document.body.classList.add('overflow-hidden');
+                updateBodyScroll();
             }
         }
 
@@ -1804,7 +1804,7 @@
             const modal = document.getElementById('photo-options-modal');
             if (modal) {
                 modal.classList.add('hidden');
-                document.body.classList.remove('overflow-hidden');
+                updateBodyScroll();
             }
         }
 
@@ -1835,13 +1835,12 @@
             <filter id="wavy-flag-filter">
                 <feTurbulence type="fractalNoise" baseFrequency="0.012 0.04" numOctaves="2" result="noise" />
                 <feDisplacementMap in="SourceGraphic" in2="noise" scale="22" xChannelSelector="R" yChannelSelector="G" />
-            </filter>
         </defs>
     </svg>
 
     <!-- Photo Edit Options Modal -->
-    <div id="photo-options-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] hidden flex items-center justify-center p-4" onclick="closePhotoOptionsModal()">
-        <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-sm w-full overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in duration-200" onclick="event.stopPropagation()">
+    <div id="photo-options-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in duration-200" onclick="event.stopPropagation()">
             <!-- Header -->
             <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
                 <h3 class="text-sm font-black uppercase tracking-wider text-slate-850 dark:text-white font-outfit">Student Profile Photo</h3>
@@ -1850,52 +1849,55 @@
                 </button>
             </div>
             
-            <!-- Current Photo Preview -->
-            <div class="py-5 flex flex-col items-center justify-center bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800/80">
-                <div class="relative w-24 h-24 rounded-2xl overflow-hidden border-4 border-white dark:border-slate-850 shadow-md">
+            <!-- 2-Column Body -->
+            <div class="p-5 flex flex-col sm:flex-row gap-5 items-center">
+                <!-- Left Column: Bigger Photo Preview -->
+                <div class="flex-1 flex flex-col items-center justify-center">
+                    <div class="relative w-40 h-40 rounded-2xl overflow-hidden border-4 border-slate-100 dark:border-slate-800 shadow-md bg-slate-100 dark:bg-slate-900">
+                        @if($photoUrl)
+                            <img id="options-modal-preview-image" src="{{ $photoUrl }}" alt="Preview" class="w-full h-full object-cover">
+                        @else
+                            <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
+                                <i data-lucide="image" class="w-10 h-10 mb-1.5 text-slate-300"></i>
+                                <span class="text-xs font-black uppercase text-slate-400 tracking-wider">No Photo</span>
+                            </div>
+                        @endif
+                    </div>
+                    <span class="text-[9px] font-black uppercase text-slate-400 mt-2 tracking-widest">Current Photo</span>
+                </div>
+
+                <!-- Right Column: Options List -->
+                <div class="flex-1 w-full flex flex-col gap-3">
+                    <!-- Upload New Photo -->
+                    <button type="button" 
+                            onclick="triggerPhotoUpload()" 
+                            class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition active:scale-[0.98] shadow-sm cursor-pointer">
+                        <i data-lucide="upload-cloud" class="w-4 h-4"></i> Upload Photo
+                    </button>
+
+                    <!-- Sync Photo from M365 -->
+                    <button type="button" 
+                            onclick="triggerMicrosoftSync()" 
+                            class="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition active:scale-[0.98] shadow-sm cursor-pointer">
+                        <i data-lucide="refresh-cw" class="w-4 h-4"></i> Sync from M365
+                    </button>
+
                     @if($photoUrl)
-                        <img id="options-modal-preview-image" src="{{ $photoUrl }}" alt="Preview" class="w-full h-full object-cover">
-                    @else
-                        <div class="absolute inset-0 bg-slate-100 dark:bg-slate-800 flex flex-col items-center justify-center text-center p-2">
-                            <i data-lucide="image" class="w-7 h-7 mb-1 text-slate-300"></i>
-                            <span class="text-[9px] font-black uppercase text-slate-400 tracking-wider">No Photo</span>
-                        </div>
+                        <!-- Crop & Adjust -->
+                        <button type="button" 
+                                onclick="triggerCropAdjust()" 
+                                class="w-full py-2.5 px-4 bg-slate-700 hover:bg-slate-600 text-white rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition active:scale-[0.98] shadow-sm cursor-pointer">
+                            <i data-lucide="crop" class="w-4 h-4"></i> Crop & Adjust
+                        </button>
+
+                        <!-- Reset to Default -->
+                        <button type="button" 
+                                onclick="triggerResetPhoto()" 
+                                class="w-full py-2.5 px-4 bg-rose-600 hover:bg-rose-750 text-white rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition active:scale-[0.98] shadow-sm cursor-pointer">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i> Reset Default
+                        </button>
                     @endif
                 </div>
-                <span class="text-[9px] font-black uppercase text-slate-400 mt-2 tracking-widest">Current Photo</span>
-            </div>
-            
-            <!-- Options List -->
-            <div class="p-5 flex flex-col gap-3">
-                <!-- Upload New Photo -->
-                <button type="button" 
-                        onclick="triggerPhotoUpload()" 
-                        class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition active:scale-[0.98] shadow-sm cursor-pointer">
-                    <i data-lucide="upload-cloud" class="w-4 h-4"></i> Upload New Photo
-                </button>
-
-                <!-- Sync Photo from M365 -->
-                <button type="button" 
-                        onclick="triggerMicrosoftSync()" 
-                        class="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition active:scale-[0.98] shadow-sm cursor-pointer">
-                    <i data-lucide="refresh-cw" class="w-4 h-4"></i> Sync Photo from M365
-                </button>
-
-                @if($photoUrl)
-                    <!-- Crop & Adjust -->
-                    <button type="button" 
-                            onclick="triggerCropAdjust()" 
-                            class="w-full py-2.5 px-4 bg-slate-700 hover:bg-slate-600 text-white rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition active:scale-[0.98] shadow-sm cursor-pointer">
-                        <i data-lucide="crop" class="w-4 h-4"></i> Crop & Adjust
-                    </button>
-
-                    <!-- Reset to Default -->
-                    <button type="button" 
-                            onclick="triggerResetPhoto()" 
-                            class="w-full py-2.5 px-4 bg-rose-600 hover:bg-rose-750 text-white rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition active:scale-[0.98] shadow-sm cursor-pointer">
-                        <i data-lucide="trash-2" class="w-4 h-4"></i> Reset to Default
-                    </button>
-                @endif
             </div>
         </div>
     </div>

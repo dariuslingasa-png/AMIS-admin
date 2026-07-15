@@ -1,7 +1,7 @@
 <!-- Preview Modal Portal -->
 <template x-teleport="body">
     <div x-show="preview" class="preview-modal" x-cloak>
-        <button type="button" class="preview-backdrop" @click="closePreview()"></button>
+        <button type="button" class="preview-backdrop" style="cursor: default;"></button>
         <div class="preview-panel">
             <div class="preview-head gap-3">
                 <strong x-text="label"></strong>
