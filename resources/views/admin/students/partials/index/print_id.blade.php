@@ -209,7 +209,7 @@
         
         .student-grade span {
             font-family: 'Outfit', sans-serif;
-            font-size: 26px;
+            font-size: 31px;
             font-weight: 900;
             line-height: 1;
             letter-spacing: 0.5px;
