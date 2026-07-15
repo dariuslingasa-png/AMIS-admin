@@ -320,37 +320,13 @@
                     
                     @if (auth()->user()?->hasRole('super_admin'))
                         <!-- Camera edit button placed in the outer relative wrapper, so it does not get cut off by overflow-hidden -->
-                        <div class="absolute -bottom-1.5 -right-1.5 z-30 group/edit" onclick="event.stopPropagation()">
+                        <div style="position: absolute; right: -6px; bottom: -6px; z-index: 30;" onclick="event.stopPropagation()">
                             <button type="button" 
-                                    class="w-7 h-7 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full flex items-center justify-center shadow-md border-2 border-white transition active:scale-90 cursor-pointer">
+                                    onclick="openPhotoOptionsModal()"
+                                    class="w-7 h-7 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full flex items-center justify-center shadow-md border-2 border-white transition active:scale-90 cursor-pointer"
+                                    title="Edit Photo Options">
                                 <i data-lucide="camera" class="w-3.5 h-3.5"></i>
                             </button>
-                            
-                            <!-- Dropdown menu -->
-                            <div class="absolute right-0 top-full mt-1 w-28 bg-slate-900 border border-slate-700 rounded-lg shadow-xl py-1 opacity-0 pointer-events-none group-hover/edit:opacity-100 group-hover/edit:pointer-events-auto transition duration-200 flex flex-col gap-0.5 z-40">
-                                <button type="button" 
-                                        onclick="document.getElementById('student-photo-input').click()" 
-                                        class="w-full px-2.5 py-1.5 hover:bg-slate-800 text-white text-[10px] font-bold uppercase tracking-wider text-left flex items-center gap-1.5 transition">
-                                    <i data-lucide="upload-cloud" class="w-3 h-3 text-emerald-500"></i> New Photo
-                                </button>
-                                <button type="button" 
-                                        onclick="syncMicrosoftPhoto()" 
-                                        class="w-full px-2.5 py-1.5 hover:bg-slate-800 text-white text-[10px] font-bold uppercase tracking-wider text-left flex items-center gap-1.5 transition">
-                                    <i data-lucide="refresh-cw" class="w-3 h-3 text-blue-400"></i> M365 Sync
-                                </button>
-                                @if($photoUrl)
-                                    <button type="button" 
-                                            onclick="adjustExistingPhoto('{{ $photoUrl }}')" 
-                                            class="w-full px-2.5 py-1.5 hover:bg-slate-800 text-white text-[10px] font-bold uppercase tracking-wider text-left flex items-center gap-1.5 transition">
-                                        <i data-lucide="crop" class="w-3 h-3 text-slate-400"></i> Crop
-                                    </button>
-                                    <button type="button" 
-                                            onclick="deleteStudentPhoto()" 
-                                            class="w-full px-2.5 py-1.5 hover:bg-rose-950/40 text-rose-400 text-[10px] font-bold uppercase tracking-wider text-left flex items-center gap-1.5 transition">
-                                        <i data-lucide="trash-2" class="w-3 h-3"></i> Reset
-                                    </button>
-                                @endif
-                            </div>
                         </div>
                         <input type="file" id="student-photo-input" name="photo" accept="image/*" class="hidden" onchange="uploadStudentPhoto(this)">
                     @endif
@@ -1815,6 +1791,42 @@
                     window.open(url, '_blank');
                 });
         }
+
+        function openPhotoOptionsModal() {
+            const modal = document.getElementById('photo-options-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                document.body.classList.add('overflow-hidden');
+            }
+        }
+
+        function closePhotoOptionsModal() {
+            const modal = document.getElementById('photo-options-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+            }
+        }
+
+        function triggerPhotoUpload() {
+            closePhotoOptionsModal();
+            document.getElementById('student-photo-input').click();
+        }
+
+        function triggerMicrosoftSync() {
+            closePhotoOptionsModal();
+            syncMicrosoftPhoto();
+        }
+
+        function triggerCropAdjust() {
+            closePhotoOptionsModal();
+            adjustExistingPhoto('{{ $photoUrl }}');
+        }
+
+        function triggerResetPhoto() {
+            closePhotoOptionsModal();
+            deleteStudentPhoto();
+        }
     </script>
 
     <!-- SVG Wavy Flag Filter -->
@@ -1826,4 +1838,50 @@
             </filter>
         </defs>
     </svg>
+
+    <!-- Photo Edit Options Modal -->
+    <div id="photo-options-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] hidden flex items-center justify-center p-4" onclick="closePhotoOptionsModal()">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-sm w-full overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in duration-200" onclick="event.stopPropagation()">
+            <!-- Header -->
+            <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <h3 class="text-sm font-black uppercase tracking-wider text-slate-850 dark:text-white font-outfit">Student Profile Photo</h3>
+                <button type="button" onclick="closePhotoOptionsModal()" class="text-slate-400 hover:text-slate-650 dark:hover:text-slate-200 transition">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            
+            <!-- Options List -->
+            <div class="p-5 flex flex-col gap-3">
+                <!-- Upload New Photo -->
+                <button type="button" 
+                        onclick="triggerPhotoUpload()" 
+                        class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition active:scale-[0.98] shadow-sm cursor-pointer">
+                    <i data-lucide="upload-cloud" class="w-4 h-4"></i> Upload New Photo
+                </button>
+
+                <!-- Sync Photo from M365 -->
+                <button type="button" 
+                        onclick="triggerMicrosoftSync()" 
+                        class="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition active:scale-[0.98] shadow-sm cursor-pointer">
+                    <i data-lucide="refresh-cw" class="w-4 h-4"></i> Sync Photo from M365
+                </button>
+
+                @if($photoUrl)
+                    <!-- Crop & Adjust -->
+                    <button type="button" 
+                            onclick="triggerCropAdjust()" 
+                            class="w-full py-2.5 px-4 bg-slate-700 hover:bg-slate-600 text-white rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition active:scale-[0.98] shadow-sm cursor-pointer">
+                        <i data-lucide="crop" class="w-4 h-4"></i> Crop & Adjust
+                    </button>
+
+                    <!-- Reset to Default -->
+                    <button type="button" 
+                            onclick="triggerResetPhoto()" 
+                            class="w-full py-2.5 px-4 bg-rose-600 hover:bg-rose-750 text-white rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition active:scale-[0.98] shadow-sm cursor-pointer">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i> Reset to Default
+                    </button>
+                @endif
+            </div>
+        </div>
+    </div>
 </x-admin-layout>
