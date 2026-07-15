@@ -1066,24 +1066,18 @@
                                         {{ $homeAddress }}
                                     </div>
                                 </div>
-                            </div>
-
-                            @php
-                                $learningMode = strtolower($applicant->learning_mode ?? '');
-                                $isOdl = str_contains($learningMode, 'online') || str_contains($learningMode, 'flexible') || str_contains($learningMode, 'odl');
-                            @endphp
-
-                            @if($isOdl)
-                                <!-- ODL Digital ID Return / Verification Policy -->
-                                <div class="return-policy-container" style="position: absolute; left: 23px; top: 296px; width: 234px; height: 45px; z-index: 15; background-color: #f6f6f6; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 2.5px; border-radius: 4px; padding: 0 4px;">
-                                    <div style="font-family: 'Outfit', sans-serif; font-size: 7.8px; font-weight: 800; color: #0f172a; line-height: 1.25; text-transform: uppercase; letter-spacing: 0.02em;">
-                                        This is an official Digital Student ID of Al Munawwara Islamic School.
-                                    </div>
-                                    <div style="font-family: 'Outfit', sans-serif; font-size: 7.4px; font-weight: 700; color: #475569; line-height: 1.2;">
-                                        For verification, scan the QR code on the front of this ID.
-                                    </div>
+                            </div>                            <!-- Custom Return Policy Overlay (Same for ODL and F2F) -->
+                            <div class="return-policy-container" style="position: absolute; left: 23px; top: 296px; width: 234px; height: 45px; z-index: 15; background-color: #f6f6f6; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 2px; border-radius: 4px; padding: 0 4px;">
+                                <div style="font-family: 'Outfit', sans-serif; font-size: 8px; font-weight: 800; color: #1e293b; line-height: 1.3;">
+                                    If found, please return this ID
                                 </div>
-                            @endif
+                                <div style="font-family: 'Outfit', sans-serif; font-size: 8px; font-weight: 800; color: #1e293b; line-height: 1.3;">
+                                    to Al Munawwara Islamic School
+                                </div>
+                                <div style="font-family: 'Outfit', sans-serif; font-size: 8px; font-weight: 800; color: #1e293b; line-height: 1.3;">
+                                    Admin Office, 3rd Floor.
+                                </div>
+                            </div>
                         </div>
                     </div></div>
 
