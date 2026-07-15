@@ -325,6 +325,11 @@
                                         class="w-full py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[8px] font-black uppercase tracking-wider flex items-center justify-center gap-1 transition active:scale-95 shadow cursor-pointer">
                                     <i data-lucide="upload-cloud" class="w-2.5 h-2.5"></i> New
                                 </button>
+                                <button type="button" 
+                                        onclick="syncMicrosoftPhoto()" 
+                                        class="w-full py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[8px] font-black uppercase tracking-wider flex items-center justify-center gap-1 transition active:scale-95 shadow cursor-pointer">
+                                    <i data-lucide="refresh-cw" class="w-2.5 h-2.5"></i> M365 Sync
+                                </button>
                                 @if($photoUrl)
                                     <button type="button" 
                                             onclick="adjustExistingPhoto('{{ $photoUrl }}')" 
@@ -342,6 +347,15 @@
                     </div>
                     @if (auth()->user()?->hasRole('super_admin'))
                         <input type="file" id="student-photo-input" name="photo" accept="image/*" class="hidden" onchange="uploadStudentPhoto(this)">
+                        <!-- Bottom-right camera edit button -->
+                        <div class="absolute -bottom-1.5 -right-1.5 z-30">
+                            <button type="button" 
+                                    onclick="document.getElementById('student-photo-input').click()" 
+                                    class="w-7 h-7 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full flex items-center justify-center shadow-md border-2 border-white transition active:scale-90 cursor-pointer"
+                                    title="Upload New Photo">
+                                <i data-lucide="camera" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
                     @endif
                 </div>
                 
@@ -957,6 +971,12 @@
                                                     class="flex-1 py-1.5 px-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[8px] font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition active:scale-95 shadow cursor-pointer">
                                                 <i data-lucide="upload-cloud" class="w-3 h-3"></i> New
                                             </button>
+                                            <!-- Sync M365 button -->
+                                            <button type="button" 
+                                                    onclick="syncMicrosoftPhoto()" 
+                                                    class="flex-1 py-1.5 px-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[8px] font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition active:scale-95 shadow cursor-pointer">
+                                                <i data-lucide="refresh-cw" class="w-3 h-3"></i> M365
+                                            </button>
                                             @if($photoUrl)
                                                 <!-- Adjust Existing button -->
                                                 <button type="button" 
@@ -1071,6 +1091,28 @@
                                         {{ $homeAddress }}
                                     </div>
                                 </div>
+                            </div>
+
+                            @php
+                                $learningMode = strtolower($applicant->learning_mode ?? '');
+                                $isOdl = str_contains($learningMode, 'online') || str_contains($learningMode, 'flexible') || str_contains($learningMode, 'odl');
+                            @endphp
+
+                            @if($isOdl)
+                                <!-- ODL Digital ID Return / Verification Policy -->
+                                <div class="return-policy-container" style="position: absolute; left: 23px; top: 296px; width: 234px; height: 45px; z-index: 15; background-color: #f6f6f6; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 2.5px; border-radius: 4px; padding: 0 4px;">
+                                    <div style="font-family: 'Outfit', sans-serif; font-size: 7.8px; font-weight: 800; color: #0f172a; line-height: 1.25; text-transform: uppercase; letter-spacing: 0.02em;">
+                                        This is an official Digital Student ID of Al Munawwara Islamic School.
+                                    </div>
+                                    <div style="font-family: 'Outfit', sans-serif; font-size: 7.4px; font-weight: 700; color: #475569; line-height: 1.2;">
+                                        For verification, scan the QR code on the front of this ID.
+                                    </div>
+                                </div>
+                            @endif
+
+                            <!-- Official School Website -->
+                            <div class="school-website" style="position: absolute; left: 0; right: 0; bottom: 6px; text-align: center; font-family: 'Outfit', sans-serif; font-size: 8px; font-weight: 800; color: #047857; z-index: 20; letter-spacing: 0.05em;">
+                                www.amis.edu.ph
                             </div>
                         </div>
                     </div></div>
@@ -1624,6 +1666,39 @@
             } catch (e) {
                 console.error(e);
                 alert('An error occurred while deleting photo.');
+            }
+        }
+        async function syncMicrosoftPhoto() {
+            if (!confirm('Fetch profile photo from Microsoft 365 / Azure AD and save it locally?')) return;
+            
+            const overlay = document.createElement('div');
+            overlay.className = 'fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] flex flex-col items-center justify-center gap-3 text-white';
+            overlay.innerHTML = `
+                <div class="animate-spin rounded-full h-10 w-10 border-4 border-white border-t-transparent"></div>
+                <span class="text-sm font-black uppercase tracking-widest font-outfit">Syncing from Microsoft...</span>
+            `;
+            document.body.appendChild(overlay);
+
+            try {
+                const response = await fetch('{{ route('admin.students.sync-microsoft-photo', $student) }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                });
+                
+                const result = await response.json();
+                if (response.ok && result.success) {
+                    location.reload();
+                } else {
+                    alert(result.message || 'Failed to sync photo from Microsoft.');
+                }
+            } catch (e) {
+                console.error(e);
+                alert('An error occurred while syncing photo from Microsoft.');
+            } finally {
+                overlay.remove();
             }
         }
     </script>

@@ -731,6 +731,28 @@
                                     <div class="address-box">
                                         <p style="font-size: {{ $addressFontSize }};">{{ $homeAddress }}</p>
                                     </div>
+
+                                    @php
+                                        $learningMode = strtolower($applicant->learning_mode ?? '');
+                                        $isOdl = str_contains($learningMode, 'online') || str_contains($learningMode, 'flexible') || str_contains($learningMode, 'odl');
+                                    @endphp
+
+                                    @if($isOdl)
+                                        <!-- ODL Digital ID Return / Verification Policy -->
+                                        <div class="return-policy-container" style="position: absolute; left: 28px; top: 360px; width: 284px; height: 55px; z-index: 15; background-color: #f6f6f6; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 4px;">
+                                            <div style="font-family: 'Outfit', sans-serif; font-size: 9.5px; font-weight: 800; color: #0f172a; line-height: 1.25; text-transform: uppercase; letter-spacing: 0.02em;">
+                                                This is an official Digital Student ID of Al Munawwara Islamic School.
+                                            </div>
+                                            <div style="font-family: 'Outfit', sans-serif; font-size: 9px; font-weight: 700; color: #475569; line-height: 1.2;">
+                                                For verification, scan the QR code on the front of this ID.
+                                            </div>
+                                        </div>
+                                    @endif
+
+                                    <!-- Official School Website -->
+                                    <div class="school-website" style="position: absolute; left: 0; right: 0; bottom: 8px; text-align: center; font-family: 'Outfit', sans-serif; font-size: 10px; font-weight: 800; color: #047857; z-index: 20; letter-spacing: 0.05em;">
+                                        www.amis.edu.ph
+                                    </div>
                                 </div>
                             </div>
                         </div>

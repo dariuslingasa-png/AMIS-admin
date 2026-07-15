@@ -1801,6 +1801,76 @@ class AdminStudentController extends Controller
         ], 400);
     }
 
+    public function syncMicrosoftPhoto(Request $request, Student $student)
+    {
+        abort_unless(auth()->user()?->hasRole('super_admin'), 403);
+
+        $upn = $student->school_email;
+        if (empty($upn)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Student does not have a Microsoft 365 school email UPN.',
+            ], 400);
+        }
+
+        try {
+            $graph = new \App\Services\MicrosoftGraphService();
+            $photoData = $graph->getUserPhoto($upn);
+            
+            if (!$photoData || empty($photoData['bytes'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No profile photo found in Microsoft 365 / Azure AD for this account.',
+                ], 404);
+            }
+
+            // Save the bytes as a public file in 'public/optimized/' just like updatePhoto
+            $bytes = $photoData['bytes'];
+            $extension = str_contains($photoData['content_type'], 'png') ? 'png' : 'jpg';
+            $filename = 'optimized/' . \Illuminate\Support\Str::random(40) . '.' . $extension;
+            
+            \Illuminate\Support\Facades\Storage::disk('public')->put($filename, $bytes);
+
+            if ($student->applicant) {
+                $student->applicant->update([
+                    'photo_2x2_url' => $filename,
+                ]);
+
+                // Write audit log
+                \App\Models\AdminAuditLog::create([
+                    'user_id' => auth()->id(),
+                    'event' => 'sync_microsoft_photo',
+                    'ip_address' => request()->ip(),
+                    'user_agent' => \Illuminate\Support\Str::limit((string) request()->userAgent(), 1000, ''),
+                    'successful' => true,
+                    'message' => 'Super Administrator pulled profile photo from Microsoft M365 for student UPN: ' . $student->school_email,
+                    'metadata' => [
+                        'student_id' => $student->id,
+                        'school_email' => $student->school_email,
+                        'photo_path' => $filename,
+                    ],
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Profile photo recovered from Microsoft 365 successfully.',
+                    'photo_url' => \App\Support\EnrollmentStorage::url($filename),
+                ]);
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error("syncMicrosoftPhoto failed: " . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve photo from Microsoft: ' . $e->getMessage(),
+            ], 500);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to sync photo.',
+        ], 400);
+    }
+
     public function updateSection(Request $request, Student $student)
     {
         abort_if(auth()->user()?->isTeacherAdminViewer(), 403);

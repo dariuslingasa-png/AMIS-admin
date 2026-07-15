@@ -151,6 +151,7 @@ Route::name('admin.')->group(function () {
         Route::post('/students/{student}/update-section', [AdminStudentController::class, 'updateSection'])->name('students.update-section');
         Route::post('/students/{student}/update-photo', [AdminStudentController::class, 'updatePhoto'])->name('students.update-photo');
         Route::post('/students/{student}/delete-photo', [AdminStudentController::class, 'deletePhoto'])->name('students.delete-photo');
+        Route::post('/students/{student}/sync-microsoft-photo', [AdminStudentController::class, 'syncMicrosoftPhoto'])->name('students.sync-microsoft-photo');
         Route::delete('/students/{student}', [AdminStudentController::class, 'destroy'])->name('students.destroy');
 
         Route::get('/soa', [AdminSoaController::class, 'index'])->name('soa.index');
