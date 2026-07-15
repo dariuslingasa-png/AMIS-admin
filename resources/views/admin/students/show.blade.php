@@ -1016,7 +1016,7 @@
                         <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Back Side</span>
                         <div class="relative rounded-2xl overflow-hidden shadow-lg border border-slate-200 dark:border-slate-800" style="width: 280px; height: 443px; background-color: #064e3b;">
                             <!-- Background template image -->
-                            <img src="{{ asset('assets/amis-id-template-back.png') }}?v=3" class="absolute inset-0 w-full h-full object-cover" style="z-index: 1; pointer-events: none;" alt="AMIS ID Template Back">
+                            <img src="{{ asset('images/id/amis_backid.png') }}?v=1" class="absolute inset-0 w-full h-full object-cover" style="z-index: 1; pointer-events: none;" alt="AMIS ID Template Back">
 
                             <!-- Emergency Details List -->
                             @php
@@ -1065,17 +1065,6 @@
                                     <div style="text-align: left; font-family: 'Outfit', sans-serif; font-size: {{ $addressFontSize }}; font-weight: 700; text-transform: uppercase; color: #475569; line-height: 1.25;">
                                         {{ $homeAddress }}
                                     </div>
-                                </div>
-                            </div>                            <!-- Custom Return Policy Overlay (Same for ODL and F2F) -->
-                            <div class="return-policy-container" style="position: absolute; left: 23px; top: 296px; width: 234px; height: 45px; z-index: 15; background-color: #f6f6f6; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 2px; border-radius: 4px; padding: 0 4px;">
-                                <div style="font-family: 'Outfit', sans-serif; font-size: 8px; font-weight: 800; color: #1e293b; line-height: 1.3;">
-                                    If found, please return this ID
-                                </div>
-                                <div style="font-family: 'Outfit', sans-serif; font-size: 8px; font-weight: 800; color: #1e293b; line-height: 1.3;">
-                                    to Al Munawwara Islamic School
-                                </div>
-                                <div style="font-family: 'Outfit', sans-serif; font-size: 8px; font-weight: 800; color: #1e293b; line-height: 1.3;">
-                                    Admin Office, 3rd Floor.
                                 </div>
                             </div>
                         </div>

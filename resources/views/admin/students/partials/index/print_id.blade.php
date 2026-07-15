@@ -441,7 +441,7 @@
                     <div class="id-card-scaler">
                         <div class="id-card">
                             <!-- Background Template Image -->
-                            <img src="{{ asset('assets/amis-id-template-back.png') }}?v=3" class="id-template" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1;" alt="AMIS ID Template Back">
+                            <img src="{{ asset('images/id/amis_backid.png') }}?v=1" class="id-template" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1;" alt="AMIS ID Template Back">
 
                             <!-- Emergency Details List -->
                             @php
@@ -492,19 +492,7 @@
                                         {{ $homeAddress }}
                                     </div>
                                 </div>
-                            </div>                            <!-- Custom Return Policy Overlay (Same for ODL and F2F) -->
-                            <div class="return-policy-container" style="position: absolute; left: 28px; top: 360px; width: 284px; height: 55px; z-index: 15; background-color: #f6f6f6; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 3px; padding: 0 4px;">
-                                <div style="font-family: 'Outfit', sans-serif; font-size: 10px; font-weight: 800; color: #1e293b; line-height: 1.3;">
-                                    If found, please return this ID
-                                </div>
-                                <div style="font-family: 'Outfit', sans-serif; font-size: 10px; font-weight: 800; color: #1e293b; line-height: 1.3;">
-                                    to Al Munawwara Islamic School
-                                </div>
-                                <div style="font-family: 'Outfit', sans-serif; font-size: 10px; font-weight: 800; color: #1e293b; line-height: 1.3;">
-                                    Admin Office, 3rd Floor.
-                                </div>
-                            </div>
-                        </div>
+                            </div>                        </div>
                     </div>
                 </div>
             </div>
