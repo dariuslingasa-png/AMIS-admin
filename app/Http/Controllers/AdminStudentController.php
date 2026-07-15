@@ -1739,7 +1739,10 @@ class AdminStudentController extends Controller
                 // Write audit log
                 \App\Models\AdminAuditLog::create([
                     'user_id' => auth()->id(),
-                    'action' => 'update_student_photo',
+                    'event' => 'update_student_photo',
+                    'ip_address' => request()->ip(),
+                    'user_agent' => \Illuminate\Support\Str::limit((string) request()->userAgent(), 1000, ''),
+                    'successful' => true,
                     'message' => 'Super Administrator updated profile photo for student UPN: ' . $student->school_email,
                     'metadata' => [
                         'student_id' => $student->id,
