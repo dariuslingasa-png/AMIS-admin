@@ -510,11 +510,6 @@
                                     </div>
                                 </div>
                             @endif
-
-                            <!-- Official School Website -->
-                            <div class="school-website" style="position: absolute; left: 0; right: 0; bottom: 8px; text-align: center; font-family: 'Outfit', sans-serif; font-size: 10px; font-weight: 800; color: #047857; z-index: 20; letter-spacing: 0.05em;">
-                                www.amis.edu.ph
-                            </div>
                         </div>
                     </div>
                 </div>
