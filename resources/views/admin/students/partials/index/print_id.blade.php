@@ -237,73 +237,30 @@
         }
         
         /* Back Card Styles */
-        .parent-name {
+        .emergency-info {
             position: absolute;
-            left: 15px;
+            left: 28px;
             top: 85px;
-            width: 310px;
-            height: 28px;
+            width: 284px;
             z-index: 10;
-            text-align: center;
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            padding: 0 16px;
+            gap: 7px;
         }
-        
-        .parent-name h3 {
-            font-family: 'Outfit', sans-serif;
-            font-weight: 900;
-            text-transform: uppercase;
-            color: #0f172a;
-            margin: 0;
-            line-height: 1.1;
-        }
-        
-        .contact-number {
-            position: absolute;
-            left: 15px;
-            top: 118px;
-            width: 310px;
-            height: 20px;
-            z-index: 10;
-            text-align: center;
+        .emerg-row {
             display: flex;
-            flex-direction: column;
-            justify-content: center;
-            padding: 0 16px;
+            align-items: flex-start;
+            gap: 10px;
         }
-        
-        .contact-number h4 {
-            font-family: 'Outfit', sans-serif;
-            font-size: 17px;
-            font-weight: 700;
-            color: #1e293b;
-            margin: 0;
-            line-height: 1;
+        .emerg-icon {
+            flex-shrink: 0;
+            width: 14px;
+            height: 14px;
+            color: #047857; /* Emerald green to match theme */
+            margin-top: 1.5px;
         }
-        
-        .address-box {
-            position: absolute;
-            left: 20px;
-            top: 144px;
-            width: 300px;
-            height: 42px;
-            z-index: 10;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            padding: 0 20px;
-        }
-        
-        .address-box p {
-            font-family: 'Outfit', sans-serif;
-            font-weight: 700;
-            text-transform: uppercase;
-            color: #475569;
-            margin: 0;
-            line-height: 1.25;
+        .emerg-text {
+            text-align: left;
         }
     </style>
 </head>
@@ -436,32 +393,55 @@
                     <!-- Background Template Image -->
                     <img src="{{ asset('assets/amis-id-template-back.png') }}?v=3" class="id-template" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1;" alt="AMIS ID Template Back">
 
-                    <!-- Parent Name -->
+                    <!-- Emergency Details List -->
                     @php
                         $relationship = trim($applicant->emergency_relationship ?? '');
-                        $displayNameText = $emergencyName;
-                        if (!empty($relationship)) {
-                            $displayNameText .= ' (' . $relationship . ')';
-                        }
-                        $parentNameLen = strlen($displayNameText);
-                        $parentNameFontSize = $parentNameLen > 24 ? '15px' : ($parentNameLen > 18 ? '18px' : '22px');
-                    @endphp
-                    <div class="parent-name">
-                        <h3 style="font-size: {{ $parentNameFontSize }};">{{ $displayNameText }}</h3>
-                    </div>
-
-                    <!-- Contact Number -->
-                    <div class="contact-number">
-                        <h4>{{ $emergencyPhone }}</h4>
-                    </div>
-
-                    <!-- Address -->
-                    @php
+                        $parentNameLen = strlen($emergencyName);
+                        $parentNameFontSize = $parentNameLen > 24 ? '14px' : ($parentNameLen > 18 ? '16px' : '19px');
+                        
                         $addressLen = strlen($homeAddress);
-                        $addressFontSize = $addressLen > 60 ? '10.5px' : ($addressLen > 40 ? '12px' : '13.5px');
+                        $addressFontSize = $addressLen > 60 ? '10.5px' : ($addressLen > 40 ? '11.5px' : '12.5px');
                     @endphp
-                    <div class="address-box">
-                        <p style="font-size: {{ $addressFontSize }};">{{ $homeAddress }}</p>
+                    <div class="emergency-info">
+                        <!-- Contact Name -->
+                        <div class="emerg-row">
+                            <span class="emerg-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:100%; height:100%;"><path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z" clip-rule="evenodd" /></svg>
+                            </span>
+                            <div class="emerg-text" style="font-family: 'Outfit', sans-serif; font-size: {{ $parentNameFontSize }}; font-weight: 900; text-transform: uppercase; color: #0f172a; line-height: 1.1;">
+                                {{ $emergencyName }}
+                            </div>
+                        </div>
+
+                        <!-- Relationship -->
+                        <div class="emerg-row">
+                            <span class="emerg-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:100%; height:100%;"><path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" /></svg>
+                            </span>
+                            <div class="emerg-text" style="font-family: 'Outfit', sans-serif; font-size: 13.5px; font-weight: 700; text-transform: uppercase; color: #475569; line-height: 1;">
+                                {{ $relationship ?: 'Emergency Contact' }}
+                            </div>
+                        </div>
+
+                        <!-- Phone -->
+                        <div class="emerg-row">
+                            <span class="emerg-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:100%; height:100%;"><path fill-rule="evenodd" d="M1.5 4.5a3 3 0 0 1 3-3h1.372c.86 0 1.61.586 1.819 1.42l.589 2.356a1.75 1.75 0 0 1-.607 1.89l-1.077.808a12.983 12.983 0 0 0 5.753 5.753l.808-1.077a1.75 1.75 0 0 1 1.89-.607l2.356.589c.834.209 1.42.959 1.42 1.82V19.5a3 3 0 0 1-3 3h-2.25C8.552 22.5 1.5 15.448 1.5 6.75V4.5Z" clip-rule="evenodd" /></svg>
+                            </span>
+                            <div class="emerg-text" style="font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 800; color: #1e293b; line-height: 1;">
+                                {{ $emergencyPhone }}
+                            </div>
+                        </div>
+
+                        <!-- Address -->
+                        <div class="emerg-row">
+                            <span class="emerg-icon" style="margin-top: 2.5px;">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:100%; height:100%;"><path fill-rule="evenodd" d="m11.54 22.351.07.04.028.016a.76.76 0 0 0 .723 0l.028-.015.071-.041a16.975 16.975 0 0 0 3.58-2.977c2.2-2.384 4.19-5.462 4.19-8.923 0-4.82-3.855-8.5-8.5-8.5-8.5 0-8.5 3.68-8.5 8.5c0 3.461 1.99 6.54 4.19 8.923a16.975 16.975 0 0 0 3.58 2.977Zm3.71-12.851a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" clip-rule="evenodd" /></svg>
+                            </span>
+                            <div class="emerg-text" style="font-family: 'Outfit', sans-serif; font-size: {{ $addressFontSize }}; font-weight: 700; text-transform: uppercase; color: #475569; line-height: 1.25;">
+                                {{ $homeAddress }}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

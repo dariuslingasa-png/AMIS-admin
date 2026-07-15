@@ -845,9 +845,6 @@
                         }
                         
                         $relationship = trim($student->applicant->emergency_relationship ?? '');
-                        if (!empty($relationship)) {
-                            $emergencyName .= ' (' . $relationship . ')';
-                        }
                         
                         $emergencyPhone = $student->applicant->emergency_phone ?: '-';
                         if (empty($emergencyPhone)) {
@@ -919,18 +916,55 @@
                             <!-- Background template image -->
                             <img src="{{ asset('assets/amis-id-template-back.png') }}?v=3" class="absolute inset-0 w-full h-full object-cover" style="z-index: 1; pointer-events: none;" alt="AMIS ID Template Back">
 
-                            <!-- Emergency Name -->
+                            <!-- Emergency Details List -->
                             @php
                                 $parentNameLen = strlen($emergencyName);
-                                $parentNameFontSize = $parentNameLen > 24 ? '11px' : ($parentNameLen > 18 ? '13px' : '15px');
+                                $parentNameFontSize = $parentNameLen > 24 ? '11.5px' : ($parentNameLen > 18 ? '13px' : '15.5px');
+                                
+                                $addressLen = strlen($homeAddress);
+                                $addressFontSize = $addressLen > 60 ? '8.5px' : ($addressLen > 40 ? '9.5px' : '10.5px');
                             @endphp
-                            <div class="absolute text-center font-black text-[#0f172a] uppercase leading-tight flex flex-col justify-center" style="left: 12px; top: 70px; width: 256px; height: 23px; z-index: 10; font-size: {{ $parentNameFontSize }};">{{ $emergencyName }}</div>
+                            <div style="position: absolute; left: 23px; top: 70px; width: 233px; z-index: 10; display: flex; flex-direction: column; gap: 5.5px;">
+                                <!-- Contact Name -->
+                                <div style="display: flex; align-items: flex-start; gap: 8px;">
+                                    <span style="flex-shrink: 0; width: 11.5px; height: 11.5px; color: #047857; margin-top: 1.5px;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:100%; height:100%;"><path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z" clip-rule="evenodd" /></svg>
+                                    </span>
+                                    <div style="text-align: left; font-family: 'Outfit', sans-serif; font-size: {{ $parentNameFontSize }}; font-weight: 900; text-transform: uppercase; color: #0f172a; line-height: 1.1;">
+                                        {{ $emergencyName }}
+                                    </div>
+                                </div>
 
-                            <!-- Emergency Contact -->
-                            <div class="absolute text-center font-bold text-[#1e293b] leading-none flex flex-col justify-center" style="left: 12px; top: 97px; width: 256px; height: 16px; z-index: 10; font-size: 12.5px;">{{ $emergencyPhone }}</div>
+                                <!-- Relationship -->
+                                <div style="display: flex; align-items: flex-start; gap: 8px;">
+                                    <span style="flex-shrink: 0; width: 11.5px; height: 11.5px; color: #047857; margin-top: 1.5px;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:100%; height:100%;"><path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" /></svg>
+                                    </span>
+                                    <div style="text-align: left; font-family: 'Outfit', sans-serif; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #475569; line-height: 1;">
+                                        {{ $relationship ?: 'Emergency Contact' }}
+                                    </div>
+                                </div>
 
-                            <!-- Home Address -->
-                            <div class="absolute text-center font-bold text-[#475569] uppercase leading-tight flex flex-col justify-center" style="left: 16px; top: 119px; width: 248px; height: 35px; z-index: 10; font-size: 9px; padding: 0 16px;">{{ $homeAddress }}</div>
+                                <!-- Phone -->
+                                <div style="display: flex; align-items: flex-start; gap: 8px;">
+                                    <span style="flex-shrink: 0; width: 11.5px; height: 11.5px; color: #047857; margin-top: 1.5px;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:100%; height:100%;"><path fill-rule="evenodd" d="M1.5 4.5a3 3 0 0 1 3-3h1.372c.86 0 1.61.586 1.819 1.42l.589 2.356a1.75 1.75 0 0 1-.607 1.89l-1.077.808a12.983 12.983 0 0 0 5.753 5.753l.808-1.077a1.75 1.75 0 0 1 1.89-.607l2.356.589c.834.209 1.42.959 1.42 1.82V19.5a3 3 0 0 1-3 3h-2.25C8.552 22.5 1.5 15.448 1.5 6.75V4.5Z" clip-rule="evenodd" /></svg>
+                                    </span>
+                                    <div style="text-align: left; font-family: 'Outfit', sans-serif; font-size: 12.5px; font-weight: 800; color: #1e293b; line-height: 1;">
+                                        {{ $emergencyPhone }}
+                                    </div>
+                                </div>
+
+                                <!-- Address -->
+                                <div style="display: flex; align-items: flex-start; gap: 8px;">
+                                    <span style="flex-shrink: 0; width: 11.5px; height: 11.5px; color: #047857; margin-top: 2px;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:100%; height:100%;"><path fill-rule="evenodd" d="m11.54 22.351.07.04.028.016a.76.76 0 0 0 .723 0l.028-.015.071-.041a16.975 16.975 0 0 0 3.58-2.977c2.2-2.384 4.19-5.462 4.19-8.923 0-4.82-3.855-8.5-8.5-8.5-8.5 0-8.5 3.68-8.5 8.5c0 3.461 1.99 6.54 4.19 8.923a16.975 16.975 0 0 0 3.58 2.977Zm3.71-12.851a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" clip-rule="evenodd" /></svg>
+                                    </span>
+                                    <div style="text-align: left; font-family: 'Outfit', sans-serif; font-size: {{ $addressFontSize }}; font-weight: 700; text-transform: uppercase; color: #475569; line-height: 1.25;">
+                                        {{ $homeAddress }}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div></div>
 
