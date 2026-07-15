@@ -1850,6 +1850,21 @@
                 </button>
             </div>
             
+            <!-- Current Photo Preview -->
+            <div class="py-5 flex flex-col items-center justify-center bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800/80">
+                <div class="relative w-24 h-24 rounded-2xl overflow-hidden border-4 border-white dark:border-slate-850 shadow-md">
+                    @if($photoUrl)
+                        <img id="options-modal-preview-image" src="{{ $photoUrl }}" alt="Preview" class="w-full h-full object-cover">
+                    @else
+                        <div class="absolute inset-0 bg-slate-100 dark:bg-slate-800 flex flex-col items-center justify-center text-center p-2">
+                            <i data-lucide="image" class="w-7 h-7 mb-1 text-slate-300"></i>
+                            <span class="text-[9px] font-black uppercase text-slate-400 tracking-wider">No Photo</span>
+                        </div>
+                    @endif
+                </div>
+                <span class="text-[9px] font-black uppercase text-slate-400 mt-2 tracking-widest">Current Photo</span>
+            </div>
+            
             <!-- Options List -->
             <div class="p-5 flex flex-col gap-3">
                 <!-- Upload New Photo -->
