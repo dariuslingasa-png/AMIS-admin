@@ -203,7 +203,7 @@
             font-size: 15.5px;
             font-weight: 700;
             z-index: 10;
-            left: 243px;
+            left: 239px;
             top: 394px;
             width: 170px;
             height: 22px;
