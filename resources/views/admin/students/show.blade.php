@@ -112,6 +112,32 @@
     }
 @endphp
 
+<script>
+    function updateBodyScroll() {
+        let alpineModalOpen = false;
+        try {
+            const el = document.querySelector('[x-data]');
+            if (el && window.Alpine) {
+                const data = window.Alpine.$data(el);
+                if (data && (data.openEditModal || data.showIdPreview || data.openPasswordModal || data.preview)) {
+                    alpineModalOpen = true;
+                }
+            }
+        } catch (e) {}
+
+        const cropModal = document.getElementById('photo-crop-modal');
+        const cropOpen = cropModal && !cropModal.classList.contains('hidden');
+
+        if (alpineModalOpen || cropOpen) {
+            document.body.style.overflow = 'hidden';
+            document.body.classList.add('overflow-hidden');
+        } else {
+            document.body.style.overflow = '';
+            document.body.classList.remove('overflow-hidden');
+        }
+    }
+</script>
+
 <x-admin-layout
     title="Student Profile"
     :breadcrumbs="[
@@ -230,10 +256,10 @@
              }
          }
      }"
-     x-effect="document.body.classList.toggle('overflow-hidden', preview)"
-     @keydown.escape.window="closePreview()"
-     @mouseup.window="stopPan()"
-     @touchend.window="stopPan()">
+      x-effect="preview; openEditModal; showIdPreview; openPasswordModal; typeof updateBodyScroll === 'function' && updateBodyScroll()"
+      @keydown.escape.window="closePreview()"
+      @mouseup.window="stopPan()"
+      @touchend.window="stopPan()">
 
     <!-- Page back link -->
     <div class="mb-5 flex justify-between items-center">
@@ -1415,6 +1441,7 @@
             // Show Crop Modal first to establish layout dimensions
             const cropModal = document.getElementById('photo-crop-modal');
             cropModal.classList.remove('hidden');
+            updateBodyScroll();
             
             cropImg.onload = function() {
                 if (cropper) {
@@ -1455,6 +1482,7 @@
                 // Show Crop Modal first to establish layout dimensions
                 const cropModal = document.getElementById('photo-crop-modal');
                 cropModal.classList.remove('hidden');
+                updateBodyScroll();
                 
                 cropImg.onload = function() {
                     if (cropper) {
@@ -1488,6 +1516,7 @@
         function closeCropModal() {
             const cropModal = document.getElementById('photo-crop-modal');
             cropModal.classList.add('hidden');
+            updateBodyScroll();
             if (cropper) {
                 cropper.destroy();
                 cropper = null;
