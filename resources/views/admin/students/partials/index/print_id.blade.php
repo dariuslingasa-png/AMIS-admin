@@ -68,8 +68,8 @@
         }
         
         .id-card-wrapper {
-            width: 54mm;
-            height: 85.6mm;
+            width: 59.4mm;
+            height: 94.16mm;
             position: relative;
             overflow: hidden;
             box-sizing: border-box;
@@ -82,7 +82,7 @@
             position: absolute;
             top: 0;
             left: 0;
-            transform: scale(0.6);
+            transform: scale(0.66);
             transform-origin: top left;
         }
         
