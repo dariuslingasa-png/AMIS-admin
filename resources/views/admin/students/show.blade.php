@@ -927,7 +927,7 @@
                             <!-- Student Photo with Edit Overlay (Super Admins Only) -->
                             @if(auth()->user()?->hasRole('super_admin'))
                                 <div class="photo-clip group" 
-                                     style="left: 67px; top: 114px; width: 146px; height: 142px; border-radius: 12px; z-index: 5;">
+                                     style="left: 67px; top: 134px; width: 146px; height: 142px; border-radius: 12px; z-index: 5;">
                                     @if($photoUrl)
                                         <img id="id-preview-photo" src="{{ $photoUrl }}" class="transition duration-300 group-hover:scale-105 group-hover:brightness-75">
                                     @else
@@ -971,7 +971,7 @@
                                 </div>
                             @else
                                 <!-- Non-admin read-only image -->
-                                <div class="photo-clip" style="left: 67px; top: 114px; width: 146px; height: 142px; border-radius: 12px; z-index: 5;">
+                                <div class="photo-clip" style="left: 67px; top: 134px; width: 146px; height: 142px; border-radius: 12px; z-index: 5;">
                                     @if($photoUrl)
                                         <img id="id-preview-photo" src="{{ $photoUrl }}">
                                     @else
@@ -981,7 +981,7 @@
                             @endif
 
                             <!-- Student ID -->
-                            <div class="absolute text-white font-black tracking-wide text-center uppercase" style="left: 0; top: 263px; width: 280px; height: 12px; z-index: 20; font-size: 10px;">{{ $studentNumber }}</div>
+                            <div class="absolute text-white font-black tracking-wide text-center uppercase" style="left: 0; top: 283px; width: 280px; height: 12px; z-index: 20; font-size: 10px;">{{ $studentNumber }}</div>
 
                             <!-- Last Name -->
                             <div class="absolute text-center font-black text-[#0f172a] uppercase tracking-tight flex flex-col justify-center items-center animate-fade-in" style="left: 12px; top: 271px; width: 256px; height: 32px; z-index: 20; font-size: {{ $lastNameFontSize }}; {{ $lastNameStyle }} line-height: 1.1;">{{ $lastName }}</div>
