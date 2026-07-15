@@ -866,7 +866,22 @@
                             return '#6d28d9';
                         };
                         $lastNameLen = strlen($lastName);
-                        $lastNameFontSize = $lastNameLen > 20 ? '12px' : ($lastNameLen > 15 ? '15px' : ($lastNameLen > 10 ? '19px' : '26px'));
+                        if ($lastNameLen <= 8) {
+                            $lastNameFontSize = '30px';
+                            $lastNameStyle = 'white-space: nowrap;';
+                        } elseif ($lastNameLen <= 12) {
+                            $lastNameFontSize = '23px';
+                            $lastNameStyle = 'white-space: nowrap;';
+                        } elseif ($lastNameLen <= 16) {
+                            $lastNameFontSize = '19px';
+                            $lastNameStyle = 'white-space: nowrap;';
+                        } elseif ($lastNameLen <= 20) {
+                            $lastNameFontSize = '15px';
+                            $lastNameStyle = 'white-space: nowrap;';
+                        } else {
+                            $lastNameFontSize = '12.5px';
+                            $lastNameStyle = 'word-break: break-word;';
+                        }
                     @endphp
 
                     <!-- Front Side Card -->
@@ -887,7 +902,7 @@
                             <div class="absolute text-white font-black tracking-wide text-center uppercase" style="left: 0; top: 243px; width: 280px; height: 12px; z-index: 10; font-size: 10px;">{{ $studentNumber }}</div>
 
                             <!-- Last Name -->
-                            <div class="absolute text-center font-black text-[#0f172a] uppercase tracking-tight flex flex-col justify-center items-center animate-fade-in" style="left: 12px; top: 271px; width: 256px; height: 32px; z-index: 10; font-size: {{ $lastNameFontSize }}; line-height: 1.1;">{{ $lastName }}</div>
+                            <div class="absolute text-center font-black text-[#0f172a] uppercase tracking-tight flex flex-col justify-center items-center animate-fade-in" style="left: 12px; top: 271px; width: 256px; height: 32px; z-index: 10; font-size: {{ $lastNameFontSize }}; {{ $lastNameStyle }} line-height: 1.1;">{{ $lastName }}</div>
 
                             <!-- First Name -->
                              @php

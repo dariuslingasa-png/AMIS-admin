@@ -374,10 +374,25 @@
                             <!-- Last Name -->
                             @php
                                 $lastNameLen = strlen($lastName);
-                                $lastNameFontSize = $lastNameLen > 20 ? '16px' : ($lastNameLen > 15 ? '19px' : ($lastNameLen > 10 ? '24px' : '32px'));
+                                if ($lastNameLen <= 8) {
+                                    $lastNameFontSize = '36px';
+                                    $lastNameStyle = 'white-space: nowrap;';
+                                } elseif ($lastNameLen <= 12) {
+                                    $lastNameFontSize = '28px';
+                                    $lastNameStyle = 'white-space: nowrap;';
+                                } elseif ($lastNameLen <= 16) {
+                                    $lastNameFontSize = '23px';
+                                    $lastNameStyle = 'white-space: nowrap;';
+                                } elseif ($lastNameLen <= 20) {
+                                    $lastNameFontSize = '18px';
+                                    $lastNameStyle = 'white-space: nowrap;';
+                                } else {
+                                    $lastNameFontSize = '15px';
+                                    $lastNameStyle = 'word-break: break-word;';
+                                }
                             @endphp
                             <div class="student-last-name">
-                                <h3 style="font-size: {{ $lastNameFontSize }};">{{ $lastName }}</h3>
+                                <h3 style="font-size: {{ $lastNameFontSize }}; {{ $lastNameStyle }}">{{ $lastName }}</h3>
                             </div>
 
                             <!-- First Name -->
