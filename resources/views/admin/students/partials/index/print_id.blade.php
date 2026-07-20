@@ -2,8 +2,20 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>AMIS Student ID Cards</title>
+    @php
+        $idTitle = 'AMIS-Student-ID-Cards';
+        if (isset($students) && count($students) === 1) {
+            $st = $students->first();
+            $app = $st?->applicant;
+            $ln = strtoupper(trim($app?->last_name ?? ''));
+            $fn = strtoupper(trim($app?->first_name ?? ''));
+            $gr = strtoupper(trim(str_replace(' ', '', $st?->grade_level ?? '')));
+            if ($ln || $fn) {
+                $idTitle = implode('-', array_filter([$ln, $fn, $gr ?: 'GRADE']));
+            }
+        }
+    @endphp
+    <title>{{ $idTitle }}</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&display=swap');
         
@@ -97,13 +109,13 @@
         
         .photo-clip {
             position: absolute;
-            left: 81px;
-            top: 154px;
-            width: 178px;
-            height: 172px;
+            left: 71px;
+            top: 144px;
+            width: 198px;
+            height: 192px;
             overflow: hidden;
             background: transparent;
-            border-radius: 14px;
+            border-radius: 6px;
         }
         
         .photo-clip img {
@@ -112,18 +124,19 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+            object-position: center center;
             display: block;
             z-index: 1;
         }
         
         .photo-placeholder {
             position: absolute;
-            left: 81px;
-            top: 154px;
-            width: 178px;
-            height: 172px;
+            left: 71px;
+            top: 144px;
+            width: 198px;
+            height: 192px;
             z-index: 5;
-            border-radius: 14px;
+            border-radius: 6px;
             background: #f1f5f9;
             border: 2px dashed #cbd5e1;
             display: flex;
@@ -140,7 +153,7 @@
         .student-id {
             position: absolute;
             left: 0;
-            top: 335px;
+            top: 325px;
             width: 340px;
             height: 15px;
             z-index: 20;
@@ -157,7 +170,7 @@
         .student-last-name {
             position: absolute;
             left: 15px;
-            top: 334px;
+            top: 352px;
             width: 310px;
             height: 32px;
             z-index: 20;
@@ -181,7 +194,7 @@
         .student-first-name {
             position: absolute;
             left: 15px;
-            top: 366px;
+            top: 386px;
             width: 310px;
             height: 22px;
             z-index: 20;
@@ -204,7 +217,7 @@
         .student-grade {
             position: absolute;
             left: 15px;
-            top: 414px;
+            top: 412px;
             width: 310px;
             height: 30px;
             z-index: 20;
@@ -290,6 +303,24 @@
         }
         .emerg-text {
             text-align: left;
+        }
+        .back-signature-qr {
+            position: absolute;
+            left: 142.5px;
+            top: 422px;
+            width: 55px;
+            height: 55px;
+            z-index: 25;
+            padding: 1.5px;
+            border-radius: 2px;
+            background: white;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .back-signature-qr img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
         }
     </style>
 </head>
@@ -428,10 +459,10 @@
                                 </div>
                             @endif
 
-                            <!-- QR Code -->
-                            <div class="student-qr">
-                                <img src="{{ $qrCodeUrl }}" alt="QR Verification">
-                            </div>
+                             <!-- QR Code -->
+                             <div class="student-qr">
+                                 <img src="{{ $qrCodeUrl }}" alt="QR Verification">
+                             </div>
                         </div>
                     </div>
                 </div>
@@ -492,7 +523,23 @@
                                         {{ $homeAddress }}
                                     </div>
                                 </div>
-                            </div>                        </div>
+                            </div>
+
+
+                            <!-- Secure Director Signature QR (Only for authorized students) -->
+                            @if(in_array((string)$student->student_number, ['260253', '260254']))
+                                @php
+                                    $signatureQrUrl = 'https://quickchart.io/qr?text=' . urlencode('https://amis.edu.ph/signature') . '&dark=000000&light=ffffff&margin=1&format=png&size=200';
+                                @endphp
+                                <div class="back-signature-qr">
+                                    <img src="{{ $signatureQrUrl }}" alt="Signature QR">
+                                </div>
+                            @else
+                                <div class="secure-signature-placeholder" style="position: absolute; left: 85px; top: 432px; width: 170px; text-align: center; z-index: 25; pointer-events: none;">
+                                    <span style="font-family: 'Outfit', sans-serif; font-size: 8px; font-weight: 900; text-transform: uppercase; color: #64748b; letter-spacing: 0.1em; border: 1.5px dashed #cbd5e1; padding: 3px 6px; border-radius: 6px; background: rgba(255, 255, 255, 0.85); display: inline-block; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">Secure Signature Coming Soon</span>
+                                </div>
+                            @endif
+                        </div>
                     </div>
                 </div>
             </div>

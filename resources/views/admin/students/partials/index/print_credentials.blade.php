@@ -2,8 +2,20 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>AMIS Student Credentials Print</title>
+    @php
+        $credTitle = 'AMIS-Student-Credentials-Print';
+        if (isset($students) && count($students) === 1) {
+            $st = $students->first();
+            $app = $st?->applicant;
+            $ln = strtoupper(trim($app?->last_name ?? ''));
+            $fn = strtoupper(trim($app?->first_name ?? ''));
+            $gr = strtoupper(trim(str_replace(' ', '', $st?->grade_level ?? '')));
+            if ($ln || $fn) {
+                $credTitle = implode('-', array_filter([$ln, $fn, $gr ?: 'GRADE', 'CREDENTIALS']));
+            }
+        }
+    @endphp
+    <title>{{ $credTitle }}</title>
     <style>
         @page { size: A4; margin: 10mm 8mm; }
         * { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }

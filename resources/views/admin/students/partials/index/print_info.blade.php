@@ -2,8 +2,20 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>AMIS Student Record Sheets</title>
+    @php
+        $infoTitle = 'AMIS-Student-Record-Sheets';
+        if (isset($students) && count($students) === 1) {
+            $st = $students->first();
+            $app = $st?->applicant;
+            $ln = strtoupper(trim($app?->last_name ?? ''));
+            $fn = strtoupper(trim($app?->first_name ?? ''));
+            $gr = strtoupper(trim(str_replace(' ', '', $st?->grade_level ?? '')));
+            if ($ln || $fn) {
+                $infoTitle = implode('-', array_filter([$ln, $fn, $gr ?: 'GRADE', 'RECORD']));
+            }
+        }
+    @endphp
+    <title>{{ $infoTitle }}</title>
     <style>
         @page { size: A4; margin: 10mm 10mm; }
         * { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
@@ -84,13 +96,13 @@
         
         .photo-clip {
             position: absolute;
-            left: 81px;
-            top: 154px;
-            width: 178px;
-            height: 172px;
+            left: 71px;
+            top: 144px;
+            width: 198px;
+            height: 192px;
             overflow: hidden;
             background: transparent;
-            border-radius: 14px;
+            border-radius: 6px;
         }
         
         .photo-clip img {
@@ -99,18 +111,19 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+            object-position: center center;
             display: block;
             z-index: 1;
         }
         
         .green-frame-overlay {
             position: absolute;
-            left: 81px;
-            top: 154px;
-            width: 178px;
-            height: 172px;
+            left: 71px;
+            top: 144px;
+            width: 198px;
+            height: 192px;
             border: 4.5px solid #054f3b;
-            border-radius: 14px;
+            border-radius: 6px;
             z-index: 2;
             pointer-events: none;
             box-sizing: border-box;
@@ -118,12 +131,12 @@
         
         .photo-placeholder {
             position: absolute;
-            left: 81px;
-            top: 154px;
-            width: 178px;
-            height: 172px;
+            left: 71px;
+            top: 144px;
+            width: 198px;
+            height: 192px;
             z-index: 1;
-            border-radius: 14px;
+            border-radius: 6px;
             background: #f1f5f9;
             border: 2px dashed #cbd5e1;
             display: flex;
@@ -140,7 +153,7 @@
         .student-id {
             position: absolute;
             left: 0;
-            top: 335px;
+            top: 325px;
             width: 340px;
             height: 15px;
             z-index: 20;
@@ -157,7 +170,7 @@
         .student-last-name {
             position: absolute;
             left: 15px;
-            top: 334px;
+            top: 352px;
             width: 310px;
             height: 32px;
             z-index: 20;
@@ -181,7 +194,7 @@
         .student-first-name {
             position: absolute;
             left: 15px;
-            top: 366px;
+            top: 386px;
             width: 310px;
             height: 22px;
             z-index: 20;
@@ -204,7 +217,7 @@
         .student-grade {
             position: absolute;
             left: 15px;
-            top: 406px;
+            top: 412px;
             width: 310px;
             height: 30px;
             z-index: 20;
