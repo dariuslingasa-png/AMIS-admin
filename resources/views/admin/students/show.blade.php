@@ -1107,12 +1107,20 @@
                                 </div>
                             @endif
                         </div>
-                        <button type="button" 
-                                onclick="downloadIdCardPng('back')" 
-                                class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition active:scale-95 cursor-pointer mt-1">
-                            <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                            <span>Download Back PNG</span>
-                        </button>
+                        <div class="flex items-center gap-2 mt-1">
+                            <button type="button" 
+                                    onclick="downloadIdCardPng('back', false)" 
+                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition active:scale-95 cursor-pointer">
+                                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                                <span>Back PNG (Color)</span>
+                            </button>
+                            <button type="button" 
+                                    onclick="downloadIdCardPng('back', true)" 
+                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-black text-white text-xs font-bold shadow-xs transition active:scale-95 cursor-pointer">
+                                <i data-lucide="file-badge-2" class="w-3.5 h-3.5 text-emerald-400"></i>
+                                <span>Back PNG (Black Only 🖤)</span>
+                            </button>
+                        </div>
                     </div>
 
                     <input type="hidden" id="id-card-filename-slug" value="{{ implode('-', array_filter([$lastName, $firstName, str_replace(' ', '', $displayGrade)])) }}">
@@ -1122,13 +1130,17 @@
                 <div class="flex items-center justify-between px-6 py-4 border-t border-slate-200 dark:border-slate-855 bg-white dark:bg-slate-900">
                     <p class="text-xs text-slate-400 font-medium hidden sm:block">Smart ID Printer PNG images (300 DPI high-res).</p>
                     <div class="flex items-center gap-2.5 flex-wrap">
-                        <button type="button" onclick="downloadIdCardPng('front')" class="rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 px-3.5 py-2 text-xs font-bold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 transition active:scale-[0.98] cursor-pointer flex items-center gap-1.5">
+                        <button type="button" onclick="downloadIdCardPng('front', false)" class="rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 px-3.5 py-2 text-xs font-bold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 transition active:scale-[0.98] cursor-pointer flex items-center gap-1.5">
                             <i data-lucide="download" class="w-4 h-4"></i>
                             <span>Front PNG</span>
                         </button>
-                        <button type="button" onclick="downloadIdCardPng('back')" class="rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 px-3.5 py-2 text-xs font-bold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 transition active:scale-[0.98] cursor-pointer flex items-center gap-1.5">
+                        <button type="button" onclick="downloadIdCardPng('back', false)" class="rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 px-3 py-2 text-xs font-bold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 transition active:scale-[0.98] cursor-pointer flex items-center gap-1.5">
                             <i data-lucide="download" class="w-4 h-4"></i>
-                            <span>Back PNG</span>
+                            <span>Back PNG (Color)</span>
+                        </button>
+                        <button type="button" onclick="downloadIdCardPng('back', true)" class="rounded-xl border border-slate-800 bg-slate-900 hover:bg-black px-3.5 py-2 text-xs font-bold text-white transition active:scale-[0.98] cursor-pointer flex items-center gap-1.5 shadow-sm">
+                            <i data-lucide="file-badge-2" class="w-4 h-4 text-emerald-400"></i>
+                            <span>Back PNG (Black Only 🖤)</span>
                         </button>
                         <button type="button" @click="showIdPreview = false" class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-850 active:scale-[0.98] cursor-pointer">
                             Close
@@ -1962,13 +1974,13 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script>
-    async function downloadIdCardPng(side) {
+    async function downloadIdCardPng(side, isMonochrome = false) {
         const boxId = side === 'front' ? 'id-card-front-box' : 'id-card-back-box';
         const cardEl = document.getElementById(boxId);
         if (!cardEl) return;
 
         const rawSlug = document.getElementById('id-card-filename-slug')?.value || 'STUDENT-ID';
-        const filename = `${rawSlug}-${side.toUpperCase()}.png`;
+        const filename = `${rawSlug}-${side.toUpperCase()}${isMonochrome ? '-BLACK-ONLY' : ''}.png`;
 
         const btn = event?.currentTarget;
         let oldContent = '';
@@ -1982,19 +1994,44 @@
         try {
             let dataUrl = '';
             
-            // Primary strategy: htmlToImage (SVG foreignObject renderer - zero CSS oklch errors)
+            // Primary strategy: htmlToImage
             if (typeof htmlToImage !== 'undefined') {
                 dataUrl = await htmlToImage.toPng(cardEl, {
                     pixelRatio: 3,
                     cacheBust: true,
-                    backgroundColor: '#064e3b'
+                    backgroundColor: isMonochrome ? '#ffffff' : '#064e3b'
                 });
             } else if (typeof html2canvas !== 'undefined') {
-                const canvas = await html2canvas(cardEl, { scale: 3, useCORS: true, allowTaint: true, backgroundColor: '#064e3b' });
+                const canvas = await html2canvas(cardEl, { scale: 3, useCORS: true, allowTaint: true, backgroundColor: isMonochrome ? '#ffffff' : '#064e3b' });
                 dataUrl = canvas.toDataURL('image/png', 1.0);
             }
 
             if (dataUrl) {
+                if (isMonochrome) {
+                    const img = new Image();
+                    img.crossOrigin = 'anonymous';
+                    img.src = dataUrl;
+                    await new Promise(res => img.onload = res);
+                    
+                    const cvs = document.createElement('canvas');
+                    cvs.width = img.width;
+                    cvs.height = img.height;
+                    const ctx = cvs.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    
+                    const imgData = ctx.getImageData(0, 0, cvs.width, cvs.height);
+                    const d = imgData.data;
+                    for (let i = 0; i < d.length; i += 4) {
+                        const gray = 0.299 * d[i] + 0.587 * d[i+1] + 0.114 * d[i+2];
+                        const val = gray > 215 ? 255 : (gray < 165 ? 0 : Math.round(gray));
+                        d[i] = val;
+                        d[i+1] = val;
+                        d[i+2] = val;
+                    }
+                    ctx.putImageData(imgData, 0, 0);
+                    dataUrl = cvs.toDataURL('image/png', 1.0);
+                }
+
                 const link = document.createElement('a');
                 link.download = filename;
                 link.href = dataUrl;
@@ -2006,44 +2043,7 @@
             }
         } catch (err) {
             console.error('PNG Download Primary Error:', err);
-            // Secondary strategy: html2canvas with oklch sanitizer on clone
-            if (typeof html2canvas !== 'undefined') {
-                try {
-                    const canvas = await html2canvas(cardEl, {
-                        scale: 2,
-                        useCORS: true,
-                        allowTaint: true,
-                        backgroundColor: '#064e3b',
-                        onclone: (clonedDoc) => {
-                            const clonedBox = clonedDoc.getElementById(boxId);
-                            if (clonedBox) {
-                                const allEls = clonedBox.querySelectorAll('*');
-                                [clonedBox, ...allEls].forEach(el => {
-                                    const comp = window.getComputedStyle(el);
-                                    ['color', 'backgroundColor', 'borderColor'].forEach(p => {
-                                        if (comp[p] && comp[p].includes('oklch')) {
-                                            el.style[p] = p === 'backgroundColor' ? '#064e3b' : '#ffffff';
-                                        }
-                                    });
-                                });
-                            }
-                        }
-                    });
-                    const fallbackUrl = canvas.toDataURL('image/png', 1.0);
-                    const link = document.createElement('a');
-                    link.download = filename;
-                    link.href = fallbackUrl;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    return;
-                } catch (err2) {
-                    console.error('Fallback Error:', err2);
-                    alert('PNG Generation Error: ' + (err2.message || err2));
-                }
-            } else {
-                alert('PNG Generation Error: ' + (err.message || err));
-            }
+            alert('PNG Generation Error: ' + (err.message || err));
         } finally {
             if (btn && oldContent) {
                 btn.disabled = false;
