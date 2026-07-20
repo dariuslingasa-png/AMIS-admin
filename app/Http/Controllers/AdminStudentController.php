@@ -1645,9 +1645,9 @@ class AdminStudentController extends Controller
             'grade_level' => 'nullable|string',
             'learning_mode' => 'nullable|string',
             'amis_student_id' => 'nullable|string',
-            'first_name' => 'required|string|max:255',
+            'first_name' => 'nullable|string|max:255',
             'middle_name' => 'nullable|string|max:255',
-            'last_name' => 'required|string|max:255',
+            'last_name' => 'nullable|string|max:255',
             'suffix' => 'nullable|string|max:50',
             'gender' => 'nullable|string|max:50',
             'date_of_birth' => 'nullable|date',
@@ -1659,6 +1659,7 @@ class AdminStudentController extends Controller
             'parent_email' => 'nullable|email|max:255',
             'parent_mobile' => 'nullable|string|max:50',
             'address' => 'nullable|string',
+            'home_address' => 'nullable|string',
             'father_name' => 'nullable|string|max:255',
             'mother_name' => 'nullable|string|max:255',
             'emergency_name' => 'nullable|string|max:255',
@@ -1668,55 +1669,73 @@ class AdminStudentController extends Controller
         ]);
 
         DB::transaction(function () use ($request, $student) {
-            $student->update([
-                'grade_level' => $request->grade_level,
-            ]);
-
-            if ($student->applicant) {
-                $applicant = $student->applicant;
-                $applicant->update([
-                    'student_type' => $request->student_type ? mb_strtoupper($request->student_type) : null,
+            if ($request->filled('grade_level')) {
+                $student->update([
                     'grade_level' => $request->grade_level,
-                    'learning_mode' => $request->learning_mode ? mb_strtoupper($request->learning_mode) : null,
-                    'amis_student_id' => $request->amis_student_id ? mb_strtoupper($request->amis_student_id) : null,
-                    'first_name' => mb_strtoupper($request->first_name),
-                    'middle_name' => $request->middle_name ? mb_strtoupper($request->middle_name) : null,
-                    'last_name' => mb_strtoupper($request->last_name),
-                    'suffix' => $request->suffix ? mb_strtoupper($request->suffix) : null,
-                    'gender' => $request->gender ? mb_strtoupper($request->gender) : null,
-                    'date_of_birth' => $request->date_of_birth,
-                    'place_of_birth' => $request->place_of_birth ? mb_strtoupper($request->place_of_birth) : null,
-                    'religion' => $request->religion ? mb_strtoupper($request->religion) : null,
-                    'ethnicity' => $request->ethnicity ? mb_strtoupper($request->ethnicity) : null,
-                    'email' => $request->email ? strtolower($request->email) : null,
-                    'mobile_number' => $request->mobile,
-                    'parent_email' => $request->parent_email ? strtolower($request->parent_email) : null,
-                    'parent_mobile' => $request->parent_mobile,
-                    'address' => $request->address ? mb_strtoupper($request->address) : null,
-                    'street_address' => $request->address ? mb_strtoupper($request->address) : null,
-                    'home_address' => $request->address ? mb_strtoupper($request->address) : null,
-                    'emergency_name' => $request->emergency_name ? mb_strtoupper($request->emergency_name) : null,
-                    'emergency_relationship' => $request->emergency_relationship ? mb_strtoupper($request->emergency_relationship) : null,
-                    'emergency_phone' => $request->emergency_phone,
-                    'lrn' => $request->lrn ?: 'NA',
                 ]);
-
-                // Split father's and mother's names if possible
-                if ($request->filled('father_name')) {
-                    $parts = explode(' ', trim($request->father_name));
-                    $applicant->father_last_name = mb_strtoupper(array_pop($parts));
-                    $applicant->father_first_name = mb_strtoupper(implode(' ', $parts)) ?: 'FATHER';
-                }
-                if ($request->filled('mother_name')) {
-                    $parts = explode(' ', trim($request->mother_name));
-                    $applicant->mother_last_name = mb_strtoupper(array_pop($parts));
-                    $applicant->mother_first_name = mb_strtoupper(implode(' ', $parts)) ?: 'MOTHER';
-                }
-                $applicant->save();
             }
+
+            $applicant = $student->applicant;
+            if (!$applicant) {
+                $applicant = \App\Models\EnrollmentApplicant::create([
+                    'user_id' => $student->user_id,
+                    'first_name' => $request->first_name ? mb_strtoupper($request->first_name) : 'STUDENT',
+                    'last_name' => $request->last_name ? mb_strtoupper($request->last_name) : 'PROFILE',
+                    'grade_level' => $student->grade_level,
+                    'status' => 'approved',
+                ]);
+                $student->update([
+                    'enrollment_applicant_id' => $applicant->id,
+                ]);
+            }
+
+            $updateData = [];
+
+            if ($request->has('student_type')) $updateData['student_type'] = $request->student_type ? mb_strtoupper($request->student_type) : null;
+            if ($request->has('grade_level')) $updateData['grade_level'] = $request->grade_level;
+            if ($request->has('learning_mode')) $updateData['learning_mode'] = $request->learning_mode ? mb_strtoupper($request->learning_mode) : null;
+            if ($request->has('amis_student_id')) $updateData['amis_student_id'] = $request->amis_student_id ? mb_strtoupper($request->amis_student_id) : null;
+            if ($request->filled('first_name')) $updateData['first_name'] = mb_strtoupper($request->first_name);
+            if ($request->has('middle_name')) $updateData['middle_name'] = $request->middle_name ? mb_strtoupper($request->middle_name) : null;
+            if ($request->filled('last_name')) $updateData['last_name'] = mb_strtoupper($request->last_name);
+            if ($request->has('suffix')) $updateData['suffix'] = $request->suffix ? mb_strtoupper($request->suffix) : null;
+            if ($request->has('gender')) $updateData['gender'] = $request->gender ? mb_strtoupper($request->gender) : null;
+            if ($request->has('date_of_birth')) $updateData['date_of_birth'] = $request->date_of_birth ?: null;
+            if ($request->has('place_of_birth')) $updateData['place_of_birth'] = $request->place_of_birth ? mb_strtoupper($request->place_of_birth) : null;
+            if ($request->has('religion')) $updateData['religion'] = $request->religion ? mb_strtoupper($request->religion) : null;
+            if ($request->has('ethnicity')) $updateData['ethnicity'] = $request->ethnicity ? mb_strtoupper($request->ethnicity) : null;
+            if ($request->has('email')) $updateData['email'] = $request->email ? strtolower($request->email) : null;
+            if ($request->has('mobile')) $updateData['mobile_number'] = $request->mobile;
+            if ($request->has('parent_email')) $updateData['parent_email'] = $request->parent_email ? strtolower($request->parent_email) : null;
+            if ($request->has('parent_mobile')) $updateData['parent_mobile'] = $request->parent_mobile;
+            if ($request->has('address')) {
+                $updateData['address'] = $request->address ? mb_strtoupper($request->address) : null;
+                $updateData['street_address'] = $request->address ? mb_strtoupper($request->address) : null;
+            }
+            if ($request->has('home_address')) $updateData['home_address'] = $request->home_address ? mb_strtoupper($request->home_address) : null;
+            if ($request->has('emergency_name')) $updateData['emergency_name'] = $request->emergency_name ? mb_strtoupper($request->emergency_name) : null;
+            if ($request->has('emergency_relationship')) $updateData['emergency_relationship'] = $request->emergency_relationship ? mb_strtoupper($request->emergency_relationship) : null;
+            if ($request->has('emergency_phone')) $updateData['emergency_phone'] = $request->emergency_phone;
+            if ($request->has('lrn')) $updateData['lrn'] = $request->lrn ?: 'NA';
+
+            if (!empty($updateData)) {
+                $applicant->update($updateData);
+            }
+
+            if ($request->filled('father_name')) {
+                $parts = explode(' ', trim($request->father_name));
+                $applicant->father_last_name = mb_strtoupper(array_pop($parts));
+                $applicant->father_first_name = mb_strtoupper(implode(' ', $parts)) ?: 'FATHER';
+            }
+            if ($request->filled('mother_name')) {
+                $parts = explode(' ', trim($request->mother_name));
+                $applicant->mother_last_name = mb_strtoupper(array_pop($parts));
+                $applicant->mother_first_name = mb_strtoupper(implode(' ', $parts)) ?: 'MOTHER';
+            }
+            $applicant->save();
         });
 
-        return back()->with('success', 'Student record updated successfully.');
+        return back()->with('success', 'Student profile updated successfully.');
     }
 
     public function updatePhoto(Request $request, Student $student)

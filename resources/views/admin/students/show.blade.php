@@ -149,7 +149,7 @@
     ]"
 >
     <div x-data="{
-         openEditModal: false,
+         openEditModal: {{ $errors->any() ? 'true' : 'false' }},
          showIdPreview: false,
          openPasswordModal: false,
          editSection: 'all',
@@ -926,54 +926,30 @@
                             
                             <!-- Student Photo with Edit Overlay (Super Admins Only) -->
                             @if(auth()->user()?->hasRole('super_admin'))
-                                <div class="photo-clip group" 
-                                     style="left: 67px; top: 134px; width: 146px; height: 142px; border-radius: 12px; z-index: 5;">
+                                <div class="photo-clip group cursor-pointer" 
+                                     onclick="openPhotoOptionsModal()"
+                                     style="left: 57px; top: 124px; width: 166px; height: 162px; border-radius: 12px; z-index: 5;"
+                                     title="Edit Photo">
                                     @if($photoUrl)
-                                        <img id="id-preview-photo" src="{{ $photoUrl }}" class="transition duration-300 group-hover:scale-105 group-hover:brightness-75">
+                                        <img id="id-preview-photo" src="{{ $photoUrl }}" class="transition duration-300 group-hover:scale-105 group-hover:brightness-75" style="object-position: center center;">
                                     @else
                                         <div class="absolute inset-0 bg-slate-150 flex flex-col items-center justify-center text-center border border-dashed border-slate-300 text-[10px] font-bold text-slate-450 gap-1 z-1">
                                             <i data-lucide="camera" class="w-5 h-5 text-slate-400"></i>
                                             <span>UPLOAD</span>
                                         </div>
                                     @endif
-                                    <!-- Edit Hover Overlay -->
-                                    <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-2 transition-opacity duration-200 text-white p-2" style="z-index: 20;">
-                                        <span class="text-[9px] font-black tracking-wider uppercase text-center mb-1">Edit Photo</span>
-                                        <div class="flex gap-1.5 w-full justify-center">
-                                            <!-- Upload New button -->
-                                            <button type="button" 
-                                                    onclick="document.getElementById('student-photo-input').click()" 
-                                                    class="flex-1 py-1.5 px-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[8px] font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition active:scale-95 shadow cursor-pointer">
-                                                <i data-lucide="upload-cloud" class="w-3 h-3"></i> New
-                                            </button>
-                                            <!-- Sync M365 button -->
-                                            <button type="button" 
-                                                    onclick="syncMicrosoftPhoto()" 
-                                                    class="flex-1 py-1.5 px-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[8px] font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition active:scale-95 shadow cursor-pointer">
-                                                <i data-lucide="refresh-cw" class="w-3 h-3"></i> M365
-                                            </button>
-                                            @if($photoUrl)
-                                                <!-- Adjust Existing button -->
-                                                <button type="button" 
-                                                        onclick="adjustExistingPhoto('{{ $photoUrl }}')" 
-                                                        class="flex-1 py-1.5 px-1 bg-slate-700 hover:bg-slate-600 text-white rounded text-[8px] font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition active:scale-95 shadow cursor-pointer">
-                                                    <i data-lucide="crop" class="w-3 h-3"></i> Crop
-                                                </button>
-                                                <!-- Reset Photo button -->
-                                                <button type="button" 
-                                                        onclick="deleteStudentPhoto()" 
-                                                        class="flex-1 py-1.5 px-1 bg-rose-650 hover:bg-rose-750 text-white rounded text-[8px] font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition active:scale-95 shadow cursor-pointer">
-                                                    <i data-lucide="trash-2" class="w-3 h-3"></i> Reset
-                                                </button>
-                                            @endif
+                                    <!-- Simple Edit Icon Overlay on hover -->
+                                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-200 text-white" style="z-index: 20;">
+                                        <div class="bg-white/20 backdrop-blur-md rounded-full p-2.5 border border-white/30 shadow-md transform scale-90 group-hover:scale-100 transition duration-200">
+                                            <i data-lucide="camera" class="w-5 h-5 text-white"></i>
                                         </div>
                                     </div>
                                 </div>
                             @else
                                 <!-- Non-admin read-only image -->
-                                <div class="photo-clip" style="left: 67px; top: 134px; width: 146px; height: 142px; border-radius: 12px; z-index: 5;">
+                                <div class="photo-clip" style="left: 57px; top: 124px; width: 166px; height: 162px; border-radius: 12px; z-index: 5;">
                                     @if($photoUrl)
-                                        <img id="id-preview-photo" src="{{ $photoUrl }}">
+                                        <img id="id-preview-photo" src="{{ $photoUrl }}" style="object-position: center center;">
                                     @else
                                         <div class="absolute inset-0 bg-slate-100 flex items-center justify-center text-center border border-dashed border-slate-300 text-[10px] font-bold text-slate-400 z-1">NO PHOTO</div>
                                     @endif
@@ -981,10 +957,10 @@
                             @endif
 
                             <!-- Student ID -->
-                            <div class="absolute text-white font-black tracking-wide text-center uppercase" style="left: 0; top: 283px; width: 280px; height: 12px; z-index: 20; font-size: 10px;">{{ $studentNumber }}</div>
+                            <div class="absolute text-white font-black tracking-wide text-center uppercase" style="left: 0; top: 267px; width: 280px; height: 12px; z-index: 20; font-size: 10px;">{{ $studentNumber }}</div>
 
                             <!-- Last Name -->
-                            <div class="absolute text-center font-black text-[#0f172a] uppercase tracking-tight flex flex-col justify-center items-center animate-fade-in" style="left: 12px; top: 271px; width: 256px; height: 32px; z-index: 20; font-size: {{ $lastNameFontSize }}; {{ $lastNameStyle }} line-height: 1.1;">{{ $lastName }}</div>
+                            <div class="absolute text-center font-black text-[#0f172a] uppercase tracking-tight flex flex-col justify-center items-center animate-fade-in" style="left: 12px; top: 291px; width: 256px; height: 32px; z-index: 20; font-size: {{ $lastNameFontSize }}; {{ $lastNameStyle }} line-height: 1.1;">{{ $lastName }}</div>
 
                             <!-- First Name -->
                              @php
@@ -992,10 +968,10 @@
                                  $displayFirstNameLen = strlen($displayFirstName);
                                  $displayFirstNameFontSize = $displayFirstNameLen > 25 ? '11.5px' : ($displayFirstNameLen > 18 ? '13px' : '15px');
                              @endphp
-                             <div class="absolute text-center font-bold text-[#334155] uppercase leading-none flex flex-col justify-center items-center animate-fade-in" style="left: 12px; top: 304px; width: 256px; height: 18px; z-index: 20; font-size: {{ $displayFirstNameFontSize }};">{{ $displayFirstName }}</div>
+                             <div class="absolute text-center font-bold text-[#334155] uppercase leading-none flex flex-col justify-center items-center animate-fade-in" style="left: 12px; top: 318px; width: 256px; height: 18px; z-index: 20; font-size: {{ $displayFirstNameFontSize }};">{{ $displayFirstName }}</div>
 
                             <!-- Grade Level -->
-                             <div class="absolute text-center font-black uppercase tracking-wide flex flex-col justify-center items-center animate-fade-in" style="left: 12px; top: 340px; width: 256px; height: 24px; z-index: 20; font-size: 25px; color: {{ $getGradeColor($displayGrade) }};">{{ $displayGrade }}</div>
+                             <div class="absolute text-center font-black uppercase tracking-wide flex flex-col justify-center items-center animate-fade-in" style="left: 12px; top: 341px; width: 256px; height: 24px; z-index: 20; font-size: 25px; color: {{ $getGradeColor($displayGrade) }};">{{ $displayGrade }}</div>
 
                             <!-- LRN -->
                             @if($student->applicant->lrn && !in_array(strtoupper($student->applicant->lrn), ['N/A', 'NA', 'EMPTY', '']))
@@ -1065,8 +1041,21 @@
                                     <div style="text-align: left; font-family: 'Outfit', sans-serif; font-size: {{ $addressFontSize }}; font-weight: 700; text-transform: uppercase; color: #475569; line-height: 1.25;">
                                         {{ $homeAddress }}
                                     </div>
-                                </div>
                             </div>
+
+                            <!-- Secure Director Signature QR (Only for authorized students) -->
+                            @if(in_array((string)$student->student_number, ['260253', '260254']))
+                                @php
+                                    $signatureQrUrl = 'https://quickchart.io/qr?text=' . urlencode('https://amis.edu.ph/signature') . '&dark=000000&light=ffffff&margin=1&format=png&size=200';
+                                @endphp
+                                <div style="position: absolute; left: 117.5px; top: 348px; width: 45px; height: 45px; z-index: 25; padding: 1.5px; border-radius: 2px; background: white; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+                                    <img src="{{ $signatureQrUrl }}" alt="Signature QR" class="w-full h-full object-contain">
+                                </div>
+                            @else
+                                <div style="position: absolute; left: 70px; top: 355px; width: 140px; text-align: center; z-index: 25; pointer-events: none;">
+                                    <span style="font-family: 'Outfit', sans-serif; font-size: 6.5px; font-weight: 900; text-transform: uppercase; color: #64748b; letter-spacing: 0.08em; border: 1px dashed #cbd5e1; padding: 2px 4px; border-radius: 4px; background: rgba(255, 255, 255, 0.85); display: inline-block; box-shadow: 0 1px 1px rgba(0,0,0,0.05);">Secure Signature Coming Soon</span>
+                                </div>
+                            @endif
                         </div>
                     </div></div>
 
@@ -1173,6 +1162,16 @@
                 <form action="{{ route('admin.students.update-profile', $student) }}" method="POST" class="p-6 space-y-5 flex-1"
                       @submit="[...$el.querySelectorAll('input[type=text], textarea')].forEach(i => { if(i.name !== 'email' && i.name !== 'parent_email' && i.name !== 'lrn' && i.name !== 'mobile' && i.name !== 'parent_mobile' && i.name !== 'emergency_phone') i.value = i.value.toUpperCase() })">
                     @csrf
+                    
+                    @if ($errors->any())
+                        <div class="p-4 rounded-xl bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-300 text-xs font-semibold">
+                            <ul class="list-disc list-inside space-y-1">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
                     
                     <!-- Academic Details -->
                     <div x-show="editSection === 'all' || editSection === 'academic'">
@@ -1299,6 +1298,11 @@
                                 <label class="block text-xs font-bold text-slate-700 dark:text-slate-350 mb-1">Parent Mobile</label>
                                 <input type="text" name="parent_mobile" value="{{ $student->applicant->parent_mobile ?? '' }}" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-sm font-semibold text-slate-900 dark:text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500">
                             </div>
+                        </div>
+
+                        <div class="mt-3">
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-350 mb-1">Home Address</label>
+                            <textarea name="home_address" rows="2" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-sm font-semibold text-slate-900 dark:text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 uppercase">{{ $student->applicant->home_address ?? '' }}</textarea>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
