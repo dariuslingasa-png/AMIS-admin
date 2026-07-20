@@ -903,6 +903,36 @@
                         $studentNumber = $student->student_number;
                         $hash = base64_encode((int)$studentNumber + 987654);
                         $qrCodeUrl = 'https://quickchart.io/qr?text=' . urlencode('https://amis.edu.ph/v/' . $hash) . '&dark=000000&light=ffffff&margin=1&format=png&size=300';
+                        $signatureRawUrl = 'https://quickchart.io/qr?text=' . urlencode('https://amis.edu.ph/signature') . '&dark=000000&light=ffffff&margin=1&format=png&size=200';
+
+                        // Pre-convert images to Base64 to guarantee zero CORS canvas taint
+                        $getInlineBase64 = function($url) {
+                            if (empty($url)) return '';
+                            if (str_starts_with($url, 'data:')) return $url;
+                            try {
+                                $parsed = parse_url($url, PHP_URL_PATH);
+                                if ($parsed && file_exists(public_path($parsed))) {
+                                    $path = public_path($parsed);
+                                    $mime = mime_content_type($path) ?: 'image/png';
+                                    return 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($path));
+                                }
+                                $ctx = stream_context_create([
+                                    'http' => ['timeout' => 3, 'header' => "User-Agent: Mozilla/5.0\r\n"],
+                                    'ssl' => ['verify_peer' => false, 'verify_peer_name' => false]
+                                ]);
+                                $content = @file_get_contents($url, false, $ctx);
+                                if ($content) {
+                                    $mime = 'image/png';
+                                    if (str_contains(strtolower($url), '.jpg') || str_contains(strtolower($url), '.jpeg')) $mime = 'image/jpeg';
+                                    return 'data:' . $mime . ';base64,' . base64_encode($content);
+                                }
+                            } catch (\Throwable $e) {}
+                            return $url;
+                        };
+
+                        $qrCodeBase64 = $getInlineBase64($qrCodeUrl);
+                        $signatureQrBase64 = $getInlineBase64($signatureRawUrl);
+                        $photoBase64 = $photoUrl ? $getInlineBase64($photoUrl) : '';
                         
                         $getGradeColor = function($grade) {
                             if (!$grade) return '#6d28d9';
@@ -947,7 +977,7 @@
                                      style="left: 57px; top: 124px; width: 166px; height: 162px; border-radius: 12px; z-index: 5;"
                                      title="Edit Photo">
                                     @if($photoUrl)
-                                        <img id="id-preview-photo" src="{{ $photoUrl }}" class="transition duration-300 group-hover:scale-105 group-hover:brightness-75" style="object-position: center center;">
+                                        <img id="id-preview-photo" src="{{ $photoBase64 ?: $photoUrl }}" crossorigin="anonymous" class="transition duration-300 group-hover:scale-105 group-hover:brightness-75" style="object-position: center center;">
                                     @else
                                         <div class="absolute inset-0 bg-slate-150 flex flex-col items-center justify-center text-center border border-dashed border-slate-300 text-[10px] font-bold text-slate-450 gap-1 z-1">
                                             <i data-lucide="camera" class="w-5 h-5 text-slate-400"></i>
@@ -965,7 +995,7 @@
                                 <!-- Non-admin read-only image -->
                                 <div class="photo-clip" style="left: 57px; top: 124px; width: 166px; height: 162px; border-radius: 12px; z-index: 5;">
                                     @if($photoUrl)
-                                        <img id="id-preview-photo" src="{{ $photoUrl }}" style="object-position: center center;">
+                                        <img id="id-preview-photo" src="{{ $photoBase64 ?: $photoUrl }}" crossorigin="anonymous" style="object-position: center center;">
                                     @else
                                         <div class="absolute inset-0 bg-slate-100 flex items-center justify-center text-center border border-dashed border-slate-300 text-[10px] font-bold text-slate-400 z-1">NO PHOTO</div>
                                     @endif
@@ -998,7 +1028,7 @@
 
                             <!-- QR Code -->
                             <div class="absolute p-0.5 rounded bg-white" style="left: 111px; top: 377px; width: 58px; height: 58px; z-index: 20;">
-                                <img src="{{ $qrCodeUrl }}" alt="QR Verification" class="w-full h-full object-contain">
+                                <img src="{{ $qrCodeBase64 ?: $qrCodeUrl }}" crossorigin="anonymous" alt="QR Verification" class="w-full h-full object-contain">
                             </div>
                         </div>
                         <button type="button" 
@@ -1068,11 +1098,8 @@
 
                             <!-- Secure Director Signature QR (Only for authorized students) -->
                             @if(in_array((string)$student->student_number, ['260253', '260254', '260158', '260895', '260894', '260893']))
-                                @php
-                                    $signatureQrUrl = 'https://quickchart.io/qr?text=' . urlencode('https://amis.edu.ph/signature') . '&dark=000000&light=ffffff&margin=1&format=png&size=200';
-                                @endphp
                                 <div style="position: absolute; left: 117.5px; top: 348px; width: 45px; height: 45px; z-index: 25; padding: 1.5px; border-radius: 2px; background: white; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
-                                    <img src="{{ $signatureQrUrl }}" alt="Signature QR" class="w-full h-full object-contain">
+                                    <img src="{{ $signatureQrBase64 ?: $signatureRawUrl }}" crossorigin="anonymous" alt="Signature QR" class="w-full h-full object-contain">
                                 </div>
                             @else
                                 <div style="position: absolute; left: 70px; top: 342px; width: 140px; text-align: center; z-index: 25; pointer-events: none;">
@@ -1956,10 +1983,27 @@
         }
 
         try {
+            // Pre-process any img without base64 to ensure zero CORS taint
+            const imgs = cardEl.querySelectorAll('img');
+            for (let img of imgs) {
+                if (img.src && !img.src.startsWith('data:')) {
+                    try {
+                        const cvs = document.createElement('canvas');
+                        cvs.width = img.naturalWidth || img.width || 300;
+                        cvs.height = img.naturalHeight || img.height || 300;
+                        const ctx = cvs.getContext('2d');
+                        ctx.drawImage(img, 0, 0, cvs.width, cvs.height);
+                        img.src = cvs.toDataURL('image/png');
+                    } catch (e) {
+                        console.warn('Canvas image prep failed:', e);
+                    }
+                }
+            }
+
             const canvas = await html2canvas(cardEl, {
-                scale: 3, // 300 DPI high-res output for Smart ID Printers
+                scale: 3,
                 useCORS: true,
-                allowTaint: true,
+                allowTaint: false,
                 backgroundColor: null,
                 logging: false
             });
@@ -1973,7 +2017,25 @@
             document.body.removeChild(link);
         } catch (err) {
             console.error('PNG Download Error:', err);
-            alert('Failed to generate PNG image. Please try again.');
+            try {
+                // Fallback attempt
+                const canvas2 = await html2canvas(cardEl, {
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: null,
+                    logging: false
+                });
+                const dataUrl2 = canvas2.toDataURL('image/png', 1.0);
+                const link2 = document.createElement('a');
+                link2.download = filename;
+                link2.href = dataUrl2;
+                document.body.appendChild(link2);
+                link2.click();
+                document.body.removeChild(link2);
+            } catch (err2) {
+                alert('Failed to generate PNG image: ' + (err2.message || 'CORS Security error'));
+            }
         } finally {
             if (btn && oldContent) {
                 btn.disabled = false;
