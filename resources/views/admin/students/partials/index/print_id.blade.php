@@ -527,7 +527,7 @@
 
 
                             <!-- Secure Director Signature QR (Only for authorized students) -->
-                            @if(in_array((string)$student->student_number, ['260253', '260254']))
+                            @if(in_array((string)$student->student_number, ['260253', '260254', '260158', '260895', '260894', '260893']))
                                 @php
                                     $signatureQrUrl = 'https://quickchart.io/qr?text=' . urlencode('https://amis.edu.ph/signature') . '&dark=000000&light=ffffff&margin=1&format=png&size=200';
                                 @endphp
