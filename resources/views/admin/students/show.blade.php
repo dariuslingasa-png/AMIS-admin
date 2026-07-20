@@ -966,7 +966,7 @@
                     <!-- Front Side Card -->
                     <div class="flex flex-col items-center gap-2">
                         <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Front Side</span>
-                        <div id="id-card-front-box" class="relative rounded-2xl overflow-hidden shadow-lg border border-slate-200 dark:border-slate-800" style="width: 280px; height: 443px; background-color: #064e3b;">
+                        <div id="id-card-front-box" class="relative rounded-2xl overflow-hidden" style="width: 280px; height: 443px; background-color: #064e3b; border: 1px solid #cbd5e1; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);">
                             <!-- Background template image (Top Layer) -->
                             <img src="{{ asset('images/id/amis_frontid.png') }}?v={{ filemtime(public_path('images/id/amis_frontid.png')) }}" class="absolute inset-0 w-full h-full object-cover" style="z-index: 10; pointer-events: none;" alt="AMIS ID Template">
                             
@@ -1042,7 +1042,7 @@
                     <!-- Back Side Card -->
                     <div class="flex flex-col items-center gap-2">
                         <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Back Side</span>
-                        <div id="id-card-back-box" class="relative rounded-2xl overflow-hidden shadow-lg border border-slate-200 dark:border-slate-800" style="width: 280px; height: 443px; background-color: #064e3b;">
+                        <div id="id-card-back-box" class="relative rounded-2xl overflow-hidden" style="width: 280px; height: 443px; background-color: #064e3b; border: 1px solid #cbd5e1; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);">
                             <!-- Background template image -->
                             <img src="{{ asset('images/id/amis_backid.png') }}?v=1" class="absolute inset-0 w-full h-full object-cover" style="z-index: 1; pointer-events: none;" alt="AMIS ID Template Back">
 
@@ -1958,14 +1958,11 @@
         </div>
     </div>
 
-    <!-- HTML2Canvas CDN & ID Card PNG Generator Script -->
+    <!-- Modern HTML-to-Image & HTML2Canvas CDN Script -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script>
     async function downloadIdCardPng(side) {
-        if (typeof html2canvas === 'undefined') {
-            alert('PNG Generator is loading. Please try again in a moment.');
-            return;
-        }
         const boxId = side === 'front' ? 'id-card-front-box' : 'id-card-back-box';
         const cardEl = document.getElementById(boxId);
         if (!cardEl) return;
@@ -1983,58 +1980,69 @@
         }
 
         try {
-            // Pre-process any img without base64 to ensure zero CORS taint
-            const imgs = cardEl.querySelectorAll('img');
-            for (let img of imgs) {
-                if (img.src && !img.src.startsWith('data:')) {
-                    try {
-                        const cvs = document.createElement('canvas');
-                        cvs.width = img.naturalWidth || img.width || 300;
-                        cvs.height = img.naturalHeight || img.height || 300;
-                        const ctx = cvs.getContext('2d');
-                        ctx.drawImage(img, 0, 0, cvs.width, cvs.height);
-                        img.src = cvs.toDataURL('image/png');
-                    } catch (e) {
-                        console.warn('Canvas image prep failed:', e);
-                    }
-                }
+            let dataUrl = '';
+            
+            // Primary strategy: htmlToImage (SVG foreignObject renderer - zero CSS oklch errors)
+            if (typeof htmlToImage !== 'undefined') {
+                dataUrl = await htmlToImage.toPng(cardEl, {
+                    pixelRatio: 3,
+                    cacheBust: true,
+                    backgroundColor: '#064e3b'
+                });
+            } else if (typeof html2canvas !== 'undefined') {
+                const canvas = await html2canvas(cardEl, { scale: 3, useCORS: true, allowTaint: true, backgroundColor: '#064e3b' });
+                dataUrl = canvas.toDataURL('image/png', 1.0);
             }
 
-            const canvas = await html2canvas(cardEl, {
-                scale: 3,
-                useCORS: true,
-                allowTaint: false,
-                backgroundColor: null,
-                logging: false
-            });
-
-            const dataUrl = canvas.toDataURL('image/png', 1.0);
-            const link = document.createElement('a');
-            link.download = filename;
-            link.href = dataUrl;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            if (dataUrl) {
+                const link = document.createElement('a');
+                link.download = filename;
+                link.href = dataUrl;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } else {
+                throw new Error('No image generator available.');
+            }
         } catch (err) {
-            console.error('PNG Download Error:', err);
-            try {
-                // Fallback attempt
-                const canvas2 = await html2canvas(cardEl, {
-                    scale: 2,
-                    useCORS: true,
-                    allowTaint: true,
-                    backgroundColor: null,
-                    logging: false
-                });
-                const dataUrl2 = canvas2.toDataURL('image/png', 1.0);
-                const link2 = document.createElement('a');
-                link2.download = filename;
-                link2.href = dataUrl2;
-                document.body.appendChild(link2);
-                link2.click();
-                document.body.removeChild(link2);
-            } catch (err2) {
-                alert('Failed to generate PNG image: ' + (err2.message || 'CORS Security error'));
+            console.error('PNG Download Primary Error:', err);
+            // Secondary strategy: html2canvas with oklch sanitizer on clone
+            if (typeof html2canvas !== 'undefined') {
+                try {
+                    const canvas = await html2canvas(cardEl, {
+                        scale: 2,
+                        useCORS: true,
+                        allowTaint: true,
+                        backgroundColor: '#064e3b',
+                        onclone: (clonedDoc) => {
+                            const clonedBox = clonedDoc.getElementById(boxId);
+                            if (clonedBox) {
+                                const allEls = clonedBox.querySelectorAll('*');
+                                [clonedBox, ...allEls].forEach(el => {
+                                    const comp = window.getComputedStyle(el);
+                                    ['color', 'backgroundColor', 'borderColor'].forEach(p => {
+                                        if (comp[p] && comp[p].includes('oklch')) {
+                                            el.style[p] = p === 'backgroundColor' ? '#064e3b' : '#ffffff';
+                                        }
+                                    });
+                                });
+                            }
+                        }
+                    });
+                    const fallbackUrl = canvas.toDataURL('image/png', 1.0);
+                    const link = document.createElement('a');
+                    link.download = filename;
+                    link.href = fallbackUrl;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    return;
+                } catch (err2) {
+                    console.error('Fallback Error:', err2);
+                    alert('PNG Generation Error: ' + (err2.message || err2));
+                }
+            } else {
+                alert('PNG Generation Error: ' + (err.message || err));
             }
         } finally {
             if (btn && oldContent) {
