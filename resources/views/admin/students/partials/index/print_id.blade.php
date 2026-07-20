@@ -50,6 +50,12 @@
             gap: 6px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
+        .toolbar button.btn-png {
+            background: #0284c7;
+        }
+        .toolbar button.btn-png:hover {
+            background: #0369a1;
+        }
         @media print {
             .toolbar { display: none !important; }
             body { background: #fff; }
@@ -323,10 +329,18 @@
             display: block;
         }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
-    <div class="toolbar">
-        <button type="button" onclick="window.print()">Print ID Cards</button>
+    <div class="toolbar" style="display: flex; gap: 8px;">
+        <button type="button" onclick="downloadAllPngs()" class="btn-png">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+            Download High-Res PNGs (Smart Printer)
+        </button>
+        <button type="button" onclick="window.print()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+            Print PDF / Printer
+        </button>
     </div>
 
     @php
@@ -396,7 +410,7 @@
             <div class="id-pair-container">
                 <!-- Front Side -->
                 <div class="id-card-wrapper">
-                    <div class="id-card-scaler">
+                    <div class="id-card-scaler" id="print-front-box-{{ $student->id }}" data-filename="{{ implode('-', array_filter([$lastName, $firstName, str_replace(' ', '', $displayGrade)])) }}">
                         <div class="id-card">
                              <!-- Background Template Image (Top Layer) -->
                              <img src="{{ asset('images/id/amis_frontid.png') }}?v={{ filemtime(public_path('images/id/amis_frontid.png')) }}" class="id-template" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 10; pointer-events: none;" alt="AMIS ID Template">
@@ -469,7 +483,7 @@
 
                 <!-- Back Side -->
                 <div class="id-card-wrapper">
-                    <div class="id-card-scaler">
+                    <div class="id-card-scaler" id="print-back-box-{{ $student->id }}" data-filename="{{ implode('-', array_filter([$lastName, $firstName, str_replace(' ', '', $displayGrade)])) }}">
                         <div class="id-card">
                             <!-- Background Template Image -->
                             <img src="{{ asset('images/id/amis_backid.png') }}?v=1" class="id-template" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1;" alt="AMIS ID Template Back">
@@ -554,11 +568,51 @@
             window.print();
         }
         window.addEventListener('load', () => {
-            setTimeout(doPrint, 1000);
+            // Only auto-print if print parameter is explicit or user clicked print
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('autoprint') === '1') {
+                setTimeout(doPrint, 1000);
+            }
         });
-        window.addEventListener('focus', () => {
-            setTimeout(doPrint, 200);
-        });
+
+        async function downloadCardPng(elementId, filename) {
+            if (typeof html2canvas === 'undefined') return;
+            const cardEl = document.getElementById(elementId);
+            if (!cardEl) return;
+            try {
+                const canvas = await html2canvas(cardEl, {
+                    scale: 3, // 300 DPI high resolution
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: null,
+                    logging: false
+                });
+                const link = document.createElement('a');
+                link.download = filename;
+                link.href = canvas.toDataURL('image/png', 1.0);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function downloadAllPngs() {
+            const frontEls = document.querySelectorAll('[id^="print-front-box-"]');
+            const backEls = document.querySelectorAll('[id^="print-back-box-"]');
+            
+            for (let el of frontEls) {
+                const name = el.getAttribute('data-filename') || 'STUDENT';
+                await downloadCardPng(el.id, `${name}-FRONT.png`);
+                await new Promise(r => setTimeout(r, 400));
+            }
+            for (let el of backEls) {
+                const name = el.getAttribute('data-filename') || 'STUDENT';
+                await downloadCardPng(el.id, `${name}-BACK.png`);
+                await new Promise(r => setTimeout(r, 400));
+            }
+        }
     </script>
 </body>
 </html>

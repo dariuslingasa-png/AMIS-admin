@@ -936,7 +936,7 @@
                     <!-- Front Side Card -->
                     <div class="flex flex-col items-center gap-2">
                         <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Front Side</span>
-                        <div class="relative rounded-2xl overflow-hidden shadow-lg border border-slate-200 dark:border-slate-800" style="width: 280px; height: 443px; background-color: #064e3b;">
+                        <div id="id-card-front-box" class="relative rounded-2xl overflow-hidden shadow-lg border border-slate-200 dark:border-slate-800" style="width: 280px; height: 443px; background-color: #064e3b;">
                             <!-- Background template image (Top Layer) -->
                             <img src="{{ asset('images/id/amis_frontid.png') }}?v={{ filemtime(public_path('images/id/amis_frontid.png')) }}" class="absolute inset-0 w-full h-full object-cover" style="z-index: 10; pointer-events: none;" alt="AMIS ID Template">
                             
@@ -1001,12 +1001,18 @@
                                 <img src="{{ $qrCodeUrl }}" alt="QR Verification" class="w-full h-full object-contain">
                             </div>
                         </div>
+                        <button type="button" 
+                                onclick="downloadIdCardPng('front')" 
+                                class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition active:scale-95 cursor-pointer mt-1">
+                            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                            <span>Download Front PNG</span>
+                        </button>
                     </div>
 
                     <!-- Back Side Card -->
                     <div class="flex flex-col items-center gap-2">
                         <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Back Side</span>
-                        <div class="relative rounded-2xl overflow-hidden shadow-lg border border-slate-200 dark:border-slate-800" style="width: 280px; height: 443px; background-color: #064e3b;">
+                        <div id="id-card-back-box" class="relative rounded-2xl overflow-hidden shadow-lg border border-slate-200 dark:border-slate-800" style="width: 280px; height: 443px; background-color: #064e3b;">
                             <!-- Background template image -->
                             <img src="{{ asset('images/id/amis_backid.png') }}?v=1" class="absolute inset-0 w-full h-full object-cover" style="z-index: 1; pointer-events: none;" alt="AMIS ID Template Back">
 
@@ -1074,21 +1080,37 @@
                                 </div>
                             @endif
                         </div>
+                        <button type="button" 
+                                onclick="downloadIdCardPng('back')" 
+                                class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition active:scale-95 cursor-pointer mt-1">
+                            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                            <span>Download Back PNG</span>
+                        </button>
                     </div>
+
+                    <input type="hidden" id="id-card-filename-slug" value="{{ implode('-', array_filter([$lastName, $firstName, str_replace(' ', '', $displayGrade)])) }}">
                 </div>
 
                 <!-- Footer -->
                 <div class="flex items-center justify-between px-6 py-4 border-t border-slate-200 dark:border-slate-855 bg-white dark:bg-slate-900">
-                    <p class="text-xs text-slate-400 font-medium">Verify all details before printing the physical card.</p>
-                    <div class="flex items-center gap-3">
+                    <p class="text-xs text-slate-400 font-medium hidden sm:block">Smart ID Printer PNG images (300 DPI high-res).</p>
+                    <div class="flex items-center gap-2.5 flex-wrap">
+                        <button type="button" onclick="downloadIdCardPng('front')" class="rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 px-3.5 py-2 text-xs font-bold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 transition active:scale-[0.98] cursor-pointer flex items-center gap-1.5">
+                            <i data-lucide="download" class="w-4 h-4"></i>
+                            <span>Front PNG</span>
+                        </button>
+                        <button type="button" onclick="downloadIdCardPng('back')" class="rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 px-3.5 py-2 text-xs font-bold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 transition active:scale-[0.98] cursor-pointer flex items-center gap-1.5">
+                            <i data-lucide="download" class="w-4 h-4"></i>
+                            <span>Back PNG</span>
+                        </button>
                         <button type="button" @click="showIdPreview = false" class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-850 active:scale-[0.98] cursor-pointer">
                             Close
                         </button>
                         <a href="{{ route('admin.students.index', ['search' => $student->student_number, 'print_id' => 1]) }}"
                            target="_blank"
-                           class="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 text-xs font-bold shadow-md transition active:scale-[0.98] cursor-pointer flex items-center gap-1.5">
+                           class="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 text-xs font-bold shadow-md transition active:scale-[0.98] cursor-pointer flex items-center gap-1.5">
                             <i data-lucide="printer" class="w-4 h-4"></i>
-                            <span>Print ID Card</span>
+                            <span>Print View</span>
                         </a>
                     </div>
                 </div>
@@ -1908,4 +1930,57 @@
             </div>
         </div>
     </div>
+
+    <!-- HTML2Canvas CDN & ID Card PNG Generator Script -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script>
+    async function downloadIdCardPng(side) {
+        if (typeof html2canvas === 'undefined') {
+            alert('PNG Generator is loading. Please try again in a moment.');
+            return;
+        }
+        const boxId = side === 'front' ? 'id-card-front-box' : 'id-card-back-box';
+        const cardEl = document.getElementById(boxId);
+        if (!cardEl) return;
+
+        const rawSlug = document.getElementById('id-card-filename-slug')?.value || 'STUDENT-ID';
+        const filename = `${rawSlug}-${side.toUpperCase()}.png`;
+
+        const btn = event?.currentTarget;
+        let oldContent = '';
+        if (btn) {
+            oldContent = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> Generating...`;
+            if (window.lucide) window.lucide.createIcons();
+        }
+
+        try {
+            const canvas = await html2canvas(cardEl, {
+                scale: 3, // 300 DPI high-res output for Smart ID Printers
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: null,
+                logging: false
+            });
+
+            const dataUrl = canvas.toDataURL('image/png', 1.0);
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = dataUrl;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch (err) {
+            console.error('PNG Download Error:', err);
+            alert('Failed to generate PNG image. Please try again.');
+        } finally {
+            if (btn && oldContent) {
+                btn.disabled = false;
+                btn.innerHTML = oldContent;
+                if (window.lucide) window.lucide.createIcons();
+            }
+        }
+    }
+    </script>
 </x-admin-layout>
