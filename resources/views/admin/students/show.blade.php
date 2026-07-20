@@ -856,9 +856,9 @@
                     
                     @php
                         // Resolve ID card variables
-                        $firstName = trim($student->applicant->first_name ?? '');
-                        $middleName = trim($student->applicant->middle_name ?? '');
-                        $lastName = trim($student->applicant->last_name ?? '');
+                        $firstName = trim($student->applicant?->first_name ?? '');
+                        $middleName = trim($student->applicant?->middle_name ?? '');
+                        $lastName = trim($student->applicant?->last_name ?? '');
                         $middleInitial = '';
                         if ($middleName !== '') {
                             $firstChar = mb_strtoupper(mb_substr($middleName, 0, 1));
@@ -869,21 +869,35 @@
                         $fullName = html_entity_decode(implode(' ', $fullNameParts), ENT_QUOTES, 'UTF-8');
                         $displayGrade = $student->grade_level;
 
-                        $homeAddress = implode(', ', array_filter([$student->applicant->home_street_address, $student->applicant->home_city, $student->applicant->home_state_province]));
+                        $homeAddress = implode(', ', array_filter([$student->applicant?->home_street_address, $student->applicant?->home_city, $student->applicant?->home_state_province]));
                         if (empty($homeAddress)) {
-                            $homeAddress = $student->applicant->home_address ?: '-';
+                            $homeAddress = $student->applicant?->home_address ?: '-';
                         }
                         
-                        $emergencyName = $student->applicant->emergency_name ?: '-';
-                        if (empty($emergencyName) || strtolower($emergencyName) === 'emergency contact') {
-                            $emergencyName = trim(($student->applicant->father_first_name ?? '') . ' ' . ($student->applicant->father_last_name ?? '')) ?: (trim(($student->applicant->mother_first_name ?? '') . ' ' . ($student->applicant->mother_last_name ?? '')) ?: 'Registrar Office');
+                        $rawEmergencyName = trim($student->applicant?->emergency_name ?? '');
+                        $fatherName = trim(($student->applicant?->father_first_name ?? '') . ' ' . ($student->applicant?->father_last_name ?? ''));
+                        $motherName = trim(($student->applicant?->mother_first_name ?? '') . ' ' . ($student->applicant?->mother_last_name ?? ''));
+                        
+                        if (empty($rawEmergencyName) || strtolower($rawEmergencyName) === 'emergency contact' || is_numeric(str_replace(['+', ' ', '-', '(', ')'], '', $rawEmergencyName))) {
+                            $emergencyName = $fatherName ?: ($motherName ?: 'REGISTRAR OFFICE');
+                        } else {
+                            $emergencyName = $rawEmergencyName;
                         }
                         
-                        $relationship = trim($student->applicant->emergency_relationship ?? '');
+                        $relationship = trim($student->applicant?->emergency_relationship ?? '');
+                        if (empty($relationship)) {
+                            if (!empty($fatherName) && str_contains(strtolower($emergencyName), strtolower($fatherName))) {
+                                $relationship = 'FATHER';
+                            } elseif (!empty($motherName) && str_contains(strtolower($emergencyName), strtolower($motherName))) {
+                                $relationship = 'MOTHER';
+                            } else {
+                                $relationship = 'PARENT / GUARDIAN';
+                            }
+                        }
                         
-                        $emergencyPhone = $student->applicant->emergency_phone ?: '-';
+                        $emergencyPhone = $student->applicant?->emergency_phone ?: '';
                         if (empty($emergencyPhone)) {
-                            $emergencyPhone = $student->applicant->parent_mobile ?: ($student->applicant->mobile_number ?: '+63 900 000 0000');
+                            $emergencyPhone = $student->applicant?->parent_mobile ?: ($student->applicant?->mobile_number ?: '+63 900 000 0000');
                         }
 
                         $studentNumber = $student->student_number;
@@ -976,7 +990,7 @@
                              <div class="absolute text-center font-black uppercase tracking-wide flex flex-col justify-center items-center animate-fade-in" style="left: 12px; top: 341px; width: 256px; height: 24px; z-index: 20; font-size: 25px; color: {{ $getGradeColor($displayGrade) }};">{{ $displayGrade }}</div>
 
                             <!-- LRN -->
-                            @if($student->applicant->lrn && !in_array(strtoupper($student->applicant->lrn), ['N/A', 'NA', 'EMPTY', '']))
+                            @if($student->applicant?->lrn && !in_array(strtoupper($student->applicant->lrn), ['N/A', 'NA', 'EMPTY', '']))
                                 <div class="absolute font-bold text-[#1e293b] whitespace-nowrap" style="left: 197px; top: 323px; width: 140px; height: 18px; z-index: 20; font-size: 12.5px; transform: rotate(-90deg); transform-origin: center; display: flex; align-items: center; justify-content: flex-start; letter-spacing: 0.05em;">
                                     LRN: <span>{{ $student->applicant->lrn }}</span>
                                 </div>
@@ -1021,7 +1035,7 @@
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:100%; height:100%;"><path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" /></svg>
                                     </span>
                                     <div style="text-align: left; font-family: 'Outfit', sans-serif; font-size: 12.5px; font-weight: 700; text-transform: uppercase; color: #475569; line-height: 1;">
-                                        {{ $relationship ?: 'Emergency Contact' }}
+                                        {{ $relationship ?: 'PARENT / GUARDIAN' }}
                                     </div>
                                 </div>
 
@@ -1043,6 +1057,7 @@
                                     <div style="text-align: left; font-family: 'Outfit', sans-serif; font-size: {{ $addressFontSize }}; font-weight: 700; text-transform: uppercase; color: #475569; line-height: 1.25;">
                                         {{ $homeAddress }}
                                     </div>
+                                </div>
                             </div>
 
                             <!-- Secure Director Signature QR (Only for authorized students) -->
@@ -1054,12 +1069,13 @@
                                     <img src="{{ $signatureQrUrl }}" alt="Signature QR" class="w-full h-full object-contain">
                                 </div>
                             @else
-                                <div style="position: absolute; left: 70px; top: 355px; width: 140px; text-align: center; z-index: 25; pointer-events: none;">
-                                    <span style="font-family: 'Outfit', sans-serif; font-size: 6.5px; font-weight: 900; text-transform: uppercase; color: #64748b; letter-spacing: 0.08em; border: 1px dashed #cbd5e1; padding: 2px 4px; border-radius: 4px; background: rgba(255, 255, 255, 0.85); display: inline-block; box-shadow: 0 1px 1px rgba(0,0,0,0.05);">Secure Signature Coming Soon</span>
+                                <div style="position: absolute; left: 70px; top: 342px; width: 140px; text-align: center; z-index: 25; pointer-events: none;">
+                                    <span style="font-family: 'Outfit', sans-serif; font-size: 6.5px; font-weight: 900; text-transform: uppercase; color: #64748b; letter-spacing: 0.08em; border: 1px dashed #cbd5e1; padding: 2px 4px; border-radius: 4px; background: rgba(255, 255, 255, 0.9); display: inline-block; box-shadow: 0 1px 1px rgba(0,0,0,0.05);">Secure Signature Coming Soon</span>
                                 </div>
                             @endif
                         </div>
-                    </div></div>
+                    </div>
+                </div>
 
                 <!-- Footer -->
                 <div class="flex items-center justify-between px-6 py-4 border-t border-slate-200 dark:border-slate-855 bg-white dark:bg-slate-900">
