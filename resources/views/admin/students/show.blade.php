@@ -833,8 +833,10 @@
         @include('admin.students.partials.show.modal')
 
         <!-- ID Card Preview Modal -->
-        <div x-show="showIdPreview" x-cloak
-             class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-fade-in">
+        <template x-teleport="body">
+            <div x-show="showIdPreview"
+                 style="display: none; z-index: 99999;"
+                 class="fixed inset-0 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-fade-in">
             <div class="bg-slate-100 dark:bg-slate-950 rounded-3xl max-w-3xl w-full overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col"
                  x-transition:enter="transition ease-out duration-200"
                  x-transition:enter-start="opacity-0 scale-95"
@@ -1076,10 +1078,13 @@
                 </div>
             </div>
         </div>
+        </template>
 
         <!-- Password Settings Modal -->
-        <div x-show="openPasswordModal" x-cloak
-             class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-fade-in">
+        <template x-teleport="body">
+            <div x-show="openPasswordModal"
+                 style="display: none; z-index: 99999;"
+                 class="fixed inset-0 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-fade-in">
             <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800 flex flex-col"
                  x-transition:enter="transition ease-out duration-200"
                  x-transition:enter-start="opacity-0 scale-95"
@@ -1136,11 +1141,14 @@
                 </div>
             </div>
         </div>
+        </template>
 
         <!-- Edit Profile Modal -->
         @unless ($isTeacherAdminViewer)
-        <div x-show="openEditModal" x-cloak
-             class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-fade-in">
+        <template x-teleport="body">
+            <div x-show="openEditModal"
+                 style="display: none; z-index: 99999;"
+                 class="fixed inset-0 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-fade-in">
             
             <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto shadow-2xl border border-slate-100 dark:border-slate-800 flex flex-col"
                  x-transition:enter="transition ease-out duration-200"
@@ -1334,6 +1342,7 @@
                 </form>
             </div>
         </div>
+        </template>
         @endunless
     </div>
 

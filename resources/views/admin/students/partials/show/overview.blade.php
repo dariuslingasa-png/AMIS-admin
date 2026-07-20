@@ -15,6 +15,16 @@
     @endif
 
     <x-card title="Student Profile" subtitle="Core demographics and contact info">
+        <x-slot:actions>
+            @unless ($isTeacherAdminViewer)
+                <button @click="openEditModal = true; editSection = 'all'"
+                        type="button"
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition active:scale-95 cursor-pointer">
+                    <i data-lucide="edit" class="h-3.5 w-3.5"></i>
+                    <span>Edit All Details</span>
+                </button>
+            @endunless
+        </x-slot:actions>
         <div class="detail-section-stack">
             @foreach ($studentSections as $section)
                 <x-applicant.detail-section :title="$section['title']" :icon="$section['icon']" :sectionKey="$section['key']" :fields="$section['fields']" />
@@ -24,6 +34,14 @@
 
     @unless ($isTeacherAdminViewer)
         <x-card title="Residential Info" subtitle="Residence details from enrollment form">
+            <x-slot:actions>
+                <button @click="openEditModal = true; editSection = 'contact'"
+                        type="button"
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold transition active:scale-95 cursor-pointer">
+                    <i data-lucide="edit-3" class="h-3.5 w-3.5"></i>
+                    <span>Edit Residence</span>
+                </button>
+            </x-slot:actions>
             <div class="detail-section-stack">
                 @foreach ($addressSections as $section)
                     <x-applicant.detail-section :title="$section['title']" :icon="$section['icon']" :sectionKey="$section['key']" :fields="$section['fields']" />
@@ -32,6 +50,14 @@
         </x-card>
 
         <x-card title="Parent / Guardian Details" subtitle="Grouped parent contacts and home addresses">
+            <x-slot:actions>
+                <button @click="openEditModal = true; editSection = 'parents'"
+                        type="button"
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold transition active:scale-95 cursor-pointer">
+                    <i data-lucide="edit-3" class="h-3.5 w-3.5"></i>
+                    <span>Edit Parents</span>
+                </button>
+            </x-slot:actions>
             <div class="detail-section-stack">
                 @foreach ($guardianSections as $section)
                     <x-applicant.detail-section :title="$section['title']" :icon="$section['icon']" :sectionKey="$section['key']" :fields="$section['fields']" />
