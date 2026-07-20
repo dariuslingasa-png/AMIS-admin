@@ -293,7 +293,7 @@
             <!-- Dynamic Profile Header Card -->
             <section class="applicant-profile-card relative overflow-hidden {{ $accentClass }}">
                 @if ($countryCode)
-                    <div class="absolute right-0 top-0 bottom-0 h-full w-1/3 overflow-hidden pointer-events-none opacity-20 select-none print-hide" style="mask-image: linear-gradient(to left, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%); -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%);">
+                    <div class="absolute right-0 top-0 bottom-0 h-full w-2/5 overflow-hidden pointer-events-none opacity-65 select-none print-hide" style="mask-image: linear-gradient(to left, rgba(0,0,0,1) 30%, rgba(0,0,0,0) 100%); -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,1) 30%, rgba(0,0,0,0) 100%);">
                         <img src="https://flagcdn.com/w640/{{ $countryCode }}.png" 
                              alt="Country Flag" 
                              class="h-full w-full object-cover object-right animate-pulse"
@@ -369,7 +369,7 @@
                             <i data-lucide="globe" class="w-4 h-4 opacity-75"></i>
                             <span class="font-medium tracking-wide flex items-center gap-1.5">
                                 @if ($countryCode)
-                                    <img src="https://flagcdn.com/16x12/{{ $countryCode }}.png" class="inline rounded-xs shadow-xs" alt="{{ $student->applicant->country }}">
+                                    <img src="https://flagcdn.com/w40/{{ $countryCode }}.png" class="inline-block w-5 h-3.5 rounded-xs object-cover shadow-sm border border-white/40" alt="{{ $student->applicant->country }}">
                                 @endif
                                 {{ $student->applicant->country }}
                             </span>
