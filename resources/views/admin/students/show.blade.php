@@ -1150,19 +1150,21 @@
                             @endif
 
                             <!-- Student ID -->
-                            <div class="absolute text-white font-black tracking-wide text-center uppercase animate-fade-in" style="left: 0; top: 267px; width: 280px; height: 12px; z-index: 20;" :style="'font-size: ' + idFontSize + 'px'">{{ $studentNumber }}</div>
+                            <div class="absolute text-white font-black tracking-wide text-center uppercase animate-fade-in" style="left: 0; top: 267px; width: 280px; height: 12px; z-index: 20; font-size: {{ $student->id_num_font_size ? $student->id_num_font_size . 'px' : '12.5px' }};">{{ $studentNumber }}</div>
 
                             <!-- Last Name -->
-                            <div class="absolute text-center font-black text-[#0f172a] uppercase tracking-tight flex flex-col justify-center items-center animate-fade-in" style="left: 12px; top: 291px; width: 256px; height: 32px; z-index: 20; {{ $lastNameStyle }} line-height: 1.1;" :style="'font-size: ' + lastNameFontSize + 'px'">{{ $lastName }}</div>
+                            <div class="absolute text-center font-black text-[#0f172a] uppercase tracking-tight flex flex-col justify-center items-center animate-fade-in" style="left: 12px; top: 291px; width: 256px; height: 32px; z-index: 20; {{ $lastNameStyle }} line-height: 1.1; font-size: {{ $student->id_last_name_font_size ? $student->id_last_name_font_size . 'px' : $lastNameFontSize }};">{{ $lastName }}</div>
 
                             <!-- First Name -->
                              @php
                                  $displayFirstName = trim($firstName . ' ' . $middleInitial);
+                                 $displayFirstNameLen = strlen($displayFirstName);
+                                 $defaultFirstNameFontSize = $displayFirstNameLen > 25 ? '11.5px' : ($displayFirstNameLen > 18 ? '13px' : '15px');
                              @endphp
-                             <div class="absolute text-center font-bold text-[#334155] uppercase leading-none flex flex-col justify-center items-center animate-fade-in" style="left: 12px; top: 318px; width: 256px; height: 18px; z-index: 20;" :style="'font-size: ' + firstNameFontSize + 'px'">{{ $displayFirstName }}</div>
+                             <div class="absolute text-center font-bold text-[#334155] uppercase leading-none flex flex-col justify-center items-center animate-fade-in" style="left: 12px; top: 318px; width: 256px; height: 18px; z-index: 20; font-size: {{ $student->id_first_name_font_size ? $student->id_first_name_font_size . 'px' : $defaultFirstNameFontSize }};">{{ $displayFirstName }}</div>
 
                             <!-- Grade Level -->
-                             <div class="absolute text-center font-black uppercase tracking-wide flex flex-col justify-center items-center animate-fade-in" style="left: 12px; top: 341px; width: 256px; height: 24px; z-index: 20; color: {{ $getGradeColor($displayGrade) }};" :style="'font-size: ' + gradeFontSize + 'px'">{{ $displayGrade }}</div>
+                             <div class="absolute text-center font-black uppercase tracking-wide flex flex-col justify-center items-center animate-fade-in" style="left: 12px; top: 341px; width: 256px; height: 24px; z-index: 20; color: {{ $getGradeColor($displayGrade) }}; font-size: {{ $student->id_grade_font_size ? $student->id_grade_font_size . 'px' : '31px' }};">{{ $displayGrade }}</div>
 
                             <!-- LRN -->
                             @if($student->applicant?->lrn && !in_array(strtoupper($student->applicant->lrn), ['N/A', 'NA', 'EMPTY', '']))
