@@ -207,44 +207,44 @@
                         <!-- Front Card -->
                         <td>
                             <div class="id-card-wrap">
-                                <div class="relative rounded-2xl overflow-hidden text-left" style="width: 280px; height: 443px; background-color: #064e3b; border: 1px solid #cbd5e1; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin: 0 auto;">
-                                    <img src="{{ asset('images/id/amis_frontid.png') }}" class="absolute inset-0 w-full h-full object-cover" style="z-index: 10; pointer-events: none;">
+                                <div class="rounded-2xl overflow-hidden text-left" style="position: relative; width: 280px; height: 443px; background-color: #064e3b; border: 1px solid #cbd5e1; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin: 0 auto;">
+                                    <img src="{{ asset('images/id/amis_frontid.png') }}" class="absolute inset-0 w-full h-full object-cover" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none;">
                                     
                                     <!-- Photo -->
-                                    <div class="photo-clip absolute overflow-hidden" style="left: 57px; top: 124px; width: 166px; height: 162px; border-radius: 12px; z-index: 5;">
+                                    <div class="photo-clip absolute overflow-hidden" style="position: absolute; left: 57px; top: 124px; width: 166px; height: 162px; border-radius: 12px; z-index: 5;">
                                         @if($photoUrl)
                                             <img src="{{ $photoUrl }}" class="w-full h-full object-cover">
                                         @else
                                             <div class="w-full h-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-400">NO PHOTO</div>
                                         @endif
                                     </div>
-
+ 
                                     <!-- Student ID -->
-                                    <div class="absolute text-white font-black text-center uppercase" style="left: 0; top: 267px; width: 280px; z-index: 20; font-size: 10px;">{{ $studentNumber }}</div>
-
+                                    <div class="absolute text-white font-black text-center uppercase" style="position: absolute; left: 0; top: 267px; width: 280px; z-index: 20; font-size: 10px;">{{ $studentNumber }}</div>
+ 
                                     <!-- Last Name -->
-                                    <div class="absolute text-center font-black text-[#0f172a] uppercase flex items-center justify-center" style="left: 12px; top: 291px; width: 256px; height: 32px; z-index: 20; font-size: 22px;">{{ $lastName }}</div>
-
+                                    <div class="absolute text-center font-black text-[#0f172a] uppercase flex items-center justify-center" style="position: absolute; left: 12px; top: 291px; width: 256px; height: 32px; z-index: 20; font-size: 22px;">{{ $lastName }}</div>
+ 
                                     <!-- First Name -->
-                                    <div class="absolute text-center font-bold text-[#334155] uppercase flex items-center justify-center" style="left: 12px; top: 318px; width: 256px; height: 18px; z-index: 20; font-size: 13px;">{{ trim($firstName . ' ' . $middleInitial) }}</div>
-
+                                    <div class="absolute text-center font-bold text-[#334155] uppercase flex items-center justify-center" style="position: absolute; left: 12px; top: 318px; width: 256px; height: 18px; z-index: 20; font-size: 13px;">{{ trim($firstName . ' ' . $middleInitial) }}</div>
+ 
                                     <!-- Grade Level -->
-                                    <div class="absolute text-center font-black uppercase flex items-center justify-center" style="left: 12px; top: 341px; width: 256px; height: 24px; z-index: 20; font-size: 24px; color: #0284c7;">{{ $section->grade_level }}</div>
-
+                                    <div class="absolute text-center font-black uppercase flex items-center justify-center" style="position: absolute; left: 12px; top: 341px; width: 256px; height: 24px; z-index: 20; font-size: 24px; color: #0284c7;">{{ $section->grade_level }}</div>
+ 
                                     <!-- QR Code -->
-                                    <div class="absolute p-0.5 rounded bg-white" style="left: 111px; top: 377px; width: 58px; height: 58px; z-index: 20;">
+                                    <div class="absolute p-0.5 rounded bg-white" style="position: absolute; left: 111px; top: 377px; width: 58px; height: 58px; z-index: 20;">
                                         <img src="{{ $qrCodeUrl }}" class="w-full h-full object-contain">
                                     </div>
                                 </div>
                             </div>
                         </td>
-
+ 
                         <!-- Back Card -->
                         <td>
                             <div class="id-card-wrap">
-                                <div class="relative rounded-2xl overflow-hidden text-left" style="width: 280px; height: 443px; background-color: #064e3b; border: 1px solid #cbd5e1; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin: 0 auto;">
-                                    <img src="{{ asset('images/id/amis_backid.png') }}" class="absolute inset-0 w-full h-full object-cover" style="z-index: 1; pointer-events: none;">
-
+                                <div class="rounded-2xl overflow-hidden text-left" style="position: relative; width: 280px; height: 443px; background-color: #064e3b; border: 1px solid #cbd5e1; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin: 0 auto;">
+                                    <img src="{{ asset('images/id/amis_backid.png') }}" class="absolute inset-0 w-full h-full object-cover" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none;">
+ 
                                     <!-- Details -->
                                     <div style="position: absolute; left: 23px; top: 70px; width: 233px; z-index: 10; display: flex; flex-direction: column; gap: 5.5px;">
                                         <div style="font-size: 13px; font-weight: 900; text-transform: uppercase; color: #0f172a;">
