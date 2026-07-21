@@ -68,76 +68,220 @@
             </div>
         </header>
 
-        <div class="mb-6 text-center">
-            <h1 class="uppercase tracking-tight text-slate-900 font-bold" style="font-family: Arial, sans-serif; font-size: 13px; margin: 0; letter-spacing: 0.05em;">
-                HALAQAH ONLINE REGISTRATIONS LIST
-            </h1>
-            <div class="text-slate-500 font-normal" style="font-family: Arial, sans-serif; font-size: 9px; margin-top: 4px;">
-                Generated on: {{ now()->timezone('Asia/Manila')->format('M d, Y h:i A') }} | Total Records: {{ $registrations->count() }} Submissions
-            </div>
-        </div>
-
-        <table class="w-full text-left text-sm print-table">
-            <thead>
-                <tr>
-                    <th style="width: 5%; text-align: center;">#</th>
-                    <th style="width: 15%">Date</th>
-                    <th style="width: 30%">Applicant Details</th>
-                    <th style="width: 25%">Program Details</th>
-                    <th style="width: 25%">Message / Goals</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach ($registrations as $reg)
-                    @php
-                        $lines = explode("\n", $reg->message);
-                        $details = [];
-                        foreach ($lines as $line) {
-                            if (str_contains($line, ':')) {
-                                [$k, $v] = explode(':', $line, 2);
-                                $details[trim($k)] = trim($v);
-                            }
+        @if($tab === 'students')
+            @php
+                $beginners = collect();
+                $advanced = collect();
+                
+                foreach($registrations as $reg) {
+                    $lines = explode("\n", $reg->message);
+                    $details = [];
+                    foreach ($lines as $line) {
+                        if (str_contains($line, ':')) {
+                            [$k, $v] = explode(':', $line, 2);
+                            $details[trim($k)] = trim($v);
                         }
-                        $address = $details['Address'] ?? '';
-                        $msTeams = $details['MS Teams Account'] ?? '';
-                        $level = $details['Learning Level'] ?? '';
-                        $gradeLevel = $details['Grade Level'] ?? '';
-                        
-                        $msgParts = explode('--- Halaqah Registration Details ---', $reg->message);
-                        $actualMessage = trim($msgParts[0]);
-                    @endphp
+                    }
+                    $reg->level = $details['Learning Level'] ?? '';
+                    $reg->gradeLevel = $details['Grade Level'] ?? '';
+                    $reg->msTeams = $details['MS Teams Account'] ?? '';
+                    
+                    if (str_contains(strtolower($reg->level), 'beginner') || str_contains(strtolower($reg->level), 'cannot')) {
+                        $beginners->push($reg);
+                    } else {
+                        $advanced->push($reg);
+                    }
+                }
+            @endphp
+
+            <!-- BEGINNER SECTION / PAGE -->
+            <div class="page-break-after">
+                <div class="mb-6 text-center">
+                    <h1 class="uppercase tracking-tight text-slate-900 font-bold" style="font-family: Arial, sans-serif; font-size: 13px; margin: 0; letter-spacing: 0.05em;">
+                        HALAQAH ONLINE OFFICIAL STUDENT ROSTER - BEGINNER
+                    </h1>
+                    <div class="text-slate-500 font-normal" style="font-family: Arial, sans-serif; font-size: 9px; margin-top: 4px;">
+                        Generated on: {{ now()->timezone('Asia/Manila')->format('M d, Y h:i A') }} | Total Records: {{ $beginners->count() }} Approved Students
+                    </div>
+                </div>
+
+                <table class="w-full text-left text-sm print-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 10%; text-align: center;">#</th>
+                            <th style="width: 50%">Full Name</th>
+                            <th style="width: 40%">Level</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($beginners as $reg)
+                            <tr>
+                                <td style="text-align: center; font-weight: bold; color: #64748b; font-size: 11px;">{{ $loop->iteration }}</td>
+                                <td>
+                                    <strong style="color: #0f172a; text-transform: uppercase; font-size: 11px;">{{ $reg->name }}</strong>
+                                    @if($reg->gradeLevel)
+                                        <span style="margin-left: 8px; font-size: 9px; color: #475569; font-weight: bold; text-transform: uppercase;">Grade: {{ $reg->gradeLevel }}</span>
+                                    @endif
+                                    @if($reg->msTeams)
+                                        <div style="margin-top: 2px; font-size: 9px; color: #64748b;">Teams UPN: <code style="background: #f1f5f9; padding: 1px 3px; border-radius: 3px; font-family: monospace;">{{ $reg->msTeams }}</code></div>
+                                    @endif
+                                </td>
+                                <td style="font-weight: bold; color: #b45309; text-transform: uppercase; font-size: 11px;">
+                                    {{ $reg->level ?: 'BEGINNER' }}
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="3" class="text-center" style="padding: 20px; color: #64748b;">No beginner students.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- ADVANCED SECTION / PAGE -->
+            <div style="page-break-before: always; break-before: page; margin-top: 20px;">
+                <!-- Header block for second page -->
+                <header class="header" style="border-bottom: 2px solid #059669; padding-bottom: 10px; margin-bottom: 20px;">
+                    <div style="display: table; width: 100%; border-collapse: collapse;">
+                        <div style="display: table-row;">
+                            <div style="display: table-cell; vertical-align: middle; width: 40%; text-align: left;">
+                                <h1 style="font-family: Arial, sans-serif; font-weight: 900; font-size: 14px; margin: 0; text-transform: uppercase; letter-spacing: 0.05em; color: #0f172a;">
+                                    AL MUNAWWARA ISLAMIC SCHOOL
+                                </h1>
+                                <div style="margin-top: 2px; color: #64748b; font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">
+                                    Official School Portal
+                                </div>
+                            </div>
+                            <div style="display: table-cell; vertical-align: middle; width: 20%; text-align: center;">
+                                <img src="{{ asset('images/AMIS_Logo.png') }}" alt="AMIS Logo" style="height: 54px; width: auto; display: inline-block;">
+                            </div>
+                            <div style="display: table-cell; vertical-align: middle; width: 40%; text-align: right; direction: rtl;">
+                                <h1 style="font-family: 'Times New Roman', serif; font-weight: 900; font-size: 18px; margin: 0; color: #059669; letter-spacing: 0.03em;">
+                                    المدرسة المنورة الإسلامية
+                                </h1>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="text-align: center; font-size: 9px; color: #475569; font-weight: 700; margin-top: 8px; font-family: Arial, sans-serif; text-transform: uppercase; letter-spacing: 0.03em;">
+                        Don Julian Rodriguez Avenue, Ma-a, Davao City, Philippines, 8000
+                    </div>
+                </header>
+
+                <div class="mb-6 text-center">
+                    <h1 class="uppercase tracking-tight text-slate-900 font-bold" style="font-family: Arial, sans-serif; font-size: 13px; margin: 0; letter-spacing: 0.05em;">
+                        HALAQAH ONLINE OFFICIAL STUDENT ROSTER - ADVANCED
+                    </h1>
+                    <div class="text-slate-500 font-normal" style="font-family: Arial, sans-serif; font-size: 9px; margin-top: 4px;">
+                        Generated on: {{ now()->timezone('Asia/Manila')->format('M d, Y h:i A') }} | Total Records: {{ $advanced->count() }} Approved Students
+                    </div>
+                </div>
+
+                <table class="w-full text-left text-sm print-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 10%; text-align: center;">#</th>
+                            <th style="width: 50%">Full Name</th>
+                            <th style="width: 40%">Level</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($advanced as $reg)
+                            <tr>
+                                <td style="text-align: center; font-weight: bold; color: #64748b; font-size: 11px;">{{ $loop->iteration }}</td>
+                                <td>
+                                    <strong style="color: #0f172a; text-transform: uppercase; font-size: 11px;">{{ $reg->name }}</strong>
+                                    @if($reg->gradeLevel)
+                                        <span style="margin-left: 8px; font-size: 9px; color: #475569; font-weight: bold; text-transform: uppercase;">Grade: {{ $reg->gradeLevel }}</span>
+                                    @endif
+                                    @if($reg->msTeams)
+                                        <div style="margin-top: 2px; font-size: 9px; color: #64748b;">Teams UPN: <code style="background: #f1f5f9; padding: 1px 3px; border-radius: 3px; font-family: monospace;">{{ $reg->msTeams }}</code></div>
+                                    @endif
+                                </td>
+                                <td style="font-weight: bold; color: #4338ca; text-transform: uppercase; font-size: 11px;">
+                                    {{ $reg->level ?: 'ADVANCED' }}
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="3" class="text-center" style="padding: 20px; color: #64748b;">No advanced students.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        @else
+            <div class="mb-6 text-center">
+                <h1 class="uppercase tracking-tight text-slate-900 font-bold" style="font-family: Arial, sans-serif; font-size: 13px; margin: 0; letter-spacing: 0.05em;">
+                    HALAQAH ONLINE REGISTRATIONS LIST
+                </h1>
+                <div class="text-slate-500 font-normal" style="font-family: Arial, sans-serif; font-size: 9px; margin-top: 4px;">
+                    Generated on: {{ now()->timezone('Asia/Manila')->format('M d, Y h:i A') }} | Total Records: {{ $registrations->count() }} Submissions
+                </div>
+            </div>
+
+            <table class="w-full text-left text-sm print-table">
+                <thead>
                     <tr>
-                        <td style="text-align: center; font-weight: bold; color: #64748b;">{{ $loop->iteration }}</td>
-                        <td style="color: #64748b;">
-                            {{ date('M d, Y', strtotime($reg->created_at)) }}
-                            <div style="font-size: 8px; color: #94a3b8;">{{ date('h:i A', strtotime($reg->created_at)) }}</div>
-                        </td>
-                        <td>
-                            <strong style="color: #0f172a; text-transform: uppercase;">{{ $reg->name }}</strong>
-                            <div style="margin-top: 2px; color: #475569;">Email: {{ $reg->email }}</div>
-                            <div style="color: #475569;">Phone: {{ $reg->phone }}</div>
-                            @if($address)
-                                <div style="font-size: 8px; color: #64748b; text-transform: uppercase;">Loc: {{ $address }}</div>
-                            @endif
-                        </td>
-                        <td>
-                            @if($level)
-                                <div style="font-weight: bold; color: #0369a1; text-transform: uppercase;">{{ $level }}</div>
-                            @endif
-                            @if($gradeLevel)
-                                <div style="margin-top: 2px; font-size: 8.5px; color: #334155; font-weight: 800; text-transform: uppercase;">Grade: {{ $gradeLevel }}</div>
-                            @endif
-                            @if($msTeams)
-                                <div style="margin-top: 2px; font-size: 8px; color: #475569;">Teams UPN: <code style="background: #f1f5f9; padding: 2px 4px; border-radius: 4px; font-family: monospace;">{{ $msTeams }}</code></div>
-                            @endif
-                        </td>
-                        <td style="color: #475569;">
-                            {{ $actualMessage ?: '-' }}
-                        </td>
+                        <th style="width: 5%; text-align: center;">#</th>
+                        <th style="width: 15%">Date</th>
+                        <th style="width: 30%">Applicant Details</th>
+                        <th style="width: 25%">Program Details</th>
+                        <th style="width: 25%">Message / Goals</th>
                     </tr>
-                @endforeach
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach ($registrations as $reg)
+                        @php
+                            $lines = explode("\n", $reg->message);
+                            $details = [];
+                            foreach ($lines as $line) {
+                                if (str_contains($line, ':')) {
+                                    [$k, $v] = explode(':', $line, 2);
+                                    $details[trim($k)] = trim($v);
+                                }
+                            }
+                            $address = $details['Address'] ?? '';
+                            $msTeams = $details['MS Teams Account'] ?? '';
+                            $level = $details['Learning Level'] ?? '';
+                            $gradeLevel = $details['Grade Level'] ?? '';
+                            
+                            $msgParts = explode('--- Halaqah Registration Details ---', $reg->message);
+                            $actualMessage = trim($msgParts[0]);
+                        @endphp
+                        <tr>
+                            <td style="text-align: center; font-weight: bold; color: #64748b;">{{ $loop->iteration }}</td>
+                            <td style="color: #64748b;">
+                                {{ date('M d, Y', strtotime($reg->created_at)) }}
+                                <div style="font-size: 8px; color: #94a3b8;">{{ date('h:i A', strtotime($reg->created_at)) }}</div>
+                            </td>
+                            <td>
+                                <strong style="color: #0f172a; text-transform: uppercase;">{{ $reg->name }}</strong>
+                                <div style="margin-top: 2px; color: #475569;">Email: {{ $reg->email }}</div>
+                                <div style="color: #475569;">Phone: {{ $reg->phone }}</div>
+                                @if($address)
+                                    <div style="font-size: 8px; color: #64748b; text-transform: uppercase;">Loc: {{ $address }}</div>
+                                @endif
+                            </td>
+                            <td>
+                                @if($level)
+                                    <div style="font-weight: bold; color: #0369a1; text-transform: uppercase;">{{ $level }}</div>
+                                @endif
+                                @if($gradeLevel)
+                                    <div style="margin-top: 2px; font-size: 8.5px; color: #334155; font-weight: 800; text-transform: uppercase;">Grade: {{ $gradeLevel }}</div>
+                                @endif
+                                @if($msTeams)
+                                    <div style="margin-top: 2px; font-size: 8px; color: #475569;">Teams UPN: <code style="background: #f1f5f9; padding: 2px 4px; border-radius: 4px; font-family: monospace;">{{ $msTeams }}</code></div>
+                                @endif
+                            </td>
+                            <td style="color: #475569;">
+                                {{ $actualMessage ?: '-' }}
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        @endif
     </main>
 
     <script>

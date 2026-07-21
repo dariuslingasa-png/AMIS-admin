@@ -30,6 +30,7 @@
                 ['Account Onboarding', 'user-cog', route('admin.students.accounts'), request()->routeIs('admin.students.accounts')],
                 ['CSV Comparison', 'scale', route('admin.students.comparison'), request()->routeIs('admin.students.comparison')],
                 ['Enrollment History', 'history', route('admin.students.history'), request()->routeIs('admin.students.history')],
+                ['Audit Logs', 'clipboard-list', route('admin.students.audit-logs'), request()->routeIs('admin.students.audit-logs')],
                 ['Reports & Analytics', 'file-text', route('admin.students.reports'), request()->routeIs('admin.students.reports')],
                 ['Call Attendance', 'calendar-days', route('admin.students.attendance'), request()->routeIs('admin.students.attendance')],
             ],
@@ -100,6 +101,13 @@
             'icon' => 'users', 'iconClass' => 'text-fuchsia-600', 'headerClass' => 'text-fuchsia-700', 'activeClass' => 'sidebar-link-active-fuchsia', 'title' => 'Administration',
             'links' => [
                 ['User Accounts', 'user-cog', route('admin.administration.users.index'), request()->routeIs('admin.administration.users.*')],
+            ],
+        ],
+        [
+            'active' => request()->routeIs('admin.website.*'),
+            'icon' => 'globe', 'iconClass' => 'text-teal-600', 'headerClass' => 'text-teal-700', 'activeClass' => 'sidebar-link-active-teal', 'title' => 'Website CMS',
+            'links' => [
+                ['Announcements', 'megaphone', route('admin.website.announcements.index'), request()->routeIs('admin.website.announcements.*')],
             ],
         ],
         [

@@ -58,7 +58,7 @@ class SectionOccupancyTest extends TestCase
 
         // 2. Flexible Section
         $flexibleSection = Section::create([
-            'name' => 'B',
+            'name' => 'HUDHAYFAH IBN AL-YAMAN',
             'grade_level' => 'Grade 1',
             'learning_mode' => 'flexible',
             'shift' => '1st Shift',

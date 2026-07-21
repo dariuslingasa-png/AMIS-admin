@@ -15,7 +15,82 @@ class AdminMsTeamsController extends Controller
 {
     public function index(Request $request)
     {
-        return redirect()->route('admin.academic.schedules');
+        $sections = Section::withCount('students as enrolled_count')
+            ->withCount('subjects')
+            ->orderBy('grade_level')
+            ->orderBy('learning_mode')
+            ->orderBy('shift')
+            ->orderBy('gender')
+            ->get();
+
+        $stats = [
+            'total_sections' => $sections->count(),
+            'with_team' => $sections->whereNotNull('ms_team_id')->count(),
+            'without_team' => $sections->whereNull('ms_team_id')->count(),
+            'total_enrolled' => StudentSection::where('ms_status', 'enrolled')->count(),
+            'total_failed' => StudentSection::where('ms_status', 'failed')->count(),
+        ];
+
+        return view('admin.ms-teams.index', compact('sections', 'stats'));
+    }
+
+    public function roster(Request $request)
+    {
+        $gradeOrder = [
+            'Kinder 1', 'Kinder 2',
+            'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6',
+            'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12',
+        ];
+
+        $gradeCounts = Student::query()
+            ->select('grade_level')
+            ->selectRaw('COUNT(*) as student_count')
+            ->whereNotNull('grade_level')
+            ->groupBy('grade_level')
+            ->get()
+            ->sortBy(function ($row) use ($gradeOrder) {
+                $position = array_search($row->grade_level, $gradeOrder, true);
+
+                return $position === false ? 999 : $position;
+            })
+            ->values();
+
+        $availableGrades = $gradeCounts->pluck('grade_level');
+        $selectedGrade = $request->string('grade')->toString();
+
+        if (! $availableGrades->contains($selectedGrade)) {
+            $selectedGrade = (string) $availableGrades->first();
+        }
+
+        $sections = Section::query()
+            ->where('grade_level', $selectedGrade)
+            ->withCount('students')
+            ->orderBy('learning_mode')
+            ->orderBy('shift')
+            ->orderBy('name')
+            ->get();
+
+        $students = Student::query()
+            ->with(['applicant', 'user:id,name', 'studentSection.section'])
+            ->where('grade_level', $selectedGrade)
+            ->get()
+            ->sortBy(fn (Student $student) => sprintf(
+                '%s %s %s',
+                $student->applicant?->last_name ?? '',
+                $student->applicant?->first_name ?? '',
+                $student->student_number ?? ''
+            ))
+            ->values();
+
+        $assignedCount = $students->filter(fn (Student $student) => $student->studentSection?->section)->count();
+
+        return view('admin.ms-teams.roster', compact(
+            'gradeCounts',
+            'selectedGrade',
+            'sections',
+            'students',
+            'assignedCount'
+        ));
     }
 
     public function store(Request $request)
@@ -193,6 +268,19 @@ class AdminMsTeamsController extends Controller
             ->latest()
             ->get();
 
+        $unassignedStudents = Student::query()
+            ->with(['applicant', 'user:id,name'])
+            ->where('grade_level', $section->grade_level)
+            ->whereDoesntHave('studentSection')
+            ->get()
+            ->sortBy(fn (Student $student) => sprintf(
+                '%s %s %s',
+                $student->applicant?->last_name ?? '',
+                $student->applicant?->first_name ?? '',
+                $student->student_number ?? ''
+            ))
+            ->values();
+
         $teachers = \App\Models\User::where('role', 'teacher')
             ->orderBy('name')
             ->get()
@@ -202,7 +290,7 @@ class AdminMsTeamsController extends Controller
                 return $user;
             });
 
-        return view('admin.ms-teams.show', compact('section', 'enrollments', 'teachers'));
+        return view('admin.ms-teams.show', compact('section', 'enrollments', 'unassignedStudents', 'teachers'));
     }
 
     /**

@@ -260,6 +260,58 @@ class AdminStudentController extends Controller
         return view('admin.students.index', compact('students', 'stats', 'analytics', 'gradeOrder', 'isPrint'));
     }
 
+    public function auditLogs(Request $request)
+    {
+        $search = trim($request->input('search', ''));
+        $eventFilter = $request->input('event', 'all');
+
+        $query = \App\Models\AdminAuditLog::with('user')
+            ->where(function ($q) {
+                $q->where('event', 'like', '%student%')
+                  ->orWhere('event', 'like', '%photo%')
+                  ->orWhere('event', 'like', '%application%')
+                  ->orWhere('event', 'like', '%document%')
+                  ->orWhere('event', 'like', '%license%');
+            });
+
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('message', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('event', 'like', "%{$search}%")
+                  ->orWhere('ip_address', 'like', "%{$search}%")
+                  ->orWhereHas('user', function ($u) use ($search) {
+                      $u->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        if ($eventFilter !== 'all') {
+            if ($eventFilter === 'photo') {
+                $query->where('event', 'like', '%photo%');
+            } elseif ($eventFilter === 'profile') {
+                $query->where('event', 'like', '%profile%');
+            } elseif ($eventFilter === 'section') {
+                $query->where('event', 'like', '%section%');
+            } elseif ($eventFilter === 'approval') {
+                $query->where(function($b) {
+                    $b->where('event', 'like', '%application%')->orWhere('event', 'like', '%approval%');
+                });
+            } elseif ($eventFilter === 'delete') {
+                $query->where('event', 'like', '%delete%');
+            }
+        }
+
+        $logs = $query->latest()->paginate(30)->withQueryString();
+
+        return view('admin.students.audit-logs', [
+            'logs' => $logs,
+            'search' => $search,
+            'eventFilter' => $eventFilter,
+        ]);
+    }
+
     public function show(Student $student)
     {
         abort_unless(auth()->user()?->canViewAdminGrade($student->grade_level), 403);

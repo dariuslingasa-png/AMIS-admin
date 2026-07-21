@@ -372,6 +372,7 @@
                                 <div>
                                     <div class="font-extrabold text-slate-900 text-xs uppercase">{{ $last }}, {{ $first }}</div>
                                     <div class="text-[9px] text-slate-400 font-mono tracking-wide mt-0.5">{{ $e->student->student_number }}</div>
+                                    <div class="mt-0.5 break-all text-[9px] font-semibold text-sky-700">{{ $e->student->school_email ?? $e->student->ms_email ?? 'No email' }}</div>
                                 </div>
                             </div>
                             <div class="flex items-center gap-2">
@@ -389,6 +390,47 @@
                             <p class="font-semibold text-xs">No students enrolled yet.</p>
                         </div>
                     @endforelse
+                </div>
+
+                <div x-data="{ candidateSearch: '' }" class="border-t border-slate-100 pt-4">
+                    <div class="mb-3 flex items-start justify-between gap-3">
+                        <div>
+                            <div class="text-xs font-black uppercase tracking-wider text-slate-700">Unassigned {{ $section->grade_level }}</div>
+                            <p class="mt-0.5 text-[9px] font-semibold text-slate-400">Local AMIS students available for this class</p>
+                        </div>
+                        <span class="shrink-0 rounded-full bg-amber-50 px-2.5 py-1 text-[9px] font-black text-amber-700">{{ $unassignedStudents->count() }}</span>
+                    </div>
+
+                    <div class="relative mb-3">
+                        <i data-lucide="search" class="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400"></i>
+                        <input type="search" x-model="candidateSearch" placeholder="Search student name, ID, or email..." class="w-full rounded-xl border border-slate-200 py-2 pl-9 pr-3 text-[10px] font-semibold outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100">
+                    </div>
+
+                    <div class="max-h-[32rem] divide-y divide-slate-100 overflow-y-auto rounded-xl border border-slate-100">
+                        @forelse($unassignedStudents as $candidate)
+                            @php
+                                $candidateName = $candidate->applicant?->full_name ?? $candidate->user?->name ?? 'Unnamed Student';
+                                $candidateEmail = $candidate->school_email ?? $candidate->ms_email ?? '';
+                                $candidateSearchText = strtolower($candidateName.' '.$candidate->student_number.' '.$candidateEmail);
+                            @endphp
+                            <div class="flex items-center justify-between gap-3 p-3 hover:bg-slate-50" x-show='candidateSearch === "" || @js($candidateSearchText).includes(candidateSearch.toLowerCase())'>
+                                <div class="min-w-0">
+                                    <a href="{{ route('admin.students.show', $candidate) }}" class="block truncate text-[10px] font-extrabold uppercase text-slate-900 hover:text-emerald-700">{{ $candidateName }}</a>
+                                    <div class="mt-0.5 text-[9px] font-mono text-slate-400">{{ $candidate->student_number }}</div>
+                                    <div class="mt-0.5 break-all text-[9px] font-semibold text-sky-700">{{ $candidateEmail ?: 'No email' }}</div>
+                                </div>
+                                @unless(auth()->user()->isTeacherAdminViewer())
+                                    <form method="POST" action="{{ route('admin.ms-teams.students.assign', $section) }}" class="shrink-0">
+                                        @csrf
+                                        <input type="hidden" name="student_id" value="{{ $candidate->id }}">
+                                        <button type="submit" class="rounded-lg bg-emerald-700 px-3 py-1.5 text-[9px] font-bold text-white hover:bg-emerald-800">Assign</button>
+                                    </form>
+                                @endunless
+                            </div>
+                        @empty
+                            <div class="p-6 text-center text-[10px] font-bold text-slate-400">No unassigned students remain in this grade.</div>
+                        @endforelse
+                    </div>
                 </div>
             </div>
         </div>

@@ -80,6 +80,11 @@
             <p class="mt-1 text-sm text-slate-500">Manage grade sections, assign subjects, and enroll students.</p>
         </div>
         <div class="flex items-center gap-2 shrink-0">
+            <a href="{{ route('admin.ms-teams.roster') }}"
+               class="inline-flex items-center gap-2 border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold text-sm px-4 py-2.5 rounded-xl transition-all shadow-xs">
+                <i data-lucide="users-round" class="w-4 h-4"></i>
+                Student Roster
+            </a>
             <a href="{{ route('admin.ms-teams.structure') }}"
                class="inline-flex items-center gap-2 border border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-800 font-bold text-sm px-4 py-2.5 rounded-xl transition-all shadow-xs">
                 <i data-lucide="network" class="w-4 h-4"></i>

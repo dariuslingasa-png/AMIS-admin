@@ -599,7 +599,13 @@ class AdminPaymentController extends Controller
      */
     public function viewReceiptFile(Request $request)
     {
-        $this->ensurePaymentReviewer();
+        abort_unless(
+            auth()->user() && (
+                auth()->user()->canReviewEnrollmentPayments() || 
+                auth()->user()->hasAdminPortalAccess()
+            ),
+            403
+        );
 
         $path = $request->query('path');
         if (blank($path)) {

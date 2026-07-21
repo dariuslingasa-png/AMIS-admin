@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Listeners\LogSentEmail;
+use App\Models\User;
 use App\Policies\AcademicModulePolicy;
 use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Support\Facades\Event;
@@ -25,6 +26,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Gate::define('manage-academic', [AcademicModulePolicy::class, 'manage']);
+        Gate::define('manage-microsoft-rosters', fn (User $user) => $user->hasRole(['super_admin', 'admin']) || $user->hasPermission('microsoft_roster_management')
+        );
 
         Event::listen(MessageSent::class, LogSentEmail::class);
     }

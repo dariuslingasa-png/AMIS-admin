@@ -1,33 +1,45 @@
 <?php
 
+use App\Http\Controllers\Academic\GradeLevelController;
+use App\Http\Controllers\Academic\SchoolYearController;
+use App\Http\Controllers\Admin\AccessControlController;
+use App\Http\Controllers\Admin\AdminAnnouncementController;
+use App\Http\Controllers\Admin\AdminEnrollmentSettingsController;
+use App\Http\Controllers\Admin\AdministrationController;
+use App\Http\Controllers\Admin\AdminSupportTicketController;
 use App\Http\Controllers\Admin\ApplicantController;
 use App\Http\Controllers\Admin\ApprovalController;
+use App\Http\Controllers\Admin\AttendanceController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EnrollmentAnalyticsController;
 use App\Http\Controllers\Admin\EnrollmentController;
+use App\Http\Controllers\Admin\GoogleDriveAuthController;
+use App\Http\Controllers\Admin\RegistrationController;
 use App\Http\Controllers\Admin\RequirementController;
-use App\Http\Controllers\Admin\AdministrationController;
-use App\Http\Controllers\Admin\AccessControlController;
 use App\Http\Controllers\Admin\SecurityWorkspaceController;
 use App\Http\Controllers\Admin\SystemManagementController;
-use App\Http\Controllers\Admin\AdminSupportTicketController;
-use App\Http\Controllers\AdminAuthController;
-use App\Http\Controllers\AdminClassScheduleController;
-use App\Http\Controllers\AdminDiscountSettingsController;
-use App\Http\Controllers\AdminEbookController;
 use App\Http\Controllers\AdminAcademicController;
 use App\Http\Controllers\AdminAcademicSubjectController;
 use App\Http\Controllers\AdminAcademicTeacherController;
+use App\Http\Controllers\AdminAuthController;
+use App\Http\Controllers\AdminBackupController;
+use App\Http\Controllers\AdminClassScheduleController;
+use App\Http\Controllers\AdminDiscountSettingsController;
+use App\Http\Controllers\AdminEbookController;
+use App\Http\Controllers\AdminFinanceController;
+use App\Http\Controllers\AdminFinanceMasterController;
+use App\Http\Controllers\AdminMicrosoftTeamsRosterController;
 use App\Http\Controllers\AdminMsSyncController;
 use App\Http\Controllers\AdminMsTeamsController;
 use App\Http\Controllers\AdminPaymentController;
 use App\Http\Controllers\AdminSoaController;
+use App\Http\Controllers\AdminStudentAccountController;
 use App\Http\Controllers\AdminStudentController;
 use App\Http\Controllers\AdminStudentDashboardController;
-use App\Http\Controllers\AdminStudentProcessController;
-use App\Http\Controllers\AdminStudentAccountController;
 use App\Http\Controllers\AdminStudentFamilyController;
+use App\Http\Controllers\AdminStudentProcessController;
 use App\Http\Controllers\AdminUserController;
+use App\Http\Controllers\IdentityRoutingController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route('admin.login'));
@@ -51,9 +63,9 @@ Route::name('admin.')->group(function () {
         ->middleware('throttle:10,1')
         ->name('microsoft.callback');
 
-    Route::post('/api/identity/login', [\App\Http\Controllers\IdentityRoutingController::class, 'login'])
+    Route::post('/api/identity/login', [IdentityRoutingController::class, 'login'])
         ->name('identity.login');
-    Route::post('/api/identity/link', [\App\Http\Controllers\IdentityRoutingController::class, 'link'])
+    Route::post('/api/identity/link', [IdentityRoutingController::class, 'link'])
         ->middleware('auth')
         ->name('identity.link');
 
@@ -61,12 +73,22 @@ Route::name('admin.')->group(function () {
         Route::get('/dashboard', DashboardController::class)->name('dashboard');
 
         Route::prefix('attendance')->name('attendance.')->group(function () {
-            Route::get('/', [App\Http\Controllers\Admin\AttendanceController::class, 'index'])->name('index');
-            Route::get('/scanner', [App\Http\Controllers\Admin\AttendanceController::class, 'scanner'])->name('scanner');
-            Route::post('/scan', [App\Http\Controllers\Admin\AttendanceController::class, 'scan'])->name('scan');
-            Route::get('/manual', [App\Http\Controllers\Admin\AttendanceController::class, 'manual'])->name('manual');
-            Route::post('/manual', [App\Http\Controllers\Admin\AttendanceController::class, 'storeManual'])->name('manual.store');
-            Route::get('/reports', [App\Http\Controllers\Admin\AttendanceController::class, 'reports'])->name('reports');
+            Route::get('/', [AttendanceController::class, 'index'])->name('index');
+            Route::get('/scanner', [AttendanceController::class, 'scanner'])->name('scanner');
+            Route::post('/scan', [AttendanceController::class, 'scan'])->name('scan');
+            Route::get('/manual', [AttendanceController::class, 'manual'])->name('manual');
+            Route::post('/manual', [AttendanceController::class, 'storeManual'])->name('manual.store');
+            Route::get('/reports', [AttendanceController::class, 'reports'])->name('reports');
+        });
+
+        Route::prefix('faculty-attendance')->name('faculty-attendance.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\FacultyAttendanceController::class, 'index'])->name('index');
+            Route::post('/import', [\App\Http\Controllers\Admin\FacultyAttendanceController::class, 'import'])->name('import');
+            Route::post('/users', [\App\Http\Controllers\Admin\FacultyAttendanceController::class, 'storeUser'])->name('users.store');
+            Route::post('/users/{id}/delete', [\App\Http\Controllers\Admin\FacultyAttendanceController::class, 'deleteUser'])->name('users.delete');
+            Route::get('/users/download', [\App\Http\Controllers\Admin\FacultyAttendanceController::class, 'downloadUsers'])->name('users.download');
+            Route::post('/link', [\App\Http\Controllers\Admin\FacultyAttendanceController::class, 'linkBiometricProfile'])->name('link');
+            Route::post('/remarks', [\App\Http\Controllers\Admin\FacultyAttendanceController::class, 'storeRemark'])->name('remarks.store');
         });
 
         Route::prefix('ebook')->name('ebook.')->group(function () {
@@ -119,10 +141,11 @@ Route::name('admin.')->group(function () {
         Route::get('/students/dashboard/sections/{section}/roster-print', [AdminStudentDashboardController::class, 'rosterPrint'])->name('students.roster-print');
         Route::get('/students/history', [AdminStudentProcessController::class, 'history'])->name('students.history');
         Route::get('/students/accounts', [AdminStudentProcessController::class, 'accounts'])->name('students.accounts');
+        Route::get('/students/audit-logs', [AdminStudentController::class, 'auditLogs'])->name('students.audit-logs');
         Route::redirect('/students/documents', '/students')->name('students.documents');
         Route::get('/students/verification', [AdminStudentProcessController::class, 'verification'])->name('students.verification');
         Route::redirect('/students/promotions', '/students')->name('students.promotions');
-        Route::redirect('/students/occupancy', '/students/reports')->name('students.occupancy');
+        Route::get('/students/occupancy', [AdminStudentDashboardController::class, 'occupancy'])->name('students.occupancy');
         Route::get('/students/occupancy/grade/{grade}/roster-print', [AdminStudentDashboardController::class, 'gradeRosterPrint'])->name('students.grade-roster-print');
         Route::get('/students/reports', [AdminStudentDashboardController::class, 'reports'])->name('students.reports');
         Route::get('/students/attendance', [AdminStudentDashboardController::class, 'attendance'])->name('students.attendance');
@@ -131,11 +154,11 @@ Route::name('admin.')->group(function () {
         Route::get('/students/reports/class-roster', [AdminStudentDashboardController::class, 'classRosterData'])->name('students.reports.class-roster');
         Route::post('/students/reports/sync', [AdminStudentDashboardController::class, 'syncNow'])->name('students.reports.sync');
         Route::get('/students/reports/print-all', [AdminStudentDashboardController::class, 'printAllRosters'])->name('students.print-all-rosters');
-        Route::get('/google-drive/auth', [\App\Http\Controllers\Admin\GoogleDriveAuthController::class, 'redirect'])->name('google-drive.auth');
-        Route::get('/google-drive/callback', [\App\Http\Controllers\Admin\GoogleDriveAuthController::class, 'callback'])->name('google-drive.callback');
-        Route::get('/auth/google-drive/callback', [\App\Http\Controllers\Admin\GoogleDriveAuthController::class, 'callback'])->name('google-drive.callback.auth');
+        Route::get('/google-drive/auth', [GoogleDriveAuthController::class, 'redirect'])->name('google-drive.auth');
+        Route::get('/google-drive/callback', [GoogleDriveAuthController::class, 'callback'])->name('google-drive.callback');
+        Route::get('/auth/google-drive/callback', [GoogleDriveAuthController::class, 'callback'])->name('google-drive.callback.auth');
         Route::post('/students/reports/sync-google-drive', [AdminStudentDashboardController::class, 'syncGoogleDrive'])->name('students.reports.sync-google-drive');
-        Route::redirect('/students/families', '/students')->name('students.families');
+        Route::get('/students/families', [AdminStudentFamilyController::class, 'families'])->name('students.families');
         Route::get('/students/export-canva', [AdminStudentController::class, 'exportCanva'])->name('students.export-canva');
         Route::get('/students/export-verification-db', [AdminStudentController::class, 'exportVerificationDatabase'])->name('students.export-verification-db');
         Route::get('/students/download-docs-zip', [AdminStudentController::class, 'downloadDocumentsZip'])->name('students.download-docs-zip');
@@ -165,22 +188,22 @@ Route::name('admin.')->group(function () {
         Route::post('/payments/email-reports', [AdminPaymentController::class, 'emailReports'])->name('payments.email-reports');
         Route::get('/finance', [AdminPaymentController::class, 'dashboard'])->name('finance.dashboard');
         Route::get('/finance/fees', [AdminPaymentController::class, 'fees'])->name('finance.fees');
-        Route::get('/finance/masters-list', [\App\Http\Controllers\AdminFinanceMasterController::class, 'index'])->name('finance.masters-list');
-        Route::patch('/finance/masters-list/{entry}', [\App\Http\Controllers\AdminFinanceMasterController::class, 'update'])->name('finance.masters-list.update');
+        Route::get('/finance/masters-list', [AdminFinanceMasterController::class, 'index'])->name('finance.masters-list');
+        Route::patch('/finance/masters-list/{entry}', [AdminFinanceMasterController::class, 'update'])->name('finance.masters-list.update');
         Route::get('/payments/receipt-file', [AdminPaymentController::class, 'viewReceiptFile'])->name('payments.receipt-file');
         Route::get('/payments/{payment}', [AdminPaymentController::class, 'show'])->name('payments.show');
         Route::patch('/payments/{payment}/verify', [AdminPaymentController::class, 'verify'])->name('payments.verify');
         Route::patch('/payments/{payment}/reject', [AdminPaymentController::class, 'reject'])->name('payments.reject');
 
-        Route::get('/finance/fees-manage', [\App\Http\Controllers\AdminFinanceController::class, 'feesIndex'])->name('finance.fees-manage');
-        Route::post('/finance/fees-manage', [\App\Http\Controllers\AdminFinanceController::class, 'feesStore'])->name('finance.fees-manage.store');
-        Route::delete('/finance/fees-manage/{fee}', [\App\Http\Controllers\AdminFinanceController::class, 'feesDestroy'])->name('finance.fees-manage.destroy');
-        Route::post('/finance/soa/{account}/adjust', [\App\Http\Controllers\AdminFinanceController::class, 'adjustFee'])->name('finance.soa.adjust');
-        Route::get('/finance/export-soa', [\App\Http\Controllers\AdminFinanceController::class, 'exportSoa'])->name('finance.export-soa');
-        Route::get('/finance/soa/{account}/export-family', [\App\Http\Controllers\AdminFinanceController::class, 'exportFamilyPayments'])->name('finance.export-family');
-        Route::get('/finance/receipt/{payment}', [\App\Http\Controllers\AdminFinanceController::class, 'printReceipt'])->name('finance.receipt');
-        Route::get('/finance/aging-report', [\App\Http\Controllers\AdminFinanceController::class, 'agingReport'])->name('finance.aging-report');
-        Route::post('/finance/soa/{account}/reminder', [\App\Http\Controllers\AdminFinanceController::class, 'sendReminder'])->name('finance.send-reminder');
+        Route::get('/finance/fees-manage', [AdminFinanceController::class, 'feesIndex'])->name('finance.fees-manage');
+        Route::post('/finance/fees-manage', [AdminFinanceController::class, 'feesStore'])->name('finance.fees-manage.store');
+        Route::delete('/finance/fees-manage/{fee}', [AdminFinanceController::class, 'feesDestroy'])->name('finance.fees-manage.destroy');
+        Route::post('/finance/soa/{account}/adjust', [AdminFinanceController::class, 'adjustFee'])->name('finance.soa.adjust');
+        Route::get('/finance/export-soa', [AdminFinanceController::class, 'exportSoa'])->name('finance.export-soa');
+        Route::get('/finance/soa/{account}/export-family', [AdminFinanceController::class, 'exportFamilyPayments'])->name('finance.export-family');
+        Route::get('/finance/receipt/{payment}', [AdminFinanceController::class, 'printReceipt'])->name('finance.receipt');
+        Route::get('/finance/aging-report', [AdminFinanceController::class, 'agingReport'])->name('finance.aging-report');
+        Route::post('/finance/soa/{account}/reminder', [AdminFinanceController::class, 'sendReminder'])->name('finance.send-reminder');
 
         Route::get('/ms-sync', [AdminMsSyncController::class, 'index'])->name('ms-sync.index');
         Route::get('/ms-sync/data', [AdminMsSyncController::class, 'data'])->name('ms-sync.data');
@@ -198,12 +221,12 @@ Route::name('admin.')->group(function () {
         Route::get('/admins', [AdminUserController::class, 'index'])->name('admins.index');
         Route::get('/admins/audit-logs', [AdminUserController::class, 'auditLogs'])->name('admins.audit-logs');
         Route::get('/admins/login-activity', [AdminUserController::class, 'loginActivity'])->name('admins.login-activity');
-        Route::get('/admins/backups', [\App\Http\Controllers\AdminBackupController::class, 'index'])->name('admins.backups');
-        Route::post('/admins/backups', [\App\Http\Controllers\AdminBackupController::class, 'create'])->name('admins.backups.create');
-        Route::post('/admins/backups/full', [\App\Http\Controllers\AdminBackupController::class, 'runFullBackup'])->name('admins.backups.full');
-        Route::get('/admins/backups/{filename}/download', [\App\Http\Controllers\AdminBackupController::class, 'download'])->name('admins.backups.download');
-        Route::delete('/admins/backups/{filename}', [\App\Http\Controllers\AdminBackupController::class, 'destroy'])->name('admins.backups.destroy');
-        Route::post('/admins/backups/{filename}/google-drive', [\App\Http\Controllers\AdminBackupController::class, 'uploadToDrive'])->name('admins.backups.google-drive');
+        Route::get('/admins/backups', [AdminBackupController::class, 'index'])->name('admins.backups');
+        Route::post('/admins/backups', [AdminBackupController::class, 'create'])->name('admins.backups.create');
+        Route::post('/admins/backups/full', [AdminBackupController::class, 'runFullBackup'])->name('admins.backups.full');
+        Route::get('/admins/backups/{filename}/download', [AdminBackupController::class, 'download'])->name('admins.backups.download');
+        Route::delete('/admins/backups/{filename}', [AdminBackupController::class, 'destroy'])->name('admins.backups.destroy');
+        Route::post('/admins/backups/{filename}/google-drive', [AdminBackupController::class, 'uploadToDrive'])->name('admins.backups.google-drive');
         Route::post('/admins', [AdminUserController::class, 'store'])->name('admins.store');
         Route::get('/admins/{user}/edit', [AdminUserController::class, 'edit'])->name('admins.edit');
         Route::patch('/admins/{user}', [AdminUserController::class, 'update'])->name('admins.update');
@@ -219,6 +242,14 @@ Route::name('admin.')->group(function () {
         Route::patch('/administration/users/{user}/status', [AdministrationController::class, 'usersStatus'])->name('administration.users.status');
         Route::get('/administration/users/{user}/security', [AdministrationController::class, 'usersSecurity'])->name('administration.users.security');
         Route::patch('/administration/users/{user}/security', [AdministrationController::class, 'usersSecurityUpdate'])->name('administration.users.security.update');
+
+        // Website Announcements Workspace
+        Route::get('/website/announcements', [AdminAnnouncementController::class, 'index'])->name('website.announcements.index');
+        Route::get('/website/announcements/create', [AdminAnnouncementController::class, 'create'])->name('website.announcements.create');
+        Route::post('/website/announcements', [AdminAnnouncementController::class, 'store'])->name('website.announcements.store');
+        Route::get('/website/announcements/{id}/edit', [AdminAnnouncementController::class, 'edit'])->name('website.announcements.edit');
+        Route::put('/website/announcements/{id}', [AdminAnnouncementController::class, 'update'])->name('website.announcements.update');
+        Route::delete('/website/announcements/{id}', [AdminAnnouncementController::class, 'destroy'])->name('website.announcements.destroy');
 
         // Access Control Workspace
         Route::get('/access-control/roles', [AccessControlController::class, 'rolesIndex'])->name('access-control.roles.index');
@@ -255,8 +286,8 @@ Route::name('admin.')->group(function () {
         Route::get('/settings/discounts', [AdminDiscountSettingsController::class, 'edit'])->name('settings.discounts');
         Route::patch('/settings/discounts', [AdminDiscountSettingsController::class, 'update'])->name('settings.discounts.update');
 
-        Route::get('/settings/enrollment', [\App\Http\Controllers\Admin\AdminEnrollmentSettingsController::class, 'edit'])->name('settings.enrollment');
-        Route::patch('/settings/enrollment', [\App\Http\Controllers\Admin\AdminEnrollmentSettingsController::class, 'update'])->name('settings.enrollment.update');
+        Route::get('/settings/enrollment', [AdminEnrollmentSettingsController::class, 'edit'])->name('settings.enrollment');
+        Route::patch('/settings/enrollment', [AdminEnrollmentSettingsController::class, 'update'])->name('settings.enrollment.update');
 
         Route::prefix('academic')->name('academic.')->group(function () {
             Route::get('/', [AdminAcademicController::class, 'dashboard'])->name('dashboard');
@@ -267,7 +298,7 @@ Route::name('admin.')->group(function () {
             Route::patch('/subjects/{subject}/archive', [AdminAcademicSubjectController::class, 'archive'])->name('subjects.archive');
             Route::patch('/subjects/{subject}/restore', [AdminAcademicSubjectController::class, 'restore'])->name('subjects.restore');
             Route::get('/curriculum', [AdminAcademicController::class, 'curriculum'])->name('curriculum');
-            Route::get('/grade-levels', [\App\Http\Controllers\Academic\GradeLevelController::class, 'index'])->name('grade-levels');
+            Route::get('/grade-levels', [GradeLevelController::class, 'index'])->name('grade-levels');
             Route::get('/class-advisory', [AdminAcademicController::class, 'classAdvisory'])->name('class-advisory');
             Route::post('/class-advisory', [AdminAcademicController::class, 'assignClassAdvisory'])->name('class-advisory.store');
             Route::get('/teachers', [AdminAcademicTeacherController::class, 'index'])->name('teachers');
@@ -285,30 +316,31 @@ Route::name('admin.')->group(function () {
             Route::patch('/schedules/sections/{section}/publish', [AdminClassScheduleController::class, 'togglePublish'])->name('schedules.sections.publish');
             Route::get('/schedules/sections/{section}/json', [AdminClassScheduleController::class, 'exportJson'])->name('schedules.sections.json.get');
             Route::post('/schedules/sections/{section}/json', [AdminClassScheduleController::class, 'importJson'])->name('schedules.sections.json');
-            Route::get('/school-years', [\App\Http\Controllers\Academic\SchoolYearController::class, 'index'])->name('school-years');
+            Route::get('/school-years', [SchoolYearController::class, 'index'])->name('school-years');
             Route::get('/calendar', [AdminAcademicController::class, 'calendar'])->name('calendar');
             Route::get('/operations', [AdminAcademicController::class, 'operations'])->name('operations');
 
             // School Years CRUD (Decoupled Refactored Architecture)
-            Route::get('/school-years-list', [\App\Http\Controllers\Academic\SchoolYearController::class, 'index'])->name('school-years.index');
-            Route::get('/school-years-list/create', [\App\Http\Controllers\Academic\SchoolYearController::class, 'create'])->name('school-years.create');
-            Route::post('/school-years-list', [\App\Http\Controllers\Academic\SchoolYearController::class, 'store'])->name('school-years.store');
-            Route::get('/school-years-list/{school_year}/edit', [\App\Http\Controllers\Academic\SchoolYearController::class, 'edit'])->name('school-years.edit');
-            Route::post('/school-years-list/{school_year}', [\App\Http\Controllers\Academic\SchoolYearController::class, 'update'])->name('school-years.update');
-            Route::post('/school-years-list/{school_year}/toggle-active', [\App\Http\Controllers\Academic\SchoolYearController::class, 'toggleActive'])->name('school-years.toggle-active');
-            Route::post('/school-years-list/{school_year}/toggle-status', [\App\Http\Controllers\Academic\SchoolYearController::class, 'toggleStatus'])->name('school-years.toggle-status');
+            Route::get('/school-years-list', [SchoolYearController::class, 'index'])->name('school-years.index');
+            Route::get('/school-years-list/create', [SchoolYearController::class, 'create'])->name('school-years.create');
+            Route::post('/school-years-list', [SchoolYearController::class, 'store'])->name('school-years.store');
+            Route::get('/school-years-list/{school_year}/edit', [SchoolYearController::class, 'edit'])->name('school-years.edit');
+            Route::post('/school-years-list/{school_year}', [SchoolYearController::class, 'update'])->name('school-years.update');
+            Route::post('/school-years-list/{school_year}/toggle-active', [SchoolYearController::class, 'toggleActive'])->name('school-years.toggle-active');
+            Route::post('/school-years-list/{school_year}/toggle-status', [SchoolYearController::class, 'toggleStatus'])->name('school-years.toggle-status');
 
             // Grade Levels CRUD (Decoupled Refactored Architecture)
-            Route::get('/grade-levels-list', [\App\Http\Controllers\Academic\GradeLevelController::class, 'index'])->name('grade-levels.index');
-            Route::get('/grade-levels-list/create', [\App\Http\Controllers\Academic\GradeLevelController::class, 'create'])->name('grade-levels.create');
-            Route::post('/grade-levels-list', [\App\Http\Controllers\Academic\GradeLevelController::class, 'store'])->name('grade-levels.store');
-            Route::get('/grade-levels-list/{grade_level}/edit', [\App\Http\Controllers\Academic\GradeLevelController::class, 'edit'])->name('grade-levels.edit');
-            Route::post('/grade-levels-list/{grade_level}', [\App\Http\Controllers\Academic\GradeLevelController::class, 'update'])->name('grade-levels.update');
-            Route::post('/grade-levels-list/{grade_level}/toggle-active', [\App\Http\Controllers\Academic\GradeLevelController::class, 'toggleActive'])->name('grade-levels.toggle-active');
+            Route::get('/grade-levels-list', [GradeLevelController::class, 'index'])->name('grade-levels.index');
+            Route::get('/grade-levels-list/create', [GradeLevelController::class, 'create'])->name('grade-levels.create');
+            Route::post('/grade-levels-list', [GradeLevelController::class, 'store'])->name('grade-levels.store');
+            Route::get('/grade-levels-list/{grade_level}/edit', [GradeLevelController::class, 'edit'])->name('grade-levels.edit');
+            Route::post('/grade-levels-list/{grade_level}', [GradeLevelController::class, 'update'])->name('grade-levels.update');
+            Route::post('/grade-levels-list/{grade_level}/toggle-active', [GradeLevelController::class, 'toggleActive'])->name('grade-levels.toggle-active');
         });
 
         Route::prefix('ms-teams')->name('ms-teams.')->group(function () {
             Route::get('/', [AdminMsTeamsController::class, 'index'])->name('index');
+            Route::get('/roster', [AdminMsTeamsController::class, 'roster'])->name('roster');
             Route::get('/structure', [AdminMsTeamsController::class, 'structure'])->name('structure');
             Route::get('/structure/data', [AdminMsTeamsController::class, 'structureData'])->name('structure.data');
             Route::post('/', [AdminMsTeamsController::class, 'store'])->name('store');
@@ -332,6 +364,38 @@ Route::name('admin.')->group(function () {
             Route::post('/{section}/retry-team', [AdminMsTeamsController::class, 'retryTeam'])->name('retry-team');
             Route::post('/{section}/sync-advisor', [AdminMsTeamsController::class, 'syncAdvisor'])->name('sync-advisor');
         });
+
+        Route::prefix('microsoft-integration')
+            ->name('microsoft-roster.')
+            ->middleware('can:manage-microsoft-rosters')
+            ->group(function () {
+                Route::get('/accounts', [AdminMicrosoftTeamsRosterController::class, 'accounts'])->name('accounts');
+                Route::get('/teams', [AdminMicrosoftTeamsRosterController::class, 'index'])->name('index');
+                Route::post('/teams/sync', [AdminMicrosoftTeamsRosterController::class, 'syncAll'])->name('sync');
+                Route::get('/teams/status', [AdminMicrosoftTeamsRosterController::class, 'status'])->name('status');
+                Route::get('/teams/export/{format}', [AdminMicrosoftTeamsRosterController::class, 'exportTeams'])->name('export');
+                Route::get('/teams/{team}/roster/export/{format}', [AdminMicrosoftTeamsRosterController::class, 'exportRoster'])->name('roster.export');
+                Route::get('/teams/{team}/raw/download', [AdminMicrosoftTeamsRosterController::class, 'rawDownload'])->name('raw.download');
+                Route::get('/teams/{team}/raw', [AdminMicrosoftTeamsRosterController::class, 'raw'])->name('raw');
+                Route::post('/teams/{team}/sync', [AdminMicrosoftTeamsRosterController::class, 'syncTeam'])->name('team.sync');
+                Route::get('/teams/{team}', [AdminMicrosoftTeamsRosterController::class, 'show'])->name('show');
+
+                Route::get('/mappings', [AdminMicrosoftTeamsRosterController::class, 'mappings'])->name('mappings');
+                Route::get('/mappings/{team}/edit', [AdminMicrosoftTeamsRosterController::class, 'editMapping'])->name('mappings.edit');
+                Route::put('/mappings/{team}', [AdminMicrosoftTeamsRosterController::class, 'updateMapping'])->name('mappings.update');
+                Route::post('/mappings/{team}/ignore', [AdminMicrosoftTeamsRosterController::class, 'ignoreMapping'])->name('mappings.ignore');
+                Route::delete('/mappings/{team}', [AdminMicrosoftTeamsRosterController::class, 'destroyMapping'])->name('mappings.destroy');
+
+                Route::get('/unmatched', [AdminMicrosoftTeamsRosterController::class, 'unmatched'])->name('unmatched');
+                Route::get('/unmatched/export/{format}', [AdminMicrosoftTeamsRosterController::class, 'exportUnmatched'])->name('unmatched.export');
+                Route::get('/memberships/{membership}/review', [AdminMicrosoftTeamsRosterController::class, 'reviewMatch'])->name('matches.review');
+                Route::post('/memberships/{membership}/match', [AdminMicrosoftTeamsRosterController::class, 'storeManualMatch'])->name('matches.store');
+                Route::delete('/memberships/{membership}/match', [AdminMicrosoftTeamsRosterController::class, 'removeManualMatch'])->name('matches.destroy');
+                Route::post('/memberships/{membership}/ignore', [AdminMicrosoftTeamsRosterController::class, 'ignoreAccount'])->name('matches.ignore');
+
+                Route::get('/history', [AdminMicrosoftTeamsRosterController::class, 'history'])->name('history');
+                Route::get('/history/{run}', [AdminMicrosoftTeamsRosterController::class, 'historyShow'])->name('history.show');
+            });
         Route::prefix('support')->name('support.')->group(function () {
             Route::get('/', [AdminSupportTicketController::class, 'index'])->name('index');
             Route::get('/settings', [AdminSupportTicketController::class, 'settings'])->name('settings');
@@ -341,9 +405,10 @@ Route::name('admin.')->group(function () {
             Route::patch('/{ticket}/status', [AdminSupportTicketController::class, 'updateStatus'])->name('status');
         });
         Route::prefix('registrations')->name('registrations.')->group(function () {
-            Route::get('/halaqah', [\App\Http\Controllers\Admin\RegistrationController::class, 'halaqah'])->name('halaqah');
-            Route::patch('/halaqah/{id}/toggle', [\App\Http\Controllers\Admin\RegistrationController::class, 'toggleStatus'])->name('halaqah.toggle');
-            Route::delete('/halaqah/{id}', [\App\Http\Controllers\Admin\RegistrationController::class, 'destroy'])->name('halaqah.destroy');
+            Route::redirect('/halaqah/approved', '/admin/registrations/halaqah?tab=students')->name('halaqah.approved');
+            Route::get('/halaqah', [RegistrationController::class, 'halaqah'])->name('halaqah');
+            Route::patch('/halaqah/{id}/toggle', [RegistrationController::class, 'toggleStatus'])->name('halaqah.toggle');
+            Route::delete('/halaqah/{id}', [RegistrationController::class, 'destroy'])->name('halaqah.destroy');
         });
     });
 });

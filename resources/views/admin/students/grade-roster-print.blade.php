@@ -127,7 +127,12 @@
                                 <span style="color: #ef4444; font-weight: 900;">MISSING LRN</span>
                             @endif
                         </td>
-                        <td class="student-name">{{ $name }}</td>
+                        <td class="student-name">
+                            {{ $name }}
+                            <div style="font-size: 9px; color: #64748b; font-weight: normal; margin-top: 2px;">
+                                Student No: {{ $student->student_number }}
+                            </div>
+                        </td>
                     </tr>
                 @empty
                     <tr>

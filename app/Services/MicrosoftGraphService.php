@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\MsTeamChannel;
+use App\Services\Microsoft\MicrosoftGraphAuthService;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -15,56 +16,38 @@ class MicrosoftGraphService
 
     private string $clientSecret;
 
-    private ?string $accessToken = null;
-
     private ?string $delegatedToken = null;
 
-    public function __construct()
+    private MicrosoftGraphAuthService $authService;
+
+    public function __construct(?MicrosoftGraphAuthService $authService = null)
     {
-        $this->tenantId = config('services.microsoft.tenant_id');
-        $this->clientId = config('services.microsoft.client_id');
-        $this->clientSecret = config('services.microsoft.client_secret');
+        $this->tenantId = (string) config('services.microsoft.tenant_id');
+        $this->clientId = (string) config('services.microsoft.client_id');
+        $this->clientSecret = (string) config('services.microsoft.client_secret');
+        $this->authService = $authService ?? app(MicrosoftGraphAuthService::class);
     }
 
     // ── Auth ──────────────────────────────────────────────────────────
 
     private function getAccessToken(): string
     {
-        if ($this->accessToken) {
-            return $this->accessToken;
-        }
-
-        $response = Http::asForm()->post(
-            "https://login.microsoftonline.com/{$this->tenantId}/oauth2/v2.0/token",
-            [
-                'grant_type' => 'client_credentials',
-                'client_id' => $this->clientId,
-                'client_secret' => $this->clientSecret,
-                'scope' => 'https://graph.microsoft.com/.default',
-            ]
-        );
-
-        if (! $response->successful()) {
-            Log::error('Microsoft Graph token error', $response->json());
-            throw new \Exception('Failed to get Microsoft access token: '.$response->body());
-        }
-
-        $this->accessToken = $response->json('access_token');
-
-        return $this->accessToken;
+        return $this->authService->accessToken();
     }
 
     private function graph(): PendingRequest
     {
         return Http::withToken($this->getAccessToken())
-            ->baseUrl('https://graph.microsoft.com/v1.0')
+            ->baseUrl(rtrim((string) config('services.microsoft.graph_base_url'), '/'))
+            ->connectTimeout(10)
             ->timeout(60);
     }
 
     private function graphBeta(): PendingRequest
     {
         return Http::withToken($this->getAccessToken())
-            ->baseUrl('https://graph.microsoft.com/beta')
+            ->baseUrl(preg_replace('#/v1\.0$#', '/beta', rtrim((string) config('services.microsoft.graph_base_url'), '/')))
+            ->connectTimeout(10)
             ->timeout(60);
     }
 
@@ -99,8 +82,8 @@ class MicrosoftGraphService
         );
 
         if (! $response->successful()) {
-            Log::error('Microsoft Graph ROPC token error', $response->json());
-            throw new \Exception('Failed to get delegated access token: '.$response->body());
+            Log::error('Microsoft Graph ROPC token request failed', ['status' => $response->status()]);
+            throw new \Exception('Failed to get delegated Microsoft access token.');
         }
 
         $this->delegatedToken = $response->json('access_token');
@@ -145,15 +128,15 @@ class MicrosoftGraphService
         }
 
         $response = $this->graph()->post('/users', [
-            'accountEnabled'    => true,
-            'displayName'       => $displayName,
-            'mailNickname'      => $mailNickname,
+            'accountEnabled' => true,
+            'displayName' => $displayName,
+            'mailNickname' => $mailNickname,
             'userPrincipalName' => $upn,
-            'userType'          => 'Member',
-            'usageLocation'     => 'PH',   // Required for M365 license assignment
-            'passwordPolicies'  => 'DisablePasswordExpiration,DisableStrongPassword', // Allow simple passwords
-            'passwordProfile'   => [
-                'password'                      => $tempPassword,
+            'userType' => 'Member',
+            'usageLocation' => 'PH',   // Required for M365 license assignment
+            'passwordPolicies' => 'DisablePasswordExpiration,DisableStrongPassword', // Allow simple passwords
+            'passwordProfile' => [
+                'password' => $tempPassword,
                 'forceChangePasswordNextSignIn' => false, // No reset prompt on first login
             ],
         ]);
@@ -237,23 +220,23 @@ class MicrosoftGraphService
      * Fetch a user object from Microsoft Graph by UPN or object ID.
      *
      * @param  string  $upnOrId  The user principal name or Azure AD object ID.
-     * @param  array   $select   Optional list of properties to select (e.g. ['id', 'displayName']).
-     * @return array   The user object from MS Graph.
+     * @param  array  $select  Optional list of properties to select (e.g. ['id', 'displayName']).
+     * @return array The user object from MS Graph.
      *
      * @throws \Exception if the request fails.
      */
     public function getUser(string $upnOrId, array $select = []): array
     {
-        $url = '/users/' . urlencode($upnOrId);
+        $url = '/users/'.urlencode($upnOrId);
 
         if (! empty($select)) {
-            $url .= '?$select=' . implode(',', $select);
+            $url .= '?$select='.implode(',', $select);
         }
 
         $response = $this->graph()->get($url);
 
         if (! $response->successful()) {
-            throw new \Exception("Failed to fetch Microsoft user {$upnOrId}: " . $response->body());
+            throw new \Exception("Failed to fetch Microsoft user {$upnOrId}: ".$response->body());
         }
 
         return $response->json();
@@ -405,6 +388,7 @@ class MicrosoftGraphService
         try {
             $resolvedId = $this->resolveUserId($upnOrId);
             $response = $this->graph()->get("/users/{$resolvedId}/photo");
+
             return $response->successful();
         } catch (\Throwable $e) {
             return false;
@@ -415,24 +399,25 @@ class MicrosoftGraphService
     {
         try {
             $resolvedId = $this->resolveUserId($upnOrId);
-            
+
             $metaResponse = $this->graph()->get("/users/{$resolvedId}/photo");
-            if (!$metaResponse->successful()) {
+            if (! $metaResponse->successful()) {
                 return null;
             }
             $contentType = $metaResponse->json('@odata.mediaContentType') ?? 'image/jpeg';
-            
+
             $photoResponse = $this->graph()->get("/users/{$resolvedId}/photo/\$value");
-            if (!$photoResponse->successful()) {
+            if (! $photoResponse->successful()) {
                 return null;
             }
-            
+
             return [
                 'bytes' => $photoResponse->body(),
-                'content_type' => $contentType
+                'content_type' => $contentType,
             ];
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error("getUserPhoto failed for {$upnOrId}: " . $e->getMessage());
+            Log::error("getUserPhoto failed for {$upnOrId}: ".$e->getMessage());
+
             return null;
         }
     }
@@ -550,7 +535,6 @@ class MicrosoftGraphService
             throw new \Exception('Failed to update Azure user: '.$delegatedResponse->body());
         }
     }
-
 
     // ── Teams Management ──────────────────────────────────────────────
 
@@ -1074,15 +1058,17 @@ class MicrosoftGraphService
             if ($res->successful() || $res->status() === 204) {
                 Log::info("MFA disabled for user {$msUserId}");
             } else {
-                Log::warning("MFA disable returned {$res->status()} for {$msUserId}: " . $res->body());
+                Log::warning("MFA disable returned {$res->status()} for {$msUserId}: ".$res->body());
             }
 
             // 2. Remove any registered Microsoft Authenticator methods
             $methods = $this->graph()->get("/users/{$msUserId}/authentication/methods")->json()['value'] ?? [];
             foreach ($methods as $method) {
                 $type = $method['@odata.type'] ?? '';
-                $mid  = $method['id'] ?? '';
-                if (!$mid) continue;
+                $mid = $method['id'] ?? '';
+                if (! $mid) {
+                    continue;
+                }
 
                 if (str_contains($type, 'microsoftAuthenticator')) {
                     $this->graph()->delete("/users/{$msUserId}/authentication/microsoftAuthenticatorMethods/{$mid}");
@@ -1094,7 +1080,7 @@ class MicrosoftGraphService
                 }
             }
         } catch (\Throwable $e) {
-            Log::warning("disablePerUserMfa failed for {$msUserId}: " . $e->getMessage());
+            Log::warning("disablePerUserMfa failed for {$msUserId}: ".$e->getMessage());
         }
     }
 
@@ -1146,7 +1132,7 @@ class MicrosoftGraphService
     /**
      * Execute a JSON batch request to Microsoft Graph.
      *
-     * @param array $requests An array of request arrays as defined by Microsoft Graph batch API.
+     * @param  array  $requests  An array of request arrays as defined by Microsoft Graph batch API.
      * @return array The responses array from Microsoft Graph.
      */
     public function executeBatch(array $requests): array
@@ -1159,12 +1145,12 @@ class MicrosoftGraphService
             'requests' => $requests,
         ]);
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             Log::error('Graph batch request failed', [
                 'status' => $response->status(),
-                'body' => $response->body()
+                'body' => $response->body(),
             ]);
-            throw new \Exception('Failed to execute Microsoft Graph batch request: ' . $response->body());
+            throw new \Exception('Failed to execute Microsoft Graph batch request: '.$response->body());
         }
 
         return $response->json('responses') ?? [];
@@ -1177,9 +1163,9 @@ class MicrosoftGraphService
     {
         $response = $this->graph()->get("/teams/{$teamId}/channels/{$channelId}/members");
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             Log::error('Graph listChannelMembers error', $response->json());
-            throw new \Exception('Failed to list channel members: ' . $response->body());
+            throw new \Exception('Failed to list channel members: '.$response->body());
         }
 
         return $response->json('value', []);
@@ -1192,9 +1178,9 @@ class MicrosoftGraphService
     {
         $response = $this->graph()->delete("/teams/{$teamId}/channels/{$channelId}/members/{$membershipId}");
 
-        if (!$response->successful() && $response->status() !== 404) {
+        if (! $response->successful() && $response->status() !== 404) {
             Log::error('Graph removeChannelMember error', $response->json());
-            throw new \Exception('Failed to remove channel member: ' . $response->body());
+            throw new \Exception('Failed to remove channel member: '.$response->body());
         }
     }
 
@@ -1205,9 +1191,9 @@ class MicrosoftGraphService
     {
         $response = $this->graph()->delete("/teams/{$teamId}/channels/{$channelId}");
 
-        if (!$response->successful() && $response->status() !== 404) {
+        if (! $response->successful() && $response->status() !== 404) {
             Log::error('Graph deleteChannel error', $response->json());
-            throw new \Exception('Failed to delete channel: ' . $response->body());
+            throw new \Exception('Failed to delete channel: '.$response->body());
         }
     }
 
@@ -1240,11 +1226,12 @@ class MicrosoftGraphService
             'Accept' => 'text/csv',
         ])->get("/reports/getTeamsUserActivityUserDetail(period='{$period}')");
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             Log::warning('Graph getTeamsUserActivityReport failed', [
                 'status' => $response->status(),
-                'body'   => substr($response->body(), 0, 300),
+                'body' => substr($response->body(), 0, 300),
             ]);
+
             return [];
         }
 
@@ -1277,62 +1264,69 @@ class MicrosoftGraphService
         // "User Principal Name", "Last Activity Date",
         // "Meetings Attended Count", "Private Chat Message Count",
         // "Post Messages", "Call Count"
-        $idxUpn          = $col['user_principal_name']       ?? null;
-        $idxUserId       = $col['user_id']                   ?? null;  // Azure AD Object ID (always real)
-        $idxLastActivity = $col['last_activity_date']        ?? null;
-        $idxMeetings     = $col['meetings_attended_count']   ?? null;
-        $idxChat         = $col['private_chat_message_count']?? null;
-        $idxPost         = $col['post_messages']             ?? null;
-        $idxCall         = $col['call_count']                ?? null;
+        $idxUpn = $col['user_principal_name'] ?? null;
+        $idxUserId = $col['user_id'] ?? null;  // Azure AD Object ID (always real)
+        $idxLastActivity = $col['last_activity_date'] ?? null;
+        $idxMeetings = $col['meetings_attended_count'] ?? null;
+        $idxChat = $col['private_chat_message_count'] ?? null;
+        $idxPost = $col['post_messages'] ?? null;
+        $idxCall = $col['call_count'] ?? null;
 
         if ($idxUpn === null && $idxUserId === null) {
-            Log::warning('getTeamsUserActivityReport: Could not find UPN or UserId column. Headers: ' . implode(', ', $headers));
+            Log::warning('getTeamsUserActivityReport: Could not find UPN or UserId column. Headers: '.implode(', ', $headers));
+
             return [];
         }
 
         $activity = [];
         foreach ($lines as $line) {
             $line = trim($line);
-            if (empty($line)) continue;
+            if (empty($line)) {
+                continue;
+            }
 
             $row = str_getcsv($line, ',', '"', '');
 
-            $upn    = $idxUpn    !== null ? strtolower(trim($row[$idxUpn]    ?? '')) : '';
+            $upn = $idxUpn !== null ? strtolower(trim($row[$idxUpn] ?? '')) : '';
             $userId = $idxUserId !== null ? strtolower(trim($row[$idxUserId] ?? '')) : '';
 
             // Skip if neither UPN nor userId is present
-            if (empty($upn) && empty($userId)) continue;
+            if (empty($upn) && empty($userId)) {
+                continue;
+            }
 
             // Filter by domain when UPN is not anonymized
-            $isAmisDomain = !empty($upn) && str_ends_with($upn, '@amis.edu.ph');
+            $isAmisDomain = ! empty($upn) && str_ends_with($upn, '@amis.edu.ph');
             // When anonymized, UPN looks like a hex hash — accept all and let sync filter by userId
-            $isAnonymized = !empty($upn) && !str_contains($upn, '@');
+            $isAnonymized = ! empty($upn) && ! str_contains($upn, '@');
 
-            if (!$isAmisDomain && !$isAnonymized && !empty($upn)) continue;
+            if (! $isAmisDomain && ! $isAnonymized && ! empty($upn)) {
+                continue;
+            }
 
-            $lastActivity     = $idxLastActivity !== null ? trim($row[$idxLastActivity] ?? '') : '';
-            $meetingsAttended = $idxMeetings     !== null ? (int) ($row[$idxMeetings]   ?? 0)  : 0;
-            $chatMessages     = $idxChat         !== null ? (int) ($row[$idxChat]       ?? 0)  : 0;
-            $postMessages     = $idxPost         !== null ? (int) ($row[$idxPost]       ?? 0)  : 0;
-            $callCount        = $idxCall         !== null ? (int) ($row[$idxCall]       ?? 0)  : 0;
+            $lastActivity = $idxLastActivity !== null ? trim($row[$idxLastActivity] ?? '') : '';
+            $meetingsAttended = $idxMeetings !== null ? (int) ($row[$idxMeetings] ?? 0) : 0;
+            $chatMessages = $idxChat !== null ? (int) ($row[$idxChat] ?? 0) : 0;
+            $postMessages = $idxPost !== null ? (int) ($row[$idxPost] ?? 0) : 0;
+            $callCount = $idxCall !== null ? (int) ($row[$idxCall] ?? 0) : 0;
 
             $entry = [
-                'last_activity_date' => !empty($lastActivity) ? $lastActivity : null,
-                'meetings_attended'  => $meetingsAttended,
-                'chat_messages'      => $chatMessages,
-                'post_messages'      => $postMessages,
-                'call_count'         => $callCount,
-                'has_used_teams_app' => !empty($lastActivity),
-                'user_id'            => $userId,
+                'last_activity_date' => ! empty($lastActivity) ? $lastActivity : null,
+                'meetings_attended' => $meetingsAttended,
+                'chat_messages' => $chatMessages,
+                'post_messages' => $postMessages,
+                'call_count' => $callCount,
+                'has_used_teams_app' => ! empty($lastActivity),
+                'user_id' => $userId,
             ];
 
             // Index by UPN if available and real
             if ($isAmisDomain) {
-                $activity['upn:' . $upn] = $entry;
+                $activity['upn:'.$upn] = $entry;
             }
             // Always index by userId (Azure AD Object ID) — this works even when UPN is anonymized
-            if (!empty($userId) && strlen($userId) > 10) {
-                $activity['id:' . $userId] = $entry;
+            if (! empty($userId) && strlen($userId) > 10) {
+                $activity['id:'.$userId] = $entry;
             }
         }
 
@@ -1356,6 +1350,7 @@ class MicrosoftGraphService
 
         if ($response->successful()) {
             Log::info("revokeUserSessions: Sessions revoked for {$upnOrId}");
+
             return true;
         }
 
@@ -1363,13 +1358,15 @@ class MicrosoftGraphService
         $delegated = $this->graphDelegated()->post("/users/{$resolvedId}/revokeSignInSessions");
         if ($delegated->successful()) {
             Log::info("revokeUserSessions (delegated): Sessions revoked for {$upnOrId}");
+
             return true;
         }
 
         Log::warning("revokeUserSessions failed for {$upnOrId}", [
             'status' => $response->status(),
-            'body'   => $response->body(),
+            'body' => $response->body(),
         ]);
+
         return false;
     }
 }
