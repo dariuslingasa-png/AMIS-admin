@@ -1113,12 +1113,7 @@
                                 <img src="{{ $qrCodeBase64 ?: $qrCodeUrl }}" crossorigin="anonymous" alt="QR Verification" class="w-full h-full object-contain">
                             </div>
                         </div>
-                        <button type="button" 
-                                onclick="downloadIdCardPng('front')" 
-                                class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition active:scale-95 cursor-pointer mt-1">
-                            <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                            <span>Download Front PNG</span>
-                        </button>
+                        <span class="text-[10px] text-slate-400 font-semibold mt-1">Front ID Card (300 DPI)</span>
                     </div>
 
                     <!-- Back Side Card -->
@@ -1189,50 +1184,106 @@
                                 </div>
                             @endif
                         </div>
-                        <div class="flex items-center gap-2 mt-1">
-                            <button type="button" 
-                                    onclick="downloadIdCardPng('back', false)" 
-                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition active:scale-95 cursor-pointer">
-                                <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                                <span>Back PNG (Color)</span>
-                            </button>
-                            <button type="button" 
-                                    onclick="downloadIdCardPng('back', true)" 
-                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-black text-white text-xs font-bold shadow-xs transition active:scale-95 cursor-pointer">
-                                <i data-lucide="file-badge-2" class="w-3.5 h-3.5 text-emerald-400"></i>
-                                <span>Back PNG (Black Only 🖤)</span>
-                            </button>
-                        </div>
+                        <span class="text-[10px] text-slate-400 font-semibold mt-1">Back Emergency Info Sheet</span>
                     </div>
 
                     <input type="hidden" id="id-card-filename-slug" value="{{ implode('-', array_filter([$lastName, $firstName, str_replace(' ', '', $displayGrade)])) }}">
                 </div>
 
                 <!-- Footer -->
-                <div class="flex items-center justify-between px-6 py-4 border-t border-slate-200 dark:border-slate-855 bg-white dark:bg-slate-900">
+                <div class="flex flex-col sm:flex-row items-center justify-between px-6 py-4 border-t border-slate-200 dark:border-slate-855 bg-white dark:bg-slate-900 gap-3">
                     <p class="text-xs text-slate-400 font-medium hidden sm:block">Smart ID Printer PNG images (300 DPI high-res).</p>
-                    <div class="flex items-center gap-2.5 flex-wrap">
-                        <button type="button" onclick="downloadIdCardPng('front', false)" class="rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 px-3.5 py-2 text-xs font-bold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 transition active:scale-[0.98] cursor-pointer flex items-center gap-1.5">
-                            <i data-lucide="download" class="w-4 h-4"></i>
-                            <span>Front PNG</span>
-                        </button>
-                        <button type="button" onclick="downloadIdCardPng('back', false)" class="rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 px-3 py-2 text-xs font-bold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 transition active:scale-[0.98] cursor-pointer flex items-center gap-1.5">
-                            <i data-lucide="download" class="w-4 h-4"></i>
-                            <span>Back PNG (Color)</span>
-                        </button>
-                        <button type="button" onclick="downloadIdCardPng('back', true)" class="rounded-xl border border-slate-800 bg-slate-900 hover:bg-black px-3.5 py-2 text-xs font-bold text-white transition active:scale-[0.98] cursor-pointer flex items-center gap-1.5 shadow-sm">
-                            <i data-lucide="file-badge-2" class="w-4 h-4 text-emerald-400"></i>
-                            <span>Back PNG (Black Only 🖤)</span>
-                        </button>
+                    <div class="flex items-center gap-2 flex-wrap w-full sm:w-auto justify-end">
+                        <!-- 1. Print Options Dropdown -->
+                        <div class="relative inline-block text-left" x-data="{ open: false }" @click.outside="open = false">
+                            <button type="button" @click="open = !open" 
+                                    class="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 text-xs font-bold shadow-md transition active:scale-[0.98] cursor-pointer flex items-center gap-1.5">
+                                <i data-lucide="printer" class="w-4 h-4"></i>
+                                <span>Print Card</span>
+                                <i data-lucide="chevron-down" class="w-3.5 h-3.5 opacity-80"></i>
+                            </button>
+                            <div x-cloak x-show="open" x-transition.origin.top.right.duration.150ms 
+                                 class="absolute right-0 bottom-full mb-2 w-56 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-1.5 shadow-xl z-50">
+                                <a href="{{ route('admin.students.index', ['search' => $student->student_number, 'print_id' => 1]) }}" target="_blank" 
+                                   class="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-700 transition">
+                                    <i data-lucide="printer" class="w-4 h-4 text-emerald-600"></i>
+                                    <span>Print Color ID Sheet</span>
+                                </a>
+                                <a href="{{ route('admin.students.index', ['search' => $student->student_number, 'print_id' => 1, 'bw' => 1]) }}" target="_blank" 
+                                   class="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                                    <i data-lucide="file-badge-2" class="w-4 h-4 text-slate-900 dark:text-slate-100"></i>
+                                    <span>Print Black Only (K-K)</span>
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- 2. PNG Download Dropdown -->
+                        <div class="relative inline-block text-left" x-data="{ open: false }" @click.outside="open = false">
+                            <button type="button" @click="open = !open" 
+                                    class="rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 px-3.5 py-2 text-xs font-bold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 transition active:scale-[0.98] cursor-pointer flex items-center gap-1.5">
+                                <i data-lucide="download" class="w-4 h-4"></i>
+                                <span>Download PNG</span>
+                                <i data-lucide="chevron-down" class="w-3.5 h-3.5 opacity-80"></i>
+                            </button>
+                            <div x-cloak x-show="open" x-transition.origin.top.right.duration.150ms 
+                                 class="absolute right-0 bottom-full mb-2 w-56 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-1.5 shadow-xl z-50">
+                                <button type="button" @click="open = false; downloadIdCardPng('front', false, false)" 
+                                        class="w-full flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-700 transition">
+                                    <i data-lucide="image" class="w-4 h-4 text-emerald-600"></i>
+                                    <span>Front PNG (Color)</span>
+                                </button>
+                                <button type="button" @click="open = false; downloadIdCardPng('back', false, false)" 
+                                        class="w-full flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-700 transition">
+                                    <i data-lucide="image" class="w-4 h-4 text-emerald-600"></i>
+                                    <span>Back PNG (Color)</span>
+                                </button>
+                                <button type="button" @click="open = false; downloadIdCardPng('back', true, false)" 
+                                        class="w-full flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                                    <i data-lucide="file-badge-2" class="w-4 h-4 text-slate-900 dark:text-slate-100"></i>
+                                    <span>Back PNG (Black Only 🖤)</span>
+                                </button>
+                                <div class="my-1 border-t border-slate-100 dark:border-slate-800"></div>
+                                <button type="button" @click="open = false; downloadIdCardPng('front', false, false); setTimeout(() => downloadIdCardPng('back', false, false), 500)" 
+                                        class="w-full flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition">
+                                    <i data-lucide="layers" class="w-4 h-4 text-emerald-600"></i>
+                                    <span>Download Both Sides</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 3. Watermark Sample Dropdown -->
+                        <div class="relative inline-block text-left" x-data="{ open: false }" @click.outside="open = false">
+                            <button type="button" @click="open = !open" 
+                                    class="rounded-xl border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/40 px-3.5 py-2 text-xs font-bold text-amber-700 dark:text-amber-400 hover:bg-amber-100 transition active:scale-[0.98] cursor-pointer flex items-center gap-1.5">
+                                <i data-lucide="stamp" class="w-4 h-4 text-amber-600"></i>
+                                <span>Watermark PNG</span>
+                                <i data-lucide="chevron-down" class="w-3.5 h-3.5 opacity-80"></i>
+                            </button>
+                            <div x-cloak x-show="open" x-transition.origin.top.right.duration.150ms 
+                                 class="absolute right-0 bottom-full mb-2 w-56 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-1.5 shadow-xl z-50">
+                                <button type="button" @click="open = false; downloadIdCardPng('front', false, true)" 
+                                        class="w-full flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-amber-50 dark:hover:bg-amber-950/40 hover:text-amber-700 transition">
+                                    <i data-lucide="stamp" class="w-4 h-4 text-amber-600"></i>
+                                    <span>Front PNG (Sample Watermark)</span>
+                                </button>
+                                <button type="button" @click="open = false; downloadIdCardPng('back', false, true)" 
+                                        class="w-full flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-amber-50 dark:hover:bg-amber-950/40 hover:text-amber-700 transition">
+                                    <i data-lucide="stamp" class="w-4 h-4 text-amber-600"></i>
+                                    <span>Back PNG (Sample Watermark)</span>
+                                </button>
+                                <div class="my-1 border-t border-slate-100 dark:border-slate-800"></div>
+                                <button type="button" @click="open = false; downloadIdCardPng('front', false, true); setTimeout(() => downloadIdCardPng('back', false, true), 500)" 
+                                        class="w-full flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition">
+                                    <i data-lucide="layers" class="w-4 h-4 text-amber-600"></i>
+                                    <span>Both Sides (Sample Watermark)</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Close Button -->
                         <button type="button" @click="showIdPreview = false" class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-850 active:scale-[0.98] cursor-pointer">
                             Close
                         </button>
-                        <a href="{{ route('admin.students.index', ['search' => $student->student_number, 'print_id' => 1]) }}"
-                           target="_blank"
-                           class="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 text-xs font-bold shadow-md transition active:scale-[0.98] cursor-pointer flex items-center gap-1.5">
-                            <i data-lucide="printer" class="w-4 h-4"></i>
-                            <span>Print View</span>
-                        </a>
                     </div>
                 </div>
             </div>
@@ -2056,13 +2107,13 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script>
-    async function downloadIdCardPng(side, isMonochrome = false) {
+    async function downloadIdCardPng(side, isMonochrome = false, isWatermark = false) {
         const boxId = side === 'front' ? 'id-card-front-box' : 'id-card-back-box';
         const cardEl = document.getElementById(boxId);
         if (!cardEl) return;
 
         const rawSlug = document.getElementById('id-card-filename-slug')?.value || 'STUDENT-ID';
-        const filename = `${rawSlug}-${side.toUpperCase()}${isMonochrome ? '-BLACK-ONLY' : ''}.png`;
+        const filename = `${rawSlug}-${side.toUpperCase()}${isMonochrome ? '-BLACK-ONLY' : ''}${isWatermark ? '-SAMPLE-WATERMARK' : ''}.png`;
 
         const btn = event?.currentTarget;
         let oldContent = '';
@@ -2089,7 +2140,7 @@
             }
 
             if (dataUrl) {
-                if (isMonochrome) {
+                if (isMonochrome || isWatermark) {
                     const img = new Image();
                     img.crossOrigin = 'anonymous';
                     img.src = dataUrl;
@@ -2101,16 +2152,34 @@
                     const ctx = cvs.getContext('2d');
                     ctx.drawImage(img, 0, 0);
                     
-                    const imgData = ctx.getImageData(0, 0, cvs.width, cvs.height);
-                    const d = imgData.data;
-                    for (let i = 0; i < d.length; i += 4) {
-                        const gray = 0.299 * d[i] + 0.587 * d[i+1] + 0.114 * d[i+2];
-                        const val = gray > 215 ? 255 : (gray < 165 ? 0 : Math.round(gray));
-                        d[i] = val;
-                        d[i+1] = val;
-                        d[i+2] = val;
+                    if (isMonochrome) {
+                        const imgData = ctx.getImageData(0, 0, cvs.width, cvs.height);
+                        const d = imgData.data;
+                        for (let i = 0; i < d.length; i += 4) {
+                            const gray = 0.299 * d[i] + 0.587 * d[i+1] + 0.114 * d[i+2];
+                            const val = gray > 215 ? 255 : (gray < 165 ? 0 : Math.round(gray));
+                            d[i] = val;
+                            d[i+1] = val;
+                            d[i+2] = val;
+                        }
+                        ctx.putImageData(imgData, 0, 0);
                     }
-                    ctx.putImageData(imgData, 0, 0);
+
+                    if (isWatermark) {
+                        ctx.save();
+                        ctx.translate(cvs.width / 2, cvs.height / 2);
+                        ctx.rotate(-Math.PI / 4);
+                        ctx.font = '900 ' + Math.round(cvs.width * 0.13) + 'px "Outfit", Arial, sans-serif';
+                        ctx.fillStyle = 'rgba(239, 68, 68, 0.45)';
+                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+                        ctx.lineWidth = Math.round(cvs.width * 0.008);
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.strokeText('SAMPLE COPY', 0, 0);
+                        ctx.fillText('SAMPLE COPY', 0, 0);
+                        ctx.restore();
+                    }
+
                     dataUrl = cvs.toDataURL('image/png', 1.0);
                 }
 
@@ -2124,7 +2193,7 @@
                 throw new Error('No image generator available.');
             }
         } catch (err) {
-            console.error('PNG Download Primary Error:', err);
+            console.error('PNG Download Error:', err);
             alert('PNG Generation Error: ' + (err.message || err));
         } finally {
             if (btn && oldContent) {
