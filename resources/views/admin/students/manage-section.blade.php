@@ -3,6 +3,21 @@
     $enrolledCount = $section->students->count();
     $fillRate = $capacity > 0 ? min(100, round(($enrolledCount / $capacity) * 100)) : 0;
 
+    // Helper function to build name with Middle Initial
+    $buildStudentNameWithInitial = function($applicant, $studentNumber) {
+        if (!$applicant) {
+            return 'Student #' . $studentNumber;
+        }
+        $first = trim($applicant->first_name ?? '');
+        $last = trim($applicant->last_name ?? '');
+        $middle = trim($applicant->middle_name ?? '');
+        $mInitial = '';
+        if ($middle) {
+            $mInitial = ' ' . strtoupper(substr($middle, 0, 1)) . '.';
+        }
+        return html_entity_decode($first . $mInitial . ' ' . $last, ENT_QUOTES, 'UTF-8');
+    };
+
     // Group Enrolled Students into Boys, Girls, and Others
     $enrolledBoys = $section->students->filter(function($secSt) {
         $g = strtolower(trim($secSt->student?->applicant?->gender ?? ''));
@@ -312,7 +327,8 @@
                                         @php
                                             $st = $secStudent->student;
                                             $app = $st?->applicant;
-                                            $stName = $app ? html_entity_decode(implode(' ', array_filter([trim($app->first_name ?? ''), trim($app->middle_name ?? ''), trim($app->last_name ?? '')])), ENT_QUOTES, 'UTF-8') : 'Student #' . $st->student_number;
+                                            $stName = $buildStudentNameWithInitial($app, $st->student_number);
+                                            $stType = $app?->student_type ?: 'NEW';
                                         @endphp
                                         <div class="p-2.5 rounded-xl border border-slate-200/80 bg-white flex items-center justify-between gap-3 group hover:bg-slate-50 transition shadow-2xs">
                                             <div class="min-w-0 flex items-center gap-2">
@@ -321,12 +337,15 @@
                                                     <a href="{{ route('admin.students.show', $st) }}" target="_blank" class="font-black text-xs text-slate-900 hover:text-blue-700 transition uppercase block truncate">
                                                         {{ $stName }}
                                                     </a>
-                                                    <div class="flex items-center gap-2 text-[10px] text-slate-400 font-bold mt-0.5">
+                                                    <div class="flex flex-wrap items-center gap-1.5 text-[10px] text-slate-400 font-bold mt-0.5">
                                                         <span>ID: {{ $st->student_number }}</span>
                                                         @if($app?->lrn)
                                                             <span>&bull; LRN: {{ $app->lrn }}</span>
                                                         @endif
                                                         <span class="text-blue-600 font-black">&bull; MALE</span>
+                                                        <span class="inline-flex rounded px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider {{ strtolower($stType) === 'old' ? 'bg-purple-100 text-purple-700' : 'bg-emerald-100 text-emerald-700' }}">
+                                                            {{ $stType }}
+                                                        </span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -360,7 +379,8 @@
                                         @php
                                             $st = $secStudent->student;
                                             $app = $st?->applicant;
-                                            $stName = $app ? html_entity_decode(implode(' ', array_filter([trim($app->first_name ?? ''), trim($app->middle_name ?? ''), trim($app->last_name ?? '')])), ENT_QUOTES, 'UTF-8') : 'Student #' . $st->student_number;
+                                            $stName = $buildStudentNameWithInitial($app, $st->student_number);
+                                            $stType = $app?->student_type ?: 'NEW';
                                         @endphp
                                         <div class="p-2.5 rounded-xl border border-slate-200/80 bg-white flex items-center justify-between gap-3 group hover:bg-slate-50 transition shadow-2xs">
                                             <div class="min-w-0 flex items-center gap-2">
@@ -369,12 +389,15 @@
                                                     <a href="{{ route('admin.students.show', $st) }}" target="_blank" class="font-black text-xs text-slate-900 hover:text-pink-700 transition uppercase block truncate">
                                                         {{ $stName }}
                                                     </a>
-                                                    <div class="flex items-center gap-2 text-[10px] text-slate-400 font-bold mt-0.5">
+                                                    <div class="flex flex-wrap items-center gap-1.5 text-[10px] text-slate-400 font-bold mt-0.5">
                                                         <span>ID: {{ $st->student_number }}</span>
                                                         @if($app?->lrn)
                                                             <span>&bull; LRN: {{ $app->lrn }}</span>
                                                         @endif
                                                         <span class="text-pink-600 font-black">&bull; FEMALE</span>
+                                                        <span class="inline-flex rounded px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider {{ strtolower($stType) === 'old' ? 'bg-purple-100 text-purple-700' : 'bg-emerald-100 text-emerald-700' }}">
+                                                            {{ $stType }}
+                                                        </span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -407,7 +430,8 @@
                                             @php
                                                 $st = $secStudent->student;
                                                 $app = $st?->applicant;
-                                                $stName = $app ? html_entity_decode(implode(' ', array_filter([trim($app->first_name ?? ''), trim($app->middle_name ?? ''), trim($app->last_name ?? '')])), ENT_QUOTES, 'UTF-8') : 'Student #' . $st->student_number;
+                                                $stName = $buildStudentNameWithInitial($app, $st->student_number);
+                                                $stType = $app?->student_type ?: 'NEW';
                                             @endphp
                                             <div class="p-2.5 rounded-xl border border-slate-200 bg-white flex items-center justify-between gap-3 group hover:bg-slate-50 transition">
                                                 <div class="min-w-0 flex items-center gap-2">
@@ -416,11 +440,14 @@
                                                         <a href="{{ route('admin.students.show', $st) }}" target="_blank" class="font-black text-xs text-slate-900 hover:text-emerald-700 transition uppercase block truncate">
                                                             {{ $stName }}
                                                         </a>
-                                                        <div class="flex items-center gap-2 text-[10px] text-slate-400 font-bold mt-0.5">
+                                                        <div class="flex flex-wrap items-center gap-1.5 text-[10px] text-slate-400 font-bold mt-0.5">
                                                             <span>ID: {{ $st->student_number }}</span>
                                                             @if($app?->lrn)
                                                                 <span>&bull; LRN: {{ $app->lrn }}</span>
                                                             @endif
+                                                            <span class="inline-flex rounded px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider {{ strtolower($stType) === 'old' ? 'bg-purple-100 text-purple-700' : 'bg-emerald-100 text-emerald-700' }}">
+                                                                {{ $stType }}
+                                                            </span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -508,7 +535,8 @@
                                     @foreach($availableBoys as $st)
                                         @php
                                             $stApp = $st->applicant;
-                                            $stName = $stApp ? html_entity_decode(implode(' ', array_filter([trim($stApp->first_name ?? ''), trim($stApp->middle_name ?? ''), trim($stApp->last_name ?? '')])), ENT_QUOTES, 'UTF-8') : 'Student #' . $st->student_number;
+                                            $stName = $buildStudentNameWithInitial($stApp, $st->student_number);
+                                            $stType = $stApp?->student_type ?: 'NEW';
                                             $currentSec = $st->studentSection?->section;
                                             $isEnrolledInThis = $currentSec && $currentSec->id === $section->id;
                                         @endphp
@@ -521,12 +549,15 @@
                                                        class="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500">
                                                 <div class="min-w-0">
                                                     <span class="block text-xs font-black text-slate-900 uppercase truncate leading-tight">{{ $stName }}</span>
-                                                    <div class="flex items-center gap-2 text-[10px] font-bold text-slate-400 mt-0.5">
+                                                    <div class="flex flex-wrap items-center gap-1.5 text-[10px] font-bold text-slate-400 mt-0.5">
                                                         <span>ID: {{ $st->student_number }}</span>
                                                         @if($stApp?->lrn)
                                                             <span>&bull; LRN: {{ $stApp->lrn }}</span>
                                                         @endif
                                                         <span class="text-blue-600 font-extrabold">&bull; MALE</span>
+                                                        <span class="inline-flex rounded px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider {{ strtolower($stType) === 'old' ? 'bg-purple-100 text-purple-700' : 'bg-emerald-100 text-emerald-700' }}">
+                                                            {{ $stType }}
+                                                        </span>
                                                         <span>&bull; Grade: <strong>{{ $st->grade_level }}</strong></span>
                                                     </div>
                                                 </div>
@@ -562,7 +593,8 @@
                                     @foreach($availableGirls as $st)
                                         @php
                                             $stApp = $st->applicant;
-                                            $stName = $stApp ? html_entity_decode(implode(' ', array_filter([trim($stApp->first_name ?? ''), trim($stApp->middle_name ?? ''), trim($stApp->last_name ?? '')])), ENT_QUOTES, 'UTF-8') : 'Student #' . $st->student_number;
+                                            $stName = $buildStudentNameWithInitial($stApp, $st->student_number);
+                                            $stType = $stApp?->student_type ?: 'NEW';
                                             $currentSec = $st->studentSection?->section;
                                             $isEnrolledInThis = $currentSec && $currentSec->id === $section->id;
                                         @endphp
@@ -575,12 +607,15 @@
                                                        class="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500">
                                                 <div class="min-w-0">
                                                     <span class="block text-xs font-black text-slate-900 uppercase truncate leading-tight">{{ $stName }}</span>
-                                                    <div class="flex items-center gap-2 text-[10px] font-bold text-slate-400 mt-0.5">
+                                                    <div class="flex flex-wrap items-center gap-1.5 text-[10px] font-bold text-slate-400 mt-0.5">
                                                         <span>ID: {{ $st->student_number }}</span>
                                                         @if($stApp?->lrn)
                                                             <span>&bull; LRN: {{ $stApp->lrn }}</span>
                                                         @endif
                                                         <span class="text-pink-600 font-extrabold">&bull; FEMALE</span>
+                                                        <span class="inline-flex rounded px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider {{ strtolower($stType) === 'old' ? 'bg-purple-100 text-purple-700' : 'bg-emerald-100 text-emerald-700' }}">
+                                                            {{ $stType }}
+                                                        </span>
                                                         <span>&bull; Grade: <strong>{{ $st->grade_level }}</strong></span>
                                                     </div>
                                                 </div>
@@ -615,7 +650,8 @@
                                     @foreach($availableOthers as $st)
                                         @php
                                             $stApp = $st->applicant;
-                                            $stName = $stApp ? html_entity_decode(implode(' ', array_filter([trim($stApp->first_name ?? ''), trim($stApp->middle_name ?? ''), trim($stApp->last_name ?? '')])), ENT_QUOTES, 'UTF-8') : 'Student #' . $st->student_number;
+                                            $stName = $buildStudentNameWithInitial($stApp, $st->student_number);
+                                            $stType = $stApp?->student_type ?: 'NEW';
                                             $currentSec = $st->studentSection?->section;
                                             $isEnrolledInThis = $currentSec && $currentSec->id === $section->id;
                                         @endphp
@@ -628,11 +664,14 @@
                                                        class="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500">
                                                 <div class="min-w-0">
                                                     <span class="block text-xs font-black text-slate-900 uppercase truncate leading-tight">{{ $stName }}</span>
-                                                    <div class="flex items-center gap-2 text-[10px] font-bold text-slate-400 mt-0.5">
+                                                    <div class="flex flex-wrap items-center gap-1.5 text-[10px] font-bold text-slate-400 mt-0.5">
                                                         <span>ID: {{ $st->student_number }}</span>
                                                         @if($stApp?->lrn)
                                                             <span>&bull; LRN: {{ $stApp->lrn }}</span>
                                                         @endif
+                                                        <span class="inline-flex rounded px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider {{ strtolower($stType) === 'old' ? 'bg-purple-100 text-purple-700' : 'bg-emerald-100 text-emerald-700' }}">
+                                                            {{ $stType }}
+                                                        </span>
                                                         <span>&bull; Grade: <strong>{{ $st->grade_level }}</strong></span>
                                                     </div>
                                                 </div>
