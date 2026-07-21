@@ -103,7 +103,7 @@
                         ]);
                         $secSubtext = !empty($modeParts) ? implode(' · ', $modeParts) : '';
                     @endphp
-                    <tbody x-data="{ showRoster: false, openAssignModal: false, searchStudent: '' }">
+                    <tbody x-data="{ showRoster: false, openAssignModal: false, searchStudent: '', openPrintDropdown: false, openIdDropdown: false, openQuickEdit: false }">
                         <tr class="hover:bg-slate-50/40 transition" style="border-bottom: {{ $loop->last ? 'none' : '1px solid #f1f5f9' }};">
                             <!-- Section Name & Mode -->
                             <td class="py-3 pr-2">
