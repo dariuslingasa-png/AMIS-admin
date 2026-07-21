@@ -135,10 +135,10 @@
                             
                             <!-- Student Photo with Edit Overlay (Super Admins Only) -->
                             @if(auth()->user()?->hasRole('super_admin'))
-                                <div class="photo-clip group cursor-pointer" 
-                                     onclick="openPhotoOptionsModal()"
-                                     style="left: 57px; top: 124px; width: 166px; height: 162px; border-radius: 12px; z-index: 5;"
-                                     title="Edit Photo">
+                                 <div class="photo-clip group cursor-pointer" 
+                                      onclick="openPhotoOptionsModal()"
+                                      style="left: 49px; top: 106px; width: 142px; height: 139px; border-radius: 10px; z-index: 5;"
+                                      title="Edit Photo">
                                     @if($photoUrl)
                                         <img id="id-preview-photo" src="{{ $photoBase64 ?: $photoUrl }}" crossorigin="anonymous" class="transition duration-300 group-hover:scale-105 group-hover:brightness-75" style="object-position: center center;">
                                     @else
@@ -156,7 +156,7 @@
                                 </div>
                             @else
                                 <!-- Non-admin read-only image -->
-                                <div class="photo-clip" style="left: 57px; top: 124px; width: 166px; height: 162px; border-radius: 12px; z-index: 5;">
+                                <div class="photo-clip" style="left: 49px; top: 106px; width: 142px; height: 139px; border-radius: 10px; z-index: 5;">
                                     @if($photoUrl)
                                         <img id="id-preview-photo" src="{{ $photoBase64 ?: $photoUrl }}" crossorigin="anonymous" style="object-position: center center;">
                                     @else
@@ -199,7 +199,7 @@
                                 $addressLen = strlen($homeAddress);
                                 $addressFontSize = $addressLen > 60 ? '10px' : ($addressLen > 40 ? '11px' : '12px');
                             @endphp
-                            <div style="position: absolute; left: 23px; top: 70px; width: 233px; z-index: 10; display: flex; flex-direction: column; gap: 5.5px;">
+                            <div style="position: absolute; left: 19px; top: 60px; width: 200px; z-index: 10; display: flex; flex-direction: column; gap: 4.5px;">
                                 <!-- Contact Name -->
                                 <div style="display: flex; align-items: flex-start; gap: 8px;">
                                     <span style="flex-shrink: 0; width: 11.5px; height: 11.5px; color: #047857; margin-top: 1.5px;">
@@ -251,11 +251,11 @@
 
                             <!-- Director's Signature Box -->
                             @if(in_array((string)$student->student_number, ['260253', '260254', '260158', '260895', '260894', '260893']))
-                                <div style="position: absolute; left: 88px; top: 332px; width: 104px; z-index: 25; pointer-events: none;">
+                                <div style="position: absolute; left: 68px; top: 285px; width: 104px; z-index: 25; pointer-events: none;">
                                     <img src="{{ asset('images/id/signature_cabel.png') }}" style="width: 100%; height: auto; display: block; opacity: 0.95; filter: contrast(1.1) brightness(0.95);">
                                 </div>
                             @else
-                                <div style="position: absolute; left: 70px; top: 342px; width: 140px; text-align: center; z-index: 25; pointer-events: none;">
+                                <div style="position: absolute; left: 50px; top: 293px; width: 140px; text-align: center; z-index: 25; pointer-events: none;">
                                     <span style="font-family: 'Outfit', sans-serif; font-size: 6.5px; font-weight: 900; text-transform: uppercase; color: #64748b; letter-spacing: 0.08em; border: 1px dashed #cbd5e1; padding: 2px 4px; border-radius: 4px; background: rgba(255, 255, 255, 0.9); display: inline-block; box-shadow: 0 1px 1px rgba(0,0,0,0.05);">Secure Signature Coming Soon</span>
                                 </div>
                             @endif
