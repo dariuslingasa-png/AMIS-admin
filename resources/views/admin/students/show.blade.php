@@ -1207,59 +1207,59 @@
                     </div>
 
                     <!-- Text Editor Panel -->
-                    <div class="w-full md:w-56 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col gap-4 text-left shadow-sm self-stretch justify-center relative z-20">
+                    <div class="w-full md:w-64 flex-shrink-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 flex flex-col gap-4 text-left shadow-lg self-stretch justify-center relative z-20">
                         <div class="border-b border-slate-100 dark:border-slate-800 pb-2">
-                            <h4 class="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                                <i data-lucide="type" class="w-4 h-4 text-emerald-600"></i>
+                            <h4 class="text-[11px] font-extrabold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                <i data-lucide="type" class="w-4 h-4 text-emerald-600 flex-shrink-0"></i>
                                 <span>Text Font Sizes (px)</span>
                             </h4>
                         </div>
                         
                         <!-- Last Name Font Size Slider/Input -->
-                        <div class="space-y-1">
-                            <div class="flex justify-between items-center text-[10px] font-bold text-slate-650 dark:text-slate-350 uppercase">
-                                <span>Last Name</span>
-                                <span class="text-slate-800 dark:text-slate-200 font-extrabold" x-text="lastNameFontSize + 'px'"></span>
+                        <div class="space-y-1.5">
+                            <div class="flex justify-between items-center text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                <span class="flex-shrink-0">Last Name</span>
+                                <span class="text-slate-900 dark:text-white font-extrabold" x-text="lastNameFontSize + 'px'"></span>
                             </div>
-                            <div class="flex items-center gap-2">
+                            <div class="flex items-center">
                                 <input type="range" min="10" max="45" step="0.5" x-model="lastNameFontSize" 
-                                       class="w-full h-1 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-600">
+                                       class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-600">
                             </div>
                         </div>
 
                         <!-- First Name Font Size Slider/Input -->
-                        <div class="space-y-1">
-                            <div class="flex justify-between items-center text-[10px] font-bold text-slate-650 dark:text-slate-350 uppercase">
-                                <span>First Name</span>
-                                <span class="text-slate-800 dark:text-slate-200 font-extrabold" x-text="firstNameFontSize + 'px'"></span>
+                        <div class="space-y-1.5">
+                            <div class="flex justify-between items-center text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                <span class="flex-shrink-0">First Name</span>
+                                <span class="text-slate-900 dark:text-white font-extrabold" x-text="firstNameFontSize + 'px'"></span>
                             </div>
-                            <div class="flex items-center gap-2">
+                            <div class="flex items-center">
                                 <input type="range" min="8" max="25" step="0.5" x-model="firstNameFontSize" 
-                                       class="w-full h-1 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-600">
+                                       class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-600">
                             </div>
                         </div>
 
                         <!-- Grade Level Font Size Slider/Input -->
-                        <div class="space-y-1">
-                            <div class="flex justify-between items-center text-[10px] font-bold text-slate-650 dark:text-slate-350 uppercase">
-                                <span>Grade Level</span>
-                                <span class="text-slate-800 dark:text-slate-200 font-extrabold" x-text="gradeFontSize + 'px'"></span>
+                        <div class="space-y-1.5">
+                            <div class="flex justify-between items-center text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                <span class="flex-shrink-0">Grade Level</span>
+                                <span class="text-slate-900 dark:text-white font-extrabold" x-text="gradeFontSize + 'px'"></span>
                             </div>
-                            <div class="flex items-center gap-2">
+                            <div class="flex items-center">
                                 <input type="range" min="12" max="35" step="0.5" x-model="gradeFontSize" 
-                                       class="w-full h-1 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-600">
+                                       class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-600">
                             </div>
                         </div>
 
                         <!-- Student ID Font Size Slider/Input -->
-                        <div class="space-y-1">
-                            <div class="flex justify-between items-center text-[10px] font-bold text-slate-650 dark:text-slate-350 uppercase">
-                                <span>Student ID</span>
-                                <span class="text-slate-800 dark:text-slate-200 font-extrabold" x-text="idFontSize + 'px'"></span>
+                        <div class="space-y-1.5">
+                            <div class="flex justify-between items-center text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                <span class="flex-shrink-0">Student ID</span>
+                                <span class="text-slate-900 dark:text-white font-extrabold" x-text="idFontSize + 'px'"></span>
                             </div>
-                            <div class="flex items-center gap-2">
+                            <div class="flex items-center">
                                 <input type="range" min="8" max="18" step="0.5" x-model="idFontSize" 
-                                       class="w-full h-1 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-600">
+                                       class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-600">
                             </div>
                         </div>
 
@@ -1269,8 +1269,8 @@
                             firstNameFontSize = {{ $displayFirstNameFontSize }};
                             gradeFontSize = 25;
                             idFontSize = 10;
-                        " class="mt-2 w-full py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition active:scale-[0.97] cursor-pointer flex items-center justify-center gap-1">
-                            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                        " class="mt-2 w-full py-2 rounded-xl border border-slate-200 dark:border-slate-850 text-[10px] font-bold text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800 transition active:scale-[0.97] cursor-pointer flex items-center justify-center gap-1.5 shadow-sm">
+                            <i data-lucide="refresh-cw" class="w-3.5 h-3.5 flex-shrink-0"></i>
                             <span>Reset Font Sizes</span>
                         </button>
                     </div>
