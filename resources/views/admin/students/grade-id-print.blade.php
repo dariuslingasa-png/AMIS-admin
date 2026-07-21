@@ -400,9 +400,8 @@
         }
 
         @media print {
-            body { background: #fff; }
-            .toolbar { display: none !important; }
-            .no-print { display: none !important; }
+            body { background: #fff; font-size: 10px; }
+            .toolbar, .no-print { display: none !important; }
             .page-container {
                 max-width: none;
                 margin: 0;
@@ -410,22 +409,31 @@
                 box-shadow: none;
                 border-radius: 0;
             }
+            .section-header {
+                padding: 4px 10px !important;
+                margin-bottom: 8px !important;
+            }
+            .section-title {
+                font-size: 15px !important;
+            }
             .student-card-item {
                 border: 1px solid #cbd5e1;
                 page-break-inside: avoid !important;
-                margin-bottom: 12px !important;
+                margin-bottom: 6px !important;
+                padding: 6px !important;
             }
             .student-card-item:nth-child(2n) {
                 page-break-after: always !important;
                 break-after: page !important;
             }
-            /* Prevent browser from upscaling images during print = reduces memory */
+            .id-card {
+                width: 250px !important;
+                height: 395px !important;
+            }
             img {
                 image-rendering: auto;
                 max-width: 100% !important;
             }
-            /* Hide toolbar in print */
-            .toolbar, .no-print { display: none !important; }
         }
     </style>
     <style id="dynamic-font-sizes">
@@ -1167,7 +1175,7 @@
                         }
 
                         if (dataUrl) {
-                            htmlDoc += `<td><img src="${dataUrl}" width="250"></td>`;
+                            htmlDoc += `<td><img src="${dataUrl}" width="200"></td>`;
                         } else {
                             htmlDoc += `<td></td>`;
                         }
