@@ -132,14 +132,7 @@
                             <div style="font-size: 9px; color: #64748b; font-weight: normal; margin-top: 2px; display: flex; gap: 8px;">
                                 <span>Student No: {{ $student->student_number }}</span>
                                 <span style="color: #cbd5e1;">|</span>
-                                @php
-                                    $sec = $student->studentSection?->section;
-                                    $isF2f = $sec && (str_contains(strtolower((string) $sec->learning_mode), 'face') ||
-                                             str_contains(strtolower((string) $sec->learning_mode), 'f2f') ||
-                                             strtoupper((string) $sec->shift) === 'F2F');
-                                    $secText = $isF2f ? 'F2F' : 'Section: ' . ($sec?->official_name ?: ($sec?->name ?: 'N/A'));
-                                @endphp
-                                <span style="font-weight: 700; color: #047857; text-transform: uppercase;">{{ $secText }}</span>
+                                <span style="font-weight: 700; color: #047857; text-transform: uppercase;">{{ $student->studentSection?->section?->official_name ?: ($student->studentSection?->section?->name ?: 'N/A') }}</span>
                             </div>
                         </td>
                     </tr>

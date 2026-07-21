@@ -451,20 +451,14 @@
         @php
             $groupedStudents = $students->groupBy(function($s) {
                 $sec = $s->studentSection?->section;
-                if (!$sec) return 'UNASSIGNED';
-                
-                $isF2f = str_contains(strtolower((string) $sec->learning_mode), 'face') ||
-                         str_contains(strtolower((string) $sec->learning_mode), 'f2f') ||
-                         strtoupper((string) $sec->shift) === 'F2F';
-                         
-                return $isF2f ? 'F2F' : ($sec->official_name ?: ($sec->name ?: 'UNASSIGNED'));
+                return $sec ? ($sec->official_name ?: ($sec->name ?: 'UNASSIGNED')) : 'UNASSIGNED';
             });
         @endphp
 
         @forelse($groupedStudents as $sectionName => $sectionStudents)
             <div class="section-group-header" style="margin-top: 36px; margin-bottom: 20px; border-bottom: 2px solid #0f172a; padding-bottom: 8px; page-break-before: {{ $loop->first ? 'avoid' : 'always' }}; text-align: left;">
                 <h2 style="font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 900; text-transform: uppercase; color: #0f172a; margin: 0; display: flex; align-items: center; justify-content: space-between;">
-                    <span>{{ $sectionName === 'F2F' ? 'F2F' : 'SECTION: ' . $sectionName }}</span>
+                    <span>{{ $sectionName }}</span>
                     <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: none; margin-left: auto;">({{ $sectionStudents->count() }} Students)</span>
                 </h2>
             </div>
@@ -558,7 +552,7 @@
                 <div class="student-card-item">
                     <div class="student-item-header">
                         <span>{{ $index + 1 }}. {{ strtoupper($fullName) }}</span>
-                        <span style="font-size: 11px; font-weight: 700; color: #475569;">{{ $sectionName === 'F2F' ? 'F2F' : 'SECTION: ' . strtoupper($sectionName) }} | {{ strtoupper($applicant?->student_type ?: 'NEW') }} | ID: {{ $studentNumber }} | LRN: {{ $lrn }}</span>
+                        <span style="font-size: 11px; font-weight: 700; color: #475569;">{{ strtoupper($sectionName) }} | {{ strtoupper($applicant?->student_type ?: 'NEW') }} | ID: {{ $studentNumber }} | LRN: {{ $lrn }}</span>
                     </div>
 
                     <table class="cards-table">
