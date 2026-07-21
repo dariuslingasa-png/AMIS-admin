@@ -541,16 +541,16 @@
                         $lastNameFontSize = '36px';
                     } elseif ($lastNameLen <= 12) {
                         $lastNameFontSize = '28px';
-                    } elseif ($lastNameLen <= 16) {
-                        $lastNameFontSize = '23px';
-                    } elseif ($lastNameLen <= 20) {
-                        $lastNameFontSize = '18px';
-                    } elseif ($lastNameLen <= 24) {
-                        $lastNameFontSize = '14px';
-                    } elseif ($lastNameLen <= 28) {
-                        $lastNameFontSize = '12px';
+                    } elseif ($lastNameLen <= 15) {
+                        $lastNameFontSize = '22px';
+                    } elseif ($lastNameLen <= 18) {
+                        $lastNameFontSize = '17px';
+                    } elseif ($lastNameLen <= 21) {
+                        $lastNameFontSize = '12.5px';
+                    } elseif ($lastNameLen <= 25) {
+                        $lastNameFontSize = '11px';
                     } else {
-                        $lastNameFontSize = '10.5px';
+                        $lastNameFontSize = '9.5px';
                     }
                 }
 

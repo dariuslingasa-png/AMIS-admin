@@ -65,16 +65,16 @@
         $lastNameFontSize = 36;
     } elseif ($lastNameLen <= 12) {
         $lastNameFontSize = 28;
-    } elseif ($lastNameLen <= 16) {
-        $lastNameFontSize = 23;
-    } elseif ($lastNameLen <= 20) {
-        $lastNameFontSize = 18;
-    } elseif ($lastNameLen <= 24) {
-        $lastNameFontSize = 14;
-    } elseif ($lastNameLen <= 28) {
-        $lastNameFontSize = 12;
+    } elseif ($lastNameLen <= 15) {
+        $lastNameFontSize = 22;
+    } elseif ($lastNameLen <= 18) {
+        $lastNameFontSize = 17;
+    } elseif ($lastNameLen <= 21) {
+        $lastNameFontSize = 12.5;
+    } elseif ($lastNameLen <= 25) {
+        $lastNameFontSize = 11;
     } else {
-        $lastNameFontSize = 10.5;
+        $lastNameFontSize = 9.5;
     }
 
     $displayFirstName = trim($firstName . ' ' . $middleInitial);
@@ -1102,20 +1102,20 @@
                         } elseif ($lastNameLen <= 12) {
                             $lastNameFontSize = '28px';
                             $lastNameStyle = 'white-space: nowrap;';
-                        } elseif ($lastNameLen <= 16) {
-                            $lastNameFontSize = '23px';
+                        } elseif ($lastNameLen <= 15) {
+                            $lastNameFontSize = '22px';
                             $lastNameStyle = 'white-space: nowrap;';
-                        } elseif ($lastNameLen <= 20) {
-                            $lastNameFontSize = '18px';
+                        } elseif ($lastNameLen <= 18) {
+                            $lastNameFontSize = '17px';
                             $lastNameStyle = 'white-space: nowrap;';
-                        } elseif ($lastNameLen <= 24) {
-                            $lastNameFontSize = '14px';
+                        } elseif ($lastNameLen <= 21) {
+                            $lastNameFontSize = '12.5px';
                             $lastNameStyle = 'white-space: nowrap;';
-                        } elseif ($lastNameLen <= 28) {
-                            $lastNameFontSize = '12px';
+                        } elseif ($lastNameLen <= 25) {
+                            $lastNameFontSize = '11px';
                             $lastNameStyle = 'white-space: nowrap;';
                         } else {
-                            $lastNameFontSize = '10.5px';
+                            $lastNameFontSize = '9.5px';
                             $lastNameStyle = 'white-space: nowrap;';
                         }
                     @endphp

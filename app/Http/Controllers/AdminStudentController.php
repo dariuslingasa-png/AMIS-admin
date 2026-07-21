@@ -1958,20 +1958,20 @@ class AdminStudentController extends Controller
         } elseif ($lastNameLen <= 12) {
             $lastNameFontSize = 28;
             $lastNameStyle = 'white-space: nowrap;';
-        } elseif ($lastNameLen <= 16) {
-            $lastNameFontSize = 23;
+        } elseif ($lastNameLen <= 15) {
+            $lastNameFontSize = 22;
             $lastNameStyle = 'white-space: nowrap;';
-        } elseif ($lastNameLen <= 20) {
-            $lastNameFontSize = 18;
+        } elseif ($lastNameLen <= 18) {
+            $lastNameFontSize = 17;
             $lastNameStyle = 'white-space: nowrap;';
-        } elseif ($lastNameLen <= 24) {
-            $lastNameFontSize = 14;
+        } elseif ($lastNameLen <= 21) {
+            $lastNameFontSize = 12.5;
             $lastNameStyle = 'white-space: nowrap;';
-        } elseif ($lastNameLen <= 28) {
-            $lastNameFontSize = 12;
+        } elseif ($lastNameLen <= 25) {
+            $lastNameFontSize = 11;
             $lastNameStyle = 'white-space: nowrap;';
         } else {
-            $lastNameFontSize = 10.5;
+            $lastNameFontSize = 9.5;
             $lastNameStyle = 'white-space: nowrap;';
         }
 
