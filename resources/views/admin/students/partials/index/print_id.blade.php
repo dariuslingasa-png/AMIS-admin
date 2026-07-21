@@ -573,11 +573,22 @@
             elements.forEach(textEl => {
                 const maxW = 278; // 310px card width - 32px horizontal padding
                 
-                // Fast path: if text already fits, skip processing entirely
-                if (textEl.scrollWidth <= maxW) return;
-
+                // Temporarily set display to inline-block and clear any inline font size to get a clean measurement of the original width
+                const originalDisplay = textEl.style.display;
+                textEl.style.display = 'inline-block';
+                textEl.style.fontSize = '';
+                
                 let fontSize = parseFloat(window.getComputedStyle(textEl).fontSize);
-                if (isNaN(fontSize) || fontSize <= 0) return;
+                if (isNaN(fontSize) || fontSize <= 0) {
+                    textEl.style.display = originalDisplay;
+                    return;
+                }
+
+                // Fast path: if text at original size already fits, restore display and skip
+                if (textEl.scrollWidth <= maxW) {
+                    textEl.style.display = originalDisplay;
+                    return;
+                }
                 
                 let limit = 50;
                 // Shrink sequentially in 1px steps for faster performance
@@ -586,6 +597,9 @@
                     textEl.style.setProperty('font-size', fontSize + 'px', 'important');
                     limit--;
                 }
+                
+                // Restore original display
+                textEl.style.display = originalDisplay;
             });
         }
 
