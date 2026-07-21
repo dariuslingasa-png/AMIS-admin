@@ -211,11 +211,11 @@
                                     <img src="{{ asset('images/id/amis_frontid.png') }}" class="absolute inset-0 w-full h-full object-cover" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none;">
                                     
                                     <!-- Photo -->
-                                    <div class="photo-clip absolute overflow-hidden" style="position: absolute; left: 57px; top: 124px; width: 166px; height: 162px; border-radius: 12px; z-index: 5;">
+                                    <div class="photo-clip absolute overflow-hidden" style="position: absolute; left: 57px; top: 124px; width: 166px; height: 162px; border-radius: 12px; z-index: 5; overflow: hidden;">
                                         @if($photoUrl)
-                                            <img src="{{ $photoUrl }}" class="w-full h-full object-cover">
+                                            <img src="{{ $photoUrl }}" style="width: 100%; height: 100%; object-fit: cover;">
                                         @else
-                                            <div class="w-full h-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-400">NO PHOTO</div>
+                                            <div style="width: 100%; height: 100%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; color: #94a3b8;">NO PHOTO</div>
                                         @endif
                                     </div>
  
@@ -232,8 +232,8 @@
                                     <div class="absolute text-center font-black uppercase flex items-center justify-center" style="position: absolute; left: 12px; top: 341px; width: 256px; height: 24px; z-index: 20; font-size: 24px; color: #0284c7;">{{ $section->grade_level }}</div>
  
                                     <!-- QR Code -->
-                                    <div class="absolute p-0.5 rounded bg-white" style="position: absolute; left: 111px; top: 377px; width: 58px; height: 58px; z-index: 20;">
-                                        <img src="{{ $qrCodeUrl }}" class="w-full h-full object-contain">
+                                    <div class="absolute p-0.5 rounded bg-white" style="position: absolute; left: 111px; top: 377px; width: 58px; height: 58px; z-index: 20; overflow: hidden;">
+                                        <img src="{{ $qrCodeUrl }}" style="width: 100%; height: 100%; object-fit: contain;">
                                     </div>
                                 </div>
                             </div>
