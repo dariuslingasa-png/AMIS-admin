@@ -174,11 +174,11 @@ class AdminStudentDashboardController extends Controller
                  strtoupper((string) $request->shift) === 'F2F';
 
         $validated = $request->validate([
-            'name' => $isF2f ? 'nullable|string|max:255' : 'required|string|max:255',
-            'grade_level' => 'required|string|max:100',
+            'name'          => $isF2f ? 'nullable|string|max:255' : 'required|string|max:255',
+            'grade_level'   => 'required|string|max:100',
             'learning_mode' => 'nullable|string|max:100',
-            'shift' => 'nullable|string|max:100',
-            'gender' => $validated['gender'] === 'merge' ? 'nullable|string|in:male,female,merge' : 'nullable|string|in:male,female,merge',
+            'shift'         => 'nullable|string|max:100',
+            'gender'        => 'nullable|string|in:male,female,merge',
         ]);
 
         $section->update([
