@@ -455,9 +455,9 @@
         @endphp
 
         @forelse($groupedStudents as $sectionName => $sectionStudents)
-            <div class="section-group-header" style="margin-top: 36px; margin-bottom: 20px; border-bottom: 3px solid #6d28d9; padding-bottom: 8px; page-break-before: {{ $loop->first ? 'avoid' : 'always' }}; text-align: left;">
-                <h2 style="font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 900; text-transform: uppercase; color: #6d28d9; margin: 0; display: flex; align-items: center; justify-content: space-between;">
-                    <span>🏫 SECTION: {{ $sectionName }}</span>
+            <div class="section-group-header" style="margin-top: 36px; margin-bottom: 20px; border-bottom: 2px solid #0f172a; padding-bottom: 8px; page-break-before: {{ $loop->first ? 'avoid' : 'always' }}; text-align: left;">
+                <h2 style="font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 900; text-transform: uppercase; color: #0f172a; margin: 0; display: flex; align-items: center; justify-content: space-between;">
+                    <span>SECTION: {{ $sectionName }}</span>
                     <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: none; margin-left: auto;">({{ $sectionStudents->count() }} Students)</span>
                 </h2>
             </div>
