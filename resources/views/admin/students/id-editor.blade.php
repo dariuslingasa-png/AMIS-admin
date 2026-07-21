@@ -108,10 +108,10 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
             
             <!-- Left Side: ID Preview Panel -->
-            <div class="xl:col-span-8 bg-slate-50 dark:bg-slate-950/20 border border-slate-200 dark:border-slate-850/50 rounded-3xl p-6 md:p-8 flex flex-col items-center justify-center gap-6 min-h-[550px]">
+            <div class="lg:col-span-2 bg-slate-50 dark:bg-slate-950/20 border border-slate-200 dark:border-slate-850/50 rounded-3xl p-6 flex flex-col items-center justify-center gap-6">
                 
                 <div class="text-center">
                     <h2 class="text-sm font-extrabold text-slate-700 dark:text-slate-350 uppercase tracking-widest">{{ strtoupper($lastName) }}, {{ strtoupper($firstName) }}</h2>
@@ -123,13 +123,13 @@
                     </p>
                 </div>
 
-                <!-- Cards Side-by-Side Flex Container -->
-                <div class="flex flex-col md:flex-row items-center justify-center gap-8 w-full">
+                <!-- Cards: Side-by-Side always, with scroll if needed -->
+                <div class="flex flex-row items-start justify-center gap-5 w-full overflow-x-auto pb-2">
                     
                     <!-- Front Side Card -->
-                    <div class="flex flex-col items-center gap-2">
+                    <div class="flex flex-col items-center gap-2 flex-shrink-0">
                         <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Front Side</span>
-                        <div id="id-card-front-box" class="relative rounded-2xl overflow-hidden shadow-2xl border border-slate-200/80 dark:border-slate-800" style="width: 280px; height: 443px; background-color: #064e3b;">
+                        <div id="id-card-front-box" class="relative rounded-2xl overflow-hidden shadow-2xl border border-slate-200/80 dark:border-slate-800" style="width: 240px; height: 379px; background-color: #064e3b;">
                             <!-- Background template image (Top Layer) -->
                             <img src="{{ asset('images/id/amis_frontid.png') }}?v={{ filemtime(public_path('images/id/amis_frontid.png')) }}" class="absolute inset-0 w-full h-full object-cover" style="z-index: 10; pointer-events: none;" alt="AMIS ID Template">
                             
@@ -166,35 +166,28 @@
                             @endif
 
                             <!-- Student ID -->
-                            <div class="absolute text-white font-black tracking-wide text-center uppercase" style="left: 0; top: 267px; width: 280px; height: 12px; z-index: 20;" :style="'font-size: ' + idFontSize + 'px'">{{ $studentNumber }}</div>
+                            <div class="absolute text-white font-black tracking-wide text-center uppercase" style="left: 0; top: 228px; width: 240px; height: 12px; z-index: 20;" :style="'font-size: ' + idFontSize + 'px'">{{ $studentNumber }}</div>
 
                             <!-- Last Name -->
-                            <div class="absolute text-center font-black text-[#0f172a] uppercase tracking-tight flex flex-col justify-center items-center" style="left: 12px; top: 291px; width: 256px; height: 32px; z-index: 20; {{ $lastNameStyle }} line-height: 1.1;" :style="'font-size: ' + lastNameFontSize + 'px'">{{ $lastName }}</div>
+                            <div class="absolute text-center font-black text-[#0f172a] uppercase tracking-tight flex flex-col justify-center items-center" style="left: 10px; top: 249px; width: 220px; height: 28px; z-index: 20; {{ $lastNameStyle }} line-height: 1.1;" :style="'font-size: ' + lastNameFontSize + 'px'">{{ $lastName }}</div>
 
                             <!-- First Name -->
-                             <div class="absolute text-center font-bold text-[#334155] uppercase leading-none flex flex-col justify-center items-center" style="left: 12px; top: 318px; width: 256px; height: 18px; z-index: 20;" :style="'font-size: ' + firstNameFontSize + 'px'">{{ $displayFirstName }}</div>
+                            <div class="absolute text-center font-bold text-[#334155] uppercase leading-none flex flex-col justify-center items-center" style="left: 10px; top: 273px; width: 220px; height: 16px; z-index: 20;" :style="'font-size: ' + firstNameFontSize + 'px'">{{ $displayFirstName }}</div>
 
                             <!-- Grade Level -->
-                             <div class="absolute text-center font-black uppercase tracking-wide flex flex-col justify-center items-center" style="left: 12px; top: 341px; width: 256px; height: 24px; z-index: 20; color: {{ $getGradeColor($displayGrade) }};" :style="'font-size: ' + gradeFontSize + 'px'">{{ $displayGrade }}</div>
-
-                            <!-- LRN -->
-                            @if($student->applicant?->lrn && !in_array(strtoupper($student->applicant->lrn), ['N/A', 'NA', 'EMPTY', '']))
-                                <div class="absolute font-bold text-[#1e293b] whitespace-nowrap" style="left: 197px; top: 323px; width: 140px; height: 18px; z-index: 20; font-size: 12.5px; transform: rotate(-90deg); transform-origin: center; display: flex; align-items: center; justify-content: flex-start; letter-spacing: 0.05em;">
-                                    LRN: <span>{{ $student->applicant->lrn }}</span>
-                                </div>
-                            @endif
+                            <div class="absolute text-center font-black uppercase tracking-wide flex flex-col justify-center items-center" style="left: 10px; top: 292px; width: 220px; height: 22px; z-index: 20; color: {{ $getGradeColor($displayGrade) }};" :style="'font-size: ' + gradeFontSize + 'px'">{{ $displayGrade }}</div>
 
                             <!-- QR Code -->
-                            <div class="absolute p-0.5 rounded bg-white" style="left: 111px; top: 377px; width: 58px; height: 58px; z-index: 20;">
+                            <div class="absolute p-0.5 rounded bg-white" style="left: 91px; top: 323px; width: 58px; height: 58px; z-index: 20;">
                                 <img src="{{ $qrCodeBase64 ?: $qrCodeUrl }}" crossorigin="anonymous" alt="QR Verification" class="w-full h-full object-contain">
                             </div>
                         </div>
                     </div>
 
                     <!-- Back Side Card -->
-                    <div class="flex flex-col items-center gap-2">
+                    <div class="flex flex-col items-center gap-2 flex-shrink-0">
                         <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Back Side</span>
-                        <div id="id-card-back-box" class="relative rounded-2xl overflow-hidden shadow-2xl border border-slate-200/80 dark:border-slate-800" style="width: 280px; height: 443px; background-color: #064e3b;">
+                        <div id="id-card-back-box" class="relative rounded-2xl overflow-hidden shadow-2xl border border-slate-200/80 dark:border-slate-800" style="width: 240px; height: 379px; background-color: #064e3b;">
                             <!-- Background template image -->
                             <img src="{{ asset('images/id/amis_backid.png') }}?v=1" class="absolute inset-0 w-full h-full object-cover" style="z-index: 1; pointer-events: none;" alt="AMIS ID Template Back">
 
@@ -274,7 +267,7 @@
             </div>
 
             <!-- Right Side: Editor Settings Panel -->
-            <div class="xl:col-span-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 flex flex-col gap-6 shadow-xl text-left self-stretch">
+            <div class="lg:col-span-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 flex flex-col gap-6 shadow-xl text-left self-start sticky top-6">
                 
                 <div class="border-b border-slate-100 dark:border-slate-800 pb-3">
                     <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
