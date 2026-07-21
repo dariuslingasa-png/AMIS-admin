@@ -148,7 +148,7 @@ class AdminStudentDashboardController extends Controller
             'grade_level' => 'required|string|max:100',
             'learning_mode' => 'nullable|string|max:100',
             'shift' => 'nullable|string|max:100',
-            'gender' => 'required|string|in:male,female,merge',
+            'gender' => 'nullable|string|in:male,female,merge',
         ]);
 
         \App\Models\Section::create([
@@ -156,7 +156,7 @@ class AdminStudentDashboardController extends Controller
             'grade_level' => trim($validated['grade_level']),
             'learning_mode' => $validated['learning_mode'] ? trim($validated['learning_mode']) : 'Face-to-Face',
             'shift' => $validated['shift'] ? trim($validated['shift']) : null,
-            'gender' => $validated['gender'],
+            'gender' => $validated['gender'] ? $validated['gender'] : 'merge',
         ]);
 
         return back()->with('success', 'New section "' . $validated['name'] . '" created successfully!');

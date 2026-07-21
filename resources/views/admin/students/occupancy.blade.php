@@ -98,9 +98,9 @@
                             </div>
 
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Gender Allocation</label>
-                                <select name="gender" required class="w-full h-11 px-3 rounded-xl border border-slate-200 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500">
-                                    <option value="merge">Co-Ed (Merge)</option>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Gender Allocation <span class="text-slate-400 font-medium lowercase">(optional)</span></label>
+                                <select name="gender" class="w-full h-11 px-3 rounded-xl border border-slate-200 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500">
+                                    <option value="merge">Co-Ed (Merge / Default)</option>
                                     <option value="female">Girls Only</option>
                                     <option value="male">Boys Only</option>
                                 </select>
