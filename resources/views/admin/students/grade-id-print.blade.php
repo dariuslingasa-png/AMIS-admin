@@ -413,9 +413,11 @@
             .student-card-item {
                 border: 1px solid #cbd5e1;
                 page-break-inside: avoid !important;
+                margin-bottom: 12px !important;
+            }
+            .student-card-item:nth-child(2n) {
                 page-break-after: always !important;
                 break-after: page !important;
-                margin-bottom: 0 !important;
             }
             /* Prevent browser from upscaling images during print = reduces memory */
             img {
@@ -1125,49 +1127,56 @@
 <div class="subtitle">Official Student ID Cards Roster Document (1 Student Per Page)</div>
 `;
 
-            for (let i = 0; i < total; i++) {
-                const item = studentItems[i];
-                btn.innerHTML = `⏳ Student ${i + 1}/${total} (releasing memory)...`;
+            for (let i = 0; i < total; i += 2) {
+                const endIdx = Math.min(i + 2, total);
+                btn.innerHTML = `⏳ Students ${i + 1}-${endIdx}/${total} (releasing memory)...`;
 
-                const header = item.querySelector('.student-item-header');
-                const headerText = header ? header.innerText.replace(/\n/g, ' - ') : `Student ${i + 1}`;
-                const cards = Array.from(item.querySelectorAll('.id-card'));
-                
                 htmlDoc += `<div class="student-page">`;
-                htmlDoc += `<div class="student-header">${headerText}</div>`;
-                htmlDoc += `<table><tr>`;
 
-                for (let c of cards) {
-                    let dataUrl = '';
-                    try {
-                        if (typeof htmlToImage !== 'undefined') {
-                            dataUrl = await htmlToImage.toJpeg(c, {
-                                quality: 0.85,
-                                pixelRatio: 2,
-                                cacheBust: true
-                            });
-                        } else if (typeof html2canvas !== 'undefined') {
-                            const canvas = await html2canvas(c, {
-                                scale: 2,
-                                useCORS: true,
-                                allowTaint: true,
-                                backgroundColor: null,
-                                logging: false
-                            });
-                            dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+                for (let j = i; j < endIdx; j++) {
+                    const item = studentItems[j];
+                    const header = item.querySelector('.student-item-header');
+                    const headerText = header ? header.innerText.replace(/\n/g, ' - ') : `Student ${j + 1}`;
+                    const cards = Array.from(item.querySelectorAll('.id-card'));
+                    
+                    htmlDoc += `<div style="margin-bottom: 20px; page-break-inside: avoid;">`;
+                    htmlDoc += `<div class="student-header">${headerText}</div>`;
+                    htmlDoc += `<table><tr>`;
+
+                    for (let c of cards) {
+                        let dataUrl = '';
+                        try {
+                            if (typeof htmlToImage !== 'undefined') {
+                                dataUrl = await htmlToImage.toJpeg(c, {
+                                    quality: 0.85,
+                                    pixelRatio: 2,
+                                    cacheBust: true
+                                });
+                            } else if (typeof html2canvas !== 'undefined') {
+                                const canvas = await html2canvas(c, {
+                                    scale: 2,
+                                    useCORS: true,
+                                    allowTaint: true,
+                                    backgroundColor: null,
+                                    logging: false
+                                });
+                                dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+                            }
+                        } catch (err) {
+                            console.error('Card render error', err);
                         }
-                    } catch (err) {
-                        console.error('Card render error', err);
+
+                        if (dataUrl) {
+                            htmlDoc += `<td><img src="${dataUrl}" width="250"></td>`;
+                        } else {
+                            htmlDoc += `<td></td>`;
+                        }
                     }
 
-                    if (dataUrl) {
-                        htmlDoc += `<td><img src="${dataUrl}" width="250"></td>`;
-                    } else {
-                        htmlDoc += `<td></td>`;
-                    }
+                    htmlDoc += `</tr></table></div>`;
                 }
 
-                htmlDoc += `</tr></table></div>`;
+                htmlDoc += `</div>`;
 
                 // Yield control to browser thread to trigger GC & release RAM
                 await new Promise(resolve => setTimeout(resolve, 30));
@@ -1195,7 +1204,7 @@
             setButtonsDisabled(false);
             btn.innerHTML = originalHtml;
 
-            alert('✅ READY FOR GOOGLE DOCS!\n\n1. Layout is set to 1 STUDENT PER PAGE.\n2. Document is downloaded & copied to clipboard!\n3. Open Google Docs (docs.google.com) and press Ctrl + V to paste!');
+            alert('✅ READY FOR GOOGLE DOCS!\n\n1. Layout is set to 2 STUDENTS PER PAGE.\n2. Document is downloaded & copied to clipboard!\n3. Open Google Docs (docs.google.com) and press Ctrl + V to paste!');
         }
 
         function copyDocumentHtml() {
