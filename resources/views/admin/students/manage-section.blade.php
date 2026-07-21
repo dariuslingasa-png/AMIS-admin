@@ -12,7 +12,10 @@
         ['label' => $sectionDisplayName, 'href' => null],
     ]"
 >
-    <div class="space-y-6" x-data="{ openEditModal: false, isHoveringRoster: false }">
+    <!-- Load SortableJS for Fluid Drag and Drop -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+
+    <div class="space-y-6" x-data="{ openEditModal: false, isHoveringRoster: false, rosterGenderFilter: 'all', addGenderFilter: 'all' }">
         <!-- Top Header Banner -->
         <section class="overflow-hidden rounded-3xl border border-emerald-700/30 bg-gradient-to-br from-emerald-800 via-emerald-900 to-teal-950 p-6 text-white shadow-xl">
             <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -31,6 +34,11 @@
                                 {{ $section->shift }}
                             </span>
                         @endif
+                        @if($section->gender)
+                            <span class="inline-flex rounded-full bg-amber-500/20 px-3 py-1 text-xs font-bold text-amber-200 uppercase">
+                                {{ $section->gender === 'female' ? 'Girls Only' : ($section->gender === 'male' ? 'Boys Only' : 'Co-Ed Merge') }}
+                            </span>
+                        @endif
                     </div>
                     <h1 class="mt-3 text-3xl font-black tracking-tight">{{ $sectionDisplayName }}</h1>
                     <p class="mt-1 text-sm font-medium text-emerald-100 flex items-center gap-3">
@@ -39,7 +47,7 @@
                             <span>&bull; Advisor: <strong class="text-white font-extrabold">{{ str_ireplace('TEACHER ', '', $section->grade_advisor->teacher_name ?? '') }}</strong></span>
                         @endif
                     </p>
-                    <!-- Section Switcher -->
+                    <!-- Section Switcher Dropdown -->
                     <div class="mt-3 flex items-center gap-2">
                         <span class="text-xs font-bold text-emerald-200">Switch Section:</span>
                         <select onchange="if(this.value) window.location.href='/admin/students/occupancy/sections/'+this.value+'/manage'" class="h-8 px-3 rounded-xl bg-white/15 border border-white/25 text-xs font-extrabold text-white outline-none focus:ring-2 focus:ring-emerald-300">
@@ -76,7 +84,7 @@
             </div>
         </section>
 
-        <!-- Quick Settings & Controls Bar -->
+        <!-- Quick Settings Bar -->
         <div class="rounded-2xl bg-white p-4 border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-4">
             <div class="flex flex-wrap items-center gap-4 text-xs font-bold text-slate-700">
                 <span class="text-slate-400 font-extrabold uppercase tracking-wider text-[10px]">Quick Settings:</span>
@@ -129,7 +137,7 @@
 
             <div class="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-xl border border-emerald-200 flex items-center gap-1.5">
                 <i data-lucide="sparkles" class="w-3.5 h-3.5 text-emerald-600"></i>
-                <span>Tip: Hold & Drag student cards onto Left Roster to assign instantly!</span>
+                <span>Drag student cards onto Left Roster to assign!</span>
             </div>
         </div>
 
@@ -233,19 +241,41 @@
                             $refs.dragAssignForm.submit();
                         }
                      "
-                     :class="isHoveringRoster ? 'ring-4 ring-emerald-400/50 bg-emerald-50/40 border-emerald-400 scale-[1.01]' : ''">
+                     :class="isHoveringRoster ? 'ring-4 ring-emerald-400/60 bg-emerald-50/50 border-emerald-400 scale-[1.01]' : ''">
                     
-                    <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
-                        <div>
-                            <h2 class="text-base font-black text-slate-900 flex items-center gap-2">
-                                <i data-lucide="users" class="w-5 h-5 text-emerald-600"></i>
-                                <span>Current Roster</span>
-                            </h2>
-                            <p class="text-xs text-slate-500 font-medium">{{ $enrolledCount }} student(s) in section</p>
+                    <div class="pb-3 border-b border-slate-100 mb-4 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h2 class="text-base font-black text-slate-900 flex items-center gap-2">
+                                    <i data-lucide="users" class="w-5 h-5 text-emerald-600"></i>
+                                    <span>Current Roster</span>
+                                </h2>
+                                <p class="text-xs text-slate-500 font-medium">{{ $enrolledCount }} student(s) in section</p>
+                            </div>
+                            <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+                                {{ $fillRate }}% Filled
+                            </span>
                         </div>
-                        <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
-                            {{ $fillRate }}% Filled
-                        </span>
+
+                        <!-- Roster Gender Filter Tabs -->
+                        <div class="flex items-center gap-1.5 pt-1">
+                            <span class="text-[11px] font-bold text-slate-400">Gender Filter:</span>
+                            <button type="button" @click="rosterGenderFilter = 'all'"
+                                    :class="rosterGenderFilter === 'all' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                                    class="px-2.5 py-0.5 rounded-lg text-[11px] font-extrabold transition cursor-pointer">
+                                All ({{ $enrolledCount }})
+                            </button>
+                            <button type="button" @click="rosterGenderFilter = 'male'"
+                                    :class="rosterGenderFilter === 'male' ? 'bg-blue-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                                    class="px-2.5 py-0.5 rounded-lg text-[11px] font-extrabold transition cursor-pointer">
+                                👦 Boys
+                            </button>
+                            <button type="button" @click="rosterGenderFilter = 'female'"
+                                    :class="rosterGenderFilter === 'female' ? 'bg-pink-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                                    class="px-2.5 py-0.5 rounded-lg text-[11px] font-extrabold transition cursor-pointer">
+                                👧 Girls
+                            </button>
+                        </div>
                     </div>
 
                     @if($section->students->isEmpty())
@@ -255,16 +285,18 @@
                             <p class="text-[11px] font-bold text-emerald-700 mt-1">Drag student cards from the right panel & drop them here!</p>
                         </div>
                     @else
-                        <div class="space-y-2 max-h-[600px] overflow-y-auto pr-1 divide-y divide-slate-100">
+                        <div id="roster-sortable-list" class="space-y-2 max-h-[600px] overflow-y-auto pr-1 divide-y divide-slate-100">
                             @foreach($section->students as $secStudent)
                                 @php
                                     $st = $secStudent->student;
                                     $app = $st?->applicant;
                                     $stName = $app ? html_entity_decode(implode(' ', array_filter([trim($app->first_name ?? ''), trim($app->middle_name ?? ''), trim($app->last_name ?? '')])), ENT_QUOTES, 'UTF-8') : 'Student #' . $st->student_number;
+                                    $stGender = strtolower(trim($app?->gender ?? ''));
                                 @endphp
-                                <div class="pt-2.5 pb-2 flex items-center justify-between gap-3 group">
+                                <div class="pt-2.5 pb-2 flex items-center justify-between gap-3 group bg-white rounded-xl p-2 hover:bg-slate-50 transition"
+                                     x-show="rosterGenderFilter === 'all' || '{{ $stGender }}'.includes(rosterGenderFilter)">
                                     <div class="min-w-0 flex items-center gap-2">
-                                        <i data-lucide="grip-vertical" class="w-3.5 h-3.5 text-slate-300 group-hover:text-slate-500 shrink-0"></i>
+                                        <i data-lucide="grip-vertical" class="drag-handle w-4 h-4 text-slate-400 group-hover:text-emerald-600 shrink-0 cursor-grab active:cursor-grabbing"></i>
                                         <div class="min-w-0">
                                             <a href="{{ route('admin.students.show', $st) }}" target="_blank" class="font-black text-xs text-slate-900 hover:text-emerald-700 transition uppercase block truncate">
                                                 {{ $stName }}
@@ -274,7 +306,9 @@
                                                 @if($app?->lrn)
                                                     <span>&bull; LRN: {{ $app->lrn }}</span>
                                                 @endif
-                                                <span>&bull; {{ $st->grade_level }}</span>
+                                                @if($app?->gender)
+                                                    <span class="uppercase text-slate-500 font-black">&bull; {{ $app->gender }}</span>
+                                                @endif
                                             </div>
                                         </div>
                                     </div>
@@ -302,7 +336,7 @@
                                 <i data-lucide="user-plus" class="w-5 h-5 text-emerald-600"></i>
                                 <span>Add Students to {{ $sectionDisplayName }}</span>
                             </h2>
-                            <p class="text-xs text-slate-500 font-medium">Search, select, or drag-and-drop official student records</p>
+                            <p class="text-xs text-slate-500 font-medium">Search, filter by gender, or drag-and-drop student records</p>
                         </div>
                     </div>
 
@@ -320,8 +354,8 @@
                         </div>
 
                         <!-- Grade Filter Tabs -->
-                        <div class="flex items-center gap-2 pt-1">
-                            <span class="text-xs font-bold text-slate-500">Filter:</span>
+                        <div class="flex flex-wrap items-center gap-2 pt-1">
+                            <span class="text-xs font-bold text-slate-500">Grade:</span>
                             <a href="{{ route('admin.students.occupancy.manage-section', [$section, 'grade_filter' => 'matching', 'search' => request('search')]) }}"
                                class="px-3 py-1 rounded-xl text-xs font-bold transition {{ $gradeFilter === 'matching' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}">
                                 {{ $section->grade_level ?: 'Matching Grade' }} Students Only
@@ -337,28 +371,50 @@
                     <form method="POST" action="{{ route('admin.students.occupancy.assign-students', $section) }}" x-data="{ selectAll: false }">
                         @csrf
                         
-                        <div class="flex items-center justify-between px-3 py-2 bg-slate-50 rounded-2xl border border-slate-200/80 mb-3 text-xs font-bold text-slate-600">
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <input type="checkbox" @click="selectAll = !selectAll; $el.closest('form').querySelectorAll('input[type=checkbox]').forEach(c => c.checked = selectAll)"
-                                       class="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500">
-                                <span>Select All Visible Students</span>
-                            </label>
-                            <span class="text-slate-400 font-semibold">{{ $availableStudents->count() }} Student Records Found</span>
+                        <!-- Gender Filter Bar for Add Students -->
+                        <div class="flex flex-wrap items-center justify-between gap-2 px-3 py-2 bg-slate-50 rounded-2xl border border-slate-200/80 mb-3 text-xs font-bold text-slate-600">
+                            <div class="flex items-center gap-2">
+                                <label class="flex items-center gap-1.5 cursor-pointer">
+                                    <input type="checkbox" @click="selectAll = !selectAll; $el.closest('form').querySelectorAll('input[type=checkbox]').forEach(c => c.checked = selectAll)"
+                                           class="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500">
+                                    <span>Select All</span>
+                                </label>
+                                <span class="text-slate-300">|</span>
+                                <span class="text-[11px] font-bold text-slate-400">Gender Filter:</span>
+                                <button type="button" @click="addGenderFilter = 'all'"
+                                        :class="addGenderFilter === 'all' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'"
+                                        class="px-2 py-0.5 rounded-lg text-[11px] font-extrabold transition cursor-pointer">
+                                    All
+                                </button>
+                                <button type="button" @click="addGenderFilter = 'male'"
+                                        :class="addGenderFilter === 'male' ? 'bg-blue-600 text-white shadow-xs' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'"
+                                        class="px-2 py-0.5 rounded-lg text-[11px] font-extrabold transition cursor-pointer">
+                                    👦 Boys
+                                </button>
+                                <button type="button" @click="addGenderFilter = 'female'"
+                                        :class="addGenderFilter === 'female' ? 'bg-pink-600 text-white shadow-xs' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'"
+                                        class="px-2 py-0.5 rounded-lg text-[11px] font-extrabold transition cursor-pointer">
+                                    👧 Girls
+                                </button>
+                            </div>
+                            <span class="text-slate-400 font-semibold">{{ $availableStudents->count() }} Records</span>
                         </div>
 
-                        <div class="space-y-1.5 max-h-[420px] overflow-y-auto pr-1 border border-slate-200 rounded-2xl p-2 bg-slate-50/30">
+                        <div id="add-students-sortable-list" class="space-y-1.5 max-h-[420px] overflow-y-auto pr-1 border border-slate-200 rounded-2xl p-2 bg-slate-50/30">
                             @forelse($availableStudents as $st)
                                 @php
                                     $stApp = $st->applicant;
                                     $stName = $stApp ? html_entity_decode(implode(' ', array_filter([trim($stApp->first_name ?? ''), trim($stApp->middle_name ?? ''), trim($stApp->last_name ?? '')])), ENT_QUOTES, 'UTF-8') : 'Student #' . $st->student_number;
+                                    $stGender = strtolower(trim($stApp?->gender ?? ''));
                                     $currentSec = $st->studentSection?->section;
                                     $isEnrolledInThis = $currentSec && $currentSec->id === $section->id;
                                 @endphp
                                 <label draggable="true"
                                        @dragstart="$event.dataTransfer.setData('text/plain', '{{ $st->id }}')"
+                                       x-show="addGenderFilter === 'all' || '{{ $stGender }}'.includes(addGenderFilter)"
                                        class="flex items-center justify-between p-3 rounded-xl bg-white border border-slate-200/80 hover:border-emerald-400 hover:shadow-sm transition cursor-grab active:cursor-grabbing group">
                                     <div class="flex items-center gap-3 min-w-0">
-                                        <i data-lucide="grip-vertical" class="w-4 h-4 text-slate-300 group-hover:text-emerald-500 shrink-0"></i>
+                                        <i data-lucide="grip-vertical" class="drag-handle w-4 h-4 text-slate-300 group-hover:text-emerald-500 shrink-0"></i>
                                         <input type="checkbox" name="student_ids[]" value="{{ $st->id }}" @checked($isEnrolledInThis)
                                                class="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500">
                                         <div class="min-w-0">
@@ -367,6 +423,9 @@
                                                 <span>ID: {{ $st->student_number }}</span>
                                                 @if($stApp?->lrn)
                                                     <span>&bull; LRN: {{ $stApp->lrn }}</span>
+                                                @endif
+                                                @if($stApp?->gender)
+                                                    <span class="uppercase text-slate-600 font-extrabold">&bull; {{ $stApp->gender }}</span>
                                                 @endif
                                                 <span>&bull; Grade: <strong>{{ $st->grade_level }}</strong></span>
                                             </div>
@@ -413,4 +472,27 @@
 
         </div>
     </div>
+
+    <!-- Initialize SortableJS for smooth dragging -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var rosterList = document.getElementById('roster-sortable-list');
+            if (rosterList) {
+                new Sortable(rosterList, {
+                    animation: 150,
+                    handle: '.drag-handle',
+                    ghostClass: 'bg-emerald-100'
+                });
+            }
+
+            var addList = document.getElementById('add-students-sortable-list');
+            if (addList) {
+                new Sortable(addList, {
+                    animation: 150,
+                    handle: '.drag-handle',
+                    ghostClass: 'bg-emerald-100'
+                });
+            }
+        });
+    </script>
 </x-admin-layout>
