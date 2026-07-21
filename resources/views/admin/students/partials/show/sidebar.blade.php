@@ -89,6 +89,15 @@
                 <span>Print ID Card</span>
             </button>
 
+            @if($student->studentSection?->section)
+                <!-- 2b. Section ID Roster Document -->
+                <a href="{{ route('admin.students.id-roster-print', $student->studentSection->section) }}" target="_blank"
+                   class="w-full inline-flex h-10 items-center gap-2 rounded-xl border border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-950/40 px-3 text-xs font-bold text-purple-700 dark:text-purple-300 hover:bg-purple-100 transition active:scale-[0.98] cursor-pointer">
+                    <i data-lucide="layers" class="h-4 w-4 text-purple-600"></i>
+                    <span>Export Section ID Cards Sheet</span>
+                </a>
+            @endif
+
             <!-- 3. Print Enrollment Confirmation -->
             <a href="{{ route('admin.students.index', ['search' => $student->student_number, 'print_info' => 1]) }}" target="_blank"
                class="w-full inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98] transition cursor-pointer">
