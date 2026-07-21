@@ -162,6 +162,27 @@ class AdminStudentDashboardController extends Controller
         return back()->with('success', 'New section "' . $validated['name'] . '" created successfully!');
     }
 
+    public function updateSection(Request $request, Section $section)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'grade_level' => 'required|string|max:100',
+            'learning_mode' => 'nullable|string|max:100',
+            'shift' => 'nullable|string|max:100',
+            'gender' => 'nullable|string|in:male,female,merge',
+        ]);
+
+        $section->update([
+            'name' => trim($validated['name']),
+            'grade_level' => trim($validated['grade_level']),
+            'learning_mode' => $validated['learning_mode'] ? trim($validated['learning_mode']) : 'Face-to-Face',
+            'shift' => $validated['shift'] ? trim($validated['shift']) : null,
+            'gender' => $validated['gender'] ? $validated['gender'] : 'merge',
+        ]);
+
+        return back()->with('success', 'Section "' . $section->name . '" updated successfully!');
+    }
+
     public function destroySection(Section $section)
     {
         $sectionName = $section->name ?: $section->displayName;

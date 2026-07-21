@@ -12,7 +12,7 @@
         ['label' => $sectionDisplayName, 'href' => null],
     ]"
 >
-    <div class="space-y-6">
+    <div class="space-y-6" x-data="{ openEditModal: false }">
         <!-- Top Header Banner -->
         <section class="overflow-hidden rounded-3xl border border-emerald-700/30 bg-gradient-to-br from-emerald-800 via-emerald-900 to-teal-950 p-6 text-white shadow-xl">
             <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -36,6 +36,10 @@
                     </p>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
+                    <button type="button" @click="openEditModal = true" class="inline-flex items-center gap-1.5 rounded-2xl bg-amber-500 hover:bg-amber-600 px-4 py-2.5 text-xs font-black text-white shadow-md transition active:scale-95 cursor-pointer">
+                        <i data-lucide="edit" class="w-4 h-4"></i>
+                        <span>Rename / Edit Section</span>
+                    </button>
                     <a href="{{ route('admin.students.occupancy') }}" class="inline-flex items-center gap-1.5 rounded-2xl border border-white/20 bg-white/10 px-4 py-2.5 text-xs font-bold text-white hover:bg-white/20 transition active:scale-95">
                         <i data-lucide="arrow-left" class="w-4 h-4"></i>
                         <span>Back to Occupancy</span>
@@ -51,6 +55,84 @@
                 </div>
             </div>
         </section>
+
+        <!-- Edit Section Details Modal -->
+        <template x-teleport="body">
+            <div x-show="openEditModal"
+                 style="display: none; z-index: 99999;"
+                 class="fixed inset-0 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-fade-in">
+                <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col"
+                     @click.outside="openEditModal = false">
+                    <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800">
+                        <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <i data-lucide="edit" class="w-5 h-5 text-emerald-600"></i>
+                            <span>Rename & Edit Section</span>
+                        </h3>
+                        <button @click="openEditModal = false" class="text-slate-400 hover:text-slate-600 transition">
+                            <i data-lucide="x" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                    <form method="POST" action="{{ route('admin.students.occupancy.update-section', $section) }}" class="p-6 space-y-4">
+                        @csrf
+                        @method('PUT')
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Section Name</label>
+                            <input type="text" name="name" value="{{ $section->name }}" required placeholder="e.g. ALI IBN ABI TALIB"
+                                   class="w-full h-11 px-3.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-900 outline-none focus:border-emerald-500">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Grade Level</label>
+                                <select name="grade_level" required class="w-full h-11 px-3 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-900 outline-none focus:border-emerald-500">
+                                    @foreach(['Kinder 1', 'Kinder 2', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'] as $g)
+                                        <option value="{{ $g }}" @selected($section->grade_level === $g)>{{ $g }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Learning Mode <span class="text-slate-400 font-normal">(optional)</span></label>
+                                <select name="learning_mode" class="w-full h-11 px-3 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-900 outline-none focus:border-emerald-500">
+                                    <option value="">None / Default</option>
+                                    <option value="Flexible Online Learning" @selected($section->learning_mode === 'Flexible Online Learning')>Flexible Online Learning</option>
+                                    <option value="Face-to-Face" @selected($section->learning_mode === 'Face-to-Face')>Face-to-Face</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Shift <span class="text-slate-400 font-normal">(optional)</span></label>
+                                <select name="shift" class="w-full h-11 px-3 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-900 outline-none focus:border-emerald-500">
+                                    <option value="">None / No Shift</option>
+                                    <option value="1st Shift" @selected($section->shift === '1st Shift')>1st Shift</option>
+                                    <option value="2nd Shift" @selected($section->shift === '2nd Shift')>2nd Shift</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Gender Allocation <span class="text-slate-400 font-normal">(optional)</span></label>
+                                <select name="gender" class="w-full h-11 px-3 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-900 outline-none focus:border-emerald-500">
+                                    <option value="merge" @selected(($section->gender ?? 'merge') === 'merge')>Co-Ed (Merge)</option>
+                                    <option value="female" @selected($section->gender === 'female')>Girls Only</option>
+                                    <option value="male" @selected($section->gender === 'male')>Boys Only</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                            <button type="button" @click="openEditModal = false" class="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition cursor-pointer">
+                                Cancel
+                            </button>
+                            <button type="submit" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-md cursor-pointer">
+                                Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </template>
 
         <!-- Main Workspace: 2 Columns -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">

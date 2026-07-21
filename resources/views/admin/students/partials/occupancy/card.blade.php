@@ -133,6 +133,9 @@
                                             </svg>
                                         </a>
                                     @endif
+                                    <button type="button" @click="openQuickEdit = true" class="h-7 w-7 rounded-lg bg-amber-50 text-amber-700 border border-amber-100 hover:bg-amber-100 flex items-center justify-center transition active:scale-[0.95]" title="Rename / Edit Section">
+                                        <i data-lucide="pencil" class="h-3.5 w-3.5"></i>
+                                    </button>
                                     <a href="{{ route('admin.students.occupancy.manage-section', $section) }}" class="h-7 w-7 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100 flex items-center justify-center transition active:scale-[0.95]" title="Manage Section & Add Students">
                                         <i data-lucide="user-plus" class="h-3.5 w-3.5"></i>
                                     </a>
@@ -157,6 +160,85 @@
                                 </div>
                             </td>
                         </tr>
+
+                        <!-- Quick Edit Modal -->
+                        <template x-teleport="body">
+                            <div x-show="openQuickEdit"
+                                 style="display: none; z-index: 99999;"
+                                 class="fixed inset-0 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-fade-in">
+                                <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col"
+                                     @click.outside="openQuickEdit = false">
+                                    <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800">
+                                        <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                            <i data-lucide="pencil" class="w-5 h-5 text-amber-500"></i>
+                                            <span>Rename & Edit Section</span>
+                                        </h3>
+                                        <button @click="openQuickEdit = false" class="text-slate-400 hover:text-slate-600 transition">
+                                            <i data-lucide="x" class="w-5 h-5"></i>
+                                        </button>
+                                    </div>
+                                    <form method="POST" action="{{ route('admin.students.occupancy.update-section', $section) }}" class="p-6 space-y-4 text-left">
+                                        @csrf
+                                        @method('PUT')
+                                        <div>
+                                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Section Name</label>
+                                            <input type="text" name="name" value="{{ $section->name }}" required placeholder="e.g. ALI IBN ABI TALIB"
+                                                   class="w-full h-11 px-3.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-900 outline-none focus:border-emerald-500">
+                                        </div>
+
+                                        <div class="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Grade Level</label>
+                                                <select name="grade_level" required class="w-full h-11 px-3 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-900 outline-none focus:border-emerald-500">
+                                                    @foreach(['Kinder 1', 'Kinder 2', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'] as $g)
+                                                        <option value="{{ $g }}" @selected($section->grade_level === $g)>{{ $g }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+
+                                            <div>
+                                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Learning Mode <span class="text-slate-400 font-normal">(optional)</span></label>
+                                                <select name="learning_mode" class="w-full h-11 px-3 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-900 outline-none focus:border-emerald-500">
+                                                    <option value="">None / Default</option>
+                                                    <option value="Flexible Online Learning" @selected($section->learning_mode === 'Flexible Online Learning')>Flexible Online Learning</option>
+                                                    <option value="Face-to-Face" @selected($section->learning_mode === 'Face-to-Face')>Face-to-Face</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div class="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Shift <span class="text-slate-400 font-normal">(optional)</span></label>
+                                                <select name="shift" class="w-full h-11 px-3 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-900 outline-none focus:border-emerald-500">
+                                                    <option value="">None / No Shift</option>
+                                                    <option value="1st Shift" @selected($section->shift === '1st Shift')>1st Shift</option>
+                                                    <option value="2nd Shift" @selected($section->shift === '2nd Shift')>2nd Shift</option>
+                                                </select>
+                                            </div>
+
+                                            <div>
+                                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Gender Allocation <span class="text-slate-400 font-normal">(optional)</span></label>
+                                                <select name="gender" class="w-full h-11 px-3 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-900 outline-none focus:border-emerald-500">
+                                                    <option value="merge" @selected(($section->gender ?? 'merge') === 'merge')>Co-Ed (Merge)</option>
+                                                    <option value="female" @selected($section->gender === 'female')>Girls Only</option>
+                                                    <option value="male" @selected($section->gender === 'male')>Boys Only</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                                            <button type="button" @click="openQuickEdit = false" class="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition cursor-pointer">
+                                                Cancel
+                                            </button>
+                                            <button type="submit" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-md cursor-pointer">
+                                                Save Changes
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </template>
+
                         <!-- Collapsible Roster Row -->
                         <tr x-show="showRoster" x-cloak class="bg-slate-50/50">
                             <td colspan="3" class="p-3" style="border-bottom: 1px solid #f1f5f9;">
