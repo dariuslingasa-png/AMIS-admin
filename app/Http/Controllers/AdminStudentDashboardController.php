@@ -141,6 +141,27 @@ class AdminStudentDashboardController extends Controller
         ]);
     }
 
+    public function storeSection(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'grade_level' => 'required|string|max:100',
+            'learning_mode' => 'required|string|max:100',
+            'shift' => 'nullable|string|max:100',
+            'gender' => 'required|string|in:male,female,merge',
+        ]);
+
+        \App\Models\Section::create([
+            'name' => trim($validated['name']),
+            'grade_level' => trim($validated['grade_level']),
+            'learning_mode' => trim($validated['learning_mode']),
+            'shift' => $validated['shift'] ? trim($validated['shift']) : null,
+            'gender' => $validated['gender'],
+        ]);
+
+        return back()->with('success', 'New section "' . $validated['name'] . '" created successfully!');
+    }
+
     public function gradeRosterPrint(Request $request, $grade)
     {
         $grade = urldecode($grade);

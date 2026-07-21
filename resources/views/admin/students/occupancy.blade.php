@@ -19,20 +19,105 @@
         ['label' => 'Section Occupancy', 'href' => null],
     ]"
 >
-    <div class="space-y-6">
+    <div class="space-y-6" x-data="{ openCreateModal: false }">
         <!-- Banner -->
         <section class="overflow-hidden rounded-3xl border border-emerald-700/30 bg-gradient-to-br from-emerald-800 via-emerald-900 to-teal-950 p-6 text-white shadow-xl shadow-slate-900/10">
             <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                 <div>
                     <span class="inline-flex rounded-full bg-white/10 px-3 py-1 text-xs font-black uppercase tracking-[0.22em] text-slate-200">Students Workspace</span>
-                    <h1 class="mt-4 text-3xl font-black tracking-tight">Section Occupancy</h1>
+                    <h1 class="mt-4 text-3xl font-black tracking-tight">Section Occupancy & Class Roster</h1>
                     <p class="mt-2 max-w-2xl text-sm font-medium leading-6 text-emerald-100">
-                        Monitor class sizes, advisor assignments, face-to-face vs flexible capacities, and section rosters.
+                        Monitor class sizes, advisor assignments, create new sections, and export section ID cards.
                     </p>
+                </div>
+                <div>
+                    <button type="button" @click="openCreateModal = true"
+                            class="inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3 text-xs font-black text-emerald-900 shadow-lg hover:bg-emerald-50 transition active:scale-95 cursor-pointer">
+                        <i data-lucide="plus-circle" class="w-4 h-4 text-emerald-600"></i>
+                        <span>Create New Section</span>
+                    </button>
                 </div>
             </div>
         </section>
 
+        <!-- Create New Section Modal -->
+        <template x-teleport="body">
+            <div x-show="openCreateModal"
+                 style="display: none; z-index: 99999;"
+                 class="fixed inset-0 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-fade-in">
+                <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col"
+                     @click.outside="openCreateModal = false"
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 scale-95"
+                     x-transition:enter-end="opacity-100 scale-100">
+                    <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800">
+                        <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <i data-lucide="plus-circle" class="w-5 h-5 text-emerald-600"></i>
+                            <span>Create New Class Section</span>
+                        </h3>
+                        <button @click="openCreateModal = false" class="text-slate-400 hover:text-slate-600 transition">
+                            <i data-lucide="x" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                    <form method="POST" action="{{ route('admin.students.occupancy.store-section') }}" class="p-6 space-y-4">
+                        @csrf
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Section Name</label>
+                            <input type="text" name="name" required placeholder="e.g. ALI IBN ABI TALIB or HUDHAYFAH"
+                                   class="w-full h-11 px-3.5 rounded-xl border border-slate-200 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Grade Level</label>
+                                <select name="grade_level" required class="w-full h-11 px-3 rounded-xl border border-slate-200 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500">
+                                    @foreach(['Kinder 1', 'Kinder 2', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'] as $g)
+                                        <option value="{{ $g }}">{{ $g }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Learning Mode</label>
+                                <select name="learning_mode" required class="w-full h-11 px-3 rounded-xl border border-slate-200 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500">
+                                    <option value="Flexible Online Learning">Flexible Online Learning</option>
+                                    <option value="Face-to-Face">Face-to-Face</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Shift</label>
+                                <select name="shift" class="w-full h-11 px-3 rounded-xl border border-slate-200 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500">
+                                    <option value="1st Shift">1st Shift</option>
+                                    <option value="2nd Shift">2nd Shift</option>
+                                    <option value="">F2F (No Shift)</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Gender Allocation</label>
+                                <select name="gender" required class="w-full h-11 px-3 rounded-xl border border-slate-200 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500">
+                                    <option value="merge">Co-Ed (Merge)</option>
+                                    <option value="female">Girls Only</option>
+                                    <option value="male">Boys Only</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                            <button type="button" @click="openCreateModal = false" class="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition cursor-pointer">
+                                Cancel
+                            </button>
+                            <button type="submit" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-md cursor-pointer">
+                                Create Section
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </template>
 
         <!-- Occupancy Container -->
         <div id="occupancyContainer" class="space-y-6">
