@@ -228,12 +228,12 @@ class AdminStudentDashboardController extends Controller
             $query->where('grade_level', $section->grade_level);
         }
 
-        $availableStudents = $query->get()->sortBy(function ($s) {
-            $applicant = $s->applicant;
-            $lastName = strtoupper(trim($applicant?->last_name ?? ''));
-            $firstName = strtoupper(trim($applicant?->first_name ?? ''));
-            return $lastName . ' ' . $firstName;
-        });
+        $query->leftJoin('enrollment_applicants', 'students.enrollment_applicant_id', '=', 'enrollment_applicants.id')
+              ->select('students.*')
+              ->orderBy('enrollment_applicants.last_name', 'asc')
+              ->orderBy('enrollment_applicants.first_name', 'asc');
+
+        $availableStudents = $query->paginate(50)->withQueryString();
 
         $isF2f = str_contains(strtolower((string) $section->learning_mode), 'face') ||
                  str_contains(strtolower((string) $section->learning_mode), 'f2f') ||

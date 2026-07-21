@@ -34,17 +34,17 @@
     });
 
     // Group Available Students into Boys, Girls, and Others
-    $availableBoys = $availableStudents->filter(function($st) {
+    $availableBoys = $availableStudents->getCollection()->filter(function($st) {
         $g = strtolower(trim($st->applicant?->gender ?? ''));
         return str_contains($g, 'male') && !str_contains($g, 'female');
     });
 
-    $availableGirls = $availableStudents->filter(function($st) {
+    $availableGirls = $availableStudents->getCollection()->filter(function($st) {
         $g = strtolower(trim($st->applicant?->gender ?? ''));
         return str_contains($g, 'female');
     });
 
-    $availableOthers = $availableStudents->reject(function($st) use ($availableBoys, $availableGirls) {
+    $availableOthers = $availableStudents->getCollection()->reject(function($st) use ($availableBoys, $availableGirls) {
         return $availableBoys->contains($st) || $availableGirls->contains($st);
     });
 @endphp
@@ -707,6 +707,11 @@
                                 </div>
                             @endif
 
+                        </div>
+
+                        <!-- Pagination Links -->
+                        <div class="mt-4 px-2">
+                            {{ $availableStudents->links() }}
                         </div>
 
                         <div class="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between">
