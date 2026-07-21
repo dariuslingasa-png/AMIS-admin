@@ -877,18 +877,21 @@
             });
         }
 
+        function setButtonsDisabled(disabled) {
+            document.querySelectorAll('.toolbar button').forEach(b => b.disabled = disabled);
+        }
+
         async function optimizeAndPrint(btn) {
-            // First adjust all name sizes to fit perfectly!
             adjustLastNameFontSizes();
             
             const originalHtml = btn.innerHTML;
-            btn.disabled = true;
+            setButtonsDisabled(true);
 
             const cards = Array.from(document.querySelectorAll('.id-card'));
             const total = cards.length;
             if (total === 0) {
                 alert('No cards found to optimize.');
-                btn.disabled = false;
+                setButtonsDisabled(false);
                 return;
             }
 
@@ -897,12 +900,11 @@
                 await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
             } catch (err) {
                 alert('Failed to load optimizer library: ' + err);
-                btn.disabled = false;
+                setButtonsDisabled(false);
                 btn.innerHTML = originalHtml;
                 return;
             }
 
-            // Loop through each card sequentially to avoid massive memory usage spikes
             for (let i = 0; i < total; i++) {
                 const card = cards[i];
                 const wrapper = card.closest('.id-card-wrapper');
@@ -912,16 +914,15 @@
 
                 try {
                     const canvas = await html2canvas(card, {
-                        scale: 2.2, // 220 DPI (looks very crisp but keeps image size and memory low)
+                        scale: 1.5, // 150 DPI (super crisp & 3x faster rendering)
                         useCORS: true,
                         allowTaint: true,
                         backgroundColor: null,
                         logging: false
                     });
 
-                    const dataUrl = canvas.toDataURL('image/png', 0.95);
+                    const dataUrl = canvas.toDataURL('image/png', 0.92);
                     
-                    // Replace complex HTML layout with simple flat high-res image
                     wrapper.innerHTML = `<img src="${dataUrl}" class="optimized-print-img" style="width: 100%; height: 100%; object-fit: contain; display: block; border-radius: 6.5mm;">`;
                 } catch (err) {
                     console.error('Error optimizing card ' + i + ':', err);
@@ -929,10 +930,9 @@
             }
 
             btn.innerHTML = '🖨️ Opening print dialog...';
-            // Wait for DOM to adjust
-            await new Promise(resolve => setTimeout(resolve, 500));
+            await new Promise(resolve => setTimeout(resolve, 300));
             window.print();
-            btn.disabled = false;
+            setButtonsDisabled(false);
             btn.innerHTML = originalHtml;
         }
 
@@ -1104,13 +1104,13 @@
             adjustLastNameFontSizes();
             
             const originalHtml = btn.innerHTML;
-            btn.disabled = true;
+            setButtonsDisabled(true);
 
             const cards = Array.from(document.querySelectorAll('.id-card'));
             const total = cards.length;
             if (total === 0) {
                 alert('No cards found to export.');
-                btn.disabled = false;
+                setButtonsDisabled(false);
                 return;
             }
 
@@ -1119,24 +1119,23 @@
                 await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
             } catch (err) {
                 alert('Failed to load library: ' + err);
-                btn.disabled = false;
+                setButtonsDisabled(false);
                 btn.innerHTML = originalHtml;
                 return;
             }
 
-            // Render all cards to base64 images
             const cardImages = [];
             for (let i = 0; i < total; i++) {
-                btn.innerHTML = `⏳ Preparing Google Docs images: ${i + 1}/${total}...`;
+                btn.innerHTML = `⏳ Google Docs (${i + 1}/${total})...`;
                 try {
                     const canvas = await html2canvas(cards[i], {
-                        scale: 2.0, // High quality 200 DPI for Google Docs
+                        scale: 1.5, // 150 DPI (fast & high quality)
                         useCORS: true,
                         allowTaint: true,
                         backgroundColor: null,
                         logging: false
                     });
-                    cardImages.push(canvas.toDataURL('image/png', 0.95));
+                    cardImages.push(canvas.toDataURL('image/png', 0.92));
                 } catch (e) {
                     console.error('Canvas error', e);
                     cardImages.push('');
@@ -1202,7 +1201,6 @@
 
             htmlDoc += `</body></html>`;
 
-            // Copy rich HTML to Clipboard for instant Ctrl+V into Google Docs
             try {
                 const blob = new Blob([htmlDoc], { type: 'text/html' });
                 const data = [new ClipboardItem({ 'text/html': blob })];
@@ -1211,7 +1209,6 @@
                 console.warn('Clipboard write failed', err);
             }
 
-            // Also offer instant .doc file download for direct upload to Google Drive / Docs
             const blobDoc = new Blob(['\ufeff' + htmlDoc], { type: 'application/msword' });
             const link = document.createElement('a');
             const safeName = docTitle.replace(/[^a-zA-Z0-9_-]/g, '_');
@@ -1221,7 +1218,7 @@
             link.click();
             document.body.removeChild(link);
 
-            btn.disabled = false;
+            setButtonsDisabled(false);
             btn.innerHTML = originalHtml;
 
             alert('✅ READY FOR GOOGLE DOCS!\n\n1. A Word/Google Docs file (.doc) has been downloaded automatically.\n2. The roster is ALSO COPIED to your clipboard!\n\n👉 You can open Google Docs (docs.google.com) and press Ctrl+V to paste, OR upload the downloaded .doc file directly to Google Drive!');
