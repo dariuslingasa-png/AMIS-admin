@@ -225,7 +225,7 @@ class AdminStudentDashboardController extends Controller
 
         $gradeFilter = $request->get('grade_filter', 'matching');
         if ($gradeFilter === 'matching' && $section->grade_level) {
-            $query->where('grade_level', $section->grade_level);
+            $query->where('students.grade_level', $section->grade_level);
         }
 
         $query->leftJoin('enrollment_applicants', 'students.enrollment_applicant_id', '=', 'enrollment_applicants.id')
