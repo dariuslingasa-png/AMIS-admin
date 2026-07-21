@@ -240,7 +240,17 @@ class AdminStudentDashboardController extends Controller
                  strtoupper((string) $section->shift) === 'F2F';
         $capacity = $isF2f ? 30 : 45;
 
-        return view('admin.students.manage-section', compact('section', 'availableStudents', 'capacity', 'gradeFilter'));
+        $gradeOrder = ['Kinder 1', 'Kinder 2', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'];
+
+        $allSectionsGrouped = Section::withCount('students')
+            ->get()
+            ->groupBy('grade_level')
+            ->sortBy(function ($secs, $gLevel) use ($gradeOrder) {
+                $idx = array_search($gLevel, $gradeOrder);
+                return $idx === false ? 999 : $idx;
+            });
+
+        return view('admin.students.manage-section', compact('section', 'availableStudents', 'capacity', 'gradeFilter', 'allSectionsGrouped'));
     }
 
     public function gradeRosterPrint(Request $request, $grade)

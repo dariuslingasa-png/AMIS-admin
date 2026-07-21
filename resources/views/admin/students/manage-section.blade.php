@@ -12,18 +12,23 @@
         ['label' => $sectionDisplayName, 'href' => null],
     ]"
 >
-    <div class="space-y-6" x-data="{ openEditModal: false }">
+    <div class="space-y-6" x-data="{ openEditModal: false, isHoveringRoster: false }">
         <!-- Top Header Banner -->
         <section class="overflow-hidden rounded-3xl border border-emerald-700/30 bg-gradient-to-br from-emerald-800 via-emerald-900 to-teal-950 p-6 text-white shadow-xl">
             <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                    <div class="flex items-center gap-2">
+                    <div class="flex flex-wrap items-center gap-2">
                         <span class="inline-flex rounded-full bg-white/10 px-3 py-1 text-xs font-black uppercase tracking-widest text-slate-200">
                             {{ $section->grade_level }}
                         </span>
                         @if($section->learning_mode)
                             <span class="inline-flex rounded-full bg-emerald-500/20 px-3 py-1 text-xs font-bold text-emerald-200">
                                 {{ $section->learning_mode }}
+                            </span>
+                        @endif
+                        @if($section->shift)
+                            <span class="inline-flex rounded-full bg-teal-500/20 px-3 py-1 text-xs font-bold text-teal-200">
+                                {{ $section->shift }}
                             </span>
                         @endif
                     </div>
@@ -34,6 +39,21 @@
                             <span>&bull; Advisor: <strong class="text-white font-extrabold">{{ str_ireplace('TEACHER ', '', $section->grade_advisor->teacher_name ?? '') }}</strong></span>
                         @endif
                     </p>
+                    <!-- Section Switcher -->
+                    <div class="mt-3 flex items-center gap-2">
+                        <span class="text-xs font-bold text-emerald-200">Switch Section:</span>
+                        <select onchange="if(this.value) window.location.href='/admin/students/occupancy/sections/'+this.value+'/manage'" class="h-8 px-3 rounded-xl bg-white/15 border border-white/25 text-xs font-extrabold text-white outline-none focus:ring-2 focus:ring-emerald-300">
+                            @foreach($allSectionsGrouped as $gLevel => $secs)
+                                <optgroup label="{{ $gLevel }}" class="text-slate-900 font-black">
+                                    @foreach($secs as $s)
+                                        <option value="{{ $s->id }}" class="text-slate-900 font-extrabold" @selected($s->id === $section->id)>
+                                            {{ $s->grade_level }} - {{ $s->official_name ?: $s->name }} ({{ $s->occupied }} students)
+                                        </option>
+                                    @endforeach
+                                </optgroup>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
                     <button type="button" @click="openEditModal = true" class="inline-flex items-center gap-1.5 rounded-2xl bg-amber-500 hover:bg-amber-600 px-4 py-2.5 text-xs font-black text-white shadow-md transition active:scale-95 cursor-pointer">
@@ -55,6 +75,69 @@
                 </div>
             </div>
         </section>
+
+        <!-- Quick Settings & Controls Bar -->
+        <div class="rounded-2xl bg-white p-4 border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-4">
+            <div class="flex flex-wrap items-center gap-4 text-xs font-bold text-slate-700">
+                <span class="text-slate-400 font-extrabold uppercase tracking-wider text-[10px]">Quick Settings:</span>
+
+                <!-- Quick Learning Mode Dropdown -->
+                <form method="POST" action="{{ route('admin.students.occupancy.update-section', $section) }}" class="flex items-center gap-1.5">
+                    @csrf @method('PUT')
+                    <input type="hidden" name="name" value="{{ $section->name }}">
+                    <input type="hidden" name="grade_level" value="{{ $section->grade_level }}">
+                    <input type="hidden" name="shift" value="{{ $section->shift }}">
+                    <input type="hidden" name="gender" value="{{ $section->gender }}">
+                    <label class="text-slate-500 font-bold">Mode:</label>
+                    <select name="learning_mode" onchange="this.form.submit()" class="h-8 px-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-800 outline-none focus:border-emerald-500 cursor-pointer">
+                        <option value="">None / Default</option>
+                        <option value="Flexible Online Learning" @selected($section->learning_mode === 'Flexible Online Learning')>Flexible Online Learning</option>
+                        <option value="Face-to-Face" @selected($section->learning_mode === 'Face-to-Face')>Face-to-Face</option>
+                    </select>
+                </form>
+
+                <!-- Quick Shift Dropdown -->
+                <form method="POST" action="{{ route('admin.students.occupancy.update-section', $section) }}" class="flex items-center gap-1.5">
+                    @csrf @method('PUT')
+                    <input type="hidden" name="name" value="{{ $section->name }}">
+                    <input type="hidden" name="grade_level" value="{{ $section->grade_level }}">
+                    <input type="hidden" name="learning_mode" value="{{ $section->learning_mode }}">
+                    <input type="hidden" name="gender" value="{{ $section->gender }}">
+                    <label class="text-slate-500 font-bold">Shift:</label>
+                    <select name="shift" onchange="this.form.submit()" class="h-8 px-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-800 outline-none focus:border-emerald-500 cursor-pointer">
+                        <option value="">None / No Shift</option>
+                        <option value="1st Shift" @selected($section->shift === '1st Shift')>1st Shift</option>
+                        <option value="2nd Shift" @selected($section->shift === '2nd Shift')>2nd Shift</option>
+                    </select>
+                </form>
+
+                <!-- Quick Gender Dropdown -->
+                <form method="POST" action="{{ route('admin.students.occupancy.update-section', $section) }}" class="flex items-center gap-1.5">
+                    @csrf @method('PUT')
+                    <input type="hidden" name="name" value="{{ $section->name }}">
+                    <input type="hidden" name="grade_level" value="{{ $section->grade_level }}">
+                    <input type="hidden" name="learning_mode" value="{{ $section->learning_mode }}">
+                    <input type="hidden" name="shift" value="{{ $section->shift }}">
+                    <label class="text-slate-500 font-bold">Gender:</label>
+                    <select name="gender" onchange="this.form.submit()" class="h-8 px-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-800 outline-none focus:border-emerald-500 cursor-pointer">
+                        <option value="merge" @selected(($section->gender ?? 'merge') === 'merge')>Co-Ed (Merge)</option>
+                        <option value="female" @selected($section->gender === 'female')>Girls Only</option>
+                        <option value="male" @selected($section->gender === 'male')>Boys Only</option>
+                    </select>
+                </form>
+            </div>
+
+            <div class="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-xl border border-emerald-200 flex items-center gap-1.5">
+                <i data-lucide="sparkles" class="w-3.5 h-3.5 text-emerald-600"></i>
+                <span>Tip: Hold & Drag student cards onto Left Roster to assign instantly!</span>
+            </div>
+        </div>
+
+        <!-- Hidden Form for Drag & Drop Student Assignment -->
+        <form x-ref="dragAssignForm" method="POST" action="{{ route('admin.students.occupancy.assign-students', $section) }}" class="hidden">
+            @csrf
+            <input type="hidden" name="student_ids[]" x-ref="dragStudentInput">
+        </form>
 
         <!-- Edit Section Details Modal -->
         <template x-teleport="body">
@@ -137,9 +220,21 @@
         <!-- Main Workspace: 2 Columns -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-            <!-- LEFT COLUMN: Current Enrolled Roster (5 Cols) -->
+            <!-- LEFT COLUMN: Current Enrolled Roster (Drop Zone) (5 Cols) -->
             <div class="lg:col-span-5 space-y-4">
-                <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200"
+                     @dragover.prevent="isHoveringRoster = true"
+                     @dragleave="isHoveringRoster = false"
+                     @drop.prevent="
+                        isHoveringRoster = false;
+                        const stId = $event.dataTransfer.getData('text/plain');
+                        if (stId) {
+                            $refs.dragStudentInput.value = stId;
+                            $refs.dragAssignForm.submit();
+                        }
+                     "
+                     :class="isHoveringRoster ? 'ring-4 ring-emerald-400/50 bg-emerald-50/40 border-emerald-400 scale-[1.01]' : ''">
+                    
                     <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
                         <div>
                             <h2 class="text-base font-black text-slate-900 flex items-center gap-2">
@@ -154,10 +249,10 @@
                     </div>
 
                     @if($section->students->isEmpty())
-                        <div class="py-12 text-center rounded-2xl border border-dashed border-slate-200 bg-slate-50/50">
-                            <i data-lucide="user-x" class="w-8 h-8 text-slate-300 mx-auto mb-2"></i>
-                            <p class="text-xs font-bold text-slate-500">No students assigned to this section yet.</p>
-                            <p class="text-[11px] text-slate-400 mt-1">Use the panel on the right to add students.</p>
+                        <div class="py-12 text-center rounded-2xl border-2 border-dashed border-emerald-300 bg-emerald-50/20 p-6 transition">
+                            <i data-lucide="download-cloud" class="w-8 h-8 text-emerald-600 mx-auto mb-2 animate-bounce"></i>
+                            <p class="text-xs font-extrabold text-emerald-900">No students assigned yet.</p>
+                            <p class="text-[11px] font-bold text-emerald-700 mt-1">Drag student cards from the right panel & drop them here!</p>
                         </div>
                     @else
                         <div class="space-y-2 max-h-[600px] overflow-y-auto pr-1 divide-y divide-slate-100">
@@ -167,17 +262,20 @@
                                     $app = $st?->applicant;
                                     $stName = $app ? html_entity_decode(implode(' ', array_filter([trim($app->first_name ?? ''), trim($app->middle_name ?? ''), trim($app->last_name ?? '')])), ENT_QUOTES, 'UTF-8') : 'Student #' . $st->student_number;
                                 @endphp
-                                <div class="pt-2.5 pb-2 flex items-center justify-between gap-3">
-                                    <div class="min-w-0">
-                                        <a href="{{ route('admin.students.show', $st) }}" target="_blank" class="font-black text-xs text-slate-900 hover:text-emerald-700 transition uppercase block truncate">
-                                            {{ $stName }}
-                                        </a>
-                                        <div class="flex items-center gap-2 text-[10px] text-slate-400 font-bold mt-0.5">
-                                            <span>ID: {{ $st->student_number }}</span>
-                                            @if($app?->lrn)
-                                                <span>&bull; LRN: {{ $app->lrn }}</span>
-                                            @endif
-                                            <span>&bull; {{ $st->grade_level }}</span>
+                                <div class="pt-2.5 pb-2 flex items-center justify-between gap-3 group">
+                                    <div class="min-w-0 flex items-center gap-2">
+                                        <i data-lucide="grip-vertical" class="w-3.5 h-3.5 text-slate-300 group-hover:text-slate-500 shrink-0"></i>
+                                        <div class="min-w-0">
+                                            <a href="{{ route('admin.students.show', $st) }}" target="_blank" class="font-black text-xs text-slate-900 hover:text-emerald-700 transition uppercase block truncate">
+                                                {{ $stName }}
+                                            </a>
+                                            <div class="flex items-center gap-2 text-[10px] text-slate-400 font-bold mt-0.5">
+                                                <span>ID: {{ $st->student_number }}</span>
+                                                @if($app?->lrn)
+                                                    <span>&bull; LRN: {{ $app->lrn }}</span>
+                                                @endif
+                                                <span>&bull; {{ $st->grade_level }}</span>
+                                            </div>
                                         </div>
                                     </div>
                                     <form method="POST" action="{{ route('admin.students.occupancy.remove-student', $secStudent) }}" onsubmit="return confirm('Remove {{ addslashes($stName) }} from {{ addslashes($sectionDisplayName) }}?')" class="shrink-0">
@@ -204,7 +302,7 @@
                                 <i data-lucide="user-plus" class="w-5 h-5 text-emerald-600"></i>
                                 <span>Add Students to {{ $sectionDisplayName }}</span>
                             </h2>
-                            <p class="text-xs text-slate-500 font-medium">Search and select official student records in the school database</p>
+                            <p class="text-xs text-slate-500 font-medium">Search, select, or drag-and-drop official student records</p>
                         </div>
                     </div>
 
@@ -256,8 +354,11 @@
                                     $currentSec = $st->studentSection?->section;
                                     $isEnrolledInThis = $currentSec && $currentSec->id === $section->id;
                                 @endphp
-                                <label class="flex items-center justify-between p-3 rounded-xl bg-white border border-slate-200/80 hover:border-emerald-300 hover:shadow-xs transition cursor-pointer">
+                                <label draggable="true"
+                                       @dragstart="$event.dataTransfer.setData('text/plain', '{{ $st->id }}')"
+                                       class="flex items-center justify-between p-3 rounded-xl bg-white border border-slate-200/80 hover:border-emerald-400 hover:shadow-sm transition cursor-grab active:cursor-grabbing group">
                                     <div class="flex items-center gap-3 min-w-0">
+                                        <i data-lucide="grip-vertical" class="w-4 h-4 text-slate-300 group-hover:text-emerald-500 shrink-0"></i>
                                         <input type="checkbox" name="student_ids[]" value="{{ $st->id }}" @checked($isEnrolledInThis)
                                                class="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500">
                                         <div class="min-w-0">
@@ -300,7 +401,7 @@
                         </div>
 
                         <div class="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between">
-                            <span class="text-xs text-slate-500 font-medium">Check the boxes and click assign to update section roster.</span>
+                            <span class="text-xs text-slate-500 font-medium">Check the boxes or drag student cards to assign.</span>
                             <button type="submit" class="h-11 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black transition shadow-md active:scale-95 cursor-pointer flex items-center gap-2">
                                 <i data-lucide="user-check" class="w-4 h-4"></i>
                                 <span>Assign Selected Students to {{ $sectionDisplayName }}</span>
