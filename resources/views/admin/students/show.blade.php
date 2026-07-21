@@ -2330,6 +2330,18 @@
         });
     }
 
-    window.addEventListener('load', adjustLastNameFontSizes);
+    // Run ONLY after fonts are painted — prevents premature shrink on short names
+    function runAdjustAfterFonts() {
+        if (document.fonts && document.fonts.ready) {
+            document.fonts.ready.then(() => {
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(adjustLastNameFontSizes);
+                });
+            });
+        } else {
+            window.addEventListener('load', () => setTimeout(adjustLastNameFontSizes, 200));
+        }
+    }
+    runAdjustAfterFonts();
     </script>
 </x-admin-layout>

@@ -603,6 +603,18 @@
             });
         }
 
+        function runAdjustAfterFonts() {
+            if (document.fonts && document.fonts.ready) {
+                document.fonts.ready.then(() => {
+                    requestAnimationFrame(() => {
+                        requestAnimationFrame(adjustLastNameFontSizes);
+                    });
+                });
+            } else {
+                window.addEventListener('load', () => setTimeout(adjustLastNameFontSizes, 200));
+            }
+        }
+
         let hasPrinted = false;
         function doPrint() {
             adjustLastNameFontSizes();
@@ -611,11 +623,10 @@
             window.print();
         }
         window.addEventListener('load', () => {
-            adjustLastNameFontSizes();
-            // Only auto-print if print parameter is explicit or user clicked print
+            runAdjustAfterFonts();
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('autoprint') === '1') {
-                setTimeout(doPrint, 1000);
+                document.fonts.ready.then(() => setTimeout(doPrint, 500));
             }
         });
 

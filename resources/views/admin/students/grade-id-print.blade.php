@@ -936,6 +936,7 @@
         }
 
         async function smartPrint(btn) {
+            adjustLastNameFontSizes();
             const originalHtml = btn.innerHTML;
             btn.disabled = true;
 
@@ -972,6 +973,9 @@
                 timeout(15000)
             ]);
 
+            // Re-run auto-shrink just in case lazy images shifted font scaling
+            adjustLastNameFontSizes();
+
             btn.innerHTML = '🖨️ Opening print dialog...';
             await timeout(300);
             window.print();
@@ -980,6 +984,7 @@
         }
 
         async function printBySection(btn) {
+            adjustLastNameFontSizes();
             const sections = document.querySelectorAll('.section-group-header + div, .section-print-group');
             // Get all section groups by finding section-group-header elements
             const sectionHeaders = Array.from(document.querySelectorAll('.section-group-header'));
@@ -1089,8 +1094,20 @@
             });
         }
 
-        // Run auto-shrink once when window finishes loading
-        window.addEventListener('load', adjustLastNameFontSizes);
+        // Run ONLY after fonts are painted — prevents premature shrink on short names
+        function runAdjustAfterFonts() {
+            if (document.fonts && document.fonts.ready) {
+                document.fonts.ready.then(() => {
+                    requestAnimationFrame(() => {
+                        requestAnimationFrame(adjustLastNameFontSizes);
+                    });
+                });
+            } else {
+                // Fallback for older browsers
+                window.addEventListener('load', () => setTimeout(adjustLastNameFontSizes, 200));
+            }
+        }
+        runAdjustAfterFonts();
 
         function updateFontSize(cssVar, val, lblId) {
             document.documentElement.style.setProperty(cssVar, val + 'px');
