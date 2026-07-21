@@ -2295,38 +2295,7 @@
     }
 
     function adjustLastNameFontSizes() {
-        const elements = document.querySelectorAll('.student-last-name h3, .id-last-name-text h3');
-        elements.forEach(textEl => {
-            const maxW = 278; // 310px card width - 32px horizontal padding
-            
-            // Clear any inline font size to measure at base template size
-            textEl.style.fontSize = '';
-            
-            let baseFontSize = parseFloat(window.getComputedStyle(textEl).fontSize);
-            if (isNaN(baseFontSize) || baseFontSize <= 0) {
-                baseFontSize = 30;
-            }
-
-            const textContent = textEl.textContent.trim();
-            if (!textContent) return;
-
-            // Temporarily wrap text in an inline span to measure un-scaled layout width
-            textEl.innerHTML = `<span class="temp-name-span" style="display: inline; white-space: nowrap;">${textContent}</span>`;
-            const spanEl = textEl.querySelector('.temp-name-span');
-            const actualTextWidth = spanEl ? spanEl.offsetWidth : 0;
-            textEl.textContent = textContent; // Restore original text node immediately
-
-            if (actualTextWidth <= 0 || actualTextWidth <= maxW) {
-                // Fits naturally — keep base font size!
-                return;
-            }
-            
-            // Calculate required font size proportionally in 1 step
-            const calculatedSize = Math.floor(baseFontSize * (maxW / actualTextWidth));
-            const finalSize = Math.max(8, calculatedSize);
-            
-            textEl.style.setProperty('font-size', finalSize + 'px', 'important');
-        });
+        // Font sizes are calculated server-side in PHP matching Student Records (show.blade.php)
     }
 
     // Run ONLY after fonts are painted — prevents premature shrink on short names
