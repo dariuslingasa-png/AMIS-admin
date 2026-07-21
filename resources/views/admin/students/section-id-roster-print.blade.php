@@ -234,6 +234,7 @@
             margin: 0;
             line-height: 1;
             letter-spacing: -0.5px;
+            white-space: nowrap;
         }
         
         .student-first-name {
@@ -777,38 +778,41 @@
         }
 
         function adjustLastNameFontSizes() {
-            // Target actual h3 elements directly to avoid double processing or container div checks
             const elements = document.querySelectorAll('.student-last-name h3, .id-last-name-text h3');
             elements.forEach(textEl => {
                 const maxW = 278; // 310px card width - 32px horizontal padding
                 
-                // Temporarily set display to inline-block and clear any inline font size to get a clean measurement of the original width
                 const originalDisplay = textEl.style.display;
+                const originalWhiteSpace = textEl.style.whiteSpace;
+                
                 textEl.style.display = 'inline-block';
+                textEl.style.whiteSpace = 'nowrap';
                 textEl.style.fontSize = '';
                 
                 let fontSize = parseFloat(window.getComputedStyle(textEl).fontSize);
-                if (isNaN(fontSize) || fontSize <= 0) {
+                const currentWidth = textEl.scrollWidth;
+                
+                if (isNaN(fontSize) || fontSize <= 0 || isNaN(currentWidth) || currentWidth <= 0) {
                     textEl.style.display = originalDisplay;
+                    textEl.style.whiteSpace = originalWhiteSpace;
                     return;
                 }
 
-                // Fast path: if text at original size already fits, restore display and skip
-                if (textEl.scrollWidth <= maxW) {
+                // If text at original size already fits, restore display and skip
+                if (currentWidth <= maxW) {
                     textEl.style.display = originalDisplay;
+                    textEl.style.whiteSpace = originalWhiteSpace;
                     return;
                 }
                 
-                let limit = 50;
-                // Shrink sequentially in 1px steps for faster performance
-                while (textEl.scrollWidth > maxW && fontSize > 8 && limit > 0) {
-                    fontSize -= 1.0;
-                    textEl.style.setProperty('font-size', fontSize + 'px', 'important');
-                    limit--;
-                }
+                // Calculate required font size in 1 step (prevents layout thrashing & tab crash)
+                const calculatedSize = Math.floor(fontSize * (maxW / currentWidth));
+                const finalSize = Math.max(8, calculatedSize);
                 
-                // Restore original display
+                textEl.style.setProperty('font-size', finalSize + 'px', 'important');
+                
                 textEl.style.display = originalDisplay;
+                textEl.style.whiteSpace = originalWhiteSpace;
             });
         }
 
