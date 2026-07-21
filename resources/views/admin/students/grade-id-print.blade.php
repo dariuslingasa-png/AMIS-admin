@@ -441,16 +441,13 @@
                 ✏️ Edit Font Sizes
             </button>
             <button type="button" class="btn-action" style="background: #2563eb;" onclick="exportToGoogleDocs(this)">
-                📄 Export for Google Docs / Word
+                📝 Export for Google Docs / Word
             </button>
-            <button type="button" class="btn-action btn-secondary" onclick="printBySection(this)" id="btn-print-section" title="Print one section at a time — safer for large grades">
+            <button type="button" class="btn-action" style="background: #0284c7;" onclick="printBySection(this)" id="btn-print-section" title="Print one section at a time — recommended for large grades">
                 📄 Print by Section
             </button>
-            <button type="button" class="btn-action btn-secondary" onclick="smartPrint(this)" id="btn-print-pdf" title="Raw print without rendering to flat images first">
-                🖨️ Raw Print All
-            </button>
-            <button type="button" class="btn-action" onclick="optimizeAndPrint(this)" style="background: #059669;" id="btn-optimize-print" title="Highly Recommended: Converts ID cards to flat images to prevent browser crashes during large prints">
-                🚀 Optimize & Print (Prevents Crash)
+            <button type="button" class="btn-action" style="background: #059669; font-weight: 800; padding: 6px 16px;" onclick="window.print()" id="btn-print-all" title="Direct vector print — preserves 100% crisp fonts without canvas distortion">
+                🖨️ Print All ID Cards
             </button>
         </div>
     </div>

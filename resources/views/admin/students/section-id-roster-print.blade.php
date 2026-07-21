@@ -434,13 +434,10 @@
                 ✏️ Edit Font Sizes
             </button>
             <button type="button" class="btn-action" style="background: #2563eb;" onclick="exportToGoogleDocs(this)">
-                📄 Export for Google Docs / Word
+                📝 Export for Google Docs / Word
             </button>
-            <button type="button" class="btn-action btn-secondary" onclick="window.print()" title="Raw print without card flattening">
-                🖨️ Raw Print
-            </button>
-            <button type="button" class="btn-action" onclick="optimizeAndPrint(this)" style="background: #059669;" id="btn-optimize-print" title="Converts ID cards to flat images to prevent browser/PDF crashes">
-                🚀 Optimize & Print PDF
+            <button type="button" class="btn-action" style="background: #059669; font-weight: 800; padding: 6px 16px;" onclick="window.print()" id="btn-print-section-direct" title="Direct vector print — preserves 100% crisp fonts without canvas distortion">
+                🖨️ Print Section ID Cards
             </button>
         </div>
     </div>
