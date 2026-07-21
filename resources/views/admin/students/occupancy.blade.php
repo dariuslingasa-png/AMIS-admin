@@ -78,8 +78,9 @@
                             </div>
 
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Learning Mode</label>
-                                <select name="learning_mode" required class="w-full h-11 px-3 rounded-xl border border-slate-200 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500">
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Learning Mode <span class="text-slate-400 font-medium lowercase">(optional)</span></label>
+                                <select name="learning_mode" class="w-full h-11 px-3 rounded-xl border border-slate-200 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500">
+                                    <option value="">None / Default</option>
                                     <option value="Flexible Online Learning">Flexible Online Learning</option>
                                     <option value="Face-to-Face">Face-to-Face</option>
                                 </select>
@@ -88,11 +89,11 @@
 
                         <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Shift</label>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Shift <span class="text-slate-400 font-medium lowercase">(optional)</span></label>
                                 <select name="shift" class="w-full h-11 px-3 rounded-xl border border-slate-200 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500">
+                                    <option value="">None / No Shift</option>
                                     <option value="1st Shift">1st Shift</option>
                                     <option value="2nd Shift">2nd Shift</option>
-                                    <option value="">F2F (No Shift)</option>
                                 </select>
                             </div>
 

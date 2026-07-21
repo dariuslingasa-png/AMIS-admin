@@ -146,7 +146,7 @@ class AdminStudentDashboardController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'grade_level' => 'required|string|max:100',
-            'learning_mode' => 'required|string|max:100',
+            'learning_mode' => 'nullable|string|max:100',
             'shift' => 'nullable|string|max:100',
             'gender' => 'required|string|in:male,female,merge',
         ]);
@@ -154,7 +154,7 @@ class AdminStudentDashboardController extends Controller
         \App\Models\Section::create([
             'name' => trim($validated['name']),
             'grade_level' => trim($validated['grade_level']),
-            'learning_mode' => trim($validated['learning_mode']),
+            'learning_mode' => $validated['learning_mode'] ? trim($validated['learning_mode']) : 'Face-to-Face',
             'shift' => $validated['shift'] ? trim($validated['shift']) : null,
             'gender' => $validated['gender'],
         ]);
