@@ -568,21 +568,21 @@
 
     <script>
         function adjustLastNameFontSizes() {
-            const elements = document.querySelectorAll('.student-last-name h3, .student-last-name, .id-last-name-text, [style*="top: 352px"][style*="width: 310px"]');
-            elements.forEach(el => {
-                const textEl = el.querySelector('h3') || el;
-                const maxW = 278; // 310 - 32 padding
+            // Target actual h3 elements directly to avoid double processing or container div checks
+            const elements = document.querySelectorAll('.student-last-name h3, .id-last-name-text h3');
+            elements.forEach(textEl => {
+                const maxW = 278; // 310px card width - 32px horizontal padding
                 
+                // Fast path: if text already fits, skip processing entirely
+                if (textEl.scrollWidth <= maxW) return;
+
                 let fontSize = parseFloat(window.getComputedStyle(textEl).fontSize);
                 if (isNaN(fontSize) || fontSize <= 0) return;
-
-                // Reset inline font size style to read clean scrollWidth
-                textEl.style.fontSize = '';
-                fontSize = parseFloat(window.getComputedStyle(textEl).fontSize);
                 
-                let limit = 100;
+                let limit = 50;
+                // Shrink sequentially in 1px steps for faster performance
                 while (textEl.scrollWidth > maxW && fontSize > 8 && limit > 0) {
-                    fontSize -= 0.5;
+                    fontSize -= 1.0;
                     textEl.style.setProperty('font-size', fontSize + 'px', 'important');
                     limit--;
                 }
@@ -604,7 +604,6 @@
                 setTimeout(doPrint, 1000);
             }
         });
-        window.addEventListener('resize', adjustLastNameFontSizes);
 
         async function downloadCardPng(elementId, filename) {
             adjustLastNameFontSizes();
