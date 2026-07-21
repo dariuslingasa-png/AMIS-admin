@@ -449,9 +449,44 @@
         @endphp
 
         @php
-            $groupedStudents = $students->groupBy(function($s) {
-                $sec = $s->studentSection?->section;
-                return $sec ? ($sec->official_name ?: ($sec->name ?: 'UNASSIGNED')) : 'UNASSIGNED';
+            $formatSectionName = function($section) {
+                if (!$section) return 'UNASSIGNED';
+                
+                $isF2f = str_contains(strtolower((string) $section->learning_mode), 'face') ||
+                         str_contains(strtolower((string) $section->learning_mode), 'f2f') ||
+                         strtoupper((string) $section->shift) === 'F2F';
+                         
+                if ($isF2f) {
+                    return strtoupper($section->name);
+                }
+                
+                $shift = $section->shift ? strtoupper(trim($section->shift)) : '';
+                $gender = '';
+                if ($section->gender && in_array(strtolower($section->gender), ['male', 'female', 'boy', 'girl', 'boys', 'girls'])) {
+                    $g = strtolower($section->gender);
+                    if ($g === 'male' || $g === 'boy' || $g === 'boys') {
+                        $gender = 'BOYS';
+                    } else {
+                        $gender = 'GIRLS';
+                    }
+                }
+                
+                $rawName = strtoupper(trim($section->name));
+                $rawName = preg_replace('/\s*-\s*(GIRLS|BOYS)\s*$/i', '', $rawName);
+                $rawName = preg_replace('/\s*(GIRLS|BOYS)\s*$/i', '', $rawName);
+                
+                $parts = array_filter([$shift, $gender]);
+                $prefix = implode(' ', $parts);
+                
+                if ($prefix) {
+                    return $prefix . ' – ' . $rawName;
+                }
+                
+                return $rawName;
+            };
+
+            $groupedStudents = $students->groupBy(function($s) use ($formatSectionName) {
+                return $formatSectionName($s->studentSection?->section);
             });
         @endphp
 

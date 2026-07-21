@@ -132,7 +132,33 @@
                             <div style="font-size: 9px; color: #64748b; font-weight: normal; margin-top: 2px; display: flex; gap: 8px;">
                                 <span>Student No: {{ $student->student_number }}</span>
                                 <span style="color: #cbd5e1;">|</span>
-                                <span style="font-weight: 700; color: #047857; text-transform: uppercase;">{{ $student->studentSection?->section?->official_name ?: ($student->studentSection?->section?->name ?: 'N/A') }}</span>
+                                @php
+                                    $sec = $student->studentSection?->section;
+                                    $formattedSecName = 'N/A';
+                                    if ($sec) {
+                                        $isF2f = str_contains(strtolower((string) $sec->learning_mode), 'face') ||
+                                                 str_contains(strtolower((string) $sec->learning_mode), 'f2f') ||
+                                                 strtoupper((string) $sec->shift) === 'F2F';
+                                        if ($isF2f) {
+                                            $formattedSecName = strtoupper($sec->name);
+                                        } else {
+                                            $shift = $sec->shift ? strtoupper(trim($sec->shift)) : '';
+                                            $gender = '';
+                                            if ($sec->gender && in_array(strtolower($sec->gender), ['male', 'female', 'boy', 'girl', 'boys', 'girls'])) {
+                                                $g = strtolower($sec->gender);
+                                                $gender = ($g === 'male' || $g === 'boy' || $g === 'boys') ? 'BOYS' : 'GIRLS';
+                                            }
+                                            $rawName = strtoupper(trim($sec->name));
+                                            $rawName = preg_replace('/\s*-\s*(GIRLS|BOYS)\s*$/i', '', $rawName);
+                                            $rawName = preg_replace('/\s*(GIRLS|BOYS)\s*$/i', '', $rawName);
+                                            
+                                            $parts = array_filter([$shift, $gender]);
+                                            $prefix = implode(' ', $parts);
+                                            $formattedSecName = $prefix ? ($prefix . ' – ' . $rawName) : $rawName;
+                                        }
+                                    }
+                                @endphp
+                                <span style="font-weight: 700; color: #047857; text-transform: uppercase;">{{ $formattedSecName }}</span>
                             </div>
                         </td>
                     </tr>
