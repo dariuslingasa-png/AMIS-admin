@@ -569,8 +569,8 @@
                                                         <span>Assigned Here</span>
                                                     </span>
                                                 @elseif($currentSec)
-                                                    <span class="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full">
-                                                        In: {{ $currentSec->name }}
+                                                    <span class="text-[10px] font-black text-rose-700 bg-rose-50 border border-rose-200 px-2.5 py-0.5 rounded-full uppercase" title="Already assigned to another class">
+                                                        Exist: {{ $currentSec->official_name ?: $currentSec->name }}
                                                     </span>
                                                 @else
                                                     <span class="text-[10px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full">
@@ -627,8 +627,8 @@
                                                         <span>Assigned Here</span>
                                                     </span>
                                                 @elseif($currentSec)
-                                                    <span class="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full">
-                                                        In: {{ $currentSec->name }}
+                                                    <span class="text-[10px] font-black text-rose-700 bg-rose-50 border border-rose-200 px-2.5 py-0.5 rounded-full uppercase" title="Already assigned to another class">
+                                                        Exist: {{ $currentSec->official_name ?: $currentSec->name }}
                                                     </span>
                                                 @else
                                                     <span class="text-[10px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full">
@@ -683,8 +683,8 @@
                                                         <span>Assigned Here</span>
                                                     </span>
                                                 @elseif($currentSec)
-                                                    <span class="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full">
-                                                        In: {{ $currentSec->name }}
+                                                    <span class="text-[10px] font-black text-rose-700 bg-rose-50 border border-rose-200 px-2.5 py-0.5 rounded-full uppercase" title="Already assigned to another class">
+                                                        Exist: {{ $currentSec->official_name ?: $currentSec->name }}
                                                     </span>
                                                 @else
                                                     <span class="text-[10px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full">
