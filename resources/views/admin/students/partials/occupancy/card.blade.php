@@ -89,14 +89,19 @@
                         ];
                         $sTheme = $secThemeMap[$secStatusColor];
                         
-                        $genderLabel = $section->gender === 'male' ? 'Boys' : 'Girls';
-                        if ($section->is_f2f) {
-                            $sectionDisplayName = "F2F - " . $genderLabel;
-                        } else {
-                            $sectionDisplayName = ($section->official_name ?: ($section->name ?: 'Flexible')) . " - " . $genderLabel;
+                        $sectionDisplayName = $section->official_name ?: ($section->name ?: 'General Section');
+                        if ($section->gender && in_array($section->gender, ['male', 'female'])) {
+                            $genderSuffix = $section->gender === 'male' ? 'Boys' : 'Girls';
+                            if (!str_contains(strtolower($sectionDisplayName), strtolower($genderSuffix))) {
+                                $sectionDisplayName .= " - " . $genderSuffix;
+                            }
                         }
                         
-                        $secLearningModeLabel = $section->is_f2f ? 'F2F' : 'Flexible';
+                        $modeParts = array_filter([
+                            $section->learning_mode ?: null,
+                            $section->shift ?: null
+                        ]);
+                        $secSubtext = !empty($modeParts) ? implode(' · ', $modeParts) : ($section->is_f2f ? 'Face-to-Face' : 'General');
                     @endphp
                     <tbody x-data="{ showRoster: false }">
                         <tr class="hover:bg-slate-50/40 transition" style="border-bottom: {{ $loop->last ? 'none' : '1px solid #f1f5f9' }};">
@@ -104,7 +109,7 @@
                             <td class="py-3 pr-2">
                                 <div class="font-extrabold text-slate-800 uppercase leading-snug text-xs">{{ $sectionDisplayName }}</div>
                                 <div class="text-[9px] font-black text-slate-400 uppercase mt-0.5">
-                                    {{ $secLearningModeLabel }} &middot; {{ $section->shift ?: '1st Shift' }}
+                                    {{ $secSubtext }}
                                 </div>
                             </td>
                             <!-- Occupancy Bar -->
