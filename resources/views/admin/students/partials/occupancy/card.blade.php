@@ -116,7 +116,10 @@
                         ];
                         $sTheme = $secThemeMap[$secStatusColor];
                         
-                        $sectionDisplayName = $section->official_name ?: ($section->name ?: 'General Section');
+                        $isF2f = str_contains(strtolower((string) $section->learning_mode), 'face') ||
+                                 str_contains(strtolower((string) $section->learning_mode), 'f2f') ||
+                                 strtoupper((string) $section->shift) === 'F2F';
+                        $sectionDisplayName = $section->official_name ?: ($section->name ?: ($isF2f ? 'Face-to-Face' : 'General Section'));
                         if ($section->gender && in_array($section->gender, ['male', 'female'])) {
                             $genderSuffix = $section->gender === 'male' ? 'Boys' : 'Girls';
                             if (!str_contains(strtolower($sectionDisplayName), strtolower($genderSuffix))) {
@@ -241,7 +244,7 @@
                                         @method('PUT')
                                         <div>
                                             <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Section Name</label>
-                                            <input type="text" name="name" value="{{ $section->name }}" required placeholder="e.g. ALI IBN ABI TALIB"
+                                            <input type="text" name="name" value="{{ $section->name }}" placeholder="e.g. ALI IBN ABI TALIB"
                                                    class="w-full h-11 px-3.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-900 outline-none focus:border-emerald-500">
                                         </div>
 

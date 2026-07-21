@@ -63,7 +63,7 @@
                         @csrf
                         <div>
                             <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Section Name</label>
-                            <input type="text" name="name" required placeholder="e.g. ALI IBN ABI TALIB or HUDHAYFAH"
+                            <input type="text" name="name" placeholder="e.g. ALI IBN ABI TALIB or HUDHAYFAH"
                                    class="w-full h-11 px-3.5 rounded-xl border border-slate-200 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100">
                         </div>
 

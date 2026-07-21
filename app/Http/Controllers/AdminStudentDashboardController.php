@@ -143,44 +143,54 @@ class AdminStudentDashboardController extends Controller
 
     public function storeSection(Request $request)
     {
+        $isF2f = str_contains(strtolower((string) $request->learning_mode), 'face') ||
+                 str_contains(strtolower((string) $request->learning_mode), 'f2f') ||
+                 strtoupper((string) $request->shift) === 'F2F';
+
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => $isF2f ? 'nullable|string|max:255' : 'required|string|max:255',
             'grade_level' => 'required|string|max:100',
             'learning_mode' => 'nullable|string|max:100',
             'shift' => 'nullable|string|max:100',
             'gender' => 'nullable|string|in:male,female,merge',
         ]);
 
-        \App\Models\Section::create([
-            'name' => trim($validated['name']),
+        $section = \App\Models\Section::create([
+            'name' => $validated['name'] ? trim($validated['name']) : null,
             'grade_level' => trim($validated['grade_level']),
             'learning_mode' => $validated['learning_mode'] ? trim($validated['learning_mode']) : 'Face-to-Face',
             'shift' => $validated['shift'] ? trim($validated['shift']) : null,
             'gender' => $validated['gender'] ? $validated['gender'] : 'merge',
         ]);
 
-        return back()->with('success', 'New section "' . $validated['name'] . '" created successfully!');
+        $sectionName = $section->name ?: 'Face-to-Face';
+        return back()->with('success', 'New section "' . $sectionName . '" created successfully!');
     }
 
     public function updateSection(Request $request, Section $section)
     {
+        $isF2f = str_contains(strtolower((string) $request->learning_mode), 'face') ||
+                 str_contains(strtolower((string) $request->learning_mode), 'f2f') ||
+                 strtoupper((string) $request->shift) === 'F2F';
+
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => $isF2f ? 'nullable|string|max:255' : 'required|string|max:255',
             'grade_level' => 'required|string|max:100',
             'learning_mode' => 'nullable|string|max:100',
             'shift' => 'nullable|string|max:100',
-            'gender' => 'nullable|string|in:male,female,merge',
+            'gender' => $validated['gender'] === 'merge' ? 'nullable|string|in:male,female,merge' : 'nullable|string|in:male,female,merge',
         ]);
 
         $section->update([
-            'name' => trim($validated['name']),
+            'name' => $validated['name'] ? trim($validated['name']) : null,
             'grade_level' => trim($validated['grade_level']),
             'learning_mode' => $validated['learning_mode'] ? trim($validated['learning_mode']) : 'Face-to-Face',
             'shift' => $validated['shift'] ? trim($validated['shift']) : null,
-            'gender' => $validated['gender'] ? $validated['gender'] : 'merge',
+            'gender' => $request->gender ? $request->gender : 'merge',
         ]);
 
-        return back()->with('success', 'Section "' . $section->name . '" updated successfully!');
+        $sectionName = $section->name ?: 'Face-to-Face';
+        return back()->with('success', 'Section "' . $sectionName . '" updated successfully!');
     }
 
     public function destroySection(Section $section)
