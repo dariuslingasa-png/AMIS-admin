@@ -147,8 +147,8 @@
                                         <button type="button" @click="openPrintDropdown = !openPrintDropdown" class="h-7 w-7 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 flex items-center justify-center transition active:scale-[0.95]" title="Print Student Roster">
                                             <i data-lucide="printer" class="h-3.5 w-3.5"></i>
                                         </button>
-                                        <div x-cloak x-show="openPrintDropdown" x-transition.origin.top.right 
-                                             class="absolute right-0 mt-1 w-36 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl z-50 text-left">
+                                        <div x-cloak x-show="openPrintDropdown" x-transition.origin.bottom.right 
+                                             class="absolute right-0 bottom-full mb-1.5 w-36 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl z-50 text-left">
                                             <a href="{{ route('admin.students.roster-print', $section) }}" target="_blank" 
                                                class="flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-[11px] font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition">
                                                 <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-600"></i>
@@ -166,8 +166,8 @@
                                         <button type="button" @click="openIdDropdown = !openIdDropdown" class="h-7 w-7 rounded-lg bg-purple-50 text-purple-700 border border-purple-100 hover:bg-purple-100 flex items-center justify-center transition active:scale-[0.95]" title="Export Section ID Cards Document">
                                             <i data-lucide="contact" class="h-3.5 w-3.5"></i>
                                         </button>
-                                        <div x-cloak x-show="openIdDropdown" x-transition.origin.top.right 
-                                             class="absolute right-0 mt-1 w-36 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl z-50 text-left">
+                                        <div x-cloak x-show="openIdDropdown" x-transition.origin.bottom.right 
+                                             class="absolute right-0 bottom-full mb-1.5 w-36 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl z-50 text-left">
                                             <a href="{{ route('admin.students.id-roster-print', $section) }}" target="_blank" 
                                                class="flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-[11px] font-bold text-slate-700 hover:bg-purple-50 hover:text-purple-700 transition">
                                                 <i data-lucide="shield-check" class="w-3.5 h-3.5 text-purple-600"></i>
