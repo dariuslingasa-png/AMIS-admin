@@ -443,7 +443,14 @@
                 $lrn = $applicant?->lrn && !in_array(strtoupper($applicant->lrn), ['N/A', 'NA', 'EMPTY', '']) ? $applicant->lrn : 'N/A';
 
                 // Resolve Photos & QR Codes
-                $photoUrl = $student->photo_url ?: ($applicant?->photo_url ?: '');
+                $photoUrl = '';
+                if ($student->photo_url) {
+                    $photoUrl = $student->photo_url;
+                } elseif ($applicant?->photo_url) {
+                    $photoUrl = $applicant->photo_url;
+                } elseif ($applicant?->photo_2x2_url) {
+                    $photoUrl = \App\Support\EnrollmentStorage::url($applicant->photo_2x2_url);
+                }
                 $hash = base64_encode((int)$studentNumber + 987654);
                 $qrCodeUrl = 'https://quickchart.io/qr?text=' . urlencode('https://amis.edu.ph/v/' . $hash) . '&dark=000000&light=ffffff&margin=1&format=png&size=300';
                 $signatureRawUrl = 'https://quickchart.io/qr?text=' . urlencode('https://amis.edu.ph/signature') . '&dark=000000&light=ffffff&margin=1&format=png&size=200';

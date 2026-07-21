@@ -133,7 +133,7 @@ class AdminStudentDashboardController extends Controller
             $lastName = strtoupper(trim($applicant?->last_name ?? ''));
             $firstName = strtoupper(trim($applicant?->first_name ?? ''));
             return $lastName . ' ' . $firstName;
-        });
+        })->values();
         $section->setRelation('students', $sortedStudents);
 
         return view('admin.students.section-id-roster-print', [
