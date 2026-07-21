@@ -139,6 +139,7 @@ Route::name('admin.')->group(function () {
         Route::get('/students', [AdminStudentController::class, 'index'])->name('students.index');
         Route::get('/students/dashboard', [AdminStudentDashboardController::class, 'dashboard'])->name('students.dashboard');
         Route::get('/students/dashboard/sections/{section}/roster-print', [AdminStudentDashboardController::class, 'rosterPrint'])->name('students.roster-print');
+        Route::get('/students/dashboard/sections/{section}/id-roster-print', [AdminStudentDashboardController::class, 'idRosterPrint'])->name('students.id-roster-print');
         Route::get('/students/history', [AdminStudentProcessController::class, 'history'])->name('students.history');
         Route::get('/students/accounts', [AdminStudentProcessController::class, 'accounts'])->name('students.accounts');
         Route::get('/students/audit-logs', [AdminStudentController::class, 'auditLogs'])->name('students.audit-logs');

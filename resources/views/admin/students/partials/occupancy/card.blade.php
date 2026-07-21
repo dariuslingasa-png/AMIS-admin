@@ -129,8 +129,11 @@
                                     <button type="button" @click="showRoster = !showRoster" class="h-7 w-7 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-slate-500 hover:bg-slate-50 active:scale-[0.95] transition cursor-pointer" title="View Roster">
                                         <i data-lucide="users" class="h-3.5 w-3.5"></i>
                                     </button>
-                                    <a href="{{ route('admin.students.roster-print', $section) }}" target="_blank" class="h-7 w-7 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 flex items-center justify-center transition active:scale-[0.95]" title="Print Roster">
+                                    <a href="{{ route('admin.students.roster-print', $section) }}" target="_blank" class="h-7 w-7 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 flex items-center justify-center transition active:scale-[0.95]" title="Print Student Roster">
                                         <i data-lucide="printer" class="h-3.5 w-3.5"></i>
+                                    </a>
+                                    <a href="{{ route('admin.students.id-roster-print', $section) }}" target="_blank" class="h-7 w-7 rounded-lg bg-purple-50 text-purple-700 border border-purple-100 hover:bg-purple-100 flex items-center justify-center transition active:scale-[0.95]" title="Export Section ID Cards Document (Google Docs / MS Word)">
+                                        <i data-lucide="contact" class="h-3.5 w-3.5"></i>
                                     </a>
                                 </div>
                             </td>

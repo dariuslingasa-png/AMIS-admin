@@ -124,6 +124,23 @@ class AdminStudentDashboardController extends Controller
         ]);
     }
 
+    public function idRosterPrint(Section $section)
+    {
+        $section->load(['students.student.applicant.payment']);
+
+        $sortedStudents = $section->students->sortBy(function ($studentSection) {
+            $applicant = $studentSection->student?->applicant;
+            $lastName = strtoupper(trim($applicant?->last_name ?? ''));
+            $firstName = strtoupper(trim($applicant?->first_name ?? ''));
+            return $lastName . ' ' . $firstName;
+        });
+        $section->setRelation('students', $sortedStudents);
+
+        return view('admin.students.section-id-roster-print', [
+            'section' => $section,
+        ]);
+    }
+
     public function gradeRosterPrint(Request $request, $grade)
     {
         $grade = urldecode($grade);
