@@ -445,8 +445,11 @@
             <button type="button" class="btn-action btn-secondary" onclick="printBySection(this)" id="btn-print-section" title="Print one section at a time — safer for large grades">
                 📄 Print by Section
             </button>
-            <button type="button" class="btn-action" onclick="smartPrint(this)" id="btn-print-pdf">
-                🖨️ Print All / Save as PDF
+            <button type="button" class="btn-action btn-secondary" onclick="smartPrint(this)" id="btn-print-pdf" title="Raw print without rendering to flat images first">
+                🖨️ Raw Print All
+            </button>
+            <button type="button" class="btn-action" onclick="optimizeAndPrint(this)" style="background: #0284c7;" id="btn-optimize-print" title="Highly Recommended: Converts ID cards to flat images to prevent browser crashes during large prints">
+                🚀 Optimize & Print (Prevents Crash)
             </button>
         </div>
     </div>
@@ -859,6 +862,76 @@
     </div>
 
     <script>
+        function loadScript(src) {
+            return new Promise((resolve, reject) => {
+                if (window.html2canvas || document.querySelector(`script[src="${src}"]`)) {
+                    resolve();
+                    return;
+                }
+                const s = document.createElement('script');
+                s.src = src;
+                s.onload = resolve;
+                s.onerror = reject;
+                document.head.appendChild(s);
+            });
+        }
+
+        async function optimizeAndPrint(btn) {
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+
+            const cards = Array.from(document.querySelectorAll('.id-card'));
+            const total = cards.length;
+            if (total === 0) {
+                alert('No cards found to optimize.');
+                btn.disabled = false;
+                return;
+            }
+
+            btn.innerHTML = '⏳ Loading optimizer engine...';
+            try {
+                await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+            } catch (err) {
+                alert('Failed to load optimizer library: ' + err);
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+                return;
+            }
+
+            // Loop through each card sequentially to avoid massive memory usage spikes
+            for (let i = 0; i < total; i++) {
+                const card = cards[i];
+                const wrapper = card.closest('.id-card-wrapper');
+                if (!wrapper) continue;
+
+                btn.innerHTML = `⏳ Rendering cards: ${i + 1}/${total} (${Math.round((i / total) * 100)}%)...`;
+
+                try {
+                    const canvas = await html2canvas(card, {
+                        scale: 2.2, // 220 DPI (looks very crisp but keeps image size and memory low)
+                        useCORS: true,
+                        allowTaint: true,
+                        backgroundColor: null,
+                        logging: false
+                    });
+
+                    const dataUrl = canvas.toDataURL('image/png', 0.95);
+                    
+                    // Replace complex HTML layout with simple flat high-res image
+                    wrapper.innerHTML = `<img src="${dataUrl}" class="optimized-print-img" style="width: 100%; height: 100%; object-fit: contain; display: block; border-radius: 6.5mm;">`;
+                } catch (err) {
+                    console.error('Error optimizing card ' + i + ':', err);
+                }
+            }
+
+            btn.innerHTML = '🖨️ Opening print dialog...';
+            // Wait for DOM to adjust
+            await new Promise(resolve => setTimeout(resolve, 500));
+            window.print();
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+        }
+
         async function smartPrint(btn) {
             const originalHtml = btn.innerHTML;
             btn.disabled = true;
