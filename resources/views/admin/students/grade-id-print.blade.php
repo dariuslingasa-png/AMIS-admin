@@ -1106,13 +1106,13 @@
                 btn.innerHTML = `⏳ Google Docs (${i + 1}/${total})...`;
                 try {
                     const canvas = await html2canvas(cards[i], {
-                        scale: 1.5, // 150 DPI (fast & high quality)
+                        scale: 3.0, // 300 DPI Ultra-HD (crystal clear & razor sharp in Word / Google Docs)
                         useCORS: true,
                         allowTaint: true,
                         backgroundColor: null,
                         logging: false
                     });
-                    cardImages.push(canvas.toDataURL('image/png', 0.92));
+                    cardImages.push(canvas.toDataURL('image/png', 1.0));
                 } catch (e) {
                     console.error('Canvas error', e);
                     cardImages.push('');
