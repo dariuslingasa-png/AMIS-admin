@@ -593,21 +593,21 @@
                                          @endif
 
                                         <!-- Student ID Badge text -->
-                                        <div class="student-id" style="font-size: var(--id-font-size, {{ $idFontSize }});">{{ $studentNumber }}</div>
+                                        <div class="student-id" style="font-size: {{ $student->id_num_font_size ? ($student->id_num_font_size . 'px') : 'var(--id-font-size, ' . $idFontSize . ')' }};">{{ $studentNumber }}</div>
 
                                         <!-- Last Name -->
                                         <div class="student-last-name">
-                                            <h3 style="font-size: var(--last-name-font-size, {{ $lastNameFontSize }}); {{ $lastNameStyle }}">{{ $lastName }}</h3>
+                                            <h3 style="font-size: {{ $student->id_last_name_font_size ? ($student->id_last_name_font_size . 'px') : 'var(--last-name-font-size, ' . $lastNameFontSize . ')' }}; {{ $lastNameStyle }}">{{ $lastName }}</h3>
                                         </div>
 
                                         <!-- First Name -->
                                         <div class="student-first-name">
-                                            <h4 style="font-size: var(--first-name-font-size, {{ $firstNameFontSize }});">{{ $displayFirstName }}</h4>
+                                            <h4 style="font-size: {{ $student->id_first_name_font_size ? ($student->id_first_name_font_size . 'px') : 'var(--first-name-font-size, ' . $firstNameFontSize . ')' }};">{{ $displayFirstName }}</h4>
                                         </div>
 
                                         <!-- Grade Level -->
                                         <div class="student-grade">
-                                            <span style="color: {{ $getGradeColor($displayGrade) }}; font-size: var(--grade-font-size, {{ $gradeFontSize }});">{{ strtoupper($displayGrade) }}</span>
+                                            <span style="color: {{ $getGradeColor($displayGrade) }}; font-size: {{ $student->id_grade_font_size ? ($student->id_grade_font_size . 'px') : 'var(--grade-font-size, ' . $gradeFontSize . ')' }};">{{ strtoupper($displayGrade) }}</span>
                                         </div>
 
                                         <!-- LRN (Vertical) -->
