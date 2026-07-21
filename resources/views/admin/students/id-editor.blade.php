@@ -18,64 +18,70 @@
         ['label' => 'ID Editor', 'href' => null],
     ]"
 >
+    <script>
+        const SAVE_URL = '{{ route('admin.students.update-id-font-sizes', $student) }}';
+        const CSRF_TOKEN = '{{ csrf_token() }}';
+
+        async function idEditorSaveFontSizes(ctx) {
+            const btn = document.getElementById('btn-save-font-sizes');
+            const oldHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = 'Saving...';
+
+            try {
+                const response = await fetch(SAVE_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': CSRF_TOKEN,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        id_last_name_font_size: ctx.lastNameFontSize,
+                        id_first_name_font_size: ctx.firstNameFontSize,
+                        id_grade_font_size: ctx.gradeFontSize,
+                        id_num_font_size: ctx.idFontSize
+                    })
+                });
+
+                const result = await response.json();
+                if (response.ok && result.success) {
+                    btn.innerHTML = 'Saved!';
+                    btn.classList.remove('bg-emerald-600', 'hover:bg-emerald-700');
+                    btn.classList.add('bg-blue-600');
+
+                    const toast = document.createElement('div');
+                    toast.className = 'fixed bottom-5 right-5 bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2 border border-slate-800 z-[99999]';
+                    toast.innerHTML = '<span style="color:#10b981;font-weight:900;">\u2713</span>&nbsp;<span>ID settings saved!</span>';
+                    document.body.appendChild(toast);
+                    setTimeout(() => toast.remove(), 2500);
+
+                    setTimeout(() => {
+                        btn.innerHTML = oldHtml;
+                        btn.classList.remove('bg-blue-600');
+                        btn.classList.add('bg-emerald-600', 'hover:bg-emerald-700');
+                        btn.disabled = false;
+                    }, 2000);
+                } else {
+                    alert(result.message || 'Failed to save font sizes.');
+                    btn.innerHTML = oldHtml;
+                    btn.disabled = false;
+                }
+            } catch (err) {
+                alert('Error saving: ' + err);
+                btn.innerHTML = oldHtml;
+                btn.disabled = false;
+            }
+        }
+    </script>
+
     <div class="container mx-auto px-4 py-6" id="id-editor-root-wrapper"
          x-data="{
              lastNameFontSize: {{ $student->id_last_name_font_size ?: $lastNameFontSize }},
              firstNameFontSize: {{ $student->id_first_name_font_size ?: $displayFirstNameFontSize }},
              gradeFontSize: {{ $student->id_grade_font_size ?: 25 }},
              idFontSize: {{ $student->id_num_font_size ?: 10 }},
-             async saveFontSizes() {
-                 const btn = document.getElementById('btn-save-font-sizes');
-                 const oldHtml = btn.innerHTML;
-                 btn.disabled = true;
-                 btn.innerHTML = `<i class='w-3.5 h-3.5 animate-spin border-2 border-white border-t-transparent rounded-full mr-1 inline-block'></i> Saving...`;
-                 
-                 try {
-                     const response = await fetch('{{ route('admin.students.update-id-font-sizes', $student) }}', {
-                         method: 'POST',
-                         headers: {
-                             'Content-Type': 'application/json',
-                             'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                             'X-Requested-With': 'XMLHttpRequest'
-                         },
-                         body: JSON.stringify({
-                             id_last_name_font_size: this.lastNameFontSize,
-                             id_first_name_font_size: this.firstNameFontSize,
-                             id_grade_font_size: this.gradeFontSize,
-                             id_num_font_size: this.idFontSize
-                         })
-                     });
-                     
-                     const result = await response.json();
-                     if (response.ok && result.success) {
-                         btn.innerHTML = `Saved!`;
-                         btn.classList.remove('bg-emerald-600', 'hover:bg-emerald-700');
-                         btn.classList.add('bg-blue-600');
-                         
-                         // Visual toast indicator
-                         const toast = document.createElement('div');
-                         toast.className = 'fixed bottom-5 right-5 bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2 border border-slate-800 animate-fade-in z-[99999]';
-                         toast.innerHTML = `<span class=\"text-emerald-500 font-extrabold\">✓</span> <span>ID settings saved successfully!</span>`;
-                         document.body.appendChild(toast);
-                         setTimeout(() => toast.remove(), 2500);
-
-                         setTimeout(() => {
-                             btn.innerHTML = oldHtml;
-                             btn.classList.remove('bg-blue-600');
-                             btn.classList.add('bg-emerald-600', 'hover:bg-emerald-700');
-                             btn.disabled = false;
-                         }, 2000);
-                     } else {
-                         alert(result.message || 'Failed to save font sizes.');
-                         btn.innerHTML = oldHtml;
-                         btn.disabled = false;
-                     }
-                 } catch (err) {
-                     alert('Error saving font sizes: ' + err);
-                     btn.innerHTML = oldHtml;
-                     btn.disabled = false;
-                 }
-             }
+             saveFontSizes() { idEditorSaveFontSizes(this); }
          }"
     >
         <!-- Top Toolbar Header -->
