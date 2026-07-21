@@ -162,6 +162,19 @@ class AdminStudentDashboardController extends Controller
         return back()->with('success', 'New section "' . $validated['name'] . '" created successfully!');
     }
 
+    public function destroySection(Section $section)
+    {
+        $sectionName = $section->name ?: $section->displayName;
+
+        // Unassign any students linked to this section in local DB
+        \App\Models\StudentSection::where('section_id', $section->id)->delete();
+
+        // Delete section record from portal DB ONLY (Leaves Microsoft Teams untouched!)
+        $section->delete();
+
+        return back()->with('success', 'Section "' . $sectionName . '" deleted from portal list.');
+    }
+
     public function gradeRosterPrint(Request $request, $grade)
     {
         $grade = urldecode($grade);

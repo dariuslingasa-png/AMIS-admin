@@ -135,6 +135,15 @@
                                     <a href="{{ route('admin.students.id-roster-print', $section) }}" target="_blank" class="h-7 w-7 rounded-lg bg-purple-50 text-purple-700 border border-purple-100 hover:bg-purple-100 flex items-center justify-center transition active:scale-[0.95]" title="Export Section ID Cards Document (Google Docs / MS Word)">
                                         <i data-lucide="contact" class="h-3.5 w-3.5"></i>
                                     </a>
+                                    <form method="POST" action="{{ route('admin.students.occupancy.delete-section', $section) }}"
+                                          onsubmit="return confirm('Delete section &quot;{{ $section->displayName }}&quot;?\n\nNote: This will only remove the section from the portal list. Microsoft Teams app and student records will NOT be deleted.')"
+                                          class="inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="h-7 w-7 rounded-lg bg-rose-50 text-rose-600 border border-rose-100 hover:bg-rose-100 flex items-center justify-center transition active:scale-[0.95] cursor-pointer" title="Delete Section (Portal List Only)">
+                                            <i data-lucide="trash-2" class="h-3.5 w-3.5"></i>
+                                        </button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>
