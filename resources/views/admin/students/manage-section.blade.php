@@ -2,6 +2,36 @@
     $sectionDisplayName = $section->official_name ?: ($section->name ?: 'General Section');
     $enrolledCount = $section->students->count();
     $fillRate = $capacity > 0 ? min(100, round(($enrolledCount / $capacity) * 100)) : 0;
+
+    // Group Enrolled Students into Boys, Girls, and Others
+    $enrolledBoys = $section->students->filter(function($secSt) {
+        $g = strtolower(trim($secSt->student?->applicant?->gender ?? ''));
+        return str_contains($g, 'male') && !str_contains($g, 'female');
+    });
+
+    $enrolledGirls = $section->students->filter(function($secSt) {
+        $g = strtolower(trim($secSt->student?->applicant?->gender ?? ''));
+        return str_contains($g, 'female');
+    });
+
+    $enrolledUnspecified = $section->students->reject(function($secSt) use ($enrolledBoys, $enrolledGirls) {
+        return $enrolledBoys->contains($secSt) || $enrolledGirls->contains($secSt);
+    });
+
+    // Group Available Students into Boys, Girls, and Others
+    $availableBoys = $availableStudents->filter(function($st) {
+        $g = strtolower(trim($st->applicant?->gender ?? ''));
+        return str_contains($g, 'male') && !str_contains($g, 'female');
+    });
+
+    $availableGirls = $availableStudents->filter(function($st) {
+        $g = strtolower(trim($st->applicant?->gender ?? ''));
+        return str_contains($g, 'female');
+    });
+
+    $availableOthers = $availableStudents->reject(function($st) use ($availableBoys, $availableGirls) {
+        return $availableBoys->contains($st) || $availableGirls->contains($st);
+    });
 @endphp
 
 <x-admin-layout
@@ -15,7 +45,7 @@
     <!-- Load SortableJS for Fluid Drag and Drop -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 
-    <div class="space-y-6" x-data="{ openEditModal: false, isHoveringRoster: false, rosterGenderFilter: 'all', addGenderFilter: 'all' }">
+    <div class="space-y-6" x-data="{ openEditModal: false, isHoveringRoster: false }">
         <!-- Top Header Banner -->
         <section class="overflow-hidden rounded-3xl border border-emerald-700/30 bg-gradient-to-br from-emerald-800 via-emerald-900 to-teal-950 p-6 text-white shadow-xl">
             <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -43,6 +73,8 @@
                     <h1 class="mt-3 text-3xl font-black tracking-tight">{{ $sectionDisplayName }}</h1>
                     <p class="mt-1 text-sm font-medium text-emerald-100 flex items-center gap-3">
                         <span>Enrolled: <strong class="text-white font-extrabold">{{ $enrolledCount }} / {{ $capacity }}</strong> Seats ({{ $fillRate }}%)</span>
+                        <span>&bull; Boys: <strong>{{ $enrolledBoys->count() }}</strong></span>
+                        <span>&bull; Girls: <strong>{{ $enrolledGirls->count() }}</strong></span>
                         @if($section->grade_advisor)
                             <span>&bull; Advisor: <strong class="text-white font-extrabold">{{ str_ireplace('TEACHER ', '', $section->grade_advisor->teacher_name ?? '') }}</strong></span>
                         @endif
@@ -126,7 +158,7 @@
                     <input type="hidden" name="grade_level" value="{{ $section->grade_level }}">
                     <input type="hidden" name="learning_mode" value="{{ $section->learning_mode }}">
                     <input type="hidden" name="shift" value="{{ $section->shift }}">
-                    <label class="text-slate-500 font-bold">Gender:</label>
+                    <label class="text-slate-500 font-bold">Gender Allocation:</label>
                     <select name="gender" onchange="this.form.submit()" class="h-8 px-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-800 outline-none focus:border-emerald-500 cursor-pointer">
                         <option value="merge" @selected(($section->gender ?? 'merge') === 'merge')>Co-Ed (Merge)</option>
                         <option value="female" @selected($section->gender === 'female')>Girls Only</option>
@@ -228,7 +260,7 @@
         <!-- Main Workspace: 2 Columns -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-            <!-- LEFT COLUMN: Current Enrolled Roster (Drop Zone) (5 Cols) -->
+            <!-- LEFT COLUMN: Current Enrolled Roster (Grouped by Gender) (5 Cols) -->
             <div class="lg:col-span-5 space-y-4">
                 <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200"
                      @dragover.prevent="isHoveringRoster = true"
@@ -243,39 +275,17 @@
                      "
                      :class="isHoveringRoster ? 'ring-4 ring-emerald-400/60 bg-emerald-50/50 border-emerald-400 scale-[1.01]' : ''">
                     
-                    <div class="pb-3 border-b border-slate-100 mb-4 space-y-2">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <h2 class="text-base font-black text-slate-900 flex items-center gap-2">
-                                    <i data-lucide="users" class="w-5 h-5 text-emerald-600"></i>
-                                    <span>Current Roster</span>
-                                </h2>
-                                <p class="text-xs text-slate-500 font-medium">{{ $enrolledCount }} student(s) in section</p>
-                            </div>
-                            <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
-                                {{ $fillRate }}% Filled
-                            </span>
+                    <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+                        <div>
+                            <h2 class="text-base font-black text-slate-900 flex items-center gap-2">
+                                <i data-lucide="users" class="w-5 h-5 text-emerald-600"></i>
+                                <span>Current Roster</span>
+                            </h2>
+                            <p class="text-xs text-slate-500 font-medium">{{ $enrolledCount }} student(s) in section</p>
                         </div>
-
-                        <!-- Roster Gender Filter Tabs -->
-                        <div class="flex items-center gap-1.5 pt-1">
-                            <span class="text-[11px] font-bold text-slate-400">Gender Filter:</span>
-                            <button type="button" @click="rosterGenderFilter = 'all'"
-                                    :class="rosterGenderFilter === 'all' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
-                                    class="px-2.5 py-0.5 rounded-lg text-[11px] font-extrabold transition cursor-pointer">
-                                All ({{ $enrolledCount }})
-                            </button>
-                            <button type="button" @click="rosterGenderFilter = 'male'"
-                                    :class="rosterGenderFilter === 'male' ? 'bg-blue-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
-                                    class="px-2.5 py-0.5 rounded-lg text-[11px] font-extrabold transition cursor-pointer">
-                                👦 Boys
-                            </button>
-                            <button type="button" @click="rosterGenderFilter = 'female'"
-                                    :class="rosterGenderFilter === 'female' ? 'bg-pink-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
-                                    class="px-2.5 py-0.5 rounded-lg text-[11px] font-extrabold transition cursor-pointer">
-                                👧 Girls
-                            </button>
-                        </div>
+                        <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+                            {{ $fillRate }}% Filled
+                        </span>
                     </div>
 
                     @if($section->students->isEmpty())
@@ -285,43 +295,149 @@
                             <p class="text-[11px] font-bold text-emerald-700 mt-1">Drag student cards from the right panel & drop them here!</p>
                         </div>
                     @else
-                        <div id="roster-sortable-list" class="space-y-2 max-h-[600px] overflow-y-auto pr-1 divide-y divide-slate-100">
-                            @foreach($section->students as $secStudent)
-                                @php
-                                    $st = $secStudent->student;
-                                    $app = $st?->applicant;
-                                    $stName = $app ? html_entity_decode(implode(' ', array_filter([trim($app->first_name ?? ''), trim($app->middle_name ?? ''), trim($app->last_name ?? '')])), ENT_QUOTES, 'UTF-8') : 'Student #' . $st->student_number;
-                                    $stGender = strtolower(trim($app?->gender ?? ''));
-                                @endphp
-                                <div class="pt-2.5 pb-2 flex items-center justify-between gap-3 group bg-white rounded-xl p-2 hover:bg-slate-50 transition"
-                                     x-show="rosterGenderFilter === 'all' || '{{ $stGender }}'.includes(rosterGenderFilter)">
-                                    <div class="min-w-0 flex items-center gap-2">
-                                        <i data-lucide="grip-vertical" class="drag-handle w-4 h-4 text-slate-400 group-hover:text-emerald-600 shrink-0 cursor-grab active:cursor-grabbing"></i>
-                                        <div class="min-w-0">
-                                            <a href="{{ route('admin.students.show', $st) }}" target="_blank" class="font-black text-xs text-slate-900 hover:text-emerald-700 transition uppercase block truncate">
-                                                {{ $stName }}
-                                            </a>
-                                            <div class="flex items-center gap-2 text-[10px] text-slate-400 font-bold mt-0.5">
-                                                <span>ID: {{ $st->student_number }}</span>
-                                                @if($app?->lrn)
-                                                    <span>&bull; LRN: {{ $app->lrn }}</span>
-                                                @endif
-                                                @if($app?->gender)
-                                                    <span class="uppercase text-slate-500 font-black">&bull; {{ $app->gender }}</span>
-                                                @endif
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <form method="POST" action="{{ route('admin.students.occupancy.remove-student', $secStudent) }}" onsubmit="return confirm('Remove {{ addslashes($stName) }} from {{ addslashes($sectionDisplayName) }}?')" class="shrink-0">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="inline-flex items-center gap-1 text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-100 px-2.5 py-1 rounded-xl transition cursor-pointer" title="Remove from section">
-                                            <i data-lucide="user-minus" class="w-3.5 h-3.5"></i>
-                                            <span>Remove</span>
-                                        </button>
-                                    </form>
+                        <div class="space-y-4 max-h-[600px] overflow-y-auto pr-1">
+                            
+                            <!-- BOYS SECTION -->
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between px-3 py-1.5 bg-blue-50/80 rounded-xl border border-blue-200/80 text-blue-900">
+                                    <span class="text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
+                                        <span>👦 BOYS</span>
+                                    </span>
+                                    <span class="text-[11px] font-bold text-blue-700 bg-blue-100 px-2.5 py-0.5 rounded-full">
+                                        {{ $enrolledBoys->count() }} Student(s)
+                                    </span>
                                 </div>
-                            @endforeach
+                                <div id="roster-boys-sortable" class="space-y-1.5 min-h-[40px]">
+                                    @forelse($enrolledBoys as $secStudent)
+                                        @php
+                                            $st = $secStudent->student;
+                                            $app = $st?->applicant;
+                                            $stName = $app ? html_entity_decode(implode(' ', array_filter([trim($app->first_name ?? ''), trim($app->middle_name ?? ''), trim($app->last_name ?? '')])), ENT_QUOTES, 'UTF-8') : 'Student #' . $st->student_number;
+                                        @endphp
+                                        <div class="p-2.5 rounded-xl border border-slate-200/80 bg-white flex items-center justify-between gap-3 group hover:bg-slate-50 transition shadow-2xs">
+                                            <div class="min-w-0 flex items-center gap-2">
+                                                <i data-lucide="grip-vertical" class="drag-handle w-4 h-4 text-slate-300 group-hover:text-blue-600 shrink-0 cursor-grab active:cursor-grabbing"></i>
+                                                <div class="min-w-0">
+                                                    <a href="{{ route('admin.students.show', $st) }}" target="_blank" class="font-black text-xs text-slate-900 hover:text-blue-700 transition uppercase block truncate">
+                                                        {{ $stName }}
+                                                    </a>
+                                                    <div class="flex items-center gap-2 text-[10px] text-slate-400 font-bold mt-0.5">
+                                                        <span>ID: {{ $st->student_number }}</span>
+                                                        @if($app?->lrn)
+                                                            <span>&bull; LRN: {{ $app->lrn }}</span>
+                                                        @endif
+                                                        <span class="text-blue-600 font-black">&bull; MALE</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <form method="POST" action="{{ route('admin.students.occupancy.remove-student', $secStudent) }}" onsubmit="return confirm('Remove {{ addslashes($stName) }} from {{ addslashes($sectionDisplayName) }}?')" class="shrink-0">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="inline-flex items-center gap-1 text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-100 px-2 py-1 rounded-lg transition cursor-pointer" title="Remove from section">
+                                                    <i data-lucide="user-minus" class="w-3.5 h-3.5"></i>
+                                                    <span>Remove</span>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    @empty
+                                        <p class="text-[11px] font-semibold text-slate-400 italic px-2 py-1">No boys enrolled in this section.</p>
+                                    @endforelse
+                                </div>
+                            </div>
+
+                            <!-- GIRLS SECTION -->
+                            <div class="space-y-2 pt-2 border-t border-slate-100">
+                                <div class="flex items-center justify-between px-3 py-1.5 bg-pink-50/80 rounded-xl border border-pink-200/80 text-pink-900">
+                                    <span class="text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
+                                        <span>👧 GIRLS</span>
+                                    </span>
+                                    <span class="text-[11px] font-bold text-pink-700 bg-pink-100 px-2.5 py-0.5 rounded-full">
+                                        {{ $enrolledGirls->count() }} Student(s)
+                                    </span>
+                                </div>
+                                <div id="roster-girls-sortable" class="space-y-1.5 min-h-[40px]">
+                                    @forelse($enrolledGirls as $secStudent)
+                                        @php
+                                            $st = $secStudent->student;
+                                            $app = $st?->applicant;
+                                            $stName = $app ? html_entity_decode(implode(' ', array_filter([trim($app->first_name ?? ''), trim($app->middle_name ?? ''), trim($app->last_name ?? '')])), ENT_QUOTES, 'UTF-8') : 'Student #' . $st->student_number;
+                                        @endphp
+                                        <div class="p-2.5 rounded-xl border border-slate-200/80 bg-white flex items-center justify-between gap-3 group hover:bg-slate-50 transition shadow-2xs">
+                                            <div class="min-w-0 flex items-center gap-2">
+                                                <i data-lucide="grip-vertical" class="drag-handle w-4 h-4 text-slate-300 group-hover:text-pink-600 shrink-0 cursor-grab active:cursor-grabbing"></i>
+                                                <div class="min-w-0">
+                                                    <a href="{{ route('admin.students.show', $st) }}" target="_blank" class="font-black text-xs text-slate-900 hover:text-pink-700 transition uppercase block truncate">
+                                                        {{ $stName }}
+                                                    </a>
+                                                    <div class="flex items-center gap-2 text-[10px] text-slate-400 font-bold mt-0.5">
+                                                        <span>ID: {{ $st->student_number }}</span>
+                                                        @if($app?->lrn)
+                                                            <span>&bull; LRN: {{ $app->lrn }}</span>
+                                                        @endif
+                                                        <span class="text-pink-600 font-black">&bull; FEMALE</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <form method="POST" action="{{ route('admin.students.occupancy.remove-student', $secStudent) }}" onsubmit="return confirm('Remove {{ addslashes($stName) }} from {{ addslashes($sectionDisplayName) }}?')" class="shrink-0">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="inline-flex items-center gap-1 text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-100 px-2 py-1 rounded-lg transition cursor-pointer" title="Remove from section">
+                                                    <i data-lucide="user-minus" class="w-3.5 h-3.5"></i>
+                                                    <span>Remove</span>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    @empty
+                                        <p class="text-[11px] font-semibold text-slate-400 italic px-2 py-1">No girls enrolled in this section.</p>
+                                    @endforelse
+                                </div>
+                            </div>
+
+                            @if($enrolledUnspecified->isNotEmpty())
+                                <!-- UNSPECIFIED / OTHER GENDER SECTION -->
+                                <div class="space-y-2 pt-2 border-t border-slate-100">
+                                    <div class="flex items-center justify-between px-3 py-1.5 bg-slate-100 rounded-xl border border-slate-200 text-slate-700">
+                                        <span class="text-xs font-black uppercase tracking-wider">👥 OTHER / UNASSIGNED GENDER</span>
+                                        <span class="text-[11px] font-bold text-slate-600 bg-white px-2 py-0.5 rounded-full">
+                                            {{ $enrolledUnspecified->count() }} Student(s)
+                                        </span>
+                                    </div>
+                                    <div class="space-y-1.5">
+                                        @foreach($enrolledUnspecified as $secStudent)
+                                            @php
+                                                $st = $secStudent->student;
+                                                $app = $st?->applicant;
+                                                $stName = $app ? html_entity_decode(implode(' ', array_filter([trim($app->first_name ?? ''), trim($app->middle_name ?? ''), trim($app->last_name ?? '')])), ENT_QUOTES, 'UTF-8') : 'Student #' . $st->student_number;
+                                            @endphp
+                                            <div class="p-2.5 rounded-xl border border-slate-200 bg-white flex items-center justify-between gap-3 group hover:bg-slate-50 transition">
+                                                <div class="min-w-0 flex items-center gap-2">
+                                                    <i data-lucide="grip-vertical" class="drag-handle w-4 h-4 text-slate-300 shrink-0"></i>
+                                                    <div class="min-w-0">
+                                                        <a href="{{ route('admin.students.show', $st) }}" target="_blank" class="font-black text-xs text-slate-900 hover:text-emerald-700 transition uppercase block truncate">
+                                                            {{ $stName }}
+                                                        </a>
+                                                        <div class="flex items-center gap-2 text-[10px] text-slate-400 font-bold mt-0.5">
+                                                            <span>ID: {{ $st->student_number }}</span>
+                                                            @if($app?->lrn)
+                                                                <span>&bull; LRN: {{ $app->lrn }}</span>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <form method="POST" action="{{ route('admin.students.occupancy.remove-student', $secStudent) }}" onsubmit="return confirm('Remove {{ addslashes($stName) }} from {{ addslashes($sectionDisplayName) }}?')" class="shrink-0">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="inline-flex items-center gap-1 text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-100 px-2 py-1 rounded-lg transition cursor-pointer" title="Remove from section">
+                                                        <i data-lucide="user-minus" class="w-3.5 h-3.5"></i>
+                                                        <span>Remove</span>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
+
                         </div>
                     @endif
                 </div>
@@ -336,7 +452,7 @@
                                 <i data-lucide="user-plus" class="w-5 h-5 text-emerald-600"></i>
                                 <span>Add Students to {{ $sectionDisplayName }}</span>
                             </h2>
-                            <p class="text-xs text-slate-500 font-medium">Search, filter by gender, or drag-and-drop student records</p>
+                            <p class="text-xs text-slate-500 font-medium">Search, select, or drag-and-drop official student records</p>
                         </div>
                     </div>
 
@@ -371,84 +487,178 @@
                     <form method="POST" action="{{ route('admin.students.occupancy.assign-students', $section) }}" x-data="{ selectAll: false }">
                         @csrf
                         
-                        <!-- Gender Filter Bar for Add Students -->
-                        <div class="flex flex-wrap items-center justify-between gap-2 px-3 py-2 bg-slate-50 rounded-2xl border border-slate-200/80 mb-3 text-xs font-bold text-slate-600">
-                            <div class="flex items-center gap-2">
-                                <label class="flex items-center gap-1.5 cursor-pointer">
-                                    <input type="checkbox" @click="selectAll = !selectAll; $el.closest('form').querySelectorAll('input[type=checkbox]').forEach(c => c.checked = selectAll)"
-                                           class="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500">
-                                    <span>Select All</span>
-                                </label>
-                                <span class="text-slate-300">|</span>
-                                <span class="text-[11px] font-bold text-slate-400">Gender Filter:</span>
-                                <button type="button" @click="addGenderFilter = 'all'"
-                                        :class="addGenderFilter === 'all' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'"
-                                        class="px-2 py-0.5 rounded-lg text-[11px] font-extrabold transition cursor-pointer">
-                                    All
-                                </button>
-                                <button type="button" @click="addGenderFilter = 'male'"
-                                        :class="addGenderFilter === 'male' ? 'bg-blue-600 text-white shadow-xs' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'"
-                                        class="px-2 py-0.5 rounded-lg text-[11px] font-extrabold transition cursor-pointer">
-                                    👦 Boys
-                                </button>
-                                <button type="button" @click="addGenderFilter = 'female'"
-                                        :class="addGenderFilter === 'female' ? 'bg-pink-600 text-white shadow-xs' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'"
-                                        class="px-2 py-0.5 rounded-lg text-[11px] font-extrabold transition cursor-pointer">
-                                    👧 Girls
-                                </button>
-                            </div>
-                            <span class="text-slate-400 font-semibold">{{ $availableStudents->count() }} Records</span>
+                        <div class="flex items-center justify-between px-3 py-2 bg-slate-50 rounded-2xl border border-slate-200/80 mb-3 text-xs font-bold text-slate-600">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" @click="selectAll = !selectAll; $el.closest('form').querySelectorAll('input[type=checkbox]').forEach(c => c.checked = selectAll)"
+                                       class="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500">
+                                <span>Select All Visible Students</span>
+                            </label>
+                            <span class="text-slate-400 font-semibold">{{ $availableStudents->count() }} Student Records Found</span>
                         </div>
 
-                        <div id="add-students-sortable-list" class="space-y-1.5 max-h-[420px] overflow-y-auto pr-1 border border-slate-200 rounded-2xl p-2 bg-slate-50/30">
-                            @forelse($availableStudents as $st)
-                                @php
-                                    $stApp = $st->applicant;
-                                    $stName = $stApp ? html_entity_decode(implode(' ', array_filter([trim($stApp->first_name ?? ''), trim($stApp->middle_name ?? ''), trim($stApp->last_name ?? '')])), ENT_QUOTES, 'UTF-8') : 'Student #' . $st->student_number;
-                                    $stGender = strtolower(trim($stApp?->gender ?? ''));
-                                    $currentSec = $st->studentSection?->section;
-                                    $isEnrolledInThis = $currentSec && $currentSec->id === $section->id;
-                                @endphp
-                                <label draggable="true"
-                                       @dragstart="$event.dataTransfer.setData('text/plain', '{{ $st->id }}')"
-                                       x-show="addGenderFilter === 'all' || '{{ $stGender }}'.includes(addGenderFilter)"
-                                       class="flex items-center justify-between p-3 rounded-xl bg-white border border-slate-200/80 hover:border-emerald-400 hover:shadow-sm transition cursor-grab active:cursor-grabbing group">
-                                    <div class="flex items-center gap-3 min-w-0">
-                                        <i data-lucide="grip-vertical" class="drag-handle w-4 h-4 text-slate-300 group-hover:text-emerald-500 shrink-0"></i>
-                                        <input type="checkbox" name="student_ids[]" value="{{ $st->id }}" @checked($isEnrolledInThis)
-                                               class="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500">
-                                        <div class="min-w-0">
-                                            <span class="block text-xs font-black text-slate-900 uppercase truncate leading-tight">{{ $stName }}</span>
-                                            <div class="flex items-center gap-2 text-[10px] font-bold text-slate-400 mt-0.5">
-                                                <span>ID: {{ $st->student_number }}</span>
-                                                @if($stApp?->lrn)
-                                                    <span>&bull; LRN: {{ $stApp->lrn }}</span>
-                                                @endif
-                                                @if($stApp?->gender)
-                                                    <span class="uppercase text-slate-600 font-extrabold">&bull; {{ $stApp->gender }}</span>
-                                                @endif
-                                                <span>&bull; Grade: <strong>{{ $st->grade_level }}</strong></span>
+                        <div class="space-y-4 max-h-[420px] overflow-y-auto pr-1 border border-slate-200 rounded-2xl p-3 bg-slate-50/30">
+                            
+                            <!-- AVAILABLE BOYS -->
+                            @if($availableBoys->isNotEmpty())
+                                <div class="space-y-1.5">
+                                    <div class="text-[11px] font-black text-blue-900 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-200/60 uppercase tracking-wider flex items-center justify-between">
+                                        <span>👦 BOYS ({{ $availableBoys->count() }})</span>
+                                        <span class="text-[10px] font-bold text-blue-600">Drag or check to assign</span>
+                                    </div>
+                                    @foreach($availableBoys as $st)
+                                        @php
+                                            $stApp = $st->applicant;
+                                            $stName = $stApp ? html_entity_decode(implode(' ', array_filter([trim($stApp->first_name ?? ''), trim($stApp->middle_name ?? ''), trim($stApp->last_name ?? '')])), ENT_QUOTES, 'UTF-8') : 'Student #' . $st->student_number;
+                                            $currentSec = $st->studentSection?->section;
+                                            $isEnrolledInThis = $currentSec && $currentSec->id === $section->id;
+                                        @endphp
+                                        <label draggable="true"
+                                               @dragstart="$event.dataTransfer.setData('text/plain', '{{ $st->id }}')"
+                                               class="flex items-center justify-between p-2.5 rounded-xl bg-white border border-slate-200/80 hover:border-blue-400 hover:shadow-xs transition cursor-grab active:cursor-grabbing group">
+                                            <div class="flex items-center gap-3 min-w-0">
+                                                <i data-lucide="grip-vertical" class="drag-handle w-4 h-4 text-slate-300 group-hover:text-blue-500 shrink-0"></i>
+                                                <input type="checkbox" name="student_ids[]" value="{{ $st->id }}" @checked($isEnrolledInThis)
+                                                       class="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500">
+                                                <div class="min-w-0">
+                                                    <span class="block text-xs font-black text-slate-900 uppercase truncate leading-tight">{{ $stName }}</span>
+                                                    <div class="flex items-center gap-2 text-[10px] font-bold text-slate-400 mt-0.5">
+                                                        <span>ID: {{ $st->student_number }}</span>
+                                                        @if($stApp?->lrn)
+                                                            <span>&bull; LRN: {{ $stApp->lrn }}</span>
+                                                        @endif
+                                                        <span class="text-blue-600 font-extrabold">&bull; MALE</span>
+                                                        <span>&bull; Grade: <strong>{{ $st->grade_level }}</strong></span>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </div>
+                                            <div class="text-right shrink-0">
+                                                @if($isEnrolledInThis)
+                                                    <span class="inline-flex items-center gap-1 text-[10px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                                                        <i data-lucide="check-circle" class="w-3 h-3 text-emerald-600"></i>
+                                                        <span>Assigned Here</span>
+                                                    </span>
+                                                @elseif($currentSec)
+                                                    <span class="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full">
+                                                        In: {{ $currentSec->name }}
+                                                    </span>
+                                                @else
+                                                    <span class="text-[10px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full">
+                                                        Unassigned
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        </label>
+                                    @endforeach
+                                </div>
+                            @endif
+
+                            <!-- AVAILABLE GIRLS -->
+                            @if($availableGirls->isNotEmpty())
+                                <div class="space-y-1.5 pt-2 border-t border-slate-100">
+                                    <div class="text-[11px] font-black text-pink-900 bg-pink-50 px-2.5 py-1 rounded-lg border border-pink-200/60 uppercase tracking-wider flex items-center justify-between">
+                                        <span>👧 GIRLS ({{ $availableGirls->count() }})</span>
+                                        <span class="text-[10px] font-bold text-pink-600">Drag or check to assign</span>
                                     </div>
-                                    <div class="text-right shrink-0">
-                                        @if($isEnrolledInThis)
-                                            <span class="inline-flex items-center gap-1 text-[10px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
-                                                <i data-lucide="check-circle" class="w-3 h-3 text-emerald-600"></i>
-                                                <span>Assigned Here</span>
-                                            </span>
-                                        @elseif($currentSec)
-                                            <span class="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full">
-                                                In: {{ $currentSec->name }}
-                                            </span>
-                                        @else
-                                            <span class="text-[10px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full">
-                                                Unassigned
-                                            </span>
-                                        @endif
+                                    @foreach($availableGirls as $st)
+                                        @php
+                                            $stApp = $st->applicant;
+                                            $stName = $stApp ? html_entity_decode(implode(' ', array_filter([trim($stApp->first_name ?? ''), trim($stApp->middle_name ?? ''), trim($stApp->last_name ?? '')])), ENT_QUOTES, 'UTF-8') : 'Student #' . $st->student_number;
+                                            $currentSec = $st->studentSection?->section;
+                                            $isEnrolledInThis = $currentSec && $currentSec->id === $section->id;
+                                        @endphp
+                                        <label draggable="true"
+                                               @dragstart="$event.dataTransfer.setData('text/plain', '{{ $st->id }}')"
+                                               class="flex items-center justify-between p-2.5 rounded-xl bg-white border border-slate-200/80 hover:border-pink-400 hover:shadow-xs transition cursor-grab active:cursor-grabbing group">
+                                            <div class="flex items-center gap-3 min-w-0">
+                                                <i data-lucide="grip-vertical" class="drag-handle w-4 h-4 text-slate-300 group-hover:text-pink-500 shrink-0"></i>
+                                                <input type="checkbox" name="student_ids[]" value="{{ $st->id }}" @checked($isEnrolledInThis)
+                                                       class="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500">
+                                                <div class="min-w-0">
+                                                    <span class="block text-xs font-black text-slate-900 uppercase truncate leading-tight">{{ $stName }}</span>
+                                                    <div class="flex items-center gap-2 text-[10px] font-bold text-slate-400 mt-0.5">
+                                                        <span>ID: {{ $st->student_number }}</span>
+                                                        @if($stApp?->lrn)
+                                                            <span>&bull; LRN: {{ $stApp->lrn }}</span>
+                                                        @endif
+                                                        <span class="text-pink-600 font-extrabold">&bull; FEMALE</span>
+                                                        <span>&bull; Grade: <strong>{{ $st->grade_level }}</strong></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="text-right shrink-0">
+                                                @if($isEnrolledInThis)
+                                                    <span class="inline-flex items-center gap-1 text-[10px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                                                        <i data-lucide="check-circle" class="w-3 h-3 text-emerald-600"></i>
+                                                        <span>Assigned Here</span>
+                                                    </span>
+                                                @elseif($currentSec)
+                                                    <span class="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full">
+                                                        In: {{ $currentSec->name }}
+                                                    </span>
+                                                @else
+                                                    <span class="text-[10px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full">
+                                                        Unassigned
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        </label>
+                                    @endforeach
+                                </div>
+                            @endif
+
+                            <!-- AVAILABLE OTHERS / UNSPECIFIED GENDER -->
+                            @if($availableOthers->isNotEmpty())
+                                <div class="space-y-1.5 pt-2 border-t border-slate-100">
+                                    <div class="text-[11px] font-black text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200 uppercase tracking-wider">
+                                        👥 OTHER / UNASSIGNED GENDER ({{ $availableOthers->count() }})
                                     </div>
-                                </label>
-                            @empty
+                                    @foreach($availableOthers as $st)
+                                        @php
+                                            $stApp = $st->applicant;
+                                            $stName = $stApp ? html_entity_decode(implode(' ', array_filter([trim($stApp->first_name ?? ''), trim($stApp->middle_name ?? ''), trim($stApp->last_name ?? '')])), ENT_QUOTES, 'UTF-8') : 'Student #' . $st->student_number;
+                                            $currentSec = $st->studentSection?->section;
+                                            $isEnrolledInThis = $currentSec && $currentSec->id === $section->id;
+                                        @endphp
+                                        <label draggable="true"
+                                               @dragstart="$event.dataTransfer.setData('text/plain', '{{ $st->id }}')"
+                                               class="flex items-center justify-between p-2.5 rounded-xl bg-white border border-slate-200/80 hover:border-slate-400 hover:shadow-xs transition cursor-grab active:cursor-grabbing group">
+                                            <div class="flex items-center gap-3 min-w-0">
+                                                <i data-lucide="grip-vertical" class="drag-handle w-4 h-4 text-slate-300 shrink-0"></i>
+                                                <input type="checkbox" name="student_ids[]" value="{{ $st->id }}" @checked($isEnrolledInThis)
+                                                       class="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500">
+                                                <div class="min-w-0">
+                                                    <span class="block text-xs font-black text-slate-900 uppercase truncate leading-tight">{{ $stName }}</span>
+                                                    <div class="flex items-center gap-2 text-[10px] font-bold text-slate-400 mt-0.5">
+                                                        <span>ID: {{ $st->student_number }}</span>
+                                                        @if($stApp?->lrn)
+                                                            <span>&bull; LRN: {{ $stApp->lrn }}</span>
+                                                        @endif
+                                                        <span>&bull; Grade: <strong>{{ $st->grade_level }}</strong></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="text-right shrink-0">
+                                                @if($isEnrolledInThis)
+                                                    <span class="inline-flex items-center gap-1 text-[10px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                                                        <i data-lucide="check-circle" class="w-3 h-3 text-emerald-600"></i>
+                                                        <span>Assigned Here</span>
+                                                    </span>
+                                                @elseif($currentSec)
+                                                    <span class="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full">
+                                                        In: {{ $currentSec->name }}
+                                                    </span>
+                                                @else
+                                                    <span class="text-[10px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full">
+                                                        Unassigned
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        </label>
+                                    @endforeach
+                                </div>
+                            @endif
+
+                            @if($availableStudents->isEmpty())
                                 <div class="py-12 text-center text-slate-400 italic">
                                     <i data-lucide="search-x" class="w-8 h-8 mx-auto mb-2 text-slate-300"></i>
                                     <p class="text-xs font-bold text-slate-500">No student records found matching your search.</p>
@@ -456,7 +666,8 @@
                                         <p class="text-[11px] text-slate-400 mt-1">Try switching to "All School Records" tab above to search across all grade levels.</p>
                                     @endif
                                 </div>
-                            @endforelse
+                            @endif
+
                         </div>
 
                         <div class="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between">
@@ -473,26 +684,19 @@
         </div>
     </div>
 
-    <!-- Initialize SortableJS for smooth dragging -->
+    <!-- Initialize SortableJS for fluid drag-and-drop -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            var rosterList = document.getElementById('roster-sortable-list');
-            if (rosterList) {
-                new Sortable(rosterList, {
-                    animation: 150,
-                    handle: '.drag-handle',
-                    ghostClass: 'bg-emerald-100'
-                });
-            }
-
-            var addList = document.getElementById('add-students-sortable-list');
-            if (addList) {
-                new Sortable(addList, {
-                    animation: 150,
-                    handle: '.drag-handle',
-                    ghostClass: 'bg-emerald-100'
-                });
-            }
+            ['roster-boys-sortable', 'roster-girls-sortable'].forEach(function(id) {
+                var el = document.getElementById(id);
+                if (el) {
+                    new Sortable(el, {
+                        animation: 150,
+                        handle: '.drag-handle',
+                        ghostClass: 'bg-emerald-100'
+                    });
+                }
+            });
         });
     </script>
 </x-admin-layout>

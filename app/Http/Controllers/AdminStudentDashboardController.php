@@ -325,16 +325,22 @@ class AdminStudentDashboardController extends Controller
 
     public function assignStudentsToSection(Request $request, Section $section)
     {
-        $validated = $request->validate([
-            'student_ids' => 'required|array|min:1',
-            'student_ids.*' => 'exists:students,id',
-        ]);
+        $studentIds = array_filter((array) $request->input('student_ids', []));
+
+        if (empty($studentIds)) {
+            return back()->with('error', 'Please select at least one valid student record to assign.');
+        }
 
         $count = 0;
-        foreach ($validated['student_ids'] as $studentId) {
-            \App\Models\StudentSection::where('student_id', $studentId)->delete();
+        foreach ($studentIds as $studentId) {
+            $student = Student::find($studentId);
+            if (!$student) {
+                continue;
+            }
+
+            \App\Models\StudentSection::where('student_id', $student->id)->delete();
             \App\Models\StudentSection::create([
-                'student_id' => $studentId,
+                'student_id' => $student->id,
                 'section_id' => $section->id,
                 'ms_status' => 'enrolled',
                 'ms_enrolled_at' => now(),
