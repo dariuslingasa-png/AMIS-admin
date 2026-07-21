@@ -1953,20 +1953,26 @@ class AdminStudentController extends Controller
         // Name lengths
         $lastNameLen = strlen($lastName);
         if ($lastNameLen <= 8) {
-            $lastNameFontSize = 30;
+            $lastNameFontSize = 36;
             $lastNameStyle = 'white-space: nowrap;';
         } elseif ($lastNameLen <= 12) {
-            $lastNameFontSize = 23;
+            $lastNameFontSize = 28;
             $lastNameStyle = 'white-space: nowrap;';
         } elseif ($lastNameLen <= 16) {
-            $lastNameFontSize = 19;
+            $lastNameFontSize = 23;
             $lastNameStyle = 'white-space: nowrap;';
         } elseif ($lastNameLen <= 20) {
-            $lastNameFontSize = 15;
+            $lastNameFontSize = 18;
+            $lastNameStyle = 'white-space: nowrap;';
+        } elseif ($lastNameLen <= 24) {
+            $lastNameFontSize = 14;
+            $lastNameStyle = 'white-space: nowrap;';
+        } elseif ($lastNameLen <= 28) {
+            $lastNameFontSize = 12;
             $lastNameStyle = 'white-space: nowrap;';
         } else {
-            $lastNameFontSize = 12.5;
-            $lastNameStyle = 'word-break: break-word;';
+            $lastNameFontSize = 10.5;
+            $lastNameStyle = 'white-space: nowrap;';
         }
 
         $displayFirstName = trim($firstName . ' ' . $middleInitial);

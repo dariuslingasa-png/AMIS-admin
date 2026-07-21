@@ -442,9 +442,15 @@
                                 } elseif ($lastNameLen <= 20) {
                                     $lastNameFontSize = '18px';
                                     $lastNameStyle = 'white-space: nowrap;';
+                                } elseif ($lastNameLen <= 24) {
+                                    $lastNameFontSize = '14px';
+                                    $lastNameStyle = 'white-space: nowrap;';
+                                } elseif ($lastNameLen <= 28) {
+                                    $lastNameFontSize = '12px';
+                                    $lastNameStyle = 'white-space: nowrap;';
                                 } else {
-                                    $lastNameFontSize = '15px';
-                                    $lastNameStyle = 'word-break: break-word;';
+                                    $lastNameFontSize = '10.5px';
+                                    $lastNameStyle = 'white-space: nowrap;';
                                 }
                             @endphp
                             <div class="student-last-name">

@@ -545,9 +545,12 @@
                         $lastNameFontSize = '23px';
                     } elseif ($lastNameLen <= 20) {
                         $lastNameFontSize = '18px';
+                    } elseif ($lastNameLen <= 24) {
+                        $lastNameFontSize = '14px';
+                    } elseif ($lastNameLen <= 28) {
+                        $lastNameFontSize = '12px';
                     } else {
-                        $lastNameFontSize = '15px';
-                        $lastNameStyle = 'word-break: break-word;';
+                        $lastNameFontSize = '10.5px';
                     }
                 }
 
