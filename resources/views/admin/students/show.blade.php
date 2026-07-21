@@ -913,18 +913,17 @@
 
         <!-- Preview Modal -->
         @include('admin.students.partials.show.modal')
-
         <!-- ID Card Preview Modal -->
         <template x-teleport="body">
             <div x-show="showIdPreview"
                  style="display: none; z-index: 99999;"
                  class="fixed inset-0 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-fade-in">
-            <div class="bg-slate-100 dark:bg-slate-950 rounded-3xl max-w-3xl w-full overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col"
+            <div class="bg-slate-100 dark:bg-slate-950 rounded-3xl max-w-3xl w-full overflow-visible relative shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col"
                  x-transition:enter="transition ease-out duration-200"
                  x-transition:enter-start="opacity-0 scale-95"
                  x-transition:enter-end="opacity-100 scale-100">
                 <!-- Header -->
-                <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-850 bg-white dark:bg-slate-900">
+                <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-850 bg-white dark:bg-slate-900 rounded-t-3xl">
                     <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                         <i data-lucide="contact" class="h-4.5 w-4.5 text-emerald-600"></i>
                         <span>Official ID Card Preview</span>
@@ -1191,7 +1190,7 @@
                 </div>
 
                 <!-- Footer -->
-                <div class="flex flex-col sm:flex-row items-center justify-between px-6 py-4 border-t border-slate-200 dark:border-slate-855 bg-white dark:bg-slate-900 gap-3">
+                <div class="flex flex-col sm:flex-row items-center justify-between px-6 py-4 border-t border-slate-200 dark:border-slate-855 bg-white dark:bg-slate-900 gap-3 rounded-b-3xl relative z-30 overflow-visible">
                     <p class="text-xs text-slate-400 font-medium hidden sm:block">Smart ID Printer PNG images (300 DPI high-res).</p>
                     <div class="flex items-center gap-2 flex-wrap w-full sm:w-auto justify-end">
                         <!-- 1. Print Options Dropdown -->
