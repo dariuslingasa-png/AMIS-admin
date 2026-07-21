@@ -266,15 +266,9 @@
                             </div>
 
                             <!-- Director's Signature Box -->
-                            @if(in_array((string)$student->student_number, ['260253', '260254', '260158', '260895', '260894', '260893']))
-                                <div class="back-signature-qr" style="position: absolute; left: 142.5px; top: 422px; width: 55px; height: 55px; z-index: 25; padding: 1.5px; border-radius: 2px; background: white; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
-                                    <img src="{{ $signatureQrBase64 ?: $signatureRawUrl }}" alt="Signature QR" class="w-full h-full object-contain">
-                                </div>
-                            @else
-                                <div class="secure-signature-placeholder" style="position: absolute; left: 85px; top: 432px; width: 170px; text-align: center; z-index: 25; pointer-events: none;">
-                                    <span style="font-family: 'Outfit', sans-serif; font-size: 8px; font-weight: 900; text-transform: uppercase; color: #64748b; letter-spacing: 0.1em; border: 1.5px dashed #cbd5e1; padding: 3px 6px; border-radius: 6px; background: rgba(255, 255, 255, 0.85); display: inline-block; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">Secure Signature Coming Soon</span>
-                                </div>
-                            @endif
+                            <div class="back-signature-qr" style="position: absolute; left: 142.5px; top: 422px; width: 55px; height: 55px; z-index: 25; padding: 1.5px; border-radius: 2px; background: white; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+                                <img src="{{ $signatureQrBase64 ?: $signatureRawUrl }}" alt="Signature QR" class="w-full h-full object-contain">
+                            </div>
                         </div>
                         <span class="text-[10px] text-slate-400 font-semibold mt-1">Back Emergency Info Sheet</span>
                     </div>

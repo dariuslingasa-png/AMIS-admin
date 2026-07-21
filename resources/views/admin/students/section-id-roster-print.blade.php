@@ -729,13 +729,7 @@
                                         </div>
 
                                         <!-- Secure Director Signature QR -->
-                                        @if(in_array((string)$student->student_number, ['260253', '260254', '260158', '260895', '260894', '260893']))
-                                            <div class="back-signature-qr js-qr-code" data-qr="https://amis.edu.ph/signature"></div>
-                                        @else
-                                            <div class="secure-signature-placeholder" style="position: absolute; left: 85px; top: 432px; width: 170px; text-align: center; z-index: 25; pointer-events: none;">
-                                                <span style="font-family: 'Outfit', sans-serif; font-size: 8px; font-weight: 900; text-transform: uppercase; color: #64748b; letter-spacing: 0.1em; border: 1.5px dashed #cbd5e1; padding: 3px 6px; border-radius: 6px; background: rgba(255, 255, 255, 0.85); display: inline-block; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">Secure Signature Coming Soon</span>
-                                            </div>
-                                        @endif
+                                        <div class="back-signature-qr js-qr-code" data-qr="https://amis.edu.ph/signature"></div>
                                     </div>
                                 </div>
                             </div>
