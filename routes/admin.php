@@ -155,6 +155,7 @@ Route::name('admin.')->group(function () {
         Route::post('/students/occupancy/sections/{section}/assign-students', [AdminStudentDashboardController::class, 'assignStudentsToSection'])->name('students.occupancy.assign-students');
         Route::delete('/students/occupancy/sections/remove-student/{studentSection}', [AdminStudentDashboardController::class, 'removeStudentFromSection'])->name('students.occupancy.remove-student');
         Route::get('/students/occupancy/grade/{grade}/roster-print', [AdminStudentDashboardController::class, 'gradeRosterPrint'])->name('students.grade-roster-print');
+        Route::get('/students/occupancy/grade/{grade}/id-print', [AdminStudentDashboardController::class, 'gradeIdPrint'])->name('students.grade-id-print');
         Route::get('/students/reports', [AdminStudentDashboardController::class, 'reports'])->name('students.reports');
         Route::get('/students/attendance', [AdminStudentDashboardController::class, 'attendance'])->name('students.attendance');
         Route::get('/students/reports/data', [AdminStudentDashboardController::class, 'reportsData'])->name('students.reports.data');

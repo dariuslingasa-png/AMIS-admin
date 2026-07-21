@@ -52,9 +52,36 @@
                 <span class="inline-flex rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-wider {{ $gTheme['bg'] }}">
                     {{ $gradeOccupied }} / {{ $gradeCapacity }} Seats Enrolled
                 </span>
-                <a href="{{ route('admin.students.grade-roster-print', $gradeLevel) }}" target="_blank" class="h-7 w-7 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 flex items-center justify-center transition active:scale-[0.95]" title="Print Grade PDF (All Sections)">
-                    <i data-lucide="printer" class="h-3.5 w-3.5"></i>
-                </a>
+                <!-- Grade Print Dropdown -->
+                <div class="relative inline-block text-left" x-data="{ openGradePrintDropdown: false }" @click.outside="openGradePrintDropdown = false">
+                    <button type="button" @click="openGradePrintDropdown = !openGradePrintDropdown" class="h-7 w-7 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 flex items-center justify-center transition active:scale-[0.95]" title="Print Options for {{ $gradeLevel }}">
+                        <i data-lucide="printer" class="h-3.5 w-3.5"></i>
+                    </button>
+                    <div x-cloak x-show="openGradePrintDropdown" x-transition.origin.top.right 
+                         class="absolute right-0 mt-1 w-48 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl z-50 text-left">
+                        <a href="{{ route('admin.students.grade-roster-print', $gradeLevel) }}" target="_blank" 
+                           class="flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-[11px] font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition">
+                            <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-600"></i>
+                            <span>Print Official Roster</span>
+                        </a>
+                        <a href="{{ route('admin.students.grade-roster-print', $gradeLevel) }}?watermark=1" target="_blank" 
+                           class="flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-[11px] font-bold text-slate-700 hover:bg-amber-50 hover:text-amber-700 transition">
+                            <i data-lucide="file-text" class="w-3.5 h-3.5 text-amber-600"></i>
+                            <span>Print Watermark Roster</span>
+                        </a>
+                        <div class="my-1 border-t border-slate-100"></div>
+                        <a href="{{ route('admin.students.grade-id-print', $gradeLevel) }}" target="_blank" 
+                           class="flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-[11px] font-bold text-slate-700 hover:bg-purple-50 hover:text-purple-700 transition">
+                            <i data-lucide="contact" class="w-3.5 h-3.5 text-purple-600"></i>
+                            <span>Print Official ID Cards</span>
+                        </a>
+                        <a href="{{ route('admin.students.grade-id-print', $gradeLevel) }}?watermark=1" target="_blank" 
+                           class="flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-[11px] font-bold text-slate-700 hover:bg-amber-50 hover:text-amber-700 transition">
+                            <i data-lucide="file-text" class="w-3.5 h-3.5 text-amber-600"></i>
+                            <span>Print Watermark ID Cards</span>
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
 

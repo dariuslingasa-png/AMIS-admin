@@ -276,6 +276,29 @@ class AdminStudentDashboardController extends Controller
         return view('admin.students.grade-roster-print', compact('students', 'grade'));
     }
 
+    public function gradeIdPrint(Request $request, $grade)
+    {
+        $grade = urldecode($grade);
+
+        $students = Student::where('grade_level', $grade)
+            ->whereHas('studentSection')
+            ->with(['applicant'])
+            ->get()
+            ->sortBy(function ($student) {
+                $applicant = $student->applicant;
+                $lastName = strtoupper(trim($applicant?->last_name ?? ''));
+                $firstName = strtoupper(trim($applicant?->first_name ?? ''));
+                $middleName = strtoupper(trim($applicant?->middle_name ?? ''));
+                return $lastName . ' ' . $firstName . ' ' . $middleName;
+            })->values();
+
+        if ($students->isEmpty()) {
+            abort(404, 'No enrolled students found for this grade level.');
+        }
+
+        return view('admin.students.grade-id-print', compact('students', 'grade'));
+    }
+
     public function occupancy(Request $request)
     {
         $sections = Section::with(['students.student.applicant', 'activeAdvisory'])
