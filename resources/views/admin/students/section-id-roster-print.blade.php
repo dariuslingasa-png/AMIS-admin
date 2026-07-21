@@ -412,7 +412,10 @@
             }
             .student-card-item {
                 border: 1px solid #cbd5e1;
-                page-break-inside: avoid;
+                page-break-inside: avoid !important;
+                page-break-after: always !important;
+                break-after: page !important;
+                margin-bottom: 0 !important;
             }
         }
     </style>
@@ -869,17 +872,22 @@
             setTimeout(adjustLastNameFontSizes, 100);
         }
 
+        function setButtonsDisabled(state) {
+            const btns = document.querySelectorAll('button');
+            btns.forEach(b => b.disabled = state);
+        }
+
         async function exportToGoogleDocs(btn) {
             adjustLastNameFontSizes();
             
             const originalHtml = btn.innerHTML;
-            btn.disabled = true;
+            setButtonsDisabled(true);
 
-            const cards = Array.from(document.querySelectorAll('.id-card'));
-            const total = cards.length;
+            const studentItems = Array.from(document.querySelectorAll('.student-card-item'));
+            const total = studentItems.length;
             if (total === 0) {
                 alert('No cards found to export.');
-                btn.disabled = false;
+                setButtonsDisabled(false);
                 return;
             }
 
@@ -893,37 +901,8 @@
                 await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
             } catch (err) {}
 
-            const cardImages = [];
-            for (let i = 0; i < total; i++) {
-                btn.innerHTML = `⏳ Generating ultra-sharp IDs: ${i + 1}/${total}...`;
-                try {
-                    let dataUrl = '';
-                    if (typeof htmlToImage !== 'undefined') {
-                        dataUrl = await htmlToImage.toPng(cards[i], {
-                            pixelRatio: 3,
-                            cacheBust: true
-                        });
-                    } else if (typeof html2canvas !== 'undefined') {
-                        const canvas = await html2canvas(cards[i], {
-                            scale: 3,
-                            useCORS: true,
-                            allowTaint: true,
-                            backgroundColor: null,
-                            logging: false
-                        });
-                        dataUrl = canvas.toDataURL('image/png', 1.0);
-                    }
-                    cardImages.push(dataUrl);
-                } catch (e) {
-                    console.error('Render error for card ' + i, e);
-                    cardImages.push('');
-                }
-            }
-
-            btn.innerHTML = '📝 Building Google Docs document...';
-
             const titleEl = document.querySelector('.section-title');
-            const docTitle = titleEl ? titleEl.innerText : 'STUDENT ID CARDS ROSTER';
+            const docTitle = titleEl ? titleEl.innerText : 'SECTION ID CARDS ROSTER';
 
             let htmlDoc = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
 <head><meta charset='utf-8'><title>${docTitle}</title>
@@ -931,7 +910,8 @@
     body { font-family: Arial, sans-serif; margin: 20px; }
     h1 { text-align: center; color: #0f172a; font-size: 20px; }
     .subtitle { text-align: center; color: #059669; font-weight: bold; font-size: 12px; margin-bottom: 25px; }
-    table { width: 100%; border-collapse: collapse; margin-bottom: 30px; page-break-inside: avoid; }
+    .student-page { page-break-after: always; margin-bottom: 40px; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
     td { width: 50%; text-align: center; vertical-align: top; padding: 10px; }
     img { width: 250px; height: auto; border-radius: 8px; }
     .student-header { font-weight: bold; font-size: 14px; margin-bottom: 8px; color: #0f172a; border-bottom: 1px solid #ddd; padding-bottom: 4px; text-align: left; }
@@ -939,47 +919,59 @@
 </head>
 <body>
 <h1>${docTitle}</h1>
-<div class="subtitle">Official Student ID Cards Roster Document</div>
+<div class="subtitle">Official Student ID Cards Roster Document (1 Student Per Page)</div>
 `;
 
-            const studentItems = document.querySelectorAll('.student-card-item');
-            if (studentItems.length > 0) {
-                studentItems.forEach((item, sIdx) => {
-                    const header = item.querySelector('.student-item-header');
-                    const headerText = header ? header.innerText.replace(/\n/g, ' - ') : `Student ${sIdx + 1}`;
-                    const itemCards = item.querySelectorAll('.id-card');
-                    
-                    htmlDoc += `<div style="margin-bottom: 30px; page-break-inside: avoid;">`;
-                    htmlDoc += `<div class="student-header">${headerText}</div>`;
-                    htmlDoc += `<table><tr>`;
-                    
-                    itemCards.forEach((c) => {
-                        const cIdx = cards.indexOf(c);
-                        if (cIdx !== -1 && cardImages[cIdx]) {
-                            htmlDoc += `<td><img src="${cardImages[cIdx]}" width="250"></td>`;
+            for (let i = 0; i < total; i++) {
+                const item = studentItems[i];
+                btn.innerHTML = `⏳ Student ${i + 1}/${total} (releasing memory)...`;
+
+                const header = item.querySelector('.student-item-header');
+                const headerText = header ? header.innerText.replace(/\n/g, ' - ') : `Student ${i + 1}`;
+                const cards = Array.from(item.querySelectorAll('.id-card'));
+                
+                htmlDoc += `<div class="student-page">`;
+                htmlDoc += `<div class="student-header">${headerText}</div>`;
+                htmlDoc += `<table><tr>`;
+
+                for (let c of cards) {
+                    let dataUrl = '';
+                    try {
+                        if (typeof htmlToImage !== 'undefined') {
+                            dataUrl = await htmlToImage.toJpeg(c, {
+                                quality: 0.85,
+                                pixelRatio: 2,
+                                cacheBust: true
+                            });
+                        } else if (typeof html2canvas !== 'undefined') {
+                            const canvas = await html2canvas(c, {
+                                scale: 2,
+                                useCORS: true,
+                                allowTaint: true,
+                                backgroundColor: null,
+                                logging: false
+                            });
+                            dataUrl = canvas.toDataURL('image/jpeg', 0.85);
                         }
-                    });
-                    
-                    htmlDoc += `</tr></table></div>`;
-                });
-            } else {
-                htmlDoc += `<table>`;
-                for (let i = 0; i < cardImages.length; i += 2) {
-                    htmlDoc += `<tr style="page-break-inside: avoid;">`;
-                    htmlDoc += `<td><img src="${cardImages[i]}" width="250"></td>`;
-                    if (cardImages[i + 1]) {
-                        htmlDoc += `<td><img src="${cardImages[i + 1]}" width="250"></td>`;
+                    } catch (err) {
+                        console.error('Card render error', err);
+                    }
+
+                    if (dataUrl) {
+                        htmlDoc += `<td><img src="${dataUrl}" width="250"></td>`;
                     } else {
                         htmlDoc += `<td></td>`;
                     }
-                    htmlDoc += `</tr>`;
                 }
-                htmlDoc += `</table>`;
+
+                htmlDoc += `</tr></table></div>`;
+
+                // Yield control to browser thread to trigger GC & release RAM
+                await new Promise(resolve => setTimeout(resolve, 30));
             }
 
             htmlDoc += `</body></html>`;
 
-            // Copy rich HTML to Clipboard for instant Ctrl+V into Google Docs
             try {
                 const blob = new Blob([htmlDoc], { type: 'text/html' });
                 const data = [new ClipboardItem({ 'text/html': blob })];
@@ -988,7 +980,6 @@
                 console.warn('Clipboard write failed', err);
             }
 
-            // Also offer instant .doc file download for direct upload to Google Drive / Docs
             const blobDoc = new Blob(['\ufeff' + htmlDoc], { type: 'application/msword' });
             const link = document.createElement('a');
             const safeName = docTitle.replace(/[^a-zA-Z0-9_-]/g, '_');
@@ -998,10 +989,10 @@
             link.click();
             document.body.removeChild(link);
 
-            btn.disabled = false;
+            setButtonsDisabled(false);
             btn.innerHTML = originalHtml;
 
-            alert('✅ COPIED TO CLIPBOARD FOR GOOGLE DOCS!\n\nTo paste into Google Docs:\n1. Open Google Docs (docs.google.com)\n2. Open a Blank Document\n3. Press Ctrl + V (or Right Click -> Paste)!\n\n👉 All ID Card images will paste cleanly into your document without any warnings!');
+            alert('✅ READY FOR GOOGLE DOCS!\n\n1. Layout is set to 1 STUDENT PER PAGE.\n2. Document is downloaded & copied to clipboard!\n3. Open Google Docs (docs.google.com) and press Ctrl + V to paste!');
         }
 
         function copyDocumentHtml() {
