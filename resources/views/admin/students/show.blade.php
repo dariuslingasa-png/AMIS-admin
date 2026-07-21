@@ -2297,19 +2297,5 @@
     function adjustLastNameFontSizes() {
         // Font sizes are calculated server-side in PHP matching Student Records (show.blade.php)
     }
-
-    // Run ONLY after fonts are painted — prevents premature shrink on short names
-    function runAdjustAfterFonts() {
-        if (document.fonts && document.fonts.ready) {
-            document.fonts.ready.then(() => {
-                requestAnimationFrame(() => {
-                    requestAnimationFrame(adjustLastNameFontSizes);
-                });
-            });
-        } else {
-            window.addEventListener('load', () => setTimeout(adjustLastNameFontSizes, 200));
-        }
-    }
-    runAdjustAfterFonts();
     </script>
 </x-admin-layout>

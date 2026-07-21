@@ -5,9 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Section ID Cards Roster - {{ $section->grade_level }} {{ $section->name }}</title>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&display=swap');
-        
         * { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         body {
             margin: 0;
@@ -847,24 +849,9 @@
             // Font sizes are calculated server-side in PHP matching Student Records (show.blade.php)
         }
 
-        // Run ONLY after fonts are painted — prevents premature shrink on short names
-        function runAdjustAfterFonts() {
-            if (document.fonts && document.fonts.ready) {
-                document.fonts.ready.then(() => {
-                    requestAnimationFrame(() => {
-                        requestAnimationFrame(adjustLastNameFontSizes);
-                    });
-                });
-            } else {
-                window.addEventListener('load', () => setTimeout(adjustLastNameFontSizes, 200));
-            }
-        }
-        runAdjustAfterFonts();
-
         function updateFontSize(cssVar, val, lblId) {
             document.documentElement.style.setProperty(cssVar, val + 'px');
             document.getElementById(lblId).innerText = val + 'px';
-            setTimeout(adjustLastNameFontSizes, 50);
         }
 
         function resetFontSizes() {

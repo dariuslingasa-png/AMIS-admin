@@ -564,18 +564,6 @@
             // Font sizes are calculated server-side in PHP matching Student Records (show.blade.php)
         }
 
-        function runAdjustAfterFonts() {
-            if (document.fonts && document.fonts.ready) {
-                document.fonts.ready.then(() => {
-                    requestAnimationFrame(() => {
-                        requestAnimationFrame(adjustLastNameFontSizes);
-                    });
-                });
-            } else {
-                window.addEventListener('load', () => setTimeout(adjustLastNameFontSizes, 200));
-            }
-        }
-
         let hasPrinted = false;
         function doPrint() {
             adjustLastNameFontSizes();
