@@ -567,21 +567,47 @@
     @endforeach
 
     <script>
+        function adjustLastNameFontSizes() {
+            const elements = document.querySelectorAll('.student-last-name h3, .student-last-name, .id-last-name-text, [style*="top: 352px"][style*="width: 310px"]');
+            elements.forEach(el => {
+                const textEl = el.querySelector('h3') || el;
+                const maxW = 278; // 310 - 32 padding
+                
+                let fontSize = parseFloat(window.getComputedStyle(textEl).fontSize);
+                if (isNaN(fontSize) || fontSize <= 0) return;
+
+                // Reset inline font size style to read clean scrollWidth
+                textEl.style.fontSize = '';
+                fontSize = parseFloat(window.getComputedStyle(textEl).fontSize);
+                
+                let limit = 100;
+                while (textEl.scrollWidth > maxW && fontSize > 8 && limit > 0) {
+                    fontSize -= 0.5;
+                    textEl.style.setProperty('font-size', fontSize + 'px', 'important');
+                    limit--;
+                }
+            });
+        }
+
         let hasPrinted = false;
         function doPrint() {
+            adjustLastNameFontSizes();
             if (hasPrinted) return;
             hasPrinted = true;
             window.print();
         }
         window.addEventListener('load', () => {
+            adjustLastNameFontSizes();
             // Only auto-print if print parameter is explicit or user clicked print
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('autoprint') === '1') {
                 setTimeout(doPrint, 1000);
             }
         });
+        window.addEventListener('resize', adjustLastNameFontSizes);
 
         async function downloadCardPng(elementId, filename) {
+            adjustLastNameFontSizes();
             if (typeof html2canvas === 'undefined') return;
             const cardEl = document.getElementById(elementId);
             if (!cardEl) return;

@@ -779,9 +779,35 @@
             }
         }
 
+        function adjustLastNameFontSizes() {
+            const elements = document.querySelectorAll('.student-last-name h3, .student-last-name, .id-last-name-text, [style*="top: 352px"][style*="width: 310px"]');
+            elements.forEach(el => {
+                const textEl = el.querySelector('h3') || el;
+                const maxW = 278; // 310 - 32 padding
+                
+                let fontSize = parseFloat(window.getComputedStyle(textEl).fontSize);
+                if (isNaN(fontSize) || fontSize <= 0) return;
+
+                // Reset inline font size style to read clean scrollWidth
+                textEl.style.fontSize = '';
+                fontSize = parseFloat(window.getComputedStyle(textEl).fontSize);
+                
+                let limit = 100;
+                while (textEl.scrollWidth > maxW && fontSize > 8 && limit > 0) {
+                    fontSize -= 0.5;
+                    textEl.style.setProperty('font-size', fontSize + 'px', 'important');
+                    limit--;
+                }
+            });
+        }
+
+        window.addEventListener('load', adjustLastNameFontSizes);
+        window.addEventListener('resize', adjustLastNameFontSizes);
+
         function updateFontSize(cssVar, val, lblId) {
             document.documentElement.style.setProperty(cssVar, val + 'px');
             document.getElementById(lblId).innerText = val + 'px';
+            setTimeout(adjustLastNameFontSizes, 50);
         }
 
         function resetFontSizes() {
@@ -796,6 +822,7 @@
             ranges[1].value = 15;
             ranges[2].value = 31;
             ranges[3].value = 12.5;
+            setTimeout(adjustLastNameFontSizes, 100);
         }
 
         function copyDocumentHtml() {

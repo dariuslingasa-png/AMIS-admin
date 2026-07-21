@@ -880,6 +880,9 @@
         }
 
         async function optimizeAndPrint(btn) {
+            // First adjust all name sizes to fit perfectly!
+            adjustLastNameFontSizes();
+            
             const originalHtml = btn.innerHTML;
             btn.disabled = true;
 
@@ -1053,9 +1056,46 @@
             }
         }
 
+        function adjustLastNameFontSizes() {
+            // Target print list templates (which use .student-last-name h3 or container divs)
+            const elements = document.querySelectorAll('.student-last-name h3, .student-last-name, .id-last-name-text, [style*="top: 352px"][style*="width: 310px"]');
+            elements.forEach(el => {
+                const textEl = el.querySelector('h3') || el;
+                // If this is the container div, clientWidth is defined. Otherwise fallback to 310px.
+                const container = el.classList.contains('student-last-name') ? el : el.closest('.student-last-name') || el;
+                const maxW = 278; // 310px card width - 32px horizontal padding
+                
+                // Get current font size
+                let fontSize = parseFloat(window.getComputedStyle(textEl).fontSize);
+                if (isNaN(fontSize) || fontSize <= 0) return;
+
+                // Reset inline font size style before shrinking to get clean scrollWidth
+                textEl.style.fontSize = '';
+                fontSize = parseFloat(window.getComputedStyle(textEl).fontSize);
+                
+                let limit = 100;
+                // Shrink sequentially until scrollWidth fits within the maximum bounds
+                while (textEl.scrollWidth > maxW && fontSize > 8 && limit > 0) {
+                    fontSize -= 0.5;
+                    textEl.style.setProperty('font-size', fontSize + 'px', 'important');
+                    limit--;
+                }
+            });
+        }
+
+        // Run auto-shrink on window load
+        window.addEventListener('load', () => {
+            adjustLastNameFontSizes();
+        });
+
+        // Also hook into resize/orientation updates just in case
+        window.addEventListener('resize', adjustLastNameFontSizes);
+
         function updateFontSize(cssVar, val, lblId) {
             document.documentElement.style.setProperty(cssVar, val + 'px');
             document.getElementById(lblId).innerText = val + 'px';
+            // Re-run auto-shrink after slider adjustments
+            setTimeout(adjustLastNameFontSizes, 50);
         }
 
         function resetFontSizes() {
@@ -1070,6 +1110,7 @@
             ranges[1].value = 15;
             ranges[2].value = 31;
             ranges[3].value = 12.5;
+            setTimeout(adjustLastNameFontSizes, 100);
         }
 
         function copyDocumentHtml() {

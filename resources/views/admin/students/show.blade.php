@@ -329,7 +329,7 @@
              }
          }
      }"
-      x-effect="preview; openEditModal; showIdPreview; openPasswordModal; typeof updateBodyScroll === 'function' && updateBodyScroll()"
+      x-effect="preview; openEditModal; showIdPreview; openPasswordModal; typeof updateBodyScroll === 'function' && updateBodyScroll(); if (showIdPreview) { $nextTick(() => { typeof adjustLastNameFontSizes === 'function' && adjustLastNameFontSizes(); setTimeout(() => { typeof adjustLastNameFontSizes === 'function' && adjustLastNameFontSizes(); }, 150); }); }"
       @keydown.escape.window="closePreview()"
       @mouseup.window="stopPan()"
       @touchend.window="stopPan()">
@@ -1164,7 +1164,7 @@
                             <div class="absolute text-white font-black tracking-wide text-center uppercase animate-fade-in" style="left: 0; top: 325px; width: 340px; height: 15px; z-index: 20; font-size: {{ $student->id_num_font_size ? $student->id_num_font_size . 'px' : '12.5px' }}; line-height: 15px;">{{ $studentNumber }}</div>
 
                             <!-- Last Name -->
-                            <div class="absolute text-center font-black text-[#0f172a] uppercase tracking-tight flex flex-col justify-center items-center animate-fade-in" style="left: 15px; top: 352px; width: 310px; height: 32px; z-index: 20; padding: 0 16px; {{ $lastNameStyle }} line-height: 1; letter-spacing: -0.5px; font-size: {{ $student->id_last_name_font_size ? $student->id_last_name_font_size . 'px' : $lastNameFontSize }};">{{ $lastName }}</div>
+                            <div class="absolute text-center font-black text-[#0f172a] uppercase tracking-tight flex flex-col justify-center items-center animate-fade-in id-last-name-text" style="left: 15px; top: 352px; width: 310px; height: 32px; z-index: 20; padding: 0 16px; {{ $lastNameStyle }} line-height: 1; letter-spacing: -0.5px; font-size: {{ $student->id_last_name_font_size ? $student->id_last_name_font_size . 'px' : $lastNameFontSize }};">{{ $lastName }}</div>
 
                             <!-- First Name -->
                              @php
@@ -2293,5 +2293,30 @@
             }
         }
     }
+
+    function adjustLastNameFontSizes() {
+        const elements = document.querySelectorAll('.id-last-name-text, [style*="top: 352px"][style*="width: 310px"]');
+        elements.forEach(el => {
+            const textEl = el.querySelector('h3') || el;
+            const maxW = 278; // 310 - 32 padding
+            
+            let fontSize = parseFloat(window.getComputedStyle(textEl).fontSize);
+            if (isNaN(fontSize) || fontSize <= 0) return;
+
+            // Reset inline font size style to get clean scrollWidth
+            textEl.style.fontSize = '';
+            fontSize = parseFloat(window.getComputedStyle(textEl).fontSize);
+            
+            let limit = 100;
+            while (textEl.scrollWidth > maxW && fontSize > 8 && limit > 0) {
+                fontSize -= 0.5;
+                textEl.style.setProperty('font-size', fontSize + 'px', 'important');
+                limit--;
+            }
+        });
+    }
+
+    window.addEventListener('load', adjustLastNameFontSizes);
+    window.addEventListener('resize', adjustLastNameFontSizes);
     </script>
 </x-admin-layout>
