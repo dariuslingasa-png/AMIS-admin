@@ -317,9 +317,9 @@
             background: white;
         }
         
-        .student-qr img {
-            width: 100%;
-            height: 100%;
+        .student-qr img, .student-qr canvas {
+            width: 100% !important;
+            height: 100% !important;
             object-fit: contain;
             display: block;
         }
@@ -362,9 +362,9 @@
             background: white;
             box-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
-        .back-signature-qr img {
-            width: 100%;
-            height: 100%;
+        .back-signature-qr img, .back-signature-qr canvas {
+            width: 100% !important;
+            height: 100% !important;
             object-fit: contain;
             display: block;
         }
@@ -619,9 +619,7 @@
                                         @endif
 
                                          <!-- QR Code -->
-                                         <div class="student-qr">
-                                             <img src="{{ $qrCodeUrl }}" alt="QR Verification">
-                                         </div>
+                                         <div class="student-qr js-qr-code" data-qr="https://amis.edu.ph/v/{{ $hash }}"></div>
                                     </div>
                                 </div>
                             </div>
@@ -691,12 +689,7 @@
 
                                         <!-- Secure Director Signature QR -->
                                         @if(in_array((string)$student->student_number, ['260253', '260254', '260158', '260895', '260894', '260893']))
-                                            @php
-                                                $signatureQrUrl = 'https://quickchart.io/qr?text=' . urlencode('https://amis.edu.ph/signature') . '&dark=000000&light=ffffff&margin=1&format=png&size=200';
-                                            @endphp
-                                            <div class="back-signature-qr">
-                                                <img src="{{ $signatureQrUrl }}" alt="Signature QR">
-                                            </div>
+                                            <div class="back-signature-qr js-qr-code" data-qr="https://amis.edu.ph/signature"></div>
                                         @else
                                             <div class="secure-signature-placeholder" style="position: absolute; left: 85px; top: 432px; width: 170px; text-align: center; z-index: 25; pointer-events: none;">
                                                 <span style="font-family: 'Outfit', sans-serif; font-size: 8px; font-weight: 900; text-transform: uppercase; color: #64748b; letter-spacing: 0.1em; border: 1.5px dashed #cbd5e1; padding: 3px 6px; border-radius: 6px; background: rgba(255, 255, 255, 0.85); display: inline-block; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">Secure Signature Coming Soon</span>
@@ -1018,6 +1011,30 @@
 
         function copyDocumentHtml() {
             exportToGoogleDocs(document.getElementById('btn-optimize-print') || document.body);
+        }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+        function renderAllQRCodes() {
+            if (typeof QRCode === 'undefined') return;
+            document.querySelectorAll('.js-qr-code').forEach(el => {
+                if (el.dataset.qr && !el.dataset.qrRendered) {
+                    el.dataset.qrRendered = "true";
+                    new QRCode(el, {
+                        text: el.dataset.qr,
+                        width: el.classList.contains('back-signature-qr') ? 100 : 150,
+                        height: el.classList.contains('back-signature-qr') ? 100 : 150,
+                        colorDark : "#000000",
+                        colorLight : "#ffffff",
+                        correctLevel : QRCode.CorrectLevel.M
+                    });
+                }
+            });
+        }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', renderAllQRCodes);
+        } else {
+            renderAllQRCodes();
         }
     </script>
 </body>
