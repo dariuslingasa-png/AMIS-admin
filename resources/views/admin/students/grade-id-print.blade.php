@@ -411,6 +411,13 @@
                 border: 1px solid #cbd5e1;
                 page-break-inside: avoid;
             }
+            /* Prevent browser from upscaling images during print = reduces memory */
+            img {
+                image-rendering: auto;
+                max-width: 100% !important;
+            }
+            /* Hide toolbar in print */
+            .toolbar, .no-print { display: none !important; }
         }
     </style>
     <style id="dynamic-font-sizes">
@@ -435,8 +442,11 @@
             <button type="button" class="btn-action btn-secondary" onclick="copyDocumentHtml()">
                 📋 Copy for Google Docs / MS Word
             </button>
+            <button type="button" class="btn-action btn-secondary" onclick="printBySection(this)" id="btn-print-section" title="Print one section at a time — safer for large grades">
+                📄 Print by Section
+            </button>
             <button type="button" class="btn-action" onclick="smartPrint(this)" id="btn-print-pdf">
-                🖨️ Print / Save as PDF
+                🖨️ Print All / Save as PDF
             </button>
         </div>
     </div>
@@ -573,7 +583,7 @@
                         $photoUrl = \App\Support\EnrollmentStorage::url($applicant->photo_2x2_url);
                     }
                     $hash = base64_encode((int)$studentNumber + 987654);
-                    $qrCodeUrl = 'https://quickchart.io/qr?text=' . urlencode('https://amis.edu.ph/v/' . $hash) . '&dark=000000&light=ffffff&margin=1&format=png&size=300';
+                    $qrCodeUrl = 'https://quickchart.io/qr?text=' . urlencode('https://amis.edu.ph/v/' . $hash) . '&dark=000000&light=ffffff&margin=1&format=png&size=100';
                     $signatureRawUrl = 'https://quickchart.io/qr?text=' . urlencode('https://amis.edu.ph/signature') . '&dark=000000&light=ffffff&margin=1&format=png&size=200';
 
                     $displayGrade = $student->grade_level;
@@ -853,7 +863,6 @@
             const originalHtml = btn.innerHTML;
             btn.disabled = true;
 
-            // Collect all images on the page
             const allImgs = Array.from(document.querySelectorAll('img'));
             const notLoaded = allImgs.filter(img => !img.complete || img.naturalWidth === 0);
 
@@ -877,25 +886,86 @@
                         resolve();
                     };
                     img.onload = done;
-                    img.onerror = done; // still continue even if one fails
-                    // Safety: if already loaded by now
+                    img.onerror = done;
                     if (img.complete) done();
                 });
             });
 
-            // Wait for all images OR 15 seconds max
             await Promise.race([
                 Promise.all(imagePromises),
                 timeout(15000)
             ]);
 
             btn.innerHTML = '🖨️ Opening print dialog...';
-            await timeout(300); // tiny pause so browser can breathe
-
+            await timeout(300);
             window.print();
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+        }
+
+        async function printBySection(btn) {
+            const sections = document.querySelectorAll('.section-group-header + div, .section-print-group');
+            // Get all section groups by finding section-group-header elements
+            const sectionHeaders = Array.from(document.querySelectorAll('.section-group-header'));
+            
+            if (sectionHeaders.length === 0) {
+                // Fallback: just print all
+                await smartPrint(document.getElementById('btn-print-pdf'));
+                return;
+            }
+
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+
+            // Wrap each section group in a printable div if not already done
+            // Find all student-card-item groups per section
+            const allItems = document.querySelectorAll('.student-card-item');
+            const totalSections = sectionHeaders.length;
+
+            for (let i = 0; i < sectionHeaders.length; i++) {
+                btn.innerHTML = `📄 Printing section ${i + 1}/${totalSections}...`;
+
+                // Find items belonging to this section (between this header and the next)
+                const currentHeader = sectionHeaders[i];
+                const nextHeader = sectionHeaders[i + 1] || null;
+                
+                // Hide all section groups except current
+                sectionHeaders.forEach((h, idx) => {
+                    h.style.display = (idx === i) ? '' : 'none';
+                });
+
+                // Hide all student cards not in current section
+                let inCurrentSection = false;
+                allItems.forEach(item => {
+                    const prevHeader = getPreviousHeader(item, sectionHeaders);
+                    item.style.display = (prevHeader === currentHeader) ? '' : 'none';
+                });
+
+                // Wait a moment for DOM to update
+                await new Promise(resolve => setTimeout(resolve, 200));
+                window.print();
+                // Wait for print dialog to close
+                await new Promise(resolve => setTimeout(resolve, 800));
+            }
+
+            // Restore all
+            sectionHeaders.forEach(h => h.style.display = '');
+            allItems.forEach(item => item.style.display = '');
 
             btn.innerHTML = originalHtml;
             btn.disabled = false;
+        }
+
+        function getPreviousHeader(element, headers) {
+            let best = null;
+            for (const h of headers) {
+                if (h.compareDocumentPosition(element) & Node.DOCUMENT_POSITION_FOLLOWING) {
+                    best = h;
+                } else {
+                    break;
+                }
+            }
+            return best;
         }
 
         function toggleEditor() {
