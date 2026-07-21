@@ -1198,7 +1198,7 @@
             setButtonsDisabled(false);
             btn.innerHTML = originalHtml;
 
-            alert('✅ READY FOR GOOGLE DOCS!\n\n1. A Word/Google Docs file (.doc) has been downloaded automatically.\n2. The roster is ALSO COPIED to your clipboard!\n\n👉 You can open Google Docs (docs.google.com) and press Ctrl+V to paste, OR upload the downloaded .doc file directly to Google Drive!');
+            alert('✅ COPIED TO CLIPBOARD FOR GOOGLE DOCS!\n\nTo paste into Google Docs:\n1. Open Google Docs (docs.google.com)\n2. Open a Blank Document\n3. Press Ctrl + V (or Right Click -> Paste)!\n\n👉 All ID Card images will paste cleanly into your document without any warnings!');
         }
 
         function copyDocumentHtml() {
