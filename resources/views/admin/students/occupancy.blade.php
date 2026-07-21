@@ -208,7 +208,7 @@
             <!-- Grade Cards Grid -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 @forelse($sectionsGrouped as $gradeLevel => $gradeSections)
-                    @include('admin.students.partials.occupancy.card', ['gradeLevel' => $gradeLevel, 'gradeSections' => $gradeSections])
+                    @include('admin.students.partials.occupancy.card', ['gradeLevel' => $gradeLevel, 'gradeSections' => $gradeSections, 'studentsByGrade' => $studentsByGrade ?? collect()])
                 @empty
                     <div class="col-span-full rounded-2xl border border-dashed border-slate-300 p-12 text-center bg-white">
                         <p class="text-sm font-bold text-slate-500">No school sections configured.</p>

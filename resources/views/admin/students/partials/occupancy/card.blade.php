@@ -101,16 +101,18 @@
                             $section->learning_mode ?: null,
                             $section->shift ?: null
                         ]);
-                        $secSubtext = !empty($modeParts) ? implode(' · ', $modeParts) : ($section->is_f2f ? 'Face-to-Face' : 'General');
+                        $secSubtext = !empty($modeParts) ? implode(' · ', $modeParts) : '';
                     @endphp
-                    <tbody x-data="{ showRoster: false }">
+                    <tbody x-data="{ showRoster: false, openAssignModal: false, searchStudent: '' }">
                         <tr class="hover:bg-slate-50/40 transition" style="border-bottom: {{ $loop->last ? 'none' : '1px solid #f1f5f9' }};">
                             <!-- Section Name & Mode -->
                             <td class="py-3 pr-2">
                                 <div class="font-extrabold text-slate-800 uppercase leading-snug text-xs">{{ $sectionDisplayName }}</div>
-                                <div class="text-[9px] font-black text-slate-400 uppercase mt-0.5">
-                                    {{ $secSubtext }}
-                                </div>
+                                @if($secSubtext)
+                                    <div class="text-[9px] font-black text-slate-400 uppercase mt-0.5">
+                                        {{ $secSubtext }}
+                                    </div>
+                                @endif
                             </td>
                             <!-- Occupancy Bar -->
                             <td class="py-3 pr-2">
@@ -131,6 +133,9 @@
                                             </svg>
                                         </a>
                                     @endif
+                                    <button type="button" @click="openAssignModal = true" class="h-7 w-7 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100 flex items-center justify-center transition active:scale-[0.95]" title="Add Students to Section">
+                                        <i data-lucide="user-plus" class="h-3.5 w-3.5"></i>
+                                    </button>
                                     <button type="button" @click="showRoster = !showRoster" class="h-7 w-7 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-slate-500 hover:bg-slate-50 active:scale-[0.95] transition cursor-pointer" title="View Roster">
                                         <i data-lucide="users" class="h-3.5 w-3.5"></i>
                                     </button>
@@ -156,27 +161,48 @@
                         <tr x-show="showRoster" x-cloak class="bg-slate-50/50">
                             <td colspan="3" class="p-3" style="border-bottom: 1px solid #f1f5f9;">
                                 <div class="space-y-2">
-                                    <h5 class="text-[9px] font-black uppercase tracking-wider text-slate-400">Class Roster ({{ $section->occupied }} Students)</h5>
+                                    <div class="flex items-center justify-between">
+                                        <h5 class="text-[9px] font-black uppercase tracking-wider text-slate-400">Class Roster ({{ $section->occupied }} Students)</h5>
+                                        <button type="button" @click="openAssignModal = true" class="inline-flex items-center gap-1 rounded-md bg-emerald-600 px-2 py-1 text-[9px] font-extrabold text-white hover:bg-emerald-700 transition active:scale-95 cursor-pointer">
+                                            <i data-lucide="user-plus" class="w-3 h-3"></i>
+                                            <span>Add Students</span>
+                                        </button>
+                                    </div>
                                     @if($section->students->isEmpty())
-                                        <p class="text-[10px] font-semibold text-slate-400 italic">No students assigned to this section.</p>
+                                        <div class="py-3 text-center">
+                                            <p class="text-[10px] font-semibold text-slate-400 italic mb-2">No students assigned to this section.</p>
+                                            <button type="button" @click="openAssignModal = true" class="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-1.5 text-xs font-black text-white shadow-xs hover:bg-emerald-700 transition active:scale-95 cursor-pointer">
+                                                <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
+                                                <span>Add Students to Section</span>
+                                            </button>
+                                        </div>
                                     @else
-                                        <div class="max-h-40 overflow-y-auto divide-y divide-slate-200/60 pr-1">
+                                        <div class="max-h-48 overflow-y-auto divide-y divide-slate-200/60 pr-1">
                                             @foreach($section->students as $studentSec)
                                                 @php
                                                     $student = $studentSec->student;
-                                                    $applicant = $student->applicant;
+                                                    $applicant = $student?->applicant;
                                                     $fullName = $applicant ? html_entity_decode(implode(' ', array_filter([trim($applicant->first_name ?? ''), trim($applicant->middle_name ?? ''), trim($applicant->last_name ?? '')])), ENT_QUOTES, 'UTF-8') : 'Unknown Student';
                                                 @endphp
-                                                <div class="py-1 flex items-center justify-between gap-2 text-[10px]">
+                                                <div class="py-1.5 flex items-center justify-between gap-2 text-[10px]">
                                                     <div class="min-w-0">
                                                         <a href="{{ route('admin.students.show', $student) }}" class="font-extrabold text-slate-700 hover:text-emerald-700 transition uppercase block truncate leading-tight">
                                                             {{ $fullName }}
                                                         </a>
                                                         <span class="text-[8px] font-bold text-slate-400 mt-0.5 block">{{ $student->student_number }}</span>
                                                     </div>
-                                                    <span class="rounded bg-white border border-slate-200 px-1 py-0.5 text-[8px] font-bold text-slate-400 uppercase shrink-0">
-                                                        {{ $applicant->learning_mode ?? 'F2F' }}
-                                                    </span>
+                                                    <div class="flex items-center gap-1.5">
+                                                        <span class="rounded bg-white border border-slate-200 px-1 py-0.5 text-[8px] font-bold text-slate-400 uppercase shrink-0">
+                                                            {{ $applicant->learning_mode ?? 'F2F' }}
+                                                        </span>
+                                                        <form method="POST" action="{{ route('admin.students.occupancy.remove-student', $studentSec) }}" onsubmit="return confirm('Remove student from section?')" class="inline">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit" class="text-rose-500 hover:text-rose-700 text-[10px] font-bold px-1.5 py-0.5 rounded hover:bg-rose-50 transition cursor-pointer" title="Remove student from section">
+                                                                &times;
+                                                            </button>
+                                                        </form>
+                                                    </div>
                                                 </div>
                                             @endforeach
                                         </div>
@@ -184,6 +210,80 @@
                                 </div>
                             </td>
                         </tr>
+
+                        <!-- Assign Students Modal for this Section -->
+                        <template x-teleport="body">
+                            <div x-show="openAssignModal"
+                                 style="display: none; z-index: 99999;"
+                                 class="fixed inset-0 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-fade-in">
+                                <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[85vh]"
+                                     @click.outside="openAssignModal = false"
+                                     x-transition:enter="transition ease-out duration-200"
+                                     x-transition:enter-start="opacity-0 scale-95"
+                                     x-transition:enter-end="opacity-100 scale-100">
+                                    <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800">
+                                        <div>
+                                            <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                                <i data-lucide="user-plus" class="w-5 h-5 text-emerald-600"></i>
+                                                <span>Add Students to Section</span>
+                                            </h3>
+                                            <p class="text-xs text-slate-500 font-medium mt-0.5">{{ $sectionDisplayName }} ({{ $gradeLevel }})</p>
+                                        </div>
+                                        <button @click="openAssignModal = false" class="text-slate-400 hover:text-slate-600 transition">
+                                            <i data-lucide="x" class="w-5 h-5"></i>
+                                        </button>
+                                    </div>
+
+                                    @php
+                                        $gradeStudents = isset($studentsByGrade[$gradeLevel]) ? $studentsByGrade[$gradeLevel] : collect();
+                                    @endphp
+
+                                    <form method="POST" action="{{ route('admin.students.occupancy.assign-students', $section) }}" class="flex flex-col flex-1 overflow-hidden p-6">
+                                        @csrf
+                                        <div class="mb-3">
+                                            <input type="text" x-model="searchStudent" placeholder="Search student by name or student number..."
+                                                   class="w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-900 outline-none focus:border-emerald-500">
+                                        </div>
+
+                                        <div class="flex-1 overflow-y-auto border border-slate-200 rounded-xl p-2 divide-y divide-slate-100 max-h-72">
+                                            @forelse($gradeStudents as $st)
+                                                @php
+                                                    $stApplicant = $st->applicant;
+                                                    $stName = $stApplicant ? html_entity_decode(implode(' ', array_filter([trim($stApplicant->first_name ?? ''), trim($stApplicant->middle_name ?? ''), trim($stApplicant->last_name ?? '')])), ENT_QUOTES, 'UTF-8') : 'Student #' . $st->student_number;
+                                                    $currentSec = $st->studentSection?->section;
+                                                    $isAlreadyInThisSec = $currentSec && $currentSec->id === $section->id;
+                                                @endphp
+                                                <label x-show="!searchStudent || '{{ strtolower(addslashes($stName)) }} {{ $st->student_number }}'.includes(searchStudent.toLowerCase())"
+                                                       class="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 cursor-pointer transition">
+                                                    <div class="flex items-center gap-3 min-w-0">
+                                                        <input type="checkbox" name="student_ids[]" value="{{ $st->id }}" @checked($isAlreadyInThisSec)
+                                                               class="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500">
+                                                        <div class="min-w-0">
+                                                            <span class="block text-xs font-extrabold text-slate-800 uppercase truncate">{{ $stName }}</span>
+                                                            <span class="block text-[9px] font-bold text-slate-400">ID: {{ $st->student_number }} @if($currentSec)&bull; Current: {{ $currentSec->name }}@else &bull; Unassigned @endif</span>
+                                                        </div>
+                                                    </div>
+                                                    @if($isAlreadyInThisSec)
+                                                        <span class="text-[9px] font-extrabold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">Assigned</span>
+                                                    @endif
+                                                </label>
+                                            @empty
+                                                <div class="p-6 text-center text-xs text-slate-400 italic">No official student records found for {{ $gradeLevel }}.</div>
+                                            @endforelse
+                                        </div>
+
+                                        <div class="flex items-center justify-end gap-2 pt-4 mt-3 border-t border-slate-100">
+                                            <button type="button" @click="openAssignModal = false" class="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition cursor-pointer">
+                                                Cancel
+                                            </button>
+                                            <button type="submit" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold transition shadow-md cursor-pointer">
+                                                Add Selected Students
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </template>
                     </tbody>
                 @endforeach
             </table>

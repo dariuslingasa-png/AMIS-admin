@@ -235,9 +235,43 @@ class AdminStudentDashboardController extends Controller
             return $index === false ? 999 : $index;
         });
 
-        $totalOfficial = Student::whereHas('user', fn($q) => $q->where('account_status', 'verified'))->count();
+        $studentsByGrade = Student::with(['applicant', 'studentSection.section'])
+            ->get()
+            ->sortBy(fn($s) => strtoupper(trim(($s->applicant?->last_name ?? '') . ' ' . ($s->applicant?->first_name ?? ''))))
+            ->groupBy('grade_level');
 
-        return view('admin.students.occupancy', compact('sectionsGrouped', 'sections', 'totalOfficial'));
+        return view('admin.students.occupancy', compact('sectionsGrouped', 'sections', 'totalOfficial', 'studentsByGrade'));
+    }
+
+    public function assignStudentsToSection(Request $request, Section $section)
+    {
+        $validated = $request->validate([
+            'student_ids' => 'required|array|min:1',
+            'student_ids.*' => 'exists:students,id',
+        ]);
+
+        $count = 0;
+        foreach ($validated['student_ids'] as $studentId) {
+            \App\Models\StudentSection::where('student_id', $studentId)->delete();
+            \App\Models\StudentSection::create([
+                'student_id' => $studentId,
+                'section_id' => $section->id,
+                'ms_status' => 'enrolled',
+                'ms_enrolled_at' => now(),
+            ]);
+            $count++;
+        }
+
+        $sectionName = $section->name ?: $section->displayName;
+        return back()->with('success', "{$count} student(s) successfully added to section \"{$sectionName}\"!");
+    }
+
+    public function removeStudentFromSection(\App\Models\StudentSection $studentSection)
+    {
+        $studentName = $studentSection->student?->applicant?->first_name ?? 'Student';
+        $studentSection->delete();
+
+        return back()->with('success', "Student removed from section.");
     }
 
     public function reports(Request $request)
