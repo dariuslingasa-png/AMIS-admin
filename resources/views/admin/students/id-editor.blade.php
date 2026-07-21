@@ -108,8 +108,8 @@
             </div>
         </div>
 
-        <!-- Main Workspace: Side-by-Side ID Previews -->
-        <div class="max-w-7xl mx-auto px-6 py-10">
+        <!-- Main Workspace: Side-by-Side ID Previews + Right Sidebar Controls -->
+        <div class="max-w-7xl mx-auto px-6 py-8">
             <div class="text-center mb-8">
                 <h2 class="text-lg font-black text-slate-800 dark:text-white uppercase tracking-wider">{{ strtoupper($lastName) }}, {{ strtoupper($firstName) }}</h2>
                 <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-1">
@@ -117,257 +117,230 @@
                     @if($student->studentSection?->section)
                         | {{ strtoupper($student->studentSection->section->name) }}
                     @endif
-                    | <span class="text-emerald-600 dark:text-emerald-400">LAYOUT WORKSPACE</span>
+                    | <span class="text-emerald-600 dark:text-emerald-400">LAYOUT EDITOR</span>
                 </p>
             </div>
 
-            <!-- Previews Container -->
-            <div class="flex flex-col md:flex-row items-center justify-center gap-4 w-full">
+            <!-- Responsive Workspace Grid: Previews on Left, Sidebar on Right -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start w-full">
                 
-                <!-- Front Side Card -->
-                <div class="flex flex-col items-center gap-3">
-                    <div class="flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
-                        <span class="text-xs font-black text-slate-400 uppercase tracking-widest">Front Side Preview</span>
-                    </div>
-                    <div id="id-card-front-box" class="relative rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-slate-250 dark:border-slate-800" style="width: 340px; height: 538px; background-color: #064e3b;">
-                        <!-- Background template image (Top Layer) -->
-                        <img src="{{ asset('images/id/amis_frontid.png') }}?v={{ filemtime(public_path('images/id/amis_frontid.png')) }}" class="absolute inset-0 w-full h-full object-cover" style="z-index: 10; pointer-events: none;" alt="AMIS ID Template">
-                        
-                        <!-- Student Photo with Edit Overlay (Super Admins Only) -->
-                        @if(auth()->user()?->hasRole('super_admin'))
-                             <div class="photo-clip group cursor-pointer" 
-                                  onclick="openPhotoOptionsModal()"
-                                  style="left: 71px; top: 144px; width: 198px; height: 192px; border-radius: 6px; z-index: 5;"
-                                  title="Edit Photo">
-                                @if($photoUrl)
-                                    <img id="id-preview-photo" src="{{ $photoUrl }}" class="transition duration-300 group-hover:scale-105 group-hover:brightness-75" style="object-position: center center;">
-                                @else
-                                    <div class="absolute inset-0 bg-slate-150 flex flex-col items-center justify-center text-center border border-dashed border-slate-300 text-[10px] font-bold text-slate-450 gap-1 z-1">
-                                        <i data-lucide="camera" class="w-5 h-5 text-slate-400"></i>
-                                        <span>UPLOAD</span>
-                                    </div>
-                                @endif
-                                <!-- Simple Edit Icon Overlay on hover -->
-                                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-200 text-white" style="z-index: 20;">
-                                    <div class="bg-white/20 backdrop-blur-md rounded-full p-2.5 border border-white/30 shadow-md transform scale-90 group-hover:scale-100 transition duration-200">
-                                        <i data-lucide="camera" class="w-5 h-5 text-white"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        @else
-                            <!-- Non-admin read-only image -->
-                            <div class="photo-clip" style="left: 71px; top: 144px; width: 198px; height: 192px; border-radius: 6px; z-index: 5;">
-                                @if($photoUrl)
-                                    <img id="id-preview-photo" src="{{ $photoUrl }}" style="object-position: center center;">
-                                @else
-                                    <div class="absolute inset-0 bg-slate-100 flex items-center justify-center text-center border border-dashed border-slate-300 text-[10px] font-bold text-slate-450 z-1">NO PHOTO</div>
-                                @endif
-                            </div>
-                        @endif
-
-                        <!-- Student ID -->
-                        <div class="absolute text-white font-black tracking-wide text-center uppercase" style="left: 0; top: 325px; width: 340px; height: 15px; z-index: 20; line-height: 15px;" :style="{ fontSize: idFontSize + 'px' }">{{ $studentNumber }}</div>
-
-                        <!-- Last Name -->
-                        <div class="absolute text-center font-black text-[#0f172a] uppercase tracking-tight flex flex-col justify-center items-center" style="left: 15px; top: 352px; width: 310px; height: 32px; z-index: 20; padding: 0 16px; {{ $lastNameStyle }} line-height: 1; letter-spacing: -0.5px;" :style="{ fontSize: lastNameFontSize + 'px' }">{{ $lastName }}</div>
-
-                        <!-- First Name -->
-                        <div class="absolute text-center font-bold text-[#334155] uppercase leading-none flex flex-col justify-center items-center" style="left: 15px; top: 386px; width: 310px; height: 22px; z-index: 20; padding: 0 16px; line-height: 1;" :style="{ fontSize: firstNameFontSize + 'px' }">{{ $displayFirstName }}</div>
-
-                        <!-- Grade Level -->
-                        <div class="absolute text-center font-black uppercase tracking-wide flex flex-col justify-center items-center" style="left: 15px; top: 412px; width: 310px; height: 30px; z-index: 20; padding: 0 16px; line-height: 1; letter-spacing: 0.5px; text-shadow: 0 1px 1px rgba(0,0,0,0.05); color: {{ $getGradeColor($displayGrade) }};" :style="{ fontSize: gradeFontSize + 'px' }">{{ $displayGrade }}</div>
-
-                        <!-- LRN -->
-                        @if($student->applicant?->lrn && !in_array(strtoupper($student->applicant->lrn), ['N/A', 'NA', 'EMPTY', '']))
-                            <div class="absolute font-bold text-[#1e293b] whitespace-nowrap" style="left: 239px; top: 394px; width: 170px; height: 22px; z-index: 20; font-size: 15.5px; transform: rotate(-90deg); transform-origin: center; display: flex; align-items: center; justify-content: flex-start; letter-spacing: 0.05em;">
-                                LRN: <span style="margin-left: 4px;">{{ $student->applicant->lrn }}</span>
-                            </div>
-                        @endif
-
-                        <!-- QR Code -->
-                        <div class="absolute p-0.5 rounded bg-white" style="left: 134.5px; top: 458px; width: 71px; height: 71px; z-index: 20;">
-                            <img src="{{ $qrCodeBase64 ?: $qrCodeUrl }}" alt="QR Verification" class="w-full h-full object-contain">
+                <!-- Left Content: Previews (Front ID & Back ID Side-by-Side) -->
+                <div class="lg:col-span-2 flex flex-col md:flex-row items-center justify-center gap-4 w-full bg-slate-50/50 dark:bg-slate-950/10 border border-slate-150 dark:border-slate-850/50 rounded-3xl p-6 shadow-xs">
+                    
+                    <!-- Front Side Card -->
+                    <div class="flex flex-col items-center gap-3">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+                            <span class="text-xs font-black text-slate-450 uppercase tracking-widest">Front Side Preview</span>
                         </div>
-                    </div>
-                    <!-- Empty spacer to match the height of the back card footer text for perfect vertical alignment -->
-                    <span class="text-[10px] text-transparent select-none mt-1">Spacer</span>
-                </div>
-                
-                <!-- Back Side Card -->
-                <div class="flex flex-col items-center gap-3">
-                    <div class="flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span class="text-xs font-black text-slate-450 uppercase tracking-widest">Back Side Preview</span>
-                    </div>
-                    <div id="id-card-back-box" class="relative rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-slate-250 dark:border-slate-800" style="width: 340px; height: 538px; background-color: #064e3b;">
-                        <!-- Background template image -->
-                        <img src="{{ asset('images/id/amis_backid.png') }}?v=1" class="absolute inset-0 w-full h-full object-cover" style="z-index: 1; pointer-events: none;" alt="AMIS ID Template Back">
-
-                        <!-- Emergency Details List -->
-                        @php
-                            $parentNameLen = strlen($emergencyName);
-                            $parentNameFontSize = $parentNameLen > 24 ? '14px' : ($parentNameLen > 18 ? '16px' : '19px');
+                        <div id="id-card-front-box" class="relative rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-slate-250 dark:border-slate-800 flex-shrink-0" style="width: 340px; height: 538px; background-color: #064e3b;">
+                            <!-- Background template image (Top Layer) -->
+                            <img src="{{ asset('images/id/amis_frontid.png') }}?v={{ filemtime(public_path('images/id/amis_frontid.png')) }}" class="absolute inset-0 w-full h-full object-cover" style="z-index: 10; pointer-events: none;" alt="AMIS ID Template">
                             
-                            $addressLen = strlen($homeAddress);
-                            $addressFontSize = $addressLen > 60 ? '12px' : ($addressLen > 40 ? '13px' : '14px');
-                        @endphp
-                        <div class="emergency-info" style="position: absolute; left: 28px; top: 85px; width: 284px; z-index: 10; display: flex; flex-direction: column; gap: 7px;">
-                            <!-- Contact Name -->
-                            <div class="emerg-row" style="display: flex; align-items: flex-start; gap: 10px;">
-                                <span class="emerg-icon" style="flex-shrink: 0; width: 14px; height: 14px; color: #047857; margin-top: 1.5px;">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:100%; height:100%;"><path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z" clip-rule="evenodd" /></svg>
-                                </span>
-                                <div class="emerg-text" style="text-align: left; font-family: 'Outfit', sans-serif; font-size: {{ $parentNameFontSize }}; font-weight: 900; text-transform: uppercase; color: #0f172a; line-height: 1.1;">
-                                    {{ $emergencyName }}
+                            <!-- Student Photo with Edit Overlay (Super Admins Only) -->
+                            @if(auth()->user()?->hasRole('super_admin'))
+                                 <div class="photo-clip group cursor-pointer" 
+                                      onclick="openPhotoOptionsModal()"
+                                      style="left: 71px; top: 144px; width: 198px; height: 192px; border-radius: 6px; z-index: 5;"
+                                      title="Edit Photo">
+                                    @if($photoUrl)
+                                        <img id="id-preview-photo" src="{{ $photoUrl }}" class="transition duration-300 group-hover:scale-105 group-hover:brightness-75" style="object-position: center center;">
+                                    @else
+                                        <div class="absolute inset-0 bg-slate-150 flex flex-col items-center justify-center text-center border border-dashed border-slate-300 text-[10px] font-bold text-slate-450 gap-1 z-1">
+                                            <i data-lucide="camera" class="w-5 h-5 text-slate-400"></i>
+                                            <span>UPLOAD</span>
+                                        </div>
+                                    @endif
+                                    <!-- Simple Edit Icon Overlay on hover -->
+                                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-200 text-white" style="z-index: 20;">
+                                        <div class="bg-white/20 backdrop-blur-md rounded-full p-2.5 border border-white/30 shadow-md transform scale-90 group-hover:scale-100 transition duration-200">
+                                            <i data-lucide="camera" class="w-5 h-5 text-white"></i>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
+                            @else
+                                <!-- Non-admin read-only image -->
+                                <div class="photo-clip" style="left: 71px; top: 144px; width: 198px; height: 192px; border-radius: 6px; z-index: 5;">
+                                    @if($photoUrl)
+                                        <img id="id-preview-photo" src="{{ $photoUrl }}" style="object-position: center center;">
+                                    @else
+                                        <div class="absolute inset-0 bg-slate-100 flex items-center justify-center text-center border border-dashed border-slate-300 text-[10px] font-bold text-slate-450 z-1">NO PHOTO</div>
+                                    @endif
+                                </div>
+                            @endif
 
-                            <!-- Relationship Label -->
-                            <div class="emerg-row" style="display: flex; align-items: flex-start; gap: 10px;">
-                                <span class="emerg-icon" style="flex-shrink: 0; width: 14px; height: 14px; color: #047857; margin-top: 1.5px;">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:100%; height:100%;"><path fill-rule="evenodd" d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" clip-rule="evenodd" /></svg>
-                                </span>
-                                <div class="emerg-text" style="text-align: left; font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 700; text-transform: uppercase; color: #475569; line-height: 1;">
-                                    @php
-                                        $relationship = 'PARENT / GUARDIAN';
-                                        if (!empty($applicant->father_first_name) && str_contains(strtolower($emergencyName), strtolower($applicant->father_first_name))) {
-                                            $relationship = 'FATHER';
-                                        } elseif (!empty($applicant->mother_first_name) && str_contains(strtolower($emergencyName), strtolower($applicant->mother_first_name))) {
-                                            $relationship = 'MOTHER';
-                                        }
-                                    @endphp
-                                    {{ $relationship }}
-                                </div>
-                            </div>
+                            <!-- Student ID -->
+                            <div class="absolute text-white font-black tracking-wide text-center uppercase" style="left: 0; top: 325px; width: 340px; height: 15px; z-index: 20; line-height: 15px;" :style="{ fontSize: idFontSize + 'px' }">{{ $studentNumber }}</div>
 
-                            <!-- Contact Number -->
-                            <div class="emerg-row" style="display: flex; align-items: flex-start; gap: 10px;">
-                                <span class="emerg-icon" style="flex-shrink: 0; width: 14px; height: 14px; color: #047857; margin-top: 1.5px;">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:100%; height:100%;"><path fill-rule="evenodd" d="M1.5 4.5a3 3 0 0 1 3-3h1.372c.86 0 1.61.586 1.819 1.42l.545 2.181a1.875 1.875 0 0 1-.585 1.83l-1.503 1.201a14.73 14.73 0 0 0 6.182 6.183l1.202-1.502a1.875 1.875 0 0 1 1.83-.585l2.181.545a1.875 1.875 0 0 1 1.42 1.82V19.5a3 3 0 0 1-3 3h-2.25C8.552 22.5 1.5 15.448 1.5 6.75V4.5Z" clip-rule="evenodd" /></svg>
-                                </span>
-                                <div class="emerg-text" style="text-align: left; font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 800; color: #1e293b; line-height: 1;">
-                                    {{ $emergencyPhone }}
-                                </div>
-                            </div>
+                            <!-- Last Name -->
+                            <div class="absolute text-center font-black text-[#0f172a] uppercase tracking-tight flex flex-col justify-center items-center" style="left: 15px; top: 352px; width: 310px; height: 32px; z-index: 20; padding: 0 16px; {{ $lastNameStyle }} line-height: 1; letter-spacing: -0.5px;" :style="{ fontSize: lastNameFontSize + 'px' }">{{ $lastName }}</div>
 
-                            <!-- Address -->
-                            <div class="emerg-row" style="display: flex; align-items: flex-start; gap: 10px;">
-                                <span class="emerg-icon" style="flex-shrink: 0; width: 14px; height: 14px; color: #047857; margin-top: 2.5px;">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:100%; height:100%;"><path fill-rule="evenodd" d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.155-1.071 31.06 31.06 0 004.01-4.578c2.112-2.923 3.402-6.166 3.402-9.336a8.91 8.91 0 00-18 0c0 3.17 1.29 6.413 3.402 9.336a31.06 31.06 0 004.01 4.578 16.975 16.975 0 001.156 1.071zM12 8.25a2.25 2.25 0 100 4.5 2.25 2.25 0 000-4.5z" clip-rule="evenodd" /></svg>
-                                </span>
-                                <div class="emerg-text" style="text-align: left; font-family: 'Outfit', sans-serif; font-size: {{ $addressFontSize }}; font-weight: 700; color: #475569; line-height: 1.25; text-transform: uppercase;">
-                                    {{ $homeAddress }}
+                            <!-- First Name -->
+                            <div class="absolute text-center font-bold text-[#334155] uppercase leading-none flex flex-col justify-center items-center" style="left: 15px; top: 386px; width: 310px; height: 22px; z-index: 20; padding: 0 16px; line-height: 1;" :style="{ fontSize: firstNameFontSize + 'px' }">{{ $displayFirstName }}</div>
+
+                            <!-- Grade Level -->
+                            <div class="absolute text-center font-black uppercase tracking-wide flex flex-col justify-center items-center" style="left: 15px; top: 412px; width: 310px; height: 30px; z-index: 20; padding: 0 16px; line-height: 1; letter-spacing: 0.5px; text-shadow: 0 1px 1px rgba(0,0,0,0.05); color: {{ $getGradeColor($displayGrade) }};" :style="{ fontSize: gradeFontSize + 'px' }">{{ $displayGrade }}</div>
+
+                            <!-- LRN -->
+                            @if($student->applicant?->lrn && !in_array(strtoupper($student->applicant->lrn), ['N/A', 'NA', 'EMPTY', '']))
+                                <div class="absolute font-bold text-[#1e293b] whitespace-nowrap" style="left: 239px; top: 394px; width: 170px; height: 22px; z-index: 20; font-size: 15.5px; transform: rotate(-90deg); transform-origin: center; display: flex; align-items: center; justify-content: flex-start; letter-spacing: 0.05em;">
+                                    LRN: <span style="margin-left: 4px;">{{ $student->applicant->lrn }}</span>
                                 </div>
+                            @endif
+
+                            <!-- QR Code -->
+                            <div class="absolute p-0.5 rounded bg-white" style="left: 134.5px; top: 458px; width: 71px; height: 71px; z-index: 20;">
+                                <img src="{{ $qrCodeBase64 ?: $qrCodeUrl }}" alt="QR Verification" class="w-full h-full object-contain">
                             </div>
                         </div>
-
-                        <!-- Director's Signature Box -->
-                        @if(in_array((string)$student->student_number, ['260253', '260254', '260158', '260895', '260894', '260893']))
-                            <div class="back-signature-qr" style="position: absolute; left: 142.5px; top: 422px; width: 55px; height: 55px; z-index: 25; padding: 1.5px; border-radius: 2px; background: white; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
-                                <img src="{{ $signatureQrBase64 ?: $signatureRawUrl }}" alt="Signature QR" class="w-full h-full object-contain">
-                            </div>
-                        @else
-                            <div class="secure-signature-placeholder" style="position: absolute; left: 85px; top: 432px; width: 170px; text-align: center; z-index: 25; pointer-events: none;">
-                                <span style="font-family: 'Outfit', sans-serif; font-size: 8px; font-weight: 900; text-transform: uppercase; color: #64748b; letter-spacing: 0.1em; border: 1.5px dashed #cbd5e1; padding: 3px 6px; border-radius: 6px; background: rgba(255, 255, 255, 0.85); display: inline-block; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">Secure Signature Coming Soon</span>
-                            </div>
-                        @endif
+                        <!-- Empty spacer to match the height of the back card footer text for perfect vertical alignment -->
+                        <span class="text-[10px] text-transparent select-none mt-1">Spacer</span>
                     </div>
-                    <span class="text-[10px] text-slate-400 font-semibold mt-1">Back Emergency Info Sheet</span>
+                    
+                    <!-- Back Side Card -->
+                    <div class="flex flex-col items-center gap-3">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <span class="text-xs font-black text-slate-450 uppercase tracking-widest">Back Side Preview</span>
+                        </div>
+                        <div id="id-card-back-box" class="relative rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-slate-250 dark:border-slate-800 flex-shrink-0" style="width: 340px; height: 538px; background-color: #064e3b;">
+                            <!-- Background template image -->
+                            <img src="{{ asset('images/id/amis_backid.png') }}?v=1" class="absolute inset-0 w-full h-full object-cover" style="z-index: 1; pointer-events: none;" alt="AMIS ID Template Back">
+
+                            <!-- Emergency Details List -->
+                            @php
+                                $parentNameLen = strlen($emergencyName);
+                                $parentNameFontSize = $parentNameLen > 24 ? '14px' : ($parentNameLen > 18 ? '16px' : '19px');
+                                
+                                $addressLen = strlen($homeAddress);
+                                $addressFontSize = $addressLen > 60 ? '12px' : ($addressLen > 40 ? '13px' : '14px');
+                            @endphp
+                            <div class="emergency-info" style="position: absolute; left: 28px; top: 85px; width: 284px; z-index: 10; display: flex; flex-direction: column; gap: 7px;">
+                                <!-- Contact Name -->
+                                <div class="emerg-row" style="display: flex; align-items: flex-start; gap: 10px;">
+                                    <span class="emerg-icon" style="flex-shrink: 0; width: 14px; height: 14px; color: #047857; margin-top: 1.5px;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:100%; height:100%;"><path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z" clip-rule="evenodd" /></svg>
+                                    </span>
+                                    <div class="emerg-text" style="text-align: left; font-family: 'Outfit', sans-serif; font-size: {{ $parentNameFontSize }}; font-weight: 900; text-transform: uppercase; color: #0f172a; line-height: 1.1;">
+                                        {{ $emergencyName }}
+                                    </div>
+                                </div>
+
+                                <!-- Relationship Label -->
+                                <div class="emerg-row" style="display: flex; align-items: flex-start; gap: 10px;">
+                                    <span class="emerg-icon" style="flex-shrink: 0; width: 14px; height: 14px; color: #047857; margin-top: 1.5px;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:100%; height:100%;"><path fill-rule="evenodd" d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" clip-rule="evenodd" /></svg>
+                                    </span>
+                                    <div class="emerg-text" style="text-align: left; font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 700; text-transform: uppercase; color: #475569; line-height: 1;">
+                                        @php
+                                            $relationship = 'PARENT / GUARDIAN';
+                                            if (!empty($applicant->father_first_name) && str_contains(strtolower($emergencyName), strtolower($applicant->father_first_name))) {
+                                                $relationship = 'FATHER';
+                                            } elseif (!empty($applicant->mother_first_name) && str_contains(strtolower($emergencyName), strtolower($applicant->mother_first_name))) {
+                                                $relationship = 'MOTHER';
+                                            }
+                                        @endphp
+                                        {{ $relationship }}
+                                    </div>
+                                </div>
+
+                                <!-- Contact Number -->
+                                <div class="emerg-row" style="display: flex; align-items: flex-start; gap: 10px;">
+                                    <span class="emerg-icon" style="flex-shrink: 0; width: 14px; height: 14px; color: #047857; margin-top: 1.5px;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:100%; height:100%;"><path fill-rule="evenodd" d="M1.5 4.5a3 3 0 0 1 3-3h1.372c.86 0 1.61.586 1.819 1.42l.545 2.181a1.875 1.875 0 0 1-.585 1.83l-1.503 1.201a14.73 14.73 0 0 0 6.182 6.183l1.202-1.502a1.875 1.875 0 0 1 1.83-.585l2.181.545a1.875 1.875 0 0 1 1.42 1.82V19.5a3 3 0 0 1-3 3h-2.25C8.552 22.5 1.5 15.448 1.5 6.75V4.5Z" clip-rule="evenodd" /></svg>
+                                    </span>
+                                    <div class="emerg-text" style="text-align: left; font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 800; color: #1e293b; line-height: 1;">
+                                        {{ $emergencyPhone }}
+                                    </div>
+                                </div>
+
+                                <!-- Address -->
+                                <div class="emerg-row" style="display: flex; align-items: flex-start; gap: 10px;">
+                                    <span class="emerg-icon" style="flex-shrink: 0; width: 14px; height: 14px; color: #047857; margin-top: 2.5px;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:100%; height:100%;"><path fill-rule="evenodd" d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.155-1.071 31.06 31.06 0 004.01-4.578c2.112-2.923 3.402-6.166 3.402-9.336a8.91 8.91 0 00-18 0c0 3.17 1.29 6.413 3.402 9.336a31.06 31.06 0 004.01 4.578 16.975 16.975 0 001.156 1.071zM12 8.25a2.25 2.25 0 100 4.5 2.25 2.25 0 000-4.5z" clip-rule="evenodd" /></svg>
+                                    </span>
+                                    <div class="emerg-text" style="text-align: left; font-family: 'Outfit', sans-serif; font-size: {{ $addressFontSize }}; font-weight: 700; color: #475569; line-height: 1.25; text-transform: uppercase;">
+                                        {{ $homeAddress }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Director's Signature Box -->
+                            @if(in_array((string)$student->student_number, ['260253', '260254', '260158', '260895', '260894', '260893']))
+                                <div class="back-signature-qr" style="position: absolute; left: 142.5px; top: 422px; width: 55px; height: 55px; z-index: 25; padding: 1.5px; border-radius: 2px; background: white; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+                                    <img src="{{ $signatureQrBase64 ?: $signatureRawUrl }}" alt="Signature QR" class="w-full h-full object-contain">
+                                </div>
+                            @else
+                                <div class="secure-signature-placeholder" style="position: absolute; left: 85px; top: 432px; width: 170px; text-align: center; z-index: 25; pointer-events: none;">
+                                    <span style="font-family: 'Outfit', sans-serif; font-size: 8px; font-weight: 900; text-transform: uppercase; color: #64748b; letter-spacing: 0.1em; border: 1.5px dashed #cbd5e1; padding: 3px 6px; border-radius: 6px; background: rgba(255, 255, 255, 0.85); display: inline-block; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">Secure Signature Coming Soon</span>
+                                </div>
+                            @endif
+                        </div>
+                        <span class="text-[10px] text-slate-400 font-semibold mt-1">Back Emergency Info Sheet</span>
+                    </div>
                 </div>
-            </div>
 
-            <!-- Spacious Control Panel Card (Positioned in normal flow below previews) -->
-            <div class="max-w-4xl mx-auto mt-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-xl">
-                
-                <div class="border-b border-slate-100 dark:border-slate-800 pb-4 mb-6">
-                    <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                        <i data-lucide="sliders" class="w-4.5 h-4.5 text-emerald-600"></i>
-                        <span>Text Font Size Controls (PX)</span>
-                    </h3>
-                </div>
+                <!-- Right Sidebar Panel: Layout Size Controls -->
+                <div class="lg:col-span-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-xl flex flex-col gap-6 self-start sticky top-6">
+                    
+                    <div class="border-b border-slate-100 dark:border-slate-800 pb-3">
+                        <h3 class="text-xs font-black text-slate-450 uppercase tracking-widest flex items-center gap-2">
+                            <i data-lucide="sliders" class="w-4.5 h-4.5 text-emerald-600"></i>
+                            <span>Text Font Sizes (px)</span>
+                        </h3>
+                    </div>
 
-                <!-- Sliders Grid: Responsive and Full-Width -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 w-full mb-8">
-                    <!-- Last Name Slider (UNLOCKED) -->
-                    <div class="space-y-2">
-                        <div class="flex justify-between items-center text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                            <span>Last Name</span>
-                            <span class="text-slate-900 dark:text-white font-black" x-text="lastNameFontSize + 'px'"></span>
+                    <!-- Sliders Grid (Vertical Stack) -->
+                    <div class="flex flex-col gap-5 w-full">
+                        <!-- Last Name Slider (UNLOCKED) -->
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-center text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                <span>Last Name</span>
+                                <span class="text-slate-900 dark:text-white font-black" x-text="lastNameFontSize + 'px'"></span>
+                            </div>
+                            <input type="range" min="10" max="45" step="0.5" x-model="lastNameFontSize" 
+                                   class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-600">
                         </div>
-                        <input type="range" min="10" max="45" step="0.5" x-model="lastNameFontSize" 
-                               class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-600">
-                    </div>
 
-                    <!-- First Name Slider (LOCKED) -->
-                    <div class="space-y-2 opacity-60">
-                        <div class="flex justify-between items-center text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                            <span>First Name 🔒</span>
-                            <span class="text-slate-400 dark:text-slate-500 font-bold" x-text="firstNameFontSize + 'px'"></span>
+                        <!-- First Name Slider (LOCKED) -->
+                        <div class="space-y-2 opacity-60">
+                            <div class="flex justify-between items-center text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                                <span>First Name 🔒</span>
+                                <span class="text-slate-400 dark:text-slate-500 font-bold" x-text="firstNameFontSize + 'px'"></span>
+                            </div>
+                            <input type="range" min="8" max="25" step="0.5" x-model="firstNameFontSize" disabled
+                                   class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg appearance-none cursor-not-allowed">
                         </div>
-                        <input type="range" min="8" max="25" step="0.5" x-model="firstNameFontSize" disabled
-                               class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg appearance-none cursor-not-allowed">
-                    </div>
 
-                    <!-- Grade Level Slider (LOCKED) -->
-                    <div class="space-y-2 opacity-60">
-                        <div class="flex justify-between items-center text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                            <span>Grade Level 🔒</span>
-                            <span class="text-slate-400 dark:text-slate-500 font-bold" x-text="gradeFontSize + 'px'"></span>
+                        <!-- Grade Level Slider (LOCKED) -->
+                        <div class="space-y-2 opacity-60">
+                            <div class="flex justify-between items-center text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                                <span>Grade Level 🔒</span>
+                                <span class="text-slate-400 dark:text-slate-500 font-bold" x-text="gradeFontSize + 'px'"></span>
+                            </div>
+                            <input type="range" min="12" max="35" step="0.5" x-model="gradeFontSize" disabled
+                                   class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg appearance-none cursor-not-allowed">
                         </div>
-                        <input type="range" min="12" max="35" step="0.5" x-model="gradeFontSize" disabled
-                               class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg appearance-none cursor-not-allowed">
-                    </div>
 
-                    <!-- Student ID Slider (LOCKED) -->
-                    <div class="space-y-2 opacity-60">
-                        <div class="flex justify-between items-center text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                            <span>Student ID 🔒</span>
-                            <span class="text-slate-400 dark:text-slate-500 font-bold" x-text="idFontSize + 'px'"></span>
+                        <!-- Student ID Slider (LOCKED) -->
+                        <div class="space-y-2 opacity-60">
+                            <div class="flex justify-between items-center text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                                <span>Student ID 🔒</span>
+                                <span class="text-slate-400 dark:text-slate-500 font-bold" x-text="idFontSize + 'px'"></span>
+                            </div>
+                            <input type="range" min="8" max="18" step="0.5" x-model="idFontSize" disabled
+                                   class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg appearance-none cursor-not-allowed">
                         </div>
-                        <input type="range" min="8" max="18" step="0.5" x-model="idFontSize" disabled
-                               class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg appearance-none cursor-not-allowed">
-                    </div>
-                </div>
-
-                <!-- Actions and Navigation Row -->
-                <div class="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-100 dark:border-slate-800 pt-6">
-                    <!-- Student Navigation -->
-                    <div class="flex items-center gap-2 w-full sm:w-auto">
-                        @if($prevStudentId)
-                            <a href="{{ route('admin.students.id-editor', $prevStudentId) }}" class="flex-1 sm:flex-initial h-10 px-4 rounded-xl border border-slate-200 dark:border-slate-850 text-xs font-bold text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800 transition active:scale-[0.97] flex items-center justify-center gap-1.5 shadow-sm bg-white dark:bg-slate-900">
-                                <i data-lucide="chevron-left" class="w-4 h-4 flex-shrink-0"></i>
-                                <span>Prev</span>
-                            </a>
-                        @else
-                            <button type="button" disabled class="flex-1 sm:flex-initial h-10 px-4 rounded-xl border border-slate-100 dark:border-slate-850 text-xs font-bold text-slate-300 dark:text-slate-650 cursor-not-allowed flex items-center justify-center gap-1.5">
-                                <i data-lucide="chevron-left" class="w-4 h-4 flex-shrink-0"></i>
-                                <span>Prev</span>
-                            </button>
-                        @endif
-
-                        @if($nextStudentId)
-                            <a href="{{ route('admin.students.id-editor', $nextStudentId) }}" class="flex-1 sm:flex-initial h-10 px-4 rounded-xl border border-slate-200 dark:border-slate-850 text-xs font-bold text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800 transition active:scale-[0.97] flex items-center justify-center gap-1.5 shadow-sm bg-white dark:bg-slate-900">
-                                <span>Next</span>
-                                <i data-lucide="chevron-right" class="w-4 h-4 flex-shrink-0"></i>
-                            </a>
-                        @else
-                            <button type="button" disabled class="flex-1 sm:flex-initial h-10 px-4 rounded-xl border border-slate-100 dark:border-slate-850 text-xs font-bold text-slate-300 dark:text-slate-650 cursor-not-allowed flex items-center justify-center gap-1.5">
-                                <span>Next</span>
-                                <i data-lucide="chevron-right" class="w-4 h-4 flex-shrink-0"></i>
-                            </button>
-                        @endif
                     </div>
 
-                    <!-- Photo Sync/Upload & Action Buttons -->
-                    <div class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto justify-end">
-                        <!-- Photo Upload (Super Admins Only) -->
-                        @if(auth()->user()?->hasRole('super_admin'))
-                            <button type="button" onclick="openPhotoOptionsModal()" class="h-10 px-4 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-350 hover:text-emerald-800 dark:hover:bg-emerald-900 transition active:scale-[0.97] cursor-pointer flex items-center justify-center gap-2 shadow-sm border border-emerald-150 dark:border-emerald-900 text-xs font-bold w-full sm:w-auto">
-                                <i data-lucide="camera" class="w-4 h-4 flex-shrink-0"></i>
-                                <span>Upload Photo</span>
-                            </button>
-                        @endif
+                    <!-- Action Buttons -->
+                    <div class="flex flex-col gap-2.5 pt-2 border-t border-slate-100 dark:border-slate-800">
+                        <!-- Save ID Settings -->
+                        <button type="button" id="btn-save-font-sizes" @click="saveFontSizes()" 
+                                class="w-full h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold shadow-md transition active:scale-[0.97] cursor-pointer flex items-center justify-center gap-2 border border-emerald-500 whitespace-nowrap">
+                            <i data-lucide="save" class="w-4.5 h-4.5"></i>
+                            <span>Save ID Settings</span>
+                        </button>
 
                         <!-- Reset -->
                         <button type="button" @click="
@@ -375,17 +348,47 @@
                             firstNameFontSize = {{ $displayFirstNameFontSize }};
                             gradeFontSize = 25;
                             idFontSize = 10;
-                        " class="h-10 px-4 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800 transition active:scale-[0.97] cursor-pointer flex items-center justify-center gap-1.5 shadow-sm bg-white dark:bg-slate-900 w-full sm:w-auto">
-                            <i data-lucide="refresh-cw" class="w-4 h-4 flex-shrink-0"></i>
-                            <span>Reset</span>
+                        " class="w-full h-11 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800 transition active:scale-[0.97] cursor-pointer flex items-center justify-center gap-1.5 shadow-sm bg-white dark:bg-slate-900">
+                            <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                            <span>Reset Default Sizes</span>
                         </button>
+                    </div>
 
-                        <!-- Save Settings -->
-                        <button type="button" id="btn-save-font-sizes" @click="saveFontSizes()" 
-                                class="h-10 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold shadow-md transition active:scale-[0.97] cursor-pointer flex items-center justify-center gap-2 border border-emerald-500 whitespace-nowrap w-full sm:w-auto">
-                            <i data-lucide="save" class="w-4 h-4 flex-shrink-0"></i>
-                            <span>Save ID Settings</span>
-                        </button>
+                    <!-- Photo Upload Button (Super Admins Only) -->
+                    @if(auth()->user()?->hasRole('super_admin'))
+                        <div class="pt-1">
+                            <button type="button" onclick="openPhotoOptionsModal()" class="w-full h-11 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-350 hover:text-emerald-800 dark:hover:bg-emerald-900 transition active:scale-[0.97] cursor-pointer flex items-center justify-center gap-2 shadow-sm border border-emerald-150 dark:border-emerald-900 text-xs font-bold">
+                                <i data-lucide="camera" class="w-4.5 h-4.5"></i>
+                                <span>Upload / Edit Photo</span>
+                            </button>
+                        </div>
+                    @endif
+
+                    <!-- Student Navigation -->
+                    <div class="border-t border-slate-100 dark:border-slate-800 pt-5 flex items-center gap-2">
+                        @if($prevStudentId)
+                            <a href="{{ route('admin.students.id-editor', $prevStudentId) }}" class="flex-1 h-10 px-4 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800 transition active:scale-[0.97] flex items-center justify-center gap-1.5 shadow-sm bg-white dark:bg-slate-900">
+                                <i data-lucide="chevron-left" class="w-4 h-4 flex-shrink-0"></i>
+                                <span>Prev</span>
+                            </a>
+                        @else
+                            <button type="button" disabled class="flex-1 h-10 px-4 rounded-xl border border-slate-100 dark:border-slate-850 text-xs font-bold text-slate-300 dark:text-slate-650 cursor-not-allowed flex items-center justify-center gap-1.5">
+                                <i data-lucide="chevron-left" class="w-4 h-4 flex-shrink-0"></i>
+                                <span>Prev</span>
+                            </button>
+                        @endif
+
+                        @if($nextStudentId)
+                            <a href="{{ route('admin.students.id-editor', $nextStudentId) }}" class="flex-1 h-10 px-4 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800 transition active:scale-[0.97] flex items-center justify-center gap-1.5 shadow-sm bg-white dark:bg-slate-900">
+                                <span>Next</span>
+                                <i data-lucide="chevron-right" class="w-4 h-4 flex-shrink-0"></i>
+                            </a>
+                        @else
+                            <button type="button" disabled class="flex-1 h-10 px-4 rounded-xl border border-slate-100 dark:border-slate-850 text-xs font-bold text-slate-300 dark:text-slate-650 cursor-not-allowed flex items-center justify-center gap-1.5">
+                                <span>Next</span>
+                                <i data-lucide="chevron-right" class="w-4 h-4 flex-shrink-0"></i>
+                            </button>
+                        @endif
                     </div>
                 </div>
 
