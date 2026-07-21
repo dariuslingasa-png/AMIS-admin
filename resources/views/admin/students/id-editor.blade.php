@@ -289,7 +289,7 @@
 
                 <!-- Sliders Grid: Responsive and Full-Width -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 w-full mb-8">
-                    <!-- Last Name Slider -->
+                    <!-- Last Name Slider (UNLOCKED) -->
                     <div class="space-y-2">
                         <div class="flex justify-between items-center text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                             <span>Last Name</span>
@@ -299,34 +299,34 @@
                                class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-600">
                     </div>
 
-                    <!-- First Name Slider -->
-                    <div class="space-y-2">
-                        <div class="flex justify-between items-center text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                            <span>First Name</span>
-                            <span class="text-slate-900 dark:text-white font-black" x-text="firstNameFontSize + 'px'"></span>
+                    <!-- First Name Slider (LOCKED) -->
+                    <div class="space-y-2 opacity-60">
+                        <div class="flex justify-between items-center text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                            <span>First Name 🔒</span>
+                            <span class="text-slate-400 dark:text-slate-500 font-bold" x-text="firstNameFontSize + 'px'"></span>
                         </div>
-                        <input type="range" min="8" max="25" step="0.5" x-model="firstNameFontSize" 
-                               class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-600">
+                        <input type="range" min="8" max="25" step="0.5" x-model="firstNameFontSize" disabled
+                               class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg appearance-none cursor-not-allowed">
                     </div>
 
-                    <!-- Grade Level Slider -->
-                    <div class="space-y-2">
-                        <div class="flex justify-between items-center text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                            <span>Grade Level</span>
-                            <span class="text-slate-900 dark:text-white font-black" x-text="gradeFontSize + 'px'"></span>
+                    <!-- Grade Level Slider (LOCKED) -->
+                    <div class="space-y-2 opacity-60">
+                        <div class="flex justify-between items-center text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                            <span>Grade Level 🔒</span>
+                            <span class="text-slate-400 dark:text-slate-500 font-bold" x-text="gradeFontSize + 'px'"></span>
                         </div>
-                        <input type="range" min="12" max="35" step="0.5" x-model="gradeFontSize" 
-                               class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-600">
+                        <input type="range" min="12" max="35" step="0.5" x-model="gradeFontSize" disabled
+                               class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg appearance-none cursor-not-allowed">
                     </div>
 
-                    <!-- Student ID Slider -->
-                    <div class="space-y-2">
-                        <div class="flex justify-between items-center text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                            <span>Student ID</span>
-                            <span class="text-slate-900 dark:text-white font-black" x-text="idFontSize + 'px'"></span>
+                    <!-- Student ID Slider (LOCKED) -->
+                    <div class="space-y-2 opacity-60">
+                        <div class="flex justify-between items-center text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                            <span>Student ID 🔒</span>
+                            <span class="text-slate-400 dark:text-slate-500 font-bold" x-text="idFontSize + 'px'"></span>
                         </div>
-                        <input type="range" min="8" max="18" step="0.5" x-model="idFontSize" 
-                               class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-600">
+                        <input type="range" min="8" max="18" step="0.5" x-model="idFontSize" disabled
+                               class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg appearance-none cursor-not-allowed">
                     </div>
                 </div>
 
