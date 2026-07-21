@@ -433,14 +433,14 @@
             <button type="button" class="btn-action btn-secondary" onclick="toggleEditor()" id="btn-toggle-editor">
                 ✏️ Edit Font Sizes
             </button>
-            <button type="button" class="btn-action btn-secondary" onclick="copyDocumentHtml()">
-                📋 Copy for Google Docs / MS Word
+            <button type="button" class="btn-action" style="background: #2563eb;" onclick="exportToGoogleDocs(this)">
+                📄 Export for Google Docs / Word
             </button>
             <button type="button" class="btn-action btn-secondary" onclick="window.print()" title="Raw print without card flattening">
                 🖨️ Raw Print
             </button>
-            <button type="button" class="btn-action" onclick="optimizeAndPrint(this)" style="background: #0284c7;" id="btn-optimize-print" title="Highly Recommended: Converts ID cards to flat images to prevent browser/PDF crashes">
-                🚀 Optimize & Print (Prevents Crash)
+            <button type="button" class="btn-action" onclick="optimizeAndPrint(this)" style="background: #059669;" id="btn-optimize-print" title="Converts ID cards to flat images to prevent browser/PDF crashes">
+                🚀 Optimize & Print PDF
             </button>
         </div>
     </div>
@@ -927,22 +927,135 @@
             setTimeout(adjustLastNameFontSizes, 100);
         }
 
-        function copyDocumentHtml() {
-            const area = document.getElementById('roster-document-area');
-            if (!area) return;
+        async function exportToGoogleDocs(btn) {
+            adjustLastNameFontSizes();
+            
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
 
-            const range = document.createRange();
-            range.selectNode(area);
-            window.getSelection().removeAllRanges();
-            window.getSelection().addRange(range);
-
-            try {
-                document.execCommand('copy');
-                alert('✅ Section ID Roster copied! You can now paste (Ctrl+V) directly into Google Docs or Microsoft Word!');
-            } catch (err) {
-                alert('Copy failed: ' + err);
+            const cards = Array.from(document.querySelectorAll('.id-card'));
+            const total = cards.length;
+            if (total === 0) {
+                alert('No cards found to export.');
+                btn.disabled = false;
+                return;
             }
-            window.getSelection().removeAllRanges();
+
+            btn.innerHTML = '⏳ Loading Google Docs engine...';
+            try {
+                await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+            } catch (err) {
+                alert('Failed to load library: ' + err);
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+                return;
+            }
+
+            // Render all cards to base64 images
+            const cardImages = [];
+            for (let i = 0; i < total; i++) {
+                btn.innerHTML = `⏳ Preparing Google Docs images: ${i + 1}/${total}...`;
+                try {
+                    const canvas = await html2canvas(cards[i], {
+                        scale: 2.0, // High quality 200 DPI for Google Docs
+                        useCORS: true,
+                        allowTaint: true,
+                        backgroundColor: null,
+                        logging: false
+                    });
+                    cardImages.push(canvas.toDataURL('image/png', 0.95));
+                } catch (e) {
+                    console.error('Canvas error', e);
+                    cardImages.push('');
+                }
+            }
+
+            btn.innerHTML = '📝 Building Google Docs document...';
+
+            const titleEl = document.querySelector('.section-title');
+            const docTitle = titleEl ? titleEl.innerText : 'STUDENT ID CARDS ROSTER';
+
+            let htmlDoc = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head><meta charset='utf-8'><title>${docTitle}</title>
+<style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h1 { text-align: center; color: #0f172a; font-size: 20px; }
+    .subtitle { text-align: center; color: #059669; font-weight: bold; font-size: 12px; margin-bottom: 25px; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 30px; page-break-inside: avoid; }
+    td { width: 50%; text-align: center; vertical-align: top; padding: 10px; }
+    img { width: 250px; height: auto; border-radius: 8px; }
+    .student-header { font-weight: bold; font-size: 14px; margin-bottom: 8px; color: #0f172a; border-bottom: 1px solid #ddd; padding-bottom: 4px; text-align: left; }
+</style>
+</head>
+<body>
+<h1>${docTitle}</h1>
+<div class="subtitle">Official Student ID Cards Roster Document</div>
+`;
+
+            const studentItems = document.querySelectorAll('.student-card-item');
+            if (studentItems.length > 0) {
+                studentItems.forEach((item, sIdx) => {
+                    const header = item.querySelector('.student-item-header');
+                    const headerText = header ? header.innerText.replace(/\n/g, ' - ') : `Student ${sIdx + 1}`;
+                    const itemCards = item.querySelectorAll('.id-card');
+                    
+                    htmlDoc += `<div style="margin-bottom: 30px; page-break-inside: avoid;">`;
+                    htmlDoc += `<div class="student-header">${headerText}</div>`;
+                    htmlDoc += `<table><tr>`;
+                    
+                    itemCards.forEach((c) => {
+                        const cIdx = cards.indexOf(c);
+                        if (cIdx !== -1 && cardImages[cIdx]) {
+                            htmlDoc += `<td><img src="${cardImages[cIdx]}" width="250"></td>`;
+                        }
+                    });
+                    
+                    htmlDoc += `</tr></table></div>`;
+                });
+            } else {
+                htmlDoc += `<table>`;
+                for (let i = 0; i < cardImages.length; i += 2) {
+                    htmlDoc += `<tr style="page-break-inside: avoid;">`;
+                    htmlDoc += `<td><img src="${cardImages[i]}" width="250"></td>`;
+                    if (cardImages[i + 1]) {
+                        htmlDoc += `<td><img src="${cardImages[i + 1]}" width="250"></td>`;
+                    } else {
+                        htmlDoc += `<td></td>`;
+                    }
+                    htmlDoc += `</tr>`;
+                }
+                htmlDoc += `</table>`;
+            }
+
+            htmlDoc += `</body></html>`;
+
+            // Copy rich HTML to Clipboard for instant Ctrl+V into Google Docs
+            try {
+                const blob = new Blob([htmlDoc], { type: 'text/html' });
+                const data = [new ClipboardItem({ 'text/html': blob })];
+                await navigator.clipboard.write(data);
+            } catch (err) {
+                console.warn('Clipboard write failed', err);
+            }
+
+            // Also offer instant .doc file download for direct upload to Google Drive / Docs
+            const blobDoc = new Blob(['\ufeff' + htmlDoc], { type: 'application/msword' });
+            const link = document.createElement('a');
+            const safeName = docTitle.replace(/[^a-zA-Z0-9_-]/g, '_');
+            link.download = `${safeName}_Google_Docs.doc`;
+            link.href = URL.createObjectURL(blobDoc);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+
+            alert('✅ READY FOR GOOGLE DOCS!\n\n1. A Word/Google Docs file (.doc) has been downloaded automatically.\n2. The roster is ALSO COPIED to your clipboard!\n\n👉 You can open Google Docs (docs.google.com) and press Ctrl+V to paste, OR upload the downloaded .doc file directly to Google Drive!');
+        }
+
+        function copyDocumentHtml() {
+            exportToGoogleDocs(document.getElementById('btn-optimize-print') || document.body);
         }
     </script>
 </body>
