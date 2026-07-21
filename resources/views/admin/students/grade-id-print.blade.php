@@ -449,7 +449,7 @@
             <button type="button" class="btn-action btn-secondary" onclick="smartPrint(this)" id="btn-print-pdf" title="Raw print without rendering to flat images first">
                 🖨️ Raw Print All
             </button>
-            <button type="button" class="btn-action" onclick="optimizeAndPrint(this)" style="background: #0284c7;" id="btn-optimize-print" title="Highly Recommended: Converts ID cards to flat images to prevent browser crashes during large prints">
+            <button type="button" class="btn-action" onclick="optimizeAndPrint(this)" style="background: #059669;" id="btn-optimize-print" title="Highly Recommended: Converts ID cards to flat images to prevent browser crashes during large prints">
                 🚀 Optimize & Print (Prevents Crash)
             </button>
         </div>

@@ -436,8 +436,11 @@
             <button type="button" class="btn-action btn-secondary" onclick="copyDocumentHtml()">
                 📋 Copy for Google Docs / MS Word
             </button>
-            <button type="button" class="btn-action" onclick="window.print()">
-                🖨️ Print / Save as PDF
+            <button type="button" class="btn-action btn-secondary" onclick="window.print()" title="Raw print without card flattening">
+                🖨️ Raw Print
+            </button>
+            <button type="button" class="btn-action" onclick="optimizeAndPrint(this)" style="background: #0284c7;" id="btn-optimize-print" title="Highly Recommended: Converts ID cards to flat images to prevent browser/PDF crashes">
+                🚀 Optimize & Print (Prevents Crash)
             </button>
         </div>
     </div>
@@ -775,6 +778,79 @@
             } else {
                 panel.style.display = 'none';
             }
+        }
+
+        function loadScript(src) {
+            return new Promise((resolve, reject) => {
+                if (window.html2canvas) {
+                    resolve();
+                    return;
+                }
+                const s = document.createElement('script');
+                s.src = src;
+                s.onload = resolve;
+                s.onerror = reject;
+                document.head.appendChild(s);
+            });
+        }
+
+        async function optimizeAndPrint(btn) {
+            adjustLastNameFontSizes();
+            
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+
+            const cards = Array.from(document.querySelectorAll('.id-card'));
+            const total = cards.length;
+            if (total === 0) {
+                window.print();
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+                return;
+            }
+
+            btn.innerHTML = '⏳ Loading optimizer engine...';
+            try {
+                await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+            } catch (err) {
+                console.warn('Failed to load html2canvas, fallback to direct print', err);
+                window.print();
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+                return;
+            }
+
+            // Loop through each card sequentially to avoid memory spikes
+            for (let i = 0; i < total; i++) {
+                const card = cards[i];
+                const wrapper = card.closest('.id-card-wrapper');
+                if (!wrapper) continue;
+
+                btn.innerHTML = `⏳ Rendering cards: ${i + 1}/${total} (${Math.round((i / total) * 100)}%)...`;
+
+                try {
+                    const canvas = await html2canvas(card, {
+                        scale: 2.0, // 200 DPI (crisp & crash-free)
+                        useCORS: true,
+                        allowTaint: true,
+                        backgroundColor: null,
+                        logging: false
+                    });
+
+                    const dataUrl = canvas.toDataURL('image/png', 0.95);
+                    
+                    // Replace complex HTML layout with simple flat high-res image
+                    wrapper.innerHTML = `<img src="${dataUrl}" class="optimized-print-img" style="width: 100%; height: 100%; object-fit: contain; display: block; border-radius: 6.5mm;">`;
+                } catch (err) {
+                    console.error('Error optimizing card ' + i + ':', err);
+                }
+            }
+
+            btn.innerHTML = '🖨️ Opening print dialog...';
+            await new Promise(resolve => setTimeout(resolve, 300));
+            window.print();
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
         }
 
         function adjustLastNameFontSizes() {
