@@ -129,8 +129,8 @@
                     <!-- Front Side Card -->
                     <div class="flex flex-col items-center gap-2 flex-shrink-0">
                         <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Front Side</span>
-                        <div style="transform: scale(0.83); transform-origin: top center; margin-bottom: -75px;">
-                        <div id="id-card-front-box" class="relative rounded-2xl overflow-hidden shadow-2xl border border-slate-200/80 dark:border-slate-800" style="width: 280px; height: 443px; background-color: #064e3b;">
+                        <div style="transform: scale(0.82); transform-origin: top center; margin-bottom: -95px;">
+                        <div id="id-card-front-box" class="relative rounded-3xl overflow-hidden shadow-2xl border border-slate-200/80 dark:border-slate-800" style="width: 340px; height: 538px; background-color: #064e3b;">
                             <!-- Background template image (Top Layer) -->
                             <img src="{{ asset('images/id/amis_frontid.png') }}?v={{ filemtime(public_path('images/id/amis_frontid.png')) }}" class="absolute inset-0 w-full h-full object-cover" style="z-index: 10; pointer-events: none;" alt="AMIS ID Template">
                             
@@ -138,7 +138,7 @@
                             @if(auth()->user()?->hasRole('super_admin'))
                                  <div class="photo-clip group cursor-pointer" 
                                       onclick="openPhotoOptionsModal()"
-                                      style="left: 57px; top: 124px; width: 166px; height: 162px; border-radius: 12px; z-index: 5;"
+                                      style="left: 71px; top: 144px; width: 198px; height: 192px; border-radius: 6px; z-index: 5;"
                                       title="Edit Photo">
                                     @if($photoUrl)
                                         <img id="id-preview-photo" src="{{ $photoBase64 ?: $photoUrl }}" crossorigin="anonymous" class="transition duration-300 group-hover:scale-105 group-hover:brightness-75" style="object-position: center center;">
@@ -157,7 +157,7 @@
                                 </div>
                             @else
                                 <!-- Non-admin read-only image -->
-                                <div class="photo-clip" style="left: 57px; top: 124px; width: 166px; height: 162px; border-radius: 12px; z-index: 5;">
+                                <div class="photo-clip" style="left: 71px; top: 144px; width: 198px; height: 192px; border-radius: 6px; z-index: 5;">
                                     @if($photoUrl)
                                         <img id="id-preview-photo" src="{{ $photoBase64 ?: $photoUrl }}" crossorigin="anonymous" style="object-position: center center;">
                                     @else
@@ -167,58 +167,63 @@
                             @endif
 
                             <!-- Student ID -->
-                            <div class="absolute text-white font-black tracking-wide text-center uppercase" style="left: 0; top: 267px; width: 280px; height: 12px; z-index: 20;" :style="'font-size: ' + idFontSize + 'px'">{{ $studentNumber }}</div>
+                            <div class="absolute text-white font-black tracking-wide text-center uppercase" style="left: 0; top: 325px; width: 340px; height: 15px; z-index: 20; line-height: 15px;" :style="'font-size: ' + idFontSize + 'px'">{{ $studentNumber }}</div>
 
                             <!-- Last Name -->
-                            <div class="absolute text-center font-black text-[#0f172a] uppercase tracking-tight flex flex-col justify-center items-center" style="left: 12px; top: 291px; width: 256px; height: 32px; z-index: 20; {{ $lastNameStyle }} line-height: 1.1;" :style="'font-size: ' + lastNameFontSize + 'px'">{{ $lastName }}</div>
+                            <div class="absolute text-center font-black text-[#0f172a] uppercase tracking-tight flex flex-col justify-center items-center" style="left: 15px; top: 352px; width: 310px; height: 32px; z-index: 20; padding: 0 16px; {{ $lastNameStyle }} line-height: 1; letter-spacing: -0.5px;" :style="'font-size: ' + lastNameFontSize + 'px'">{{ $lastName }}</div>
 
                             <!-- First Name -->
-                            <div class="absolute text-center font-bold text-[#334155] uppercase leading-none flex flex-col justify-center items-center" style="left: 12px; top: 318px; width: 256px; height: 18px; z-index: 20;" :style="'font-size: ' + firstNameFontSize + 'px'">{{ $displayFirstName }}</div>
+                            <div class="absolute text-center font-bold text-[#334155] uppercase leading-none flex flex-col justify-center items-center" style="left: 15px; top: 386px; width: 310px; height: 22px; z-index: 20; padding: 0 16px; line-height: 1;" :style="'font-size: ' + firstNameFontSize + 'px'">{{ $displayFirstName }}</div>
 
                             <!-- Grade Level -->
-                            <div class="absolute text-center font-black uppercase tracking-wide flex flex-col justify-center items-center" style="left: 12px; top: 341px; width: 256px; height: 24px; z-index: 20; color: {{ $getGradeColor($displayGrade) }};" :style="'font-size: ' + gradeFontSize + 'px'">{{ $displayGrade }}</div>
+                            <div class="absolute text-center font-black uppercase tracking-wide flex flex-col justify-center items-center" style="left: 15px; top: 412px; width: 310px; height: 30px; z-index: 20; padding: 0 16px; line-height: 1; letter-spacing: 0.5px; text-shadow: 0 1px 1px rgba(0,0,0,0.05); color: {{ $getGradeColor($displayGrade) }};" :style="'font-size: ' + gradeFontSize + 'px'">{{ $displayGrade }}</div>
+
+                            <!-- LRN -->
+                            @if($student->applicant?->lrn && !in_array(strtoupper($student->applicant->lrn), ['N/A', 'NA', 'EMPTY', '']))
+                                <div class="absolute font-bold text-[#1e293b] whitespace-nowrap" style="left: 239px; top: 394px; width: 170px; height: 22px; z-index: 20; font-size: 15.5px; transform: rotate(-90deg); transform-origin: center; display: flex; align-items: center; justify-content: flex-start; letter-spacing: 0.05em;">
+                                    LRN: <span style="margin-left: 4px;">{{ $student->applicant->lrn }}</span>
+                                </div>
+                            @endif
 
                             <!-- QR Code -->
-                            <div class="absolute p-0.5 rounded bg-white" style="left: 111px; top: 377px; width: 58px; height: 58px; z-index: 20;">
+                            <div class="absolute p-0.5 rounded bg-white" style="left: 134.5px; top: 458px; width: 71px; height: 71px; z-index: 20;">
                                 <img src="{{ $qrCodeBase64 ?: $qrCodeUrl }}" crossorigin="anonymous" alt="QR Verification" class="w-full h-full object-contain">
                             </div>
-                        </div>
-                        </div><!-- end scale wrapper -->
                     </div>
-
+                    
                     <!-- Back Side Card -->
                     <div class="flex flex-col items-center gap-2 flex-shrink-0">
                         <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Back Side</span>
-                        <div style="transform: scale(0.83); transform-origin: top center; margin-bottom: -75px;">
-                        <div id="id-card-back-box" class="relative rounded-2xl overflow-hidden shadow-2xl border border-slate-200/80 dark:border-slate-800" style="width: 280px; height: 443px; background-color: #064e3b;">
+                        <div style="transform: scale(0.82); transform-origin: top center; margin-bottom: -95px;">
+                        <div id="id-card-back-box" class="relative rounded-3xl overflow-hidden shadow-2xl border border-slate-200/80 dark:border-slate-800" style="width: 340px; height: 538px; background-color: #064e3b;">
                             <!-- Background template image -->
                             <img src="{{ asset('images/id/amis_backid.png') }}?v=1" class="absolute inset-0 w-full h-full object-cover" style="z-index: 1; pointer-events: none;" alt="AMIS ID Template Back">
 
                             <!-- Emergency Details List -->
                             @php
                                 $parentNameLen = strlen($emergencyName);
-                                $parentNameFontSize = $parentNameLen > 24 ? '11.5px' : ($parentNameLen > 18 ? '13px' : '15.5px');
+                                $parentNameFontSize = $parentNameLen > 24 ? '14px' : ($parentNameLen > 18 ? '16px' : '19px');
                                 
                                 $addressLen = strlen($homeAddress);
-                                $addressFontSize = $addressLen > 60 ? '10px' : ($addressLen > 40 ? '11px' : '12px');
+                                $addressFontSize = $addressLen > 60 ? '12px' : ($addressLen > 40 ? '13px' : '14px');
                             @endphp
-                            <div style="position: absolute; left: 23px; top: 70px; width: 233px; z-index: 10; display: flex; flex-direction: column; gap: 5.5px;">
+                            <div class="emergency-info" style="position: absolute; left: 28px; top: 85px; width: 284px; z-index: 10; display: flex; flex-direction: column; gap: 7px;">
                                 <!-- Contact Name -->
-                                <div style="display: flex; align-items: flex-start; gap: 8px;">
-                                    <span style="flex-shrink: 0; width: 11.5px; height: 11.5px; color: #047857; margin-top: 1.5px;">
+                                <div class="emerg-row" style="display: flex; align-items: flex-start; gap: 10px;">
+                                    <span class="emerg-icon" style="flex-shrink: 0; width: 14px; height: 14px; color: #047857; margin-top: 1.5px;">
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:100%; height:100%;"><path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z" clip-rule="evenodd" /></svg>
                                     </span>
-                                    <div style="text-align: left; font-family: 'Outfit', sans-serif; font-size: {{ $parentNameFontSize }}; font-weight: 900; text-transform: uppercase; color: #0f172a; line-height: 1.1;">
+                                    <div class="emerg-text" style="text-align: left; font-family: 'Outfit', sans-serif; font-size: {{ $parentNameFontSize }}; font-weight: 900; text-transform: uppercase; color: #0f172a; line-height: 1.1;">
                                         {{ $emergencyName }}
                                     </div>
                                 </div>
 
                                 <!-- Relationship Label -->
-                                <div style="display: flex; align-items: flex-start; gap: 8px;">
-                                    <span style="flex-shrink: 0; width: 11.5px; height: 11.5px; color: #047857; margin-top: 1.5px;">
+                                <div class="emerg-row" style="display: flex; align-items: flex-start; gap: 10px;">
+                                    <span class="emerg-icon" style="flex-shrink: 0; width: 14px; height: 14px; color: #047857; margin-top: 1.5px;">
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:100%; height:100%;"><path fill-rule="evenodd" d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" clip-rule="evenodd" /></svg>
                                     </span>
-                                    <div style="text-align: left; font-family: 'Outfit', sans-serif; font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b;">
+                                    <div class="emerg-text" style="text-align: left; font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 700; text-transform: uppercase; color: #475569; line-height: 1;">
                                         @php
                                             $relationship = 'PARENT / GUARDIAN';
                                             if (!empty($applicant->father_first_name) && str_contains(strtolower($emergencyName), strtolower($applicant->father_first_name))) {
@@ -232,21 +237,21 @@
                                 </div>
 
                                 <!-- Contact Number -->
-                                <div style="display: flex; align-items: flex-start; gap: 8px;">
-                                    <span style="flex-shrink: 0; width: 11.5px; height: 11.5px; color: #047857; margin-top: 1.5px;">
+                                <div class="emerg-row" style="display: flex; align-items: flex-start; gap: 10px;">
+                                    <span class="emerg-icon" style="flex-shrink: 0; width: 14px; height: 14px; color: #047857; margin-top: 1.5px;">
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:100%; height:100%;"><path fill-rule="evenodd" d="M1.5 4.5a3 3 0 0 1 3-3h1.372c.86 0 1.61.586 1.819 1.42l.545 2.181a1.875 1.875 0 0 1-.585 1.83l-1.503 1.201a14.73 14.73 0 0 0 6.182 6.183l1.202-1.502a1.875 1.875 0 0 1 1.83-.585l2.181.545a1.875 1.875 0 0 1 1.42 1.82V19.5a3 3 0 0 1-3 3h-2.25C8.552 22.5 1.5 15.448 1.5 6.75V4.5Z" clip-rule="evenodd" /></svg>
                                     </span>
-                                    <div style="text-align: left; font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 900; color: #0f172a;">
+                                    <div class="emerg-text" style="text-align: left; font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 800; color: #1e293b; line-height: 1;">
                                         {{ $emergencyPhone }}
                                     </div>
                                 </div>
 
                                 <!-- Address -->
-                                <div style="display: flex; align-items: flex-start; gap: 8px;">
-                                    <span style="flex-shrink: 0; width: 11.5px; height: 11.5px; color: #047857; margin-top: 1.5px;">
+                                <div class="emerg-row" style="display: flex; align-items: flex-start; gap: 10px;">
+                                    <span class="emerg-icon" style="flex-shrink: 0; width: 14px; height: 14px; color: #047857; margin-top: 2.5px;">
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:100%; height:100%;"><path fill-rule="evenodd" d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.155-1.071 31.06 31.06 0 004.01-4.578c2.112-2.923 3.402-6.166 3.402-9.336a8.91 8.91 0 00-18 0c0 3.17 1.29 6.413 3.402 9.336a31.06 31.06 0 004.01 4.578 16.975 16.975 0 001.156 1.071zM12 8.25a2.25 2.25 0 100 4.5 2.25 2.25 0 000-4.5z" clip-rule="evenodd" /></svg>
                                     </span>
-                                    <div style="text-align: left; font-family: 'Outfit', sans-serif; font-size: {{ $addressFontSize }}; font-weight: 800; color: #334155; line-height: 1.15; text-transform: uppercase;">
+                                    <div class="emerg-text" style="text-align: left; font-family: 'Outfit', sans-serif; font-size: {{ $addressFontSize }}; font-weight: 700; color: #475569; line-height: 1.25; text-transform: uppercase;">
                                         {{ $homeAddress }}
                                     </div>
                                 </div>
@@ -254,18 +259,18 @@
 
                             <!-- Director's Signature Box -->
                             @if(in_array((string)$student->student_number, ['260253', '260254', '260158', '260895', '260894', '260893']))
-                                <div style="position: absolute; left: 88px; top: 332px; width: 104px; z-index: 25; pointer-events: none;">
-                                    <img src="{{ asset('images/id/signature_cabel.png') }}" style="width: 100%; height: auto; display: block; opacity: 0.95; filter: contrast(1.1) brightness(0.95);">
+                                <div class="back-signature-qr" style="position: absolute; left: 142.5px; top: 422px; width: 55px; height: 55px; z-index: 25; padding: 1.5px; border-radius: 2px; background: white; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+                                    <img src="{{ $signatureQrBase64 ?: $signatureRawUrl }}" crossorigin="anonymous" alt="Signature QR" class="w-full h-full object-contain">
                                 </div>
                             @else
-                                <div style="position: absolute; left: 70px; top: 342px; width: 140px; text-align: center; z-index: 25; pointer-events: none;">
-                                    <span style="font-family: 'Outfit', sans-serif; font-size: 6.5px; font-weight: 900; text-transform: uppercase; color: #64748b; letter-spacing: 0.08em; border: 1px dashed #cbd5e1; padding: 2px 4px; border-radius: 4px; background: rgba(255, 255, 255, 0.9); display: inline-block; box-shadow: 0 1px 1px rgba(0,0,0,0.05);">Secure Signature Coming Soon</span>
+                                <div class="secure-signature-placeholder" style="position: absolute; left: 85px; top: 432px; width: 170px; text-align: center; z-index: 25; pointer-events: none;">
+                                    <span style="font-family: 'Outfit', sans-serif; font-size: 8px; font-weight: 900; text-transform: uppercase; color: #64748b; letter-spacing: 0.1em; border: 1.5px dashed #cbd5e1; padding: 3px 6px; border-radius: 6px; background: rgba(255, 255, 255, 0.85); display: inline-block; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">Secure Signature Coming Soon</span>
                                 </div>
                             @endif
                         </div>
                         </div><!-- end scale wrapper -->
                         <span class="text-[10px] text-slate-400 font-semibold mt-1">Back Emergency Info Sheet</span>
-                    </div>
+                    </div>div>
 
                 </div>
             </div>
