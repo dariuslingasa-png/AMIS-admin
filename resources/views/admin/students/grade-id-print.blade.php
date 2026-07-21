@@ -435,7 +435,7 @@
             <button type="button" class="btn-action btn-secondary" onclick="copyDocumentHtml()">
                 📋 Copy for Google Docs / MS Word
             </button>
-            <button type="button" class="btn-action" onclick="window.print()">
+            <button type="button" class="btn-action" onclick="smartPrint(this)" id="btn-print-pdf">
                 🖨️ Print / Save as PDF
             </button>
         </div>
@@ -849,6 +849,55 @@
     </div>
 
     <script>
+        async function smartPrint(btn) {
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+
+            // Collect all images on the page
+            const allImgs = Array.from(document.querySelectorAll('img'));
+            const notLoaded = allImgs.filter(img => !img.complete || img.naturalWidth === 0);
+
+            if (notLoaded.length === 0) {
+                window.print();
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+                return;
+            }
+
+            btn.innerHTML = '⏳ Loading images (0/' + notLoaded.length + ')...';
+            let loaded = 0;
+
+            const timeout = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+            const imagePromises = notLoaded.map(img => {
+                return new Promise(resolve => {
+                    const done = () => {
+                        loaded++;
+                        btn.innerHTML = '⏳ Loading images (' + loaded + '/' + notLoaded.length + ')...';
+                        resolve();
+                    };
+                    img.onload = done;
+                    img.onerror = done; // still continue even if one fails
+                    // Safety: if already loaded by now
+                    if (img.complete) done();
+                });
+            });
+
+            // Wait for all images OR 15 seconds max
+            await Promise.race([
+                Promise.all(imagePromises),
+                timeout(15000)
+            ]);
+
+            btn.innerHTML = '🖨️ Opening print dialog...';
+            await timeout(300); // tiny pause so browser can breathe
+
+            window.print();
+
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+        }
+
         function toggleEditor() {
             const panel = document.getElementById('print-editor-panel');
             if (panel.style.display === 'none') {
