@@ -883,31 +883,39 @@
                 return;
             }
 
-            btn.innerHTML = '⏳ Loading Google Docs engine...';
+            btn.innerHTML = '⏳ Loading render engine...';
+            try {
+                await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js');
+            } catch (err) {
+                console.warn('html-to-image CDN fallback', err);
+            }
             try {
                 await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
-            } catch (err) {
-                alert('Failed to load library: ' + err);
-                btn.disabled = false;
-                btn.innerHTML = originalHtml;
-                return;
-            }
+            } catch (err) {}
 
-            // Render all cards to base64 images
             const cardImages = [];
             for (let i = 0; i < total; i++) {
-                btn.innerHTML = `⏳ Preparing Google Docs images: ${i + 1}/${total}...`;
+                btn.innerHTML = `⏳ Generating ultra-sharp IDs: ${i + 1}/${total}...`;
                 try {
-                    const canvas = await html2canvas(cards[i], {
-                        scale: 3.0, // 300 DPI Ultra-HD (crystal clear & razor sharp in Word / Google Docs)
-                        useCORS: true,
-                        allowTaint: true,
-                        backgroundColor: null,
-                        logging: false
-                    });
-                    cardImages.push(canvas.toDataURL('image/png', 1.0));
+                    let dataUrl = '';
+                    if (typeof htmlToImage !== 'undefined') {
+                        dataUrl = await htmlToImage.toPng(cards[i], {
+                            pixelRatio: 3,
+                            cacheBust: true
+                        });
+                    } else if (typeof html2canvas !== 'undefined') {
+                        const canvas = await html2canvas(cards[i], {
+                            scale: 3,
+                            useCORS: true,
+                            allowTaint: true,
+                            backgroundColor: null,
+                            logging: false
+                        });
+                        dataUrl = canvas.toDataURL('image/png', 1.0);
+                    }
+                    cardImages.push(dataUrl);
                 } catch (e) {
-                    console.error('Canvas error', e);
+                    console.error('Render error for card ' + i, e);
                     cardImages.push('');
                 }
             }
