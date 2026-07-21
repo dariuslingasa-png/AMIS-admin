@@ -401,7 +401,7 @@
 
         @page {
             size: A4 portrait;
-            margin: 0 !important;
+            margin: 5mm 6mm !important;
         }
 
         @media print {
@@ -410,34 +410,27 @@
                 margin: 0 !important;
                 padding: 0 !important;
             }
-            .toolbar, .no-print { display: none !important; }
+            .toolbar, .no-print, .section-header { 
+                display: none !important; 
+            }
             .page-container {
                 max-width: none !important;
                 margin: 0 !important;
                 padding: 0 !important;
                 box-shadow: none !important;
+                border: none !important;
                 border-radius: 0 !important;
-            }
-            .section-header {
-                padding: 6px 12px !important;
-                margin-bottom: 0 !important;
-                text-align: center !important;
-            }
-            .section-title {
-                font-size: 15px !important;
-            }
-            .section-subtitle {
-                font-size: 10px !important;
             }
             .student-card-item {
                 border: 1px solid #cbd5e1 !important;
+                border-radius: 8px !important;
                 page-break-inside: avoid !important;
                 break-inside: avoid !important;
-                margin: 0 auto 10px auto !important;
+                margin: 0 auto 8px auto !important;
                 padding: 6px 10px !important;
-                transform: scale(0.72) !important;
+                transform: scale(0.75) !important;
                 transform-origin: top center !important;
-                margin-bottom: -140px !important;
+                margin-bottom: -130px !important;
             }
             .student-card-item:nth-child(2n) {
                 page-break-after: always !important;
