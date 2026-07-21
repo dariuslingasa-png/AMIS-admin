@@ -168,11 +168,11 @@
 >
     <div x-data="{
          openEditModal: {{ $errors->any() ? 'true' : 'false' }},
-         showIdPreview: false,
-         lastNameFontSize: {{ $lastNameFontSize }},
-         firstNameFontSize: {{ $displayFirstNameFontSize }},
-         gradeFontSize: 25,
-         idFontSize: 10,
+         showIdPreview: {{ request('preview_id') ? 'true' : 'false' }},
+         lastNameFontSize: {{ $student->id_last_name_font_size ?: $lastNameFontSize }},
+         firstNameFontSize: {{ $student->id_first_name_font_size ?: $displayFirstNameFontSize }},
+         gradeFontSize: {{ $student->id_grade_font_size ?: 25 }},
+         idFontSize: {{ $student->id_num_font_size ?: 10 }},
          openPasswordModal: false,
          editSection: 'all',
          copySuccess: false,
@@ -199,6 +199,50 @@
              this.preview = false;
              this.zoom = 1;
              this.stopPan();
+         },
+         async saveFontSizes() {
+             const btn = document.getElementById('btn-save-font-sizes');
+             const oldHtml = btn.innerHTML;
+             btn.disabled = true;
+             btn.innerHTML = `Saving...`;
+             
+             try {
+                 const response = await fetch('{{ route('admin.students.update-id-font-sizes', $student) }}', {
+                     method: 'POST',
+                     headers: {
+                         'Content-Type': 'application/json',
+                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                         'X-Requested-With': 'XMLHttpRequest'
+                     },
+                     body: JSON.stringify({
+                         id_last_name_font_size: this.lastNameFontSize,
+                         id_first_name_font_size: this.firstNameFontSize,
+                         id_grade_font_size: this.gradeFontSize,
+                         id_num_font_size: this.idFontSize
+                     })
+                 });
+                 
+                 const result = await response.json();
+                 if (response.ok && result.success) {
+                     btn.innerHTML = `Saved!`;
+                     btn.classList.remove('bg-emerald-600', 'hover:bg-emerald-700');
+                     btn.classList.add('bg-blue-600');
+                     setTimeout(() => {
+                         btn.innerHTML = oldHtml;
+                         btn.classList.remove('bg-blue-600');
+                         btn.classList.add('bg-emerald-600', 'hover:bg-emerald-700');
+                         btn.disabled = false;
+                     }, 2000);
+                 } else {
+                     alert(result.message || 'Failed to save font sizes.');
+                     btn.innerHTML = oldHtml;
+                     btn.disabled = false;
+                 }
+             } catch (err) {
+                 alert('Error saving font sizes: ' + err);
+                 btn.innerHTML = oldHtml;
+                 btn.disabled = false;
+             }
          },
          zoomIn() {
              this.zoom = Math.min(3, Number((this.zoom + 0.1).toFixed(2)));
@@ -940,7 +984,7 @@
             <div x-show="showIdPreview"
                  style="display: none; z-index: 99999;"
                  class="fixed inset-0 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-fade-in">
-            <div class="bg-slate-100 dark:bg-slate-950 rounded-3xl max-w-3xl w-full overflow-visible relative shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col"
+            <div class="bg-slate-100 dark:bg-slate-950 rounded-3xl max-w-5xl w-full overflow-visible relative shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col"
                  x-transition:enter="transition ease-out duration-200"
                  x-transition:enter-start="opacity-0 scale-95"
                  x-transition:enter-end="opacity-100 scale-100">
@@ -1263,16 +1307,56 @@
                             </div>
                         </div>
 
-                        <!-- Reset Buttons -->
-                        <button type="button" @click="
-                            lastNameFontSize = {{ $lastNameFontSize }};
-                            firstNameFontSize = {{ $displayFirstNameFontSize }};
-                            gradeFontSize = 25;
-                            idFontSize = 10;
-                        " class="mt-2 w-full py-2 rounded-xl border border-slate-200 dark:border-slate-850 text-[10px] font-bold text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800 transition active:scale-[0.97] cursor-pointer flex items-center justify-center gap-1.5 shadow-sm">
-                            <i data-lucide="refresh-cw" class="w-3.5 h-3.5 flex-shrink-0"></i>
-                            <span>Reset Font Sizes</span>
-                        </button>
+                        <!-- Action Buttons (Save & Reset) -->
+                        <div class="space-y-2 mt-2">
+                            <!-- Save Button -->
+                            <button type="button" id="btn-save-font-sizes" @click="saveFontSizes()" 
+                                    class="w-full py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold shadow-sm transition active:scale-[0.97] cursor-pointer flex items-center justify-center gap-1.5 border border-emerald-500">
+                                <i data-lucide="save" class="w-3.5 h-3.5 flex-shrink-0"></i>
+                                <span>Save Font Sizes</span>
+                            </button>
+
+                            <!-- Reset Button -->
+                            <button type="button" @click="
+                                lastNameFontSize = {{ $lastNameFontSize }};
+                                firstNameFontSize = {{ $displayFirstNameFontSize }};
+                                gradeFontSize = 25;
+                                idFontSize = 10;
+                            " class="w-full py-2 rounded-xl border border-slate-200 dark:border-slate-850 text-[10px] font-bold text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800 transition active:scale-[0.97] cursor-pointer flex items-center justify-center gap-1.5 shadow-sm">
+                                <i data-lucide="refresh-cw" class="w-3.5 h-3.5 flex-shrink-0"></i>
+                                <span>Reset Default Sizes</span>
+                            </button>
+                        </div>
+
+                        <!-- Student Navigation section -->
+                        <div class="border-t border-slate-100 dark:border-slate-800 pt-3 mt-1">
+                            <div class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Student Navigation</div>
+                            <div class="flex gap-2">
+                                @if($prevStudentId)
+                                    <a href="{{ route('admin.students.show', $prevStudentId) }}?preview_id=1" class="flex-1 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800 transition active:scale-[0.97] flex items-center justify-center gap-1 shadow-sm">
+                                        <i data-lucide="chevron-left" class="w-3.5 h-3.5 flex-shrink-0"></i>
+                                        <span>Prev</span>
+                                    </a>
+                                @else
+                                    <button type="button" disabled class="flex-1 py-1.5 rounded-xl border border-slate-100 dark:border-slate-850 text-[10px] font-bold text-slate-300 dark:text-slate-650 cursor-not-allowed flex items-center justify-center gap-1">
+                                        <i data-lucide="chevron-left" class="w-3.5 h-3.5 flex-shrink-0"></i>
+                                        <span>Prev</span>
+                                    </button>
+                                @endif
+
+                                @if($nextStudentId)
+                                    <a href="{{ route('admin.students.show', $nextStudentId) }}?preview_id=1" class="flex-1 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800 transition active:scale-[0.97] flex items-center justify-center gap-1 shadow-sm">
+                                        <span>Next</span>
+                                        <i data-lucide="chevron-right" class="w-3.5 h-3.5 flex-shrink-0"></i>
+                                    </a>
+                                @else
+                                    <button type="button" disabled class="flex-1 py-1.5 rounded-xl border border-slate-100 dark:border-slate-850 text-[10px] font-bold text-slate-300 dark:text-slate-650 cursor-not-allowed flex items-center justify-center gap-1">
+                                        <span>Next</span>
+                                        <i data-lucide="chevron-right" class="w-3.5 h-3.5 flex-shrink-0"></i>
+                                    </button>
+                                @endif
+                            </div>
+                        </div>
 
                         <!-- Photo Editor section -->
                         @if(auth()->user()?->hasRole('super_admin'))

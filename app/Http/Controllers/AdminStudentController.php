@@ -363,12 +363,30 @@ class AdminStudentController extends Controller
 
         $sections = \App\Models\Section::orderBy('grade_level')->orderBy('name')->get();
 
+        // Resolve previous and next student in the same section / grade level
+        $sectionId = $student->studentSection?->section_id;
+        if ($sectionId) {
+            $siblingsQuery = Student::whereHas('studentSection', function($q) use ($sectionId) {
+                $q->where('section_id', $sectionId);
+            });
+        } else {
+            $siblingsQuery = Student::where('grade_level', $student->grade_level);
+        }
+        
+        $orderedStudents = $siblingsQuery->orderBy('id', 'asc')->pluck('id')->toArray();
+        $currentIndex = array_search($student->id, $orderedStudents);
+        
+        $prevStudentId = ($currentIndex !== false && isset($orderedStudents[$currentIndex - 1])) ? $orderedStudents[$currentIndex - 1] : null;
+        $nextStudentId = ($currentIndex !== false && isset($orderedStudents[$currentIndex + 1])) ? $orderedStudents[$currentIndex + 1] : null;
+
         return view('admin.students.show', [
             'student'      => $student,
             'siblings'     => $siblings,
             'statusLabels' => $statusLabels,
             'auditLogs'    => $auditLogs,
             'sections'     => $sections,
+            'prevStudentId' => $prevStudentId,
+            'nextStudentId' => $nextStudentId,
         ]);
     }
 
@@ -1853,6 +1871,30 @@ class AdminStudentController extends Controller
         });
 
         return back()->with('success', 'Student profile updated successfully.');
+    }
+
+    public function updateIdFontSizes(Request $request, Student $student)
+    {
+        abort_if(auth()->user()?->isTeacherAdminViewer(), 403);
+
+        $validated = $request->validate([
+            'id_last_name_font_size' => 'nullable|numeric|min:5|max:100',
+            'id_first_name_font_size' => 'nullable|numeric|min:5|max:100',
+            'id_grade_font_size' => 'nullable|numeric|min:5|max:100',
+            'id_num_font_size' => 'nullable|numeric|min:5|max:100',
+        ]);
+
+        $student->update([
+            'id_last_name_font_size' => $validated['id_last_name_font_size'],
+            'id_first_name_font_size' => $validated['id_first_name_font_size'],
+            'id_grade_font_size' => $validated['id_grade_font_size'],
+            'id_num_font_size' => $validated['id_num_font_size'],
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'ID card font sizes saved successfully!',
+        ]);
     }
 
     public function updatePhoto(Request $request, Student $student)

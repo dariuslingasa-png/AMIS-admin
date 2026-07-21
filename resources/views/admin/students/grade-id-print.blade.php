@@ -610,23 +610,38 @@
                     }
 
                     // Dynamic font sizes matching print_id.blade.php
+                    $lastNameStyle = 'white-space: nowrap;';
                     $lastNameLen = strlen($lastName);
-                    if ($lastNameLen <= 8) {
-                        $lastNameFontSize = '36px';
-                        $lastNameStyle = 'white-space: nowrap;';
-                    } elseif ($lastNameLen <= 12) {
-                        $lastNameFontSize = '28px';
-                        $lastNameStyle = 'white-space: nowrap;';
-                    } elseif ($lastNameLen <= 16) {
-                        $lastNameFontSize = '23px';
-                        $lastNameStyle = 'white-space: nowrap;';
-                    } elseif ($lastNameLen <= 20) {
-                        $lastNameFontSize = '18px';
-                        $lastNameStyle = 'white-space: nowrap;';
+                    if ($student->id_last_name_font_size) {
+                        $lastNameFontSize = $student->id_last_name_font_size . 'px';
+                        if ($lastNameLen > 20) {
+                            $lastNameStyle = 'word-break: break-word;';
+                        }
                     } else {
-                        $lastNameFontSize = '15px';
-                        $lastNameStyle = 'word-break: break-word;';
+                        if ($lastNameLen <= 8) {
+                            $lastNameFontSize = '36px';
+                        } elseif ($lastNameLen <= 12) {
+                            $lastNameFontSize = '28px';
+                        } elseif ($lastNameLen <= 16) {
+                            $lastNameFontSize = '23px';
+                        } elseif ($lastNameLen <= 20) {
+                            $lastNameFontSize = '18px';
+                        } else {
+                            $lastNameFontSize = '15px';
+                            $lastNameStyle = 'word-break: break-word;';
+                        }
                     }
+
+                    $displayFirstName = trim($firstName . ' ' . $middleInitial);
+                    $firstNameLen = strlen($displayFirstName);
+                    if ($student->id_first_name_font_size) {
+                        $firstNameFontSize = $student->id_first_name_font_size . 'px';
+                    } else {
+                        $firstNameFontSize = $firstNameLen > 25 ? '14px' : ($firstNameLen > 18 ? '16px' : '18px');
+                    }
+
+                    $gradeFontSize = $student->id_grade_font_size ? ($student->id_grade_font_size . 'px') : '31px';
+                    $idFontSize = $student->id_num_font_size ? ($student->id_num_font_size . 'px') : '12.5px';
                 @endphp
 
                 <div class="student-card-item">
@@ -659,7 +674,7 @@
                                              @endif
 
                                             <!-- Student ID Badge text -->
-                                            <div class="student-id">{{ $studentNumber }}</div>
+                                            <div class="student-id" style="font-size: var(--id-font-size, {{ $idFontSize }});">{{ $studentNumber }}</div>
 
                                             <!-- Last Name -->
                                             <div class="student-last-name">
@@ -667,18 +682,13 @@
                                             </div>
 
                                             <!-- First Name -->
-                                            @php
-                                                $displayFirstName = trim($firstName . ' ' . $middleInitial);
-                                                $firstNameLen = strlen($displayFirstName);
-                                                $firstNameFontSize = $firstNameLen > 25 ? '14px' : ($firstNameLen > 18 ? '16px' : '18px');
-                                            @endphp
                                             <div class="student-first-name">
                                                 <h4 style="font-size: var(--first-name-font-size, {{ $firstNameFontSize }});">{{ $displayFirstName }}</h4>
                                             </div>
 
                                             <!-- Grade Level -->
                                             <div class="student-grade">
-                                                <span style="color: {{ $getGradeColor($displayGrade) }}; font-size: var(--grade-font-size, 31px);">{{ strtoupper($displayGrade) }}</span>
+                                                <span style="color: {{ $getGradeColor($displayGrade) }}; font-size: var(--grade-font-size, {{ $gradeFontSize }});">{{ strtoupper($displayGrade) }}</span>
                                             </div>
 
                                             <!-- LRN (Vertical) -->
