@@ -401,7 +401,7 @@
 
         @page {
             size: A4 portrait;
-            margin: 3mm 4mm !important;
+            margin: 0 !important;
         }
 
         @media print {
@@ -410,7 +410,7 @@
                 margin: 0 !important;
                 padding: 0 !important;
             }
-            .toolbar, .no-print, .section-header { 
+            .toolbar, .no-print, .section-header, .section-group-header { 
                 display: none !important; 
             }
             .page-container {
@@ -419,23 +419,28 @@
                 padding: 0 !important;
                 box-shadow: none !important;
                 border: none !important;
-                border-radius: 0 !important;
             }
-            .student-card-item {
-                border: 1px solid #cbd5e1 !important;
-                border-radius: 8px !important;
-                page-break-inside: avoid !important;
-                break-inside: avoid !important;
-                margin: 0 auto 4px auto !important;
-                padding: 4px 8px !important;
-                transform: scale(0.68) !important;
-                transform-origin: top center !important;
-                margin-bottom: -160px !important;
-            }
-            .student-card-item:nth-child(2n) {
+            .print-page {
                 page-break-after: always !important;
                 break-after: page !important;
-                margin-bottom: 0 !important;
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+                height: 100vh !important;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: space-around !important;
+                align-items: center !important;
+                box-sizing: border-box !important;
+                padding: 20px 0 !important;
+            }
+            .student-card-item {
+                transform: scale(0.68) !important;
+                transform-origin: center center !important;
+                margin: 0 !important;
+                border: 1px solid #cbd5e1 !important;
+                border-radius: 8px !important;
+                padding: 6px 12px !important;
+                background: #fff !important;
             }
             .id-card {
                 width: 340px !important;
@@ -581,6 +586,9 @@
             </div>
             
             @foreach($sectionStudents as $index => $student)
+                @if($loop->index % 2 === 0)
+                    <div class="print-page">
+                @endif
                 @php
                     $applicant = $student->applicant;
                     
@@ -818,7 +826,9 @@
                             </td>
                         </tr>
                     </table>
-                </div>
+                @if($loop->index % 2 === 1 || $loop->last)
+                    </div>
+                @endif
             @endforeach
         @empty
             <div style="text-align: center; padding: 40px; color: #64748b; font-weight: bold;">
