@@ -1064,7 +1064,7 @@
             elements.forEach(textEl => {
                 const maxW = 278; // 310px card width - 32px horizontal padding
                 
-                // Reset inline font size to base template size before measuring
+                // Clear any inline font size to measure at base template size
                 textEl.style.fontSize = '';
                 
                 let baseFontSize = parseFloat(window.getComputedStyle(textEl).fontSize);
@@ -1072,17 +1072,21 @@
                     baseFontSize = 30;
                 }
 
-                // Measure EXACT text glyph width using Range API (bypasses Flexbox container stretching)
-                const range = document.createRange();
-                range.selectNodeContents(textEl);
-                const actualTextWidth = range.getBoundingClientRect().width;
+                const textContent = textEl.textContent.trim();
+                if (!textContent) return;
 
-                if (isNaN(actualTextWidth) || actualTextWidth <= 0 || actualTextWidth <= maxW) {
+                // Temporarily wrap text in an inline span to measure un-scaled layout width
+                textEl.innerHTML = `<span class="temp-name-span" style="display: inline; white-space: nowrap;">${textContent}</span>`;
+                const spanEl = textEl.querySelector('.temp-name-span');
+                const actualTextWidth = spanEl ? spanEl.offsetWidth : 0;
+                textEl.textContent = textContent; // Restore original text node immediately
+
+                if (actualTextWidth <= 0 || actualTextWidth <= maxW) {
                     // Fits naturally — keep base font size!
                     return;
                 }
                 
-                // Calculate required font size proportionally in 1 single step
+                // Calculate required font size proportionally in 1 step
                 const calculatedSize = Math.floor(baseFontSize * (maxW / actualTextWidth));
                 const finalSize = Math.max(8, calculatedSize);
                 
