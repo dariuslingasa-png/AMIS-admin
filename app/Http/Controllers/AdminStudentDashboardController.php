@@ -206,6 +206,26 @@ class AdminStudentDashboardController extends Controller
         return back()->with('success', 'Section "' . $sectionName . '" deleted from portal list.');
     }
 
+    public function destroyGradeSections($grade)
+    {
+        // Find all sections in this grade level
+        $sections = \App\Models\Section::where('grade_level', $grade)->get();
+        $count = $sections->count();
+
+        if ($count === 0) {
+            return back()->with('error', 'No sections found in ' . $grade . '.');
+        }
+
+        foreach ($sections as $section) {
+            // Unassign students from section
+            \App\Models\StudentSection::where('section_id', $section->id)->delete();
+            // Delete the section
+            $section->delete();
+        }
+
+        return back()->with('success', 'Successfully deleted ' . $count . ' sections from ' . $grade . '.');
+    }
+
     public function manageSection(Request $request, Section $section)
     {
         $section->load(['students.student.applicant', 'activeAdvisory']);

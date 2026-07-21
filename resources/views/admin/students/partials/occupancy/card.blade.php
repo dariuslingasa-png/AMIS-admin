@@ -52,6 +52,16 @@
                 <span class="inline-flex rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-wider {{ $gTheme['bg'] }}">
                     {{ $gradeOccupied }} / {{ $gradeCapacity }} Seats Enrolled
                 </span>
+                <!-- Delete All Sections in Grade -->
+                <form method="POST" action="{{ route('admin.students.occupancy.delete-grade-sections', $gradeLevel) }}"
+                      onsubmit="return confirm('WARNING: Are you sure you want to delete ALL sections under {{ $gradeLevel }}?\n\nThis will unassign all students in this grade level. This cannot be undone!')"
+                      class="inline">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="h-7 w-7 rounded-lg bg-rose-50 text-rose-600 border border-rose-100 hover:bg-rose-100 flex items-center justify-center transition active:scale-[0.95] cursor-pointer" title="Delete ALL sections in {{ $gradeLevel }}">
+                        <i data-lucide="trash-2" class="h-3.5 w-3.5"></i>
+                    </button>
+                </form>
                 <!-- Grade Print Dropdown -->
                 <div class="relative inline-block text-left" x-data="{ openGradePrintDropdown: false }" @click.outside="openGradePrintDropdown = false">
                     <button type="button" @click="openGradePrintDropdown = !openGradePrintDropdown" class="h-7 w-7 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 flex items-center justify-center transition active:scale-[0.95]" title="Print Options for {{ $gradeLevel }}">
