@@ -280,11 +280,33 @@ class AdminStudentController extends Controller
 
         $statusLabels = \App\Services\Admin\Enrollment\EnrollmentReviewService::STATUS_LABELS;
 
-        $auditLogs = \App\Models\AdminAuditLog::where('message', 'like', "%{$student->school_email}%")
-            ->orWhere('metadata->email', $student->school_email)
-            ->orWhere('metadata->old_email', $student->school_email)
-            ->orWhere('metadata->new_email', $student->school_email)
+        $studentEmail = strtolower($student->school_email ?? '');
+        $studentNumber = $student->student_number;
+        $applicant = $student->applicant;
+        $fullName = $applicant ? trim(($applicant->first_name ?? '') . ' ' . ($applicant->last_name ?? '')) : '';
+
+        $auditLogs = \App\Models\AdminAuditLog::with('user')
+            ->where(function ($query) use ($student, $studentEmail, $studentNumber, $fullName) {
+                $query->where('metadata->student_id', $student->id)
+                    ->orWhere('metadata->student_number', $studentNumber)
+                    ->orWhere('metadata->applicant_id', $student->enrollment_applicant_id);
+
+                if ($studentEmail !== '') {
+                    $query->orWhere('message', 'like', "%{$studentEmail}%")
+                        ->orWhere('metadata->email', $studentEmail)
+                        ->orWhere('metadata->school_email', $studentEmail);
+                }
+
+                if (!empty($studentNumber)) {
+                    $query->orWhere('message', 'like', "%{$studentNumber}%");
+                }
+
+                if (!empty($fullName)) {
+                    $query->orWhere('message', 'like', "%{$fullName}%");
+                }
+            })
             ->latest()
+            ->take(100)
             ->get();
 
         $sections = \App\Models\Section::orderBy('grade_level')->orderBy('name')->get();
@@ -1113,6 +1135,18 @@ class AdminStudentController extends Controller
             $student->delete();
         });
 
+        // Record Audit Log
+        \App\Models\AdminAuditLog::record(
+            event: 'delete_student_record',
+            successful: true,
+            message: "Deleted student record for {$name}",
+            metadata: [
+                'student_id' => $student->id,
+                'student_number' => $student->student_number,
+                'school_email' => $student->school_email,
+            ]
+        );
+
         if ($msError) {
             return redirect()->route('admin.students.index')
                 ->with('warning', "Student {$name} deleted from portal, but Azure AD deletion failed: {$msError}");
@@ -1501,6 +1535,23 @@ class AdminStudentController extends Controller
 
         $applicant->save();
 
+        $studentName = trim(($applicant->first_name ?? '') . ' ' . ($applicant->last_name ?? ''));
+        $valDisplay = is_array($value) ? json_encode($value) : (string)$value;
+
+        \App\Models\AdminAuditLog::record(
+            event: 'update_student_field_' . $field,
+            successful: true,
+            message: "Updated student {$field} to '{$valDisplay}' for student {$studentName} ({$studentNumber})",
+            metadata: [
+                'student_id' => $student->id,
+                'student_number' => $studentNumber,
+                'school_email' => $student->school_email,
+                'applicant_id' => $applicant->id,
+                'field' => $field,
+                'value' => $value,
+            ]
+        );
+
         return response()->json([
             'success' => true,
             'message' => 'Field updated successfully',
@@ -1733,6 +1784,20 @@ class AdminStudentController extends Controller
                 $applicant->mother_first_name = mb_strtoupper(implode(' ', $parts)) ?: 'MOTHER';
             }
             $applicant->save();
+
+            $studentName = trim(($applicant->first_name ?? '') . ' ' . ($applicant->last_name ?? ''));
+            \App\Models\AdminAuditLog::record(
+                event: 'update_student_profile',
+                successful: true,
+                message: "Updated profile details for student {$studentName} ({$student->student_number})",
+                metadata: [
+                    'student_id' => $student->id,
+                    'student_number' => $student->student_number,
+                    'school_email' => $student->school_email,
+                    'applicant_id' => $applicant->id,
+                    'updated_fields' => array_keys($updateData),
+                ]
+            );
         });
 
         return back()->with('success', 'Student profile updated successfully.');
@@ -1914,6 +1979,22 @@ class AdminStudentController extends Controller
                 );
             }
         });
+
+        $secName = $sectionId ? (\App\Models\Section::find($sectionId)->name ?? "Section #{$sectionId}") : 'Unassigned';
+        $studentName = $student->applicant ? trim($student->applicant->first_name . ' ' . $student->applicant->last_name) : $student->student_number;
+        \App\Models\AdminAuditLog::record(
+            event: 'update_student_section',
+            successful: true,
+            message: "Assigned student {$studentName} ({$student->student_number}) to section: {$secName}",
+            metadata: [
+                'student_id' => $student->id,
+                'student_number' => $student->student_number,
+                'school_email' => $student->school_email,
+                'applicant_id' => $student->enrollment_applicant_id,
+                'section_id' => $sectionId,
+                'section_name' => $secName,
+            ]
+        );
 
         // Sync to MS Teams and photo
         if ($student->ms_user_id) {

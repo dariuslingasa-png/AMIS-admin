@@ -428,6 +428,15 @@
                         <i data-lucide="key-round" class="h-4 w-4"></i>
                         <span>Account Summary</span>
                     </button>
+                    <button @click="activeTab = 'audit'" 
+                            :class="activeTab === 'audit' ? 'bg-emerald-600 text-white shadow-sm' : 'bg-white/50 dark:bg-slate-900/30 text-slate-650 hover:text-slate-950 dark:text-slate-400 dark:hover:text-white hover:bg-white/80 dark:hover:bg-slate-900/60 shadow-xs'" 
+                            class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 focus:outline-none flex-1 cursor-pointer">
+                        <i data-lucide="history" class="h-4 w-4"></i>
+                        <span>Audit Logs & History</span>
+                        @if($auditLogs->count() > 0)
+                            <span class="ml-1 px-1.5 py-0.5 text-[10px] rounded-full font-black bg-white/20 text-white">{{ $auditLogs->count() }}</span>
+                        @endif
+                    </button>
                 </nav>
             </div>
 
@@ -818,6 +827,79 @@
                                 </form>
                             </div>
                         </div>
+                    </div>
+                </x-card>
+            </div>
+
+            <!-- Audit Logs & History Tab -->
+            <div x-show="activeTab === 'audit'" class="space-y-6" x-cloak>
+                <x-card title="Student Record Audit Trail" subtitle="Chronological log of administrative actions, photo uploads, profile edits, and section assignments for this student">
+                    <div class="mt-4">
+                        @if($auditLogs->isEmpty())
+                            <div class="text-center py-12 text-slate-500 dark:text-slate-400">
+                                <i data-lucide="history" class="h-10 w-10 mx-auto mb-3 text-slate-400 opacity-60"></i>
+                                <p class="font-bold text-sm">No Audit Logs Recorded</p>
+                                <p class="text-xs text-slate-400 mt-1">Actions performed on this student record (photo upload, profile edit, section update, etc.) will be logged here in real-time.</p>
+                            </div>
+                        @else
+                            <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+                                <table class="w-full text-left text-sm border-collapse">
+                                    <thead>
+                                        <tr class="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-xs font-black text-slate-500 uppercase tracking-wider">
+                                            <th class="py-3.5 px-4">Date & Time</th>
+                                            <th class="py-3.5 px-4">Admin / Staff</th>
+                                            <th class="py-3.5 px-4">Action</th>
+                                            <th class="py-3.5 px-4">Details / Description</th>
+                                            <th class="py-3.5 px-4">IP Address</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 bg-white dark:bg-slate-900/10">
+                                        @foreach($auditLogs as $log)
+                                            <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition">
+                                                <td class="py-3 px-4 text-xs font-semibold text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                                                    {{ $log->created_at ? $log->created_at->format('M d, Y h:i:s A') : '—' }}
+                                                    <div class="text-[10px] text-slate-400 font-normal">{{ $log->created_at?->diffForHumans() }}</div>
+                                                </td>
+                                                <td class="py-3 px-4 text-xs">
+                                                    <div class="font-bold text-slate-900 dark:text-white">
+                                                        {{ $log->user ? $log->user->name : ($log->email ?: 'System') }}
+                                                    </div>
+                                                    @if($log->user && $log->user->email)
+                                                        <div class="text-[10px] text-slate-400 font-medium">{{ $log->user->email }}</div>
+                                                    @endif
+                                                </td>
+                                                <td class="py-3 px-4 text-xs">
+                                                    @php
+                                                        $eventBadgeClass = match(true) {
+                                                            str_contains($log->event, 'photo') => 'bg-purple-50 text-purple-700 dark:bg-purple-950/30 dark:text-purple-300 border-purple-200',
+                                                            str_contains($log->event, 'profile') => 'bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-300 border-blue-200',
+                                                            str_contains($log->event, 'section') => 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300 border-emerald-200',
+                                                            str_contains($log->event, 'delete') => 'bg-rose-50 text-rose-700 dark:bg-rose-950/30 dark:text-rose-300 border-rose-200',
+                                                            default => 'bg-slate-50 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-200'
+                                                        };
+                                                    @endphp
+                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black border {{ $eventBadgeClass }}">
+                                                        {{ str_replace('_', ' ', strtoupper($log->event)) }}
+                                                    </span>
+                                                </td>
+                                                <td class="py-3 px-4 text-xs font-medium text-slate-700 dark:text-slate-300">
+                                                    {{ $log->message ?: 'Action recorded' }}
+                                                    @if(!empty($log->metadata) && is_array($log->metadata))
+                                                        <details class="mt-1">
+                                                            <summary class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold cursor-pointer hover:underline">View Metadata</summary>
+                                                            <pre class="text-[10px] bg-slate-900 text-slate-200 p-2 rounded-lg mt-1 font-mono overflow-x-auto max-w-md">{{ json_encode($log->metadata, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) }}</pre>
+                                                        </details>
+                                                    @endif
+                                                </td>
+                                                <td class="py-3 px-4 text-xs font-mono text-slate-500 whitespace-nowrap">
+                                                    {{ $log->ip_address ?: '—' }}
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @endif
                     </div>
                 </x-card>
             </div>
