@@ -627,9 +627,6 @@
                     $lastNameLen = strlen($lastName);
                     if ($student->id_last_name_font_size) {
                         $lastNameFontSize = $student->id_last_name_font_size . 'px';
-                        if ($lastNameLen > 20) {
-                            $lastNameStyle = 'word-break: break-word;';
-                        }
                     } else {
                         if ($lastNameLen <= 8) {
                             $lastNameFontSize = '36px';
