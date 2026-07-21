@@ -401,7 +401,7 @@
 
         @page {
             size: A4 portrait;
-            margin: 5mm 6mm !important;
+            margin: 3mm 4mm !important;
         }
 
         @media print {
@@ -426,11 +426,11 @@
                 border-radius: 8px !important;
                 page-break-inside: avoid !important;
                 break-inside: avoid !important;
-                margin: 0 auto 8px auto !important;
-                padding: 6px 10px !important;
-                transform: scale(0.75) !important;
+                margin: 0 auto 4px auto !important;
+                padding: 4px 8px !important;
+                transform: scale(0.68) !important;
                 transform-origin: top center !important;
-                margin-bottom: -130px !important;
+                margin-bottom: -160px !important;
             }
             .student-card-item:nth-child(2n) {
                 page-break-after: always !important;
