@@ -1249,127 +1249,6 @@
                         </div>
                         <span class="text-[10px] text-slate-400 font-semibold mt-1">Back Emergency Info Sheet</span>
                     </div>
-
-                    <!-- Text Editor Panel -->
-                    <div class="w-full md:w-64 flex-shrink-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 flex flex-col gap-4 text-left shadow-lg self-stretch justify-center relative z-20">
-                        <div class="border-b border-slate-100 dark:border-slate-800 pb-2">
-                            <h4 class="text-[11px] font-extrabold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                <i data-lucide="type" class="w-4 h-4 text-emerald-600 flex-shrink-0"></i>
-                                <span>Text Font Sizes (px)</span>
-                            </h4>
-                        </div>
-                        
-                        <!-- Last Name Font Size Slider/Input -->
-                        <div class="space-y-1.5">
-                            <div class="flex justify-between items-center text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                <span class="flex-shrink-0">Last Name</span>
-                                <span class="text-slate-900 dark:text-white font-extrabold" x-text="lastNameFontSize + 'px'"></span>
-                            </div>
-                            <div class="flex items-center">
-                                <input type="range" min="10" max="45" step="0.5" x-model="lastNameFontSize" 
-                                       class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-600">
-                            </div>
-                        </div>
-
-                        <!-- First Name Font Size Slider/Input -->
-                        <div class="space-y-1.5">
-                            <div class="flex justify-between items-center text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                <span class="flex-shrink-0">First Name</span>
-                                <span class="text-slate-900 dark:text-white font-extrabold" x-text="firstNameFontSize + 'px'"></span>
-                            </div>
-                            <div class="flex items-center">
-                                <input type="range" min="8" max="25" step="0.5" x-model="firstNameFontSize" 
-                                       class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-600">
-                            </div>
-                        </div>
-
-                        <!-- Grade Level Font Size Slider/Input -->
-                        <div class="space-y-1.5">
-                            <div class="flex justify-between items-center text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                <span class="flex-shrink-0">Grade Level</span>
-                                <span class="text-slate-900 dark:text-white font-extrabold" x-text="gradeFontSize + 'px'"></span>
-                            </div>
-                            <div class="flex items-center">
-                                <input type="range" min="12" max="35" step="0.5" x-model="gradeFontSize" 
-                                       class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-600">
-                            </div>
-                        </div>
-
-                        <!-- Student ID Font Size Slider/Input -->
-                        <div class="space-y-1.5">
-                            <div class="flex justify-between items-center text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                <span class="flex-shrink-0">Student ID</span>
-                                <span class="text-slate-900 dark:text-white font-extrabold" x-text="idFontSize + 'px'"></span>
-                            </div>
-                            <div class="flex items-center">
-                                <input type="range" min="8" max="18" step="0.5" x-model="idFontSize" 
-                                       class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-600">
-                            </div>
-                        </div>
-
-                        <!-- Action Buttons (Save & Reset) -->
-                        <div class="space-y-2 mt-2">
-                            <!-- Save Button -->
-                            <button type="button" id="btn-save-font-sizes" @click="saveFontSizes()" 
-                                    class="w-full py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold shadow-sm transition active:scale-[0.97] cursor-pointer flex items-center justify-center gap-1.5 border border-emerald-500">
-                                <i data-lucide="save" class="w-3.5 h-3.5 flex-shrink-0"></i>
-                                <span>Save Font Sizes</span>
-                            </button>
-
-                            <!-- Reset Button -->
-                            <button type="button" @click="
-                                lastNameFontSize = {{ $lastNameFontSize }};
-                                firstNameFontSize = {{ $displayFirstNameFontSize }};
-                                gradeFontSize = 25;
-                                idFontSize = 10;
-                            " class="w-full py-2 rounded-xl border border-slate-200 dark:border-slate-850 text-[10px] font-bold text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800 transition active:scale-[0.97] cursor-pointer flex items-center justify-center gap-1.5 shadow-sm">
-                                <i data-lucide="refresh-cw" class="w-3.5 h-3.5 flex-shrink-0"></i>
-                                <span>Reset Default Sizes</span>
-                            </button>
-                        </div>
-
-                        <!-- Student Navigation section -->
-                        <div class="border-t border-slate-100 dark:border-slate-800 pt-3 mt-1">
-                            <div class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Student Navigation</div>
-                            <div class="flex gap-2">
-                                @if($prevStudentId)
-                                    <a href="{{ route('admin.students.show', $prevStudentId) }}?preview_id=1" class="flex-1 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800 transition active:scale-[0.97] flex items-center justify-center gap-1 shadow-sm">
-                                        <i data-lucide="chevron-left" class="w-3.5 h-3.5 flex-shrink-0"></i>
-                                        <span>Prev</span>
-                                    </a>
-                                @else
-                                    <button type="button" disabled class="flex-1 py-1.5 rounded-xl border border-slate-100 dark:border-slate-850 text-[10px] font-bold text-slate-300 dark:text-slate-650 cursor-not-allowed flex items-center justify-center gap-1">
-                                        <i data-lucide="chevron-left" class="w-3.5 h-3.5 flex-shrink-0"></i>
-                                        <span>Prev</span>
-                                    </button>
-                                @endif
-
-                                @if($nextStudentId)
-                                    <a href="{{ route('admin.students.show', $nextStudentId) }}?preview_id=1" class="flex-1 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800 transition active:scale-[0.97] flex items-center justify-center gap-1 shadow-sm">
-                                        <span>Next</span>
-                                        <i data-lucide="chevron-right" class="w-3.5 h-3.5 flex-shrink-0"></i>
-                                    </a>
-                                @else
-                                    <button type="button" disabled class="flex-1 py-1.5 rounded-xl border border-slate-100 dark:border-slate-850 text-[10px] font-bold text-slate-300 dark:text-slate-650 cursor-not-allowed flex items-center justify-center gap-1">
-                                        <span>Next</span>
-                                        <i data-lucide="chevron-right" class="w-3.5 h-3.5 flex-shrink-0"></i>
-                                    </button>
-                                @endif
-                            </div>
-                        </div>
-
-                        <!-- Photo Editor section -->
-                        @if(auth()->user()?->hasRole('super_admin'))
-                            <div class="border-t border-slate-100 dark:border-slate-800 pt-3 mt-1">
-                                <div class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Student Photo</div>
-                                <button type="button" onclick="openPhotoOptionsModal()" class="w-full py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-350 hover:text-emerald-800 dark:hover:bg-emerald-900 transition active:scale-[0.97] cursor-pointer flex items-center justify-center gap-1.5 shadow-sm border border-emerald-100 dark:border-emerald-900">
-                                    <i data-lucide="camera" class="w-4 h-4 flex-shrink-0"></i>
-                                    <span>Edit / Upload Photo</span>
-                                </button>
-                            </div>
-                        @endif
-                    </div>
-
                     <input type="hidden" id="id-card-filename-slug" value="{{ implode('-', array_filter([$lastName, $firstName, str_replace(' ', '', $displayGrade)])) }}">
                 </div>
 
@@ -1462,6 +1341,12 @@
                                 </button>
                             </div>
                         </div>
+
+                        <!-- Edit ID Layout button -->
+                        <a href="{{ route('admin.students.id-editor', $student) }}" class="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 text-xs font-bold shadow-md transition active:scale-[0.98] cursor-pointer flex items-center gap-1.5 border border-emerald-500">
+                            <i data-lucide="edit" class="w-4 h-4"></i>
+                            <span>Edit ID Layout</span>
+                        </a>
 
                         <!-- Close Button -->
                         <button type="button" @click="showIdPreview = false" class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-850 active:scale-[0.98] cursor-pointer">

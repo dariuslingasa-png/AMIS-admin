@@ -89,6 +89,13 @@
                 <span>Print ID Card</span>
             </button>
 
+            <!-- 2b. ID Editor -->
+            <a href="{{ route('admin.students.id-editor', $student) }}"
+               class="w-full inline-flex h-10 items-center gap-2 rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 px-3 text-xs font-bold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 transition active:scale-[0.98] cursor-pointer">
+                <i data-lucide="edit-3" class="h-4 w-4 text-emerald-600"></i>
+                <span>Open ID Editor</span>
+            </a>
+
             @if($student->studentSection?->section)
                 <!-- 2b. Section ID Roster Document -->
                 <a href="{{ route('admin.students.id-roster-print', $student->studentSection->section) }}" target="_blank"

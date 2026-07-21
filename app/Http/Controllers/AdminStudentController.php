@@ -1873,6 +1873,127 @@ class AdminStudentController extends Controller
         return back()->with('success', 'Student profile updated successfully.');
     }
 
+    public function idEditor(Student $student)
+    {
+        abort_unless(auth()->user()?->canViewAdminGrade($student->grade_level), 403);
+
+        $student->load([
+            'applicant.user',
+            'studentSection.section'
+        ]);
+
+        $applicant = $student->applicant;
+        $lastName = $applicant ? trim($applicant->last_name) : 'STUDENT';
+        $firstName = $applicant ? trim($applicant->first_name) : 'PROFILE';
+        $middleName = $applicant ? trim($applicant->middle_name) : '';
+        $middleInitial = $middleName ? (substr($middleName, 0, 1) . '.') : '';
+        
+        $displayGrade = $student->grade_level;
+        if ($student->studentSection?->section) {
+            $sec = $student->studentSection->section;
+            if (str_contains(strtolower($sec->learning_mode), 'online') || str_contains(strtolower($sec->learning_mode), 'odl')) {
+                $displayGrade = $student->grade_level . ' - ' . ($sec->official_name ?: $sec->name);
+            }
+        }
+        
+        $studentNumber = $student->student_number;
+        $hash = base64_encode((int)$studentNumber + 987654);
+        
+        $photoUrl = $student->photo_2x2_url ? route('public.student.photo', ['hash' => $hash]) : ($applicant?->photo_2x2_url ? \App\Support\EnrollmentStorage::url($applicant->photo_2x2_url) : '');
+        $qrCodeUrl = 'https://quickchart.io/qr?text=' . urlencode('https://amis.edu.ph/v/' . $hash) . '&dark=000000&light=ffffff&margin=1&format=png&size=300';
+        
+        // Emergency info
+        $emergencyName = $applicant?->emergency_name ?: 'Emergency Contact';
+        $emergencyPhone = $applicant?->emergency_phone ?: ($applicant?->parent_mobile ?: ($applicant?->mobile_number ?: '+63 900 000 0000'));
+        $homeAddress = trim($applicant?->home_address ?: ($applicant?->address ?: 'Davao City, Philippines'));
+
+        // Resolve previous and next student in the same section / grade level
+        $sectionId = $student->studentSection?->section_id;
+        if ($sectionId) {
+            $siblingsQuery = Student::whereHas('studentSection', function($q) use ($sectionId) {
+                $q->where('section_id', $sectionId);
+            });
+        } else {
+            $siblingsQuery = Student::where('grade_level', $student->grade_level);
+        }
+        
+        $orderedStudents = $siblingsQuery->orderBy('id', 'asc')->pluck('id')->toArray();
+        $currentIndex = array_search($student->id, $orderedStudents);
+        
+        $prevStudentId = ($currentIndex !== false && isset($orderedStudents[$currentIndex - 1])) ? $orderedStudents[$currentIndex - 1] : null;
+        $nextStudentId = ($currentIndex !== false && isset($orderedStudents[$currentIndex + 1])) ? $orderedStudents[$currentIndex + 1] : null;
+
+        // Base64 helpers for print offline support if needed
+        $getInlineBase64 = function($url) {
+            if (!$url) return '';
+            try {
+                if (str_starts_with($url, 'http')) {
+                    $arrContextOptions = [
+                        "ssl" => [
+                            "verify_peer" => false,
+                            "verify_peer_name" => false,
+                        ],
+                    ];
+                    $data = file_get_contents($url, false, stream_context_create($arrContextOptions));
+                } else {
+                    $data = file_get_contents(public_path(ltrim($url, '/')));
+                }
+                if ($data) {
+                    $type = 'image/png';
+                    if (str_contains($url, '.jpg') || str_contains($url, '.jpeg')) $type = 'image/jpeg';
+                    return 'data:' . $type . ';base64,' . base64_encode($data);
+                }
+            } catch (\Throwable $e) {}
+            return '';
+        };
+
+        $qrCodeBase64 = $getInlineBase64($qrCodeUrl);
+        $photoBase64 = $photoUrl ? $getInlineBase64($photoUrl) : '';
+
+        // Name lengths
+        $lastNameLen = strlen($lastName);
+        if ($lastNameLen <= 8) {
+            $lastNameFontSize = 30;
+            $lastNameStyle = 'white-space: nowrap;';
+        } elseif ($lastNameLen <= 12) {
+            $lastNameFontSize = 23;
+            $lastNameStyle = 'white-space: nowrap;';
+        } elseif ($lastNameLen <= 16) {
+            $lastNameFontSize = 19;
+            $lastNameStyle = 'white-space: nowrap;';
+        } elseif ($lastNameLen <= 20) {
+            $lastNameFontSize = 15;
+            $lastNameStyle = 'white-space: nowrap;';
+        } else {
+            $lastNameFontSize = 12.5;
+            $lastNameStyle = 'word-break: break-word;';
+        }
+
+        $displayFirstName = trim($firstName . ' ' . $middleInitial);
+        $firstNameLen = strlen($displayFirstName);
+        $displayFirstNameFontSize = $firstNameLen > 25 ? 14 : ($firstNameLen > 18 ? 16 : 18);
+
+        return view('admin.students.id-editor', [
+            'student' => $student,
+            'prevStudentId' => $prevStudentId,
+            'nextStudentId' => $nextStudentId,
+            'lastName' => $lastName,
+            'firstName' => $firstName,
+            'displayFirstName' => $displayFirstName,
+            'lastNameFontSize' => $lastNameFontSize,
+            'lastNameStyle' => $lastNameStyle,
+            'displayFirstNameFontSize' => $displayFirstNameFontSize,
+            'displayGrade' => $displayGrade,
+            'studentNumber' => $studentNumber,
+            'photoUrl' => $photoUrl,
+            'photoBase64' => $photoBase64,
+            'qrCodeBase64' => $qrCodeBase64,
+            'emergencyName' => $emergencyName,
+            'emergencyPhone' => $emergencyPhone,
+            'homeAddress' => $homeAddress,
+        ]);
+    }
+
     public function updateIdFontSizes(Request $request, Student $student)
     {
         abort_if(auth()->user()?->isTeacherAdminViewer(), 403);
