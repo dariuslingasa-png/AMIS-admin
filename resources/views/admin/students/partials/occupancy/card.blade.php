@@ -133,9 +133,9 @@
                                             </svg>
                                         </a>
                                     @endif
-                                    <button type="button" @click="openAssignModal = true" class="h-7 w-7 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100 flex items-center justify-center transition active:scale-[0.95]" title="Add Students to Section">
+                                    <a href="{{ route('admin.students.occupancy.manage-section', $section) }}" class="h-7 w-7 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100 flex items-center justify-center transition active:scale-[0.95]" title="Manage Section & Add Students">
                                         <i data-lucide="user-plus" class="h-3.5 w-3.5"></i>
-                                    </button>
+                                    </a>
                                     <button type="button" @click="showRoster = !showRoster" class="h-7 w-7 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-slate-500 hover:bg-slate-50 active:scale-[0.95] transition cursor-pointer" title="View Roster">
                                         <i data-lucide="users" class="h-3.5 w-3.5"></i>
                                     </button>
@@ -146,7 +146,7 @@
                                         <i data-lucide="contact" class="h-3.5 w-3.5"></i>
                                     </a>
                                     <form method="POST" action="{{ route('admin.students.occupancy.delete-section', $section) }}"
-                                          onsubmit="return confirm('Delete section &quot;{{ $section->displayName }}&quot;?\n\nNote: This will only remove the section from the portal list. Microsoft Teams app and student records will NOT be deleted.')"
+                                          onsubmit="return confirm('Delete section &quot;{{ $sectionDisplayName }}&quot;?\n\nNote: This will only remove the section from the portal list. Microsoft Teams app and student records will NOT be deleted.')"
                                           class="inline">
                                         @csrf
                                         @method('DELETE')
@@ -163,18 +163,18 @@
                                 <div class="space-y-2">
                                     <div class="flex items-center justify-between">
                                         <h5 class="text-[9px] font-black uppercase tracking-wider text-slate-400">Class Roster ({{ $section->occupied }} Students)</h5>
-                                        <button type="button" @click="openAssignModal = true" class="inline-flex items-center gap-1 rounded-md bg-emerald-600 px-2 py-1 text-[9px] font-extrabold text-white hover:bg-emerald-700 transition active:scale-95 cursor-pointer">
+                                        <a href="{{ route('admin.students.occupancy.manage-section', $section) }}" class="inline-flex items-center gap-1 rounded-md bg-emerald-600 px-2 py-1 text-[9px] font-extrabold text-white hover:bg-emerald-700 transition active:scale-95 cursor-pointer">
                                             <i data-lucide="user-plus" class="w-3 h-3"></i>
-                                            <span>Add Students</span>
-                                        </button>
+                                            <span>Manage / Add Students</span>
+                                        </a>
                                     </div>
                                     @if($section->students->isEmpty())
                                         <div class="py-3 text-center">
                                             <p class="text-[10px] font-semibold text-slate-400 italic mb-2">No students assigned to this section.</p>
-                                            <button type="button" @click="openAssignModal = true" class="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-1.5 text-xs font-black text-white shadow-xs hover:bg-emerald-700 transition active:scale-95 cursor-pointer">
+                                            <a href="{{ route('admin.students.occupancy.manage-section', $section) }}" class="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-1.5 text-xs font-black text-white shadow-xs hover:bg-emerald-700 transition active:scale-95 cursor-pointer">
                                                 <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
-                                                <span>Add Students to Section</span>
-                                            </button>
+                                                <span>Manage & Add Students Page</span>
+                                            </a>
                                         </div>
                                     @else
                                         <div class="max-h-48 overflow-y-auto divide-y divide-slate-200/60 pr-1">

@@ -148,6 +148,7 @@ Route::name('admin.')->group(function () {
         Route::redirect('/students/promotions', '/students')->name('students.promotions');
         Route::get('/students/occupancy', [AdminStudentDashboardController::class, 'occupancy'])->name('students.occupancy');
         Route::post('/students/occupancy/create-section', [AdminStudentDashboardController::class, 'storeSection'])->name('students.occupancy.store-section');
+        Route::get('/students/occupancy/sections/{section}/manage', [AdminStudentDashboardController::class, 'manageSection'])->name('students.occupancy.manage-section');
         Route::delete('/students/occupancy/sections/{section}', [AdminStudentDashboardController::class, 'destroySection'])->name('students.occupancy.delete-section');
         Route::post('/students/occupancy/sections/{section}/assign-students', [AdminStudentDashboardController::class, 'assignStudentsToSection'])->name('students.occupancy.assign-students');
         Route::delete('/students/occupancy/sections/remove-student/{studentSection}', [AdminStudentDashboardController::class, 'removeStudentFromSection'])->name('students.occupancy.remove-student');

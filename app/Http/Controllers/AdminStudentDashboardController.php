@@ -175,6 +175,53 @@ class AdminStudentDashboardController extends Controller
         return back()->with('success', 'Section "' . $sectionName . '" deleted from portal list.');
     }
 
+    public function manageSection(Request $request, Section $section)
+    {
+        $section->load(['students.student.applicant', 'activeAdvisory']);
+
+        $sortedEnrolled = $section->students->sortBy(function ($studentSection) {
+            $applicant = $studentSection->student?->applicant;
+            $lastName = strtoupper(trim($applicant?->last_name ?? ''));
+            $firstName = strtoupper(trim($applicant?->first_name ?? ''));
+            return $lastName . ' ' . $firstName;
+        });
+        $section->setRelation('students', $sortedEnrolled);
+
+        $query = Student::with(['applicant', 'studentSection.section', 'user']);
+
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            $query->where(function ($q) use ($search) {
+                $q->where('student_number', 'like', "%{$search}%")
+                  ->orWhereHas('applicant', function ($aq) use ($search) {
+                      $aq->where('first_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%")
+                        ->orWhere('middle_name', 'like', "%{$search}%")
+                        ->orWhere('lrn', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $gradeFilter = $request->get('grade_filter', 'matching');
+        if ($gradeFilter === 'matching' && $section->grade_level) {
+            $query->where('grade_level', $section->grade_level);
+        }
+
+        $availableStudents = $query->get()->sortBy(function ($s) {
+            $applicant = $s->applicant;
+            $lastName = strtoupper(trim($applicant?->last_name ?? ''));
+            $firstName = strtoupper(trim($applicant?->first_name ?? ''));
+            return $lastName . ' ' . $firstName;
+        });
+
+        $isF2f = str_contains(strtolower((string) $section->learning_mode), 'face') ||
+                 str_contains(strtolower((string) $section->learning_mode), 'f2f') ||
+                 strtoupper((string) $section->shift) === 'F2F';
+        $capacity = $isF2f ? 30 : 45;
+
+        return view('admin.students.manage-section', compact('section', 'availableStudents', 'capacity', 'gradeFilter'));
+    }
+
     public function gradeRosterPrint(Request $request, $grade)
     {
         $grade = urldecode($grade);
