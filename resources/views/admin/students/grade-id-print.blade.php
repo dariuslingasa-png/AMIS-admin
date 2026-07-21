@@ -434,7 +434,7 @@
                 padding: 20px 0 !important;
             }
             .student-card-item {
-                transform: scale(0.75) !important;
+                transform: scale(0.95) !important;
                 transform-origin: center center !important;
                 margin: 0 !important;
                 border: 1px solid #cbd5e1 !important;
