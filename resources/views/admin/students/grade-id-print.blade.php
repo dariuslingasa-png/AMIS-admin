@@ -401,11 +401,11 @@
 
         @page {
             size: A4 portrait;
-            margin: 5mm;
+            margin: 3mm 4mm;
         }
 
         @media print {
-            body { background: #fff; font-size: 10px; margin: 0; padding: 0; }
+            body { background: #fff; font-size: 9px; margin: 0; padding: 0; }
             .toolbar, .no-print { display: none !important; }
             .page-container {
                 max-width: none;
@@ -415,26 +415,30 @@
                 border-radius: 0;
             }
             .section-header {
-                padding: 4px 8px !important;
-                margin-bottom: 6px !important;
+                padding: 2px 6px !important;
+                margin-bottom: 4px !important;
             }
             .section-title {
-                font-size: 14px !important;
+                font-size: 13px !important;
+            }
+            .section-subtitle {
+                font-size: 9px !important;
+                margin-top: 1px !important;
             }
             .student-card-item {
                 border: 1px solid #cbd5e1;
                 page-break-inside: avoid !important;
                 break-inside: avoid !important;
-                margin-bottom: 6px !important;
-                padding: 4px 6px !important;
+                margin-bottom: 4px !important;
+                padding: 2px 4px !important;
             }
             .student-card-item:nth-child(2n) {
                 page-break-after: always !important;
                 break-after: page !important;
             }
             .id-card {
-                width: 215px !important;
-                height: 340px !important;
+                width: 196px !important;
+                height: 310px !important;
             }
             img {
                 image-rendering: auto;
