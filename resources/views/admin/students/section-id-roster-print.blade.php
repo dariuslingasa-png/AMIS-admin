@@ -858,37 +858,29 @@
             elements.forEach(textEl => {
                 const maxW = 278; // 310px card width - 32px horizontal padding
                 
-                const originalDisplay = textEl.style.display;
-                const originalWhiteSpace = textEl.style.whiteSpace;
-                
-                textEl.style.display = 'inline-block';
-                textEl.style.whiteSpace = 'nowrap';
+                // Reset inline font size to base template size before measuring
                 textEl.style.fontSize = '';
                 
-                let fontSize = parseFloat(window.getComputedStyle(textEl).fontSize);
-                const currentWidth = textEl.scrollWidth;
-                
-                if (isNaN(fontSize) || fontSize <= 0 || isNaN(currentWidth) || currentWidth <= 0) {
-                    textEl.style.display = originalDisplay;
-                    textEl.style.whiteSpace = originalWhiteSpace;
-                    return;
+                let baseFontSize = parseFloat(window.getComputedStyle(textEl).fontSize);
+                if (isNaN(baseFontSize) || baseFontSize <= 0) {
+                    baseFontSize = 30;
                 }
 
-                // If text at original size already fits, restore display and skip
-                if (currentWidth <= maxW) {
-                    textEl.style.display = originalDisplay;
-                    textEl.style.whiteSpace = originalWhiteSpace;
+                // Measure EXACT text glyph width using Range API (bypasses Flexbox container stretching)
+                const range = document.createRange();
+                range.selectNodeContents(textEl);
+                const actualTextWidth = range.getBoundingClientRect().width;
+
+                if (isNaN(actualTextWidth) || actualTextWidth <= 0 || actualTextWidth <= maxW) {
+                    // Fits naturally — keep base font size!
                     return;
                 }
                 
-                // Calculate required font size in 1 step (prevents layout thrashing & tab crash)
-                const calculatedSize = Math.floor(fontSize * (maxW / currentWidth));
+                // Calculate required font size proportionally in 1 single step
+                const calculatedSize = Math.floor(baseFontSize * (maxW / actualTextWidth));
                 const finalSize = Math.max(8, calculatedSize);
                 
                 textEl.style.setProperty('font-size', finalSize + 'px', 'important');
-                
-                textEl.style.display = originalDisplay;
-                textEl.style.whiteSpace = originalWhiteSpace;
             });
         }
 
