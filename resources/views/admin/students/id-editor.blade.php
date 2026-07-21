@@ -122,7 +122,7 @@
             </div>
 
             <!-- Previews Container -->
-            <div class="flex flex-col lg:flex-row items-center lg:items-start justify-center gap-12 w-full">
+            <div class="flex flex-col md:flex-row items-center justify-center gap-4 w-full">
                 
                 <!-- Front Side Card -->
                 <div class="flex flex-col items-center gap-3">
@@ -190,6 +190,8 @@
                             <img src="{{ $qrCodeBase64 ?: $qrCodeUrl }}" alt="QR Verification" class="w-full h-full object-contain">
                         </div>
                     </div>
+                    <!-- Empty spacer to match the height of the back card footer text for perfect vertical alignment -->
+                    <span class="text-[10px] text-transparent select-none mt-1">Spacer</span>
                 </div>
                 
                 <!-- Back Side Card -->
