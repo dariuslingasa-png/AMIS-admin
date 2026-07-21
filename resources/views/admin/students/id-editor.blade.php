@@ -75,7 +75,7 @@
         }
     </script>
 
-    <div class="w-full min-h-screen pb-44" id="id-editor-root-wrapper"
+    <div class="w-full min-h-screen pb-12" id="id-editor-root-wrapper"
          x-data="{
              lastNameFontSize: {{ number_format($student->id_last_name_font_size ?: $lastNameFontSize, 1, '.', '') }},
              firstNameFontSize: {{ number_format($student->id_first_name_font_size ?: $displayFirstNameFontSize, 1, '.', '') }},
@@ -196,7 +196,7 @@
                 <div class="flex flex-col items-center gap-3">
                     <div class="flex items-center gap-2">
                         <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span class="text-xs font-black text-slate-400 uppercase tracking-widest">Back Side Preview</span>
+                        <span class="text-xs font-black text-slate-450 uppercase tracking-widest">Back Side Preview</span>
                     </div>
                     <div id="id-card-back-box" class="relative rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-slate-250 dark:border-slate-800" style="width: 340px; height: 538px; background-color: #064e3b;">
                         <!-- Background template image -->
@@ -274,16 +274,21 @@
                     <span class="text-[10px] text-slate-400 font-semibold mt-1">Back Emergency Info Sheet</span>
                 </div>
             </div>
-        </div>
 
-        <!-- Sticky Bottom Glassmorphic Control Bar -->
-        <div class="fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] py-4 px-6 no-print">
-            <div class="max-w-7xl mx-auto flex flex-col xl:flex-row items-center justify-between gap-6">
+            <!-- Spacious Control Panel Card (Positioned in normal flow below previews) -->
+            <div class="max-w-4xl mx-auto mt-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-xl">
                 
-                <!-- Font Size Sliders (4 Sliders Side-by-Side) -->
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 xl:gap-6 flex-1 w-full">
+                <div class="border-b border-slate-100 dark:border-slate-800 pb-4 mb-6">
+                    <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                        <i data-lucide="sliders" class="w-4.5 h-4.5 text-emerald-600"></i>
+                        <span>Text Font Size Controls (PX)</span>
+                    </h3>
+                </div>
+
+                <!-- Sliders Grid: Responsive and Full-Width -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 w-full mb-8">
                     <!-- Last Name Slider -->
-                    <div class="space-y-1">
+                    <div class="space-y-2">
                         <div class="flex justify-between items-center text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                             <span>Last Name</span>
                             <span class="text-slate-900 dark:text-white font-black" x-text="lastNameFontSize + 'px'"></span>
@@ -293,7 +298,7 @@
                     </div>
 
                     <!-- First Name Slider -->
-                    <div class="space-y-1">
+                    <div class="space-y-2">
                         <div class="flex justify-between items-center text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                             <span>First Name</span>
                             <span class="text-slate-900 dark:text-white font-black" x-text="firstNameFontSize + 'px'"></span>
@@ -303,7 +308,7 @@
                     </div>
 
                     <!-- Grade Level Slider -->
-                    <div class="space-y-1">
+                    <div class="space-y-2">
                         <div class="flex justify-between items-center text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                             <span>Grade Level</span>
                             <span class="text-slate-900 dark:text-white font-black" x-text="gradeFontSize + 'px'"></span>
@@ -313,7 +318,7 @@
                     </div>
 
                     <!-- Student ID Slider -->
-                    <div class="space-y-1">
+                    <div class="space-y-2">
                         <div class="flex justify-between items-center text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                             <span>Student ID</span>
                             <span class="text-slate-900 dark:text-white font-black" x-text="idFontSize + 'px'"></span>
@@ -323,12 +328,12 @@
                     </div>
                 </div>
 
-                <!-- Navigation & Action Buttons -->
-                <div class="flex flex-col sm:flex-row items-center gap-4 w-full xl:w-auto flex-shrink-0">
+                <!-- Actions and Navigation Row -->
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-100 dark:border-slate-800 pt-6">
                     <!-- Student Navigation -->
-                    <div class="flex items-center gap-2.5 w-full sm:w-auto">
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
                         @if($prevStudentId)
-                            <a href="{{ route('admin.students.id-editor', $prevStudentId) }}" class="flex-1 sm:flex-initial h-10 px-4 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800 transition active:scale-[0.97] flex items-center justify-center gap-1.5 shadow-sm bg-white dark:bg-slate-900">
+                            <a href="{{ route('admin.students.id-editor', $prevStudentId) }}" class="flex-1 sm:flex-initial h-10 px-4 rounded-xl border border-slate-200 dark:border-slate-850 text-xs font-bold text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800 transition active:scale-[0.97] flex items-center justify-center gap-1.5 shadow-sm bg-white dark:bg-slate-900">
                                 <i data-lucide="chevron-left" class="w-4 h-4 flex-shrink-0"></i>
                                 <span>Prev</span>
                             </a>
@@ -340,7 +345,7 @@
                         @endif
 
                         @if($nextStudentId)
-                            <a href="{{ route('admin.students.id-editor', $nextStudentId) }}" class="flex-1 sm:flex-initial h-10 px-4 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800 transition active:scale-[0.97] flex items-center justify-center gap-1.5 shadow-sm bg-white dark:bg-slate-900">
+                            <a href="{{ route('admin.students.id-editor', $nextStudentId) }}" class="flex-1 sm:flex-initial h-10 px-4 rounded-xl border border-slate-200 dark:border-slate-850 text-xs font-bold text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800 transition active:scale-[0.97] flex items-center justify-center gap-1.5 shadow-sm bg-white dark:bg-slate-900">
                                 <span>Next</span>
                                 <i data-lucide="chevron-right" class="w-4 h-4 flex-shrink-0"></i>
                             </a>
@@ -352,16 +357,16 @@
                         @endif
                     </div>
 
-                    <!-- Photo Upload Button (Super Admins Only) -->
-                    @if(auth()->user()?->hasRole('super_admin'))
-                        <button type="button" onclick="openPhotoOptionsModal()" class="h-10 px-4 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-350 hover:text-emerald-800 dark:hover:bg-emerald-900 transition active:scale-[0.97] cursor-pointer flex items-center justify-center gap-2 shadow-sm border border-emerald-150 dark:border-emerald-900 w-full sm:w-auto text-xs font-bold">
-                            <i data-lucide="camera" class="w-4 h-4 flex-shrink-0"></i>
-                            <span>Photo</span>
-                        </button>
-                    @endif
+                    <!-- Photo Sync/Upload & Action Buttons -->
+                    <div class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto justify-end">
+                        <!-- Photo Upload (Super Admins Only) -->
+                        @if(auth()->user()?->hasRole('super_admin'))
+                            <button type="button" onclick="openPhotoOptionsModal()" class="h-10 px-4 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-350 hover:text-emerald-800 dark:hover:bg-emerald-900 transition active:scale-[0.97] cursor-pointer flex items-center justify-center gap-2 shadow-sm border border-emerald-150 dark:border-emerald-900 text-xs font-bold w-full sm:w-auto">
+                                <i data-lucide="camera" class="w-4 h-4 flex-shrink-0"></i>
+                                <span>Upload Photo</span>
+                            </button>
+                        @endif
 
-                    <!-- Reset & Save Actions -->
-                    <div class="flex items-center gap-2.5 w-full sm:w-auto">
                         <!-- Reset -->
                         <button type="button" @click="
                             lastNameFontSize = {{ $lastNameFontSize }};
@@ -373,14 +378,15 @@
                             <span>Reset</span>
                         </button>
 
-                        <!-- Save -->
+                        <!-- Save Settings -->
                         <button type="button" id="btn-save-font-sizes" @click="saveFontSizes()" 
-                                class="h-10 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold shadow-md transition active:scale-[0.97] cursor-pointer flex items-center justify-center gap-2 border border-emerald-500 w-full sm:w-auto whitespace-nowrap">
+                                class="h-10 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold shadow-md transition active:scale-[0.97] cursor-pointer flex items-center justify-center gap-2 border border-emerald-500 whitespace-nowrap w-full sm:w-auto">
                             <i data-lucide="save" class="w-4 h-4 flex-shrink-0"></i>
                             <span>Save ID Settings</span>
                         </button>
                     </div>
                 </div>
+
             </div>
         </div>
     </div>
