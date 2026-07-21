@@ -537,7 +537,7 @@
             <div class="student-card-item">
                 <div class="student-item-header">
                     <span>{{ $index + 1 }}. {{ strtoupper($fullName) }}</span>
-                    <span style="font-size: 11px; font-weight: 700; color: #475569;">{{ strtoupper($applicant?->student_type ?: 'NEW') }} | ID: {{ $studentNumber }} | LRN: {{ $lrn }}</span>
+                    <span style="font-size: 11px; font-weight: 700; color: #475569;">SECTION: {{ strtoupper($student->studentSection?->section?->official_name ?: ($student->studentSection?->section?->name ?: 'N/A')) }} | {{ strtoupper($applicant?->student_type ?: 'NEW') }} | ID: {{ $studentNumber }} | LRN: {{ $lrn }}</span>
                 </div>
 
                 <table class="cards-table">

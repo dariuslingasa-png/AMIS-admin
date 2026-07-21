@@ -259,7 +259,7 @@ class AdminStudentDashboardController extends Controller
 
         $students = Student::where('grade_level', $grade)
             ->whereHas('studentSection')
-            ->with(['applicant'])
+            ->with(['applicant', 'studentSection.section'])
             ->get()
             ->sortBy(function ($student) {
                 $applicant = $student->applicant;
@@ -282,7 +282,7 @@ class AdminStudentDashboardController extends Controller
 
         $students = Student::where('grade_level', $grade)
             ->whereHas('studentSection')
-            ->with(['applicant'])
+            ->with(['applicant', 'studentSection.section'])
             ->get()
             ->sortBy(function ($student) {
                 $applicant = $student->applicant;

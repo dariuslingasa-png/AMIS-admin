@@ -129,8 +129,10 @@
                         </td>
                         <td class="student-name">
                             {{ $name }}
-                            <div style="font-size: 9px; color: #64748b; font-weight: normal; margin-top: 2px;">
-                                Student No: {{ $student->student_number }}
+                            <div style="font-size: 9px; color: #64748b; font-weight: normal; margin-top: 2px; display: flex; gap: 8px;">
+                                <span>Student No: {{ $student->student_number }}</span>
+                                <span style="color: #cbd5e1;">|</span>
+                                <span style="font-weight: 700; color: #047857; text-transform: uppercase;">Section: {{ $student->studentSection?->section?->official_name ?: ($student->studentSection?->section?->name ?: 'N/A') }}</span>
                             </div>
                         </td>
                     </tr>
