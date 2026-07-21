@@ -138,10 +138,10 @@
                             @if(auth()->user()?->hasRole('super_admin'))
                                  <div class="photo-clip group cursor-pointer" 
                                       onclick="openPhotoOptionsModal()"
-                                      style="left: 71px; top: 144px; width: 198px; height: 192px; border-radius: 6px; z-index: 5;"
+                                      style="left: 71px; top: 144px; width: 198px; height: 192px; border-radius: 6px; z-index: 11;"
                                       title="Edit Photo">
                                     @if($photoUrl)
-                                        <img id="id-preview-photo" src="{{ $photoBase64 ?: $photoUrl }}" crossorigin="anonymous" class="transition duration-300 group-hover:scale-105 group-hover:brightness-75" style="object-position: center center;">
+                                        <img id="id-preview-photo" src="{{ $photoBase64 ?: $photoUrl }}" class="transition duration-300 group-hover:scale-105 group-hover:brightness-75" style="object-position: center center;">
                                     @else
                                         <div class="absolute inset-0 bg-slate-150 flex flex-col items-center justify-center text-center border border-dashed border-slate-300 text-[10px] font-bold text-slate-450 gap-1 z-1">
                                             <i data-lucide="camera" class="w-5 h-5 text-slate-400"></i>
@@ -157,9 +157,9 @@
                                 </div>
                             @else
                                 <!-- Non-admin read-only image -->
-                                <div class="photo-clip" style="left: 71px; top: 144px; width: 198px; height: 192px; border-radius: 6px; z-index: 5;">
+                                <div class="photo-clip" style="left: 71px; top: 144px; width: 198px; height: 192px; border-radius: 6px; z-index: 11;">
                                     @if($photoUrl)
-                                        <img id="id-preview-photo" src="{{ $photoBase64 ?: $photoUrl }}" crossorigin="anonymous" style="object-position: center center;">
+                                        <img id="id-preview-photo" src="{{ $photoBase64 ?: $photoUrl }}" style="object-position: center center;">
                                     @else
                                         <div class="absolute inset-0 bg-slate-100 flex items-center justify-center text-center border border-dashed border-slate-300 text-[10px] font-bold text-slate-400 z-1">NO PHOTO</div>
                                     @endif
@@ -167,16 +167,16 @@
                             @endif
 
                             <!-- Student ID -->
-                            <div class="absolute text-white font-black tracking-wide text-center uppercase" style="left: 0; top: 325px; width: 340px; height: 15px; z-index: 20; line-height: 15px;" :style="'font-size: ' + idFontSize + 'px'">{{ $studentNumber }}</div>
+                            <div class="absolute text-white font-black tracking-wide text-center uppercase" style="left: 0; top: 325px; width: 340px; height: 15px; z-index: 20; line-height: 15px;" :style="'font-size: ' + idFontSize + 'px !important'">{{ $studentNumber }}</div>
 
                             <!-- Last Name -->
-                            <div class="absolute text-center font-black text-[#0f172a] uppercase tracking-tight flex flex-col justify-center items-center" style="left: 15px; top: 352px; width: 310px; height: 32px; z-index: 20; padding: 0 16px; {{ $lastNameStyle }} line-height: 1; letter-spacing: -0.5px;" :style="'font-size: ' + lastNameFontSize + 'px'">{{ $lastName }}</div>
+                            <div class="absolute text-center font-black text-[#0f172a] uppercase tracking-tight flex flex-col justify-center items-center" style="left: 15px; top: 352px; width: 310px; height: 32px; z-index: 20; padding: 0 16px; {{ $lastNameStyle }} line-height: 1; letter-spacing: -0.5px;" :style="'font-size: ' + lastNameFontSize + 'px !important'">{{ $lastName }}</div>
 
                             <!-- First Name -->
-                            <div class="absolute text-center font-bold text-[#334155] uppercase leading-none flex flex-col justify-center items-center" style="left: 15px; top: 386px; width: 310px; height: 22px; z-index: 20; padding: 0 16px; line-height: 1;" :style="'font-size: ' + firstNameFontSize + 'px'">{{ $displayFirstName }}</div>
+                            <div class="absolute text-center font-bold text-[#334155] uppercase leading-none flex flex-col justify-center items-center" style="left: 15px; top: 386px; width: 310px; height: 22px; z-index: 20; padding: 0 16px; line-height: 1;" :style="'font-size: ' + firstNameFontSize + 'px !important'">{{ $displayFirstName }}</div>
 
                             <!-- Grade Level -->
-                            <div class="absolute text-center font-black uppercase tracking-wide flex flex-col justify-center items-center" style="left: 15px; top: 412px; width: 310px; height: 30px; z-index: 20; padding: 0 16px; line-height: 1; letter-spacing: 0.5px; text-shadow: 0 1px 1px rgba(0,0,0,0.05); color: {{ $getGradeColor($displayGrade) }};" :style="'font-size: ' + gradeFontSize + 'px'">{{ $displayGrade }}</div>
+                            <div class="absolute text-center font-black uppercase tracking-wide flex flex-col justify-center items-center" style="left: 15px; top: 412px; width: 310px; height: 30px; z-index: 20; padding: 0 16px; line-height: 1; letter-spacing: 0.5px; text-shadow: 0 1px 1px rgba(0,0,0,0.05); color: {{ $getGradeColor($displayGrade) }};" :style="'font-size: ' + gradeFontSize + 'px !important'">{{ $displayGrade }}</div>
 
                             <!-- LRN -->
                             @if($student->applicant?->lrn && !in_array(strtoupper($student->applicant->lrn), ['N/A', 'NA', 'EMPTY', '']))
@@ -187,7 +187,7 @@
 
                             <!-- QR Code -->
                             <div class="absolute p-0.5 rounded bg-white" style="left: 134.5px; top: 458px; width: 71px; height: 71px; z-index: 20;">
-                                <img src="{{ $qrCodeBase64 ?: $qrCodeUrl }}" crossorigin="anonymous" alt="QR Verification" class="w-full h-full object-contain">
+                                <img src="{{ $qrCodeBase64 ?: $qrCodeUrl }}" alt="QR Verification" class="w-full h-full object-contain">
                             </div>
                     </div>
                     
@@ -260,7 +260,7 @@
                             <!-- Director's Signature Box -->
                             @if(in_array((string)$student->student_number, ['260253', '260254', '260158', '260895', '260894', '260893']))
                                 <div class="back-signature-qr" style="position: absolute; left: 142.5px; top: 422px; width: 55px; height: 55px; z-index: 25; padding: 1.5px; border-radius: 2px; background: white; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
-                                    <img src="{{ $signatureQrBase64 ?: $signatureRawUrl }}" crossorigin="anonymous" alt="Signature QR" class="w-full h-full object-contain">
+                                    <img src="{{ $signatureQrBase64 ?: $signatureRawUrl }}" alt="Signature QR" class="w-full h-full object-contain">
                                 </div>
                             @else
                                 <div class="secure-signature-placeholder" style="position: absolute; left: 85px; top: 432px; width: 170px; text-align: center; z-index: 25; pointer-events: none;">
