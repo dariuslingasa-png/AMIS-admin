@@ -1,4 +1,4 @@
-<x-layouts.admin
+<x-admin-layout
     :title="'Student ID Editor - ' . $student->student_number"
     :breadcrumbs="[
         ['label' => 'Students', 'href' => route('admin.students.index')],
@@ -641,4 +641,4 @@
             }
         </script>
     @endif
-</x-layouts.admin>
+</x-admin-layout>
