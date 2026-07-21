@@ -368,6 +368,34 @@
             display: block;
         }
 
+        /* Watermark stamp style */
+        .id-watermark {
+            position: absolute;
+            z-index: 99;
+            pointer-events: none;
+            text-align: center;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: rgba(239, 68, 68, 0.48);
+            -webkit-text-stroke: 1.5px rgba(255, 255, 255, 0.95);
+            paint-order: stroke fill;
+            border: 4px double rgba(239, 68, 68, 0.48);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 24px;
+            transform: rotate(-12deg);
+        }
+        .front-watermark {
+            left: 55px;
+            top: 72px;
+        }
+        .back-watermark {
+            left: 55px;
+            top: 388px;
+        }
+
         @media print {
             body { background: #fff; }
             .toolbar { display: none !important; }
@@ -524,6 +552,10 @@
                                          <!-- Background Template Image (Top Layer) -->
                                          <img src="{{ asset('images/id/amis_frontid.png') }}?v={{ filemtime(public_path('images/id/amis_frontid.png')) }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 10; pointer-events: none;" alt="AMIS ID Template">
                                          
+                                         @if(request('watermark') == 1)
+                                             <div class="id-watermark front-watermark">SAMPLE COPY</div>
+                                         @endif
+                                         
                                          <!-- Student Photo Container (Middle Layer) -->
                                          @if($photoUrl)
                                              <div class="photo-clip">
@@ -579,6 +611,10 @@
                                     <div class="id-card">
                                         <!-- Background Template Image -->
                                         <img src="{{ asset('images/id/amis_backid.png') }}?v=1" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; pointer-events: none;" alt="AMIS ID Template Back">
+
+                                        @if(request('watermark') == 1)
+                                            <div class="id-watermark back-watermark">SAMPLE COPY</div>
+                                        @endif
 
                                         <!-- Emergency Details List -->
                                         @php

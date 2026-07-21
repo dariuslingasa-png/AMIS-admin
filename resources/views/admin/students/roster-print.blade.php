@@ -21,6 +21,7 @@
             margin: 0 auto;
             background: #fff;
             padding: 18mm 16mm;
+            position: relative;
         }
         .toolbar {
             position: sticky;
@@ -139,6 +140,7 @@
         .roster tbody tr:nth-child(even) td { background: #f8fafc; }
         .number { width: 34px; text-align: center; color: #64748b; }
         .student-no { width: 110px; text-align: center; font-weight: 800; }
+        .student-no-th { width: 110px; text-align: center; }
         .student-name { font-weight: 900; text-transform: uppercase; }
         .footer {
             display: table;
@@ -181,6 +183,11 @@
     </div>
 
     <main class="page">
+        @if(request('watermark') == 1)
+            <div style="position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg); font-size: 70px; font-weight: 900; color: rgba(220, 38, 38, 0.08); text-transform: uppercase; white-space: nowrap; z-index: 1000; pointer-events: none; letter-spacing: 0.15em; border: 12px double rgba(220, 38, 38, 0.08); padding: 15px 30px; border-radius: 20px; font-family: sans-serif;">
+                SAMPLE COPY
+            </div>
+        @endif
         <header class="header">
             <div class="brand-mark">
                 <img class="brand-logo" src="{{ asset('images/AMIS_Logo.png') }}" alt="AMIS Logo">

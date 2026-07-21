@@ -119,14 +119,49 @@
                         <i data-lucide="arrow-left" class="w-4 h-4"></i>
                         <span>Back to Occupancy</span>
                     </a>
-                    <a href="{{ route('admin.students.id-roster-print', $section) }}" target="_blank" class="inline-flex items-center gap-1.5 rounded-2xl bg-purple-600 px-4 py-2.5 text-xs font-black text-white shadow-md hover:bg-purple-700 transition active:scale-95">
-                        <i data-lucide="contact" class="w-4 h-4"></i>
-                        <span>Export ID Cards Sheet</span>
-                    </a>
-                    <a href="{{ route('admin.students.roster-print', $section) }}" target="_blank" class="inline-flex items-center gap-1.5 rounded-2xl bg-white px-4 py-2.5 text-xs font-black text-emerald-900 shadow-md hover:bg-emerald-50 transition active:scale-95">
-                        <i data-lucide="printer" class="w-4 h-4 text-emerald-600"></i>
-                        <span>Print Roster PDF</span>
-                    </a>
+                    <!-- Export ID Cards Dropdown -->
+                    <div class="relative inline-block text-left" x-data="{ openIdDropdown: false }" @click.outside="openIdDropdown = false">
+                        <button type="button" @click="openIdDropdown = !openIdDropdown" class="inline-flex items-center gap-1.5 rounded-2xl bg-purple-600 px-4 py-2.5 text-xs font-black text-white shadow-md hover:bg-purple-700 transition active:scale-95">
+                            <i data-lucide="contact" class="w-4 h-4"></i>
+                            <span>Export ID Cards Sheet</span>
+                            <i data-lucide="chevron-down" class="w-3.5 h-3.5 opacity-80"></i>
+                        </button>
+                        <div x-cloak x-show="openIdDropdown" x-transition.origin.top.right 
+                             class="absolute right-0 mt-2 w-44 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl z-50 text-left">
+                            <a href="{{ route('admin.students.id-roster-print', $section) }}" target="_blank" 
+                               class="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 hover:bg-purple-50 hover:text-purple-700 transition">
+                                <i data-lucide="shield-check" class="w-4 h-4 text-purple-600"></i>
+                                <span>Official ID Cards</span>
+                            </a>
+                            <a href="{{ route('admin.students.id-roster-print', $section) }}?watermark=1" target="_blank" 
+                               class="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 hover:bg-amber-50 hover:text-amber-800 transition">
+                                <i data-lucide="file-text" class="w-4 h-4 text-amber-600"></i>
+                                <span>Watermark Copy</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Print Roster Dropdown -->
+                    <div class="relative inline-block text-left" x-data="{ openPrintDropdown: false }" @click.outside="openPrintDropdown = false">
+                        <button type="button" @click="openPrintDropdown = !openPrintDropdown" class="inline-flex items-center gap-1.5 rounded-2xl bg-white px-4 py-2.5 text-xs font-black text-emerald-900 shadow-md hover:bg-emerald-50 transition active:scale-95">
+                            <i data-lucide="printer" class="w-4 h-4 text-emerald-600"></i>
+                            <span>Print Roster PDF</span>
+                            <i data-lucide="chevron-down" class="w-3.5 h-3.5 opacity-80"></i>
+                        </button>
+                        <div x-cloak x-show="openPrintDropdown" x-transition.origin.top.right 
+                             class="absolute right-0 mt-2 w-44 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl z-50 text-left">
+                            <a href="{{ route('admin.students.roster-print', $section) }}" target="_blank" 
+                               class="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition">
+                                <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600"></i>
+                                <span>Official Roster</span>
+                            </a>
+                            <a href="{{ route('admin.students.roster-print', $section) }}?watermark=1" target="_blank" 
+                               class="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 hover:bg-amber-50 hover:text-amber-800 transition">
+                                <i data-lucide="file-text" class="w-4 h-4 text-amber-600"></i>
+                                <span>Watermark Copy</span>
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
