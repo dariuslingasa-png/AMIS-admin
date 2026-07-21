@@ -59,6 +59,24 @@
     $displayName = $name ? Str::upper($name) : 'STUDENT PROFILE';
     $isTeacherAdminViewer = auth()->user()?->isTeacherAdminViewer() ?? false;
     
+    // Calculate ID card text font sizes globally
+    $lastNameLen = strlen($lastName);
+    if ($lastNameLen <= 8) {
+        $lastNameFontSize = 30;
+    } elseif ($lastNameLen <= 12) {
+        $lastNameFontSize = 23;
+    } elseif ($lastNameLen <= 16) {
+        $lastNameFontSize = 19;
+    } elseif ($lastNameLen <= 20) {
+        $lastNameFontSize = 15;
+    } else {
+        $lastNameFontSize = 12.5;
+    }
+
+    $displayFirstName = trim($firstName . ' ' . $middleInitial);
+    $displayFirstNameLen = strlen($displayFirstName);
+    $displayFirstNameFontSize = $displayFirstNameLen > 25 ? 11.5 : ($displayFirstNameLen > 18 ? 13 : 15);
+    
     $photoUrl = \App\Support\EnrollmentStorage::url($student->applicant->photo_2x2_url);
     $studentAddress = implode(', ', array_filter([$student->applicant->street_address, $student->applicant->city, $student->applicant->state_province, $student->applicant->country]));
     $homeAddress = implode(', ', array_filter([$student->applicant->home_street_address, $student->applicant->home_city, $student->applicant->home_state_province]));
@@ -151,6 +169,10 @@
     <div x-data="{
          openEditModal: {{ $errors->any() ? 'true' : 'false' }},
          showIdPreview: false,
+         lastNameFontSize: {{ $lastNameFontSize }},
+         firstNameFontSize: {{ $displayFirstNameFontSize }},
+         gradeFontSize: 25,
+         idFontSize: 10,
          openPasswordModal: false,
          editSection: 'all',
          copySuccess: false,
@@ -1084,21 +1106,19 @@
                             @endif
 
                             <!-- Student ID -->
-                            <div class="absolute text-white font-black tracking-wide text-center uppercase" style="left: 0; top: 267px; width: 280px; height: 12px; z-index: 20; font-size: 10px;">{{ $studentNumber }}</div>
+                            <div class="absolute text-white font-black tracking-wide text-center uppercase animate-fade-in" style="left: 0; top: 267px; width: 280px; height: 12px; z-index: 20;" :style="'font-size: ' + idFontSize + 'px'">{{ $studentNumber }}</div>
 
                             <!-- Last Name -->
-                            <div class="absolute text-center font-black text-[#0f172a] uppercase tracking-tight flex flex-col justify-center items-center animate-fade-in" style="left: 12px; top: 291px; width: 256px; height: 32px; z-index: 20; font-size: {{ $lastNameFontSize }}; {{ $lastNameStyle }} line-height: 1.1;">{{ $lastName }}</div>
+                            <div class="absolute text-center font-black text-[#0f172a] uppercase tracking-tight flex flex-col justify-center items-center animate-fade-in" style="left: 12px; top: 291px; width: 256px; height: 32px; z-index: 20; {{ $lastNameStyle }} line-height: 1.1;" :style="'font-size: ' + lastNameFontSize + 'px'">{{ $lastName }}</div>
 
                             <!-- First Name -->
                              @php
                                  $displayFirstName = trim($firstName . ' ' . $middleInitial);
-                                 $displayFirstNameLen = strlen($displayFirstName);
-                                 $displayFirstNameFontSize = $displayFirstNameLen > 25 ? '11.5px' : ($displayFirstNameLen > 18 ? '13px' : '15px');
                              @endphp
-                             <div class="absolute text-center font-bold text-[#334155] uppercase leading-none flex flex-col justify-center items-center animate-fade-in" style="left: 12px; top: 318px; width: 256px; height: 18px; z-index: 20; font-size: {{ $displayFirstNameFontSize }};">{{ $displayFirstName }}</div>
+                             <div class="absolute text-center font-bold text-[#334155] uppercase leading-none flex flex-col justify-center items-center animate-fade-in" style="left: 12px; top: 318px; width: 256px; height: 18px; z-index: 20;" :style="'font-size: ' + firstNameFontSize + 'px'">{{ $displayFirstName }}</div>
 
                             <!-- Grade Level -->
-                             <div class="absolute text-center font-black uppercase tracking-wide flex flex-col justify-center items-center animate-fade-in" style="left: 12px; top: 341px; width: 256px; height: 24px; z-index: 20; font-size: 25px; color: {{ $getGradeColor($displayGrade) }};">{{ $displayGrade }}</div>
+                             <div class="absolute text-center font-black uppercase tracking-wide flex flex-col justify-center items-center animate-fade-in" style="left: 12px; top: 341px; width: 256px; height: 24px; z-index: 20; color: {{ $getGradeColor($displayGrade) }};" :style="'font-size: ' + gradeFontSize + 'px'">{{ $displayGrade }}</div>
 
                             <!-- LRN -->
                             @if($student->applicant?->lrn && !in_array(strtoupper($student->applicant->lrn), ['N/A', 'NA', 'EMPTY', '']))
@@ -1184,6 +1204,75 @@
                             @endif
                         </div>
                         <span class="text-[10px] text-slate-400 font-semibold mt-1">Back Emergency Info Sheet</span>
+                    </div>
+
+                    <!-- Text Editor Panel -->
+                    <div class="w-full md:w-56 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col gap-4 text-left shadow-sm self-stretch justify-center relative z-20">
+                        <div class="border-b border-slate-100 dark:border-slate-800 pb-2">
+                            <h4 class="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                                <i data-lucide="type" class="w-4 h-4 text-emerald-600"></i>
+                                <span>Text Font Sizes (px)</span>
+                            </h4>
+                        </div>
+                        
+                        <!-- Last Name Font Size Slider/Input -->
+                        <div class="space-y-1">
+                            <div class="flex justify-between items-center text-[10px] font-bold text-slate-650 dark:text-slate-350 uppercase">
+                                <span>Last Name</span>
+                                <span class="text-slate-800 dark:text-slate-200 font-extrabold" x-text="lastNameFontSize + 'px'"></span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <input type="range" min="10" max="45" step="0.5" x-model="lastNameFontSize" 
+                                       class="w-full h-1 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-600">
+                            </div>
+                        </div>
+
+                        <!-- First Name Font Size Slider/Input -->
+                        <div class="space-y-1">
+                            <div class="flex justify-between items-center text-[10px] font-bold text-slate-650 dark:text-slate-350 uppercase">
+                                <span>First Name</span>
+                                <span class="text-slate-800 dark:text-slate-200 font-extrabold" x-text="firstNameFontSize + 'px'"></span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <input type="range" min="8" max="25" step="0.5" x-model="firstNameFontSize" 
+                                       class="w-full h-1 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-600">
+                            </div>
+                        </div>
+
+                        <!-- Grade Level Font Size Slider/Input -->
+                        <div class="space-y-1">
+                            <div class="flex justify-between items-center text-[10px] font-bold text-slate-650 dark:text-slate-350 uppercase">
+                                <span>Grade Level</span>
+                                <span class="text-slate-800 dark:text-slate-200 font-extrabold" x-text="gradeFontSize + 'px'"></span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <input type="range" min="12" max="35" step="0.5" x-model="gradeFontSize" 
+                                       class="w-full h-1 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-600">
+                            </div>
+                        </div>
+
+                        <!-- Student ID Font Size Slider/Input -->
+                        <div class="space-y-1">
+                            <div class="flex justify-between items-center text-[10px] font-bold text-slate-650 dark:text-slate-350 uppercase">
+                                <span>Student ID</span>
+                                <span class="text-slate-800 dark:text-slate-200 font-extrabold" x-text="idFontSize + 'px'"></span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <input type="range" min="8" max="18" step="0.5" x-model="idFontSize" 
+                                       class="w-full h-1 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-600">
+                            </div>
+                        </div>
+
+                        <!-- Reset Buttons -->
+                        <button type="button" @click="
+                            lastNameFontSize = {{ $lastNameFontSize }};
+                            firstNameFontSize = {{ $displayFirstNameFontSize }};
+                            gradeFontSize = 25;
+                            idFontSize = 10;
+                        " class="mt-2 w-full py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition active:scale-[0.97] cursor-pointer flex items-center justify-center gap-1">
+                            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                            <span>Reset Font Sizes</span>
+                        </button>
                     </div>
 
                     <input type="hidden" id="id-card-filename-slug" value="{{ implode('-', array_filter([$lastName, $firstName, str_replace(' ', '', $displayGrade)])) }}">
