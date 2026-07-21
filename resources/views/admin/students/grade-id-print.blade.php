@@ -487,6 +487,39 @@
 
             $groupedStudents = $students->groupBy(function($s) use ($formatSectionName) {
                 return $formatSectionName($s->studentSection?->section);
+            })->sortBy(function($students, $sectionName) {
+                $sec = $students->first()?->studentSection?->section;
+                if (!$sec) return 999;
+                
+                $isF2f = str_contains(strtolower((string) $sec->learning_mode), 'face') ||
+                         str_contains(strtolower((string) $sec->learning_mode), 'f2f') ||
+                         strtoupper((string) $sec->shift) === 'F2F';
+                         
+                if ($isF2f) {
+                    return 10;
+                }
+                
+                $shiftWeight = 0;
+                $shift = strtolower((string)$sec->shift);
+                if (str_contains($shift, '1st') || str_contains($shift, 'first')) {
+                    $shiftWeight = 100;
+                } elseif (str_contains($shift, '2nd') || str_contains($shift, 'second')) {
+                    $shiftWeight = 200;
+                } else {
+                    $shiftWeight = 300;
+                }
+                
+                $genderWeight = 0;
+                $gender = strtolower((string)$sec->gender);
+                if ($gender === 'female' || $gender === 'girl' || $gender === 'girls') {
+                    $genderWeight = 1;
+                } elseif ($gender === 'male' || $gender === 'boy' || $gender === 'boys') {
+                    $genderWeight = 2;
+                } else {
+                    $genderWeight = 3;
+                }
+                
+                return $shiftWeight + $genderWeight;
             });
         @endphp
 
