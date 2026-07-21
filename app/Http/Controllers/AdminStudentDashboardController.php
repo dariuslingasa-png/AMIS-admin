@@ -235,6 +235,8 @@ class AdminStudentDashboardController extends Controller
             return $index === false ? 999 : $index;
         });
 
+        $totalOfficial = Student::whereHas('user', fn($q) => $q->where('account_status', 'verified'))->count();
+
         $studentsByGrade = Student::with(['applicant', 'studentSection.section'])
             ->get()
             ->sortBy(fn($s) => strtoupper(trim(($s->applicant?->last_name ?? '') . ' ' . ($s->applicant?->first_name ?? ''))))
