@@ -1273,6 +1273,17 @@
                             <i data-lucide="refresh-cw" class="w-3.5 h-3.5 flex-shrink-0"></i>
                             <span>Reset Font Sizes</span>
                         </button>
+
+                        <!-- Photo Editor section -->
+                        @if(auth()->user()?->hasRole('super_admin'))
+                            <div class="border-t border-slate-100 dark:border-slate-800 pt-3 mt-1">
+                                <div class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Student Photo</div>
+                                <button type="button" onclick="openPhotoOptionsModal()" class="w-full py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-350 hover:text-emerald-800 dark:hover:bg-emerald-900 transition active:scale-[0.97] cursor-pointer flex items-center justify-center gap-1.5 shadow-sm border border-emerald-100 dark:border-emerald-900">
+                                    <i data-lucide="camera" class="w-4 h-4 flex-shrink-0"></i>
+                                    <span>Edit / Upload Photo</span>
+                                </button>
+                            </div>
+                        @endif
                     </div>
 
                     <input type="hidden" id="id-card-filename-slug" value="{{ implode('-', array_filter([$lastName, $firstName, str_replace(' ', '', $displayGrade)])) }}">

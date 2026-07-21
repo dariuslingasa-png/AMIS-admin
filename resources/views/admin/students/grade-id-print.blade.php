@@ -206,7 +206,7 @@
             font-family: 'Outfit', sans-serif;
             font-weight: 900;
             letter-spacing: 0.05em;
-            font-size: 12.5px;
+            font-size: var(--id-font-size, 12.5px);
             color: white;
             text-align: center;
             line-height: 15px;
@@ -399,6 +399,7 @@
         @media print {
             body { background: #fff; }
             .toolbar { display: none !important; }
+            .no-print { display: none !important; }
             .page-container {
                 max-width: none;
                 margin: 0;
@@ -412,6 +413,14 @@
             }
         }
     </style>
+    <style id="dynamic-font-sizes">
+        :root {
+            --id-font-size: 12.5px;
+            --last-name-font-size: 30px;
+            --first-name-font-size: 16px;
+            --grade-font-size: 31px;
+        }
+    </style>
 </head>
 <body>
 
@@ -420,6 +429,9 @@
             📋 Grade ID Cards Roster: {{ strtoupper($grade) }}
         </div>
         <div class="toolbar-actions">
+            <button type="button" class="btn-action btn-secondary" onclick="toggleEditor()" id="btn-toggle-editor">
+                ✏️ Edit Font Sizes
+            </button>
             <button type="button" class="btn-action btn-secondary" onclick="copyDocumentHtml()">
                 📋 Copy for Google Docs / MS Word
             </button>
@@ -651,7 +663,7 @@
 
                                             <!-- Last Name -->
                                             <div class="student-last-name">
-                                                <h3 style="font-size: {{ $lastNameFontSize }}; {{ $lastNameStyle }}">{{ $lastName }}</h3>
+                                                <h3 style="font-size: var(--last-name-font-size, {{ $lastNameFontSize }}); {{ $lastNameStyle }}">{{ $lastName }}</h3>
                                             </div>
 
                                             <!-- First Name -->
@@ -661,12 +673,12 @@
                                                 $firstNameFontSize = $firstNameLen > 25 ? '14px' : ($firstNameLen > 18 ? '16px' : '18px');
                                             @endphp
                                             <div class="student-first-name">
-                                                <h4 style="font-size: {{ $firstNameFontSize }};">{{ $displayFirstName }}</h4>
+                                                <h4 style="font-size: var(--first-name-font-size, {{ $firstNameFontSize }});">{{ $displayFirstName }}</h4>
                                             </div>
 
                                             <!-- Grade Level -->
                                             <div class="student-grade">
-                                                <span style="color: {{ $getGradeColor($displayGrade) }};">{{ strtoupper($displayGrade) }}</span>
+                                                <span style="color: {{ $getGradeColor($displayGrade) }}; font-size: var(--grade-font-size, 31px);">{{ strtoupper($displayGrade) }}</span>
                                             </div>
 
                                             <!-- LRN (Vertical) -->
@@ -775,7 +787,86 @@
         @endforelse
     </div>
 
+    <!-- Floating Editor Panel (hidden during print) -->
+    <div id="print-editor-panel" style="display: none; position: fixed; right: 24px; top: 70px; width: 260px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 16px; padding: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15); z-index: 99999; font-family: 'Outfit', sans-serif;" class="no-print">
+        <div style="border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
+            <h4 style="margin: 0; font-size: 11px; font-weight: 800; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em; display: flex; align-items: center; gap: 6px;">
+                ✏️ ID Font Editor
+            </h4>
+            <button onclick="toggleEditor()" style="border: 0; background: transparent; cursor: pointer; color: #94a3b8; font-weight: bold; font-size: 14px;">✕</button>
+        </div>
+
+        <!-- Last Name slider -->
+        <div style="margin-bottom: 12px;">
+            <div style="display: flex; justify-content: space-between; font-size: 10px; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 4px;">
+                <span>Last Name</span>
+                <span id="lbl-last-name" style="font-weight: 800; color: #0f172a;">30px</span>
+            </div>
+            <input type="range" min="10" max="45" step="0.5" value="30" oninput="updateFontSize('--last-name-font-size', this.value, 'lbl-last-name')" style="width: 100%; cursor: pointer;">
+        </div>
+
+        <!-- First Name slider -->
+        <div style="margin-bottom: 12px;">
+            <div style="display: flex; justify-content: space-between; font-size: 10px; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 4px;">
+                <span>First Name</span>
+                <span id="lbl-first-name" style="font-weight: 800; color: #0f172a;">15px</span>
+            </div>
+            <input type="range" min="8" max="25" step="0.5" value="15" oninput="updateFontSize('--first-name-font-size', this.value, 'lbl-first-name')" style="width: 100%; cursor: pointer;">
+        </div>
+
+        <!-- Grade Level slider -->
+        <div style="margin-bottom: 12px;">
+            <div style="display: flex; justify-content: space-between; font-size: 10px; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 4px;">
+                <span>Grade Level</span>
+                <span id="lbl-grade" style="font-weight: 800; color: #0f172a;">31px</span>
+            </div>
+            <input type="range" min="12" max="35" step="0.5" value="31" oninput="updateFontSize('--grade-font-size', this.value, 'lbl-grade')" style="width: 100%; cursor: pointer;">
+        </div>
+
+        <!-- Student ID slider -->
+        <div style="margin-bottom: 16px;">
+            <div style="display: flex; justify-content: space-between; font-size: 10px; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 4px;">
+                <span>Student ID</span>
+                <span id="lbl-id" style="font-weight: 800; color: #0f172a;">12.5px</span>
+            </div>
+            <input type="range" min="8" max="18" step="0.5" value="12.5" oninput="updateFontSize('--id-font-size', this.value, 'lbl-id')" style="width: 100%; cursor: pointer;">
+        </div>
+
+        <!-- Reset Button -->
+        <button onclick="resetFontSizes()" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 8px; background: #fafafa; font-size: 10px; font-weight: 800; color: #475569; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
+            <span>Reset Default</span>
+        </button>
+    </div>
+
     <script>
+        function toggleEditor() {
+            const panel = document.getElementById('print-editor-panel');
+            if (panel.style.display === 'none') {
+                panel.style.display = 'block';
+            } else {
+                panel.style.display = 'none';
+            }
+        }
+
+        function updateFontSize(cssVar, val, lblId) {
+            document.documentElement.style.setProperty(cssVar, val + 'px');
+            document.getElementById(lblId).innerText = val + 'px';
+        }
+
+        function resetFontSizes() {
+            updateFontSize('--last-name-font-size', 30, 'lbl-last-name');
+            updateFontSize('--first-name-font-size', 15, 'lbl-first-name');
+            updateFontSize('--grade-font-size', 31, 'lbl-grade');
+            updateFontSize('--id-font-size', 12.5, 'lbl-id');
+            
+            // Reset input ranges value
+            const ranges = document.querySelectorAll('#print-editor-panel input[type="range"]');
+            ranges[0].value = 30;
+            ranges[1].value = 15;
+            ranges[2].value = 31;
+            ranges[3].value = 12.5;
+        }
+
         function copyDocumentHtml() {
             const area = document.getElementById('roster-document-area');
             if (!area) return;
