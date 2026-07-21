@@ -167,16 +167,16 @@
                             @endif
 
                             <!-- Student ID -->
-                            <div class="absolute text-white font-black tracking-wide text-center uppercase" style="left: 0; top: 325px; width: 340px; height: 15px; z-index: 20; line-height: 15px;" :style="'font-size: ' + idFontSize + 'px !important'">{{ $studentNumber }}</div>
+                            <div class="absolute text-white font-black tracking-wide text-center uppercase" style="left: 0; top: 325px; width: 340px; height: 15px; z-index: 20; line-height: 15px;" :style="{ fontSize: idFontSize + 'px' }">{{ $studentNumber }}</div>
 
                             <!-- Last Name -->
-                            <div class="absolute text-center font-black text-[#0f172a] uppercase tracking-tight flex flex-col justify-center items-center" style="left: 15px; top: 352px; width: 310px; height: 32px; z-index: 20; padding: 0 16px; {{ $lastNameStyle }} line-height: 1; letter-spacing: -0.5px;" :style="'font-size: ' + lastNameFontSize + 'px !important'">{{ $lastName }}</div>
+                            <div class="absolute text-center font-black text-[#0f172a] uppercase tracking-tight flex flex-col justify-center items-center" style="left: 15px; top: 352px; width: 310px; height: 32px; z-index: 20; padding: 0 16px; {{ $lastNameStyle }} line-height: 1; letter-spacing: -0.5px;" :style="{ fontSize: lastNameFontSize + 'px' }">{{ $lastName }}</div>
 
                             <!-- First Name -->
-                            <div class="absolute text-center font-bold text-[#334155] uppercase leading-none flex flex-col justify-center items-center" style="left: 15px; top: 386px; width: 310px; height: 22px; z-index: 20; padding: 0 16px; line-height: 1;" :style="'font-size: ' + firstNameFontSize + 'px !important'">{{ $displayFirstName }}</div>
+                            <div class="absolute text-center font-bold text-[#334155] uppercase leading-none flex flex-col justify-center items-center" style="left: 15px; top: 386px; width: 310px; height: 22px; z-index: 20; padding: 0 16px; line-height: 1;" :style="{ fontSize: firstNameFontSize + 'px' }">{{ $displayFirstName }}</div>
 
                             <!-- Grade Level -->
-                            <div class="absolute text-center font-black uppercase tracking-wide flex flex-col justify-center items-center" style="left: 15px; top: 412px; width: 310px; height: 30px; z-index: 20; padding: 0 16px; line-height: 1; letter-spacing: 0.5px; text-shadow: 0 1px 1px rgba(0,0,0,0.05); color: {{ $getGradeColor($displayGrade) }};" :style="'font-size: ' + gradeFontSize + 'px !important'">{{ $displayGrade }}</div>
+                            <div class="absolute text-center font-black uppercase tracking-wide flex flex-col justify-center items-center" style="left: 15px; top: 412px; width: 310px; height: 30px; z-index: 20; padding: 0 16px; line-height: 1; letter-spacing: 0.5px; text-shadow: 0 1px 1px rgba(0,0,0,0.05); color: {{ $getGradeColor($displayGrade) }};" :style="{ fontSize: gradeFontSize + 'px' }">{{ $displayGrade }}</div>
 
                             <!-- LRN -->
                             @if($student->applicant?->lrn && !in_array(strtoupper($student->applicant->lrn), ['N/A', 'NA', 'EMPTY', '']))
@@ -270,8 +270,7 @@
                         </div>
                         </div><!-- end scale wrapper -->
                         <span class="text-[10px] text-slate-400 font-semibold mt-1">Back Emergency Info Sheet</span>
-                    </div>div>
-
+                    </div>
                 </div>
             </div>
 
