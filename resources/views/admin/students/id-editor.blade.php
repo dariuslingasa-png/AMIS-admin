@@ -123,13 +123,14 @@
                     </p>
                 </div>
 
-                <!-- Cards: Side-by-Side always, with scroll if needed -->
-                <div class="flex flex-row items-start justify-center gap-5 w-full overflow-x-auto pb-2">
+                <!-- Cards: Side-by-Side, scaled to fit -->
+                <div class="flex flex-row items-start justify-center gap-4 w-full overflow-x-auto pb-4">
                     
                     <!-- Front Side Card -->
                     <div class="flex flex-col items-center gap-2 flex-shrink-0">
                         <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Front Side</span>
-                        <div id="id-card-front-box" class="relative rounded-2xl overflow-hidden shadow-2xl border border-slate-200/80 dark:border-slate-800" style="width: 240px; height: 379px; background-color: #064e3b;">
+                        <div style="transform: scale(0.83); transform-origin: top center; margin-bottom: -75px;">
+                        <div id="id-card-front-box" class="relative rounded-2xl overflow-hidden shadow-2xl border border-slate-200/80 dark:border-slate-800" style="width: 280px; height: 443px; background-color: #064e3b;">
                             <!-- Background template image (Top Layer) -->
                             <img src="{{ asset('images/id/amis_frontid.png') }}?v={{ filemtime(public_path('images/id/amis_frontid.png')) }}" class="absolute inset-0 w-full h-full object-cover" style="z-index: 10; pointer-events: none;" alt="AMIS ID Template">
                             
@@ -137,7 +138,7 @@
                             @if(auth()->user()?->hasRole('super_admin'))
                                  <div class="photo-clip group cursor-pointer" 
                                       onclick="openPhotoOptionsModal()"
-                                      style="left: 49px; top: 106px; width: 142px; height: 139px; border-radius: 10px; z-index: 5;"
+                                      style="left: 57px; top: 124px; width: 166px; height: 162px; border-radius: 12px; z-index: 5;"
                                       title="Edit Photo">
                                     @if($photoUrl)
                                         <img id="id-preview-photo" src="{{ $photoBase64 ?: $photoUrl }}" crossorigin="anonymous" class="transition duration-300 group-hover:scale-105 group-hover:brightness-75" style="object-position: center center;">
@@ -156,7 +157,7 @@
                                 </div>
                             @else
                                 <!-- Non-admin read-only image -->
-                                <div class="photo-clip" style="left: 49px; top: 106px; width: 142px; height: 139px; border-radius: 10px; z-index: 5;">
+                                <div class="photo-clip" style="left: 57px; top: 124px; width: 166px; height: 162px; border-radius: 12px; z-index: 5;">
                                     @if($photoUrl)
                                         <img id="id-preview-photo" src="{{ $photoBase64 ?: $photoUrl }}" crossorigin="anonymous" style="object-position: center center;">
                                     @else
@@ -166,28 +167,30 @@
                             @endif
 
                             <!-- Student ID -->
-                            <div class="absolute text-white font-black tracking-wide text-center uppercase" style="left: 0; top: 228px; width: 240px; height: 12px; z-index: 20;" :style="'font-size: ' + idFontSize + 'px'">{{ $studentNumber }}</div>
+                            <div class="absolute text-white font-black tracking-wide text-center uppercase" style="left: 0; top: 267px; width: 280px; height: 12px; z-index: 20;" :style="'font-size: ' + idFontSize + 'px'">{{ $studentNumber }}</div>
 
                             <!-- Last Name -->
-                            <div class="absolute text-center font-black text-[#0f172a] uppercase tracking-tight flex flex-col justify-center items-center" style="left: 10px; top: 249px; width: 220px; height: 28px; z-index: 20; {{ $lastNameStyle }} line-height: 1.1;" :style="'font-size: ' + lastNameFontSize + 'px'">{{ $lastName }}</div>
+                            <div class="absolute text-center font-black text-[#0f172a] uppercase tracking-tight flex flex-col justify-center items-center" style="left: 12px; top: 291px; width: 256px; height: 32px; z-index: 20; {{ $lastNameStyle }} line-height: 1.1;" :style="'font-size: ' + lastNameFontSize + 'px'">{{ $lastName }}</div>
 
                             <!-- First Name -->
-                            <div class="absolute text-center font-bold text-[#334155] uppercase leading-none flex flex-col justify-center items-center" style="left: 10px; top: 273px; width: 220px; height: 16px; z-index: 20;" :style="'font-size: ' + firstNameFontSize + 'px'">{{ $displayFirstName }}</div>
+                            <div class="absolute text-center font-bold text-[#334155] uppercase leading-none flex flex-col justify-center items-center" style="left: 12px; top: 318px; width: 256px; height: 18px; z-index: 20;" :style="'font-size: ' + firstNameFontSize + 'px'">{{ $displayFirstName }}</div>
 
                             <!-- Grade Level -->
-                            <div class="absolute text-center font-black uppercase tracking-wide flex flex-col justify-center items-center" style="left: 10px; top: 292px; width: 220px; height: 22px; z-index: 20; color: {{ $getGradeColor($displayGrade) }};" :style="'font-size: ' + gradeFontSize + 'px'">{{ $displayGrade }}</div>
+                            <div class="absolute text-center font-black uppercase tracking-wide flex flex-col justify-center items-center" style="left: 12px; top: 341px; width: 256px; height: 24px; z-index: 20; color: {{ $getGradeColor($displayGrade) }};" :style="'font-size: ' + gradeFontSize + 'px'">{{ $displayGrade }}</div>
 
                             <!-- QR Code -->
-                            <div class="absolute p-0.5 rounded bg-white" style="left: 91px; top: 323px; width: 58px; height: 58px; z-index: 20;">
+                            <div class="absolute p-0.5 rounded bg-white" style="left: 111px; top: 377px; width: 58px; height: 58px; z-index: 20;">
                                 <img src="{{ $qrCodeBase64 ?: $qrCodeUrl }}" crossorigin="anonymous" alt="QR Verification" class="w-full h-full object-contain">
                             </div>
                         </div>
+                        </div><!-- end scale wrapper -->
                     </div>
 
                     <!-- Back Side Card -->
                     <div class="flex flex-col items-center gap-2 flex-shrink-0">
                         <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Back Side</span>
-                        <div id="id-card-back-box" class="relative rounded-2xl overflow-hidden shadow-2xl border border-slate-200/80 dark:border-slate-800" style="width: 240px; height: 379px; background-color: #064e3b;">
+                        <div style="transform: scale(0.83); transform-origin: top center; margin-bottom: -75px;">
+                        <div id="id-card-back-box" class="relative rounded-2xl overflow-hidden shadow-2xl border border-slate-200/80 dark:border-slate-800" style="width: 280px; height: 443px; background-color: #064e3b;">
                             <!-- Background template image -->
                             <img src="{{ asset('images/id/amis_backid.png') }}?v=1" class="absolute inset-0 w-full h-full object-cover" style="z-index: 1; pointer-events: none;" alt="AMIS ID Template Back">
 
@@ -199,7 +202,7 @@
                                 $addressLen = strlen($homeAddress);
                                 $addressFontSize = $addressLen > 60 ? '10px' : ($addressLen > 40 ? '11px' : '12px');
                             @endphp
-                            <div style="position: absolute; left: 19px; top: 60px; width: 200px; z-index: 10; display: flex; flex-direction: column; gap: 4.5px;">
+                            <div style="position: absolute; left: 23px; top: 70px; width: 233px; z-index: 10; display: flex; flex-direction: column; gap: 5.5px;">
                                 <!-- Contact Name -->
                                 <div style="display: flex; align-items: flex-start; gap: 8px;">
                                     <span style="flex-shrink: 0; width: 11.5px; height: 11.5px; color: #047857; margin-top: 1.5px;">
@@ -251,15 +254,16 @@
 
                             <!-- Director's Signature Box -->
                             @if(in_array((string)$student->student_number, ['260253', '260254', '260158', '260895', '260894', '260893']))
-                                <div style="position: absolute; left: 68px; top: 285px; width: 104px; z-index: 25; pointer-events: none;">
+                                <div style="position: absolute; left: 88px; top: 332px; width: 104px; z-index: 25; pointer-events: none;">
                                     <img src="{{ asset('images/id/signature_cabel.png') }}" style="width: 100%; height: auto; display: block; opacity: 0.95; filter: contrast(1.1) brightness(0.95);">
                                 </div>
                             @else
-                                <div style="position: absolute; left: 50px; top: 293px; width: 140px; text-align: center; z-index: 25; pointer-events: none;">
+                                <div style="position: absolute; left: 70px; top: 342px; width: 140px; text-align: center; z-index: 25; pointer-events: none;">
                                     <span style="font-family: 'Outfit', sans-serif; font-size: 6.5px; font-weight: 900; text-transform: uppercase; color: #64748b; letter-spacing: 0.08em; border: 1px dashed #cbd5e1; padding: 2px 4px; border-radius: 4px; background: rgba(255, 255, 255, 0.9); display: inline-block; box-shadow: 0 1px 1px rgba(0,0,0,0.05);">Secure Signature Coming Soon</span>
                                 </div>
                             @endif
                         </div>
+                        </div><!-- end scale wrapper -->
                         <span class="text-[10px] text-slate-400 font-semibold mt-1">Back Emergency Info Sheet</span>
                     </div>
 
