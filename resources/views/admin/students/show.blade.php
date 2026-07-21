@@ -2166,12 +2166,18 @@
 
                     if (isWatermark) {
                         ctx.save();
-                        ctx.translate(cvs.width / 2, cvs.height / 2);
-                        ctx.rotate(-Math.PI / 4);
-                        ctx.font = '900 ' + Math.round(cvs.width * 0.13) + 'px "Outfit", Arial, sans-serif';
-                        ctx.fillStyle = 'rgba(239, 68, 68, 0.45)';
-                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
-                        ctx.lineWidth = Math.round(cvs.width * 0.008);
+                        if (side === 'front') {
+                            // Position watermark at top header area (above student photo)
+                            ctx.translate(cvs.width / 2, cvs.height * 0.145);
+                        } else {
+                            // Position watermark at bottom area (below parent & emergency contact details)
+                            ctx.translate(cvs.width / 2, cvs.height * 0.725);
+                        }
+                        ctx.rotate(-12 * Math.PI / 180);
+                        ctx.font = '900 ' + Math.round(cvs.width * 0.115) + 'px "Outfit", Arial, sans-serif';
+                        ctx.fillStyle = 'rgba(239, 68, 68, 0.48)';
+                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.95)';
+                        ctx.lineWidth = Math.round(cvs.width * 0.007);
                         ctx.textAlign = 'center';
                         ctx.textBaseline = 'middle';
                         ctx.strokeText('SAMPLE COPY', 0, 0);
