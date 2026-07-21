@@ -138,7 +138,7 @@
                         @if(auth()->user()?->hasRole('super_admin'))
                              <div class="photo-clip group cursor-pointer" 
                                   onclick="openPhotoOptionsModal()"
-                                  style="left: 71px; top: 144px; width: 198px; height: 192px; border-radius: 6px; z-index: 11;"
+                                  style="left: 71px; top: 144px; width: 198px; height: 192px; border-radius: 6px; z-index: 5;"
                                   title="Edit Photo">
                                 @if($photoUrl)
                                     <img id="id-preview-photo" src="{{ $photoUrl }}" class="transition duration-300 group-hover:scale-105 group-hover:brightness-75" style="object-position: center center;">
@@ -157,7 +157,7 @@
                             </div>
                         @else
                             <!-- Non-admin read-only image -->
-                            <div class="photo-clip" style="left: 71px; top: 144px; width: 198px; height: 192px; border-radius: 6px; z-index: 11;">
+                            <div class="photo-clip" style="left: 71px; top: 144px; width: 198px; height: 192px; border-radius: 6px; z-index: 5;">
                                 @if($photoUrl)
                                     <img id="id-preview-photo" src="{{ $photoUrl }}" style="object-position: center center;">
                                 @else
