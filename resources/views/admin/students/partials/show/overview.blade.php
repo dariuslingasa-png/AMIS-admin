@@ -104,7 +104,7 @@
         </x-slot:actions>
         <div class="detail-section-stack">
             @foreach ($studentSections as $section)
-                <x-applicant.detail-section :title="$section['title']" :icon="$section['icon']" :sectionKey="$section['key']" :fields="$section['fields']" :isLocked="$isRequirementsComplete" />
+                <x-applicant.detail-section :title="$section['title']" :icon="$section['icon']" :sectionKey="$section['key']" :fields="$section['fields']" :is-locked="$isRequirementsComplete" />
             @endforeach
         </div>
     </x-card>
@@ -128,7 +128,7 @@
             </x-slot:actions>
             <div class="detail-section-stack">
                 @foreach ($addressSections as $section)
-                    <x-applicant.detail-section :title="$section['title']" :icon="$section['icon']" :sectionKey="$section['key']" :fields="$section['fields']" :isLocked="$isRequirementsComplete" />
+                    <x-applicant.detail-section :title="$section['title']" :icon="$section['icon']" :sectionKey="$section['key']" :fields="$section['fields']" :is-locked="$isRequirementsComplete" />
                 @endforeach
             </div>
         </x-card>
@@ -151,7 +151,7 @@
             </x-slot:actions>
             <div class="detail-section-stack">
                 @foreach ($guardianSections as $section)
-                    <x-applicant.detail-section :title="$section['title']" :icon="$section['icon']" :sectionKey="$section['key']" :fields="$section['fields']" :isLocked="$isRequirementsComplete" />
+                    <x-applicant.detail-section :title="$section['title']" :icon="$section['icon']" :sectionKey="$section['key']" :fields="$section['fields']" :is-locked="$isRequirementsComplete" />
                 @endforeach
             </div>
 
@@ -206,7 +206,7 @@
         <x-card title="Medical Background" subtitle="Health info and emergency response contacts">
             <div class="detail-section-stack">
                 @foreach ($medicalSections as $section)
-                    <x-applicant.detail-section :title="$section['title']" :icon="$section['icon']" :sectionKey="$section['key'] ?? ''" :fields="$section['fields']" :isLocked="$isRequirementsComplete" />
+                    <x-applicant.detail-section :title="$section['title']" :icon="$section['icon']" :sectionKey="$section['key'] ?? ''" :fields="$section['fields']" :is-locked="$isRequirementsComplete" />
                 @endforeach
             </div>
         </x-card>
