@@ -411,7 +411,7 @@
 
     <!-- Photo Options and Cropping Modals -->
     @unless(auth()->user()?->isTeacherAdminViewer())
-        <div id="photo-options-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4 z-[99999]">
+        <div id="photo-options-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4" style="z-index: 9999999;">
             <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-150 dark:border-slate-800 text-center animate-scale-in">
                 <div class="w-12 h-12 bg-emerald-50 dark:bg-emerald-950/40 rounded-full flex items-center justify-center mx-auto mb-4">
                     <i data-lucide="user-cog" class="w-6 h-6 text-emerald-600"></i>
@@ -443,7 +443,7 @@
         </div>
 
         <!-- Crop Photo Modal -->
-        <div id="photo-crop-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-xs hidden items-center justify-center p-4 z-[99999]">
+        <div id="photo-crop-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-xs hidden items-center justify-center p-4" style="z-index: 9999999;">
             <div class="bg-slate-900 rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl border border-slate-850 flex flex-col">
                 <div class="flex items-center justify-between px-6 py-4 border-b border-slate-850 bg-slate-900">
                     <h3 class="text-sm font-bold text-white uppercase flex items-center gap-2">

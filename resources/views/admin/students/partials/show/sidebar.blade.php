@@ -108,7 +108,7 @@
                     @endif
                 </div>
 
-                @if(auth()->user()?->hasRole('super_admin') || auth()->user()?->isAdmin())
+                @unless ($isTeacherAdminViewer)
                     <form method="POST" action="{{ route('admin.students.toggle-requirements-lock', $student) }}" class="mt-1">
                         @csrf
                         @if($student->is_requirements_locked)
@@ -123,7 +123,7 @@
                             </button>
                         @endif
                     </form>
-                @endif
+                @endunless
             </div>
         </div>
     </x-card>
