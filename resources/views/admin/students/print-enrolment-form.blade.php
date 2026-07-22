@@ -259,6 +259,7 @@
             width: 200px;
             outline: none;
             padding: 0 4px;
+            text-transform: uppercase;
         }
 
         /* OLD / NEW Checkboxes Vertically Stacked */
@@ -350,6 +351,7 @@
             overflow: hidden;
             text-overflow: ellipsis;
             display: block;
+            text-transform: uppercase;
         }
 
         .label-text {
@@ -471,6 +473,7 @@
             overflow: hidden;
             text-overflow: ellipsis;
             display: block;
+            text-transform: uppercase;
         }
 
         .grid-physician-row {
@@ -613,32 +616,32 @@
 
         // Parent Name formatting helper: Format middle name to Middle Initial (e.g. SAHARODIN G. SALINDAWAN)
         $formatParentName = function($first, $middle, $last) {
-            $first = trim($first ?? '');
-            $middle = trim($middle ?? '');
-            $last = trim($last ?? '');
+            $first = mb_strtoupper(trim($first ?? ''));
+            $middle = mb_strtoupper(trim($middle ?? ''));
+            $last = mb_strtoupper(trim($last ?? ''));
             
             $mInitial = '';
             if ($middle !== '') {
-                $firstChar = mb_strtoupper(mb_substr($middle, 0, 1));
+                $firstChar = mb_substr($middle, 0, 1);
                 $mInitial = ($firstChar === '.') ? '.' : $firstChar . '.';
             }
             
             return implode(' ', array_filter([$first, $mInitial, $last]));
         };
 
-        $fatherFull = $formatParentName($app->father_first_name ?? '', $app->father_middle_name ?? '', $app->father_last_name ?? '');
-        $motherFull = $formatParentName($app->mother_first_name ?? '', $app->mother_middle_name ?? '', $app->mother_last_name ?? '');
+        $fatherFull = mb_strtoupper($formatParentName($app->father_first_name ?? '', $app->father_middle_name ?? '', $app->father_last_name ?? ''));
+        $motherFull = mb_strtoupper($formatParentName($app->mother_first_name ?? '', $app->mother_middle_name ?? '', $app->mother_last_name ?? ''));
 
         // Fallback if individual father/mother name fields were empty
         if (empty($fatherFull) && !empty($app->father_name)) {
-            $fatherFull = trim($app->father_name);
+            $fatherFull = mb_strtoupper(trim($app->father_name));
         }
         if (empty($motherFull) && !empty($app->mother_name)) {
-            $motherFull = trim($app->mother_name);
+            $motherFull = mb_strtoupper(trim($app->mother_name));
         }
 
-        $fatherContact = implode(' / ', array_filter([$app->parent_mobile ?? null, $app->parent_email ?? null]));
-        $motherContact = implode(' / ', array_filter([$app->parent_mobile ?? null, $app->parent_email ?? null]));
+        $fatherContact = mb_strtoupper(implode(' / ', array_filter([$app->parent_mobile ?? null, $app->parent_email ?? null])));
+        $motherContact = mb_strtoupper(implode(' / ', array_filter([$app->parent_mobile ?? null, $app->parent_email ?? null])));
 
         $fatherPresent = !empty($fatherFull);
         $motherPresent = !empty($motherFull);
@@ -646,15 +649,16 @@
         $singleParent = ($fatherPresent || $motherPresent) && !$bothParents;
         $guardianPresent = !$fatherPresent && !$motherPresent;
 
-        $fullAddress = $app->address ?? $app->street_address ?? $app->home_address ?? '';
-        if (empty($fullAddress)) {
-            $fullAddress = implode(', ', array_filter([
+        $rawAddress = $app->address ?? $app->street_address ?? $app->home_address ?? '';
+        if (empty($rawAddress)) {
+            $rawAddress = implode(', ', array_filter([
                 $app->street_address ?? null,
                 $app->city ?? null,
                 $app->state_province ?? null,
                 $app->country ?? null
             ]));
         }
+        $fullAddress = mb_strtoupper($rawAddress);
 
         $photoUrl = null;
         if ($app && !empty($app->photo_2x2_url)) {
@@ -714,7 +718,7 @@
                     <span class="section-title">STUDENT INFORMATION</span>
                     <div class="lrn-container">
                         <span>LRN:</span>
-                        <input type="text" class="lrn-input" value="{{ $app->lrn ?? $student->student_number }}" style="{{ $getDynamicStyle($app->lrn ?? $student->student_number, '1rem', '0.88rem', '0.78rem', '0.68rem', 12, 18, 24) }}">
+                        <input type="text" class="lrn-input" value="{{ mb_strtoupper($app->lrn ?? $student->student_number) }}" style="{{ $getDynamicStyle($app->lrn ?? $student->student_number, '1rem', '0.88rem', '0.78rem', '0.68rem', 12, 18, 24) }}">
                     </div>
                 </div>
             </div>
@@ -743,23 +747,23 @@
         <div class="field-container">
             <div class="grid-5-col">
                 <div>
-                    <input type="text" class="input-line" value="{{ $app->last_name ?? '' }}" style="{{ $getDynamicStyle($app->last_name ?? '', '0.98rem', '0.80rem', '0.68rem', '0.58rem', 14, 20, 26) }}">
+                    <input type="text" class="input-line" value="{{ mb_strtoupper($app->last_name ?? '') }}" style="{{ $getDynamicStyle($app->last_name ?? '', '0.98rem', '0.80rem', '0.68rem', '0.58rem', 14, 20, 26) }}">
                     <span class="label-text">Last</span>
                 </div>
                 <div>
-                    <input type="text" class="input-line" value="{{ $app->first_name ?? '' }}" style="{{ $getDynamicStyle($app->first_name ?? '', '0.98rem', '0.80rem', '0.68rem', '0.58rem', 14, 20, 26) }}">
+                    <input type="text" class="input-line" value="{{ mb_strtoupper($app->first_name ?? '') }}" style="{{ $getDynamicStyle($app->first_name ?? '', '0.98rem', '0.80rem', '0.68rem', '0.58rem', 14, 20, 26) }}">
                     <span class="label-text">First</span>
                 </div>
                 <div>
-                    <input type="text" class="input-line" value="{{ $app->middle_name ?? '' }}" style="{{ $getDynamicStyle($app->middle_name ?? '', '0.98rem', '0.80rem', '0.68rem', '0.58rem', 14, 20, 26) }}">
+                    <input type="text" class="input-line" value="{{ mb_strtoupper($app->middle_name ?? '') }}" style="{{ $getDynamicStyle($app->middle_name ?? '', '0.98rem', '0.80rem', '0.68rem', '0.58rem', 14, 20, 26) }}">
                     <span class="label-text">Middle</span>
                 </div>
                 <div>
-                    <input type="text" class="input-line" value="{{ ucfirst(strtolower($app->gender ?? '')) }}">
+                    <input type="text" class="input-line" value="{{ mb_strtoupper($app->gender ?? '') }}">
                     <span class="label-text">Sex</span>
                 </div>
                 <div>
-                    <input type="text" class="input-line" value="{{ $student->grade_level ?? $app->grade_level ?? '' }}">
+                    <input type="text" class="input-line" value="{{ mb_strtoupper($student->grade_level ?? $app->grade_level ?? '') }}">
                     <span class="label-text">Grade Level</span>
                 </div>
             </div>
@@ -775,15 +779,15 @@
         <div class="field-container" style="margin-top: 14px;">
             <div class="grid-3-col-birth">
                 <div>
-                    <input type="text" class="input-line" value="{{ $app?->date_of_birth ? $app->date_of_birth->format('M d, Y') : '' }}">
+                    <input type="text" class="input-line" value="{{ $app?->date_of_birth ? mb_strtoupper($app->date_of_birth->format('M d, Y')) : '' }}">
                     <span class="label-text">Date of Birth</span>
                 </div>
                 <div>
-                    <input type="text" class="input-line" value="{{ $app->place_of_birth ?? '' }}" style="{{ $getDynamicStyle($app->place_of_birth ?? '', '0.98rem', '0.82rem', '0.70rem', '0.60rem', 22, 35, 45) }}">
+                    <input type="text" class="input-line" value="{{ mb_strtoupper($app->place_of_birth ?? '') }}" style="{{ $getDynamicStyle($app->place_of_birth ?? '', '0.98rem', '0.82rem', '0.70rem', '0.60rem', 22, 35, 45) }}">
                     <span class="label-text">Place of Birth</span>
                 </div>
                 <div>
-                    <input type="text" class="input-line" value="{{ $app->religion ?? 'Islam' }}">
+                    <input type="text" class="input-line" value="{{ mb_strtoupper($app->religion ?? 'Islam') }}">
                     <span class="label-text">Religion</span>
                 </div>
             </div>
@@ -791,7 +795,7 @@
 
         <!-- Previous Attended School Name -->
         <div class="field-container" style="margin-top: 14px;">
-            <input type="text" class="input-line" value="{{ $app->previous_school_name ?? '' }}" style="{{ $getDynamicStyle($app->previous_school_name ?? '', '0.98rem', '0.82rem', '0.70rem', '0.60rem', 35, 55, 75) }}">
+            <input type="text" class="input-line" value="{{ mb_strtoupper($app->previous_school_name ?? '') }}" style="{{ $getDynamicStyle($app->previous_school_name ?? '', '0.98rem', '0.82rem', '0.70rem', '0.60rem', 35, 55, 75) }}">
             <span class="label-text">Previous Attended School Name</span>
         </div>
 
@@ -799,11 +803,11 @@
         <div class="field-container" style="margin-top: 14px;">
             <div class="grid-2-col-school">
                 <div>
-                    <input type="text" class="input-line" value="{{ $app->previous_school_address ?? '' }}" style="{{ $getDynamicStyle($app->previous_school_address ?? '', '0.98rem', '0.82rem', '0.70rem', '0.60rem', 35, 55, 75) }}">
+                    <input type="text" class="input-line" value="{{ mb_strtoupper($app->previous_school_address ?? '') }}" style="{{ $getDynamicStyle($app->previous_school_address ?? '', '0.98rem', '0.82rem', '0.70rem', '0.60rem', 35, 55, 75) }}">
                     <span class="label-text">Previous School Address</span>
                 </div>
                 <div>
-                    <input type="text" class="input-line" value="{{ $app->mobile_number ?? $app->parent_mobile ?? '' }}">
+                    <input type="text" class="input-line" value="{{ mb_strtoupper($app->mobile_number ?? $app->parent_mobile ?? '') }}">
                     <span class="label-text">Telephone No.</span>
                 </div>
             </div>
@@ -822,7 +826,7 @@
                     <span class="label-text">Father's Full Name</span>
                 </div>
                 <div>
-                    <input type="text" class="input-line" value="{{ $app->father_occupation ?? '' }}" style="{{ $getDynamicStyle($app->father_occupation ?? '', '0.98rem', '0.80rem', '0.68rem', '0.58rem', 16, 24, 30) }}">
+                    <input type="text" class="input-line" value="{{ mb_strtoupper($app->father_occupation ?? '') }}" style="{{ $getDynamicStyle($app->father_occupation ?? '', '0.98rem', '0.80rem', '0.68rem', '0.58rem', 16, 24, 30) }}">
                     <span class="label-text">Occupation</span>
                 </div>
                 <div>
@@ -840,7 +844,7 @@
                     <span class="label-text">Mother's Full Name</span>
                 </div>
                 <div>
-                    <input type="text" class="input-line" value="{{ $app->mother_occupation ?? '' }}" style="{{ $getDynamicStyle($app->mother_occupation ?? '', '0.98rem', '0.80rem', '0.68rem', '0.58rem', 16, 24, 30) }}">
+                    <input type="text" class="input-line" value="{{ mb_strtoupper($app->mother_occupation ?? '') }}" style="{{ $getDynamicStyle($app->mother_occupation ?? '', '0.98rem', '0.80rem', '0.68rem', '0.58rem', 16, 24, 30) }}">
                     <span class="label-text">Occupation</span>
                 </div>
                 <div>
@@ -852,7 +856,7 @@
 
         <!-- Home Address -->
         <div class="field-container" style="margin-top: 14px;">
-            <input type="text" class="input-line" value="{{ $app->home_address ?? $fullAddress }}" style="{{ $getDynamicStyle($app->home_address ?? $fullAddress, '0.98rem', '0.82rem', '0.70rem', '0.60rem', 45, 65, 85) }}">
+            <input type="text" class="input-line" value="{{ mb_strtoupper($app->home_address ?? $fullAddress) }}" style="{{ $getDynamicStyle($app->home_address ?? $fullAddress, '0.98rem', '0.82rem', '0.70rem', '0.60rem', 45, 65, 85) }}">
             <span class="label-text">Home Address</span>
         </div>
 
@@ -868,8 +872,8 @@
         @for($i = 0; $i < 3; $i++)
             @php
                 $sib = $siblingList->get($i);
-                $sibName = $sib ? trim(($sib->first_name ?? '') . ' ' . ($sib->last_name ?? '')) : '';
-                $sibGrade = $sib->grade_level ?? '';
+                $sibName = $sib ? mb_strtoupper(trim(($sib->first_name ?? '') . ' ' . ($sib->last_name ?? ''))) : '';
+                $sibGrade = $sib ? mb_strtoupper($sib->grade_level ?? '') : '';
             @endphp
             <div class="field-container" style="{{ $i === 0 ? 'margin-top: 10px;' : '' }}">
                 <div class="grid-children-row">
@@ -934,7 +938,7 @@
 
         <div class="p2-explain-block">
             <span class="p2-explain-label">If yes, please explain:</span>
-            <input type="text" class="p2-full-line" value="{{ $app->med_explanation ?? '' }}">
+            <input type="text" class="p2-full-line" value="{{ mb_strtoupper($app->med_explanation ?? '') }}">
             <input type="text" class="p2-full-line">
         </div>
 
@@ -947,18 +951,18 @@
 
         <div class="p2-explain-block">
             <span class="p2-explain-label">If yes, please explain:</span>
-            <input type="text" class="p2-full-line" value="{{ $app->current_medications ?? '' }}">
+            <input type="text" class="p2-full-line" value="{{ mb_strtoupper($app->current_medications ?? '') }}">
             <input type="text" class="p2-full-line">
         </div>
 
         <!-- Family Physician & Phone -->
         <div class="grid-physician-row">
             <div>
-                <input type="text" class="input-line" value="{{ $app->family_physician ?? '' }}">
+                <input type="text" class="input-line" value="{{ mb_strtoupper($app->family_physician ?? '') }}">
                 <span class="label-text">Family Physician:</span>
             </div>
             <div>
-                <input type="text" class="input-line" value="{{ $app->physician_phone ?? '' }}">
+                <input type="text" class="input-line" value="{{ mb_strtoupper($app->physician_phone ?? '') }}">
                 <span class="label-text">Phone:</span>
             </div>
         </div>
@@ -970,15 +974,15 @@
 
         <div class="p2-emergency-grid">
             <div>
-                <input type="text" class="input-line" value="{{ $app->emergency_name ?? '' }}" style="{{ $getDynamicStyle($app->emergency_name ?? '', '0.98rem', '0.80rem', '0.68rem', '0.58rem', 20, 28, 35) }}">
+                <input type="text" class="input-line" value="{{ mb_strtoupper($app->emergency_name ?? '') }}" style="{{ $getDynamicStyle($app->emergency_name ?? '', '0.98rem', '0.80rem', '0.68rem', '0.58rem', 20, 28, 35) }}">
                 <span class="label-text">Name</span>
             </div>
             <div>
-                <input type="text" class="input-line" value="{{ $app->emergency_relationship ?? '' }}">
+                <input type="text" class="input-line" value="{{ mb_strtoupper($app->emergency_relationship ?? '') }}">
                 <span class="label-text">Relationship</span>
             </div>
             <div>
-                <input type="text" class="input-line" value="{{ $app->emergency_phone ?? '' }}">
+                <input type="text" class="input-line" value="{{ mb_strtoupper($app->emergency_phone ?? '') }}">
                 <span class="label-text">Phone</span>
             </div>
         </div>
@@ -989,7 +993,7 @@
         </div>
 
         <div class="field-container" style="margin-top: 10px;">
-            <input type="text" class="input-line" value="{{ $app->referral_source ?? '' }}">
+            <input type="text" class="input-line" value="{{ mb_strtoupper($app->referral_source ?? '') }}">
             <span class="label-text">I heard about AMIS from</span>
         </div>
 
@@ -1013,7 +1017,7 @@
                 <span class="label-text">Parent/Guardian</span>
             </div>
             <div>
-                <input type="text" class="input-line" value="{{ $student->created_at->format('M d, Y') }}">
+                <input type="text" class="input-line" value="{{ mb_strtoupper($student->created_at->format('M d, Y')) }}">
                 <span class="label-text">Date</span>
             </div>
         </div>
@@ -1041,7 +1045,7 @@
             </div>
             <div>
                 <span>OR No.:</span>
-                <input type="text" class="input-line" style="width: 110px; display: inline-block;" value="{{ $app?->payment?->reference_number ?? '' }}">
+                <input type="text" class="input-line" style="width: 110px; display: inline-block;" value="{{ mb_strtoupper($app?->payment?->reference_number ?? '') }}">
             </div>
         </div>
 
