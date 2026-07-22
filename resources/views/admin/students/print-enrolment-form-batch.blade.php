@@ -574,6 +574,9 @@
             }
         }
     </style>
+    <!-- html2canvas and JSZip CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body>
 
@@ -595,27 +598,56 @@
         <div class="btn-group">
             <button class="btn btn-secondary" onclick="window.close()">
                 <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                Close Window
+                Close
             </button>
-            <a href="{{ route('admin.students.download-docs-zip', request()->query()) }}" class="btn btn-zip">
+            <a href="{{ route('admin.students.download-enrolment-forms-zip', request()->query()) }}" class="btn btn-zip">
                 <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                Download ZIP Archive
+                ZIP (HTML)
             </a>
+            <button class="btn btn-zip" id="btn-download-png-zip" onclick="generatePngZip()" style="background-color: #f5f3ff; color: #5b21b6; border-color: #ddd6fe;">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                ZIP (PNG)
+            </button>
             <button class="btn btn-primary" onclick="window.print()">
                 <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-                Print All / Save as PDF
+                Print / Save PDF
             </button>
         </div>
     </div>
 
     @forelse($students as $student)
-        @include('admin.students.partials.print.enrolment-form-body', [
-            'student'    => $student,
-            'applicant'  => $student->applicant,
-            'siblings'   => $siblingsMap[$student->id] ?? [],
-            'pageNumber' => $loop->iteration,
-            'totalPages' => count($students),
-        ])
+        @php
+            $appl = $student->applicant;
+            $lastNameClean = mb_strtoupper(str_replace([' ', '/'], '_', trim($appl->last_name ?? 'STUDENT')));
+            $firstNameClean = mb_strtoupper(str_replace([' ', '/'], '_', trim($appl->first_name ?? 'PROFILE')));
+            $gradeFolder = trim($student->grade_level ?: 'Grade_1');
+            if (preg_match('/^Grade\s*(\d+)$/i', $gradeFolder, $m)) {
+                $gShort = 'G' . $m[1];
+            } elseif (preg_match('/^Kinder\s*(\d+)$/i', $gradeFolder, $m)) {
+                $gShort = 'K' . $m[1];
+            } else {
+                $gShort = str_replace(' ', '_', $gradeFolder);
+            }
+            $learningMode = strtolower($appl->learning_mode ?? '');
+            $isF2f = str_contains($learningMode, 'face') || str_contains($learningMode, 'f2f');
+            $modeLabel = $isF2f ? 'F2F' : 'ODL';
+            if (!$isF2f) {
+                $shiftFolder = '1ST_SHIFT';
+                if (str_contains($learningMode, '2nd') || str_contains($learningMode, 'second') || str_contains($learningMode, 'shift 2')) {
+                    $shiftFolder = '2ND_SHIFT';
+                }
+                $modeLabel = "ODL/{$shiftFolder}";
+            }
+        @endphp
+        <div class="student-print-wrapper" data-student-id="{{ $student->id }}" data-student-name="{{ $lastNameClean }}_{{ $firstNameClean }}" data-grade="{{ $gShort }}" data-mode="{{ $modeLabel }}">
+            @include('admin.students.partials.print.enrolment-form-body', [
+                'student'    => $student,
+                'applicant'  => $student->applicant,
+                'siblings'   => $siblingsMap[$student->id] ?? [],
+                'pageNumber' => $loop->iteration,
+                'totalPages' => count($students),
+            ])
+        </div>
     @empty
         <div class="paper-container text-center" style="padding: 50px; font-family: 'Inter', sans-serif;">
             <h3>No student records found for printing.</h3>
@@ -673,6 +705,100 @@
                 }
             }, 3500);
         });
+
+        async function generatePngZip() {
+            const overlay = document.getElementById('loadingOverlay');
+            const fill = document.getElementById('loadingProgressBar');
+            const text = document.getElementById('loadingProgressCount');
+            const title = overlay ? overlay.querySelector('.loading-title') : null;
+            
+            if (overlay) {
+                overlay.classList.remove('hidden-overlay');
+            }
+            if (title) {
+                title.innerText = 'Generating PNG Images...';
+            }
+            if (fill) fill.style.width = '0%';
+            
+            const zip = new JSZip();
+            const wrappers = document.querySelectorAll('.student-print-wrapper');
+            const totalStudents = wrappers.length;
+            
+            if (totalStudents === 0) {
+                alert('No student records found to export.');
+                if (overlay) overlay.classList.add('hidden-overlay');
+                return;
+            }
+            
+            let processedPages = 0;
+            const totalPages = totalStudents * 2;
+            
+            for (let i = 0; i < totalStudents; i++) {
+                const wrapper = wrappers[i];
+                const studentName = wrapper.getAttribute('data-student-name') || 'STUDENT_' + i;
+                const grade = wrapper.getAttribute('data-grade') || 'Grade_1';
+                const mode = wrapper.getAttribute('data-mode') || 'F2F';
+                const pages = wrapper.querySelectorAll('.paper-container');
+                
+                const basePath = `${grade}/${mode}`;
+                
+                for (let pageIdx = 0; pageIdx < pages.length; pageIdx++) {
+                    const pageEl = pages[pageIdx];
+                    const pageNum = pageIdx + 1;
+                    
+                    const pct = Math.round((processedPages / totalPages) * 100);
+                    if (fill) fill.style.width = pct + '%';
+                    if (text) {
+                        text.innerText = `Rendering Student ${i + 1} of ${totalStudents} (Page ${pageNum}/2)...`;
+                    }
+                    
+                    try {
+                        const canvas = await html2canvas(pageEl, {
+                            scale: 2,
+                            useCORS: true,
+                            logging: false,
+                            allowTaint: true,
+                            backgroundColor: '#ffffff'
+                        });
+                        
+                        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+                        zip.file(`${basePath}/${studentName}_Page_${pageNum}.png`, blob);
+                        
+                    } catch (err) {
+                        console.error(`Failed to render ${studentName} page ${pageNum}:`, err);
+                    }
+                    
+                    processedPages++;
+                }
+            }
+            
+            if (fill) fill.style.width = '100%';
+            if (text) text.innerText = 'Creating ZIP archive... Please wait.';
+            
+            try {
+                const content = await zip.generateAsync({ type: 'blob' });
+                const url = URL.createObjectURL(content);
+                const link = document.createElement('a');
+                const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+                const gradeClean = "{{ str_replace(' ', '_', $gradeTitle ?? 'Batch') }}";
+                link.href = url;
+                link.download = `Enrollment_Forms_SY_2026-2027_${gradeClean}_${dateStr}_PNG.zip`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                setTimeout(() => URL.revokeObjectURL(url), 100);
+            } catch (zipErr) {
+                console.error('Error generating ZIP:', zipErr);
+                alert('Failed to generate ZIP file.');
+            }
+            
+            if (title) {
+                title.innerText = 'Loading Enrollment Forms';
+            }
+            if (overlay) {
+                overlay.classList.add('hidden-overlay');
+            }
+        }
 
         if (new URLSearchParams(window.location.search).get('auto_print') === '1') {
             window.addEventListener('DOMContentLoaded', () => {
