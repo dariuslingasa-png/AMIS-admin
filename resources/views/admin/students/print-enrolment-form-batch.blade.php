@@ -647,7 +647,7 @@
         <h2>📄 Enrolment Application Forms ({{ $gradeTitle ?? 'All Grades' }}) - {{ count($students) }} Students</h2>
         <div class="btn-group">
             <button class="btn btn-secondary" onclick="window.close()">Close Window</button>
-            <a href="{{ route('admin.students.download-documents-zip', request()->query()) }}" class="btn btn-zip">
+            <a href="{{ route('admin.students.download-docs-zip', request()->query()) }}" class="btn btn-zip">
                 📦 Download ZIP Archive
             </a>
             <button class="btn btn-primary" onclick="window.print()">🖨️ Print All / Save as PDF</button>
