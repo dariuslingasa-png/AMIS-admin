@@ -50,6 +50,10 @@
                         <i data-lucide="chevron-down" class="h-3 w-3 text-slate-400"></i>
                     </button>
                     <div x-cloak x-show="open" x-transition.origin.top.right.duration.150ms class="absolute right-0 mt-2 w-56 rounded-xl border border-slate-200 bg-white p-1 shadow-xl z-50">
+                        <a href="{{ route('admin.students.print-enrolment-forms-batch', request()->all()) }}" target="_blank" class="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold text-emerald-800 hover:bg-emerald-50">
+                            <i data-lucide="file-signature" class="h-3.5 w-3.5 text-emerald-600"></i>
+                            <span>Print Enrollment Application Forms ({{ request('grade') ?: 'All Grades' }})</span>
+                        </a>
                         <a href="{{ route('admin.students.index', array_merge(request()->all(), ['print_info' => 1])) }}" target="_blank" class="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">
                             <i data-lucide="file-text" class="h-3.5 w-3.5 text-slate-400"></i>
                             <span>Print Official Info Sheets</span>

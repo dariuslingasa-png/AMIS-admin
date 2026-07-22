@@ -186,6 +186,7 @@ Route::name('admin.')->group(function () {
         Route::post('/students/{student}/update-section', [AdminStudentController::class, 'updateSection'])->name('students.update-section');
         Route::post('/students/{student}/update-photo', [AdminStudentController::class, 'updatePhoto'])->name('students.update-photo');
         Route::get('/students/{student}/id-editor', [AdminStudentController::class, 'idEditor'])->name('students.id-editor');
+        Route::get('/students/print-enrolment-forms-batch', [AdminStudentController::class, 'printEnrolmentFormsBatch'])->name('students.print-enrolment-forms-batch');
         Route::get('/students/{student}/print-enrolment-form', [AdminStudentController::class, 'printEnrolmentForm'])->name('students.print-enrolment-form');
         Route::post('/students/{student}/update-id-font-sizes', [AdminStudentController::class, 'updateIdFontSizes'])->name('students.update-id-font-sizes');
         Route::post('/students/{student}/delete-photo', [AdminStudentController::class, 'deletePhoto'])->name('students.delete-photo');

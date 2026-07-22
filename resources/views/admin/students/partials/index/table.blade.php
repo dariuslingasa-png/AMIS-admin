@@ -209,6 +209,9 @@
                                         </button>
                                     </form>
                                 @endif
+                                <a href="{{ route('admin.students.print-enrolment-form', $student) }}" target="_blank" class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-emerald-200 bg-emerald-50 text-emerald-700 transition-colors duration-100 hover:bg-emerald-100" title="Print Enrollment Application Form">
+                                    <i data-lucide="file-signature" class="h-4 w-4"></i>
+                                </a>
                                 <a href="{{ route('admin.students.index', ['search' => $student->student_number, 'print_info' => 1]) }}" target="_blank" class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 transition-colors duration-100 hover:bg-slate-50" title="Print Info Sheet">
                                     <i data-lucide="printer" class="h-4 w-4"></i>
                                 </a>

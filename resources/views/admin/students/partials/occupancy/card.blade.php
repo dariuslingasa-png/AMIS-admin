@@ -76,6 +76,12 @@
                     </button>
                     <div x-cloak x-show="openGradePrintDropdown" x-transition.origin.top.right 
                          class="absolute right-0 mt-1 w-48 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl z-50 text-left">
+                        <a href="{{ route('admin.students.print-enrolment-forms-batch', ['grade' => $gradeLevel]) }}" target="_blank" 
+                           class="flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-[11px] font-bold text-emerald-800 hover:bg-emerald-50 transition">
+                            <i data-lucide="file-signature" class="w-3.5 h-3.5 text-emerald-600"></i>
+                            <span>Print Enrollment Forms</span>
+                        </a>
+                        <div class="my-1 border-t border-slate-100"></div>
                         <a href="{{ route('admin.students.grade-roster-print', $gradeLevel) }}" target="_blank" 
                            class="flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-[11px] font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition">
                             <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-600"></i>
@@ -199,6 +205,12 @@
                                         </button>
                                         <div x-cloak x-show="openPrintDropdown" x-transition.origin.bottom.right 
                                              class="absolute right-0 bottom-full mb-1.5 w-36 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl z-50 text-left">
+                                            <a href="{{ route('admin.students.print-enrolment-forms-batch', ['section_id' => $section->id]) }}" target="_blank" 
+                                               class="flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-[11px] font-bold text-emerald-800 hover:bg-emerald-50 transition">
+                                                <i data-lucide="file-signature" class="w-3.5 h-3.5 text-emerald-600"></i>
+                                                <span>Enrollment Forms</span>
+                                            </a>
+                                            <div class="my-1 border-t border-slate-100"></div>
                                             <a href="{{ route('admin.students.roster-print', $section) }}" target="_blank" 
                                                class="flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-[11px] font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition">
                                                 <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-600"></i>

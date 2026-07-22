@@ -415,6 +415,71 @@ class AdminStudentController extends Controller
         ]);
     }
 
+    public function printEnrolmentFormsBatch(Request $request)
+    {
+        $query = Student::with(['applicant.user', 'applicant.payment', 'studentSection.section']);
+
+        if ($request->filled('section_id')) {
+            $query->whereHas('studentSection', function($q) use ($request) {
+                $q->where('section_id', $request->section_id);
+            });
+        } elseif ($request->filled('grade')) {
+            $query->where('students.grade_level', $request->grade);
+        }
+
+        if ($request->filled('search')) {
+            $s = trim($request->search);
+            $query->where(function($q) use ($s) {
+                $q->where('students.student_number', 'like', "%{$s}%")
+                  ->orWhere('students.school_email', 'like', "%{$s}%")
+                  ->orWhereHas('applicant', fn($a) => $a->where('first_name', 'like', "%{$s}%")->orWhere('last_name', 'like', "%{$s}%"));
+            });
+        }
+
+        if ($request->filled('mode')) {
+            $mode = $request->mode;
+            $query->whereHas('applicant', fn($q) => $q->where('learning_mode', 'like', "%{$mode}%"));
+        }
+
+        if ($request->filled('gender')) {
+            $gender = strtolower((string) $request->gender);
+            if (in_array($gender, ['male', 'female'], true)) {
+                $query->whereHas('applicant', fn($q) => $q->whereRaw('LOWER(gender) = ?', [$gender]));
+            }
+        }
+
+        $gradeOrder = ['Kinder 1', 'Kinder 2', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'];
+        $students = $query
+            ->leftJoin('enrollment_applicants as sort_ea', 'sort_ea.id', '=', 'students.enrollment_applicant_id')
+            ->select('students.*')
+            ->orderByRaw("FIELD(students.grade_level, " . implode(',', array_fill(0, count($gradeOrder), '?')) . ")", $gradeOrder)
+            ->orderBy('sort_ea.last_name', 'asc')
+            ->orderBy('sort_ea.first_name', 'asc')
+            ->get();
+
+        $userIds = $students->pluck('applicant.user_id')->filter()->unique();
+        $allSiblings = \App\Models\EnrollmentApplicant::whereIn('user_id', $userIds)->get()->groupBy('user_id');
+
+        $siblingsMap = [];
+        foreach ($students as $s) {
+            $app = $s->applicant;
+            if ($app && $app->user_id) {
+                $siblingsMap[$s->id] = ($allSiblings[$app->user_id] ?? collect())->reject(fn($a) => $a->id === $app->id);
+            } else {
+                $siblingsMap[$s->id] = collect();
+            }
+        }
+
+        $section = $request->filled('section_id') ? \App\Models\Section::find($request->section_id) : null;
+        $gradeTitle = $section ? ($section->grade_level . ' - ' . ($section->official_name ?: $section->name)) : ($request->grade ?: 'All Grades');
+
+        return view('admin.students.print-enrolment-form-batch', [
+            'students' => $students,
+            'gradeTitle' => $gradeTitle,
+            'siblingsMap' => $siblingsMap,
+        ]);
+    }
+
     public function toggleRequirementsLock(Request $request, Student $student)
     {
         $student->is_requirements_locked = !$student->is_requirements_locked;

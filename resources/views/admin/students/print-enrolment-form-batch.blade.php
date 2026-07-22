@@ -3,22 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    @php
-        $app = $applicant;
-        
-        // Auto PDF Filename format for document title: LASTNAME FIRSTNAME GRADE LEVEL
-        $lName = mb_strtoupper(trim($app->last_name ?? $student->last_name ?? ''));
-        $fName = mb_strtoupper(trim($app->first_name ?? $student->first_name ?? ''));
-        $gLevel = mb_strtoupper(trim($student->grade_level ?? $app->grade_level ?? ''));
-        
-        $autoFileName = implode(' ', array_filter([$lName, $fName, $gLevel ? 'GRADE ' . $gLevel : '']));
-        if (empty(trim($autoFileName)) || $autoFileName === 'GRADE') {
-            $autoFileName = mb_strtoupper(trim($student->full_name)) . ($gLevel ? ' GRADE ' . $gLevel : '');
-        }
-    @endphp
-    <title>{{ $autoFileName }}</title>
+    <title>ENROLMENT APPLICATION FORMS - {{ mb_strtoupper($gradeTitle ?? 'BATCH') }}</title>
     
-    <!-- Premium Google Fonts: Merriweather for Headers & Inter for Fillable Data -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Merriweather:wght@400;700;900&display=swap" rel="stylesheet">
@@ -186,7 +172,6 @@
             flex-shrink: 0;
         }
 
-        /* NO REFUND OF ENROLLMENT FEE Box styling */
         .refund-notice-box {
             border: 2px solid #dc2626;
             padding: 6px 12px;
@@ -206,7 +191,6 @@
             align-self: center;
         }
 
-        /* Middle Header Row: Form Title, Checkboxes, 2x2 Photo Box */
         .form-middle-grid {
             display: grid;
             grid-template-columns: 1fr auto 125px;
@@ -240,7 +224,6 @@
             color: #1e293b;
         }
 
-        /* Student Info Header & LRN */
         .student-info-bar {
             display: flex;
             align-items: baseline;
@@ -281,7 +264,6 @@
             text-transform: uppercase;
         }
 
-        /* OLD / NEW Checkboxes Vertically Stacked */
         .checkbox-stack {
             display: flex;
             flex-direction: column;
@@ -317,7 +299,6 @@
             border-radius: 3px;
         }
 
-        /* 2x2 Photo Square Box */
         .photo-box {
             width: 125px;
             height: 125px;
@@ -340,7 +321,6 @@
             display: block;
         }
 
-        /* Section Header Divider */
         .section-header-row {
             font-family: 'Inter', sans-serif;
             font-size: 0.95rem;
@@ -353,7 +333,6 @@
             white-space: nowrap;
         }
 
-        /* Fillable Text Lines & Input Fields with Auto-Truncate Safety */
         .field-container {
             margin-bottom: 12px;
             width: 100%;
@@ -420,7 +399,6 @@
             margin-bottom: 8px;
         }
 
-        /* Bottom Section: Applicant Lives With */
         .lives-with-row {
             margin-top: 20px;
             display: flex;
@@ -447,7 +425,6 @@
             line-height: 18px;
         }
 
-        /* PAGE 2 STYLES */
         .p2-question-row {
             margin-top: 16px;
             font-family: 'Inter', sans-serif;
@@ -575,7 +552,6 @@
             outline: none;
         }
 
-        /* ATTACHMENTS CHECKLIST: Reduced font size by -0.5 specifically for checklist items */
         .attachments-title {
             font-family: 'Inter', sans-serif;
             font-size: 0.82rem;
@@ -593,7 +569,6 @@
             color: #334155;
         }
 
-        /* Print Media Styles for Perfect PDF Save */
         @media print {
             * {
                 -webkit-print-color-adjust: exact !important;
@@ -640,24 +615,26 @@
 
     <!-- Top Action Bar for Screen Viewing -->
     <div class="action-bar">
-        <h2>📄 Official Enrolment Application Form - {{ $student->student_number }}</h2>
+        <h2>📄 Enrolment Application Forms ({{ $gradeTitle ?? 'All Grades' }}) - {{ count($students) }} Students</h2>
         <div class="btn-group">
             <button class="btn btn-secondary" onclick="window.close()">Close Window</button>
-            <button class="btn btn-primary" onclick="triggerPrintPDF()">🖨️ Print / Save as PDF</button>
+            <button class="btn btn-primary" onclick="window.print()">🖨️ Print All / Save as PDF</button>
         </div>
     </div>
 
-    @include('admin.students.partials.print.enrolment-form-body', [
-        'student'   => $student,
-        'applicant' => $applicant,
-        'siblings'  => $siblings,
-    ])
+    @forelse($students as $student)
+        @include('admin.students.partials.print.enrolment-form-body', [
+            'student'   => $student,
+            'applicant' => $student->applicant,
+            'siblings'  => $siblingsMap[$student->id] ?? [],
+        ])
+    @empty
+        <div class="paper-container text-center" style="padding: 50px; font-family: 'Inter', sans-serif;">
+            <h3>No student records found for printing.</h3>
+        </div>
+    @endforelse
 
     <script>
-        function triggerPrintPDF() {
-            window.print();
-        }
-
         if (new URLSearchParams(window.location.search).get('auto_print') === '1') {
             window.addEventListener('DOMContentLoaded', () => {
                 setTimeout(() => window.print(), 500);
