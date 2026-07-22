@@ -66,6 +66,8 @@
             $app->country ?? null
         ]));
     }
+    // Fix missing spaces between numbers and letters (e.g. "68UMMAH" -> "68 UMMAH")
+    $rawAddress = preg_replace('/(\d+)([A-Za-z])/', '$1 $2', $rawAddress);
     $fullAddress = mb_strtoupper($rawAddress);
 
     // Student Age Calculation
@@ -107,8 +109,8 @@
         $photoSrc = 'https://amis.edu.ph/student-photo/' . $student->obfuscated_id . '.jpg';
     }
 
-    // Multi-tier Helper function for dynamic font-size calculation on long text
-    $getDynamicStyle = function($text, $baseSize = '0.98rem', $mediumSize = '0.80rem', $smallSize = '0.68rem', $xsmallSize = '0.58rem', $t1 = 18, $t2 = 25, $t3 = 32) {
+    // Multi-tier Helper function for dynamic font-size calculation on long text (keeps normal text large)
+    $getDynamicStyle = function($text, $baseSize = '0.96rem', $mediumSize = '0.84rem', $smallSize = '0.72rem', $xsmallSize = '0.60rem', $t1 = 26, $t2 = 36, $t3 = 48) {
         $len = mb_strlen(trim($text ?? ''));
         if ($len > $t3) {
             return "font-size: {$xsmallSize}; font-weight: 800;";
@@ -119,7 +121,7 @@
         if ($len > $t1) {
             return "font-size: {$mediumSize}; font-weight: 750;";
         }
-        return "font-size: {$baseSize};";
+        return "font-size: {$baseSize}; font-weight: 750;";
     };
 @endphp
 
@@ -177,15 +179,15 @@
     <div class="field-container">
         <div class="grid-5-col">
             <div>
-                <input type="text" class="input-line" value="{{ mb_strtoupper($app->last_name ?? '') }}" style="{{ $getDynamicStyle($app->last_name ?? '', '0.92rem', '0.76rem', '0.62rem', '0.50rem', 10, 16, 22) }}">
+                <input type="text" class="input-line" value="{{ mb_strtoupper($app->last_name ?? '') }}" style="{{ $getDynamicStyle($app->last_name ?? '', '0.96rem', '0.84rem', '0.72rem', '0.60rem', 22, 32, 42) }}">
                 <span class="label-text">Last</span>
             </div>
             <div>
-                <input type="text" class="input-line" value="{{ mb_strtoupper($app->first_name ?? '') }}" style="{{ $getDynamicStyle($app->first_name ?? '', '0.92rem', '0.76rem', '0.62rem', '0.50rem', 10, 16, 22) }}">
+                <input type="text" class="input-line" value="{{ mb_strtoupper($app->first_name ?? '') }}" style="{{ $getDynamicStyle($app->first_name ?? '', '0.96rem', '0.84rem', '0.72rem', '0.60rem', 22, 32, 42) }}">
                 <span class="label-text">First</span>
             </div>
             <div>
-                <input type="text" class="input-line" value="{{ mb_strtoupper($app->middle_name ?? '') }}" style="{{ $getDynamicStyle($app->middle_name ?? '', '0.92rem', '0.76rem', '0.62rem', '0.50rem', 10, 16, 22) }}">
+                <input type="text" class="input-line" value="{{ mb_strtoupper($app->middle_name ?? '') }}" style="{{ $getDynamicStyle($app->middle_name ?? '', '0.96rem', '0.84rem', '0.72rem', '0.60rem', 22, 32, 42) }}">
                 <span class="label-text">Middle</span>
             </div>
             <div>
@@ -254,11 +256,11 @@
     <div class="field-container" style="margin-top: 10px;">
         <div class="grid-parent-row">
             <div>
-                <input type="text" class="input-line" value="{{ $fatherFull }}" style="{{ $getDynamicStyle($fatherFull, '0.90rem', '0.76rem', '0.64rem', '0.52rem', 14, 20, 26) }}">
+                <input type="text" class="input-line" value="{{ $fatherFull }}" style="{{ $getDynamicStyle($fatherFull, '0.96rem', '0.84rem', '0.72rem', '0.60rem', 25, 35, 45) }}">
                 <span class="label-text">Father's Full Name</span>
             </div>
             <div>
-                <input type="text" class="input-line" value="{{ mb_strtoupper($app->father_occupation ?? '') }}" style="{{ $getDynamicStyle($app->father_occupation ?? '', '0.86rem', '0.72rem', '0.60rem', '0.50rem', 10, 16, 22) }}">
+                <input type="text" class="input-line" value="{{ mb_strtoupper($app->father_occupation ?? '') }}" style="{{ $getDynamicStyle($app->father_occupation ?? '', '0.94rem', '0.82rem', '0.70rem', '0.60rem', 22, 32, 42) }}">
                 <span class="label-text">Occupation</span>
             </div>
             <div>
@@ -280,11 +282,11 @@
     <div class="field-container" style="margin-top: 14px;">
         <div class="grid-parent-row">
             <div>
-                <input type="text" class="input-line" value="{{ $motherFull }}" style="{{ $getDynamicStyle($motherFull, '0.90rem', '0.76rem', '0.64rem', '0.52rem', 14, 20, 26) }}">
+                <input type="text" class="input-line" value="{{ $motherFull }}" style="{{ $getDynamicStyle($motherFull, '0.96rem', '0.84rem', '0.72rem', '0.60rem', 25, 35, 45) }}">
                 <span class="label-text">Mother's Full Name</span>
             </div>
             <div>
-                <input type="text" class="input-line" value="{{ mb_strtoupper($app->mother_occupation ?? '') }}" style="{{ $getDynamicStyle($app->mother_occupation ?? '', '0.86rem', '0.72rem', '0.60rem', '0.50rem', 10, 16, 22) }}">
+                <input type="text" class="input-line" value="{{ mb_strtoupper($app->mother_occupation ?? '') }}" style="{{ $getDynamicStyle($app->mother_occupation ?? '', '0.94rem', '0.82rem', '0.70rem', '0.60rem', 22, 32, 42) }}">
                 <span class="label-text">Occupation</span>
             </div>
             <div>
@@ -303,8 +305,12 @@
         </div>
     </div>
 
+    @php
+        $formattedHomeAddress = mb_strtoupper(preg_replace('/(\d+)([A-Za-z])/', '$1 $2', $app->home_address ?? $fullAddress));
+    @endphp
+
     <div class="field-container" style="margin-top: 14px;">
-        <input type="text" class="input-line" value="{{ mb_strtoupper($app->home_address ?? $fullAddress) }}" style="{{ $getDynamicStyle($app->home_address ?? $fullAddress, '0.98rem', '0.82rem', '0.70rem', '0.60rem', 45, 65, 85) }}">
+        <input type="text" class="input-line" value="{{ $formattedHomeAddress }}" style="{{ $getDynamicStyle($formattedHomeAddress, '0.96rem', '0.82rem', '0.70rem', '0.60rem', 45, 65, 85) }}">
         <span class="label-text">Home Address</span>
     </div>
 
