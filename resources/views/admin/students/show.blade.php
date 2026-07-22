@@ -491,18 +491,18 @@
                     @endif
                 </div>
                 
-                <div class="flex-1 min-w-0">
-                    <div class="flex items-center gap-3 flex-wrap">
+                <div class="flex-1 min-w-0 pr-72">
+                    <div class="flex items-center gap-2.5 flex-wrap">
                         <h2 class="text-3xl font-black tracking-tight font-outfit uppercase">{{ $displayName }}</h2>
                         @if ($isRequirementsComplete)
                             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black bg-emerald-400/20 text-emerald-200 border border-emerald-400/40 uppercase tracking-wider shadow-xs" title="All mandatory requirements verified & locked">
                                 <i data-lucide="lock" class="w-3.5 h-3.5 text-emerald-300"></i>
-                                🔒 Completed Requirements
+                                <span>Completed Requirements</span>
                             </span>
                         @else
                             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black bg-amber-400/20 text-amber-200 border border-amber-400/40 uppercase tracking-wider shadow-xs animate-pulse" title="Pending: {{ implode(', ', $missingRequirements) }}">
                                 <i data-lucide="unlock" class="w-3.5 h-3.5 text-amber-300"></i>
-                                Pending Requirements ({{ count($missingRequirements) }})
+                                <span>Pending Requirements ({{ count($missingRequirements) }})</span>
                             </span>
                         @endif
                         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black bg-white/10 text-white border border-white/20 uppercase tracking-wider">

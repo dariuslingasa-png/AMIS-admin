@@ -97,11 +97,13 @@
                     <span class="text-slate-600 dark:text-slate-400 text-sm font-medium">Requirements Clearance</span>
                     @if(isset($isRequirementsComplete) && $isRequirementsComplete)
                         <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20 dark:bg-emerald-950/20 dark:text-emerald-400 px-2.5 py-0.5 text-xs font-bold">
-                            🔒 {{ ($student->is_requirements_locked ?? false) ? 'COMPLETED INFORMATION' : 'Locked & Complete' }}
+                            <i data-lucide="lock" class="h-3 w-3 text-emerald-600"></i>
+                            <span>{{ ($student->is_requirements_locked ?? false) ? 'COMPLETED INFORMATION' : 'Locked & Complete' }}</span>
                         </span>
                     @else
                         <span class="inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/20 dark:bg-amber-950/20 dark:text-amber-400 px-2.5 py-0.5 text-xs font-bold">
-                            🔓 Pending ({{ count($missingRequirements ?? []) }})
+                            <i data-lucide="unlock" class="h-3 w-3 text-amber-600"></i>
+                            <span>Pending ({{ count($missingRequirements ?? []) }})</span>
                         </span>
                     @endif
                 </div>

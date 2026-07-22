@@ -5,7 +5,7 @@
             <div class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 dark:bg-emerald-950/30 p-3.5 flex items-center justify-between gap-3 text-emerald-900 dark:text-emerald-200">
                 <div class="flex items-center gap-2 text-xs font-bold">
                     <i data-lucide="shield-check" class="h-4 w-4 text-emerald-600 dark:text-emerald-400"></i>
-                    <span>🔒 ALL REGISTRATION DOCUMENTS & LRN REQUIREMENTS VERIFIED AND CLEAR</span>
+                    <span>ALL REGISTRATION DOCUMENTS & LRN REQUIREMENTS VERIFIED AND CLEAR</span>
                 </div>
                 <span class="px-2.5 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-black uppercase tracking-wider">LOCKED & COMPLETE</span>
             </div>
