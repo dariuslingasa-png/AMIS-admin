@@ -127,6 +127,11 @@
 
 <!-- PAGE 1: ENROLMENT APPLICATION FORM -->
 <div class="paper-container paper-page-break">
+    @if(isset($pageNumber))
+        <div class="page-number-badge">
+            PAGE {{ $pageNumber }}{{ isset($totalPages) && $totalPages > 1 ? ' OF ' . $totalPages : '' }}
+        </div>
+    @endif
     <div class="top-header-row">
         <div class="header-left-group">
             <img src="{{ $amisLogoSrc }}" alt="AMIS Logo" class="header-logo-amis">

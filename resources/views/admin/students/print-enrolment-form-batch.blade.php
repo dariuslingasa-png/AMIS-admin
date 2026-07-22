@@ -569,6 +569,23 @@
             color: #334155;
         }
 
+        .page-number-badge {
+            position: absolute;
+            top: 5mm;
+            right: 8mm;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: #1e293b;
+            background-color: #f1f5f9;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 4px;
+            padding: 2px 10px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            z-index: 10;
+        }
+
         @media print {
             * {
                 -webkit-print-color-adjust: exact !important;
@@ -624,9 +641,11 @@
 
     @forelse($students as $student)
         @include('admin.students.partials.print.enrolment-form-body', [
-            'student'   => $student,
-            'applicant' => $student->applicant,
-            'siblings'  => $siblingsMap[$student->id] ?? [],
+            'student'    => $student,
+            'applicant'  => $student->applicant,
+            'siblings'   => $siblingsMap[$student->id] ?? [],
+            'pageNumber' => $loop->iteration,
+            'totalPages' => count($students),
         ])
     @empty
         <div class="paper-container text-center" style="padding: 50px; font-family: 'Inter', sans-serif;">
