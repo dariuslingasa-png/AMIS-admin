@@ -1128,8 +1128,8 @@
                         $displayGrade = $student->grade_level;
 
                         $homeAddress = implode(', ', array_filter([$student->applicant?->home_street_address, $student->applicant?->home_city, $student->applicant?->home_state_province]));
-                        if (empty($homeAddress)) {
-                            $homeAddress = $student->applicant?->home_address ?: '-';
+                        if (empty($homeAddress) || $homeAddress === '-') {
+                            $homeAddress = $student->applicant?->home_address ?: ($studentAddress ?: 'MISSING INFO');
                         }
                         
                         $rawEmergencyName = trim($student->applicant?->emergency_name ?? '');
@@ -1137,7 +1137,7 @@
                         $motherName = trim(($student->applicant?->mother_first_name ?? '') . ' ' . ($student->applicant?->mother_last_name ?? ''));
                         
                         if (empty($rawEmergencyName) || strtolower($rawEmergencyName) === 'emergency contact' || is_numeric(str_replace(['+', ' ', '-', '(', ')'], '', $rawEmergencyName))) {
-                            $emergencyName = $fatherName ?: ($motherName ?: 'REGISTRAR OFFICE');
+                            $emergencyName = $fatherName ?: ($motherName ?: 'MISSING INFO');
                         } else {
                             $emergencyName = $rawEmergencyName;
                         }
@@ -1148,14 +1148,16 @@
                                 $relationship = 'FATHER';
                             } elseif (!empty($motherName) && str_contains(strtolower($emergencyName), strtolower($motherName))) {
                                 $relationship = 'MOTHER';
-                            } else {
+                            } elseif (!empty($fatherName) || !empty($motherName)) {
                                 $relationship = 'PARENT / GUARDIAN';
+                            } else {
+                                $relationship = 'MISSING INFO';
                             }
                         }
                         
                         $emergencyPhone = $student->applicant?->emergency_phone ?: '';
                         if (empty($emergencyPhone)) {
-                            $emergencyPhone = $student->applicant?->parent_mobile ?: ($student->applicant?->mobile_number ?: '+63 900 000 0000');
+                            $emergencyPhone = $student->applicant?->parent_mobile ?: ($student->applicant?->mobile_number ?: 'MISSING INFO');
                         }
 
                         $studentNumber = $student->student_number;

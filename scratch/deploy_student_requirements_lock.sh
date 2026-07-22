@@ -17,7 +17,8 @@ tar -czf $ARCHIVE_NAME \
     resources/views/admin/students/partials/show/overview.blade.php \
     resources/views/admin/students/partials/show/sidebar.blade.php \
     resources/views/admin/students/partials/show/documents.blade.php \
-    resources/views/components/applicant/detail-section.blade.php
+    resources/views/components/applicant/detail-section.blade.php \
+    resources/views/components/applicant/field.blade.php
 
 echo "Uploading bundle to production server..."
 scp -o StrictHostKeyChecking=no -P $REMOTE_PORT $ARCHIVE_NAME $REMOTE_USER@$REMOTE_HOST:$REMOTE_PATH/
