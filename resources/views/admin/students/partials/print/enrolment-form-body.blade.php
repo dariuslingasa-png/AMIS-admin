@@ -6,19 +6,21 @@
     $isOld = str_contains($studentType, 'OLD');
     $isNew = str_contains($studentType, 'NEW') || !$isOld;
 
-    // Base64 logo encoder helper
-    $getLogoBase64 = function($relativePath) {
-        $path = public_path($relativePath);
-        if (file_exists($path)) {
-            $type = pathinfo($path, PATHINFO_EXTENSION);
-            $data = file_get_contents($path);
-            return 'data:image/' . ($type === 'svg' ? 'svg+xml' : $type) . ';base64,' . base64_encode($data);
-        }
-        return asset($relativePath);
-    };
+    static $cachedAmisLogo = null;
+    static $cachedDepedLogo = null;
 
-    $amisLogoSrc = $getLogoBase64('images/AMIS_Logo.png');
-    $depedLogoSrc = $getLogoBase64('images/logo/deped_logo.png');
+    if ($cachedAmisLogo === null) {
+        $path = public_path('images/AMIS_Logo.png');
+        $cachedAmisLogo = file_exists($path) ? 'data:image/png;base64,' . base64_encode(file_get_contents($path)) : asset('images/AMIS_Logo.png');
+    }
+
+    if ($cachedDepedLogo === null) {
+        $path = public_path('images/logo/deped_logo.png');
+        $cachedDepedLogo = file_exists($path) ? 'data:image/png;base64,' . base64_encode(file_get_contents($path)) : asset('images/logo/deped_logo.png');
+    }
+
+    $amisLogoSrc = $cachedAmisLogo;
+    $depedLogoSrc = $cachedDepedLogo;
 
     // Parent Name formatting helper: Format middle name to Middle Initial (e.g. SAHARODIN G. SALINDAWAN)
     $formatParentName = function($first, $middle, $last) {
