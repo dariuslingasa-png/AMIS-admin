@@ -623,8 +623,12 @@
         }
 
         $photoUrl = null;
-        if ($app && $app->photo_2x2_url) {
+        if ($app && !empty($app->photo_2x2_url)) {
             $photoUrl = \App\Support\EnrollmentStorage::url($app->photo_2x2_url);
+        } elseif (!empty($student->photo_url)) {
+            $photoUrl = \App\Support\EnrollmentStorage::url($student->photo_url);
+        } elseif ($student && !empty($student->obfuscated_id)) {
+            $photoUrl = 'https://amis.edu.ph/student-photo/' . $student->obfuscated_id . '.jpg';
         }
     @endphp
 
