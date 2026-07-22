@@ -54,10 +54,10 @@
                 </span>
                 <!-- JSON Batch Sync for this Grade Level -->
                 <button type="button" 
-                        @click="$dispatch('open-json-sync', { gradeLevel: '{{ $gradeLevel }}' })" 
+                        @click="window.dispatchEvent(new CustomEvent('open-json-sync', { detail: { gradeLevel: '{{ $gradeLevel }}' } }))" 
                         class="h-7 w-7 rounded-lg bg-emerald-500/10 text-emerald-700 border border-emerald-300/40 hover:bg-emerald-600 hover:text-white flex items-center justify-center transition active:scale-[0.95] cursor-pointer" 
                         title="JSON Batch Sync for {{ $gradeLevel }}">
-                    <i data-lucide="file-json" class="h-3.5 w-3.5"></i>
+                    <i data-lucide="file-json" class="h-3.5 w-3.5 pointer-events-none"></i>
                 </button>
                 <!-- Delete All Sections in Grade -->
                 <form method="POST" action="{{ route('admin.students.occupancy.delete-grade-sections', $gradeLevel) }}"
@@ -186,8 +186,8 @@
                                     <a href="{{ route('admin.students.occupancy.manage-section', $section) }}" class="h-7 w-7 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100 flex items-center justify-center transition active:scale-[0.95]" title="Manage Section & Add Students">
                                         <i data-lucide="user-plus" class="h-3.5 w-3.5"></i>
                                     </a>
-                                    <button type="button" @click="$dispatch('open-json-sync', { sectionId: '{{ $section->id }}', gradeLevel: '{{ $gradeLevel }}' })" class="h-7 w-7 rounded-lg bg-teal-50 text-teal-700 border border-teal-100 hover:bg-teal-100 flex items-center justify-center transition active:scale-[0.95] cursor-pointer" title="JSON Batch Sync for {{ $sectionDisplayName }}">
-                                        <i data-lucide="file-json" class="h-3.5 w-3.5"></i>
+                                    <button type="button" @click="window.dispatchEvent(new CustomEvent('open-json-sync', { detail: { sectionId: '{{ $section->id }}', gradeLevel: '{{ $gradeLevel }}' } }))" class="h-7 w-7 rounded-lg bg-teal-50 text-teal-700 border border-teal-100 hover:bg-teal-100 flex items-center justify-center transition active:scale-[0.95] cursor-pointer" title="JSON Batch Sync for {{ $sectionDisplayName }}">
+                                        <i data-lucide="file-json" class="h-3.5 w-3.5 pointer-events-none"></i>
                                     </button>
                                     <button type="button" @click="showRoster = !showRoster" class="h-7 w-7 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-slate-500 hover:bg-slate-50 active:scale-[0.95] transition cursor-pointer" title="View Roster">
                                         <i data-lucide="users" class="h-3.5 w-3.5"></i>
