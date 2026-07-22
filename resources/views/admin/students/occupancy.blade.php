@@ -10,6 +10,43 @@
     $flexCapacity = $sections->where('is_f2f', false)->sum('capacity_limit');
     $flexOccupied = $sections->where('is_f2f', false)->sum('occupied');
     $flexFillRate = $flexCapacity > 0 ? min(100, round(($flexOccupied / $flexCapacity) * 100)) : 0;
+
+    $existingJsonMap = [];
+    $allStudentsArray = [];
+
+    if (isset($studentsByGrade)) {
+        foreach ($studentsByGrade as $gradeKey => $gradeStudents) {
+            $gradeArray = [];
+            foreach ($gradeStudents as $s) {
+                $app = $s->applicant;
+                $fatherName = trim(($app->father_first_name ?? '') . ' ' . ($app->father_last_name ?? ''));
+                $motherName = trim(($app->mother_first_name ?? '') . ' ' . ($app->mother_last_name ?? ''));
+                $pName = !empty($fatherName) ? $fatherName : (!empty($motherName) ? $motherName : ($app->father_name ?? $app->mother_name ?? ''));
+                
+                $item = [
+                    'lrn' => (string)($app->lrn ?? $s->student_number ?? ''),
+                    'first_name' => mb_strtoupper($app->first_name ?? ''),
+                    'middle_name' => mb_strtoupper($app->middle_name ?? ''),
+                    'last_name' => mb_strtoupper($app->last_name ?? ''),
+                    'grade_level' => (string)($s->grade_level ?? $app->grade_level ?? $gradeKey),
+                    'gender' => (string)($app->gender ?? ''),
+                    'address' => mb_strtoupper($app->address ?? $app->street_address ?? ''),
+                    'date_of_birth' => $app?->date_of_birth ? $app->date_of_birth->format('Y-m-d') : '',
+                    'place_of_birth' => mb_strtoupper($app->place_of_birth ?? ''),
+                    'religion' => mb_strtoupper($app->religion ?? 'ISLAM'),
+                    'parent_name' => mb_strtoupper($pName),
+                    'parent_mobile' => (string)($app->parent_mobile ?? $app->mobile_number ?? ''),
+                    'parent_email' => strtolower($app->parent_email ?? ''),
+                ];
+                $gradeArray[] = $item;
+                $allStudentsArray[] = $item;
+            }
+            $existingJsonMap[$gradeKey] = json_encode($gradeArray, JSON_PRETTY_PRINT);
+        }
+    }
+
+    $allJsonPretty = json_encode($allStudentsArray, JSON_PRETTY_PRINT);
+
     $sampleStudentArray = [
         [
             'lrn' => '127168190019',
@@ -31,6 +68,8 @@
 @endphp
 
 <script>
+    window.AMIS_EXISTING_JSON_MAP = @json($existingJsonMap);
+    window.AMIS_ALL_JSON = @json($allJsonPretty);
     window.AMIS_SAMPLE_JSON = @json($sampleJsonPretty);
 
     document.addEventListener('alpine:init', () => {
@@ -50,6 +89,12 @@
 
             init() {
                 window.AMIS_OCCUPANCY = this;
+                
+                this.$watch('openJsonModal', value => {
+                    if (value && !this.jsonInputText) {
+                        window.fillSampleJson(this.selectedGradeLevel);
+                    }
+                });
             },
 
             async generatePreview() {
@@ -109,16 +154,40 @@
         }));
     });
 
-    window.fillSampleJson = function() {
+    window.fillSampleJson = function(gradeLevel = null) {
+        let payload = '';
+        const activeGrade = gradeLevel || (window.AMIS_OCCUPANCY ? window.AMIS_OCCUPANCY.selectedGradeLevel : '');
+        
+        if (activeGrade && window.AMIS_EXISTING_JSON_MAP && window.AMIS_EXISTING_JSON_MAP[activeGrade]) {
+            payload = window.AMIS_EXISTING_JSON_MAP[activeGrade];
+        } else if (window.AMIS_ALL_JSON && window.AMIS_ALL_JSON.length > 2) {
+            payload = window.AMIS_ALL_JSON;
+        } else {
+            payload = window.AMIS_SAMPLE_JSON;
+        }
+
         if (window.AMIS_OCCUPANCY) {
-            window.AMIS_OCCUPANCY.jsonInputText = window.AMIS_SAMPLE_JSON;
+            window.AMIS_OCCUPANCY.jsonInputText = payload;
+            window.AMIS_OCCUPANCY.jsonSample = payload;
         }
         const txtArea = document.querySelector('textarea[name="json_data"]');
         if (txtArea) {
-            txtArea.value = window.AMIS_SAMPLE_JSON;
+            txtArea.value = payload;
             txtArea.dispatchEvent(new Event('input', { bubbles: true }));
         }
     };
+
+    window.addEventListener('open-json-sync', (e) => {
+        if (window.AMIS_OCCUPANCY) {
+            if (e.detail && e.detail.gradeLevel) {
+                window.AMIS_OCCUPANCY.selectedGradeLevel = e.detail.gradeLevel;
+            }
+            if (e.detail && e.detail.sectionId) {
+                window.AMIS_OCCUPANCY.selectedTargetSection = e.detail.sectionId;
+            }
+            window.fillSampleJson(window.AMIS_OCCUPANCY.selectedGradeLevel);
+        }
+    });
 </script>
 
 <x-admin-layout
@@ -286,8 +355,8 @@
                                 <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                                     Paste JSON Payload (40+ Students Array)
                                 </label>
-                                <button type="button" @click="window.fillSampleJson(); jsonInputText = jsonSample;" class="text-[11px] font-bold text-emerald-600 hover:text-emerald-700 underline cursor-pointer">
-                                    Fill Sample Format
+                                <button type="button" @click="window.fillSampleJson(selectedGradeLevel); jsonInputText = window.AMIS_OCCUPANCY ? window.AMIS_OCCUPANCY.jsonInputText : jsonInputText;" class="text-[11px] font-bold text-emerald-600 hover:text-emerald-700 underline cursor-pointer flex items-center gap-1">
+                                    ⚡ Auto-Fill Existing DB Students (<span x-text="selectedGradeLevel || 'All'"></span>)
                                 </button>
                             </div>
                             <textarea name="json_data" x-model="jsonInputText" rows="8" placeholder="Paste your student JSON array here..."
