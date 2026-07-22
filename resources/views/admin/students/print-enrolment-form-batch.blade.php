@@ -369,8 +369,8 @@
 
         .grid-5-col {
             display: grid;
-            grid-template-columns: 2.5fr 2fr 2fr 1.2fr 1.5fr;
-            gap: 15px;
+            grid-template-columns: 2.6fr 2.6fr 2.4fr 0.6fr 1.8fr;
+            gap: 12px;
         }
 
         .grid-4-col-birth {

@@ -193,8 +193,8 @@
                     $g = strtoupper(trim($app->gender ?? ''));
                     $sexChar = str_starts_with($g, 'F') ? 'F' : (str_starts_with($g, 'M') ? 'M' : $g);
                 @endphp
-                <input type="text" class="input-line" value="{{ $sexChar }}">
-                <span class="label-text">Sex</span>
+                <input type="text" class="input-line" value="{{ $sexChar }}" style="text-align: center;">
+                <span class="label-text" style="text-align: center;">Sex</span>
             </div>
             <div>
                 <input type="text" class="input-line" value="{{ mb_strtoupper($student->grade_level ?? $app->grade_level ?? '') }}" style="{{ $getDynamicStyle($student->grade_level ?? $app->grade_level ?? '', '0.82rem', '0.72rem', '0.62rem', '0.52rem', 8, 14, 20) }}">
