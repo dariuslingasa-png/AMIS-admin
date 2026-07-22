@@ -149,6 +149,7 @@ Route::name('admin.')->group(function () {
         Route::get('/students/occupancy', [AdminStudentDashboardController::class, 'occupancy'])->name('students.occupancy');
         Route::post('/students/occupancy/create-section', [AdminStudentDashboardController::class, 'storeSection'])->name('students.occupancy.store-section');
         Route::post('/students/occupancy/bulk-json-import', [AdminStudentDashboardController::class, 'bulkJsonImport'])->name('students.occupancy.bulk-json-import');
+        Route::post('/students/occupancy/preview-json-import', [AdminStudentDashboardController::class, 'previewJsonImport'])->name('students.occupancy.preview-json-import');
         Route::put('/students/occupancy/sections/{section}', [AdminStudentDashboardController::class, 'updateSection'])->name('students.occupancy.update-section');
         Route::get('/students/occupancy/assign-students-page', [AdminStudentDashboardController::class, 'assignStudentsPage'])->name('students.occupancy.assign-page');
         Route::get('/students/occupancy/sections/{section}/manage', [AdminStudentDashboardController::class, 'manageSection'])->name('students.occupancy.manage-section');

@@ -1646,5 +1646,137 @@ class AdminStudentDashboardController extends Controller
         $msg = "Batch JSON Processing Complete! (Updated: {$updatedCount} existing students, Auto-Inserted: {$createdCount} new students" . ($assignedCount > 0 ? ", Assigned to Section: {$assignedCount}" : "") . ")";
         return back()->with('success', $msg);
     }
+
+    /**
+     * Preview JSON import data without mutating database records.
+     * Evaluates whether each item matches an existing student (UPDATE) or is a new record (CREATE).
+     */
+    public function previewJsonImport(Request $request)
+    {
+        $jsonData = trim($request->input('json_data', ''));
+        
+        if ($request->hasFile('json_file')) {
+            $file = $request->file('json_file');
+            $jsonData = file_get_contents($file->getRealPath());
+        }
+
+        if (empty($jsonData)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'JSON payload or file is empty.',
+            ], 422);
+        }
+
+        // Clean trailing commas
+        $jsonDataClean = preg_replace('/,\s*([\]}])/', '$1', $jsonData);
+        $items = json_decode($jsonDataClean, true);
+
+        if (!is_array($items)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid JSON structure. Please check for missing brackets or quotation marks.',
+            ], 422);
+        }
+
+        if (isset($items['students']) && is_array($items['students'])) {
+            $items = $items['students'];
+        }
+
+        $previewList = [];
+        $updateCount = 0;
+        $createCount = 0;
+
+        foreach ($items as $index => $item) {
+            if (!is_array($item)) continue;
+
+            $getVal = function ($keys, $default = '') use ($item) {
+                foreach ((array)$keys as $k) {
+                    if (isset($item[$k]) && filled($item[$k])) return trim((string)$item[$k]);
+                }
+                return $default;
+            };
+
+            $lrn = $getVal(['lrn', 'student_number', 'LRN', 'student_id']);
+            $firstName = $getVal(['first_name', 'fname', 'first', 'given_name']);
+            $lastName = $getVal(['last_name', 'lname', 'last', 'surname']);
+            $middleName = $getVal(['middle_name', 'mname', 'middle']);
+            $fullName = $getVal(['name', 'full_name', 'student_name']);
+
+            if (empty($firstName) && empty($lastName) && !empty($fullName)) {
+                $parts = explode(' ', $fullName);
+                if (count($parts) >= 2) {
+                    $lastName = array_pop($parts);
+                    $firstName = implode(' ', $parts);
+                } else {
+                    $firstName = $fullName;
+                }
+            }
+
+            $address = $getVal(['address', 'home_address', 'street_address', 'location']);
+            $gradeLevel = $getVal(['grade_level', 'grade', 'level']);
+            $gender = $getVal(['gender', 'sex']);
+            $dob = $getVal(['date_of_birth', 'dob', 'birthdate']);
+            $parentName = $getVal(['parent_name', 'guardian_name', 'father_name', 'mother_name', 'parent']);
+            $parentMobile = $getVal(['parent_mobile', 'parent_phone', 'mobile_number', 'contact']);
+
+            $applicant = null;
+
+            // Search by LRN
+            if (!empty($lrn)) {
+                $applicant = \App\Models\EnrollmentApplicant::where('lrn', $lrn)->first();
+                if (!$applicant) {
+                    $student = Student::where('student_number', $lrn)->first();
+                    if ($student) $applicant = $student->applicant;
+                }
+            }
+
+            // Search by Name if not matched by LRN
+            if (!$applicant && (!empty($firstName) || !empty($lastName))) {
+                $cleanFirstName = trim(preg_replace('/\s+[A-Za-z]\.?$/i', '', $firstName));
+                $cleanLastName = trim($lastName);
+
+                $query = \App\Models\EnrollmentApplicant::query();
+                if (!empty($cleanFirstName)) $query->where('first_name', 'like', '%' . $cleanFirstName . '%');
+                if (!empty($cleanLastName)) $query->where('last_name', 'like', '%' . $cleanLastName . '%');
+                $applicant = $query->first();
+
+                if (!$applicant && (!empty($cleanLastName) || !empty($cleanFirstName))) {
+                    $searchStr = trim($cleanFirstName . ' ' . $cleanLastName);
+                    $user = \App\Models\User::where('name', 'like', "%{$searchStr}%")->first();
+                    if ($user && $user->student) {
+                        $applicant = $user->student->applicant;
+                    }
+                }
+            }
+
+            $status = $applicant ? 'UPDATE' : 'CREATE';
+            if ($applicant) {
+                $updateCount++;
+            } else {
+                $createCount++;
+            }
+
+            $previewList[] = [
+                'index' => $index + 1,
+                'status' => $status,
+                'matched_student_id' => $applicant?->student?->student_number ?? $applicant?->amis_student_id ?? null,
+                'matched_name' => $applicant ? ($applicant->last_name . ', ' . $applicant->first_name) : null,
+                'lrn' => $lrn ?: ($applicant?->lrn ?? 'Auto-Generated'),
+                'name' => mb_strtoupper(trim($lastName . ', ' . $firstName . ' ' . $middleName)),
+                'grade_level' => $gradeLevel ?: 'Grade 1',
+                'gender' => !empty($gender) ? ucfirst(strtolower($gender)) : 'Male',
+                'address' => mb_strtoupper($address ?: 'N/A'),
+                'parent' => mb_strtoupper($parentName ?: 'N/A') . ($parentMobile ? " ({$parentMobile})" : ''),
+            ];
+        }
+
+        return response()->json([
+            'success' => true,
+            'total' => count($previewList),
+            'update_count' => $updateCount,
+            'create_count' => $createCount,
+            'students' => $previewList,
+        ]);
+    }
 }
 
