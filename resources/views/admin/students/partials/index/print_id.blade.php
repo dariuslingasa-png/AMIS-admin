@@ -457,7 +457,7 @@
                               @endif
 
                             <!-- Student ID Badge text -->
-                            <div class="student-id">{{ $badgeStudentId }}</div>
+                            <div class="student-id" style="font-size: {{ $student->id_num_font_size ? $student->id_num_font_size . 'px' : '12.5px' }};">{{ $badgeStudentId }}</div>
 
                             <!-- Last Name -->
                             @php
@@ -486,7 +486,7 @@
                                 }
                             @endphp
                             <div class="student-last-name">
-                                <h3 style="font-size: {{ $lastNameFontSize }}; {{ $lastNameStyle }}">{{ $lastName }}</h3>
+                                <h3 style="font-size: {{ $student->id_last_name_font_size ? $student->id_last_name_font_size . 'px' : $lastNameFontSize }}; {{ $lastNameStyle }}">{{ $lastName }}</h3>
                             </div>
 
                             <!-- First Name -->
@@ -496,12 +496,12 @@
                                 $firstNameFontSize = $firstNameLen > 25 ? '14px' : ($firstNameLen > 18 ? '16px' : '18px');
                             @endphp
                             <div class="student-first-name">
-                                <h4 style="font-size: {{ $firstNameFontSize }};">{{ $displayFirstName }}</h4>
+                                <h4 style="font-size: {{ $student->id_first_name_font_size ? $student->id_first_name_font_size . 'px' : $firstNameFontSize }};">{{ $displayFirstName }}</h4>
                             </div>
 
                             <!-- Grade Level -->
                             <div class="student-grade">
-                                <span style="color: {{ $getGradeColor($displayGrade) }};">{{ $displayGrade }}</span>
+                                <span style="color: {{ $getGradeColor($displayGrade) }}; font-size: {{ $student->id_grade_font_size ? $student->id_grade_font_size . 'px' : '31px' }}">{{ $displayGrade }}</span>
                             </div>
 
                             <!-- LRN -->
