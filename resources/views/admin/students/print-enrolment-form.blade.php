@@ -6,7 +6,7 @@
     @php
         $app = $applicant;
         
-        // Auto PDF Filename format: LASTNAME FIRSTNAME GRADE LEVEL
+        // Auto PDF Filename format for document title: LASTNAME FIRSTNAME GRADE LEVEL
         $lName = mb_strtoupper(trim($app->last_name ?? $student->last_name ?? ''));
         $fName = mb_strtoupper(trim($app->first_name ?? $student->first_name ?? ''));
         $gLevel = mb_strtoupper(trim($student->grade_level ?? $app->grade_level ?? ''));
@@ -16,7 +16,7 @@
             $autoFileName = mb_strtoupper(trim($student->full_name)) . ($gLevel ? ' GRADE ' . $gLevel : '');
         }
     @endphp
-    <title>{{ $autoFileName }} - Enrolment Application Form</title>
+    <title>{{ $autoFileName }}</title>
     
     <!-- Premium Google Fonts: Merriweather for Headers & Inter for Fillable Data -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -718,27 +718,34 @@
             $studentAge = \Carbon\Carbon::parse($app->date_of_birth)->age;
         }
 
-        // Student 2x2 Photo Base64 / Remote URL resolver
+        // Robust Student 2x2 Photo Base64 / Remote URL resolver
+        $resolveBase64Image = function($relativePath) {
+            if (empty($relativePath)) return null;
+            $lpath = ltrim($relativePath, '/');
+            $candidates = [
+                public_path('storage/' . $lpath),
+                storage_path('app/public/' . $lpath),
+                storage_path('app/' . $lpath),
+                '/home2/amisdavc/enrollment.amis.edu.ph/storage/app/public/' . $lpath,
+                '/home2/amisdavc/enrollment.amis.edu.ph/public/storage/' . $lpath,
+                public_path($lpath)
+            ];
+            foreach ($candidates as $c) {
+                if (file_exists($c) && is_file($c)) {
+                    $ext = strtolower(pathinfo($c, PATHINFO_EXTENSION));
+                    $mime = ($ext === 'png') ? 'image/png' : (($ext === 'webp') ? 'image/webp' : 'image/jpeg');
+                    return 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($c));
+                }
+            }
+            return null;
+        };
+
         $photoSrc = null;
         if ($app && !empty($app->photo_2x2_url)) {
-            $storagePath = storage_path('app/public/' . ltrim($app->photo_2x2_url, '/'));
-            if (file_exists($storagePath)) {
-                $type = pathinfo($storagePath, PATHINFO_EXTENSION);
-                $data = file_get_contents($storagePath);
-                $photoSrc = 'data:image/' . ($type ?: 'jpeg') . ';base64,' . base64_encode($data);
-            } else {
-                $photoSrc = \App\Support\EnrollmentStorage::url($app->photo_2x2_url);
-            }
+            $photoSrc = $resolveBase64Image($app->photo_2x2_url);
         }
-        if (!$photoSrc && !empty($student->photo_url)) {
-            $storagePath = storage_path('app/public/' . ltrim($student->photo_url, '/'));
-            if (file_exists($storagePath)) {
-                $type = pathinfo($storagePath, PATHINFO_EXTENSION);
-                $data = file_get_contents($storagePath);
-                $photoSrc = 'data:image/' . ($type ?: 'jpeg') . ';base64,' . base64_encode($data);
-            } else {
-                $photoSrc = \App\Support\EnrollmentStorage::url($student->photo_url);
-            }
+        if (!$photoSrc && $student && !empty($student->photo_url)) {
+            $photoSrc = $resolveBase64Image($student->photo_url);
         }
         if (!$photoSrc && $student && !empty($student->obfuscated_id)) {
             $photoSrc = 'https://amis.edu.ph/student-photo/' . $student->obfuscated_id . '.jpg';
