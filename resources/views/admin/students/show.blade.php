@@ -473,7 +473,12 @@
                         @if ($photoUrl)
                             <img src="{{ $photoUrl }}" alt="2x2 Photo" class="w-full h-full object-cover block transition duration-300 group-hover:scale-105 group-hover:brightness-95">
                         @else
-                            <span class="text-xs font-extrabold uppercase text-center text-slate-300">NO PHOTO</span>
+                            <div class="w-full h-full flex flex-col items-center justify-center bg-white/10 text-white/80 p-1 text-center select-none">
+                                <svg class="w-10 h-10 text-white/60 mb-0.5" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                                </svg>
+                                <span class="text-[9px] font-black uppercase tracking-wider opacity-90">NO PHOTO</span>
+                            </div>
                         @endif
                     </div>
                     
@@ -1777,24 +1782,39 @@
             background-color: #090d16 !important;
         }
     </style>
-    <div id="photo-crop-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
-        <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800 flex flex-col">
+    <div id="photo-crop-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-slate-900/70 backdrop-blur-xs p-4 md:p-6">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800 flex flex-col">
             <!-- Header -->
-            <div class="flex items-center justify-between px-5 py-4 border-b border-slate-150 dark:border-slate-800">
-                <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                    <i data-lucide="crop" class="h-4.5 w-4.5 text-emerald-600"></i>
+            <div class="flex items-center justify-between px-6 py-4.5 border-b border-slate-150 dark:border-slate-800">
+                <h3 class="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                    <i data-lucide="crop" class="h-5 w-5 text-emerald-600"></i>
                     <span>Position & Scale Photo</span>
                 </h3>
-                <button type="button" onclick="closeCropModal()" class="text-slate-400 hover:text-slate-655 dark:hover:text-slate-200 transition-colors">
+                <button type="button" onclick="closeCropModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
                     <i data-lucide="x" class="h-5 w-5"></i>
                 </button>
             </div>
             <!-- Body -->
-            <div class="p-5 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950/20">
-                <div class="w-full overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900" style="height: 300px; position: relative;">
+            <div class="p-6 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950/20">
+                <div class="w-full overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 relative shadow-inner" style="height: 480px;">
                     <img id="crop-image-preview" src="" alt="Source image for cropping" style="display: block; max-width: 100%; height: 100%; margin: 0 auto;">
+                    
+                    <!-- Centered Face & Shoulder Oval Guide Overlay -->
+                    <div class="pointer-events-none absolute inset-0 z-30 flex flex-col items-center justify-center">
+                        <div class="relative flex items-center justify-center opacity-80" style="width: 250px; height: 240px;">
+                            <svg viewBox="0 0 100 100" class="w-full h-full text-emerald-400 drop-shadow-md">
+                                <!-- Face Oval Guide -->
+                                <ellipse cx="50" cy="40" rx="24" ry="29" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="4 3" />
+                                <!-- Shoulder Guide -->
+                                <path d="M 30 68 Q 50 62 70 68 L 88 95 L 12 95 Z" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="4 3" />
+                            </svg>
+                            <span class="absolute top-2 text-[10px] font-black tracking-widest text-emerald-300 uppercase bg-slate-900/80 px-2.5 py-0.5 rounded-full shadow-xs border border-emerald-400/30">
+                                Align Face Here
+                            </span>
+                        </div>
+                    </div>
                 </div>
-                <p class="text-[11px] text-slate-400 mt-3 font-semibold">Drag to pan the photo and scroll or use the buttons below to zoom.</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-3.5 font-semibold">Drag to pan the photo and scroll or use the buttons below to zoom.</p>
             </div>
             <!-- Footer -->
             <div class="flex items-center justify-between gap-3 px-5 py-4 border-t border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900">
