@@ -512,10 +512,10 @@
                 
                 <div class="relative" style="width: 96px; height: 96px; z-index: 1; overflow: visible;">
                     <!-- Inner avatar block with overflow hidden for the photo clip -->
-                    <div class="w-full h-full relative group flex items-center justify-center overflow-hidden rounded-2xl border-2 border-white/45 bg-white/12 text-emerald-100 cursor-zoom-in" 
-                          @if ($photoUrl) @click="openPreview('{{ $photoUrl }}', '2x2 Photo', false)" @endif>
+                    <div class="w-full h-full relative group flex items-center justify-center overflow-hidden rounded-2xl border-2 border-white/45 bg-white/12 text-emerald-100 cursor-pointer" 
+                          @unless ($isTeacherAdminViewer) onclick="openPhotoOptionsModal()" @else @if ($photoUrl) @click="openPreview('{{ $photoUrl }}', '2x2 Photo', false)" @endif @endunless>
                         @if ($photoUrl)
-                            <img src="{{ $photoUrl }}" alt="2x2 Photo" class="w-full h-full object-cover block transition duration-300 group-hover:scale-105 group-hover:brightness-95">
+                            <img src="{{ $photoUrl }}" alt="2x2 Photo" class="w-full h-full object-cover block transition duration-300 group-hover:scale-105 group-hover:brightness-75">
                         @else
                             <div class="w-full h-full flex flex-col items-center justify-center bg-white/10 text-white/80 p-1 text-center select-none">
                                 <svg class="w-10 h-10 text-white/60 mb-0.5" fill="currentColor" viewBox="0 0 24 24">
@@ -524,20 +524,28 @@
                                 <span class="text-[9px] font-black uppercase tracking-wider opacity-90">NO PHOTO</span>
                             </div>
                         @endif
+
+                        @unless ($isTeacherAdminViewer)
+                            <!-- Hover overlay for photo editing -->
+                            <div class="absolute inset-0 bg-slate-900/50 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition duration-200 text-white gap-1 select-none pointer-events-none">
+                                <i data-lucide="camera" class="w-6 h-6 text-white drop-shadow"></i>
+                                <span class="text-[9px] font-black uppercase tracking-wider">EDIT PHOTO</span>
+                            </div>
+                        @endunless
                     </div>
                     
-                    @if (auth()->user()?->hasRole('super_admin') && !$isRequirementsComplete)
+                    @unless ($isTeacherAdminViewer)
                         <!-- Camera edit button placed in the outer relative wrapper, so it does not get cut off by overflow-hidden -->
                         <div style="position: absolute; right: -8px; bottom: -8px; z-index: 9999; overflow: visible;" onclick="event.stopPropagation()">
                             <button type="button" 
                                     onclick="openPhotoOptionsModal()"
-                                    class="w-7 h-7 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full flex items-center justify-center shadow-md border-2 border-white transition active:scale-90 cursor-pointer"
-                                    title="Edit Photo Options">
-                                <i data-lucide="camera" class="w-3.5 h-3.5"></i>
+                                    class="w-8 h-8 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full flex items-center justify-center shadow-lg border-2 border-white transition active:scale-90 cursor-pointer"
+                                    title="Edit / Replace Photo">
+                                <i data-lucide="camera" class="w-4 h-4"></i>
                             </button>
                         </div>
                         <input type="file" id="student-photo-input" name="photo" accept="image/*" class="hidden" onchange="uploadStudentPhoto(this)">
-                    @endif
+                    @endunless
                 </div>
                 
                 <div class="flex-1 min-w-0 pr-48">
@@ -1280,8 +1288,8 @@
                             <!-- Background template image (Top Layer) -->
                             <img src="{{ asset('images/id/amis_frontid.png') }}?v={{ filemtime(public_path('images/id/amis_frontid.png')) }}" class="absolute inset-0 w-full h-full object-cover" style="z-index: 10; pointer-events: none;" alt="AMIS ID Template">
                             
-                            <!-- Student Photo with Edit Overlay (Super Admins Only) -->
-                            @if(auth()->user()?->hasRole('super_admin'))
+                            <!-- Student Photo with Edit Overlay -->
+                            @unless ($isTeacherAdminViewer)
                                 <div class="photo-clip group cursor-pointer" 
                                      onclick="openPhotoOptionsModal()"
                                      style="left: 71px; top: 144px; width: 198px; height: 192px; border-radius: 6px; z-index: 5;"

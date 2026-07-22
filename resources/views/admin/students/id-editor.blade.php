@@ -137,8 +137,8 @@
                             <!-- Background template image (Top Layer) -->
                             <img src="{{ asset('images/id/amis_frontid.png') }}?v={{ filemtime(public_path('images/id/amis_frontid.png')) }}" class="absolute inset-0 w-full h-full object-cover" style="z-index: 10; pointer-events: none;" alt="AMIS ID Template">
                             
-                            <!-- Student Photo with Edit Overlay (Super Admins Only) -->
-                            @if(auth()->user()?->hasRole('super_admin'))
+                            <!-- Student Photo with Edit Overlay -->
+                            @unless(auth()->user()?->isTeacherAdminViewer())
                                  <div class="photo-clip group cursor-pointer" 
                                       onclick="openPhotoOptionsModal()"
                                       style="left: 71px; top: 144px; width: 198px; height: 192px; border-radius: 6px; z-index: 5;"
@@ -348,8 +348,8 @@
                         </button>
                     </div>
 
-                    <!-- Photo Upload Button (Super Admins Only) -->
-                    @if(auth()->user()?->hasRole('super_admin'))
+                    <!-- Photo Upload Button -->
+                    @unless(auth()->user()?->isTeacherAdminViewer())
                         <div class="pt-1">
                             <button type="button" onclick="openPhotoOptionsModal()" class="w-full h-11 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-350 hover:text-emerald-800 dark:hover:bg-emerald-900 transition active:scale-[0.97] cursor-pointer flex items-center justify-center gap-2 shadow-sm border border-emerald-150 dark:border-emerald-900 text-xs font-bold">
                                 <i data-lucide="camera" class="w-4.5 h-4.5"></i>
@@ -410,7 +410,7 @@
     </style>
 
     <!-- Photo Options and Cropping Modals -->
-    @if(auth()->user()?->hasRole('super_admin'))
+    @unless(auth()->user()?->isTeacherAdminViewer())
         <div id="photo-options-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4 z-[99999]">
             <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-150 dark:border-slate-800 text-center animate-scale-in">
                 <div class="w-12 h-12 bg-emerald-50 dark:bg-emerald-950/40 rounded-full flex items-center justify-center mx-auto mb-4">
