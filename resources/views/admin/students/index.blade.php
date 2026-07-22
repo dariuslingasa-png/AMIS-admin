@@ -54,10 +54,10 @@
                             <i data-lucide="file-signature" class="h-4 w-4 text-emerald-600"></i>
                             <span>Print Enrollment Application Forms ({{ request('grade') ?: 'All Grades' }})</span>
                         </a>
-                        <a href="{{ route('admin.students.print-enrolment-forms-batch', array_merge(request()->all(), ['auto_zip_png' => 1])) }}" target="_blank" class="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 transition">
+                        <button type="button" @click="open = false; downloadEnrolmentPngZip('{{ route('admin.students.print-enrolment-forms-batch', request()->all()) }}')" class="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 transition text-left cursor-pointer">
                             <i data-lucide="file-archive" class="h-4 w-4 text-emerald-600"></i>
                             <span>Zip Enrollment Application Forms ({{ request('grade') ?: 'All Grades' }})</span>
-                        </a>
+                        </button>
                         <a href="{{ route('admin.students.index', array_merge(request()->all(), ['print_info' => 1])) }}" target="_blank" class="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition">
                             <i data-lucide="file-text" class="h-4 w-4 text-slate-400"></i>
                             <span>Print Official Info Sheets</span>
@@ -291,6 +291,66 @@
             });
         }
     });
+
+    function downloadEnrolmentPngZip(url) {
+        const modal = document.getElementById('zip-loading-modal');
+        const bar = document.getElementById('zip-progress-bar');
+        const text = document.getElementById('zip-progress-text');
+        
+        if (modal) modal.classList.remove('hidden');
+        if (bar) bar.style.width = '0%';
+        if (text) text.innerText = 'Loading student application forms... Please wait.';
+        
+        const oldIframe = document.getElementById('zip-iframe');
+        if (oldIframe) oldIframe.remove();
+        
+        const iframe = document.createElement('iframe');
+        iframe.id = 'zip-iframe';
+        iframe.style.position = 'absolute';
+        iframe.style.left = '-9999px';
+        iframe.style.top = '-9999px';
+        iframe.style.width = '1200px';
+        iframe.style.height = '1600px';
+        iframe.style.border = 'none';
+        iframe.style.pointerEvents = 'none';
+        
+        iframe.src = url + (url.includes('?') ? '&' : '?') + 'auto_zip_png=1';
+        document.body.appendChild(iframe);
+    }
+    
+    window.addEventListener('message', function(event) {
+        if (event.data && event.data.type === 'zip_progress') {
+            const bar = document.getElementById('zip-progress-bar');
+            const text = document.getElementById('zip-progress-text');
+            if (bar) bar.style.width = event.data.percent + '%';
+            if (text) text.innerText = event.data.text;
+        }
+        if (event.data && event.data.type === 'zip_done') {
+            setTimeout(() => {
+                const modal = document.getElementById('zip-loading-modal');
+                if (modal) modal.classList.add('hidden');
+                const iframe = document.getElementById('zip-iframe');
+                if (iframe) iframe.remove();
+            }, 2000);
+        }
+    });
     </script>
+
+    <!-- ZIP PNG Loading Modal -->
+    <div id="zip-loading-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-md transition-all duration-300">
+        <div class="relative w-full max-w-md scale-95 transform rounded-2xl border border-slate-200/80 bg-white p-8 shadow-2xl transition-all duration-300 dark:border-slate-800 dark:bg-slate-900 text-center">
+            <div class="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-violet-50 dark:bg-violet-950/30">
+                <svg class="h-8 w-8 animate-spin text-violet-600" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">Generating PNG ZIP Archive</h3>
+            <p id="zip-progress-text" class="text-sm text-slate-500 dark:text-slate-400 mb-6">Loading student application forms... Please wait.</p>
+            <div class="h-1.5 w-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                <div id="zip-progress-bar" class="h-full rounded-full bg-violet-600 transition-all duration-200" style="width: 0%"></div>
+            </div>
+        </div>
+    </div>
 </x-admin-layout>
 @endif
