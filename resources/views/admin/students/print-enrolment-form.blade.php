@@ -114,20 +114,20 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 22px;
+            margin-bottom: 18px;
             gap: 10px;
         }
 
         .header-left-group {
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 12px;
             flex: 1;
         }
 
         .header-logo-amis {
-            width: 88px;
-            height: 88px;
+            width: 72px;
+            height: 72px;
             object-fit: contain;
             flex-shrink: 0;
         }
@@ -140,7 +140,7 @@
 
         .school-name {
             font-family: 'Merriweather', serif;
-            font-size: 1.22rem;
+            font-size: 1.18rem;
             font-weight: 900;
             letter-spacing: 0.3px;
             color: #0f172a;
@@ -152,8 +152,8 @@
 
         .school-address {
             font-family: 'Merriweather', serif;
-            font-size: 0.9rem;
-            margin-top: 3px;
+            font-size: 0.88rem;
+            margin-top: 2px;
             color: #334155;
             white-space: nowrap;
             text-align: center;
@@ -162,29 +162,34 @@
         .header-right-group {
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 10px;
             flex-shrink: 0;
         }
 
         .header-logo-deped {
-            width: 82px;
-            height: 82px;
+            width: 66px;
+            height: 66px;
             object-fit: contain;
             flex-shrink: 0;
         }
 
         .refund-notice-box {
             border: 2px solid #dc2626;
-            padding: 6px 10px;
+            padding: 4px 8px;
             text-align: center;
             font-family: 'Inter', sans-serif;
             font-weight: 800;
-            font-size: 0.85rem;
-            line-height: 1.2;
+            font-size: 0.78rem;
+            line-height: 1.15;
             color: #dc2626;
             text-transform: uppercase;
             white-space: nowrap;
             border-radius: 4px;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-self: center;
         }
 
         /* Middle Header Row: Form Title, Checkboxes, 2x2 Photo Box */
