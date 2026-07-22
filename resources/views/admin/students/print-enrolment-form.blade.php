@@ -3,7 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enrolment Application Form - {{ $student->student_number }} - {{ $student->full_name }}</title>
+    @php
+        $app = $applicant;
+        
+        // Auto PDF Filename format: LASTNAME FIRSTNAME GRADE LEVEL
+        $lName = mb_strtoupper(trim($app->last_name ?? $student->last_name ?? ''));
+        $fName = mb_strtoupper(trim($app->first_name ?? $student->first_name ?? ''));
+        $gLevel = mb_strtoupper(trim($student->grade_level ?? $app->grade_level ?? ''));
+        
+        $autoFileName = implode(' ', array_filter([$lName, $fName, $gLevel ? 'GRADE ' . $gLevel : '']));
+        if (empty(trim($autoFileName)) || $autoFileName === 'GRADE') {
+            $autoFileName = mb_strtoupper(trim($student->full_name)) . ($gLevel ? ' GRADE ' . $gLevel : '');
+        }
+    @endphp
+    <title>{{ $autoFileName }} - Enrolment Application Form</title>
     
     <!-- Premium Google Fonts: Merriweather for Headers & Inter for Fillable Data -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -635,7 +648,6 @@
     </div>
 
     @php
-        $app = $applicant;
         $studentType = strtoupper($app->student_type ?? 'OLD');
         $isOld = str_contains($studentType, 'OLD');
         $isNew = str_contains($studentType, 'NEW') || !$isOld;
