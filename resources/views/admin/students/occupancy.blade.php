@@ -19,7 +19,11 @@
         ['label' => 'Section Occupancy', 'href' => null],
     ]"
 >
-    <div class="space-y-6" x-data="{ openCreateModal: false }">
+    <div class="space-y-6" x-data="{ 
+        openCreateModal: false, 
+        openJsonModal: false,
+        jsonSample: `[\n  {\n    \"lrn\": \"127168190019\",\n    \"first_name\": \"AZHAR\",\n    \"middle_name\": \"IBRAHIM\",\n    \"last_name\": \"SALINDAWAN\",\n    \"grade_level\": \"Grade 7\",\n    \"gender\": \"Male\",\n    \"address\": \"6921 ALKHAZNAH ISHBILIYAH RIYADH, 13225, SAUDI ARABIA\",\n    \"date_of_birth\": \"2014-06-13\",\n    \"place_of_birth\": \"RIYADH KSA\",\n    \"religion\": \"ISLAM\",\n    \"parent_name\": \"SAHARODIN G. SALINDAWAN\",\n    \"parent_mobile\": \"50 073 8648\",\n    \"parent_email\": \"angel_10178@yahoo.com\"\n  }\n]`
+    }">
         <!-- Banner -->
         <section class="overflow-hidden rounded-3xl border border-emerald-700/30 bg-gradient-to-br from-emerald-800 via-emerald-900 to-teal-950 p-6 text-white shadow-xl shadow-slate-900/10">
             <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -27,10 +31,15 @@
                     <span class="inline-flex rounded-full bg-white/10 px-3 py-1 text-xs font-black uppercase tracking-[0.22em] text-slate-200">Students Workspace</span>
                     <h1 class="mt-4 text-3xl font-black tracking-tight">Section Occupancy & Class Roster</h1>
                     <p class="mt-2 max-w-2xl text-sm font-medium leading-6 text-emerald-100">
-                        Monitor class sizes, advisor assignments, create new sections, and export section ID cards.
+                        Monitor class sizes, advisor assignments, create new sections, and auto-match & insert JSON student records.
                     </p>
                 </div>
-                <div>
+                <div class="flex flex-wrap items-center gap-3">
+                    <button type="button" @click="openJsonModal = true"
+                            class="inline-flex items-center gap-2 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 px-5 py-3 text-xs font-black text-white shadow-lg hover:bg-emerald-500/30 transition active:scale-95 cursor-pointer backdrop-blur-xs">
+                        <i data-lucide="file-json" class="w-4 h-4 text-emerald-300"></i>
+                        <span>⚡ JSON Batch Sync</span>
+                    </button>
                     <button type="button" @click="openCreateModal = true"
                             class="inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3 text-xs font-black text-emerald-900 shadow-lg hover:bg-emerald-50 transition active:scale-95 cursor-pointer">
                         <i data-lucide="plus-circle" class="w-4 h-4 text-emerald-600"></i>
@@ -113,6 +122,83 @@
                             </button>
                             <button type="submit" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-md cursor-pointer">
                                 Create Section
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </template>
+
+        <!-- JSON Bulk Student Import & Auto-Match Modal -->
+        <template x-teleport="body">
+            <div x-show="openJsonModal"
+                 style="display: none; z-index: 99999;"
+                 class="fixed inset-0 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-fade-in">
+                <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[90vh]"
+                     @click.outside="openJsonModal = false"
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 scale-95"
+                     x-transition:enter-end="opacity-100 scale-100">
+                    <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
+                        <div>
+                            <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                <i data-lucide="file-json" class="w-5 h-5 text-emerald-600"></i>
+                                <span>Batch JSON Student Sync (Auto-Match & Insert)</span>
+                            </h3>
+                            <p class="text-xs font-semibold text-slate-500 mt-0.5">Auto-updates existing students by Name / LRN or creates new student records automatically.</p>
+                        </div>
+                        <button @click="openJsonModal = false" class="text-slate-400 hover:text-slate-600 transition cursor-pointer">
+                            <i data-lucide="x" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+
+                    <form method="POST" action="{{ route('admin.students.occupancy.bulk-json-import') }}" enctype="multipart/form-data" class="p-6 space-y-4 overflow-y-auto">
+                        @csrf
+                        
+                        <!-- Target Section Selector (Optional) -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
+                                Assign to Section <span class="text-slate-400 font-medium lowercase">(optional)</span>
+                            </label>
+                            <select name="target_section_id" class="w-full h-11 px-3 rounded-xl border border-slate-200 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500">
+                                <option value="">Do Not Assign Section Automatically</option>
+                                @foreach($sections as $sec)
+                                    <option value="{{ $sec->id }}">{{ $sec->grade_level }} - {{ $sec->name ?: 'F2F' }} ({{ $sec->occupied }}/{{ $sec->capacity_limit }})</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- JSON Textarea -->
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                                    Paste JSON Payload (40+ Students Array)
+                                </label>
+                                <button type="button" @click="$refs.jsonArea.value = jsonSample" class="text-[11px] font-bold text-emerald-600 hover:text-emerald-700 underline cursor-pointer">
+                                    Fill Sample Format
+                                </button>
+                            </div>
+                            <textarea x-ref="jsonArea" name="json_data" rows="9" placeholder="Paste your student JSON array here..."
+                                      class="w-full p-3.5 rounded-xl border border-slate-200 bg-slate-900 font-mono text-xs text-emerald-400 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 leading-relaxed shadow-inner"></textarea>
+                        </div>
+
+                        <!-- JSON File Upload Alternative -->
+                        <div class="border-t border-slate-100 dark:border-slate-800 pt-3">
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
+                                Or Upload JSON File (.json / .txt)
+                            </label>
+                            <input type="file" name="json_file" accept=".json,.txt"
+                                   class="w-full text-xs font-semibold text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer">
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                            <button type="button" @click="openJsonModal = false" class="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition cursor-pointer">
+                                Cancel
+                            </button>
+                            <button type="submit" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-md cursor-pointer flex items-center gap-1.5">
+                                <i data-lucide="zap" class="w-4 h-4"></i>
+                                <span>Process & Auto-Sync Batch</span>
                             </button>
                         </div>
                     </form>

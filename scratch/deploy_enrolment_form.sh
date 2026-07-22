@@ -10,9 +10,11 @@ ARCHIVE_NAME="print_enrolment_form_deploy.tar.gz"
 echo "=== 1. Bundling modified files in amis_admin ==="
 tar -czf $ARCHIVE_NAME \
     app/Http/Controllers/AdminStudentController.php \
+    app/Http/Controllers/AdminStudentDashboardController.php \
     routes/admin.php \
     resources/views/admin/students/partials/show/sidebar.blade.php \
     resources/views/admin/students/print-enrolment-form.blade.php \
+    resources/views/admin/students/occupancy.blade.php \
     public/images/logo/deped_logo.png
 
 echo "=== 2. Uploading bundle to production server via SCP ==="
