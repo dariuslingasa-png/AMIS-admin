@@ -24,7 +24,8 @@
         openJsonModal: false,
         selectedTargetSection: '',
         selectedGradeLevel: '',
-        jsonSample: `[\n  {\n    \"lrn\": \"127168190019\",\n    \"first_name\": \"AZHAR\",\n    \"middle_name\": \"IBRAHIM\",\n    \"last_name\": \"SALINDAWAN\",\n    \"grade_level\": \"Grade 7\",\n    \"gender\": \"Male\",\n    \"address\": \"6921 ALKHAZNAH ISHBILIYAH RIYADH, 13225, SAUDI ARABIA\",\n    \"date_of_birth\": \"2014-06-13\",\n    \"place_of_birth\": \"RIYADH KSA\",\n    \"religion\": \"ISLAM\",\n    \"parent_name\": \"SAHARODIN G. SALINDAWAN\",\n    \"parent_mobile\": \"50 073 8648\",\n    \"parent_email\": \"angel_10178@yahoo.com\"\n  }\n]`
+        jsonInputText: '',
+        jsonSample: `[\n  {\n    \"lrn\": \"127168190019\",\n    \"first_name\": \"AZHAR\",\n    \"middle_name\": \"IBRAHIM\",\n    \"last_name\": \"SALINDAWAN\",\n    \"grade_level\": \"Grade 1\",\n    \"gender\": \"Male\",\n    \"address\": \"6921 ALKHAZNAH ISHBILIYAH RIYADH, 13225, SAUDI ARABIA\",\n    \"date_of_birth\": \"2018-06-13\",\n    \"place_of_birth\": \"RIYADH KSA\",\n    \"religion\": \"ISLAM\",\n    \"parent_name\": \"SAHARODIN G. SALINDAWAN\",\n    \"parent_mobile\": \"50 073 8648\",\n    \"parent_email\": \"angel_10178@yahoo.com\"\n  }\n]`
     }"
     x-init="window.AMIS_OCCUPANCY = $data"
     @open-json-sync.window="openJsonModal = true; selectedTargetSection = $event.detail.sectionId || ''; selectedGradeLevel = $event.detail.gradeLevel || '';">
@@ -181,11 +182,11 @@
                             <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                                 Paste JSON Payload (40+ Students Array)
                             </label>
-                            <button type="button" @click="$refs.jsonArea.value = jsonSample" class="text-[11px] font-bold text-emerald-600 hover:text-emerald-700 underline cursor-pointer">
+                            <button type="button" @click="jsonInputText = jsonSample" class="text-[11px] font-bold text-emerald-600 hover:text-emerald-700 underline cursor-pointer">
                                 Fill Sample Format
                             </button>
                         </div>
-                        <textarea x-ref="jsonArea" name="json_data" rows="9" placeholder="Paste your student JSON array here..."
+                        <textarea name="json_data" x-model="jsonInputText" rows="9" placeholder="Paste your student JSON array here..."
                                   class="w-full p-3.5 rounded-xl border border-slate-200 bg-slate-900 font-mono text-xs text-emerald-400 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 leading-relaxed shadow-inner"></textarea>
                     </div>
 
