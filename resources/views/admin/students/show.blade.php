@@ -2246,12 +2246,12 @@
                     <div class="footer">
                         Al Munawwara Islamic School Registrar Office
                     </div>
-                    <script>
+                    <${'script'}>
                         window.onload = function() {
                             window.print();
                             window.close();
                         }
-                    <\/script>
+                    </${'script'}>
                 </body>
                 </html>
             `);
