@@ -2500,10 +2500,8 @@
         }
     }
 
-    function adjustLastNameFontSizes() {
-        // Font sizes are calculated server-side in PHP matching Student Records (show.blade.php)
     }
-    </div>
+    </script>
 
     <!-- Student JSON Payload Modal -->
     <div x-cloak x-show="openStudentJsonModal"
