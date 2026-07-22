@@ -12,6 +12,11 @@
                         <button type="button" class="rounded-full border border-slate-200 bg-white px-3 py-1 text-sm font-black text-slate-700 shadow-sm transition hover:bg-slate-100" @click="zoomIn()">+</button>
                         <button type="button" class="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-black uppercase tracking-[0.14em] text-slate-500 shadow-sm transition hover:bg-slate-100" @click="resetZoom()">Reset</button>
                     </div>
+                    <template x-if="label === '2x2 Photo' || label === '2x2 Photo ID'">
+                        <button type="button" class="rounded-full border border-emerald-600 bg-emerald-600 px-3 py-1 text-xs font-black uppercase tracking-[0.14em] text-white shadow-sm transition hover:bg-emerald-700 flex items-center gap-1.5 cursor-pointer" @click="closePreview(); openPhotoOptionsModal();">
+                            <i data-lucide="camera" class="h-3.5 w-3.5"></i> Replace / Edit Photo
+                        </button>
+                    </template>
                     <button id="download-pdf-btn" type="button" class="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-black uppercase tracking-[0.14em] text-emerald-700 shadow-sm transition hover:bg-emerald-100 flex items-center gap-1 cursor-pointer" @click="downloadPdf()">
                         <i data-lucide="download" class="h-3.5 w-3.5"></i> Download PDF
                     </button>

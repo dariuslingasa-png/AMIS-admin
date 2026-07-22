@@ -462,6 +462,16 @@
             </button>
 
             @unless ($isTeacherAdminViewer)
+                <!-- Upload / Edit Photo Button (Always Available) -->
+                <button type="button" onclick="openPhotoOptionsModal()"
+                   class="inline-flex items-center gap-2 rounded-xl border border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-950/40 px-4 py-2 text-sm font-bold text-blue-800 dark:text-blue-300 shadow-sm transition hover:bg-blue-100 dark:hover:bg-blue-900/60 active:scale-[0.98] cursor-pointer"
+                   title="Upload, Crop, or Replace Student Photo">
+                    <i data-lucide="camera" class="h-4 w-4 text-blue-600 dark:text-blue-400"></i>
+                    <span>Edit Photo</span>
+                </button>
+            @endunless
+
+            @unless ($isTeacherAdminViewer)
                 @if ($isRequirementsComplete)
                     <span class="inline-flex items-center gap-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 px-3.5 py-2 text-xs font-black uppercase tracking-wider shadow-2xs" title="Profile is locked">
                         <i data-lucide="lock" class="h-4 w-4 text-amber-600"></i>

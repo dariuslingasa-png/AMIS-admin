@@ -209,6 +209,15 @@
                 <i data-lucide="file-json" class="h-4 w-4 text-emerald-600"></i>
                 <span>Copy Student JSON Data</span>
             </button>
+
+            <!-- 9. Upload / Edit Student Photo -->
+            @unless ($isTeacherAdminViewer)
+                <button type="button" onclick="openPhotoOptionsModal()"
+                   class="w-full inline-flex h-10 items-center gap-2 rounded-xl border border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-950/40 px-3 text-xs font-bold text-blue-800 dark:text-blue-300 hover:bg-blue-100 transition active:scale-[0.98] cursor-pointer">
+                    <i data-lucide="camera" class="h-4 w-4 text-blue-600"></i>
+                    <span>Upload / Edit Student Photo</span>
+                </button>
+            @endunless
         </div>
     </x-card>
 

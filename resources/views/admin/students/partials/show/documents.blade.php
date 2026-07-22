@@ -61,6 +61,12 @@
                                 {{ $doc['url'] ? 'Verified' : 'Missing' }}
                             </x-badge>
                         </div>
+                        @if($doc['label'] === '2x2 Photo ID' && (!isset($isTeacherAdminViewer) || !$isTeacherAdminViewer))
+                            <button type="button" onclick="openPhotoOptionsModal()" class="mt-2.5 w-full inline-flex h-8 items-center justify-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-xs cursor-pointer">
+                                <i data-lucide="camera" class="w-3.5 h-3.5"></i>
+                                <span>Upload / Edit Photo</span>
+                            </button>
+                        @endif
                     </div>
                 </article>
             @endforeach
