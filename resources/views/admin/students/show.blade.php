@@ -209,7 +209,7 @@
     $medicalSections = [
         ['title' => 'Emergency Contact', 'icon' => 'shield-alert', 'key' => 'parents', 'fields' => [
             ['Contact Person', $student->applicant->emergency_name], ['Relationship', $student->applicant->emergency_relationship],
-            ['Emergency Phone', $student->applicant->emergency_phone],
+            ['Emergency Phone', $student->applicant->emergency_phone], ['Emergency Address', $student->applicant->emergency_address],
         ]],
     ];
     if ($hasMedicalConcern) {
@@ -1127,9 +1127,16 @@
                         $fullName = html_entity_decode(implode(' ', $fullNameParts), ENT_QUOTES, 'UTF-8');
                         $displayGrade = $student->grade_level;
 
-                        $homeAddress = implode(', ', array_filter([$student->applicant?->home_street_address, $student->applicant?->home_city, $student->applicant?->home_state_province]));
-                        if (empty($homeAddress) || $homeAddress === '-') {
-                            $homeAddress = $student->applicant?->home_address ?: ($studentAddress ?: 'MISSING INFO');
+                        $emergencyAddress = trim($student->applicant?->emergency_address ?? '');
+                        if (!empty($emergencyAddress)) {
+                            $homeAddress = $emergencyAddress;
+                        } else {
+                            $calculatedHome = implode(', ', array_filter([$student->applicant?->home_street_address, $student->applicant?->home_city, $student->applicant?->home_state_province]));
+                            if (empty($calculatedHome) || $calculatedHome === '-') {
+                                $homeAddress = $student->applicant?->home_address ?: ($studentAddress ?: 'MISSING INFO');
+                            } else {
+                                $homeAddress = $calculatedHome;
+                            }
                         }
                         
                         $rawEmergencyName = trim($student->applicant?->emergency_name ?? '');
@@ -1722,6 +1729,10 @@
                             <div>
                                 <label class="block text-xs font-bold text-slate-700 dark:text-slate-350 mb-1">Emergency Phone</label>
                                 <input type="text" name="emergency_phone" value="{{ $student->applicant->emergency_phone ?? '' }}" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-sm font-semibold text-slate-900 dark:text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-350 mb-1">Emergency Address</label>
+                                <input type="text" name="emergency_address" value="{{ $student->applicant->emergency_address ?? '' }}" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-sm font-semibold text-slate-900 dark:text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 uppercase" placeholder="Enter emergency contact address">
                             </div>
                         </div>
                     </div>

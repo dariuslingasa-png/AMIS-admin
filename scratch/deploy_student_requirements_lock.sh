@@ -10,7 +10,9 @@ ARCHIVE_NAME="student_requirements_lock_deploy.tar.gz"
 echo "Bundling Student Requirements Lock & Old Student Exemption modifications..."
 tar -czf $ARCHIVE_NAME \
     database/migrations/2026_07_22_000001_add_is_requirements_locked_to_students_table.php \
+    database/migrations/2026_07_22_000002_add_emergency_address_to_enrollment_applicants_table.php \
     app/Models/Student.php \
+    app/Models/EnrollmentApplicant.php \
     app/Http/Controllers/AdminStudentController.php \
     routes/admin.php \
     resources/views/admin/students/show.blade.php \

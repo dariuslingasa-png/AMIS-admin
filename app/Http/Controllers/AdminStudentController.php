@@ -1808,6 +1808,7 @@ class AdminStudentController extends Controller
             'emergency_name' => 'nullable|string|max:255',
             'emergency_relationship' => 'nullable|string|max:255',
             'emergency_phone' => 'nullable|string|max:50',
+            'emergency_address' => 'nullable|string|max:500',
             'lrn' => 'nullable|string|max:50',
         ]);
 
@@ -1859,6 +1860,7 @@ class AdminStudentController extends Controller
             if ($request->has('emergency_name')) $updateData['emergency_name'] = $request->emergency_name ? mb_strtoupper($request->emergency_name) : null;
             if ($request->has('emergency_relationship')) $updateData['emergency_relationship'] = $request->emergency_relationship ? mb_strtoupper($request->emergency_relationship) : null;
             if ($request->has('emergency_phone')) $updateData['emergency_phone'] = $request->emergency_phone;
+            if ($request->has('emergency_address')) $updateData['emergency_address'] = $request->emergency_address ? mb_strtoupper($request->emergency_address) : null;
             if ($request->has('lrn')) $updateData['lrn'] = $request->lrn ?: 'NA';
 
             if (!empty($updateData)) {

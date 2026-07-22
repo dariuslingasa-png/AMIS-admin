@@ -92,6 +92,7 @@ class EnrollmentApplicant extends Model
         'emergency_name',
         'emergency_relationship',
         'emergency_phone',
+        'emergency_address',
         // Documents
         'photo_2x2_url',
         'birth_cert_url',
