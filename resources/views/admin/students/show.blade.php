@@ -1801,15 +1801,16 @@
                     
                     <!-- Centered Face & Shoulder Oval Guide Overlay -->
                     <div class="pointer-events-none absolute inset-0 z-30 flex flex-col items-center justify-center">
-                        <div class="relative flex items-center justify-center opacity-80" style="width: 250px; height: 240px;">
-                            <svg viewBox="0 0 100 100" class="w-full h-full text-emerald-400 drop-shadow-md">
-                                <!-- Face Oval Guide -->
-                                <ellipse cx="50" cy="40" rx="24" ry="29" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="4 3" />
+                        <div class="relative flex items-center justify-center opacity-65" style="width: 320px; height: 310px;">
+                            <svg viewBox="0 0 100 100" class="w-full h-full text-emerald-400 drop-shadow-xs">
+                                <!-- Face Oval Guide (Standard 2x2 ID Photo Proportion) -->
+                                <ellipse cx="50" cy="36" rx="26" ry="30" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="3 3" />
                                 <!-- Shoulder Guide -->
-                                <path d="M 30 68 Q 50 62 70 68 L 88 95 L 12 95 Z" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="4 3" />
+                                <path d="M 18 70 Q 50 62 82 70 L 98 100 L 2 100 Z" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="3 3" />
                             </svg>
-                            <span class="absolute top-2 text-[10px] font-black tracking-widest text-emerald-300 uppercase bg-slate-900/80 px-2.5 py-0.5 rounded-full shadow-xs border border-emerald-400/30">
-                                Align Face Here
+                            <!-- Label placed cleanly above head guide so face is 100% visible -->
+                            <span class="absolute -top-6 text-[9px] font-bold tracking-widest text-emerald-300 uppercase bg-slate-900/80 px-2.5 py-0.5 rounded-full shadow-xs border border-emerald-400/30">
+                                Center Head & Shoulders
                             </span>
                         </div>
                     </div>
