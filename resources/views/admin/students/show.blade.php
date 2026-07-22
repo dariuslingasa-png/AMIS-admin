@@ -1836,7 +1836,7 @@
             background-color: #090d16 !important;
         }
     </style>
-    <div id="photo-crop-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-slate-900/70 backdrop-blur-xs p-4 md:p-6">
+    <div id="photo-crop-modal" class="fixed inset-0 hidden flex items-center justify-center bg-slate-900/70 backdrop-blur-xs p-4 md:p-6" style="z-index: 9999999;">
         <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800 flex flex-col">
             <!-- Header -->
             <div class="flex items-center justify-between px-6 py-4.5 border-b border-slate-150 dark:border-slate-800">
@@ -2287,7 +2287,7 @@
     </svg>
 
     <!-- Photo Edit Options Modal -->
-    <div id="photo-options-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] hidden flex items-center justify-center p-4">
+    <div id="photo-options-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4" style="z-index: 9999999;">
         <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in duration-200" onclick="event.stopPropagation()">
             <!-- Header -->
             <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
