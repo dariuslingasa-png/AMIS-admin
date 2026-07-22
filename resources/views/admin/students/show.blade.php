@@ -428,11 +428,18 @@
         </div>
         <div class="flex items-center gap-2">
             @unless ($isTeacherAdminViewer)
-            <button @click="openEditModal = true; editSection = 'all'"
-                    class="inline-flex items-center gap-2 rounded-xl border border-transparent bg-emerald-600 px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700 active:scale-[0.98] cursor-pointer">
-                <i data-lucide="edit" class="h-4 w-4"></i>
-                <span>Edit Profile</span>
-            </button>
+                @if ($isManuallyLocked)
+                    <span class="inline-flex items-center gap-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 px-3.5 py-2 text-xs font-black uppercase tracking-wider shadow-2xs" title="Profile is locked by administrator">
+                        <i data-lucide="lock" class="h-4 w-4 text-amber-600"></i>
+                        <span>Profile Locked</span>
+                    </span>
+                @else
+                    <button @click="openEditModal = true; editSection = 'all'"
+                            class="inline-flex items-center gap-2 rounded-xl border border-transparent bg-emerald-600 px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700 active:scale-[0.98] cursor-pointer">
+                        <i data-lucide="edit" class="h-4 w-4"></i>
+                        <span>Edit Profile</span>
+                    </button>
+                @endif
             @endunless
 
             <a href="{{ route('admin.students.index') }}"
@@ -482,7 +489,7 @@
                         @endif
                     </div>
                     
-                    @if (auth()->user()?->hasRole('super_admin'))
+                    @if (auth()->user()?->hasRole('super_admin') && !$isManuallyLocked)
                         <!-- Camera edit button placed in the outer relative wrapper, so it does not get cut off by overflow-hidden -->
                         <div style="position: absolute; right: -6px; bottom: -6px; z-index: 30;" onclick="event.stopPropagation()">
                             <button type="button" 
