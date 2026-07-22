@@ -32,6 +32,83 @@
 
 <script>
     window.AMIS_SAMPLE_JSON = @json($sampleJsonPretty);
+
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('occupancyManager', () => ({
+            openCreateModal: false,
+            openJsonModal: false,
+            jsonStep: 1,
+            selectedTargetSection: '',
+            selectedGradeLevel: '',
+            jsonInputText: '',
+            previewList: [],
+            previewTotals: { total: 0, update: 0, create: 0 },
+            loadingPreview: false,
+            previewError: '',
+            previewSearch: '',
+            jsonSample: window.AMIS_SAMPLE_JSON || '',
+
+            init() {
+                window.AMIS_OCCUPANCY = this;
+            },
+
+            async generatePreview() {
+                this.previewError = '';
+                const jsonText = (this.jsonInputText || '').trim();
+                const fileInput = this.$refs.jsonFileInput;
+                
+                if (!jsonText && (!fileInput || !fileInput.files.length)) {
+                    this.previewError = 'Please paste a JSON array or select a JSON file to preview.';
+                    return;
+                }
+
+                this.loadingPreview = true;
+                try {
+                    const formData = new FormData();
+                    formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
+                    formData.append('json_data', jsonText);
+                    if (fileInput && fileInput.files.length) {
+                        formData.append('json_file', fileInput.files[0]);
+                    }
+
+                    const response = await fetch('{{ route("admin.students.occupancy.preview-json-import") }}', {
+                        method: 'POST',
+                        body: formData,
+                        headers: { 'Accept': 'application/json' }
+                    });
+
+                    const data = await response.json();
+                    if (!response.ok || !data.success) {
+                        throw new Error(data.message || 'Failed to parse JSON payload.');
+                    }
+
+                    this.previewList = data.students || [];
+                    this.previewTotals = {
+                        total: data.total || 0,
+                        update: data.update_count || 0,
+                        create: data.create_count || 0
+                    };
+                    this.jsonStep = 2;
+                } catch (err) {
+                    this.previewError = err.message || 'Error generating preview.';
+                } finally {
+                    this.loadingPreview = false;
+                }
+            },
+
+            filteredPreviewList() {
+                if (!this.previewSearch) return this.previewList;
+                const q = this.previewSearch.toLowerCase();
+                return this.previewList.filter(s => 
+                    (s.name || '').toLowerCase().includes(q) ||
+                    (s.lrn || '').toLowerCase().includes(q) ||
+                    (s.parent || '').toLowerCase().includes(q) ||
+                    (s.status || '').toLowerCase().includes(q)
+                );
+            }
+        }));
+    });
+
     window.fillSampleJson = function() {
         if (window.AMIS_OCCUPANCY) {
             window.AMIS_OCCUPANCY.jsonInputText = window.AMIS_SAMPLE_JSON;
@@ -51,75 +128,7 @@
         ['label' => 'Section Occupancy', 'href' => null],
     ]"
 >
-    <div class="space-y-6" x-data="{ 
-        openCreateModal: false, 
-        openJsonModal: false,
-        jsonStep: 1,
-        selectedTargetSection: '',
-        selectedGradeLevel: '',
-        jsonInputText: '',
-        previewList: [],
-        previewTotals: { total: 0, update: 0, create: 0 },
-        loadingPreview: false,
-        previewError: '',
-        previewSearch: '',
-        jsonSample: window.AMIS_SAMPLE_JSON,
-        async generatePreview() {
-            this.previewError = '';
-            const jsonText = (this.jsonInputText || '').trim();
-            const fileInput = this.$refs.jsonFileInput;
-            
-            if (!jsonText && (!fileInput || !fileInput.files.length)) {
-                this.previewError = 'Please paste a JSON array or select a JSON file to preview.';
-                return;
-            }
-
-            this.loadingPreview = true;
-            try {
-                const formData = new FormData();
-                formData.append('_token', document.querySelector('meta[name=\"csrf-token\"]').content);
-                formData.append('json_data', jsonText);
-                if (fileInput && fileInput.files.length) {
-                    formData.append('json_file', fileInput.files[0]);
-                }
-
-                const response = await fetch('{{ route("admin.students.occupancy.preview-json-import") }}', {
-                    method: 'POST',
-                    body: formData,
-                    headers: { 'Accept': 'application/json' }
-                });
-
-                const data = await response.json();
-                if (!response.ok || !data.success) {
-                    throw new Error(data.message || 'Failed to parse JSON payload.');
-                }
-
-                this.previewList = data.students || [];
-                this.previewTotals = {
-                    total: data.total || 0,
-                    update: data.update_count || 0,
-                    create: data.create_count || 0
-                };
-                this.jsonStep = 2;
-            } catch (err) {
-                this.previewError = err.message || 'Error generating preview.';
-            } finally {
-                this.loadingPreview = false;
-            }
-        },
-        filteredPreviewList() {
-            if (!this.previewSearch) return this.previewList;
-            const q = this.previewSearch.toLowerCase();
-            return this.previewList.filter(s => 
-                (s.name || '').toLowerCase().includes(q) ||
-                (s.lrn || '').toLowerCase().includes(q) ||
-                (s.parent || '').toLowerCase().includes(q) ||
-                (s.status || '').toLowerCase().includes(q)
-            );
-        }
-    }"
-    x-init="window.AMIS_OCCUPANCY = $data"
-    @open-json-sync.window="openJsonModal = true; jsonStep = 1; previewError = ''; selectedTargetSection = $event.detail.sectionId || ''; selectedGradeLevel = $event.detail.gradeLevel || '';">
+    <div class="space-y-6" x-data="occupancyManager" @open-json-sync.window="openJsonModal = true; jsonStep = 1; previewError = ''; selectedTargetSection = $event.detail.sectionId || ''; selectedGradeLevel = $event.detail.gradeLevel || '';">
         <!-- Banner -->
         <section class="overflow-hidden rounded-3xl border border-emerald-700/30 bg-gradient-to-br from-emerald-800 via-emerald-900 to-teal-950 p-6 text-white shadow-xl shadow-slate-900/10">
             <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
