@@ -162,7 +162,7 @@
         .header-right-group {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             flex-shrink: 0;
         }
 
@@ -173,20 +173,21 @@
             flex-shrink: 0;
         }
 
+        /* NO REFUND OF ENROLLMENT FEE Box styling */
         .refund-notice-box {
             border: 2px solid #dc2626;
-            padding: 4px 8px;
+            padding: 6px 12px;
             text-align: center;
             font-family: 'Inter', sans-serif;
             font-weight: 800;
-            font-size: 0.78rem;
-            line-height: 1.15;
+            font-size: 0.88rem;
+            line-height: 1.25;
             color: #dc2626;
             text-transform: uppercase;
             white-space: nowrap;
-            border-radius: 4px;
+            border-radius: 5px;
             margin: 0;
-            display: flex;
+            display: inline-flex;
             flex-direction: column;
             justify-content: center;
             align-self: center;
