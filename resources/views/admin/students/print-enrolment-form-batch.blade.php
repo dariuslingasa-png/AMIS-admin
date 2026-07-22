@@ -28,7 +28,7 @@
 
         /* Top Action Bar (Screen Only) */
         .action-bar {
-            max-width: 840px;
+            max-width: 860px;
             margin: 0 auto 16px auto;
             display: flex;
             justify-content: space-between;
@@ -45,7 +45,7 @@
         }
 
         .action-bar h2 {
-            font-size: 0.95rem;
+            font-size: 0.92rem;
             font-weight: 700;
             color: #0f172a;
             display: flex;
@@ -55,22 +55,27 @@
 
         .btn-group {
             display: flex;
+            align-items: center;
             gap: 10px;
         }
 
         .btn {
             font-family: 'Inter', sans-serif;
-            font-size: 0.85rem;
+            font-size: 0.82rem;
             font-weight: 700;
-            padding: 8px 18px;
+            padding: 0 16px;
+            height: 38px;
             border-radius: 8px;
             border: none;
             cursor: pointer;
             transition: all 0.2s ease;
-            display: flex;
+            display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 6px;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            white-space: nowrap;
+            line-height: 1;
         }
 
         .btn-primary {
@@ -101,6 +106,80 @@
             background-color: #dcfce7;
             border-color: #86efac;
             transform: translateY(-1px);
+        }
+
+        .btn-icon {
+            width: 15px;
+            height: 15px;
+            flex-shrink: 0;
+        }
+
+        /* Full-Screen Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 999999;
+            transition: opacity 0.35s ease, visibility 0.35s ease;
+        }
+        .loading-overlay.hidden-overlay {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        .loading-card {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 28px 36px;
+            width: 360px;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            border: 1px solid #e2e8f0;
+        }
+        .spinner-ring {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto 16px auto;
+            border: 3.5px solid #e2e8f0;
+            border-top-color: #059669;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .loading-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.98rem;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 12px;
+        }
+        .loading-progress-bg {
+            width: 100%;
+            height: 8px;
+            background: #f1f5f9;
+            border-radius: 9999px;
+            overflow: hidden;
+            margin-bottom: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        .loading-progress-fill {
+            height: 100%;
+            background: #059669;
+            width: 5%;
+            transition: width 0.2s ease-in-out;
+            border-radius: 9999px;
+        }
+        .loading-subtext {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #64748b;
         }
 
         /* Paper Document Layout (A4 Scale) */
@@ -437,160 +516,6 @@
             line-height: 18px;
         }
 
-        .p2-question-row {
-            margin-top: 16px;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.95rem;
-            line-height: 1.45;
-            color: #0f172a;
-        }
-
-        .p2-inline-line {
-            display: inline-block;
-            border-bottom: 1.5px solid #0f172a;
-            width: 70px;
-            height: 18px;
-            vertical-align: bottom;
-            text-align: center;
-            font-weight: 800;
-            font-family: 'Inter', sans-serif;
-        }
-
-        .p2-explain-block {
-            margin-top: 8px;
-            margin-bottom: 14px;
-        }
-
-        .p2-explain-label {
-            font-family: 'Inter', sans-serif;
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: #334155;
-            display: inline-block;
-            margin-bottom: 4px;
-        }
-
-        .p2-full-line {
-            border: none;
-            border-bottom: 1.5px solid #0f172a;
-            width: 100%;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.98rem;
-            font-weight: 700;
-            color: #0f172a;
-            outline: none;
-            padding: 2px 4px;
-            margin-bottom: 6px;
-            background: transparent;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            display: block;
-            text-transform: uppercase;
-        }
-
-        .grid-physician-row {
-            display: grid;
-            grid-template-columns: 4fr 3fr;
-            gap: 20px;
-            margin-top: 16px;
-            margin-bottom: 20px;
-        }
-
-        .p2-emergency-grid {
-            display: grid;
-            grid-template-columns: 4.5fr 3.5fr 3fr;
-            gap: 15px;
-            margin-top: 8px;
-            margin-bottom: 20px;
-        }
-
-        .p2-policy-text {
-            font-family: 'Merriweather', serif;
-            font-size: 0.92rem;
-            line-height: 1.5;
-            margin-top: 12px;
-            text-align: justify;
-            color: #1e293b;
-        }
-
-        .signature-grid {
-            display: grid;
-            grid-template-columns: 5fr 2.5fr;
-            gap: 30px;
-            margin-top: 35px;
-            margin-bottom: 8px;
-        }
-
-        .signature-disclaimer {
-            font-family: 'Inter', sans-serif;
-            font-size: 0.82rem;
-            font-style: italic;
-            color: #64748b;
-            margin-bottom: 25px;
-        }
-
-        .office-perforated-line {
-            border: none;
-            border-top: 1.5px dashed #64748b;
-            margin: 18px 0 14px 0;
-        }
-
-        .grid-office-row {
-            display: grid;
-            grid-template-columns: 3.5fr 2.5fr 2.5fr;
-            gap: 15px;
-            margin-bottom: 16px;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.92rem;
-            font-weight: 600;
-        }
-
-        .date-slash-inputs {
-            display: inline-flex;
-            align-items: baseline;
-            gap: 3px;
-        }
-
-        .date-slash-input {
-            border: none;
-            border-bottom: 1.5px solid #0f172a;
-            width: 45px;
-            text-align: center;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.95rem;
-            font-weight: 700;
-            color: #0f172a;
-            outline: none;
-        }
-
-        .attachments-title {
-            font-family: 'Inter', sans-serif;
-            font-size: 0.82rem;
-            font-style: italic;
-            font-weight: 700;
-            color: #0f172a;
-            margin-bottom: 4px;
-        }
-
-        }
-
-        .paper-container {
-            width: 210mm;
-            min-height: 297mm;
-            margin: 0 auto 30px auto;
-            background: #ffffff;
-            padding: 14mm 16mm 14mm 16mm;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-            position: relative;
-            border-radius: 2px;
-        }
-
-        .paper-page-break {
-            page-break-after: always;
-            break-after: page;
-        }
-
         .page-number-badge {
             position: absolute;
             top: 5mm;
@@ -652,8 +577,8 @@
 </head>
 <body>
 
-    <!-- Full-Screen Loading Overlay -->
-    <div id="loadingOverlay" class="loading-overlay">
+    <!-- Full-Screen Loading Overlay with robust inline styles -->
+    <div id="loadingOverlay" class="loading-overlay" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; z-index: 999999;">
         <div class="loading-card">
             <div class="spinner-ring"></div>
             <div class="loading-title">Loading Enrollment Forms</div>
