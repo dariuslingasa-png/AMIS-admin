@@ -388,6 +388,7 @@
             display: grid;
             grid-template-columns: 3.8fr 2.1fr 2.9fr;
             gap: 12px;
+            align-items: flex-end;
         }
 
         .grid-children-row {
@@ -669,8 +670,8 @@
             $motherFull = mb_strtoupper(trim($app->mother_name));
         }
 
-        $fatherContact = mb_strtoupper(implode(' / ', array_filter([$app->parent_mobile ?? null, $app->parent_email ?? null])));
-        $motherContact = mb_strtoupper(implode(' / ', array_filter([$app->parent_mobile ?? null, $app->parent_email ?? null])));
+        $parentPhone = trim($app->parent_mobile ?? $app->mobile_number ?? '');
+        $parentEmail = strtolower(trim($app->parent_email ?? ''));
 
         $fatherPresent = !empty($fatherFull);
         $motherPresent = !empty($motherFull);
@@ -876,7 +877,16 @@
                     <span class="label-text">Occupation</span>
                 </div>
                 <div>
-                    <input type="text" class="input-line" value="{{ $fatherContact }}" style="{{ $getDynamicStyle($fatherContact, '0.88rem', '0.72rem', '0.60rem', '0.50rem', 22, 32, 42) }}">
+                    <div style="border-bottom: 1.5px solid #0f172a; padding: 1px 3px; min-height: 32px; display: flex; flex-direction: column; justify-content: flex-end;">
+                        <div style="font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 700; color: #0f172a; line-height: 1.2;">
+                            {{ $parentPhone }}
+                        </div>
+                        @if(!empty($parentEmail))
+                            <div style="font-family: 'Inter', sans-serif; font-size: 0.76rem; font-weight: 600; color: #0f172a; line-height: 1.2; text-transform: lowercase;">
+                                {{ $parentEmail }}
+                            </div>
+                        @endif
+                    </div>
                     <span class="label-text">Tel./Email address</span>
                 </div>
             </div>
@@ -894,7 +904,16 @@
                     <span class="label-text">Occupation</span>
                 </div>
                 <div>
-                    <input type="text" class="input-line" value="{{ $motherContact }}" style="{{ $getDynamicStyle($motherContact, '0.88rem', '0.72rem', '0.60rem', '0.50rem', 22, 32, 42) }}">
+                    <div style="border-bottom: 1.5px solid #0f172a; padding: 1px 3px; min-height: 32px; display: flex; flex-direction: column; justify-content: flex-end;">
+                        <div style="font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 700; color: #0f172a; line-height: 1.2;">
+                            {{ $parentPhone }}
+                        </div>
+                        @if(!empty($parentEmail))
+                            <div style="font-family: 'Inter', sans-serif; font-size: 0.76rem; font-weight: 600; color: #0f172a; line-height: 1.2; text-transform: lowercase;">
+                                {{ $parentEmail }}
+                            </div>
+                        @endif
+                    </div>
                     <span class="label-text">Tel./Email address</span>
                 </div>
             </div>
