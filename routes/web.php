@@ -14,3 +14,11 @@ Route::get('/messenger/setup', [FacebookBotController::class, 'setupMessengerPro
 Route::get('/verify/student/{student_number}', [PublicVerificationController::class, 'verifyStudent'])->name('public.student.verify');
 Route::get('/v/{student_number}', [PublicVerificationController::class, 'verifyStudent'])->name('public.student.verify.short');
 
+// Standalone Selfie Verification Module (Localhost)
+use App\Http\Controllers\SelfieVerificationController;
+Route::get('/selfie-verification', [SelfieVerificationController::class, 'index'])->name('selfie.index');
+Route::post('/selfie-verification/start', [SelfieVerificationController::class, 'start'])->name('selfie.start');
+Route::get('/selfie-verification/session/{session_id}', [SelfieVerificationController::class, 'sessionView'])->name('selfie.session');
+Route::get('/selfie-verification/status/{session_id}', [SelfieVerificationController::class, 'checkStatus'])->name('selfie.status');
+Route::post('/selfie-verification/upload/{session_id}', [SelfieVerificationController::class, 'upload'])->name('selfie.upload');
+

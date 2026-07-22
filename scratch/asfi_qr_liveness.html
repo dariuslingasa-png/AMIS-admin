@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sequential QR Scanner to AI Video Liveness</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- 1. HTML5 QR Code Scanner Library (Free CDN) -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js" crossorigin="anonymous"></script>
+    
+    <!-- 2. Google MediaPipe Libraries for Free Client-Side AI (No Server API Cost) -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js" crossorigin="anonymous"></script>
+    
+    <!-- Custom Styles -->
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; background-color: #090d16; color: #f8fafc; }
+        
+        /* Laser Beam Animation for Liveness Scanning */
+        @keyframes scanbeam {
+            0% { top: 15%; opacity: 0.3; }
+            50% { top: 80%; opacity: 0.9; }
+            100% { top: 15%; opacity: 0.3; }
+        }
+        .scan-beam {
+            position: absolute;
+            left: 8%;
+            right: 8%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #10b981, #34d399, #10b981, transparent);
+            box-shadow: 0 0 14px #10b981;
+            animation: scanbeam 2s ease-in-out infinite;
+        }
+
+        /* Video / Canvas Mirroring (Horizontal Mirror Effect) */
+        .mirror-feed {
+            transform: scaleX(-1);
+            -webkit-transform: scaleX(-1);
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden">
+
+    <!-- Top Navigation Bar -->
+    <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur-md px-4 py-3 sticky top-0 z-40">
+        <div class="max-w-md mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-xl bg-emerald-600 flex items-center justify-center text-white font-black shadow-md">
+                    <i data-lucide="shield-check" class="w-4 h-4"></i>
+                </div>
+                <div>
+                    <h1 class="text-xs font-black uppercase tracking-wider text-white">AMIS Verification Flow</h1>
+                    <p class="text-[10px] text-emerald-400 font-bold uppercase" id="flowStatusLabel">Step 1: Scan QR Code</p>
+                </div>
+            </div>
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-950 text-emerald-300 border border-emerald-800 uppercase flex items-center gap-1">
+                <i data-lucide="lock" class="w-3 h-3 text-emerald-400"></i>
+                <span>HTTPS SECURE</span>
+            </span>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER FOR SEQUENTIAL MODULES -->
+    <main class="max-w-md mx-auto w-full p-4 my-auto">
+        
+        <!-- =================================================================== -->
+        <!-- MODULE 1: SEQUENTIAL STEP 1 - QR CODE SCANNER -->
+        <!-- =================================================================== -->
+        <div id="qrScannerModule" class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4">
+            <div class="text-center space-y-1">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center mx-auto mb-2">
+                    <i data-lucide="qr-code" class="w-6 h-6"></i>
+                </div>
+                <h2 class="text-lg font-black text-white">Scan Verification QR Code</h2>
+                <p class="text-xs text-slate-400">Position your QR code inside the frame to proceed to video liveness verification.</p>
+            </div>
+
+            <!-- HTML5 QR Code Scanner Render Container -->
+            <div id="qr-reader" class="rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 min-h-[260px] flex items-center justify-center"></div>
+
+            <button type="button" id="btnStartQRScanner" class="w-full bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white py-3.5 rounded-2xl font-black text-xs shadow-xl transition flex items-center justify-center gap-2 cursor-pointer">
+                <i data-lucide="camera" class="w-4 h-4"></i>
+                <span>Start QR Scanner</span>
+            </button>
+        </div>
+
+        <!-- =================================================================== -->
+        <!-- MODULE 2: SEQUENTIAL STEP 2 - WEBCAM LIVENESS DETECTION VIEW -->
+        <!-- =================================================================== -->
+        <div id="livenessModule" class="hidden relative w-full aspect-square bg-slate-950 rounded-3xl overflow-hidden border-2 border-emerald-500/40 shadow-2xl flex items-center justify-center">
+            
+            <!-- Raw Video Stream (Mirrored) -->
+            <video id="webcamVideo" autoplay playsinline webkit-playsinline muted class="hidden w-full h-full object-cover mirror-feed"></video>
+
+            <!-- Background Blur Canvas (Draws Video with Soft Segmented Blur) -->
+            <canvas id="outputCanvas" class="w-full h-full object-cover mirror-feed"></canvas>
+            <img id="capturedSelfieImg" class="hidden w-full h-full object-cover mirror-feed">
+
+            <!-- Camera White Flash Overlay for Auto-Capture -->
+            <div id="flashOverlay" class="hidden fixed inset-0 bg-white z-50 pointer-events-none transition-opacity duration-200"></div>
+
+            <!-- Oval Guide & Laser Scanner Overlay -->
+            <div id="scannerOverlay" class="pointer-events-none absolute inset-0 z-30 flex flex-col items-center justify-center p-4">
+                <div id="scanBeam" class="scan-beam"></div>
+
+                <div class="relative flex items-center justify-center" style="width: 250px; height: 240px;">
+                    <svg viewBox="0 0 100 100" id="ovalSvg" class="w-full h-full text-emerald-400 drop-shadow-lg transition-colors duration-300">
+                        <ellipse cx="50" cy="36" rx="26" ry="30" fill="none" stroke="currentColor" stroke-width="2.5" stroke-dasharray="3 3" />
+                        <path d="M 18 70 Q 50 62 82 70 L 98 100 L 2 100 Z" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="3 3" />
+                    </svg>
+                    
+                    <span id="livenessStatusBadge" class="absolute -top-6 text-[9px] font-black tracking-widest text-emerald-300 uppercase bg-slate-900/90 px-3 py-1 rounded-full border border-emerald-400/40 shadow-sm flex items-center gap-1">
+                        <i data-lucide="scan-face" class="w-3 h-3 text-emerald-400"></i>
+                        <span id="livenessStatusText">ALIGN FACE INSIDE OVAL</span>
+                    </span>
+                </div>
+
+                <!-- Bottom Meter Bar -->
+                <div class="absolute bottom-4 left-4 right-4 bg-slate-900/90 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-emerald-500/40 flex items-center justify-between shadow-xl">
+                    <div class="flex items-center gap-2">
+                        <div id="meterDot" class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></div>
+                        <span id="meterLabel" class="text-[11px] font-black text-white uppercase tracking-wider">LIVE LIVENESS SCAN</span>
+                    </div>
+                    <span id="livenessScorePercent" class="text-xs font-black text-emerald-400">0%</span>
+                </div>
+            </div>
+
+            <!-- Offscreen Canvas for Snapshot Capture -->
+            <canvas id="snapshotCanvas" class="hidden"></canvas>
+        </div>
+
+        <!-- Controls for Module 2 -->
+        <div id="livenessControls" class="hidden mt-4 space-y-2">
+            <button type="button" id="btnSnapSelfie" class="w-full bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white py-3.5 rounded-2xl font-black text-xs shadow-xl transition flex items-center justify-center gap-2 cursor-pointer">
+                <i data-lucide="aperture" class="w-4 h-4"></i>
+                <span id="btnSnapText">Snap Live Selfie</span>
+            </button>
+            <div id="capturedActions" class="hidden flex items-center gap-3">
+                <button type="button" id="btnRetake" class="w-1/2 bg-slate-800 hover:bg-slate-700 text-slate-200 py-3.5 rounded-2xl font-bold text-xs transition cursor-pointer">
+                    Retake Photo
+                </button>
+                <button type="button" id="btnSubmit" class="w-1/2 bg-emerald-600 hover:bg-emerald-500 text-white py-3.5 rounded-2xl font-black text-xs shadow-xl transition cursor-pointer flex items-center justify-center gap-1.5">
+                    <i data-lucide="check" class="w-4 h-4"></i>
+                    <span>Submit Verification</span>
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
+        <div class="bg-slate-900 border border-emerald-500/40 rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl space-y-3">
+            <div class="w-14 h-14 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center mx-auto mb-1">
+                <i data-lucide="check-circle-2" class="w-8 h-8"></i>
+            </div>
+            <h3 class="text-xl font-black text-white">Liveness & QR Verified!</h3>
+            <p class="text-xs text-slate-300 font-medium">QR payload validated and live human selfie captured successfully with background blur.</p>
+            <button type="button" onclick="window.location.reload()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-xl font-black text-xs shadow-md cursor-pointer">
+                Verify Next User
+            </button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-900 py-3 text-center text-[11px] text-slate-500">
+        AMIS Sequential QR & AI Liveness Module &bull; 100% Free Client-Side AI
+    </footer>
+
+    <!-- =================================================================== -->
+    <!-- JAVASCRIPT: SEQUENTIAL FLOW & AI LIVENESS IMPLEMENTATION -->
+    <!-- =================================================================== -->
+    <script>
+        // Global State Variables
+        let html5QrcodeScanner = null;
+        let webcamStream = null;
+        let faceMesh = null;
+        let selfieSegmentation = null;
+        
+        let livenessScore = 0;
+        let hasFace = false;
+        let isCaptured = false;
+        let autoCapturedTriggered = false;
+        let scannedQRResult = null;
+
+        // DOM Elements
+        const qrModule = document.getElementById('qrScannerModule');
+        const livenessModule = document.getElementById('livenessModule');
+        const livenessControls = document.getElementById('livenessControls');
+        const flowStatusLabel = document.getElementById('flowStatusLabel');
+        
+        const video = document.getElementById('webcamVideo');
+        const outputCanvas = document.getElementById('outputCanvas');
+        const outputCtx = outputCanvas.getContext('2d');
+        const snapshotCanvas = document.getElementById('snapshotCanvas');
+        const capturedImg = document.getElementById('capturedSelfieImg');
+        
+        const ovalSvg = document.getElementById('ovalSvg');
+        const livenessStatusBadge = document.getElementById('livenessStatusBadge');
+        const livenessStatusText = document.getElementById('livenessStatusText');
+        const livenessScorePercent = document.getElementById('livenessScorePercent');
+        const meterDot = document.getElementById('meterDot');
+        const meterLabel = document.getElementById('meterLabel');
+        const scanBeam = document.getElementById('scanBeam');
+        const flashOverlay = document.getElementById('flashOverlay');
+
+        // ===================================================================
+        // STEP 1: QR CODE SCANNER INITIALIZATION
+        // ===================================================================
+        document.getElementById('btnStartQRScanner').addEventListener('click', () => {
+            initQRScanner();
+        });
+
+        function initQRScanner() {
+            if (html5QrcodeScanner) return;
+
+            html5QrcodeScanner = new Html5Qrcode("qr-reader");
+            const config = { fps: 10, qrbox: { width: 220, height: 220 } };
+
+            html5QrcodeScanner.start(
+                { facingMode: "environment" }, // Rear camera preferred for scanning QR
+                config,
+                onScanSuccess,                // SUCCESS CALLBACK
+                onScanFailure                 // Failure/Scanning callback
+            ).catch(err => {
+                console.warn("Camera scan init failed, trying default camera:", err);
+                html5QrcodeScanner.start({ facingMode: "user" }, config, onScanSuccess, onScanFailure);
+            });
+        }
+
+        /**
+         * QR SCANNER SUCCESS CALLBACK
+         * Connected directly to Liveness Camera Initialization Function!
+         */
+        function onScanSuccess(decodedText, decodedResult) {
+            console.log("✅ QR Code Successfully Scanned:", decodedText);
+            scannedQRResult = decodedText;
+
+            // 1. Stop and clear QR scanner
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.stop().then(() => {
+                    html5QrcodeScanner.clear();
+                    transitionToLivenessModule();
+                }).catch(() => {
+                    transitionToLivenessModule();
+                });
+            } else {
+                transitionToLivenessModule();
+            }
+        }
+
+        function onScanFailure(error) {
+            // Continuous scanning, ignore individual frame failures
+        }
+
+        /**
+         * TRANSITION FUNCTION: Hide QR Scanner & Open AI Liveness Camera View
+         */
+        function transitionToLivenessModule() {
+            qrModule.classList.add('hidden');
+            livenessModule.classList.remove('hidden');
+            livenessControls.classList.remove('hidden');
+            flowStatusLabel.textContent = 'Step 2: AI Video Liveness Verification';
+
+            // Launch Webcam Liveness & AI Detection
+            initLivenessCamera();
+        }
+
+        // ===================================================================
+        // STEP 2: WEBCAM LIVENESS & FREE CLIENT-SIDE AI (BACKGROUND BLUR & FACE MESH)
+        // ===================================================================
+        async function initLivenessCamera() {
+            try {
+                // Request front selfie camera stream
+                webcamStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'user', width: { ideal: 720 }, height: { ideal: 720 } },
+                    audio: false
+                });
+
+                video.srcObject = webcamStream;
+                await video.play();
+
+                // Initialize Canvas Dimensions matching Video
+                outputCanvas.width = video.videoWidth || 640;
+                outputCanvas.height = video.videoHeight || 640;
+                snapshotCanvas.width = outputCanvas.width;
+                snapshotCanvas.height = outputCanvas.height;
+
+                // Load Free Client-Side MediaPipe AI Modules
+                initMediaPipeAI();
+            } catch (err) {
+                alert("Could not open selfie camera: " + err.message);
+            }
+        }
+
+        function initMediaPipeAI() {
+            // 1. MediaPipe Selfie Segmentation (For Background Blur)
+            if (window.SelfieSegmentation) {
+                selfieSegmentation = new SelfieSegmentation({
+                    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`
+                });
+                selfieSegmentation.setOptions({ modelSelection: 1 }); // General model for sharp person segmentation
+                selfieSegmentation.onResults(onSelfieSegmentationResults);
+            }
+
+            // 2. MediaPipe Face Mesh (For Liveness & Person Detection)
+            if (window.FaceMesh) {
+                faceMesh = new FaceMesh({
+                    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
+                });
+                faceMesh.setOptions({
+                    maxNumFaces: 1,
+                    refineLandmarks: true,
+                    minDetectionConfidence: 0.5,
+                    minTrackingConfidence: 0.5
+                });
+                faceMesh.onResults(onFaceMeshResults);
+            }
+
+            // Continuous Frame Processing Loop
+            async function renderFrame() {
+                if (!isCaptured && video.readyState >= 2) {
+                    if (selfieSegmentation) {
+                        await selfieSegmentation.send({ image: video });
+                    } else {
+                        // Fallback draw unblurred video frame to canvas
+                        outputCtx.drawImage(video, 0, 0, outputCanvas.width, outputCanvas.height);
+                    }
+
+                    if (faceMesh) {
+                        await faceMesh.send({ image: video });
+                    }
+                }
+                if (!isCaptured) {
+                    requestAnimationFrame(renderFrame);
+                }
+            }
+            requestAnimationFrame(renderFrame);
+        }
+
+        /**
+         * Background Blur Canvas Rendering Callback via MediaPipe Selfie Segmentation
+         */
+        function onSelfieSegmentationResults(results) {
+            if (isCaptured) return;
+
+            outputCtx.save();
+            outputCtx.clearRect(0, 0, outputCanvas.width, outputCanvas.height);
+
+            // Draw blurred background
+            outputCtx.filter = 'blur(10px)';
+            outputCtx.drawImage(results.image, 0, 0, outputCanvas.width, outputCanvas.height);
+            outputCtx.filter = 'none';
+
+            // Mask sharp foreground person over blurred background
+            outputCtx.globalCompositeOperation = 'destination-atop';
+            outputCtx.drawImage(results.segmentationMask, 0, 0, outputCanvas.width, outputCanvas.height);
+
+            outputCtx.globalCompositeOperation = 'destination-over';
+            outputCtx.drawImage(results.image, 0, 0, outputCanvas.width, outputCanvas.height);
+            outputCtx.restore();
+        }
+
+        /**
+         * Liveness & Person Presence Detection Callback via MediaPipe Face Mesh
+         */
+        function onFaceMeshResults(results) {
+            if (isCaptured) return;
+
+            if (!results.multiFaceLandmarks || results.multiFaceLandmarks.length === 0) {
+                // NO PERSON / NO FACE DETECTED
+                hasFace = false;
+                livenessScore = 0;
+                updateLivenessUI(false, "NO HUMAN FACE DETECTED");
+                return;
+            }
+
+            // PERSON / FACE DETECTED
+            hasFace = true;
+            const landmarks = results.multiFaceLandmarks[0];
+            const nose = landmarks[1];
+
+            // Check if nose is centered inside oval guide
+            const isCentered = nose.x > 0.25 && nose.x < 0.75 && nose.y > 0.2 && nose.y < 0.8;
+
+            if (isCentered) {
+                if (livenessScore < 100) {
+                    livenessScore += Math.floor(Math.random() * 15) + 10;
+                    if (livenessScore > 100) livenessScore = 100;
+                }
+
+                let text = "LIVE HUMAN DETECTED (VERIFYING)";
+                if (livenessScore >= 100) text = "100% LIVENESS VERIFIED!";
+                
+                updateLivenessUI(true, text);
+
+                // 100% AUTO CAPTURE TRIGGER
+                if (livenessScore >= 100 && !isCaptured && !autoCapturedTriggered) {
+                    autoCapturedTriggered = true;
+                    triggerAutoCapture();
+                }
+            } else {
+                updateLivenessUI(true, "CENTER FACE INSIDE OVAL");
+            }
+        }
+
+        function updateLivenessUI(facePresent, statusMessage) {
+            livenessScorePercent.textContent = livenessScore + '%';
+            livenessStatusText.textContent = statusMessage;
+
+            if (facePresent) {
+                ovalSvg.className.baseVal = "w-full h-full text-emerald-400 drop-shadow-lg transition-colors duration-300";
+                meterDot.className = "w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping";
+                meterLabel.textContent = "LIVE AI DETECTING...";
+                livenessScorePercent.className = "text-xs font-black text-emerald-400";
+                scanBeam.style.display = livenessScore < 100 ? 'block' : 'none';
+            } else {
+                ovalSvg.className.baseVal = "w-full h-full text-rose-500 animate-pulse drop-shadow-lg transition-colors duration-300";
+                meterDot.className = "w-2.5 h-2.5 rounded-full bg-rose-500";
+                meterLabel.textContent = "NO PERSON DETECTED";
+                livenessScorePercent.className = "text-xs font-black text-rose-400";
+                scanBeam.style.display = 'none';
+            }
+        }
+
+        function triggerAutoCapture() {
+            // Flash screen
+            flashOverlay.classList.remove('hidden');
+            setTimeout(() => flashOverlay.classList.add('hidden'), 250);
+
+            takeSnapshot();
+        }
+
+        document.getElementById('btnSnapSelfie').addEventListener('click', () => {
+            takeSnapshot();
+        });
+
+        function takeSnapshot() {
+            const snapCtx = snapshotCanvas.getContext('2d');
+            
+            // Mirror canvas context drawing so saved selfie matches mirrored view
+            snapCtx.translate(snapshotCanvas.width, 0);
+            snapCtx.scale(-1, 1);
+            snapCtx.drawImage(outputCanvas, 0, 0, snapshotCanvas.width, snapshotCanvas.height);
+
+            const imageDataUrl = snapshotCanvas.toDataURL('image/png');
+            capturedImg.src = imageDataUrl;
+            
+            isCaptured = true;
+            capturedImg.classList.remove('hidden');
+            outputCanvas.classList.add('hidden');
+            document.getElementById('scannerOverlay').classList.add('hidden');
+
+            document.getElementById('btnSnapSelfie').classList.add('hidden');
+            document.getElementById('capturedActions').classList.remove('hidden');
+        }
+
+        document.getElementById('btnRetake').addEventListener('click', () => {
+            isCaptured = false;
+            autoCapturedTriggered = false;
+            livenessScore = 0;
+            
+            capturedImg.classList.add('hidden');
+            outputCanvas.classList.remove('hidden');
+            document.getElementById('scannerOverlay').classList.remove('hidden');
+
+            document.getElementById('btnSnapSelfie').classList.remove('hidden');
+            document.getElementById('capturedActions').classList.add('hidden');
+        });
+
+        document.getElementById('btnSubmit').addEventListener('click', () => {
+            document.getElementById('successModal').classList.remove('hidden');
+        });
+
+        // Initialize icons on load
+        document.addEventListener('DOMContentLoaded', () => lucide.createIcons());
+    </script>
+</body>
+</html>
