@@ -114,7 +114,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 18px;
+            margin-bottom: 10px;
             gap: 10px;
         }
 
@@ -199,7 +199,7 @@
             grid-template-columns: 1fr 90px 135px;
             align-items: flex-start;
             gap: 15px;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
 
         .form-title-area {
@@ -223,7 +223,7 @@
             font-size: 1.15rem;
             font-weight: 700;
             margin-top: 3px;
-            margin-bottom: 16px;
+            margin-bottom: 14px;
             color: #1e293b;
         }
 
@@ -272,8 +272,9 @@
         .checkbox-stack {
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            margin-top: 10px;
+            gap: 8px;
+            margin-top: 0;
+            align-self: center;
             align-items: flex-start;
             font-family: 'Inter', sans-serif;
         }
@@ -310,6 +311,8 @@
             border: 2px solid #0f172a;
             background: #fafafa;
             justify-self: end;
+            align-self: flex-start;
+            margin-top: 0;
             display: flex;
             align-items: center;
             justify-content: center;
