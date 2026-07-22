@@ -1321,40 +1321,40 @@
                             <div class="emergency-info" style="position: absolute; left: 28px; top: 85px; width: 284px; z-index: 10; display: flex; flex-direction: column; gap: 7px;">
                                 <!-- Contact Name -->
                                 <div class="emerg-row" style="display: flex; align-items: flex-start; gap: 10px;">
-                                    <span class="emerg-icon" style="flex-shrink: 0; width: 14px; height: 14px; color: #047857; margin-top: 1.5px;">
+                                    <span class="emerg-icon" style="flex-shrink: 0; width: 14px; height: 14px; color: {{ $emergencyName === 'MISSING INFO' ? '#dc2626' : '#047857' }}; margin-top: 1.5px;">
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:100%; height:100%;"><path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z" clip-rule="evenodd" /></svg>
                                     </span>
-                                    <div class="emerg-text" style="text-align: left; font-family: 'Outfit', sans-serif; font-size: {{ $parentNameFontSize }}; font-weight: 900; text-transform: uppercase; color: #0f172a; line-height: 1.1;">
+                                    <div class="emerg-text" style="text-align: left; font-family: 'Outfit', sans-serif; font-size: {{ $parentNameFontSize }}; font-weight: 900; text-transform: uppercase; color: {{ $emergencyName === 'MISSING INFO' ? '#dc2626' : '#0f172a' }}; line-height: 1.1;">
                                         {{ $emergencyName }}
                                     </div>
                                 </div>
 
                                 <!-- Relationship -->
                                 <div class="emerg-row" style="display: flex; align-items: flex-start; gap: 10px;">
-                                    <span class="emerg-icon" style="flex-shrink: 0; width: 14px; height: 14px; color: #047857; margin-top: 1.5px;">
+                                    <span class="emerg-icon" style="flex-shrink: 0; width: 14px; height: 14px; color: {{ $relationship === 'MISSING INFO' ? '#dc2626' : '#047857' }}; margin-top: 1.5px;">
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:100%; height:100%;"><path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" /></svg>
                                     </span>
-                                    <div class="emerg-text" style="text-align: left; font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 700; text-transform: uppercase; color: #475569; line-height: 1;">
-                                        {{ $relationship ?: 'PARENT / GUARDIAN' }}
+                                    <div class="emerg-text" style="text-align: left; font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 700; text-transform: uppercase; color: {{ $relationship === 'MISSING INFO' ? '#dc2626' : '#475569' }}; line-height: 1;">
+                                        {{ $relationship }}
                                     </div>
                                 </div>
 
                                 <!-- Phone -->
                                 <div class="emerg-row" style="display: flex; align-items: flex-start; gap: 10px;">
-                                    <span class="emerg-icon" style="flex-shrink: 0; width: 14px; height: 14px; color: #047857; margin-top: 1.5px;">
+                                    <span class="emerg-icon" style="flex-shrink: 0; width: 14px; height: 14px; color: {{ $emergencyPhone === 'MISSING INFO' ? '#dc2626' : '#047857' }}; margin-top: 1.5px;">
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:100%; height:100%;"><path fill-rule="evenodd" d="M1.5 4.5a3 3 0 0 1 3-3h1.372c.86 0 1.61.586 1.819 1.42l.589 2.356a1.75 1.75 0 0 1-.607 1.89l-1.077.808a12.983 12.983 0 0 0 5.753 5.753l.808-1.077a1.75 1.75 0 0 1 1.89-.607l2.356.589c.834.209 1.42.959 1.42 1.82V19.5a3 3 0 0 1-3 3h-2.25C8.552 22.5 1.5 15.448 1.5 6.75V4.5Z" clip-rule="evenodd" /></svg>
                                     </span>
-                                    <div class="emerg-text" style="text-align: left; font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 800; color: #1e293b; line-height: 1;">
+                                    <div class="emerg-text" style="text-align: left; font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 800; color: {{ $emergencyPhone === 'MISSING INFO' ? '#dc2626' : '#1e293b' }}; line-height: 1;">
                                         {{ $emergencyPhone }}
                                     </div>
                                 </div>
 
                                 <!-- Address -->
                                 <div class="emerg-row" style="display: flex; align-items: flex-start; gap: 10px;">
-                                    <span class="emerg-icon" style="flex-shrink: 0; width: 14px; height: 14px; color: #047857; margin-top: 2.5px;">
+                                    <span class="emerg-icon" style="flex-shrink: 0; width: 14px; height: 14px; color: {{ $homeAddress === 'MISSING INFO' ? '#dc2626' : '#047857' }}; margin-top: 2.5px;">
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:100%; height:100%;"><path fill-rule="evenodd" d="m11.54 22.351.07.04.028.016a.76.76 0 0 0 .723 0l.028-.015.071-.041a16.975 16.975 0 0 0 3.58-2.977c2.2-2.384 4.19-5.462 4.19-8.923 0-4.82-3.855-8.5-8.5-8.5-8.5 0-8.5 3.68-8.5 8.5c0 3.461 1.99 6.54 4.19 8.923a16.975 16.975 0 0 0 3.58 2.977Zm3.71-12.851a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" clip-rule="evenodd" /></svg>
                                     </span>
-                                    <div class="emerg-text" style="text-align: left; font-family: 'Outfit', sans-serif; font-size: {{ $addressFontSize }}; font-weight: 700; text-transform: uppercase; color: #475569; line-height: 1.25;">
+                                    <div class="emerg-text" style="text-align: left; font-family: 'Outfit', sans-serif; font-size: {{ $addressFontSize }}; font-weight: 700; text-transform: uppercase; color: {{ $homeAddress === 'MISSING INFO' ? '#dc2626' : '#475569' }}; line-height: 1.25;">
                                         {{ $homeAddress }}
                                     </div>
                                 </div>
