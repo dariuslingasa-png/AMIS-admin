@@ -573,12 +573,22 @@
             margin-bottom: 4px;
         }
 
-        .attachments-list {
-            font-family: 'Inter', sans-serif;
-            font-size: 0.72rem;
-            line-height: 1.4;
-            margin-left: 20px;
-            color: #334155;
+        }
+
+        .paper-container {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto 30px auto;
+            background: #ffffff;
+            padding: 14mm 16mm 14mm 16mm;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            position: relative;
+            border-radius: 2px;
+        }
+
+        .paper-page-break {
+            page-break-after: always;
+            break-after: page;
         }
 
         .page-number-badge {
@@ -610,7 +620,7 @@
                 padding: 0;
             }
 
-            .action-bar {
+            .action-bar, .loading-overlay {
                 display: none !important;
             }
 
@@ -642,15 +652,34 @@
 </head>
 <body>
 
+    <!-- Full-Screen Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-card">
+            <div class="spinner-ring"></div>
+            <div class="loading-title">Loading Enrollment Forms</div>
+            <div class="loading-progress-bg">
+                <div id="loadingProgressBar" class="loading-progress-fill"></div>
+            </div>
+            <div id="loadingProgressCount" class="loading-subtext">Rendering student forms (0/{{ count($students) }})...</div>
+        </div>
+    </div>
+
     <!-- Top Action Bar for Screen Viewing -->
     <div class="action-bar">
-        <h2>📄 Enrolment Application Forms ({{ $gradeTitle ?? 'All Grades' }}) - {{ count($students) }} Students</h2>
+        <h2>Enrolment Application Forms ({{ $gradeTitle ?? 'All Grades' }}) — {{ count($students) }} Students</h2>
         <div class="btn-group">
-            <button class="btn btn-secondary" onclick="window.close()">Close Window</button>
+            <button class="btn btn-secondary" onclick="window.close()">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                Close Window
+            </button>
             <a href="{{ route('admin.students.download-docs-zip', request()->query()) }}" class="btn btn-zip">
-                📦 Download ZIP Archive
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Download ZIP Archive
             </a>
-            <button class="btn btn-primary" onclick="window.print()">🖨️ Print All / Save as PDF</button>
+            <button class="btn btn-primary" onclick="window.print()">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                Print All / Save as PDF
+            </button>
         </div>
     </div>
 
@@ -669,6 +698,57 @@
     @endforelse
 
     <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const overlay = document.getElementById('loadingOverlay');
+            const fill = document.getElementById('loadingProgressBar');
+            const text = document.getElementById('loadingProgressCount');
+            const images = document.querySelectorAll('img');
+            const totalImages = images.length || 1;
+            let loadedImages = 0;
+
+            function updateProgress(percent, countMsg) {
+                if (fill) fill.style.width = percent + '%';
+                if (text) text.innerText = countMsg;
+            }
+
+            if (images.length === 0) {
+                updateProgress(100, 'Ready');
+                setTimeout(() => overlay && overlay.classList.add('hidden-overlay'), 200);
+                return;
+            }
+
+            images.forEach(img => {
+                if (img.complete) {
+                    onImgLoad();
+                } else {
+                    img.addEventListener('load', onImgLoad);
+                    img.addEventListener('error', onImgLoad);
+                }
+            });
+
+            function onImgLoad() {
+                loadedImages++;
+                const pct = Math.min(100, Math.round((loadedImages / totalImages) * 100));
+                updateProgress(pct, `Loading student forms (${loadedImages}/${totalImages})...`);
+
+                if (loadedImages >= totalImages) {
+                    setTimeout(() => {
+                        updateProgress(100, 'Loading complete!');
+                        setTimeout(() => {
+                            if (overlay) overlay.classList.add('hidden-overlay');
+                        }, 200);
+                    }, 100);
+                }
+            }
+
+            setTimeout(() => {
+                if (overlay && !overlay.classList.contains('hidden-overlay')) {
+                    updateProgress(100, 'Ready');
+                    overlay.classList.add('hidden-overlay');
+                }
+            }, 3500);
+        });
+
         if (new URLSearchParams(window.location.search).get('auto_print') === '1') {
             window.addEventListener('DOMContentLoaded', () => {
                 setTimeout(() => window.print(), 500);

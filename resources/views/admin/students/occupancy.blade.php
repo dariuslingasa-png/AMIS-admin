@@ -356,7 +356,7 @@
                                     Paste JSON Payload (40+ Students Array)
                                 </label>
                                 <button type="button" @click="window.fillSampleJson(selectedGradeLevel); jsonInputText = window.AMIS_OCCUPANCY ? window.AMIS_OCCUPANCY.jsonInputText : jsonInputText;" class="text-[11px] font-bold text-emerald-600 hover:text-emerald-700 underline cursor-pointer flex items-center gap-1">
-                                    ⚡ Auto-Fill Existing DB Students (<span x-text="selectedGradeLevel || 'All'"></span>)
+                                    Auto-Fill Existing DB Students (<span x-text="selectedGradeLevel || 'All'"></span>)
                                 </button>
                             </div>
                             <textarea name="json_data" x-model="jsonInputText" rows="8" placeholder="Paste your student JSON array here..."
