@@ -114,7 +114,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 10px;
+            margin-bottom: 16px;
             gap: 10px;
         }
 
@@ -196,10 +196,10 @@
         /* Middle Header Row: Form Title, Checkboxes, 2x2 Photo Box */
         .form-middle-grid {
             display: grid;
-            grid-template-columns: 1fr 90px 135px;
+            grid-template-columns: 1fr auto 125px;
             align-items: flex-start;
-            gap: 15px;
-            margin-bottom: 10px;
+            gap: 12px;
+            margin-bottom: 12px;
         }
 
         .form-title-area {
@@ -273,16 +273,16 @@
             display: flex;
             flex-direction: column;
             gap: 8px;
-            margin-top: 0;
-            align-self: center;
+            margin-top: 25px;
             align-items: flex-start;
             font-family: 'Inter', sans-serif;
+            padding-right: 5px;
         }
 
         .checkbox-item {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             font-size: 0.9rem;
             font-weight: 800;
             color: #0f172a;
@@ -304,10 +304,10 @@
             border-radius: 3px;
         }
 
-        /* 2x2 Photo Box */
+        /* 2x2 Photo Square Box */
         .photo-box {
-            width: 135px;
-            height: 135px;
+            width: 125px;
+            height: 125px;
             border: 2px solid #0f172a;
             background: #fafafa;
             justify-self: end;
