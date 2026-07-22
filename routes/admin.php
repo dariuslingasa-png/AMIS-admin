@@ -178,15 +178,8 @@ Route::name('admin.')->group(function () {
         Route::post('/students/comparison/sync', [AdminStudentController::class, 'syncComparisonCsv'])->name('students.comparison.sync');
         Route::post('/students/comparison/update-field', [AdminStudentController::class, 'updateField'])->name('students.comparison.update-field');
         Route::post('/students/bulk-print-list', [AdminStudentController::class, 'bulkPrintList'])->name('students.bulk-print-list');
-        Route::get('/students/{student}', [AdminStudentController::class, 'show'])->name('students.show');
-        Route::post('/students/{student}/resend', [AdminStudentAccountController::class, 'resendCredentials'])->name('students.resend');
-        Route::post('/students/{student}/status', [AdminStudentAccountController::class, 'updateStatus'])->name('students.update-status');
-        Route::post('/students/{student}/update-email', [AdminStudentAccountController::class, 'updateEmail'])->name('students.update-email');
-        Route::post('/students/{student}/update-profile', [AdminStudentController::class, 'updateProfile'])->name('students.update-profile');
-        Route::post('/students/{student}/update-section', [AdminStudentController::class, 'updateSection'])->name('students.update-section');
-        Route::post('/students/{student}/update-photo', [AdminStudentController::class, 'updatePhoto'])->name('students.update-photo');
-        Route::get('/students/{student}/id-editor', [AdminStudentController::class, 'idEditor'])->name('students.id-editor');
         Route::get('/students/print-enrolment-forms-batch', [AdminStudentController::class, 'printEnrolmentFormsBatch'])->name('students.print-enrolment-forms-batch');
+        Route::get('/students/{student}', [AdminStudentController::class, 'show'])->name('students.show');
         Route::get('/students/{student}/print-enrolment-form', [AdminStudentController::class, 'printEnrolmentForm'])->name('students.print-enrolment-form');
         Route::post('/students/{student}/update-id-font-sizes', [AdminStudentController::class, 'updateIdFontSizes'])->name('students.update-id-font-sizes');
         Route::post('/students/{student}/delete-photo', [AdminStudentController::class, 'deletePhoto'])->name('students.delete-photo');

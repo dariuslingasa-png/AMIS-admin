@@ -37,86 +37,64 @@
                             <input type="hidden" name="{{ $key }}" value="{{ $value }}">
                         @endif
                     @endforeach
-                    <button type="submit" class="inline-flex h-10 items-center gap-2 rounded-lg border border-emerald-250 bg-emerald-50 px-4 text-sm font-bold text-emerald-700 transition hover:bg-emerald-100 cursor-pointer">
-                        <i data-lucide="shield-check" class="h-4 w-4"></i>
-                        {{ request()->hasAny(['search', 'grade', 'type', 'gender', 'mode', 'ms_status']) ? 'Sync Filtered Licenses' : 'Sync Pending Licenses' }}
+                    <button type="submit" class="inline-flex h-10 items-center gap-2 rounded-xl border border-emerald-300 bg-emerald-50 px-3.5 text-xs font-bold text-emerald-800 transition hover:bg-emerald-100 cursor-pointer whitespace-nowrap shadow-sm">
+                        <i data-lucide="shield-check" class="h-4 w-4 text-emerald-600"></i>
+                        <span>{{ request()->hasAny(['search', 'grade', 'type', 'gender', 'mode', 'ms_status']) ? 'Sync Filtered Licenses' : 'Sync Pending Licenses' }}</span>
                     </button>
                 </form>
                 <!-- Print Dropdown -->
                 <div class="relative inline-block text-left" x-data="{ open: false }" @click.outside="open = false" @keydown.escape.window="open = false">
-                    <button type="button" @click="open = !open; $nextTick(() => window.lucide && window.lucide.createIcons())" class="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 transition hover:bg-slate-50 cursor-pointer">
+                    <button type="button" @click="open = !open; $nextTick(() => window.lucide && window.lucide.createIcons())" class="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-bold text-slate-700 transition hover:bg-slate-50 cursor-pointer whitespace-nowrap shadow-sm">
                         <i data-lucide="printer" class="h-4 w-4 text-slate-500"></i>
                         <span>Print Records</span>
                         <i data-lucide="chevron-down" class="h-3 w-3 text-slate-400"></i>
                     </button>
-                    <div x-cloak x-show="open" x-transition.origin.top.right.duration.150ms class="absolute right-0 mt-2 w-56 rounded-xl border border-slate-200 bg-white p-1 shadow-xl z-50">
-                        <a href="{{ route('admin.students.print-enrolment-forms-batch', request()->all()) }}" target="_blank" class="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold text-emerald-800 hover:bg-emerald-50">
-                            <i data-lucide="file-signature" class="h-3.5 w-3.5 text-emerald-600"></i>
+                    <div x-cloak x-show="open" x-transition.origin.top.right.duration.150ms class="absolute right-0 mt-2 w-64 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl z-50">
+                        <a href="{{ route('admin.students.print-enrolment-forms-batch', request()->all()) }}" target="_blank" class="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold text-emerald-800 hover:bg-emerald-50 transition">
+                            <i data-lucide="file-signature" class="h-4 w-4 text-emerald-600"></i>
                             <span>Print Enrollment Application Forms ({{ request('grade') ?: 'All Grades' }})</span>
                         </a>
-                        <a href="{{ route('admin.students.index', array_merge(request()->all(), ['print_info' => 1])) }}" target="_blank" class="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">
-                            <i data-lucide="file-text" class="h-3.5 w-3.5 text-slate-400"></i>
+                        <a href="{{ route('admin.students.index', array_merge(request()->all(), ['print_info' => 1])) }}" target="_blank" class="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition">
+                            <i data-lucide="file-text" class="h-4 w-4 text-slate-400"></i>
                             <span>Print Official Info Sheets</span>
                         </a>
-                        <a href="{{ route('admin.students.index', array_merge(request()->all(), ['print_id' => 1])) }}" target="_blank" class="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">
-                            <i data-lucide="contact" class="h-3.5 w-3.5 text-slate-400"></i>
-                            <span>Print ID Cards</span>
-                        </a>
-                        <a href="{{ route('admin.students.index', array_merge(request()->all(), ['print_credentials' => 1])) }}" target="_blank" class="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">
-                            <i data-lucide="key" class="h-3.5 w-3.5 text-slate-400"></i>
+                        <div class="flex items-center justify-between rounded-lg px-3 py-2 text-xs font-semibold text-slate-400 bg-slate-50 cursor-not-allowed select-none">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="contact" class="h-4 w-4 text-slate-400"></i>
+                                <span>Print ID Cards</span>
+                            </div>
+                            <span class="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">Coming Soon</span>
+                        </div>
+                        <a href="{{ route('admin.students.index', array_merge(request()->all(), ['print_credentials' => 1])) }}" target="_blank" class="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition">
+                            <i data-lucide="key" class="h-4 w-4 text-slate-400"></i>
                             <span>Print Microsoft Credentials</span>
                         </a>
-                        <a href="{{ route('admin.students.index', array_merge(request()->all(), ['print' => 1])) }}" target="_blank" class="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">
-                            <i data-lucide="list" class="h-3.5 w-3.5 text-slate-400"></i>
+                        <a href="{{ route('admin.students.index', array_merge(request()->all(), ['print' => 1])) }}" target="_blank" class="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition">
+                            <i data-lucide="list" class="h-4 w-4 text-slate-400"></i>
                             <span>Print Masters List</span>
                         </a>
                         <div class="my-1 border-t border-slate-100"></div>
-                        <button type="button" onclick="document.getElementById('bulk-print-modal').classList.remove('hidden')" class="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-violet-700 hover:bg-violet-50">
-                            <i data-lucide="list-checks" class="h-3.5 w-3.5 text-violet-500"></i>
+                        <button type="button" onclick="document.getElementById('bulk-print-modal').classList.remove('hidden')" class="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-violet-700 hover:bg-violet-50 transition">
+                            <i data-lucide="list-checks" class="h-4 w-4 text-violet-500"></i>
                             <span>Bulk Print from Pasted List</span>
                         </button>
                         <div class="my-1 border-t border-slate-100"></div>
-                        <a href="{{ route('admin.students.export-canva', request()->all()) }}" class="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-50">
-                            <i data-lucide="download" class="h-3.5 w-3.5 text-emerald-600"></i>
+                        <a href="{{ route('admin.students.export-canva', request()->all()) }}" class="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 transition">
+                            <i data-lucide="download" class="h-4 w-4 text-emerald-600"></i>
                             <span>Export for Canva Bulk Create</span>
                         </a>
                         <div class="my-1 border-t border-slate-100"></div>
-                        <a href="{{ route('admin.students.export-verification-db') }}" class="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-50">
-                            <i data-lucide="table" class="h-3.5 w-3.5 text-indigo-500"></i>
-                            <span>Export Verification Database (by Grade &amp; Gender)</span>
+                        <a href="{{ route('admin.students.export-verification-db') }}" class="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-50 transition">
+                            <i data-lucide="table" class="h-4 w-4 text-indigo-500"></i>
+                            <span>Export Verification Database</span>
                         </a>
                         <div class="my-1 border-t border-slate-100"></div>
-                        <a href="{{ route('admin.students.download-docs-zip', request()->all()) }}" download class="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-50">
-                            <i data-lucide="file-archive" class="h-3.5 w-3.5 text-rose-550"></i>
+                        <a href="{{ route('admin.students.download-docs-zip', request()->all()) }}" download class="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-50 transition">
+                            <i data-lucide="file-archive" class="h-4 w-4 text-rose-500"></i>
                             <span>Download Student Documents (ZIP)</span>
                         </a>
                     </div>
                 </div>
-
-                @unless ($isTeacherAdminViewer)
-                    <a href="{{ route('admin.students.accounts') }}" class="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 transition hover:bg-slate-50">
-                        <i data-lucide="user-cog" class="h-4 w-4"></i>
-                        Account Onboarding
-                    </a>
-                    <a href="{{ route('admin.students.comparison') }}" class="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 transition hover:bg-slate-50">
-                        <i data-lucide="scale" class="h-4 w-4 text-slate-500"></i>
-                        CSV Comparison
-                    </a>
-                    <a href="{{ route('admin.students.history') }}" class="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 transition hover:bg-slate-50">
-                        <i data-lucide="history" class="h-4 w-4"></i>
-                        Enrollment History
-                    </a>
-                @endunless
-                <a href="{{ route('admin.students.reports') }}" class="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 transition hover:bg-slate-50">
-                    <i data-lucide="file-text" class="h-4 w-4"></i>
-                    Reports & Analytics
-                </a>
-                @unless ($isTeacherAdminViewer)
-                    <a href="{{ route('admin.students.dashboard') }}" class="inline-flex h-10 items-center gap-2 rounded-lg border border-emerald-100 bg-emerald-50 px-4 text-sm font-bold text-emerald-700 transition hover:bg-emerald-100">
-                        <i data-lucide="layout-dashboard" class="h-4 w-4"></i>
-                        Dashboard
-                    </a>
-                @endunless
             </div>
         </div>
 
