@@ -51,6 +51,7 @@ class Student extends Model
         'ms_license_active',
         'ms_account_enabled',
         'ms_last_sign_in_at',
+        'is_requirements_locked',
     ];
 
     protected $casts = [
@@ -62,6 +63,7 @@ class Student extends Model
         'mfa_enabled'                => 'boolean',
         'ms_license_active'          => 'boolean',
         'ms_account_enabled'         => 'boolean',
+        'is_requirements_locked'     => 'boolean',
         'password_changed_at'        => 'datetime',
         'last_login_at'              => 'datetime',
         'temp_password_set_at'       => 'datetime',

@@ -187,6 +187,7 @@ Route::name('admin.')->group(function () {
         Route::post('/students/{student}/update-id-font-sizes', [AdminStudentController::class, 'updateIdFontSizes'])->name('students.update-id-font-sizes');
         Route::post('/students/{student}/delete-photo', [AdminStudentController::class, 'deletePhoto'])->name('students.delete-photo');
         Route::post('/students/{student}/sync-microsoft-photo', [AdminStudentController::class, 'syncMicrosoftPhoto'])->name('students.sync-microsoft-photo');
+        Route::post('/students/{student}/toggle-requirements-lock', [AdminStudentController::class, 'toggleRequirementsLock'])->name('students.toggle-requirements-lock');
         Route::delete('/students/{student}', [AdminStudentController::class, 'destroy'])->name('students.destroy');
 
         Route::get('/soa', [AdminSoaController::class, 'index'])->name('soa.index');

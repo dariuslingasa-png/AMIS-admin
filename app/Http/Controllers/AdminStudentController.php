@@ -390,6 +390,28 @@ class AdminStudentController extends Controller
         ]);
     }
 
+    public function toggleRequirementsLock(Request $request, Student $student)
+    {
+        $student->is_requirements_locked = !$student->is_requirements_locked;
+        $student->save();
+
+        $action = $student->is_requirements_locked ? 'locked as COMPLETED INFORMATION' : 'unlocked';
+
+        \App\Models\AdminAuditLog::create([
+            'user_id'    => auth()->id(),
+            'event'      => 'student_requirements_lock',
+            'message'    => "Student {$student->student_number} requirements manually {$action} by " . (auth()->user()->name ?? 'Admin'),
+            'metadata'   => [
+                'student_id'             => $student->id,
+                'student_number'         => $student->student_number,
+                'is_requirements_locked' => $student->is_requirements_locked,
+            ],
+            'ip_address' => $request->ip(),
+        ]);
+
+        return back()->with('success', "Student {$student->student_number} requirements status has been {$action}.");
+    }
+
     public function exportCanva(Request $request)
     {
         $isTeacherAdminViewer = $request->user()?->isTeacherAdminViewer() ?? false;

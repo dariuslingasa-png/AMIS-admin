@@ -91,17 +91,36 @@
                 @endif
             </div>
 
-            <!-- Requirements Lock Status -->
-            <div class="flex justify-between items-center py-1 border-t border-slate-100 dark:border-slate-800 pt-2">
-                <span class="text-slate-600 dark:text-slate-400 text-sm font-medium">Requirements Clearance</span>
-                @if(isset($isRequirementsComplete) && $isRequirementsComplete)
-                    <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20 dark:bg-emerald-950/20 dark:text-emerald-400 px-2.5 py-0.5 text-xs font-bold">
-                        🔒 Locked & Complete
-                    </span>
-                @else
-                    <span class="inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/20 dark:bg-amber-950/20 dark:text-amber-400 px-2.5 py-0.5 text-xs font-bold">
-                        🔓 Pending ({{ count($missingRequirements ?? []) }})
-                    </span>
+            <!-- Requirements Lock Status & Super Admin Lock Action -->
+            <div class="flex flex-col gap-2 border-t border-slate-100 dark:border-slate-800 pt-2.5">
+                <div class="flex justify-between items-center">
+                    <span class="text-slate-600 dark:text-slate-400 text-sm font-medium">Requirements Clearance</span>
+                    @if(isset($isRequirementsComplete) && $isRequirementsComplete)
+                        <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20 dark:bg-emerald-950/20 dark:text-emerald-400 px-2.5 py-0.5 text-xs font-bold">
+                            🔒 {{ ($student->is_requirements_locked ?? false) ? 'COMPLETED INFORMATION' : 'Locked & Complete' }}
+                        </span>
+                    @else
+                        <span class="inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/20 dark:bg-amber-950/20 dark:text-amber-400 px-2.5 py-0.5 text-xs font-bold">
+                            🔓 Pending ({{ count($missingRequirements ?? []) }})
+                        </span>
+                    @endif
+                </div>
+
+                @if(auth()->user()?->hasRole('super_admin') || auth()->user()?->isAdmin())
+                    <form method="POST" action="{{ route('admin.students.toggle-requirements-lock', $student) }}" class="mt-1">
+                        @csrf
+                        @if($student->is_requirements_locked)
+                            <button type="submit" class="w-full inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 text-xs font-bold text-amber-800 hover:bg-amber-100 transition active:scale-[0.98] cursor-pointer" title="Unlock Requirements Profile">
+                                <i data-lucide="unlock" class="h-3.5 w-3.5 text-amber-600"></i>
+                                <span>Unlock Requirements Profile</span>
+                            </button>
+                        @else
+                            <button type="submit" class="w-full inline-flex h-9 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-3 text-xs font-bold text-white hover:bg-emerald-700 transition active:scale-[0.98] cursor-pointer" title="Lock as COMPLETED INFORMATION">
+                                <i data-lucide="lock" class="h-3.5 w-3.5 text-white"></i>
+                                <span>Lock as COMPLETED INFORMATION</span>
+                            </button>
+                        @endif
+                    </form>
                 @endif
             </div>
         </div>

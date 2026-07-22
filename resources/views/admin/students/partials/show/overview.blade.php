@@ -9,7 +9,7 @@
                 <div>
                     <div class="flex items-center gap-2 flex-wrap">
                         <span class="inline-flex items-center gap-1 rounded-full bg-emerald-400/20 px-2.5 py-0.5 text-xs font-black text-emerald-200 border border-emerald-400/30 uppercase tracking-wider">
-                            🔒 COMPLETED REQUIREMENTS
+                            🔒 COMPLETED INFORMATION
                         </span>
                         <span class="text-xs text-emerald-200 font-bold uppercase tracking-wider">Clearance Locked & Verified</span>
                     </div>

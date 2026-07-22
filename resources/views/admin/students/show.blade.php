@@ -202,11 +202,12 @@
         $missingRequirements[] = '2x2 Photo ID';
         $reminders[] = '2x2 Student Photo is missing for official ID printing.';
     }
-    if (!$hasBirthCert) {
+    // Old Students are EXEMPT from submitting Birth Certificate and Report Card (already in system)
+    if (!$hasBirthCert && !$isOldStudent) {
         $missingRequirements[] = 'PSA Birth Certificate or Temporary Affidavit';
         $reminders[] = 'PSA Birth Certificate or notarized Temporary Affidavit is required.';
     }
-    if (!$hasReportCard && ($isTransferee || $isOldStudent || !$isKinder1or2)) {
+    if (!$hasReportCard && ($isTransferee || (!$isKinder1or2 && !$isOldStudent))) {
         $missingRequirements[] = 'Form 138 / Report Card / SF9';
         $reminders[] = 'Previous Grade Level Form 138 / Report Card is required for academic clearance.';
     }
@@ -215,7 +216,9 @@
         $reminders[] = 'No verified tuition or fee payment proof linked to this account.';
     }
 
-    $isRequirementsComplete = count($missingRequirements) === 0;
+    // Manual Lock Override by Super Admin
+    $isManuallyLocked = (bool) ($student->is_requirements_locked ?? false);
+    $isRequirementsComplete = $isManuallyLocked || (count($missingRequirements) === 0);
 @endphp
 
 <script>
