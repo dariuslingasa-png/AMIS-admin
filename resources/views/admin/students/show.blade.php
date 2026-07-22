@@ -219,7 +219,30 @@
             ['Emergency Instructions', $student->applicant->emergency_instructions],
         ]]);
     }
-@endphp
+
+    $app = $student->applicant;
+    $fatherName = trim(($app->father_first_name ?? '') . ' ' . ($app->father_last_name ?? ''));
+    $motherName = trim(($app->mother_first_name ?? '') . ' ' . ($app->mother_last_name ?? ''));
+    $pName = !empty($fatherName) ? $fatherName : (!empty($motherName) ? $motherName : ($app->father_name ?? $app->mother_name ?? ''));
+
+    $singleStudentJsonArray = [
+        [
+            'lrn' => (string)($app->lrn ?? $student->student_number ?? 'NA'),
+            'first_name' => mb_strtoupper($app->first_name ?? ''),
+            'middle_name' => mb_strtoupper($app->middle_name ?? ''),
+            'last_name' => mb_strtoupper($app->last_name ?? ''),
+            'grade_level' => (string)($student->grade_level ?: ($app->grade_level ?: 'Grade 1')),
+            'gender' => (string)($app->gender ?: 'Male'),
+            'address' => mb_strtoupper($app->address ?? $app->street_address ?? ''),
+            'date_of_birth' => $app?->date_of_birth ? $app->date_of_birth->format('Y-m-d') : '',
+            'place_of_birth' => mb_strtoupper($app->place_of_birth ?? ''),
+            'religion' => mb_strtoupper($app->religion ?? 'ISLAM'),
+            'parent_name' => mb_strtoupper($pName),
+            'parent_mobile' => (string)($app->parent_mobile ?? $app->mobile_number ?? ''),
+            'parent_email' => strtolower($app->parent_email ?? ''),
+        ]
+    ];
+    $singleStudentJsonPretty = json_encode($singleStudentJsonArray, JSON_PRETTY_PRINT);
 @endphp
 
 <script>
@@ -229,7 +252,7 @@
             const el = document.querySelector('[x-data]');
             if (el && window.Alpine) {
                 const data = window.Alpine.$data(el);
-                if (data && (data.openEditModal || data.showIdPreview || data.openPasswordModal || data.preview)) {
+                if (data && (data.openEditModal || data.showIdPreview || data.openPasswordModal || data.openStudentJsonModal || data.preview)) {
                     alpineModalOpen = true;
                 }
             }
@@ -266,6 +289,8 @@
          gradeFontSize: {{ $student->id_grade_font_size ?: 25 }},
          idFontSize: {{ $student->id_num_font_size ?: 10 }},
          openPasswordModal: false,
+         openStudentJsonModal: false,
+         singleStudentJson: @json($singleStudentJsonPretty),
          editSection: 'all',
          copySuccess: false,
          activeTab: 'overview',
@@ -428,6 +453,14 @@
             <span class="text-xs font-extrabold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">Student Administration</span>
         </div>
         <div class="flex items-center gap-2">
+            <!-- Student JSON Payload Button -->
+            <button type="button" @click="openStudentJsonModal = true"
+               class="inline-flex items-center gap-2 rounded-xl border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 px-4 py-2 text-sm font-bold text-emerald-800 dark:text-emerald-300 shadow-sm transition hover:bg-emerald-100 dark:hover:bg-emerald-900/60 active:scale-[0.98] cursor-pointer"
+               title="View & Copy Student JSON Payload">
+                <i data-lucide="file-json" class="h-4 w-4 text-emerald-600"></i>
+                <span>JSON Payload</span>
+            </button>
+
             @unless ($isTeacherAdminViewer)
                 @if ($isRequirementsComplete)
                     <span class="inline-flex items-center gap-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 px-3.5 py-2 text-xs font-black uppercase tracking-wider shadow-2xs" title="Profile is locked">
@@ -2427,5 +2460,42 @@
     function adjustLastNameFontSizes() {
         // Font sizes are calculated server-side in PHP matching Student Records (show.blade.php)
     }
-    </script>
+    </div>
+
+    <!-- Student JSON Payload Modal -->
+    <div x-cloak x-show="openStudentJsonModal"
+         style="display: none; z-index: 99999;"
+         class="fixed inset-0 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-fade-in">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col"
+             @click.outside="openStudentJsonModal = false">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
+                <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <i data-lucide="file-json" class="w-5 h-5 text-emerald-600"></i>
+                    <span>Student JSON Record Payload ({{ $student->applicant->first_name ?? '' }} {{ $student->applicant->last_name ?? '' }})</span>
+                </h3>
+                <button type="button" @click="openStudentJsonModal = false" class="text-slate-400 hover:text-slate-600 transition cursor-pointer">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <p class="text-xs font-semibold text-slate-500">
+                    This is the standardized JSON record payload for this student. You can copy it directly or use it in the Section Occupancy JSON Batch Sync.
+                </p>
+                <textarea readonly rows="11" x-text="singleStudentJson"
+                          class="w-full p-3.5 rounded-xl border border-slate-200 bg-slate-900 font-mono text-xs text-emerald-400 outline-none leading-relaxed shadow-inner select-all"></textarea>
+
+                <div class="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
+                    <a href="{{ route('admin.students.occupancy') }}" class="text-xs font-bold text-slate-600 hover:text-emerald-700 underline flex items-center gap-1.5">
+                        <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                        <span>Go to Section Occupancy JSON Sync</span>
+                    </a>
+                    <button type="button" @click="navigator.clipboard.writeText(singleStudentJson); alert('Copied student JSON payload to clipboard!');"
+                            class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-md cursor-pointer flex items-center gap-2 active:scale-95">
+                        <i data-lucide="copy" class="w-4 h-4"></i>
+                        <span>Copy JSON to Clipboard</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </x-admin-layout>
