@@ -520,10 +520,11 @@
                     </span>
                 </div>
                 
-                <div class="relative" style="width: 96px; height: 96px; z-index: 1; overflow: visible;">
+                <div class="relative" style="width: 96px; height: 96px; z-index: 10; overflow: visible;">
                     <!-- Inner avatar block with overflow hidden for the photo clip -->
                     <div class="w-full h-full relative group flex items-center justify-center overflow-hidden rounded-2xl border-2 border-white/45 bg-white/12 text-emerald-100 cursor-pointer" 
-                          @unless ($isTeacherAdminViewer) onclick="openPhotoOptionsModal()" @else @if ($photoUrl) @click="openPreview('{{ $photoUrl }}', '2x2 Photo', false)" @endif @endunless>
+                          @unless ($isTeacherAdminViewer) onclick="openPhotoOptionsModal()" @else @if ($photoUrl) @click="openPreview('{{ $photoUrl }}', '2x2 Photo', false)" @endif @endunless
+                          title="Click to edit / replace photo">
                         @if ($photoUrl)
                             <img src="{{ $photoUrl }}" alt="2x2 Photo" class="w-full h-full object-cover block transition duration-300 group-hover:scale-105 group-hover:brightness-75">
                         @else
@@ -536,22 +537,36 @@
                         @endif
 
                         @unless ($isTeacherAdminViewer)
+                            <!-- Permanent Corner Camera Badge inside photo box -->
+                            <div class="absolute bottom-1 right-1 bg-emerald-600/90 text-white p-1 rounded-lg backdrop-blur-xs shadow-md border border-white/40 flex items-center justify-center">
+                                <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" />
+                                </svg>
+                            </div>
+
                             <!-- Hover overlay for photo editing -->
-                            <div class="absolute inset-0 bg-slate-900/50 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition duration-200 text-white gap-1 select-none pointer-events-none">
-                                <i data-lucide="camera" class="w-6 h-6 text-white drop-shadow"></i>
+                            <div class="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition duration-200 text-white gap-1 select-none pointer-events-none">
+                                <svg class="w-7 h-7 text-white drop-shadow" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" />
+                                </svg>
                                 <span class="text-[9px] font-black uppercase tracking-wider">EDIT PHOTO</span>
                             </div>
                         @endunless
                     </div>
                     
                     @unless ($isTeacherAdminViewer)
-                        <!-- Camera edit button placed in the outer relative wrapper, so it does not get cut off by overflow-hidden -->
-                        <div style="position: absolute; right: -8px; bottom: -8px; z-index: 9999; overflow: visible;" onclick="event.stopPropagation()">
+                        <!-- Outer Floating Camera edit button -->
+                        <div style="position: absolute; right: -8px; bottom: -8px; z-index: 99999; overflow: visible;" onclick="event.stopPropagation(); openPhotoOptionsModal();">
                             <button type="button" 
                                     onclick="openPhotoOptionsModal()"
-                                    class="w-8 h-8 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full flex items-center justify-center shadow-lg border-2 border-white transition active:scale-90 cursor-pointer"
+                                    class="w-9 h-9 bg-emerald-600 hover:bg-emerald-500 text-white rounded-full flex items-center justify-center shadow-2xl ring-2 ring-white transition transform active:scale-90 cursor-pointer"
                                     title="Edit / Replace Photo">
-                                <i data-lucide="camera" class="w-4 h-4"></i>
+                                <svg class="w-4.5 h-4.5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" />
+                                </svg>
                             </button>
                         </div>
                         <input type="file" id="student-photo-input" name="photo" accept="image/*" class="hidden" onchange="uploadStudentPhoto(this)">

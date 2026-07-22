@@ -409,60 +409,64 @@
         }
     </style>
 
-    <!-- Photo Options and Cropping Modals -->
+    <!-- Photo Options and Cropping Modals Teleported to Body -->
     @unless(auth()->user()?->isTeacherAdminViewer())
-        <div id="photo-options-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4" style="z-index: 9999999;">
-            <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-150 dark:border-slate-800 text-center animate-scale-in">
-                <div class="w-12 h-12 bg-emerald-50 dark:bg-emerald-950/40 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i data-lucide="user-cog" class="w-6 h-6 text-emerald-600"></i>
-                </div>
-                <h3 class="text-base font-bold text-slate-900 dark:text-white uppercase mb-1">Edit Student Photo</h3>
-                <p class="text-xs text-slate-500 mb-6">Choose an action below to update the photo.</p>
-                
-                <div class="space-y-2">
-                    <button type="button" onclick="triggerFileInput()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition active:scale-[0.98]">
-                        📤 Upload New Photo
-                    </button>
-                    @if($student->school_email)
-                        <button type="button" onclick="syncMicrosoftPhoto()" id="btn-sync-ms" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition active:scale-[0.98] flex items-center justify-center gap-1.5">
-                            <i data-lucide="refresh-cw" class="w-3.5 h-3.5" id="ms-sync-spinner"></i>
-                            <span>Pull from Microsoft 365</span>
+        <template x-teleport="body">
+            <div id="photo-options-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4" style="z-index: 9999999;">
+                <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-150 dark:border-slate-800 text-center animate-scale-in">
+                    <div class="w-12 h-12 bg-emerald-50 dark:bg-emerald-950/40 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i data-lucide="user-cog" class="w-6 h-6 text-emerald-600"></i>
+                    </div>
+                    <h3 class="text-base font-bold text-slate-900 dark:text-white uppercase mb-1">Edit Student Photo</h3>
+                    <p class="text-xs text-slate-500 mb-6">Choose an action below to update the photo.</p>
+                    
+                    <div class="space-y-2">
+                        <button type="button" onclick="triggerFileInput()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition active:scale-[0.98]">
+                            📤 Upload New Photo
                         </button>
-                    @endif
-                    @if($photoUrl)
-                        <button type="button" onclick="deletePhoto()" class="w-full py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-950/30 dark:hover:bg-rose-900/40 rounded-xl text-xs font-bold transition active:scale-[0.98]">
-                            🗑️ Delete / Reset Photo
+                        @if($student->school_email)
+                            <button type="button" onclick="syncMicrosoftPhoto()" id="btn-sync-ms" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition active:scale-[0.98] flex items-center justify-center gap-1.5">
+                                <i data-lucide="refresh-cw" class="w-3.5 h-3.5" id="ms-sync-spinner"></i>
+                                <span>Pull from Microsoft 365</span>
+                            </button>
+                        @endif
+                        @if($photoUrl)
+                            <button type="button" onclick="deletePhoto()" class="w-full py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-950/30 dark:hover:bg-rose-900/40 rounded-xl text-xs font-bold transition active:scale-[0.98]">
+                                🗑️ Delete / Reset Photo
+                            </button>
+                        @endif
+                        <button type="button" onclick="closePhotoOptionsModal()" class="w-full py-2.5 border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-slate-700 dark:hover:text-slate-350 rounded-xl text-xs font-bold transition">
+                            Cancel
                         </button>
-                    @endif
-                    <button type="button" onclick="closePhotoOptionsModal()" class="w-full py-2.5 border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-slate-700 dark:hover:text-slate-350 rounded-xl text-xs font-bold transition">
-                        Cancel
-                    </button>
+                    </div>
+                    <input type="file" id="id-photo-file-input" class="hidden" accept="image/jpeg,image/png,image/jpg" onchange="loadPhotoToCrop(event)">
                 </div>
-                <input type="file" id="id-photo-file-input" class="hidden" accept="image/jpeg,image/png,image/jpg" onchange="loadPhotoToCrop(event)">
             </div>
-        </div>
+        </template>
 
-        <!-- Crop Photo Modal -->
-        <div id="photo-crop-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-xs hidden items-center justify-center p-4" style="z-index: 9999999;">
-            <div class="bg-slate-900 rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl border border-slate-850 flex flex-col">
-                <div class="flex items-center justify-between px-6 py-4 border-b border-slate-850 bg-slate-900">
-                    <h3 class="text-sm font-bold text-white uppercase flex items-center gap-2">
-                        <i data-lucide="crop" class="w-4.5 h-4.5 text-emerald-500"></i>
-                        <span>Crop Student Photo</span>
-                    </h3>
-                    <button type="button" onclick="closeCropModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
-                </div>
-                <div class="p-6 bg-slate-950 flex items-center justify-center min-h-[300px]">
-                    <img id="crop-image-element" class="max-h-[50vh] max-w-full hidden">
-                </div>
-                <div class="flex items-center justify-end px-6 py-4 border-t border-slate-850 bg-slate-900 gap-2">
-                    <button type="button" onclick="closeCropModal()" class="px-4 py-2 text-xs font-bold text-slate-400 hover:text-white rounded-xl transition">Cancel</button>
-                    <button type="button" onclick="uploadCroppedPhoto()" id="btn-upload-cropped" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1">
-                        <span>Save & Apply Photo</span>
-                    </button>
+        <!-- Crop Photo Modal Teleported to Body -->
+        <template x-teleport="body">
+            <div id="photo-crop-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-xs hidden items-center justify-center p-4" style="z-index: 9999999;">
+                <div class="bg-slate-900 rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl border border-slate-850 flex flex-col">
+                    <div class="flex items-center justify-between px-6 py-4 border-b border-slate-850 bg-slate-900">
+                        <h3 class="text-sm font-bold text-white uppercase flex items-center gap-2">
+                            <i data-lucide="crop" class="w-4.5 h-4.5 text-emerald-500"></i>
+                            <span>Crop Student Photo</span>
+                        </h3>
+                        <button type="button" onclick="closeCropModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+                    </div>
+                    <div class="p-6 bg-slate-950 flex items-center justify-center min-h-[300px]">
+                        <img id="crop-image-element" class="max-h-[50vh] max-w-full hidden">
+                    </div>
+                    <div class="flex items-center justify-end px-6 py-4 border-t border-slate-850 bg-slate-900 gap-2">
+                        <button type="button" onclick="closeCropModal()" class="px-4 py-2 text-xs font-bold text-slate-400 hover:text-white rounded-xl transition">Cancel</button>
+                        <button type="button" onclick="uploadCroppedPhoto()" id="btn-upload-cropped" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1">
+                            <span>Save & Apply Photo</span>
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
+        </template>
 
         <!-- Cropper JS and dynamic handlers -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
