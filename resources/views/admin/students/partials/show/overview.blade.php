@@ -27,7 +27,7 @@
         </div>
     @else
         <!-- INCOMPLETE REQUIREMENTS REMINDER BANNER -->
-        <div class="rounded-2xl border border-amber-200/80 bg-amber-50/90 p-4.5 text-amber-950 shadow-xs space-y-3 mb-6">
+        <div class="rounded-2xl bg-amber-50/80 p-4.5 text-amber-950 shadow-2xs space-y-3 mb-6 ring-1 ring-amber-200/50">
             <div class="flex items-start justify-between gap-3">
                 <div class="flex items-start gap-3">
                     <div class="rounded-xl bg-amber-100 p-2 text-amber-600 shrink-0 mt-0.5">
@@ -36,7 +36,7 @@
                     <div>
                         <div class="flex items-center gap-2 flex-wrap">
                             <h4 class="font-black text-sm text-amber-900">INCOMPLETE REQUIREMENTS REMINDER</h4>
-                            <span class="inline-flex items-center rounded-full bg-amber-200/70 px-2.5 py-0.5 text-[10px] font-black text-amber-900 uppercase tracking-wider">
+                            <span class="inline-flex items-center rounded-full bg-amber-200/60 px-2.5 py-0.5 text-[10px] font-black text-amber-900 uppercase tracking-wider">
                                 {{ count($missingRequirements) }} Missing Item(s)
                             </span>
                         </div>
@@ -48,15 +48,15 @@
             </div>
 
             <!-- Missing Checklist Pills -->
-            <div class="flex flex-wrap gap-2 pt-2 border-t border-amber-200/50">
+            <div class="flex flex-wrap gap-2 pt-2.5 border-t border-amber-200/40">
                 @foreach($missingRequirements as $missingItem)
-                    <span class="inline-flex items-center gap-1.5 rounded-xl bg-rose-50 px-3 py-1 text-xs font-bold text-rose-700 border border-rose-200/70 shadow-2xs">
+                    <span class="inline-flex items-center gap-1.5 rounded-xl bg-white px-3 py-1 text-xs font-bold text-rose-700 ring-1 ring-rose-200/60 shadow-2xs">
                         <i data-lucide="x-circle" class="h-3.5 w-3.5 text-rose-500"></i>
                         {{ $missingItem }}
                     </span>
                 @endforeach
                 @if($isKinder1or2)
-                    <span class="inline-flex items-center gap-1.5 rounded-xl bg-sky-50 px-3 py-1 text-xs font-bold text-sky-700 border border-sky-200/70 shadow-2xs">
+                    <span class="inline-flex items-center gap-1.5 rounded-xl bg-white px-3 py-1 text-xs font-bold text-sky-700 ring-1 ring-sky-200/60 shadow-2xs">
                         <i data-lucide="info" class="h-3.5 w-3.5 text-sky-500"></i>
                         Kinder 1 & 2: LRN Exempt
                     </span>
@@ -65,7 +65,7 @@
 
             <!-- Specific Reminders Box -->
             @if(!empty($reminders) || !empty($lrnNote))
-                <div class="bg-white/90 rounded-xl p-3.5 border border-amber-200/60 shadow-2xs text-xs space-y-2 font-semibold text-slate-700">
+                <div class="bg-white rounded-xl p-3.5 ring-1 ring-amber-200/40 shadow-2xs text-xs space-y-2 font-semibold text-slate-700">
                     @if($lrnNote)
                         <div class="flex items-center gap-2 text-amber-900 font-extrabold">
                             <i data-lucide="info" class="h-4 w-4 shrink-0 text-amber-600"></i>

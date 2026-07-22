@@ -447,11 +447,10 @@
             <!-- Dynamic Profile Header Card -->
             <section class="applicant-profile-card relative overflow-hidden {{ $accentClass }}">
                 @if ($countryCode)
-                    <div class="absolute right-0 top-0 bottom-0 h-full w-2/5 overflow-hidden pointer-events-none opacity-65 select-none print-hide" style="mask-image: linear-gradient(to left, rgba(0,0,0,1) 30%, rgba(0,0,0,0) 100%); -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,1) 30%, rgba(0,0,0,0) 100%);">
+                    <div class="absolute right-0 top-0 bottom-0 h-full w-2/5 overflow-hidden pointer-events-none opacity-20 select-none print-hide">
                         <img src="https://flagcdn.com/w640/{{ $countryCode }}.png" 
                              alt="Country Flag" 
-                             class="h-full w-full object-cover object-right animate-pulse"
-                             style="filter: url(#wavy-flag-filter); transform: scale(1.15); transform-origin: right center; animation-duration: 4s;">
+                             class="h-full w-full object-cover object-right">
                     </div>
                 @endif
 
