@@ -491,8 +491,8 @@
                     @endif
                 </div>
                 
-                <div class="flex-1 min-w-0 pr-72">
-                    <div class="flex items-center gap-2.5 flex-wrap">
+                <div class="flex-1 min-w-0 pr-48">
+                    <div class="flex items-center gap-3 flex-wrap">
                         <h2 class="text-3xl font-black tracking-tight font-outfit uppercase">{{ $displayName }}</h2>
                         @if ($isRequirementsComplete)
                             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black bg-emerald-400/20 text-emerald-200 border border-emerald-400/40 uppercase tracking-wider shadow-xs" title="All mandatory requirements verified & locked">
@@ -505,10 +505,6 @@
                                 <span>Pending Requirements ({{ count($missingRequirements) }})</span>
                             </span>
                         @endif
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black bg-white/10 text-white border border-white/20 uppercase tracking-wider">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                            Active Profile
-                        </span>
                     </div>
                     
                     <!-- Metadata Rows -->
