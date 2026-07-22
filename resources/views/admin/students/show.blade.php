@@ -132,6 +132,90 @@
             ['Emergency Instructions', $student->applicant->emergency_instructions],
         ]]);
     }
+
+    // ── C. Requirements & LRN Audit Logic ────────────────────────────────────
+    $studentTypeRaw = strtolower(trim($student->applicant->student_type ?? 'new'));
+    $isNewStudent = str_contains($studentTypeRaw, 'new');
+    $isOldStudent = str_contains($studentTypeRaw, 'old');
+    $isTransferee = str_contains($studentTypeRaw, 'transfer');
+
+    $gradeLevelStr = strtolower(trim($student->grade_level ?? ''));
+    $isKinder1or2 = in_array(trim($student->grade_level ?? ''), ['Kinder 1', 'Kinder 2', 'Kindergarten', 'K1', 'K2'], true) || str_contains($gradeLevelStr, 'kinder');
+
+    $rawLrn = trim($student->applicant->lrn ?? '');
+    $hasLrn = !empty($rawLrn) && !in_array(strtoupper($rawLrn), ['NA', 'N/A', 'NONE', 'NOT PROVIDED'], true);
+
+    // Document Verification Flags
+    $hasPhoto = !empty($student->applicant->photo_2x2_url);
+    $hasBirthCert = !empty($student->applicant->birth_cert_url) || !empty($student->applicant->affidavit_url);
+    $hasReportCard = !empty($student->applicant->report_card_url) || !empty($student->applicant->affidavit_url);
+
+    // Payment Proof Verification
+    $hasPaymentProof = false;
+    if ($student->applicant) {
+        $familyUserIds = \App\Models\EnrollmentApplicant::where('user_id', $student->applicant->user_id)
+            ->orWhere(function($q) use ($student) {
+                if ($student->applicant->family_application_id) {
+                    $q->where('family_application_id', $student->applicant->family_application_id);
+                } else {
+                    $q->where('id', -1);
+                }
+            })
+            ->pluck('user_id')
+            ->filter()
+            ->unique()
+            ->toArray();
+
+        $hasPaymentProof = \App\Models\Payment::whereIn('user_id', $familyUserIds)
+            ->whereNotNull('receipt_url')
+            ->whereNotIn('receipt_url', ['', '[]', '[""]'])
+            ->exists();
+    }
+
+    // Build Detailed Missing Items & Reminders
+    $missingRequirements = [];
+    $reminders = [];
+
+    // 1. LRN Checks & Reminders
+    if ($isKinder1or2) {
+        $lrnStatus = 'exempt';
+        $lrnNote = 'Kinder 1 & Kinder 2 students do not have LRNs yet (DepEd LRN Exempt).';
+    } elseif ($hasLrn) {
+        $lrnStatus = 'verified';
+        $lrnNote = 'LRN Verified: ' . $rawLrn;
+    } else {
+        $lrnStatus = 'missing';
+        if ($isOldStudent) {
+            $lrnNote = 'OLD STUDENT MISSING LRN: Please retrieve and update student\'s official LRN record.';
+            $missingRequirements[] = 'Learner Reference Number (LRN)';
+        } elseif ($isTransferee) {
+            $lrnNote = 'TRANSFEREE MISSING LRN: Request LRN and Form 137 / SF10 from previous school.';
+            $missingRequirements[] = 'Learner Reference Number (LRN)';
+        } else {
+            $lrnNote = 'NEW STUDENT MISSING LRN: Encode LRN upon DepEd LIS registration.';
+            $missingRequirements[] = 'Learner Reference Number (LRN)';
+        }
+    }
+
+    // 2. Document & Mandatory Checks
+    if (!$hasPhoto) {
+        $missingRequirements[] = '2x2 Photo ID';
+        $reminders[] = '2x2 Student Photo is missing for official ID printing.';
+    }
+    if (!$hasBirthCert) {
+        $missingRequirements[] = 'PSA Birth Certificate or Temporary Affidavit';
+        $reminders[] = 'PSA Birth Certificate or notarized Temporary Affidavit is required.';
+    }
+    if (!$hasReportCard && ($isTransferee || $isOldStudent || !$isKinder1or2)) {
+        $missingRequirements[] = 'Form 138 / Report Card / SF9';
+        $reminders[] = 'Previous Grade Level Form 138 / Report Card is required for academic clearance.';
+    }
+    if (!$hasPaymentProof) {
+        $missingRequirements[] = 'Enrollment Payment Proof';
+        $reminders[] = 'No verified tuition or fee payment proof linked to this account.';
+    }
+
+    $isRequirementsComplete = count($missingRequirements) === 0;
 @endphp
 
 <script>
@@ -408,20 +492,21 @@
                 <div class="flex-1 min-w-0">
                     <div class="flex items-center gap-3 flex-wrap">
                         <h2 class="text-3xl font-black tracking-tight font-outfit uppercase">{{ $displayName }}</h2>
-                        @if (!$student->applicant || $student->applicant->completion_percentage < 100)
-                            @php
-                                $missingList = $student->applicant ? implode(', ', $student->applicant->incomplete_fields) : 'No profile';
-                            @endphp
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-200 border border-amber-500/30 cursor-help uppercase tracking-wider animate-pulse" title="Missing: {{ $missingList }}">
-                                <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-                                Incomplete
+                        @if ($isRequirementsComplete)
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black bg-emerald-400/20 text-emerald-200 border border-emerald-400/40 uppercase tracking-wider shadow-xs" title="All mandatory requirements verified & locked">
+                                <i data-lucide="lock" class="w-3.5 h-3.5 text-emerald-300"></i>
+                                🔒 Completed Requirements
                             </span>
                         @else
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 uppercase tracking-wider">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                                Active
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black bg-amber-400/20 text-amber-200 border border-amber-400/40 uppercase tracking-wider shadow-xs animate-pulse" title="Pending: {{ implode(', ', $missingRequirements) }}">
+                                <i data-lucide="unlock" class="w-3.5 h-3.5 text-amber-300"></i>
+                                Pending Requirements ({{ count($missingRequirements) }})
                             </span>
                         @endif
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black bg-white/10 text-white border border-white/20 uppercase tracking-wider">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                            Active Profile
+                        </span>
                     </div>
                     
                     <!-- Metadata Rows -->
@@ -432,7 +517,18 @@
                         </div>
                         <div class="flex items-center gap-2">
                             <i data-lucide="fingerprint" class="w-4 h-4 opacity-75"></i>
-                            <span class="font-medium tracking-wide"><span class="font-bold opacity-75">LRN:</span> {{ $student->applicant->lrn ?? 'N/A' }}</span>
+                            <span class="font-medium tracking-wide">
+                                <span class="font-bold opacity-75">LRN:</span> 
+                                @if($isKinder1or2 && !$hasLrn)
+                                    <span class="font-extrabold text-sky-200">NA</span> 
+                                    <span class="ml-1 px-1.5 py-0.5 rounded bg-sky-400/25 text-sky-100 text-[9px] font-black uppercase tracking-wider">Kinder Exempt</span>
+                                @elseif($hasLrn)
+                                    <span class="font-extrabold text-emerald-200">{{ $student->applicant->lrn }}</span>
+                                @else
+                                    <span class="font-extrabold text-amber-300">Missing</span> 
+                                    <span class="ml-1 px-1.5 py-0.5 rounded bg-amber-400/25 text-amber-100 text-[9px] font-black uppercase tracking-wider">Needs LRN</span>
+                                @endif
+                            </span>
                         </div>
                         @if ($student->applicant->country)
                         <div class="flex items-center gap-2">

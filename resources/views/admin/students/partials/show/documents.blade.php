@@ -1,6 +1,32 @@
 <div x-show="activeTab === 'documents'" class="space-y-6" x-cloak>
     <!-- Mandatory Registration Requirements -->
     <x-card title="Registration Requirements" subtitle="Verify mandatory certificates and documents submitted during enrollment">
+        @if(isset($isRequirementsComplete) && $isRequirementsComplete)
+            <div class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 dark:bg-emerald-950/30 p-3.5 flex items-center justify-between gap-3 text-emerald-900 dark:text-emerald-200">
+                <div class="flex items-center gap-2 text-xs font-bold">
+                    <i data-lucide="shield-check" class="h-4 w-4 text-emerald-600 dark:text-emerald-400"></i>
+                    <span>🔒 ALL REGISTRATION DOCUMENTS & LRN REQUIREMENTS VERIFIED AND CLEAR</span>
+                </div>
+                <span class="px-2.5 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-black uppercase tracking-wider">LOCKED & COMPLETE</span>
+            </div>
+        @elseif(isset($missingRequirements) && !empty($missingRequirements))
+            <div class="mb-4 rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-950/30 p-3.5 space-y-2 text-amber-900 dark:text-amber-200">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2 text-xs font-bold text-amber-800 dark:text-amber-300">
+                        <i data-lucide="alert-circle" class="h-4 w-4 text-amber-600 animate-pulse"></i>
+                        <span>REQUIREMENTS REMINDER: {{ count($missingRequirements) }} Item(s) Pending Clearance</span>
+                    </div>
+                    <span class="px-2 py-0.5 rounded-full bg-amber-500 text-white text-[9px] font-black uppercase tracking-wider">PENDING UPLOADS</span>
+                </div>
+                <div class="flex flex-wrap gap-1.5 pt-1 border-t border-amber-200/60 dark:border-amber-900/40">
+                    @foreach($missingRequirements as $item)
+                        <span class="inline-flex items-center gap-1 rounded bg-rose-100 dark:bg-rose-950/60 px-2 py-0.5 text-[11px] font-bold text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-900/40">
+                            • {{ $item }}
+                        </span>
+                    @endforeach
+                </div>
+            </div>
+        @endif
         <div class="upload-grid">
             @php
                 $docs = [

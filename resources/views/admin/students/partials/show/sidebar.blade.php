@@ -69,6 +69,41 @@
                     @endif
                 </div>
             </div>
+
+            <!-- LRN Status -->
+            <div class="flex justify-between items-center py-1 border-t border-slate-100 dark:border-slate-800 pt-2">
+                <span class="text-slate-600 dark:text-slate-400 text-sm font-medium">LRN Status</span>
+                @if(isset($isKinder1or2) && $isKinder1or2 && !($hasLrn ?? false))
+                    <span class="inline-flex items-center gap-1 rounded-full bg-sky-50 text-sky-700 ring-1 ring-inset ring-sky-600/20 dark:bg-sky-950/20 dark:text-sky-400 px-2.5 py-0.5 text-xs font-bold">
+                        <span class="h-1.5 w-1.5 rounded-full bg-sky-500"></span>
+                        Exempt (K1/K2)
+                    </span>
+                @elseif($hasLrn ?? false)
+                    <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20 dark:bg-emerald-950/20 dark:text-emerald-400 px-2.5 py-0.5 text-xs font-bold">
+                        <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        Verified
+                    </span>
+                @else
+                    <span class="inline-flex items-center gap-1 rounded-full bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-600/20 dark:bg-rose-950/20 dark:text-rose-400 px-2.5 py-0.5 text-xs font-bold">
+                        <span class="h-1.5 w-1.5 rounded-full bg-rose-500"></span>
+                        Missing LRN
+                    </span>
+                @endif
+            </div>
+
+            <!-- Requirements Lock Status -->
+            <div class="flex justify-between items-center py-1 border-t border-slate-100 dark:border-slate-800 pt-2">
+                <span class="text-slate-600 dark:text-slate-400 text-sm font-medium">Requirements Clearance</span>
+                @if(isset($isRequirementsComplete) && $isRequirementsComplete)
+                    <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20 dark:bg-emerald-950/20 dark:text-emerald-400 px-2.5 py-0.5 text-xs font-bold">
+                        🔒 Locked & Complete
+                    </span>
+                @else
+                    <span class="inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/20 dark:bg-amber-950/20 dark:text-amber-400 px-2.5 py-0.5 text-xs font-bold">
+                        🔓 Pending ({{ count($missingRequirements ?? []) }})
+                    </span>
+                @endif
+            </div>
         </div>
     </x-card>
 
