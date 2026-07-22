@@ -298,8 +298,8 @@
         const text = document.getElementById('zip-progress-text');
         
         if (modal) modal.classList.remove('hidden');
-        if (bar) bar.style.width = '0%';
-        if (text) text.innerText = 'Loading student application forms... Please wait.';
+        if (bar) bar.style.width = '3%';
+        if (text) text.innerHTML = '<span class="font-bold text-violet-600">Step 1 of 3:</span> Connecting to server & fetching student database...';
         
         const oldIframe = document.getElementById('zip-iframe');
         if (oldIframe) oldIframe.remove();
@@ -319,19 +319,30 @@
     }
     
     window.addEventListener('message', function(event) {
+        if (event.data && event.data.type === 'zip_started') {
+            const bar = document.getElementById('zip-progress-bar');
+            const text = document.getElementById('zip-progress-text');
+            if (bar) bar.style.width = '10%';
+            if (text) text.innerHTML = '<span class="font-bold text-violet-600">Step 2 of 3:</span> Compiling templates & loading student photos...';
+        }
         if (event.data && event.data.type === 'zip_progress') {
             const bar = document.getElementById('zip-progress-bar');
             const text = document.getElementById('zip-progress-text');
-            if (bar) bar.style.width = event.data.percent + '%';
-            if (text) text.innerText = event.data.text;
+            const scaledPercent = Math.round(10 + (event.data.percent * 0.85));
+            if (bar) bar.style.width = scaledPercent + '%';
+            if (text) text.innerHTML = `<span class="font-bold text-violet-600">Step 3 of 3:</span> ${event.data.text}`;
         }
         if (event.data && event.data.type === 'zip_done') {
+            const bar = document.getElementById('zip-progress-bar');
+            const text = document.getElementById('zip-progress-text');
+            if (bar) bar.style.width = '100%';
+            if (text) text.innerHTML = '<span class="font-bold text-emerald-600">✔ ZIP Generated Successfully!</span> Download starting...';
             setTimeout(() => {
                 const modal = document.getElementById('zip-loading-modal');
                 if (modal) modal.classList.add('hidden');
                 const iframe = document.getElementById('zip-iframe');
                 if (iframe) iframe.remove();
-            }, 2000);
+            }, 3000);
         }
     });
     </script>

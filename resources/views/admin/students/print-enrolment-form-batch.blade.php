@@ -656,6 +656,9 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage({ type: 'zip_started' }, '*');
+            }
             const overlay = document.getElementById('loadingOverlay');
             const fill = document.getElementById('loadingProgressBar');
             const text = document.getElementById('loadingProgressCount');
@@ -751,6 +754,13 @@
                     if (text) {
                         text.innerText = `Rendering Student ${i + 1} of ${totalStudents} (Page ${pageNum}/2)...`;
                     }
+                    if (window.parent && window.parent !== window) {
+                        window.parent.postMessage({
+                            type: 'zip_progress',
+                            percent: pct,
+                            text: `Rendering Student ${i + 1} of ${totalStudents} (Page ${pageNum}/2)...`
+                        }, '*');
+                    }
                     
                     try {
                         const canvas = await html2canvas(pageEl, {
@@ -774,6 +784,13 @@
             
             if (fill) fill.style.width = '100%';
             if (text) text.innerText = 'Creating ZIP archive... Please wait.';
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage({
+                    type: 'zip_progress',
+                    percent: 98,
+                    text: 'Creating ZIP archive... Please wait.'
+                }, '*');
+            }
             
             try {
                 const content = await zip.generateAsync({ type: 'blob' });
@@ -787,6 +804,9 @@
                 link.click();
                 document.body.removeChild(link);
                 setTimeout(() => URL.revokeObjectURL(url), 100);
+                if (window.parent && window.parent !== window) {
+                    window.parent.postMessage({ type: 'zip_done' }, '*');
+                }
             } catch (zipErr) {
                 console.error('Error generating ZIP:', zipErr);
                 alert('Failed to generate ZIP file.');
