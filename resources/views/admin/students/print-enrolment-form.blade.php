@@ -21,8 +21,8 @@
             font-family: 'Merriweather', Georgia, serif;
             background-color: #f1f5f9;
             color: #0f172a;
-            line-height: 1.25;
-            padding: 16px 0;
+            line-height: 1.3;
+            padding: 20px 0;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
         }
@@ -35,8 +35,8 @@
             justify-content: space-between;
             align-items: center;
             background: #ffffff;
-            padding: 10px 20px;
-            border-radius: 10px;
+            padding: 12px 24px;
+            border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
             font-family: 'Inter', sans-serif;
             position: sticky;
@@ -46,7 +46,7 @@
         }
 
         .action-bar h2 {
-            font-size: 0.90rem;
+            font-size: 0.95rem;
             font-weight: 700;
             color: #0f172a;
             display: flex;
@@ -61,10 +61,10 @@
 
         .btn {
             font-family: 'Inter', sans-serif;
-            font-size: 0.80rem;
+            font-size: 0.85rem;
             font-weight: 700;
-            padding: 7px 16px;
-            border-radius: 7px;
+            padding: 8px 18px;
+            border-radius: 8px;
             border: none;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -98,7 +98,7 @@
             min-height: 297mm;
             margin: 0 auto 30px auto;
             background: #ffffff;
-            padding: 12mm 14mm 12mm 14mm;
+            padding: 14mm 16mm 14mm 16mm;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
             position: relative;
             border-radius: 2px;
@@ -114,20 +114,20 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 18px;
+            margin-bottom: 22px;
             gap: 10px;
         }
 
         .header-left-group {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 14px;
             flex: 1;
         }
 
         .header-logo-amis {
-            width: 80px;
-            height: 80px;
+            width: 88px;
+            height: 88px;
             object-fit: contain;
             flex-shrink: 0;
         }
@@ -140,7 +140,7 @@
 
         .school-name {
             font-family: 'Merriweather', serif;
-            font-size: 1.15rem;
+            font-size: 1.22rem;
             font-weight: 900;
             letter-spacing: 0.3px;
             color: #0f172a;
@@ -152,8 +152,8 @@
 
         .school-address {
             font-family: 'Merriweather', serif;
-            font-size: 0.85rem;
-            margin-top: 2px;
+            font-size: 0.9rem;
+            margin-top: 3px;
             color: #334155;
             white-space: nowrap;
             text-align: center;
@@ -162,24 +162,24 @@
         .header-right-group {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 14px;
             flex-shrink: 0;
         }
 
         .header-logo-deped {
-            width: 76px;
-            height: 76px;
+            width: 82px;
+            height: 82px;
             object-fit: contain;
             flex-shrink: 0;
         }
 
         .refund-notice-box {
             border: 2px solid #dc2626;
-            padding: 5px 8px;
+            padding: 6px 10px;
             text-align: center;
             font-family: 'Inter', sans-serif;
             font-weight: 800;
-            font-size: 0.80rem;
+            font-size: 0.85rem;
             line-height: 1.2;
             color: #dc2626;
             text-transform: uppercase;
@@ -190,10 +190,10 @@
         /* Middle Header Row: Form Title, Checkboxes, 2x2 Photo Box */
         .form-middle-grid {
             display: grid;
-            grid-template-columns: 1fr 85px 125px;
+            grid-template-columns: 1fr 90px 135px;
             align-items: flex-start;
-            gap: 12px;
-            margin-bottom: 10px;
+            gap: 15px;
+            margin-bottom: 12px;
         }
 
         .form-title-area {
@@ -204,7 +204,7 @@
 
         .form-title {
             font-family: 'Merriweather', serif;
-            font-size: 1.25rem;
+            font-size: 1.35rem;
             font-weight: 900;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -214,10 +214,10 @@
 
         .sy-title {
             font-family: 'Merriweather', serif;
-            font-size: 1.05rem;
+            font-size: 1.15rem;
             font-weight: 700;
-            margin-top: 2px;
-            margin-bottom: 14px;
+            margin-top: 3px;
+            margin-bottom: 16px;
             color: #1e293b;
         }
 
@@ -225,13 +225,13 @@
         .student-info-bar {
             display: flex;
             align-items: baseline;
-            gap: 12px;
-            margin-top: 2px;
+            gap: 15px;
+            margin-top: 4px;
         }
 
         .section-title {
             font-family: 'Inter', sans-serif;
-            font-size: 0.88rem;
+            font-size: 0.95rem;
             font-weight: 800;
             text-transform: uppercase;
             white-space: nowrap;
@@ -241,11 +241,11 @@
 
         .lrn-container {
             font-family: 'Inter', sans-serif;
-            font-size: 0.88rem;
+            font-size: 0.95rem;
             font-weight: 700;
             display: flex;
             align-items: baseline;
-            gap: 5px;
+            gap: 6px;
             white-space: nowrap;
         }
 
@@ -253,10 +253,10 @@
             border: none;
             border-bottom: 1.5px solid #0f172a;
             font-family: 'Inter', sans-serif;
-            font-size: 0.92rem;
+            font-size: 1rem;
             font-weight: 700;
             color: #0f172a;
-            width: 180px;
+            width: 200px;
             outline: none;
             padding: 0 4px;
             text-transform: uppercase;
@@ -266,8 +266,8 @@
         .checkbox-stack {
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            margin-top: 8px;
+            gap: 10px;
+            margin-top: 10px;
             align-items: flex-start;
             font-family: 'Inter', sans-serif;
         }
@@ -275,21 +275,21 @@
         .checkbox-item {
             display: flex;
             align-items: center;
-            gap: 8px;
-            font-size: 0.85rem;
+            gap: 10px;
+            font-size: 0.9rem;
             font-weight: 800;
             color: #0f172a;
             cursor: pointer;
         }
 
         .custom-checkbox {
-            width: 18px;
-            height: 18px;
+            width: 20px;
+            height: 20px;
             border: 2px solid #0f172a;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
+            font-size: 15px;
             font-weight: 900;
             background: #fff;
             line-height: 1;
@@ -299,8 +299,8 @@
 
         /* 2x2 Photo Box */
         .photo-box {
-            width: 125px;
-            height: 125px;
+            width: 135px;
+            height: 135px;
             border: 2px solid #0f172a;
             background: #fafafa;
             justify-self: end;
@@ -321,19 +321,19 @@
         /* Section Header Divider */
         .section-header-row {
             font-family: 'Inter', sans-serif;
-            font-size: 0.88rem;
+            font-size: 0.95rem;
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             color: #0f172a;
-            margin-top: 16px;
-            margin-bottom: 8px;
+            margin-top: 18px;
+            margin-bottom: 10px;
             white-space: nowrap;
         }
 
         /* Fillable Text Lines & Input Fields with Auto-Truncate Safety */
         .field-container {
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             width: 100%;
         }
 
@@ -341,11 +341,11 @@
             border: none;
             border-bottom: 1.5px solid #0f172a;
             font-family: 'Inter', sans-serif;
-            font-size: 0.90rem;
+            font-size: 0.98rem;
             font-weight: 700;
             color: #0f172a;
             outline: none;
-            padding: 1px 3px;
+            padding: 2px 4px;
             width: 100%;
             background: transparent;
             white-space: nowrap;
@@ -357,88 +357,88 @@
 
         .label-text {
             font-family: 'Inter', sans-serif;
-            font-size: 0.70rem;
+            font-size: 0.75rem;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.4px;
             color: #475569;
-            margin-top: 2px;
+            margin-top: 3px;
             display: block;
         }
 
         .grid-5-col {
             display: grid;
             grid-template-columns: 2.5fr 2fr 2fr 1.2fr 1.5fr;
-            gap: 12px;
+            gap: 15px;
         }
 
         .grid-3-col-birth {
             display: grid;
             grid-template-columns: 2.5fr 3.5fr 2fr;
-            gap: 12px;
+            gap: 15px;
         }
 
         .grid-2-col-school {
             display: grid;
             grid-template-columns: 5fr 2.5fr;
-            gap: 12px;
+            gap: 15px;
         }
 
         .grid-parent-row {
             display: grid;
             grid-template-columns: 3.8fr 2.1fr 2.9fr;
-            gap: 12px;
+            gap: 15px;
             align-items: flex-end;
         }
 
         .grid-children-row {
             display: grid;
             grid-template-columns: 4.5fr 1.5fr 2.5fr;
-            gap: 12px;
-            margin-bottom: 6px;
+            gap: 15px;
+            margin-bottom: 8px;
         }
 
         /* Bottom Section: Applicant Lives With */
         .lives-with-row {
-            margin-top: 16px;
+            margin-top: 20px;
             display: flex;
             align-items: center;
-            gap: 22px;
+            gap: 25px;
             font-family: 'Inter', sans-serif;
-            font-size: 0.88rem;
+            font-size: 0.95rem;
             font-weight: 600;
         }
 
         .radio-option {
             display: flex;
             align-items: baseline;
-            gap: 5px;
+            gap: 6px;
         }
 
         .radio-line {
             display: inline-block;
-            width: 36px;
+            width: 40px;
             border-bottom: 1.5px solid #0f172a;
             text-align: center;
             font-weight: 800;
-            height: 16px;
-            line-height: 16px;
+            height: 18px;
+            line-height: 18px;
         }
 
         /* PAGE 2 STYLES */
         .p2-question-row {
-            margin-top: 14px;
+            margin-top: 16px;
             font-family: 'Inter', sans-serif;
-            font-size: 0.88rem;
-            line-height: 1.4;
+            font-size: 0.95rem;
+            line-height: 1.45;
             color: #0f172a;
         }
 
         .p2-inline-line {
             display: inline-block;
             border-bottom: 1.5px solid #0f172a;
-            width: 65px;
-            height: 16px;
+            width: 70px;
+            height: 18px;
             vertical-align: bottom;
             text-align: center;
             font-weight: 800;
@@ -446,17 +446,17 @@
         }
 
         .p2-explain-block {
-            margin-top: 6px;
-            margin-bottom: 12px;
+            margin-top: 8px;
+            margin-bottom: 14px;
         }
 
         .p2-explain-label {
             font-family: 'Inter', sans-serif;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             font-weight: 600;
             color: #334155;
             display: inline-block;
-            margin-bottom: 3px;
+            margin-bottom: 4px;
         }
 
         .p2-full-line {
@@ -464,12 +464,12 @@
             border-bottom: 1.5px solid #0f172a;
             width: 100%;
             font-family: 'Inter', sans-serif;
-            font-size: 0.90rem;
+            font-size: 0.98rem;
             font-weight: 700;
             color: #0f172a;
             outline: none;
-            padding: 1px 3px;
-            margin-bottom: 5px;
+            padding: 2px 4px;
+            margin-bottom: 6px;
             background: transparent;
             white-space: nowrap;
             overflow: hidden;
@@ -481,24 +481,24 @@
         .grid-physician-row {
             display: grid;
             grid-template-columns: 4fr 3fr;
-            gap: 16px;
-            margin-top: 14px;
-            margin-bottom: 16px;
+            gap: 20px;
+            margin-top: 16px;
+            margin-bottom: 20px;
         }
 
         .p2-emergency-grid {
             display: grid;
             grid-template-columns: 4.5fr 3.5fr 3fr;
-            gap: 12px;
-            margin-top: 6px;
-            margin-bottom: 16px;
+            gap: 15px;
+            margin-top: 8px;
+            margin-bottom: 20px;
         }
 
         .p2-policy-text {
             font-family: 'Merriweather', serif;
-            font-size: 0.85rem;
-            line-height: 1.45;
-            margin-top: 10px;
+            font-size: 0.92rem;
+            line-height: 1.5;
+            margin-top: 12px;
             text-align: justify;
             color: #1e293b;
         }
@@ -506,32 +506,32 @@
         .signature-grid {
             display: grid;
             grid-template-columns: 5fr 2.5fr;
-            gap: 25px;
-            margin-top: 30px;
-            margin-bottom: 6px;
+            gap: 30px;
+            margin-top: 35px;
+            margin-bottom: 8px;
         }
 
         .signature-disclaimer {
             font-family: 'Inter', sans-serif;
-            font-size: 0.78rem;
+            font-size: 0.82rem;
             font-style: italic;
             color: #64748b;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
 
         .office-perforated-line {
             border: none;
             border-top: 1.5px dashed #64748b;
-            margin: 16px 0 12px 0;
+            margin: 18px 0 14px 0;
         }
 
         .grid-office-row {
             display: grid;
             grid-template-columns: 3.5fr 2.5fr 2.5fr;
-            gap: 12px;
-            margin-bottom: 14px;
+            gap: 15px;
+            margin-bottom: 16px;
             font-family: 'Inter', sans-serif;
-            font-size: 0.88rem;
+            font-size: 0.92rem;
             font-weight: 600;
         }
 
@@ -544,30 +544,31 @@
         .date-slash-input {
             border: none;
             border-bottom: 1.5px solid #0f172a;
-            width: 40px;
+            width: 45px;
             text-align: center;
             font-family: 'Inter', sans-serif;
-            font-size: 0.88rem;
+            font-size: 0.95rem;
             font-weight: 700;
             color: #0f172a;
             outline: none;
         }
 
-        .attachments-list {
-            font-family: 'Inter', sans-serif;
-            font-size: 0.85rem;
-            line-height: 1.45;
-            margin-left: 18px;
-            color: #334155;
-        }
-
+        /* ATTACHMENTS CHECKLIST: Reduced font size by 0.5 specifically for list items */
         .attachments-title {
             font-family: 'Inter', sans-serif;
-            font-size: 0.88rem;
+            font-size: 0.82rem;
             font-style: italic;
             font-weight: 700;
             color: #0f172a;
-            margin-bottom: 3px;
+            margin-bottom: 4px;
+        }
+
+        .attachments-list {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.72rem;
+            line-height: 1.4;
+            margin-left: 20px;
+            color: #334155;
         }
 
         /* Print Media Styles for Perfect PDF Save */
@@ -716,8 +717,8 @@
             $photoSrc = 'https://amis.edu.ph/student-photo/' . $student->obfuscated_id . '.jpg';
         }
 
-        // Multi-tier Helper function for dynamic font-size calculation on long text (-0.5 font size scale)
-        $getDynamicStyle = function($text, $baseSize = '0.90rem', $mediumSize = '0.75rem', $smallSize = '0.62rem', $xsmallSize = '0.52rem', $t1 = 18, $t2 = 25, $t3 = 32) {
+        // Multi-tier Helper function for dynamic font-size calculation on long text
+        $getDynamicStyle = function($text, $baseSize = '0.98rem', $mediumSize = '0.80rem', $smallSize = '0.68rem', $xsmallSize = '0.58rem', $t1 = 18, $t2 = 25, $t3 = 32) {
             $len = mb_strlen(trim($text ?? ''));
             if ($len > $t3) {
                 return "font-size: {$xsmallSize}; font-weight: 800;";
@@ -765,7 +766,7 @@
                     <span class="section-title">STUDENT INFORMATION</span>
                     <div class="lrn-container">
                         <span>LRN:</span>
-                        <input type="text" class="lrn-input" value="{{ mb_strtoupper($app->lrn ?? $student->student_number) }}" style="{{ $getDynamicStyle($app->lrn ?? $student->student_number, '0.92rem', '0.82rem', '0.72rem', '0.62rem', 12, 18, 24) }}">
+                        <input type="text" class="lrn-input" value="{{ mb_strtoupper($app->lrn ?? $student->student_number) }}" style="{{ $getDynamicStyle($app->lrn ?? $student->student_number, '1rem', '0.88rem', '0.78rem', '0.68rem', 12, 18, 24) }}">
                     </div>
                 </div>
             </div>
@@ -794,15 +795,15 @@
         <div class="field-container">
             <div class="grid-5-col">
                 <div>
-                    <input type="text" class="input-line" value="{{ mb_strtoupper($app->last_name ?? '') }}" style="{{ $getDynamicStyle($app->last_name ?? '', '0.90rem', '0.75rem', '0.62rem', '0.52rem', 14, 20, 26) }}">
+                    <input type="text" class="input-line" value="{{ mb_strtoupper($app->last_name ?? '') }}" style="{{ $getDynamicStyle($app->last_name ?? '', '0.98rem', '0.80rem', '0.68rem', '0.58rem', 14, 20, 26) }}">
                     <span class="label-text">Last</span>
                 </div>
                 <div>
-                    <input type="text" class="input-line" value="{{ mb_strtoupper($app->first_name ?? '') }}" style="{{ $getDynamicStyle($app->first_name ?? '', '0.90rem', '0.75rem', '0.62rem', '0.52rem', 14, 20, 26) }}">
+                    <input type="text" class="input-line" value="{{ mb_strtoupper($app->first_name ?? '') }}" style="{{ $getDynamicStyle($app->first_name ?? '', '0.98rem', '0.80rem', '0.68rem', '0.58rem', 14, 20, 26) }}">
                     <span class="label-text">First</span>
                 </div>
                 <div>
-                    <input type="text" class="input-line" value="{{ mb_strtoupper($app->middle_name ?? '') }}" style="{{ $getDynamicStyle($app->middle_name ?? '', '0.90rem', '0.75rem', '0.62rem', '0.52rem', 14, 20, 26) }}">
+                    <input type="text" class="input-line" value="{{ mb_strtoupper($app->middle_name ?? '') }}" style="{{ $getDynamicStyle($app->middle_name ?? '', '0.98rem', '0.80rem', '0.68rem', '0.58rem', 14, 20, 26) }}">
                     <span class="label-text">Middle</span>
                 </div>
                 <div>
@@ -817,20 +818,20 @@
         </div>
 
         <!-- Address -->
-        <div class="field-container" style="margin-top: 12px;">
-            <input type="text" class="input-line" value="{{ $fullAddress }}" style="{{ $getDynamicStyle($fullAddress, '0.90rem', '0.78rem', '0.65rem', '0.55rem', 45, 65, 85) }}">
+        <div class="field-container" style="margin-top: 14px;">
+            <input type="text" class="input-line" value="{{ $fullAddress }}" style="{{ $getDynamicStyle($fullAddress, '0.98rem', '0.82rem', '0.70rem', '0.60rem', 45, 65, 85) }}">
             <span class="label-text">Address</span>
         </div>
 
         <!-- Birth Details & Religion -->
-        <div class="field-container" style="margin-top: 12px;">
+        <div class="field-container" style="margin-top: 14px;">
             <div class="grid-3-col-birth">
                 <div>
                     <input type="text" class="input-line" value="{{ $app?->date_of_birth ? mb_strtoupper($app->date_of_birth->format('M d, Y')) : '' }}">
                     <span class="label-text">Date of Birth</span>
                 </div>
                 <div>
-                    <input type="text" class="input-line" value="{{ mb_strtoupper($app->place_of_birth ?? '') }}" style="{{ $getDynamicStyle($app->place_of_birth ?? '', '0.90rem', '0.78rem', '0.65rem', '0.55rem', 22, 35, 45) }}">
+                    <input type="text" class="input-line" value="{{ mb_strtoupper($app->place_of_birth ?? '') }}" style="{{ $getDynamicStyle($app->place_of_birth ?? '', '0.98rem', '0.82rem', '0.70rem', '0.60rem', 22, 35, 45) }}">
                     <span class="label-text">Place of Birth</span>
                 </div>
                 <div>
@@ -841,16 +842,16 @@
         </div>
 
         <!-- Previous Attended School Name -->
-        <div class="field-container" style="margin-top: 12px;">
-            <input type="text" class="input-line" value="{{ mb_strtoupper($app->previous_school_name ?? '') }}" style="{{ $getDynamicStyle($app->previous_school_name ?? '', '0.90rem', '0.78rem', '0.65rem', '0.55rem', 35, 55, 75) }}">
+        <div class="field-container" style="margin-top: 14px;">
+            <input type="text" class="input-line" value="{{ mb_strtoupper($app->previous_school_name ?? '') }}" style="{{ $getDynamicStyle($app->previous_school_name ?? '', '0.98rem', '0.82rem', '0.70rem', '0.60rem', 35, 55, 75) }}">
             <span class="label-text">Previous Attended School Name</span>
         </div>
 
         <!-- Previous School Address & Telephone -->
-        <div class="field-container" style="margin-top: 12px;">
+        <div class="field-container" style="margin-top: 14px;">
             <div class="grid-2-col-school">
                 <div>
-                    <input type="text" class="input-line" value="{{ mb_strtoupper($app->previous_school_address ?? '') }}" style="{{ $getDynamicStyle($app->previous_school_address ?? '', '0.90rem', '0.78rem', '0.65rem', '0.55rem', 35, 55, 75) }}">
+                    <input type="text" class="input-line" value="{{ mb_strtoupper($app->previous_school_address ?? '') }}" style="{{ $getDynamicStyle($app->previous_school_address ?? '', '0.98rem', '0.82rem', '0.70rem', '0.60rem', 35, 55, 75) }}">
                     <span class="label-text">Previous School Address</span>
                 </div>
                 <div>
@@ -861,28 +862,28 @@
         </div>
 
         <!-- SECTION 2: PARENT INFORMATION -->
-        <div class="section-header-row" style="margin-top: 18px;">
+        <div class="section-header-row" style="margin-top: 22px;">
             PARENT INFORMATION
         </div>
 
         <!-- Father's Details -->
-        <div class="field-container" style="margin-top: 8px;">
+        <div class="field-container" style="margin-top: 10px;">
             <div class="grid-parent-row">
                 <div>
-                    <input type="text" class="input-line" value="{{ $fatherFull }}" style="{{ $getDynamicStyle($fatherFull, '0.90rem', '0.75rem', '0.62rem', '0.52rem', 18, 25, 32) }}">
+                    <input type="text" class="input-line" value="{{ $fatherFull }}" style="{{ $getDynamicStyle($fatherFull, '0.98rem', '0.80rem', '0.68rem', '0.58rem', 18, 25, 32) }}">
                     <span class="label-text">Father's Full Name</span>
                 </div>
                 <div>
-                    <input type="text" class="input-line" value="{{ mb_strtoupper($app->father_occupation ?? '') }}" style="{{ $getDynamicStyle($app->father_occupation ?? '', '0.90rem', '0.75rem', '0.62rem', '0.52rem', 16, 24, 30) }}">
+                    <input type="text" class="input-line" value="{{ mb_strtoupper($app->father_occupation ?? '') }}" style="{{ $getDynamicStyle($app->father_occupation ?? '', '0.98rem', '0.80rem', '0.68rem', '0.58rem', 16, 24, 30) }}">
                     <span class="label-text">Occupation</span>
                 </div>
                 <div>
-                    <div style="border-bottom: 1.5px solid #0f172a; padding: 1px 3px; min-height: 32px; display: flex; flex-direction: column; justify-content: flex-end;">
-                        <div style="font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 700; color: #0f172a; line-height: 1.2;">
+                    <div style="border-bottom: 1.5px solid #0f172a; padding: 1px 3px; min-height: 34px; display: flex; flex-direction: column; justify-content: flex-end;">
+                        <div style="font-family: 'Inter', sans-serif; font-size: 0.88rem; font-weight: 750; color: #0f172a; line-height: 1.2;">
                             {{ $parentPhone }}
                         </div>
                         @if(!empty($parentEmail))
-                            <div style="font-family: 'Inter', sans-serif; font-size: 0.76rem; font-weight: 600; color: #0f172a; line-height: 1.2; text-transform: lowercase;">
+                            <div style="font-family: 'Inter', sans-serif; font-size: 0.78rem; font-weight: 600; color: #0f172a; line-height: 1.2; text-transform: lowercase;">
                                 {{ $parentEmail }}
                             </div>
                         @endif
@@ -893,23 +894,23 @@
         </div>
 
         <!-- Mother's Details -->
-        <div class="field-container" style="margin-top: 12px;">
+        <div class="field-container" style="margin-top: 14px;">
             <div class="grid-parent-row">
                 <div>
-                    <input type="text" class="input-line" value="{{ $motherFull }}" style="{{ $getDynamicStyle($motherFull, '0.90rem', '0.75rem', '0.62rem', '0.52rem', 18, 25, 32) }}">
+                    <input type="text" class="input-line" value="{{ $motherFull }}" style="{{ $getDynamicStyle($motherFull, '0.98rem', '0.80rem', '0.68rem', '0.58rem', 18, 25, 32) }}">
                     <span class="label-text">Mother's Full Name</span>
                 </div>
                 <div>
-                    <input type="text" class="input-line" value="{{ mb_strtoupper($app->mother_occupation ?? '') }}" style="{{ $getDynamicStyle($app->mother_occupation ?? '', '0.90rem', '0.75rem', '0.62rem', '0.52rem', 16, 24, 30) }}">
+                    <input type="text" class="input-line" value="{{ mb_strtoupper($app->mother_occupation ?? '') }}" style="{{ $getDynamicStyle($app->mother_occupation ?? '', '0.98rem', '0.80rem', '0.68rem', '0.58rem', 16, 24, 30) }}">
                     <span class="label-text">Occupation</span>
                 </div>
                 <div>
-                    <div style="border-bottom: 1.5px solid #0f172a; padding: 1px 3px; min-height: 32px; display: flex; flex-direction: column; justify-content: flex-end;">
-                        <div style="font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 700; color: #0f172a; line-height: 1.2;">
+                    <div style="border-bottom: 1.5px solid #0f172a; padding: 1px 3px; min-height: 34px; display: flex; flex-direction: column; justify-content: flex-end;">
+                        <div style="font-family: 'Inter', sans-serif; font-size: 0.88rem; font-weight: 750; color: #0f172a; line-height: 1.2;">
                             {{ $parentPhone }}
                         </div>
                         @if(!empty($parentEmail))
-                            <div style="font-family: 'Inter', sans-serif; font-size: 0.76rem; font-weight: 600; color: #0f172a; line-height: 1.2; text-transform: lowercase;">
+                            <div style="font-family: 'Inter', sans-serif; font-size: 0.78rem; font-weight: 600; color: #0f172a; line-height: 1.2; text-transform: lowercase;">
                                 {{ $parentEmail }}
                             </div>
                         @endif
@@ -920,13 +921,13 @@
         </div>
 
         <!-- Home Address -->
-        <div class="field-container" style="margin-top: 12px;">
-            <input type="text" class="input-line" value="{{ mb_strtoupper($app->home_address ?? $fullAddress) }}" style="{{ $getDynamicStyle($app->home_address ?? $fullAddress, '0.90rem', '0.78rem', '0.65rem', '0.55rem', 45, 65, 85) }}">
+        <div class="field-container" style="margin-top: 14px;">
+            <input type="text" class="input-line" value="{{ mb_strtoupper($app->home_address ?? $fullAddress) }}" style="{{ $getDynamicStyle($app->home_address ?? $fullAddress, '0.98rem', '0.82rem', '0.70rem', '0.60rem', 45, 65, 85) }}">
             <span class="label-text">Home Address</span>
         </div>
 
         <!-- SECTION 3: OTHER CHILDREN INFORMATION -->
-        <div class="section-header-row" style="margin-top: 18px;">
+        <div class="section-header-row" style="margin-top: 22px;">
             OTHER CHILDREN INFORMATION
         </div>
 
@@ -940,10 +941,10 @@
                 $sibName = $sib ? mb_strtoupper(trim(($sib->first_name ?? '') . ' ' . ($sib->last_name ?? ''))) : '';
                 $sibGrade = $sib ? mb_strtoupper($sib->grade_level ?? '') : '';
             @endphp
-            <div class="field-container" style="{{ $i === 0 ? 'margin-top: 8px;' : '' }}">
+            <div class="field-container" style="{{ $i === 0 ? 'margin-top: 10px;' : '' }}">
                 <div class="grid-children-row">
                     <div>
-                        <input type="text" class="input-line" value="{{ $sibName }}" style="{{ $getDynamicStyle($sibName, '0.90rem', '0.75rem', '0.62rem', '0.52rem', 22, 32, 40) }}">
+                        <input type="text" class="input-line" value="{{ $sibName }}" style="{{ $getDynamicStyle($sibName, '0.98rem', '0.82rem', '0.68rem', '0.58rem', 22, 32, 40) }}">
                         <span class="label-text">Name</span>
                     </div>
                     <div>
@@ -985,7 +986,7 @@
     <!-- =================================================================== -->
     <div class="paper-container">
         
-        <div class="section-header-row" style="margin-top: 5px; margin-bottom: 12px;">
+        <div class="section-header-row" style="margin-top: 5px; margin-bottom: 15px;">
             MEDICAL INFORMATION
         </div>
 
@@ -1008,7 +1009,7 @@
         </div>
 
         <!-- Question 2: Prescription Medication -->
-        <div class="p2-question-row" style="margin-top: 16px;">
+        <div class="p2-question-row" style="margin-top: 20px;">
             Prescription Medication: 
             &nbsp; YES <span class="p2-inline-line">{{ $hasMed ? '✓' : '' }}</span> 
             &nbsp;&nbsp; NO <span class="p2-inline-line">{{ !$hasMed ? '✓' : '' }}</span>
@@ -1033,13 +1034,13 @@
         </div>
 
         <!-- EMERGENCY CONTACTS SECTION -->
-        <div class="section-header-row" style="margin-top: 20px;">
-            EMERGENCY CONTACTS <span style="font-size: 0.85rem; font-weight: normal; text-transform: none; color: #475569;">(Other than above names)</span>
+        <div class="section-header-row" style="margin-top: 25px;">
+            EMERGENCY CONTACTS <span style="font-size: 0.9rem; font-weight: normal; text-transform: none; color: #475569;">(Other than above names)</span>
         </div>
 
         <div class="p2-emergency-grid">
             <div>
-                <input type="text" class="input-line" value="{{ mb_strtoupper($app->emergency_name ?? '') }}" style="{{ $getDynamicStyle($app->emergency_name ?? '', '0.90rem', '0.75rem', '0.62rem', '0.52rem', 20, 28, 35) }}">
+                <input type="text" class="input-line" value="{{ mb_strtoupper($app->emergency_name ?? '') }}" style="{{ $getDynamicStyle($app->emergency_name ?? '', '0.98rem', '0.80rem', '0.68rem', '0.58rem', 20, 28, 35) }}">
                 <span class="label-text">Name</span>
             </div>
             <div>
@@ -1053,11 +1054,11 @@
         </div>
 
         <!-- REFERRAL SECTION -->
-        <div class="section-header-row" style="margin-top: 20px;">
+        <div class="section-header-row" style="margin-top: 25px;">
             REFERRAL
         </div>
 
-        <div class="field-container" style="margin-top: 8px;">
+        <div class="field-container" style="margin-top: 10px;">
             <input type="text" class="input-line" value="{{ mb_strtoupper($app->referral_source ?? '') }}">
             <span class="label-text">I heard about AMIS from</span>
         </div>
@@ -1072,13 +1073,13 @@
         </p>
 
         <!-- SIGNATURE SECTION -->
-        <div class="section-header-row" style="margin-top: 20px;">
+        <div class="section-header-row" style="margin-top: 25px;">
             SIGNATURE
         </div>
 
         <div class="signature-grid">
             <div>
-                <input type="text" class="input-line" value="{{ $fatherFull ?: $motherFull }}" style="{{ $getDynamicStyle($fatherFull ?: $motherFull, '0.90rem', '0.75rem', '0.62rem', '0.52rem', 22, 32, 40) }}">
+                <input type="text" class="input-line" value="{{ $fatherFull ?: $motherFull }}" style="{{ $getDynamicStyle($fatherFull ?: $motherFull, '0.98rem', '0.80rem', '0.68rem', '0.58rem', 22, 32, 40) }}">
                 <span class="label-text">Parent/Guardian</span>
             </div>
             <div>
@@ -1106,15 +1107,15 @@
             </div>
             <div>
                 <span>Paid:</span>
-                <input type="text" class="input-line" style="width: 100px; display: inline-block;" value="{{ $app?->payment?->amount_paid ? '₱' . number_format($app->payment->amount_paid, 2) : '' }}">
+                <input type="text" class="input-line" style="width: 110px; display: inline-block;" value="{{ $app?->payment?->amount_paid ? '₱' . number_format($app->payment->amount_paid, 2) : '' }}">
             </div>
             <div>
                 <span>OR No.:</span>
-                <input type="text" class="input-line" style="width: 100px; display: inline-block;" value="{{ mb_strtoupper($app?->payment?->reference_number ?? '') }}">
+                <input type="text" class="input-line" style="width: 110px; display: inline-block;" value="{{ mb_strtoupper($app?->payment?->reference_number ?? '') }}">
             </div>
         </div>
 
-        <!-- Attachments Checklist -->
+        <!-- Attachments Checklist: Reduced font size by -0.5 specifically for checklist items -->
         <div class="attachments-title">To be attached:</div>
         <ol class="attachments-list">
             <li>Photo copy of Birth Certificate</li>
