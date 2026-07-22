@@ -408,9 +408,12 @@
             
             $photoUrl = \App\Support\EnrollmentStorage::url($applicant->photo_2x2_url);
             
-            $homeAddress = implode(', ', array_filter([$applicant->home_street_address, $applicant->home_city, $applicant->home_state_province]));
-            if (empty($homeAddress)) {
-                $homeAddress = $applicant->home_address ?: '-';
+            $emergencyAddress = trim($applicant->emergency_address ?? '');
+            if (empty($emergencyAddress)) {
+                $emergencyAddress = implode(', ', array_filter([$applicant->home_street_address, $applicant->home_city, $applicant->home_state_province]));
+                if (empty($emergencyAddress)) {
+                    $emergencyAddress = $applicant->home_address ?: '-';
+                }
             }
             
             $emergencyName = $applicant->emergency_name ?: '-';
@@ -527,7 +530,7 @@
                                 $parentNameLen = strlen($emergencyName);
                                 $parentNameFontSize = $parentNameLen > 24 ? '14px' : ($parentNameLen > 18 ? '16px' : '19px');
                                 
-                                $addressLen = strlen($homeAddress);
+                                $addressLen = strlen($emergencyAddress);
                                 $addressFontSize = $addressLen > 60 ? '12px' : ($addressLen > 40 ? '13px' : '14px');
                             @endphp
                             <div class="emergency-info">
@@ -567,7 +570,7 @@
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:100%; height:100%;"><path fill-rule="evenodd" d="m11.54 22.351.07.04.028.016a.76.76 0 0 0 .723 0l.028-.015.071-.041a16.975 16.975 0 0 0 3.58-2.977c2.2-2.384 4.19-5.462 4.19-8.923 0-4.82-3.855-8.5-8.5-8.5-8.5 0-8.5 3.68-8.5 8.5c0 3.461 1.99 6.54 4.19 8.923a16.975 16.975 0 0 0 3.58 2.977Zm3.71-12.851a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" clip-rule="evenodd" /></svg>
                                     </span>
                                     <div class="emerg-text" style="font-family: 'Outfit', sans-serif; font-size: {{ $addressFontSize }}; font-weight: 700; text-transform: uppercase; color: #475569; line-height: 1.25;">
-                                        {{ $homeAddress }}
+                                        {{ $emergencyAddress }}
                                     </div>
                                 </div>
                             </div>
