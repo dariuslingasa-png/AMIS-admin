@@ -15,6 +15,7 @@ tar -czf $ARCHIVE_NAME \
     resources/views/admin/students/partials/show/sidebar.blade.php \
     resources/views/admin/students/print-enrolment-form.blade.php \
     resources/views/admin/students/occupancy.blade.php \
+    resources/views/admin/students/partials/occupancy/card.blade.php \
     public/images/logo/deped_logo.png
 
 echo "=== 2. Uploading bundle to production server via SCP ==="
