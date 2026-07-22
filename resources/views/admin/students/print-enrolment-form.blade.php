@@ -1005,7 +1005,6 @@
         <div class="p2-explain-block">
             <span class="p2-explain-label">If yes, please explain:</span>
             <input type="text" class="p2-full-line" value="{{ mb_strtoupper($app->med_explanation ?? '') }}">
-            <input type="text" class="p2-full-line">
         </div>
 
         <!-- Question 2: Prescription Medication -->
@@ -1018,7 +1017,6 @@
         <div class="p2-explain-block">
             <span class="p2-explain-label">If yes, please explain:</span>
             <input type="text" class="p2-full-line" value="{{ mb_strtoupper($app->current_medications ?? '') }}">
-            <input type="text" class="p2-full-line">
         </div>
 
         <!-- Family Physician & Phone -->
