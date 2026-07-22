@@ -489,14 +489,17 @@
         <!-- Main Column (Tabs and Details) -->
         <main class="space-y-6">
             <!-- Dynamic Profile Header Card -->
-            <section class="applicant-profile-card relative overflow-hidden {{ $accentClass }}">
-                @if ($countryCode)
-                    <div class="absolute right-0 top-0 bottom-0 h-full w-2/5 overflow-hidden pointer-events-none opacity-20 select-none print-hide">
-                        <img src="https://flagcdn.com/w640/{{ $countryCode }}.png" 
-                             alt="Country Flag" 
-                             class="h-full w-full object-cover object-right">
-                    </div>
-                @endif
+            <section class="applicant-profile-card relative {{ $accentClass }}" style="overflow: visible;">
+                {{-- Clip only the flag bg, not the camera button --}}
+                <div class="absolute inset-0 rounded-[inherit] overflow-hidden pointer-events-none" style="z-index: 0;">
+                    @if ($countryCode)
+                        <div class="absolute right-0 top-0 bottom-0 h-full w-2/5 opacity-20 select-none">
+                            <img src="https://flagcdn.com/w640/{{ $countryCode }}.png" 
+                                 alt="Country Flag" 
+                                 class="h-full w-full object-cover object-right">
+                        </div>
+                    @endif
+                </div>
 
                 <div class="absolute top-4 right-4 flex items-center gap-2 print-hide" style="z-index: 10;">
                     <span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-white/10 text-white border border-white/25 uppercase tracking-wider">
@@ -507,7 +510,7 @@
                     </span>
                 </div>
                 
-                <div class="relative" style="width: 96px; height: 96px;">
+                <div class="relative" style="width: 96px; height: 96px; z-index: 1; overflow: visible;">
                     <!-- Inner avatar block with overflow hidden for the photo clip -->
                     <div class="w-full h-full relative group flex items-center justify-center overflow-hidden rounded-2xl border-2 border-white/45 bg-white/12 text-emerald-100 cursor-zoom-in" 
                           @if ($photoUrl) @click="openPreview('{{ $photoUrl }}', '2x2 Photo', false)" @endif>
@@ -525,7 +528,7 @@
                     
                     @if (auth()->user()?->hasRole('super_admin') && !$isRequirementsComplete)
                         <!-- Camera edit button placed in the outer relative wrapper, so it does not get cut off by overflow-hidden -->
-                        <div style="position: absolute; right: -6px; bottom: -6px; z-index: 30;" onclick="event.stopPropagation()">
+                        <div style="position: absolute; right: -8px; bottom: -8px; z-index: 9999; overflow: visible;" onclick="event.stopPropagation()">
                             <button type="button" 
                                     onclick="openPhotoOptionsModal()"
                                     class="w-7 h-7 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full flex items-center justify-center shadow-md border-2 border-white transition active:scale-90 cursor-pointer"

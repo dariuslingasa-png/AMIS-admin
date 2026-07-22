@@ -19,6 +19,7 @@
     color: #fff;
     border: 1px solid rgba(16, 185, 129, .18);
     background: linear-gradient(135deg, #064e3b, #047857);
+    overflow: visible;
 }
 
 .applicant-next-sibling {
