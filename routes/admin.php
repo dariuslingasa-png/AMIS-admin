@@ -180,7 +180,11 @@ Route::name('admin.')->group(function () {
         Route::post('/students/bulk-print-list', [AdminStudentController::class, 'bulkPrintList'])->name('students.bulk-print-list');
         Route::get('/students/print-enrolment-forms-batch', [AdminStudentController::class, 'printEnrolmentFormsBatch'])->name('students.print-enrolment-forms-batch');
         Route::get('/students/{student}', [AdminStudentController::class, 'show'])->name('students.show');
+        Route::get('/students/{student}/id-editor', [AdminStudentController::class, 'idEditor'])->name('students.id-editor');
         Route::get('/students/{student}/print-enrolment-form', [AdminStudentController::class, 'printEnrolmentForm'])->name('students.print-enrolment-form');
+        Route::post('/students/{student}/update-profile', [AdminStudentController::class, 'updateProfile'])->name('students.update-profile');
+        Route::post('/students/{student}/update-photo', [AdminStudentController::class, 'updatePhoto'])->name('students.update-photo');
+        Route::post('/students/{student}/update-section', [AdminStudentController::class, 'updateSection'])->name('students.update-section');
         Route::post('/students/{student}/update-id-font-sizes', [AdminStudentController::class, 'updateIdFontSizes'])->name('students.update-id-font-sizes');
         Route::post('/students/{student}/delete-photo', [AdminStudentController::class, 'deletePhoto'])->name('students.delete-photo');
         Route::post('/students/{student}/sync-microsoft-photo', [AdminStudentController::class, 'syncMicrosoftPhoto'])->name('students.sync-microsoft-photo');
