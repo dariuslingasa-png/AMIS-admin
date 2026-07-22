@@ -926,6 +926,13 @@ class AdminStudentController extends Controller
             $studentFolder = $formattedId . ' - ' . $fullName;
             
             $gradeFolder = trim($student->grade_level ?: 'Grade 1');
+            if (preg_match('/^Grade\s*(\d+)$/i', $gradeFolder, $m)) {
+                $gShort = 'G' . $m[1];
+            } elseif (preg_match('/^Kinder\s*(\d+)$/i', $gradeFolder, $m)) {
+                $gShort = 'K' . $m[1];
+            } else {
+                $gShort = $gradeFolder;
+            }
 
             $learningMode = strtolower($appl->learning_mode ?? '');
             $isF2f = str_contains($learningMode, 'face') || str_contains($learningMode, 'f2f');
@@ -938,13 +945,13 @@ class AdminStudentController extends Controller
             }
 
             if ($isF2f) {
-                $basePath = "{$gradeFolder}/F2F/{$studentFolderName}";
+                $basePath = "{$gShort}/F2F/{$studentFolderName}";
             } else {
-                $shiftFolder = '1st Shift';
+                $shiftFolder = '1ST SHIFT';
                 if (str_contains($learningMode, '2nd') || str_contains($learningMode, 'second') || str_contains($learningMode, 'shift 2')) {
-                    $shiftFolder = '2nd Shift';
+                    $shiftFolder = '2ND SHIFT';
                 }
-                $basePath = "{$gradeFolder}/ODL/{$shiftFolder}/{$studentFolderName}";
+                $basePath = "{$gShort}/ODL/{$shiftFolder}/{$studentFolderName}";
             }
 
             // 1. Enrollment Application Form HTML (Printable & viewable in any browser)
