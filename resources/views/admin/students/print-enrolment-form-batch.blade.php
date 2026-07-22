@@ -805,6 +805,19 @@
                 setTimeout(() => window.print(), 500);
             });
         }
+
+        if (new URLSearchParams(window.location.search).get('auto_zip_png') === '1') {
+            window.addEventListener('DOMContentLoaded', () => {
+                const checkReadyInterval = setInterval(async () => {
+                    const overlay = document.getElementById('loadingOverlay');
+                    if (!overlay || overlay.classList.contains('hidden-overlay')) {
+                        clearInterval(checkReadyInterval);
+                        await generatePngZip();
+                        setTimeout(() => window.close(), 1500);
+                    }
+                }, 200);
+            });
+        }
     </script>
 </body>
 </html>

@@ -54,7 +54,7 @@
                             <i data-lucide="file-signature" class="h-4 w-4 text-emerald-600"></i>
                             <span>Print Enrollment Application Forms ({{ request('grade') ?: 'All Grades' }})</span>
                         </a>
-                        <a href="{{ route('admin.students.download-enrolment-forms-zip', request()->all()) }}" class="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 transition">
+                        <a href="{{ route('admin.students.print-enrolment-forms-batch', array_merge(request()->all(), ['auto_zip_png' => 1])) }}" target="_blank" class="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 transition">
                             <i data-lucide="file-archive" class="h-4 w-4 text-emerald-600"></i>
                             <span>Zip Enrollment Application Forms ({{ request('grade') ?: 'All Grades' }})</span>
                         </a>
