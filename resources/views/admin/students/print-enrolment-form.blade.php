@@ -377,9 +377,9 @@
             gap: 15px;
         }
 
-        .grid-3-col-birth {
+        .grid-4-col-birth {
             display: grid;
-            grid-template-columns: 2.5fr 3.5fr 2fr;
+            grid-template-columns: 1.2fr 2.5fr 3.5fr 2fr;
             gap: 15px;
         }
 
@@ -558,7 +558,7 @@
             outline: none;
         }
 
-        /* ATTACHMENTS CHECKLIST: Reduced font size by 0.5 specifically for list items */
+        /* ATTACHMENTS CHECKLIST: Reduced font size by -0.5 specifically for checklist items */
         .attachments-title {
             font-family: 'Inter', sans-serif;
             font-size: 0.82rem;
@@ -696,6 +696,12 @@
         }
         $fullAddress = mb_strtoupper($rawAddress);
 
+        // Student Age Calculation
+        $studentAge = '';
+        if ($app && $app->date_of_birth) {
+            $studentAge = \Carbon\Carbon::parse($app->date_of_birth)->age;
+        }
+
         // Student 2x2 Photo Base64 / Remote URL resolver
         $photoSrc = null;
         if ($app && !empty($app->photo_2x2_url)) {
@@ -828,9 +834,13 @@
             <span class="label-text">Address</span>
         </div>
 
-        <!-- Birth Details & Religion -->
+        <!-- Age, Birth Details & Religion Row -->
         <div class="field-container" style="margin-top: 14px;">
-            <div class="grid-3-col-birth">
+            <div class="grid-4-col-birth">
+                <div>
+                    <input type="text" class="input-line" value="{{ $studentAge }}">
+                    <span class="label-text">Age</span>
+                </div>
                 <div>
                     <input type="text" class="input-line" value="{{ $app?->date_of_birth ? mb_strtoupper($app->date_of_birth->format('M d, Y')) : '' }}">
                     <span class="label-text">Date of Birth</span>
@@ -945,6 +955,7 @@
                 $sib = $siblingList->get($i);
                 $sibName = $sib ? mb_strtoupper(trim(($sib->first_name ?? '') . ' ' . ($sib->last_name ?? ''))) : '';
                 $sibGrade = $sib ? mb_strtoupper($sib->grade_level ?? '') : '';
+                $sibAge = ($sib && !empty($sib->date_of_birth)) ? \Carbon\Carbon::parse($sib->date_of_birth)->age : '';
             @endphp
             <div class="field-container" style="{{ $i === 0 ? 'margin-top: 10px;' : '' }}">
                 <div class="grid-children-row">
@@ -953,7 +964,7 @@
                         <span class="label-text">Name</span>
                     </div>
                     <div>
-                        <input type="text" class="input-line" value="">
+                        <input type="text" class="input-line" value="{{ $sibAge }}">
                         <span class="label-text">Age</span>
                     </div>
                     <div>
