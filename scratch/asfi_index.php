@@ -478,37 +478,26 @@ if ($isMobileCaptureMode) {
                         if (this.captured) return;
 
                         if (!results.multiFaceLandmarks || results.multiFaceLandmarks.length === 0) {
-                            // NO PERSON / NO FACE DETECTED
+                            // NO PERSON DETECTED AT ALL
                             this.hasFace = false;
                             this.livenessScore = 0;
-                            this.livenessStatusText = 'NO HUMAN FACE DETECTED';
+                            this.livenessStatusText = 'NO PERSON DETECTED';
+                            this.autoCapturedTriggered = false; // Reset trigger
                             return;
                         }
 
-                        // PERSON / FACE IS DETECTED
-                        this.hasFace = true;
+                        // PERSON DETECTED BY MEDIAPIPE AI
                         const landmarks = results.multiFaceLandmarks[0];
-                        
-                        // Nose tip position
                         const nose = landmarks[1];
-                        const isCentered = nose.x > 0.25 && nose.x < 0.75 && nose.y > 0.2 && nose.y < 0.8;
+                        const isCentered = nose.x > 0.20 && nose.x < 0.80 && nose.y > 0.15 && nose.y < 0.85;
 
                         if (isCentered) {
-                            if (this.livenessScore < 100) {
-                                this.livenessScore += Math.floor(Math.random() * 15) + 10;
-                                if (this.livenessScore > 100) this.livenessScore = 100;
-                            }
+                            this.hasFace = true;
+                            this.livenessScore = 100;
+                            this.livenessStatusText = 'PERSON DETECTED 100%';
 
-                            if (this.livenessScore < 50) {
-                                this.livenessStatusText = 'ALIGN FACE IN OVAL GUIDE';
-                            } else if (this.livenessScore < 95) {
-                                this.livenessStatusText = 'LIVE HUMAN DETECTED (VERIFYING)';
-                            } else {
-                                this.livenessStatusText = '100% LIVENESS VERIFIED!';
-                            }
-
-                            // 100% AUTO CAPTURE TRIGGER
-                            if (this.livenessScore >= 100 && !this.captured && !this.autoCapturedTriggered) {
+                            // INSTANT AUTO CAPTURE UPON PERSON DETECTION
+                            if (!this.captured && !this.autoCapturedTriggered) {
                                 this.autoCapturedTriggered = true;
                                 this.flashEffect = true;
                                 setTimeout(() => { this.flashEffect = false; }, 250);
@@ -516,41 +505,17 @@ if ($isMobileCaptureMode) {
                                 this.uploadSelfie();
                             }
                         } else {
-                            this.livenessStatusText = 'CENTER FACE INSIDE OVAL';
+                            this.hasFace = true;
+                            this.livenessScore = 40;
+                            this.livenessStatusText = 'CENTER FACE INSIDE OVAL GUIDE';
                         }
                     },
 
                     startFallbackDetectionLoop() {
                         if (this.livenessInterval) clearInterval(this.livenessInterval);
-                        this.hasFace = true;
-                        this.livenessScore = 30;
-                        this.livenessStatusText = 'ANALYZING LIVE STREAM...';
-
-                        this.livenessInterval = setInterval(() => {
-                            if (this.captured) return;
-
-                            if (this.livenessScore < 100) {
-                                this.livenessScore += Math.floor(Math.random() * 15) + 12;
-                                if (this.livenessScore > 100) this.livenessScore = 100;
-                            }
-
-                            if (this.livenessScore < 60) {
-                                this.livenessStatusText = 'BLINK OR HOLD STEADY';
-                            } else if (this.livenessScore < 95) {
-                                this.livenessStatusText = 'LIVE HUMAN DETECTED (VERIFYING)';
-                            } else {
-                                this.livenessStatusText = '100% LIVENESS VERIFIED!';
-                            }
-
-                            // 100% AUTO CAPTURE TRIGGER
-                            if (this.livenessScore >= 100 && !this.captured && !this.autoCapturedTriggered) {
-                                this.autoCapturedTriggered = true;
-                                this.flashEffect = true;
-                                setTimeout(() => { this.flashEffect = false; }, 250);
-                                this.takeSelfie();
-                                this.uploadSelfie();
-                            }
-                        }, 400);
+                        this.hasFace = false;
+                        this.livenessScore = 0;
+                        this.livenessStatusText = 'ALIGN FACE INSIDE OVAL';
                     },
 
                     takeSelfie() {

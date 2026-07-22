@@ -282,33 +282,26 @@
                     if (this.captured) return;
 
                     if (!results.multiFaceLandmarks || results.multiFaceLandmarks.length === 0) {
+                        // NO PERSON DETECTED AT ALL
                         this.hasFace = false;
                         this.livenessScore = 0;
-                        this.livenessStatusText = 'NO HUMAN FACE DETECTED';
+                        this.livenessStatusText = 'NO PERSON DETECTED';
+                        this.autoCapturedTriggered = false; // Reset trigger
                         return;
                     }
 
-                    this.hasFace = true;
+                    // PERSON DETECTED BY MEDIAPIPE AI
                     const landmarks = results.multiFaceLandmarks[0];
                     const nose = landmarks[1];
-
-                    const isCentered = nose.x > 0.25 && nose.x < 0.75 && nose.y > 0.2 && nose.y < 0.8;
+                    const isCentered = nose.x > 0.20 && nose.x < 0.80 && nose.y > 0.15 && nose.y < 0.85;
 
                     if (isCentered) {
-                        if (this.livenessScore < 100) {
-                            this.livenessScore += Math.floor(Math.random() * 15) + 10;
-                            if (this.livenessScore > 100) this.livenessScore = 100;
-                        }
+                        this.hasFace = true;
+                        this.livenessScore = 100;
+                        this.livenessStatusText = 'PERSON DETECTED 100%';
 
-                        if (this.livenessScore < 50) {
-                            this.livenessStatusText = 'ALIGN FACE IN OVAL GUIDE';
-                        } else if (this.livenessScore < 95) {
-                            this.livenessStatusText = 'LIVE HUMAN DETECTED (VERIFYING)';
-                        } else {
-                            this.livenessStatusText = 'LIVENESS VERIFIED 100%';
-                        }
-
-                        if (this.livenessScore >= 100 && !this.captured && !this.autoCapturedTriggered) {
+                        // INSTANT AUTO CAPTURE UPON PERSON DETECTION
+                        if (!this.captured && !this.autoCapturedTriggered) {
                             this.autoCapturedTriggered = true;
                             this.flashEffect = true;
                             setTimeout(() => { this.flashEffect = false; }, 250);
@@ -316,7 +309,9 @@
                             this.uploadSelfie();
                         }
                     } else {
-                        this.livenessStatusText = 'CENTER FACE INSIDE OVAL';
+                        this.hasFace = true;
+                        this.livenessScore = 40;
+                        this.livenessStatusText = 'CENTER FACE INSIDE OVAL GUIDE';
                     }
                 },
 
