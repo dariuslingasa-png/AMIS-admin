@@ -27,37 +27,37 @@
         </div>
     @else
         <!-- INCOMPLETE REQUIREMENTS REMINDER BANNER -->
-        <div class="rounded-2xl bg-amber-50/80 p-4.5 text-amber-950 shadow-2xs space-y-3 mb-6 ring-1 ring-amber-200/50">
+        <div class="rounded-2xl p-4 text-amber-950 shadow-sm space-y-3.5 mb-6" style="background-color: #fffbeb; border: 1.5px solid #fde68a;">
             <div class="flex items-start justify-between gap-3">
                 <div class="flex items-start gap-3">
-                    <div class="rounded-xl bg-amber-100 p-2 text-amber-600 shrink-0 mt-0.5">
+                    <div class="rounded-xl p-2 shrink-0 mt-0.5" style="background-color: #fef3c7; color: #d97706;">
                         <i data-lucide="alert-triangle" class="h-5 w-5 animate-pulse"></i>
                     </div>
                     <div>
                         <div class="flex items-center gap-2 flex-wrap">
-                            <h4 class="font-black text-sm text-amber-900">INCOMPLETE REQUIREMENTS REMINDER</h4>
-                            <span class="inline-flex items-center rounded-full bg-amber-200/60 px-2.5 py-0.5 text-[10px] font-black text-amber-900 uppercase tracking-wider">
+                            <h4 class="font-black text-sm" style="color: #92400e;">INCOMPLETE REQUIREMENTS REMINDER</h4>
+                            <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider" style="background-color: #fde68a; color: #78350f;">
                                 {{ count($missingRequirements) }} Missing Item(s)
                             </span>
                         </div>
-                        <p class="text-xs text-amber-800 mt-1 font-medium">
-                            The following mandatory requirements need attention for this <strong class="uppercase text-amber-950 font-extrabold">{{ $student->applicant->student_type ?? 'Student' }}</strong> ({{ $student->grade_level }}):
+                        <p class="text-xs mt-1 font-medium" style="color: #b45309;">
+                            The following mandatory requirements need attention for this <strong class="uppercase font-extrabold" style="color: #78350f;">{{ $student->applicant->student_type ?? 'Student' }}</strong> ({{ $student->grade_level }}):
                         </p>
                     </div>
                 </div>
             </div>
 
             <!-- Missing Checklist Pills -->
-            <div class="flex flex-wrap gap-2 pt-2.5 border-t border-amber-200/40">
+            <div class="flex flex-wrap gap-2 pt-2.5" style="border-top: 1px solid #fde68a;">
                 @foreach($missingRequirements as $missingItem)
-                    <span class="inline-flex items-center gap-1.5 rounded-xl bg-white px-3 py-1 text-xs font-bold text-rose-700 ring-1 ring-rose-200/60 shadow-2xs">
-                        <i data-lucide="x-circle" class="h-3.5 w-3.5 text-rose-500"></i>
+                    <span class="inline-flex items-center gap-1.5 rounded-xl px-3 py-1 text-xs font-bold" style="background-color: #fff1f2; color: #be123c; border: 1px solid #fecdd3;">
+                        <i data-lucide="x-circle" class="h-3.5 w-3.5" style="color: #e11d48;"></i>
                         {{ $missingItem }}
                     </span>
                 @endforeach
                 @if($isKinder1or2)
-                    <span class="inline-flex items-center gap-1.5 rounded-xl bg-white px-3 py-1 text-xs font-bold text-sky-700 ring-1 ring-sky-200/60 shadow-2xs">
-                        <i data-lucide="info" class="h-3.5 w-3.5 text-sky-500"></i>
+                    <span class="inline-flex items-center gap-1.5 rounded-xl px-3 py-1 text-xs font-bold" style="background-color: #f0f9ff; color: #0369a1; border: 1px solid #bae6fd;">
+                        <i data-lucide="info" class="h-3.5 w-3.5" style="color: #0284c7;"></i>
                         Kinder 1 & 2: LRN Exempt
                     </span>
                 @endif
@@ -65,16 +65,16 @@
 
             <!-- Specific Reminders Box -->
             @if(!empty($reminders) || !empty($lrnNote))
-                <div class="bg-white rounded-xl p-3.5 ring-1 ring-amber-200/40 shadow-2xs text-xs space-y-2 font-semibold text-slate-700">
+                <div class="rounded-xl p-3.5 text-xs space-y-2 font-semibold shadow-2xs" style="background-color: #ffffff; border: 1px solid #fde68a; color: #334155;">
                     @if($lrnNote)
-                        <div class="flex items-center gap-2 text-amber-900 font-extrabold">
-                            <i data-lucide="info" class="h-4 w-4 shrink-0 text-amber-600"></i>
+                        <div class="flex items-center gap-2 font-extrabold" style="color: #92400e;">
+                            <i data-lucide="info" class="h-4 w-4 shrink-0" style="color: #d97706;"></i>
                             <span>{{ $lrnNote }}</span>
                         </div>
                     @endif
                     @foreach($reminders as $rem)
-                        <div class="flex items-center gap-2 text-slate-600">
-                            <i data-lucide="chevron-right" class="h-3.5 w-3.5 shrink-0 text-amber-500"></i>
+                        <div class="flex items-center gap-2" style="color: #475569;">
+                            <i data-lucide="chevron-right" class="h-3.5 w-3.5 shrink-0" style="color: #f59e0b;"></i>
                             <span>{{ $rem }}</span>
                         </div>
                     @endforeach
