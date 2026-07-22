@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Enrolment Application Form - {{ $student->student_number }} - {{ $student->full_name }}</title>
     
-    <!-- Google Fonts for authentic serif typography -->
+    <!-- Premium Google Fonts: Merriweather for Headers & Inter for Fillable Data -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Times+New+Roman&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Merriweather:wght@400;700;900&display=swap" rel="stylesheet">
     
     <style>
         * {
@@ -18,34 +18,40 @@
         }
 
         body {
-            font-family: 'Times New Roman', Times, serif;
+            font-family: 'Merriweather', Georgia, serif;
             background-color: #f1f5f9;
-            color: #000;
-            line-height: 1.25;
+            color: #0f172a;
+            line-height: 1.3;
             padding: 20px 0;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
         }
 
         /* Top Action Bar (Screen Only) */
         .action-bar {
-            max-width: 820px;
+            max-width: 840px;
             margin: 0 auto 16px auto;
             display: flex;
             justify-content: space-between;
             align-items: center;
             background: #ffffff;
-            padding: 10px 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            padding: 12px 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
             font-family: 'Inter', sans-serif;
             position: sticky;
             top: 10px;
             z-index: 100;
+            border: 1px solid #e2e8f0;
         }
 
         .action-bar h2 {
             font-size: 0.95rem;
             font-weight: 700;
             color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .btn-group {
@@ -55,16 +61,17 @@
 
         .btn {
             font-family: 'Inter', sans-serif;
-            font-size: 0.82rem;
-            font-weight: 600;
-            padding: 7px 14px;
-            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            padding: 8px 18px;
+            border-radius: 8px;
             border: none;
             cursor: pointer;
             transition: all 0.2s ease;
             display: flex;
             align-items: center;
             gap: 6px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
         }
 
         .btn-primary {
@@ -73,14 +80,16 @@
         }
         .btn-primary:hover {
             background-color: #047857;
+            transform: translateY(-1px);
         }
 
         .btn-secondary {
-            background-color: #e2e8f0;
+            background-color: #f1f5f9;
             color: #334155;
+            border: 1px solid #cbd5e1;
         }
         .btn-secondary:hover {
-            background-color: #cbd5e1;
+            background-color: #e2e8f0;
         }
 
         /* Paper Document Layout (A4 Scale) */
@@ -90,8 +99,9 @@
             margin: 0 auto 30px auto;
             background: #ffffff;
             padding: 14mm 16mm 14mm 16mm;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
             position: relative;
+            border-radius: 2px;
         }
 
         .paper-page-break {
@@ -129,10 +139,11 @@
         }
 
         .school-name {
-            font-size: 1.25rem;
-            font-weight: bold;
-            letter-spacing: 0.2px;
-            color: #000;
+            font-family: 'Merriweather', serif;
+            font-size: 1.22rem;
+            font-weight: 900;
+            letter-spacing: 0.3px;
+            color: #0f172a;
             text-transform: uppercase;
             white-space: nowrap;
             text-align: center;
@@ -140,9 +151,10 @@
         }
 
         .school-address {
-            font-size: 0.95rem;
+            font-family: 'Merriweather', serif;
+            font-size: 0.9rem;
             margin-top: 3px;
-            color: #000;
+            color: #334155;
             white-space: nowrap;
             text-align: center;
         }
@@ -165,12 +177,14 @@
             border: 2px solid #dc2626;
             padding: 6px 10px;
             text-align: center;
-            font-weight: bold;
-            font-size: 0.9rem;
+            font-family: 'Inter', sans-serif;
+            font-weight: 800;
+            font-size: 0.85rem;
             line-height: 1.2;
             color: #dc2626;
             text-transform: uppercase;
             white-space: nowrap;
+            border-radius: 4px;
         }
 
         /* Middle Header Row: Form Title, Checkboxes, 2x2 Photo Box */
@@ -189,18 +203,22 @@
         }
 
         .form-title {
+            font-family: 'Merriweather', serif;
             font-size: 1.35rem;
-            font-weight: bold;
+            font-weight: 900;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             white-space: nowrap;
+            color: #0f172a;
         }
 
         .sy-title {
+            font-family: 'Merriweather', serif;
             font-size: 1.15rem;
-            font-weight: bold;
+            font-weight: 700;
             margin-top: 3px;
             margin-bottom: 16px;
+            color: #1e293b;
         }
 
         /* Student Info Header & LRN */
@@ -212,26 +230,32 @@
         }
 
         .section-title {
-            font-size: 1rem;
-            font-weight: bold;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 800;
             text-transform: uppercase;
             white-space: nowrap;
+            letter-spacing: 0.5px;
+            color: #0f172a;
         }
 
         .lrn-container {
-            font-size: 1rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 700;
             display: flex;
             align-items: baseline;
-            gap: 4px;
+            gap: 6px;
             white-space: nowrap;
         }
 
         .lrn-input {
             border: none;
-            border-bottom: 1.5px solid #000;
-            font-family: 'Times New Roman', Times, serif;
-            font-size: 1.05rem;
-            font-weight: bold;
+            border-bottom: 1.5px solid #0f172a;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #0f172a;
             width: 200px;
             outline: none;
             padding: 0 4px;
@@ -241,43 +265,49 @@
         .checkbox-stack {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
             margin-top: 10px;
             align-items: flex-start;
+            font-family: 'Inter', sans-serif;
         }
 
         .checkbox-item {
             display: flex;
             align-items: center;
             gap: 10px;
-            font-size: 0.95rem;
-            font-weight: bold;
+            font-size: 0.9rem;
+            font-weight: 800;
+            color: #0f172a;
             cursor: pointer;
         }
 
         .custom-checkbox {
             width: 20px;
             height: 20px;
-            border: 1.5px solid #000;
+            border: 2px solid #0f172a;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 16px;
-            font-weight: bold;
+            font-size: 15px;
+            font-weight: 900;
             background: #fff;
+            line-height: 1;
+            flex-shrink: 0;
+            border-radius: 3px;
         }
 
         /* 2x2 Photo Box */
         .photo-box {
             width: 135px;
             height: 135px;
-            border: 1.5px solid #000;
-            background: #fff;
+            border: 2px solid #0f172a;
+            background: #fafafa;
             justify-self: end;
             display: flex;
             align-items: center;
             justify-content: center;
             overflow: hidden;
+            border-radius: 3px;
         }
 
         .photo-box img {
@@ -288,9 +318,12 @@
 
         /* Section Header Divider */
         .section-header-row {
-            font-size: 1.05rem;
-            font-weight: bold;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 800;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #0f172a;
             margin-top: 18px;
             margin-bottom: 10px;
             white-space: nowrap;
@@ -298,26 +331,31 @@
 
         /* Fillable Text Lines & Input Fields */
         .field-container {
-            margin-bottom: 14px;
+            margin-bottom: 12px;
             width: 100%;
         }
 
         .input-line {
             border: none;
-            border-bottom: 1.5px solid #000;
-            font-family: 'Times New Roman', Times, serif;
-            font-size: 1.05rem;
-            font-weight: bold;
+            border-bottom: 1.5px solid #0f172a;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.98rem;
+            font-weight: 700;
+            color: #0f172a;
             outline: none;
-            padding: 1px 4px;
+            padding: 2px 4px;
             width: 100%;
             background: transparent;
         }
 
         .label-text {
-            font-size: 0.95rem;
-            font-weight: normal;
-            margin-top: 2px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            color: #475569;
+            margin-top: 3px;
             display: block;
         }
 
@@ -349,16 +387,18 @@
             display: grid;
             grid-template-columns: 4.5fr 1.5fr 2.5fr;
             gap: 15px;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         /* Bottom Section: Applicant Lives With */
         .lives-with-row {
-            margin-top: 22px;
+            margin-top: 20px;
             display: flex;
             align-items: center;
             gap: 25px;
-            font-size: 1rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
         }
 
         .radio-option {
@@ -370,51 +410,58 @@
         .radio-line {
             display: inline-block;
             width: 40px;
-            border-bottom: 1.5px solid #000;
+            border-bottom: 1.5px solid #0f172a;
             text-align: center;
-            font-weight: bold;
+            font-weight: 800;
             height: 18px;
             line-height: 18px;
         }
 
         /* PAGE 2 STYLES */
         .p2-question-row {
-            margin-top: 18px;
-            font-size: 1.05rem;
-            line-height: 1.4;
+            margin-top: 16px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            line-height: 1.45;
+            color: #0f172a;
         }
 
         .p2-inline-line {
             display: inline-block;
-            border-bottom: 1.5px solid #000;
+            border-bottom: 1.5px solid #0f172a;
             width: 70px;
             height: 18px;
             vertical-align: bottom;
             text-align: center;
-            font-weight: bold;
+            font-weight: 800;
+            font-family: 'Inter', sans-serif;
         }
 
         .p2-explain-block {
-            margin-top: 10px;
-            margin-bottom: 16px;
+            margin-top: 8px;
+            margin-bottom: 14px;
         }
 
         .p2-explain-label {
-            font-size: 1.05rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #334155;
             display: inline-block;
             margin-bottom: 4px;
         }
 
         .p2-full-line {
             border: none;
-            border-bottom: 1.5px solid #000;
+            border-bottom: 1.5px solid #0f172a;
             width: 100%;
-            font-family: 'Times New Roman', Times, serif;
-            font-size: 1.05rem;
-            font-weight: bold;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.98rem;
+            font-weight: 700;
+            color: #0f172a;
             outline: none;
-            padding: 1px 4px;
-            margin-bottom: 8px;
+            padding: 2px 4px;
+            margin-bottom: 6px;
             background: transparent;
         }
 
@@ -422,51 +469,57 @@
             display: grid;
             grid-template-columns: 4fr 3fr;
             gap: 20px;
-            margin-top: 20px;
-            margin-bottom: 25px;
+            margin-top: 16px;
+            margin-bottom: 20px;
         }
 
         .p2-emergency-grid {
             display: grid;
             grid-template-columns: 4.5fr 3.5fr 3fr;
             gap: 15px;
-            margin-top: 10px;
-            margin-bottom: 25px;
+            margin-top: 8px;
+            margin-bottom: 20px;
         }
 
         .p2-policy-text {
-            font-size: 1rem;
-            line-height: 1.45;
-            margin-top: 14px;
+            font-family: 'Merriweather', serif;
+            font-size: 0.92rem;
+            line-height: 1.5;
+            margin-top: 12px;
             text-align: justify;
+            color: #1e293b;
         }
 
         .signature-grid {
             display: grid;
             grid-template-columns: 5fr 2.5fr;
             gap: 30px;
-            margin-top: 40px;
+            margin-top: 35px;
             margin-bottom: 8px;
         }
 
         .signature-disclaimer {
-            font-size: 0.85rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.82rem;
             font-style: italic;
-            margin-bottom: 30px;
+            color: #64748b;
+            margin-bottom: 25px;
         }
 
         .office-perforated-line {
             border: none;
-            border-top: 1.5px dashed #000;
-            margin: 20px 0 15px 0;
+            border-top: 1.5px dashed #64748b;
+            margin: 18px 0 14px 0;
         }
 
         .grid-office-row {
             display: grid;
             grid-template-columns: 3.5fr 2.5fr 2.5fr;
             gap: 15px;
-            margin-bottom: 18px;
-            font-size: 1rem;
+            margin-bottom: 16px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.92rem;
+            font-weight: 600;
         }
 
         .date-slash-inputs {
@@ -477,28 +530,34 @@
 
         .date-slash-input {
             border: none;
-            border-bottom: 1.5px solid #000;
+            border-bottom: 1.5px solid #0f172a;
             width: 45px;
             text-align: center;
-            font-family: 'Times New Roman', Times, serif;
-            font-size: 1rem;
-            font-weight: bold;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #0f172a;
             outline: none;
         }
 
         .attachments-list {
-            font-size: 0.95rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
             line-height: 1.5;
             margin-left: 20px;
+            color: #334155;
         }
 
         .attachments-title {
-            font-size: 1rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.92rem;
             font-style: italic;
+            font-weight: 700;
+            color: #0f172a;
             margin-bottom: 4px;
         }
 
-        /* Print Media Styles */
+        /* Print Media Styles for Perfect PDF Save */
         @media print {
             body {
                 background: none;
@@ -533,8 +592,8 @@
     <div class="action-bar">
         <h2>📄 Official Enrolment Application Form - {{ $student->student_number }}</h2>
         <div class="btn-group">
-            <button class="btn btn-secondary" onclick="window.close()">Close</button>
-            <button class="btn btn-primary" onclick="window.print()">🖨️ Print / Save as PDF</button>
+            <button class="btn btn-secondary" onclick="window.close()">Close Window</button>
+            <button class="btn btn-primary" onclick="triggerPrintPDF()">🖨️ Print / Save as PDF</button>
         </div>
     </div>
 
@@ -577,7 +636,7 @@
         <!-- Top Header Row -->
         <div class="top-header-row">
             <div class="header-left-group">
-                <img src="/images/AMIS_Logo.png" alt="AMIS Logo" class="header-logo-amis" onerror="this.src='https://via.placeholder.com/88?text=AMIS'">
+                <img src="{{ asset('images/AMIS_Logo.png') }}" alt="AMIS Logo" class="header-logo-amis">
                 <div class="header-school-text">
                     <h1 class="school-name">AL MUNAWWARA ISLAMIC SCHOOL</h1>
                     <p class="school-address">Bugac Ma-a Road, Davao City Philippines</p>
@@ -585,7 +644,7 @@
             </div>
 
             <div class="header-right-group">
-                <img src="/images/deped_logo.png" alt="DepEd Logo" class="header-logo-deped" onerror="this.src='https://via.placeholder.com/82?text=DepEd'">
+                <img src="{{ asset('images/logo/deped_logo.png') }}" alt="DepEd Logo" class="header-logo-deped">
                 <div class="refund-notice-box">
                     NO REFUND OF<br>ENROLLMENT FEE
                 </div>
@@ -853,7 +912,7 @@
 
         <!-- EMERGENCY CONTACTS SECTION -->
         <div class="section-header-row" style="margin-top: 25px;">
-            EMERGENCY CONTACTS <span style="font-size: 0.95rem; font-weight: normal; text-transform: none;">(Other than above names)</span>
+            EMERGENCY CONTACTS <span style="font-size: 0.9rem; font-weight: normal; text-transform: none; color: #475569;">(Other than above names)</span>
         </div>
 
         <div class="p2-emergency-grid">
@@ -945,5 +1004,18 @@
 
     </div>
 
+    <script>
+        function triggerPrintPDF() {
+            // Trigger browser print dialog where user selects "Save as PDF"
+            window.print();
+        }
+
+        // Auto trigger print dialog if ?auto_print=1 in URL
+        if (new URLSearchParams(window.location.search).get('auto_print') === '1') {
+            window.addEventListener('DOMContentLoaded', () => {
+                setTimeout(() => window.print(), 500);
+            });
+        }
+    </script>
 </body>
 </html>
