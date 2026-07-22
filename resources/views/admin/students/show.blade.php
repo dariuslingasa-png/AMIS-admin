@@ -1443,7 +1443,7 @@
                             </div>
                         </div>
                         </div><!-- end scale wrapper -->
-                        <span class="text-[10px] text-slate-400 font-semibold mt-1">Back Emergency Info Sheet</span>pan>
+                        <span class="text-[10px] text-slate-400 font-semibold mt-1">Back Emergency Info Sheet</span>
                     </div>
                     <input type="hidden" id="id-card-filename-slug" value="{{ implode('-', array_filter([$lastName, $firstName, str_replace(' ', '', $displayGrade)])) }}">
                 </div>
@@ -2411,16 +2411,22 @@
         try {
             let dataUrl = '';
             
-            // Primary strategy: htmlToImage
-            if (typeof htmlToImage !== 'undefined') {
+            // Primary strategy: html2canvas (most reliable for cross-origin images, templates & QR codes)
+            if (typeof html2canvas !== 'undefined') {
+                const canvas = await html2canvas(cardEl, { 
+                    scale: 3, 
+                    useCORS: true, 
+                    allowTaint: true, 
+                    backgroundColor: isMonochrome ? '#ffffff' : (side === 'front' ? '#064e3b' : '#ffffff'),
+                    logging: false 
+                });
+                dataUrl = canvas.toDataURL('image/png', 1.0);
+            } else if (typeof htmlToImage !== 'undefined') {
                 dataUrl = await htmlToImage.toPng(cardEl, {
                     pixelRatio: 3,
                     cacheBust: true,
-                    backgroundColor: isMonochrome ? '#ffffff' : '#064e3b'
+                    backgroundColor: isMonochrome ? '#ffffff' : (side === 'front' ? '#064e3b' : '#ffffff')
                 });
-            } else if (typeof html2canvas !== 'undefined') {
-                const canvas = await html2canvas(cardEl, { scale: 3, useCORS: true, allowTaint: true, backgroundColor: isMonochrome ? '#ffffff' : '#064e3b' });
-                dataUrl = canvas.toDataURL('image/png', 1.0);
             }
 
             if (dataUrl) {
