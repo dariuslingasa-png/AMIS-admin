@@ -26,6 +26,7 @@
         selectedGradeLevel: '',
         jsonSample: `[\n  {\n    \"lrn\": \"127168190019\",\n    \"first_name\": \"AZHAR\",\n    \"middle_name\": \"IBRAHIM\",\n    \"last_name\": \"SALINDAWAN\",\n    \"grade_level\": \"Grade 7\",\n    \"gender\": \"Male\",\n    \"address\": \"6921 ALKHAZNAH ISHBILIYAH RIYADH, 13225, SAUDI ARABIA\",\n    \"date_of_birth\": \"2014-06-13\",\n    \"place_of_birth\": \"RIYADH KSA\",\n    \"religion\": \"ISLAM\",\n    \"parent_name\": \"SAHARODIN G. SALINDAWAN\",\n    \"parent_mobile\": \"50 073 8648\",\n    \"parent_email\": \"angel_10178@yahoo.com\"\n  }\n]`
     }"
+    x-init="window.AMIS_OCCUPANCY = $data"
     @open-json-sync.window="openJsonModal = true; selectedTargetSection = $event.detail.sectionId || ''; selectedGradeLevel = $event.detail.gradeLevel || '';">
         <!-- Banner -->
         <section class="overflow-hidden rounded-3xl border border-emerald-700/30 bg-gradient-to-br from-emerald-800 via-emerald-900 to-teal-950 p-6 text-white shadow-xl shadow-slate-900/10">
@@ -53,167 +54,163 @@
         </section>
 
         <!-- Create New Section Modal -->
-        <template x-teleport="body">
-            <div x-show="openCreateModal"
-                 style="display: none; z-index: 99999;"
-                 class="fixed inset-0 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-fade-in">
-                <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col"
-                     @click.outside="openCreateModal = false"
-                     x-transition:enter="transition ease-out duration-200"
-                     x-transition:enter-start="opacity-0 scale-95"
-                     x-transition:enter-end="opacity-100 scale-100">
-                    <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800">
-                        <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                            <i data-lucide="plus-circle" class="w-5 h-5 text-emerald-600"></i>
-                            <span>Create New Class Section</span>
-                        </h3>
-                        <button @click="openCreateModal = false" class="text-slate-400 hover:text-slate-600 transition">
-                            <i data-lucide="x" class="w-5 h-5"></i>
-                        </button>
-                    </div>
-                    <form method="POST" action="{{ route('admin.students.occupancy.store-section') }}" class="p-6 space-y-4">
-                        @csrf
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Section Name</label>
-                            <input type="text" name="name" placeholder="e.g. ALI IBN ABI TALIB or HUDHAYFAH"
-                                   class="w-full h-11 px-3.5 rounded-xl border border-slate-200 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100">
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Grade Level</label>
-                                <select name="grade_level" required class="w-full h-11 px-3 rounded-xl border border-slate-200 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500">
-                                    @foreach(['Kinder 1', 'Kinder 2', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'] as $g)
-                                        <option value="{{ $g }}">{{ $g }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <div>
-                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Learning Mode <span class="text-slate-400 font-medium lowercase">(optional)</span></label>
-                                <select name="learning_mode" class="w-full h-11 px-3 rounded-xl border border-slate-200 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500">
-                                    <option value="">None / Default</option>
-                                    <option value="Flexible Online Learning">Flexible Online Learning</option>
-                                    <option value="Face-to-Face">Face-to-Face</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Shift <span class="text-slate-400 font-medium lowercase">(optional)</span></label>
-                                <select name="shift" class="w-full h-11 px-3 rounded-xl border border-slate-200 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500">
-                                    <option value="">None / No Shift</option>
-                                    <option value="1st Shift">1st Shift</option>
-                                    <option value="2nd Shift">2nd Shift</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Gender Allocation <span class="text-slate-400 font-medium lowercase">(optional)</span></label>
-                                <select name="gender" class="w-full h-11 px-3 rounded-xl border border-slate-200 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500">
-                                    <option value="merge">Co-Ed (Merge / Default)</option>
-                                    <option value="female">Girls Only</option>
-                                    <option value="male">Boys Only</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
-                            <button type="button" @click="openCreateModal = false" class="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition cursor-pointer">
-                                Cancel
-                            </button>
-                            <button type="submit" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-md cursor-pointer">
-                                Create Section
-                            </button>
-                        </div>
-                    </form>
+        <div x-cloak x-show="openCreateModal"
+             style="display: none; z-index: 99999;"
+             class="fixed inset-0 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-fade-in">
+            <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col"
+                 @click.outside="openCreateModal = false"
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 scale-95"
+                 x-transition:enter-end="opacity-100 scale-100">
+                <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800">
+                    <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <i data-lucide="plus-circle" class="w-5 h-5 text-emerald-600"></i>
+                        <span>Create New Class Section</span>
+                    </h3>
+                    <button type="button" @click="openCreateModal = false" class="text-slate-400 hover:text-slate-600 transition">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
                 </div>
-            </div>
-        </template>
-
-        <!-- JSON Bulk Student Import & Auto-Match Modal -->
-        <template x-teleport="body">
-            <div x-show="openJsonModal"
-                 style="display: none; z-index: 99999;"
-                 class="fixed inset-0 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-fade-in">
-                <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[90vh]"
-                     @click.outside="openJsonModal = false"
-                     x-transition:enter="transition ease-out duration-200"
-                     x-transition:enter-start="opacity-0 scale-95"
-                     x-transition:enter-end="opacity-100 scale-100">
-                    <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
-                        <div>
-                            <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                                <i data-lucide="file-json" class="w-5 h-5 text-emerald-600"></i>
-                                <span>Batch JSON Student Sync (Auto-Match & Insert)</span>
-                                <template x-if="selectedGradeLevel">
-                                    <span class="inline-flex items-center gap-1 bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider">
-                                        <i data-lucide="filter" class="w-3 h-3"></i>
-                                        <span x-text="selectedGradeLevel"></span>
-                                    </span>
-                                </template>
-                            </h3>
-                            <p class="text-xs font-semibold text-slate-500 mt-0.5">Auto-updates existing students by Name / LRN or creates new student records automatically.</p>
-                        </div>
-                        <button @click="openJsonModal = false" class="text-slate-400 hover:text-slate-600 transition cursor-pointer">
-                            <i data-lucide="x" class="w-5 h-5"></i>
-                        </button>
+                <form method="POST" action="{{ route('admin.students.occupancy.store-section') }}" class="p-6 space-y-4">
+                    @csrf
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Section Name</label>
+                        <input type="text" name="name" placeholder="e.g. ALI IBN ABI TALIB or HUDHAYFAH"
+                               class="w-full h-11 px-3.5 rounded-xl border border-slate-200 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100">
                     </div>
 
-                    <form method="POST" action="{{ route('admin.students.occupancy.bulk-json-import') }}" enctype="multipart/form-data" class="p-6 space-y-4 overflow-y-auto">
-                        @csrf
-                        
-                        <!-- Target Section Selector (Optional) -->
+                    <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
-                                Assign to Section <span class="text-slate-400 font-medium lowercase">(optional)</span>
-                            </label>
-                            <select name="target_section_id" x-model="selectedTargetSection" class="w-full h-11 px-3 rounded-xl border border-slate-200 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500">
-                                <option value="">Do Not Assign Section Automatically</option>
-                                @foreach($sections as $sec)
-                                    <option value="{{ $sec->id }}">{{ $sec->grade_level }} - {{ $sec->name ?: 'F2F' }} ({{ $sec->occupied }}/{{ $sec->capacity_limit }})</option>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Grade Level</label>
+                            <select name="grade_level" required class="w-full h-11 px-3 rounded-xl border border-slate-200 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500">
+                                @foreach(['Kinder 1', 'Kinder 2', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'] as $g)
+                                    <option value="{{ $g }}">{{ $g }}</option>
                                 @endforeach
                             </select>
                         </div>
 
-                        <!-- JSON Textarea -->
                         <div>
-                            <div class="flex items-center justify-between mb-1">
-                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                                    Paste JSON Payload (40+ Students Array)
-                                </label>
-                                <button type="button" @click="$refs.jsonArea.value = jsonSample" class="text-[11px] font-bold text-emerald-600 hover:text-emerald-700 underline cursor-pointer">
-                                    Fill Sample Format
-                                </button>
-                            </div>
-                            <textarea x-ref="jsonArea" name="json_data" rows="9" placeholder="Paste your student JSON array here..."
-                                      class="w-full p-3.5 rounded-xl border border-slate-200 bg-slate-900 font-mono text-xs text-emerald-400 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 leading-relaxed shadow-inner"></textarea>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Learning Mode <span class="text-slate-400 font-medium lowercase">(optional)</span></label>
+                            <select name="learning_mode" class="w-full h-11 px-3 rounded-xl border border-slate-200 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500">
+                                <option value="">None / Default</option>
+                                <option value="Flexible Online Learning">Flexible Online Learning</option>
+                                <option value="Face-to-Face">Face-to-Face</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Shift <span class="text-slate-400 font-medium lowercase">(optional)</span></label>
+                            <select name="shift" class="w-full h-11 px-3 rounded-xl border border-slate-200 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500">
+                                <option value="">None / No Shift</option>
+                                <option value="1st Shift">1st Shift</option>
+                                <option value="2nd Shift">2nd Shift</option>
+                            </select>
                         </div>
 
-                        <!-- JSON File Upload Alternative -->
-                        <div class="border-t border-slate-100 dark:border-slate-800 pt-3">
-                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
-                                Or Upload JSON File (.json / .txt)
-                            </label>
-                            <input type="file" name="json_file" accept=".json,.txt"
-                                   class="w-full text-xs font-semibold text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Gender Allocation <span class="text-slate-400 font-medium lowercase">(optional)</span></label>
+                            <select name="gender" class="w-full h-11 px-3 rounded-xl border border-slate-200 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500">
+                                <option value="merge">Co-Ed (Merge / Default)</option>
+                                <option value="female">Girls Only</option>
+                                <option value="male">Boys Only</option>
+                            </select>
                         </div>
+                    </div>
 
-                        <!-- Action Buttons -->
-                        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
-                            <button type="button" @click="openJsonModal = false" class="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition cursor-pointer">
-                                Cancel
-                            </button>
-                            <button type="submit" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-md cursor-pointer flex items-center gap-1.5">
-                                <i data-lucide="zap" class="w-4 h-4"></i>
-                                <span>Process & Auto-Sync Batch</span>
-                            </button>
-                        </div>
-                    </form>
-                </div>
+                    <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                        <button type="button" @click="openCreateModal = false" class="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition cursor-pointer">
+                            Cancel
+                        </button>
+                        <button type="submit" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-md cursor-pointer">
+                            Create Section
+                        </button>
+                    </div>
+                </form>
             </div>
-        </template>
+        </div>
+
+        <!-- JSON Bulk Student Import & Auto-Match Modal -->
+        <div x-cloak x-show="openJsonModal"
+             style="display: none; z-index: 99999;"
+             class="fixed inset-0 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-fade-in">
+            <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[90vh]"
+                 @click.outside="openJsonModal = false"
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 scale-95"
+                 x-transition:enter-end="opacity-100 scale-100">
+                <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <i data-lucide="file-json" class="w-5 h-5 text-emerald-600"></i>
+                            <span>Batch JSON Student Sync (Auto-Match & Insert)</span>
+                            <template x-if="selectedGradeLevel">
+                                <span class="inline-flex items-center gap-1 bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider">
+                                    <i data-lucide="filter" class="w-3 h-3"></i>
+                                    <span x-text="selectedGradeLevel"></span>
+                                </span>
+                            </template>
+                        </h3>
+                        <p class="text-xs font-semibold text-slate-500 mt-0.5">Auto-updates existing students by Name / LRN or creates new student records automatically.</p>
+                    </div>
+                    <button type="button" @click="openJsonModal = false" class="text-slate-400 hover:text-slate-600 transition cursor-pointer">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <form method="POST" action="{{ route('admin.students.occupancy.bulk-json-import') }}" enctype="multipart/form-data" class="p-6 space-y-4 overflow-y-auto">
+                    @csrf
+                    
+                    <!-- Target Section Selector (Optional) -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
+                            Assign to Section <span class="text-slate-400 font-medium lowercase">(optional)</span>
+                        </label>
+                        <select name="target_section_id" x-model="selectedTargetSection" class="w-full h-11 px-3 rounded-xl border border-slate-200 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500">
+                            <option value="">Do Not Assign Section Automatically</option>
+                            @foreach($sections as $sec)
+                                <option value="{{ $sec->id }}">{{ $sec->grade_level }} - {{ $sec->name ?: 'F2F' }} ({{ $sec->occupied }}/{{ $sec->capacity_limit }})</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- JSON Textarea -->
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                                Paste JSON Payload (40+ Students Array)
+                            </label>
+                            <button type="button" @click="$refs.jsonArea.value = jsonSample" class="text-[11px] font-bold text-emerald-600 hover:text-emerald-700 underline cursor-pointer">
+                                Fill Sample Format
+                            </button>
+                        </div>
+                        <textarea x-ref="jsonArea" name="json_data" rows="9" placeholder="Paste your student JSON array here..."
+                                  class="w-full p-3.5 rounded-xl border border-slate-200 bg-slate-900 font-mono text-xs text-emerald-400 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 leading-relaxed shadow-inner"></textarea>
+                    </div>
+
+                    <!-- JSON File Upload Alternative -->
+                    <div class="border-t border-slate-100 dark:border-slate-800 pt-3">
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
+                            Or Upload JSON File (.json / .txt)
+                        </label>
+                        <input type="file" name="json_file" accept=".json,.txt"
+                               class="w-full text-xs font-semibold text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer">
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                        <button type="button" @click="openJsonModal = false" class="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition cursor-pointer">
+                            Cancel
+                        </button>
+                        <button type="submit" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-md cursor-pointer flex items-center gap-1.5">
+                            <i data-lucide="zap" class="w-4 h-4"></i>
+                            <span>Process & Auto-Sync Batch</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
 
         <!-- Occupancy Container -->
         <div id="occupancyContainer" class="space-y-6">
