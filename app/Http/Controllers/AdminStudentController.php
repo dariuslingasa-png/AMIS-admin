@@ -1900,6 +1900,10 @@ class AdminStudentController extends Controller
         $qrCodeBase64 = $getInlineBase64($qrCodeUrl);
         $photoBase64 = $photoUrl ? $getInlineBase64($photoUrl) : '';
 
+        // Director signature QR (used in back of ID card)
+        $signatureRawUrl = 'https://quickchart.io/qr?text=' . urlencode('https://amis.edu.ph/signature') . '&dark=000000&light=ffffff&margin=1&format=png&size=200';
+        $signatureQrBase64 = $getInlineBase64($signatureRawUrl);
+
         // Name lengths
         $lastNameLen = strlen($lastName);
         if ($lastNameLen <= 8) {
@@ -1944,9 +1948,12 @@ class AdminStudentController extends Controller
             'photoUrl' => $photoUrl,
             'photoBase64' => $photoBase64,
             'qrCodeBase64' => $qrCodeBase64,
+            'signatureRawUrl' => $signatureRawUrl,
+            'signatureQrBase64' => $signatureQrBase64,
             'emergencyName' => $emergencyName,
             'emergencyPhone' => $emergencyPhone,
             'homeAddress' => $homeAddress,
+            'applicant' => $applicant,
         ]);
     }
 
