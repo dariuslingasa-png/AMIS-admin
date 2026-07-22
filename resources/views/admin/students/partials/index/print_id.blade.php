@@ -328,15 +328,44 @@
             object-fit: contain;
             display: block;
         }
+        .dropdown-item:hover {
+            background-color: #f1f5f9 !important;
+            color: #0f172a !important;
+        }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
-    <div class="toolbar" style="display: flex; gap: 8px;">
-        <button type="button" onclick="downloadAllPngs()" class="btn-png">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-            Download High-Res PNGs (Smart Printer)
-        </button>
+    <div class="toolbar" style="display: flex; gap: 8px; align-items: center;">
+        <div class="dropdown" style="position: relative; display: inline-block;">
+            <button type="button" onclick="toggleDropdown()" class="btn-png" style="display: flex; align-items: center; gap: 6px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                <span>Download High-Res PNGs</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div id="png-dropdown-menu" class="dropdown-content" style="display: none; position: absolute; right: 0; top: 100%; margin-top: 5px; background-color: #ffffff; min-width: 250px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.15); border-radius: 12px; border: 1px solid #e2e8f0; padding: 6px; z-index: 9999; flex-direction: column; gap: 4px;">
+                <button type="button" onclick="triggerDownload('front-color-back-mono')" class="dropdown-item" style="text-align: left; background: none; color: #1e293b; padding: 10px 12px; border: none; font-size: 12px; font-weight: 700; width: 100%; cursor: pointer; border-radius: 8px; display: flex; align-items: center; gap: 8px; transition: background 0.15s;">
+                    <span style="font-size: 14px;">🖨️</span>
+                    <div style="display: flex; flex-direction: column;">
+                        <span>Front Color + Back Black/White</span>
+                        <span style="font-size: 9px; font-weight: 500; color: #059669; margin-top: 2px;">★ Recommended for Smart Printers</span>
+                    </div>
+                </button>
+                <button type="button" onclick="triggerDownload('full-color')" class="dropdown-item" style="text-align: left; background: none; color: #1e293b; padding: 10px 12px; border: none; font-size: 12px; font-weight: 700; width: 100%; cursor: pointer; border-radius: 8px; display: flex; align-items: center; gap: 8px; transition: background 0.15s;">
+                    <span style="font-size: 14px;">🎨</span>
+                    <span>Both Sides Full Color</span>
+                </button>
+                <div style="border-top: 1px solid #f1f5f9; margin: 4px 0;"></div>
+                <button type="button" onclick="triggerDownload('front-only')" class="dropdown-item" style="text-align: left; background: none; color: #475569; padding: 8px 12px; border: none; font-size: 12px; font-weight: 600; width: 100%; cursor: pointer; border-radius: 8px; display: flex; align-items: center; gap: 8px; transition: background 0.15s;">
+                    <span style="font-size: 14px;">🖼️</span>
+                    <span>Front Side Only (Color)</span>
+                </button>
+                <button type="button" onclick="triggerDownload('back-only-mono')" class="dropdown-item" style="text-align: left; background: none; color: #475569; padding: 8px 12px; border: none; font-size: 12px; font-weight: 600; width: 100%; cursor: pointer; border-radius: 8px; display: flex; align-items: center; gap: 8px; transition: background 0.15s;">
+                    <span style="font-size: 14px;">🖤</span>
+                    <span>Back Side Only (Black/White)</span>
+                </button>
+            </div>
+        </div>
         <button type="button" onclick="window.print()">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
             Print PDF / Printer
@@ -573,7 +602,46 @@
             }
         });
 
-        async function downloadCardPng(elementId, filename) {
+        function toggleDropdown() {
+            const menu = document.getElementById('png-dropdown-menu');
+            if (menu.style.display === 'none' || !menu.style.display) {
+                menu.style.display = 'flex';
+            } else {
+                menu.style.display = 'none';
+            }
+        }
+        
+        // Close dropdown when clicking outside
+        window.addEventListener('click', function(e) {
+            const dropdown = document.querySelector('.dropdown');
+            if (dropdown && !dropdown.contains(e.target)) {
+                const menu = document.getElementById('png-dropdown-menu');
+                if (menu) menu.style.display = 'none';
+            }
+        });
+
+        async function triggerDownload(mode) {
+            const btn = document.querySelector('.btn-png');
+            let oldHTML = '';
+            if (btn) {
+                oldHTML = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = `<svg class="animate-spin" style="animation: spin 1s linear infinite; margin-right: 6px;" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg>Generating...`;
+            }
+
+            try {
+                await downloadAllPngs(mode);
+            } catch (err) {
+                console.error(err);
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = oldHTML;
+                }
+            }
+        }
+
+        async function downloadCardPng(elementId, filename, isMonochrome = false) {
             adjustLastNameFontSizes();
             if (typeof html2canvas === 'undefined') return;
             const cardEl = document.getElementById(elementId);
@@ -583,12 +651,43 @@
                     scale: 3, // 300 DPI high resolution
                     useCORS: true,
                     allowTaint: true,
-                    backgroundColor: null,
+                    backgroundColor: isMonochrome ? '#ffffff' : null,
                     logging: false
                 });
+                
+                let dataUrl = canvas.toDataURL('image/png', 1.0);
+                
+                if (isMonochrome) {
+                    const img = new Image();
+                    img.crossOrigin = 'anonymous';
+                    img.src = dataUrl;
+                    await new Promise(res => {
+                        img.onload = res;
+                        img.onerror = res;
+                    });
+                    
+                    const cvs = document.createElement('canvas');
+                    cvs.width = img.width || 1020;
+                    cvs.height = img.height || 1614;
+                    const ctx = cvs.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    
+                    const imgData = ctx.getImageData(0, 0, cvs.width, cvs.height);
+                    const d = imgData.data;
+                    for (let i = 0; i < d.length; i += 4) {
+                        const gray = 0.299 * d[i] + 0.587 * d[i+1] + 0.114 * d[i+2];
+                        const val = gray > 215 ? 255 : (gray < 165 ? 0 : Math.round(gray));
+                        d[i] = val;
+                        d[i+1] = val;
+                        d[i+2] = val;
+                    }
+                    ctx.putImageData(imgData, 0, 0);
+                    dataUrl = cvs.toDataURL('image/png', 1.0);
+                }
+                
                 const link = document.createElement('a');
                 link.download = filename;
-                link.href = canvas.toDataURL('image/png', 1.0);
+                link.href = dataUrl;
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
@@ -597,19 +696,30 @@
             }
         }
 
-        async function downloadAllPngs() {
+        async function downloadAllPngs(mode = 'front-color-back-mono') {
             const frontEls = document.querySelectorAll('[id^="print-front-box-"]');
             const backEls = document.querySelectorAll('[id^="print-back-box-"]');
             
-            for (let el of frontEls) {
-                const name = el.getAttribute('data-filename') || 'STUDENT';
-                await downloadCardPng(el.id, `${name}-FRONT.png`);
-                await new Promise(r => setTimeout(r, 400));
+            // front-color-back-mono: Front Color, Back Black/White
+            // full-color: Front Color, Back Color
+            // front-only: Front Color only
+            // back-only-mono: Back Black/White only
+
+            if (mode === 'front-color-back-mono' || mode === 'full-color' || mode === 'front-only') {
+                for (let el of frontEls) {
+                    const name = el.getAttribute('data-filename') || 'STUDENT';
+                    await downloadCardPng(el.id, `${name}-FRONT.png`, false);
+                    await new Promise(r => setTimeout(r, 600));
+                }
             }
-            for (let el of backEls) {
-                const name = el.getAttribute('data-filename') || 'STUDENT';
-                await downloadCardPng(el.id, `${name}-BACK.png`);
-                await new Promise(r => setTimeout(r, 400));
+            
+            if (mode === 'front-color-back-mono' || mode === 'full-color' || mode === 'back-only-mono') {
+                for (let el of backEls) {
+                    const name = el.getAttribute('data-filename') || 'STUDENT';
+                    const isMono = (mode === 'front-color-back-mono' || mode === 'back-only-mono');
+                    await downloadCardPng(el.id, `${name}-BACK${isMono ? '-BLACK-ONLY' : ''}.png`, isMono);
+                    await new Promise(r => setTimeout(r, 600));
+                }
             }
         }
     </script>
