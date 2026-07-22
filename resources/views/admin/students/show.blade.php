@@ -271,6 +271,7 @@
             document.body.style.overflow = '';
             document.body.classList.remove('overflow-hidden');
         }
+        window.AMIS_SINGLE_STUDENT_JSON = @json($singleStudentJsonPretty);
     }
 </script>
 
@@ -290,7 +291,7 @@
          idFontSize: {{ $student->id_num_font_size ?: 10 }},
          openPasswordModal: false,
          openStudentJsonModal: false,
-         singleStudentJson: @json($singleStudentJsonPretty),
+         singleStudentJson: window.AMIS_SINGLE_STUDENT_JSON,
          editSection: 'all',
          copySuccess: false,
          activeTab: 'overview',
