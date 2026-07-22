@@ -87,8 +87,8 @@
     <x-card title="Student Profile" subtitle="Core demographics and contact info">
         <x-slot:actions>
             @unless ($isTeacherAdminViewer)
-                @if ($isManuallyLocked)
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 text-xs font-bold border border-slate-200 dark:border-slate-700 opacity-80" title="Profile is locked by administrator">
+                @if ($isRequirementsComplete)
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 text-xs font-bold border border-slate-200 dark:border-slate-700 opacity-80" title="Profile is locked">
                         <i data-lucide="lock" class="h-3.5 w-3.5 text-slate-400"></i>
                         <span>Profile Locked</span>
                     </span>
@@ -104,7 +104,7 @@
         </x-slot:actions>
         <div class="detail-section-stack">
             @foreach ($studentSections as $section)
-                <x-applicant.detail-section :title="$section['title']" :icon="$section['icon']" :sectionKey="$section['key']" :fields="$section['fields']" :isLocked="$isManuallyLocked" />
+                <x-applicant.detail-section :title="$section['title']" :icon="$section['icon']" :sectionKey="$section['key']" :fields="$section['fields']" :isLocked="$isRequirementsComplete" />
             @endforeach
         </div>
     </x-card>
@@ -112,7 +112,7 @@
     @unless ($isTeacherAdminViewer)
         <x-card title="Residential Info" subtitle="Residence details from enrollment form">
             <x-slot:actions>
-                @if ($isManuallyLocked)
+                @if ($isRequirementsComplete)
                     <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 text-xs font-bold border border-slate-200 dark:border-slate-700 opacity-80">
                         <i data-lucide="lock" class="h-3.5 w-3.5 text-slate-400"></i>
                         <span>Locked</span>
@@ -128,14 +128,14 @@
             </x-slot:actions>
             <div class="detail-section-stack">
                 @foreach ($addressSections as $section)
-                    <x-applicant.detail-section :title="$section['title']" :icon="$section['icon']" :sectionKey="$section['key']" :fields="$section['fields']" :isLocked="$isManuallyLocked" />
+                    <x-applicant.detail-section :title="$section['title']" :icon="$section['icon']" :sectionKey="$section['key']" :fields="$section['fields']" :isLocked="$isRequirementsComplete" />
                 @endforeach
             </div>
         </x-card>
 
         <x-card title="Parent / Guardian Details" subtitle="Grouped parent contacts and home addresses">
             <x-slot:actions>
-                @if ($isManuallyLocked)
+                @if ($isRequirementsComplete)
                     <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 text-xs font-bold border border-slate-200 dark:border-slate-700 opacity-80">
                         <i data-lucide="lock" class="h-3.5 w-3.5 text-slate-400"></i>
                         <span>Locked</span>
@@ -151,7 +151,7 @@
             </x-slot:actions>
             <div class="detail-section-stack">
                 @foreach ($guardianSections as $section)
-                    <x-applicant.detail-section :title="$section['title']" :icon="$section['icon']" :sectionKey="$section['key']" :fields="$section['fields']" :isLocked="$isManuallyLocked" />
+                    <x-applicant.detail-section :title="$section['title']" :icon="$section['icon']" :sectionKey="$section['key']" :fields="$section['fields']" :isLocked="$isRequirementsComplete" />
                 @endforeach
             </div>
 
@@ -206,7 +206,7 @@
         <x-card title="Medical Background" subtitle="Health info and emergency response contacts">
             <div class="detail-section-stack">
                 @foreach ($medicalSections as $section)
-                    <x-applicant.detail-section :title="$section['title']" :icon="$section['icon']" :sectionKey="$section['key'] ?? ''" :fields="$section['fields']" :isLocked="$isManuallyLocked" />
+                    <x-applicant.detail-section :title="$section['title']" :icon="$section['icon']" :sectionKey="$section['key'] ?? ''" :fields="$section['fields']" :isLocked="$isRequirementsComplete" />
                 @endforeach
             </div>
         </x-card>

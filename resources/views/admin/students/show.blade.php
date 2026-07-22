@@ -428,8 +428,8 @@
         </div>
         <div class="flex items-center gap-2">
             @unless ($isTeacherAdminViewer)
-                @if ($isManuallyLocked)
-                    <span class="inline-flex items-center gap-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 px-3.5 py-2 text-xs font-black uppercase tracking-wider shadow-2xs" title="Profile is locked by administrator">
+                @if ($isRequirementsComplete)
+                    <span class="inline-flex items-center gap-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 px-3.5 py-2 text-xs font-black uppercase tracking-wider shadow-2xs" title="Profile is locked">
                         <i data-lucide="lock" class="h-4 w-4 text-amber-600"></i>
                         <span>Profile Locked</span>
                     </span>
@@ -489,7 +489,7 @@
                         @endif
                     </div>
                     
-                    @if (auth()->user()?->hasRole('super_admin') && !$isManuallyLocked)
+                    @if (auth()->user()?->hasRole('super_admin') && !$isRequirementsComplete)
                         <!-- Camera edit button placed in the outer relative wrapper, so it does not get cut off by overflow-hidden -->
                         <div style="position: absolute; right: -6px; bottom: -6px; z-index: 30;" onclick="event.stopPropagation()">
                             <button type="button" 
