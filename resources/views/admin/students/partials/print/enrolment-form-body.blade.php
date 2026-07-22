@@ -88,7 +88,7 @@
             if (file_exists($c) && is_file($c)) {
                 $ext = strtolower(pathinfo($c, PATHINFO_EXTENSION));
                 $mime = ($ext === 'png') ? 'image/png' : (($ext === 'webp') ? 'image/webp' : 'image/jpeg');
-                return 'data:' . $mime . ';base64,' . base64_encode($data);
+                return 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($c));
             }
         }
         return null;
