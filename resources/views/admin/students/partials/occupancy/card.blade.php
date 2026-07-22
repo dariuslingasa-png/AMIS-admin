@@ -54,10 +54,11 @@
                 </span>
                 <!-- JSON Batch Sync for this Grade Level -->
                 <button type="button" 
-                        @click="if (window.AMIS_OCCUPANCY) { window.AMIS_OCCUPANCY.openJsonModal = true; window.AMIS_OCCUPANCY.selectedGradeLevel = '{{ $gradeLevel }}'; } window.dispatchEvent(new CustomEvent('open-json-sync', { detail: { gradeLevel: '{{ $gradeLevel }}' } }))" 
-                        class="h-7 w-7 rounded-lg bg-emerald-500/10 text-emerald-700 border border-emerald-300/40 hover:bg-emerald-600 hover:text-white flex items-center justify-center transition active:scale-[0.95] cursor-pointer" 
-                        title="JSON Batch Sync for {{ $gradeLevel }}">
+                        @click="if (window.copyGradeJsonToClipboard) { window.copyGradeJsonToClipboard('{{ $gradeLevel }}'); } if (window.AMIS_OCCUPANCY) { window.AMIS_OCCUPANCY.openJsonModal = true; window.AMIS_OCCUPANCY.selectedGradeLevel = '{{ $gradeLevel }}'; window.fillSampleJson('{{ $gradeLevel }}'); }" 
+                        class="h-7 px-2 rounded-lg bg-emerald-500/10 text-emerald-700 border border-emerald-300/40 hover:bg-emerald-600 hover:text-white flex items-center gap-1 text-[10px] font-bold transition active:scale-[0.95] cursor-pointer" 
+                        title="Copy {{ $gradeLevel }} JSON & Open Sync">
                     <i data-lucide="file-json" class="h-3.5 w-3.5 pointer-events-none"></i>
+                    <span>Grade JSON</span>
                 </button>
                 <!-- Delete All Sections in Grade -->
                 <form method="POST" action="{{ route('admin.students.occupancy.delete-grade-sections', $gradeLevel) }}"
@@ -76,6 +77,13 @@
                     </button>
                     <div x-cloak x-show="openGradePrintDropdown" x-transition.origin.top.right 
                          class="absolute right-0 mt-1 w-48 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl z-50 text-left">
+                        <button type="button" 
+                                @click="if (window.copyGradeJsonToClipboard) { window.copyGradeJsonToClipboard('{{ $gradeLevel }}'); }"
+                                class="w-full flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-[11px] font-bold text-emerald-700 hover:bg-emerald-50 transition cursor-pointer">
+                            <i data-lucide="copy" class="w-3.5 h-3.5 text-emerald-600"></i>
+                            <span>Copy {{ $gradeLevel }} JSON</span>
+                        </button>
+                        <div class="my-1 border-t border-slate-100"></div>
                         <a href="{{ route('admin.students.print-enrolment-forms-batch', ['grade' => $gradeLevel]) }}" target="_blank" 
                            class="flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-[11px] font-bold text-emerald-800 hover:bg-emerald-50 transition">
                             <i data-lucide="file-signature" class="w-3.5 h-3.5 text-emerald-600"></i>

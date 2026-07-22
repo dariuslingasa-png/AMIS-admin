@@ -70,7 +70,39 @@
 <script>
     window.AMIS_EXISTING_JSON_MAP = @json($existingJsonMap);
     window.AMIS_ALL_JSON = @json($allJsonPretty);
-    window.AMIS_SAMPLE_JSON = @json($sampleJsonPretty);
+    window.AMIS_SAMPLE_JSON = @json($sampleStudentArray);
+
+    window.copyGradeJsonToClipboard = function(gradeLevel) {
+        let txt = '';
+        if (gradeLevel && window.AMIS_EXISTING_JSON_MAP && window.AMIS_EXISTING_JSON_MAP[gradeLevel]) {
+            txt = window.AMIS_EXISTING_JSON_MAP[gradeLevel];
+        } else if (window.AMIS_ALL_JSON && window.AMIS_ALL_JSON !== '[]') {
+            txt = window.AMIS_ALL_JSON;
+        } else {
+            txt = JSON.stringify(window.AMIS_SAMPLE_JSON, null, 4);
+        }
+
+        navigator.clipboard.writeText(txt).then(() => {
+            alert('Copied ' + (gradeLevel || 'All') + ' student JSON payload to clipboard!');
+        }).catch(err => {
+            console.error('Failed to copy: ', err);
+        });
+    };
+
+    window.fillSampleJson = function(gradeLevel) {
+        let txt = '';
+        if (gradeLevel && window.AMIS_EXISTING_JSON_MAP && window.AMIS_EXISTING_JSON_MAP[gradeLevel]) {
+            txt = window.AMIS_EXISTING_JSON_MAP[gradeLevel];
+        } else if (window.AMIS_ALL_JSON && window.AMIS_ALL_JSON !== '[]') {
+            txt = window.AMIS_ALL_JSON;
+        } else {
+            txt = JSON.stringify(window.AMIS_SAMPLE_JSON, null, 4);
+        }
+        if (window.AMIS_OCCUPANCY) {
+            window.AMIS_OCCUPANCY.jsonInputText = txt;
+        }
+        return txt;
+    };
 
     document.addEventListener('alpine:init', () => {
         Alpine.data('occupancyManager', () => ({
@@ -349,15 +381,42 @@
                             </select>
                         </div>
 
+                        <!-- Grade Selector Quick Switcher Pills -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                                Select Grade JSON to Auto-Fill & Review:
+                            </label>
+                            <div class="flex flex-wrap gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl overflow-x-auto max-h-24">
+                                <button type="button" @click="selectedGradeLevel = ''; window.fillSampleJson('');"
+                                        :class="!selectedGradeLevel ? 'bg-emerald-600 text-white shadow-xs font-black' : 'text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 font-bold'"
+                                        class="px-2.5 py-1 rounded-lg text-xs transition cursor-pointer">
+                                    All Grades
+                                </button>
+                                @foreach(['Kinder 1', 'Kinder 2', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'] as $gChoice)
+                                    <button type="button" @click="selectedGradeLevel = '{{ $gChoice }}'; window.fillSampleJson('{{ $gChoice }}');"
+                                            :class="selectedGradeLevel === '{{ $gChoice }}' ? 'bg-emerald-600 text-white shadow-xs font-black' : 'text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 font-bold'"
+                                            class="px-2.5 py-1 rounded-lg text-xs transition cursor-pointer">
+                                        {{ $gChoice }}
+                                    </button>
+                                @endforeach
+                            </div>
+                        </div>
+
                         <!-- JSON Textarea -->
                         <div>
                             <div class="flex items-center justify-between mb-1">
                                 <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                                     Paste JSON Payload (40+ Students Array)
                                 </label>
-                                <button type="button" @click="window.fillSampleJson(selectedGradeLevel); jsonInputText = window.AMIS_OCCUPANCY ? window.AMIS_OCCUPANCY.jsonInputText : jsonInputText;" class="text-[11px] font-bold text-emerald-600 hover:text-emerald-700 underline cursor-pointer flex items-center gap-1">
-                                    Auto-Fill Existing DB Students (<span x-text="selectedGradeLevel || 'All'"></span>)
-                                </button>
+                                <div class="flex items-center gap-3">
+                                    <button type="button" @click="if (window.copyGradeJsonToClipboard) { window.copyGradeJsonToClipboard(selectedGradeLevel); }" class="text-[11px] font-bold text-sky-600 hover:text-sky-700 underline cursor-pointer flex items-center gap-1">
+                                        <i data-lucide="copy" class="w-3 h-3"></i>
+                                        Copy JSON to Clipboard
+                                    </button>
+                                    <button type="button" @click="window.fillSampleJson(selectedGradeLevel);" class="text-[11px] font-bold text-emerald-600 hover:text-emerald-700 underline cursor-pointer flex items-center gap-1">
+                                        Auto-Fill Existing DB (<span x-text="selectedGradeLevel || 'All'"></span>)
+                                    </button>
+                                </div>
                             </div>
                             <textarea name="json_data" x-model="jsonInputText" rows="8" placeholder="Paste your student JSON array here..."
                                       class="w-full p-3.5 rounded-xl border border-slate-200 bg-slate-900 font-mono text-xs text-emerald-400 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 leading-relaxed shadow-inner"></textarea>
