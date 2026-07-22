@@ -76,8 +76,8 @@
         $studentAge = \Carbon\Carbon::parse($app->date_of_birth)->age;
     }
 
-    // Robust Student 2x2 Photo Base64 / Remote URL resolver
-    $resolveBase64Image = function($relativePath) {
+    // Robust Student 2x2 Photo URL resolver (optimised to use direct storage URLs instead of heavy server-side base64 encoding)
+    $resolvePhotoUrl = function($relativePath) {
         if (empty($relativePath)) return null;
         $lpath = ltrim($relativePath, '/');
         $candidates = [
@@ -90,9 +90,7 @@
         ];
         foreach ($candidates as $c) {
             if (file_exists($c) && is_file($c)) {
-                $ext = strtolower(pathinfo($c, PATHINFO_EXTENSION));
-                $mime = ($ext === 'png') ? 'image/png' : (($ext === 'webp') ? 'image/webp' : 'image/jpeg');
-                return 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($c));
+                return asset('storage/' . $lpath);
             }
         }
         return null;
@@ -100,10 +98,10 @@
 
     $photoSrc = null;
     if ($app && !empty($app->photo_2x2_url)) {
-        $photoSrc = $resolveBase64Image($app->photo_2x2_url);
+        $photoSrc = $resolvePhotoUrl($app->photo_2x2_url);
     }
     if (!$photoSrc && $student && !empty($student->photo_url)) {
-        $photoSrc = $resolveBase64Image($student->photo_url);
+        $photoSrc = $resolvePhotoUrl($student->photo_url);
     }
     if (!$photoSrc && $student && !empty($student->obfuscated_id)) {
         $photoSrc = 'https://amis.edu.ph/student-photo/' . $student->obfuscated_id . '.jpg';
