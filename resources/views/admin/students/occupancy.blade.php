@@ -22,8 +22,11 @@
     <div class="space-y-6" x-data="{ 
         openCreateModal: false, 
         openJsonModal: false,
+        selectedTargetSection: '',
+        selectedGradeLevel: '',
         jsonSample: `[\n  {\n    \"lrn\": \"127168190019\",\n    \"first_name\": \"AZHAR\",\n    \"middle_name\": \"IBRAHIM\",\n    \"last_name\": \"SALINDAWAN\",\n    \"grade_level\": \"Grade 7\",\n    \"gender\": \"Male\",\n    \"address\": \"6921 ALKHAZNAH ISHBILIYAH RIYADH, 13225, SAUDI ARABIA\",\n    \"date_of_birth\": \"2014-06-13\",\n    \"place_of_birth\": \"RIYADH KSA\",\n    \"religion\": \"ISLAM\",\n    \"parent_name\": \"SAHARODIN G. SALINDAWAN\",\n    \"parent_mobile\": \"50 073 8648\",\n    \"parent_email\": \"angel_10178@yahoo.com\"\n  }\n]`
-    }">
+    }"
+    @open-json-sync.window="openJsonModal = true; selectedTargetSection = $event.detail.sectionId || ''; selectedGradeLevel = $event.detail.gradeLevel || '';">
         <!-- Banner -->
         <section class="overflow-hidden rounded-3xl border border-emerald-700/30 bg-gradient-to-br from-emerald-800 via-emerald-900 to-teal-950 p-6 text-white shadow-xl shadow-slate-900/10">
             <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -144,6 +147,12 @@
                             <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                                 <i data-lucide="file-json" class="w-5 h-5 text-emerald-600"></i>
                                 <span>Batch JSON Student Sync (Auto-Match & Insert)</span>
+                                <template x-if="selectedGradeLevel">
+                                    <span class="inline-flex items-center gap-1 bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider">
+                                        <i data-lucide="filter" class="w-3 h-3"></i>
+                                        <span x-text="selectedGradeLevel"></span>
+                                    </span>
+                                </template>
                             </h3>
                             <p class="text-xs font-semibold text-slate-500 mt-0.5">Auto-updates existing students by Name / LRN or creates new student records automatically.</p>
                         </div>
@@ -160,7 +169,7 @@
                             <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
                                 Assign to Section <span class="text-slate-400 font-medium lowercase">(optional)</span>
                             </label>
-                            <select name="target_section_id" class="w-full h-11 px-3 rounded-xl border border-slate-200 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500">
+                            <select name="target_section_id" x-model="selectedTargetSection" class="w-full h-11 px-3 rounded-xl border border-slate-200 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500">
                                 <option value="">Do Not Assign Section Automatically</option>
                                 @foreach($sections as $sec)
                                     <option value="{{ $sec->id }}">{{ $sec->grade_level }} - {{ $sec->name ?: 'F2F' }} ({{ $sec->occupied }}/{{ $sec->capacity_limit }})</option>

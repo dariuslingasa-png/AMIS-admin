@@ -1511,17 +1511,20 @@ class AdminStudentDashboardController extends Controller
 
                 // Match 2: Search by Name if not matched by LRN
                 if (!$applicant && (!empty($firstName) || !empty($lastName))) {
+                    $cleanFirstName = trim(preg_replace('/\s+[A-Za-z]\.?$/i', '', $firstName));
+                    $cleanLastName = trim($lastName);
+
                     $query = \App\Models\EnrollmentApplicant::query();
-                    if (!empty($firstName)) {
-                        $query->where('first_name', 'like', '%' . $firstName . '%');
+                    if (!empty($cleanFirstName)) {
+                        $query->where('first_name', 'like', '%' . $cleanFirstName . '%');
                     }
-                    if (!empty($lastName)) {
-                        $query->where('last_name', 'like', '%' . $lastName . '%');
+                    if (!empty($cleanLastName)) {
+                        $query->where('last_name', 'like', '%' . $cleanLastName . '%');
                     }
                     $applicant = $query->first();
 
-                    if (!$applicant && (!empty($lastName) || !empty($firstName))) {
-                        $searchStr = trim($firstName . ' ' . $lastName);
+                    if (!$applicant && (!empty($cleanLastName) || !empty($cleanFirstName))) {
+                        $searchStr = trim($cleanFirstName . ' ' . $cleanLastName);
                         $user = \App\Models\User::where('name', 'like', "%{$searchStr}%")->first();
                         if ($user && $user->student) {
                             $student = $user->student;
