@@ -390,6 +390,31 @@ class AdminStudentController extends Controller
         ]);
     }
 
+    public function printEnrolmentForm(Student $student)
+    {
+        abort_unless(auth()->user()?->canViewAdminGrade($student->grade_level), 403);
+
+        $student->load([
+            'applicant.user',
+            'applicant.payment',
+            'studentSection.section',
+        ]);
+
+        $applicant = $student->applicant;
+        $siblings = [];
+        if ($applicant && $applicant->user_id) {
+            $siblings = \App\Models\EnrollmentApplicant::where('user_id', $applicant->user_id)
+                ->where('id', '!=', $applicant->id)
+                ->get();
+        }
+
+        return view('admin.students.print-enrolment-form', [
+            'student'   => $student,
+            'applicant' => $applicant,
+            'siblings'  => $siblings,
+        ]);
+    }
+
     public function toggleRequirementsLock(Request $request, Student $student)
     {
         $student->is_requirements_locked = !$student->is_requirements_locked;

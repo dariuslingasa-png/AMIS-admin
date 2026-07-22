@@ -131,6 +131,13 @@
     <!-- Print & Action Checklist -->
     <x-card title="Print & Action Checklist">
         <div class="space-y-2">
+            <!-- 0. Print Enrollment Application Form -->
+            <a href="{{ route('admin.students.print-enrolment-form', $student) }}" target="_blank"
+               class="w-full inline-flex h-10 items-center gap-2 rounded-xl border border-emerald-300 dark:border-emerald-700 bg-emerald-600 text-white dark:bg-emerald-600 px-3 text-xs font-bold hover:bg-emerald-700 dark:hover:bg-emerald-700 active:scale-[0.98] transition cursor-pointer shadow-sm">
+                <i data-lucide="file-text" class="h-4 w-4 text-white"></i>
+                <span>Print Enrollment Application Form</span>
+            </a>
+
             <!-- 1. Print Official Sheet -->
             <a href="{{ route('admin.students.index', ['search' => $student->student_number, 'print_info' => 1]) }}" target="_blank"
                class="w-full inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98] transition cursor-pointer">
