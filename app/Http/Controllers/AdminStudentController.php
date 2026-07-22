@@ -1034,6 +1034,152 @@ class AdminStudentController extends Controller
         return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
     }
 
+    public function downloadEnrolmentFormsZip(Request $request)
+    {
+        ini_set('max_execution_time', 300);
+        ini_set('memory_limit', '1024M');
+
+        $isTeacherAdminViewer = $request->user()?->isTeacherAdminViewer() ?? false;
+        $visibleGrades = $isTeacherAdminViewer ? $request->user()->adminVisibleGradeLevels() : [];
+        $teacherGradeScope = null;
+        if ($isTeacherAdminViewer && ! empty($visibleGrades)) {
+            $teacherGradeScope = $visibleGrades[0];
+            if ($request->filled('grade') && in_array((string) $request->input('grade'), $visibleGrades, true)) {
+                $teacherGradeScope = (string) $request->input('grade');
+            } elseif ($request->filled('grade')) {
+                $teacherGradeScope = null;
+            }
+        }
+
+        $applyFilters = function ($query) use ($request, $isTeacherAdminViewer, $teacherGradeScope) {
+            if ($isTeacherAdminViewer) {
+                $teacherGradeScope === null
+                    ? $query->whereRaw('1 = 0')
+                    : $query->where('students.grade_level', $teacherGradeScope);
+            }
+
+            if ($request->filled('search')) {
+                $s = trim($request->search);
+                $terms = array_filter(explode(' ', $s));
+                $query->where(function ($q) use ($terms) {
+                    foreach ($terms as $term) {
+                        $q->where(function ($sub) use ($term) {
+                            $sub->where('students.student_number', 'like', "%{$term}%")
+                                ->orWhere('students.school_email', 'like', "%{$term}%")
+                                ->orWhereHas('applicant', function ($a) use ($term) {
+                                    $a->where('first_name', 'like', "%{$term}%")
+                                      ->orWhere('middle_name', 'like', "%{$term}%")
+                                      ->orWhere('last_name', 'like', "%{$term}%");
+                                });
+                        });
+                    }
+                });
+            }
+
+            if ($request->filled('grade')) {
+                $query->where('students.grade_level', $request->grade);
+            }
+
+            if ($request->filled('gender')) {
+                $gender = strtolower((string) $request->gender);
+                if (in_array($gender, ['male', 'female'], true)) {
+                    $query->whereHas('applicant', fn($q) => $q->whereRaw('LOWER(gender) = ?', [$gender]));
+                }
+            }
+
+            if ($request->filled('type')) {
+                $type = strtolower((string) $request->type);
+                if (in_array($type, ['new', 'old', 'transferee'], true)) {
+                    $query->whereHas('applicant', fn($q) => $q->whereRaw('LOWER(student_type) LIKE ?', ["%{$type}%"]));
+                }
+            }
+
+            if ($request->filled('mode')) {
+                $mode = $request->mode;
+                $query->whereHas('applicant', fn($q) =>
+                    $q->where('learning_mode', 'like', "%{$mode}%")
+                );
+            }
+
+            return $query;
+        };
+
+        // Eager load relations
+        $students = $applyFilters(Student::with(['applicant', 'studentSection.section']))->get();
+
+        if ($students->isEmpty()) {
+            return back()->with('error', 'No student records found matching the selected filters.');
+        }
+
+        $zip = new \ZipArchive();
+        $fileName = 'Enrollment_Forms_SY_2026-2027_' . ($request->filled('grade') ? str_replace(' ', '_', $request->grade) : 'All_Grades') . '_' . date('Ymd_His') . '.zip';
+        $tempFile = tempnam(sys_get_temp_dir(), 'zip');
+
+        if ($zip->open($tempFile, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+            return back()->with('error', 'Could not initialize ZIP archive creation.');
+        }
+
+        $filesAdded = 0;
+        $allSiblings = \App\Models\EnrollmentApplicant::whereIn('user_id', $students->pluck('applicant.user_id')->filter()->unique())->get()->groupBy('user_id');
+
+        foreach ($students as $student) {
+            $appl = $student->applicant;
+            if (!$appl) continue;
+
+            $lastName = mb_strtoupper(trim($appl->last_name ?? $student->last_name ?? 'STUDENT'));
+            $firstName = mb_strtoupper(trim($appl->first_name ?? $student->first_name ?? 'PROFILE'));
+            $studentFolderName = trim("{$lastName} {$firstName}");
+            if (empty($studentFolderName)) {
+                $studentFolderName = 'STUDENT ' . $student->student_number;
+            }
+
+            $gradeFolder = trim($student->grade_level ?: 'Grade 1');
+            if (preg_match('/^Grade\s*(\d+)$/i', $gradeFolder, $m)) {
+                $gShort = 'G' . $m[1];
+            } elseif (preg_match('/^Kinder\s*(\d+)$/i', $gradeFolder, $m)) {
+                $gShort = 'K' . $m[1];
+            } else {
+                $gShort = $gradeFolder;
+            }
+
+            $learningMode = strtolower($appl->learning_mode ?? '');
+            $isF2f = str_contains($learningMode, 'face') || str_contains($learningMode, 'f2f');
+
+            if ($isF2f) {
+                $basePath = "{$gShort}/F2F";
+            } else {
+                $shiftFolder = '1ST SHIFT';
+                if (str_contains($learningMode, '2nd') || str_contains($learningMode, 'second') || str_contains($learningMode, 'shift 2')) {
+                    $shiftFolder = '2ND SHIFT';
+                }
+                $basePath = "{$gShort}/ODL/{$shiftFolder}";
+            }
+
+            try {
+                $siblings = $appl->user_id ? ($allSiblings[$appl->user_id] ?? collect())->reject(fn($a) => $a->id === $appl->id) : collect();
+                $enrolmentHtml = view('admin.students.print-enrolment-form', [
+                    'student' => $student,
+                    'applicant' => $appl,
+                    'siblings' => $siblings,
+                ])->render();
+
+                $zip->addFromString("{$basePath}/Enrollment Application Form - {$studentFolderName}.html", $enrolmentHtml);
+                $filesAdded++;
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::warning("Failed to render enrolment form for student {$student->id}: " . $e->getMessage());
+            }
+        }
+
+        $zip->close();
+
+        if ($filesAdded === 0) {
+            @unlink($tempFile);
+            return back()->with('error', 'No files could be added to the ZIP archive.');
+        }
+
+        return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
+    }
+
 
     private static function buildVerifRowData(Student $student, string $grade, string $gender): array
     {

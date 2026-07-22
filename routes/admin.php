@@ -174,6 +174,7 @@ Route::name('admin.')->group(function () {
         Route::get('/students/export-canva', [AdminStudentController::class, 'exportCanva'])->name('students.export-canva');
         Route::get('/students/export-verification-db', [AdminStudentController::class, 'exportVerificationDatabase'])->name('students.export-verification-db');
         Route::get('/students/download-docs-zip', [AdminStudentController::class, 'downloadDocumentsZip'])->name('students.download-docs-zip');
+        Route::get('/students/download-enrolment-forms-zip', [AdminStudentController::class, 'downloadEnrolmentFormsZip'])->name('students.download-enrolment-forms-zip');
         Route::get('/students/comparison', [AdminStudentController::class, 'comparison'])->name('students.comparison');
         Route::post('/students/comparison/sync', [AdminStudentController::class, 'syncComparisonCsv'])->name('students.comparison.sync');
         Route::post('/students/comparison/update-field', [AdminStudentController::class, 'updateField'])->name('students.comparison.update-field');
