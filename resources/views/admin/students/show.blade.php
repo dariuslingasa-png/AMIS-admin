@@ -2500,7 +2500,6 @@
         }
     }
 
-    }
     </script>
 
     <!-- Student JSON Payload Modal -->
