@@ -87,53 +87,7 @@
     $studentMobile = trim(($student->applicant->mobile_country_code ?? '').' '.($student->applicant->mobile_number ?? ''));
     $parentMobile = trim(($student->applicant->parent_country_code ?? '').' '.($student->applicant->parent_mobile ?? ''));
 
-    // B. Reusable layout sections mapping (using same components for absolute consistency)
-    $studentSections = [
-        ['title' => 'Academic Profile', 'icon' => 'graduation-cap', 'key' => 'academic', 'fields' => [
-            ['Student Type', $student->applicant->student_type], ['Grade Level', $student->grade_level],
-            ['School Year', $student->school_year], ['Learning Mode', $student->applicant->learning_mode],
-            ['AMIS Student ID', $student->applicant->amis_student_id],
-            ['LRN', $student->applicant->lrn],
-        ]],
-        ['title' => 'Personal Details', 'icon' => 'id-card', 'key' => 'personal', 'fields' => [
-            ['First Name', $student->applicant->first_name],
-            ['Middle Name', $student->applicant->middle_name],
-            ['Last Name', $student->applicant->last_name],
-            ['Suffix', $student->applicant->suffix],
-            ['Gender', $student->applicant->gender], ['Date of Birth', optional($student->applicant->date_of_birth)->format('M d, Y')],
-            ['Place of Birth', $student->applicant->place_of_birth], ['Religion', $student->applicant->religion],
-            ['Ethnicity', $student->applicant->ethnicity],
-        ]],
-        ['title' => 'Student Contact', 'icon' => 'mail', 'key' => 'contact', 'fields' => [['Email', $student->school_email], ['Mobile', $studentMobile]]],
-    ];
-
-    $addressSections = [
-        ['title' => 'Residence Address', 'icon' => 'map', 'key' => 'contact', 'fields' => [['Full Address', $studentAddress ?: $student->applicant->address]]],
-    ];
-
-    $guardianSections = [
-        ['title' => "Father's Details", 'icon' => 'user', 'key' => 'parents', 'fields' => [["Father's Full Name", trim(($student->applicant->father_first_name ?? '').' '.($student->applicant->father_last_name ?? '')), 'Occupation', $student->applicant->father_occupation]]],
-        ['title' => "Mother's Details", 'icon' => 'user-round', 'key' => 'parents', 'fields' => [["Mother's Full Name", trim(($student->applicant->mother_first_name ?? '').' '.($student->applicant->mother_last_name ?? '')), 'Occupation', $student->applicant->mother_occupation]]],
-        ['title' => 'Parent Contact', 'icon' => 'phone', 'key' => 'parents', 'fields' => [['Parent Email', $student->applicant->parent_email], ['Parent Mobile', $parentMobile]]],
-        ['title' => 'Home Address', 'icon' => 'map-pin', 'key' => 'parents', 'fields' => [['Full Home Address', $homeAddress ?: $student->applicant->home_address]]],
-    ];
-
-    $hasMedicalConcern = (bool) $student->applicant->medical_has_concern;
-    $medicalSections = [
-        ['title' => 'Emergency Contact', 'icon' => 'shield-alert', 'key' => 'parents', 'fields' => [
-            ['Contact Person', $student->applicant->emergency_name], ['Relationship', $student->applicant->emergency_relationship],
-            ['Emergency Phone', $student->applicant->emergency_phone],
-        ]],
-    ];
-    if ($hasMedicalConcern) {
-        array_unshift($medicalSections, ['title' => 'Medical Profile', 'icon' => 'heart-pulse', 'fields' => [
-            ['Allergies', $student->applicant->allergies], ['Current Medications', $student->applicant->current_medications],
-            ['Health Conditions', $student->applicant->health_conditions], ['Medical History', $student->applicant->medical_history],
-            ['Emergency Instructions', $student->applicant->emergency_instructions],
-        ]]);
-    }
-
-    // ── C. Requirements & LRN Audit Logic ────────────────────────────────────
+    // ── B. Requirements & LRN Audit Logic ────────────────────────────────────
     $studentTypeRaw = strtolower(trim($student->applicant->student_type ?? 'new'));
     $isNewStudent = str_contains($studentTypeRaw, 'new');
     $isOldStudent = str_contains($studentTypeRaw, 'old');
@@ -219,6 +173,53 @@
     // Manual Lock Override by Super Admin
     $isManuallyLocked = (bool) ($student->is_requirements_locked ?? false);
     $isRequirementsComplete = $isManuallyLocked || (count($missingRequirements) === 0);
+
+    // ── C. Reusable layout sections mapping ──────────────────────────────────
+    $studentSections = [
+        ['title' => 'Academic Profile', 'icon' => 'graduation-cap', 'key' => 'academic', 'fields' => [
+            ['Student Type', $student->applicant->student_type], ['Grade Level', $student->grade_level],
+            ['School Year', $student->school_year], ['Learning Mode', $student->applicant->learning_mode],
+            ['AMIS Student ID', $student->applicant->amis_student_id],
+            ['LRN', $student->applicant->lrn],
+        ]],
+        ['title' => 'Personal Details', 'icon' => 'id-card', 'key' => 'personal', 'fields' => [
+            ['First Name', $student->applicant->first_name],
+            ['Middle Name', $student->applicant->middle_name],
+            ['Last Name', $student->applicant->last_name],
+            ['Suffix', $student->applicant->suffix],
+            ['Gender', $student->applicant->gender], ['Date of Birth', optional($student->applicant->date_of_birth)->format('M d, Y')],
+            ['Place of Birth', $student->applicant->place_of_birth], ['Religion', $student->applicant->religion],
+            ['Ethnicity', $student->applicant->ethnicity],
+        ]],
+        ['title' => 'Student Contact', 'icon' => 'mail', 'key' => 'contact', 'fields' => [['Email', $student->school_email], ['Mobile', $studentMobile]]],
+    ];
+
+    $addressSections = [
+        ['title' => 'Residence Address', 'icon' => 'map', 'key' => 'contact', 'fields' => [['Full Address', $studentAddress ?: $student->applicant->address]]],
+    ];
+
+    $guardianSections = [
+        ['title' => "Father's Details", 'icon' => 'user', 'key' => 'parents', 'fields' => [["Father's Full Name", trim(($student->applicant->father_first_name ?? '').' '.($student->applicant->father_last_name ?? '')), 'Occupation', $student->applicant->father_occupation]]],
+        ['title' => "Mother's Details", 'icon' => 'user-round', 'key' => 'parents', 'fields' => [["Mother's Full Name", trim(($student->applicant->mother_first_name ?? '').' '.($student->applicant->mother_last_name ?? '')), 'Occupation', $student->applicant->mother_occupation]]],
+        ['title' => 'Parent Contact', 'icon' => 'phone', 'key' => 'parents', 'fields' => [['Parent Email', $student->applicant->parent_email], ['Parent Mobile', $parentMobile]]],
+        ['title' => 'Home Address', 'icon' => 'map-pin', 'key' => 'parents', 'fields' => [['Full Home Address', $homeAddress ?: $student->applicant->home_address]]],
+    ];
+
+    $hasMedicalConcern = (bool) $student->applicant->medical_has_concern;
+    $medicalSections = [
+        ['title' => 'Emergency Contact', 'icon' => 'shield-alert', 'key' => 'parents', 'fields' => [
+            ['Contact Person', $student->applicant->emergency_name], ['Relationship', $student->applicant->emergency_relationship],
+            ['Emergency Phone', $student->applicant->emergency_phone],
+        ]],
+    ];
+    if ($hasMedicalConcern) {
+        array_unshift($medicalSections, ['title' => 'Medical Profile', 'icon' => 'heart-pulse', 'fields' => [
+            ['Allergies', $student->applicant->allergies], ['Current Medications', $student->applicant->current_medications],
+            ['Health Conditions', $student->applicant->health_conditions], ['Medical History', $student->applicant->medical_history],
+            ['Emergency Instructions', $student->applicant->emergency_instructions],
+        ]]);
+    }
+@endphp
 @endphp
 
 <script>
