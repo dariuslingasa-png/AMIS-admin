@@ -12,8 +12,12 @@ tar -czf $ARCHIVE_NAME \
     app/Http/Controllers/AdminStudentController.php \
     app/Http/Controllers/AdminStudentDashboardController.php \
     routes/admin.php \
+    resources/views/admin/students/index.blade.php \
+    resources/views/admin/students/partials/index/table.blade.php \
     resources/views/admin/students/partials/show/sidebar.blade.php \
     resources/views/admin/students/print-enrolment-form.blade.php \
+    resources/views/admin/students/print-enrolment-form-batch.blade.php \
+    resources/views/admin/students/partials/print/enrolment-form-body.blade.php \
     resources/views/admin/students/occupancy.blade.php \
     resources/views/admin/students/partials/occupancy/card.blade.php \
     public/images/logo/deped_logo.png

@@ -922,31 +922,43 @@ class AdminStudentController extends Controller
 
             $studentFolder = $formattedId . ' - ' . $fullName;
             
-            if ($isArchived) {
-                // Group archived/inactive students under Archived category
-                $gradeFolder = trim($student->grade_level ?: 'Unassigned Grade');
-                $sectionFolder = $student->studentSection->section->name ?? ($student->section ?: 'No Section');
-                $basePath = $rootFolder . '/Archived or Inactive Students/' . $gradeFolder . '/' . $sectionFolder . '/' . $studentFolder;
-            } else {
-                // Determine Mode (ODL vs F2F)
-                $learningMode = strtolower($appl->learning_mode ?? '');
-                $modeFolder = 'F2F';
-                if (str_contains($learningMode, 'online') || str_contains($learningMode, 'odl') || str_contains($learningMode, 'distance')) {
-                    $modeFolder = 'ODL';
-                }
+            $gradeFolder = trim($student->grade_level ?: 'Grade 1');
 
-                // Determine Shift
+            $learningMode = strtolower($appl->learning_mode ?? '');
+            $isF2f = str_contains($learningMode, 'face') || str_contains($learningMode, 'f2f');
+
+            $lastName = mb_strtoupper(trim($appl->last_name ?? $student->last_name ?? 'STUDENT'));
+            $firstName = mb_strtoupper(trim($appl->first_name ?? $student->first_name ?? 'PROFILE'));
+            $studentFolderName = trim("{$lastName} {$firstName}");
+            if (empty($studentFolderName)) {
+                $studentFolderName = 'STUDENT ' . $student->student_number;
+            }
+
+            if ($isF2f) {
+                $basePath = "{$gradeFolder}/F2F/{$studentFolderName}";
+            } else {
                 $shiftFolder = '1st Shift';
                 if (str_contains($learningMode, '2nd') || str_contains($learningMode, 'second') || str_contains($learningMode, 'shift 2')) {
                     $shiftFolder = '2nd Shift';
                 }
-
-                $gradeFolder = trim($student->grade_level ?: 'Unassigned Grade');
-                $sectionFolder = $student->studentSection->section->name ?? ($student->section ?: 'No Section');
-                $basePath = $rootFolder . '/' . $modeFolder . '/' . $shiftFolder . '/' . $gradeFolder . '/' . $sectionFolder . '/' . $studentFolder;
+                $basePath = "{$gradeFolder}/ODL/{$shiftFolder}/{$studentFolderName}";
             }
 
-            // 1. 01 - Student Documents
+            // 1. Enrollment Application Form HTML (Printable & viewable in any browser)
+            try {
+                $siblings = $appl->user_id ? \App\Models\EnrollmentApplicant::where('user_id', $appl->user_id)->where('id', '!=', $appl->id)->get() : [];
+                $enrolmentHtml = view('admin.students.print-enrolment-form', [
+                    'student' => $student,
+                    'applicant' => $appl,
+                    'siblings' => $siblings,
+                ])->render();
+                $zip->addFromString("{$basePath}/Enrollment Application Form - {$studentFolderName}.html", $enrolmentHtml);
+                $filesAdded++;
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::warning("Failed to render enrolment form for student {$student->id}: " . $e->getMessage());
+            }
+
+            // 2. Uploaded Student Documents
             $docTypes = [
                 '2x2_Photo' => $appl->photo_2x2_url,
                 'Birth_Certificate' => $appl->birth_cert_url,
@@ -962,70 +974,13 @@ class AdminStudentController extends Controller
                 $absolutePath = \App\Support\EnrollmentStorage::getAbsolutePath($relativeUrl);
                 if ($absolutePath && file_exists($absolutePath)) {
                     $ext = pathinfo($absolutePath, PATHINFO_EXTENSION);
-                    $zipPath = $basePath . '/01 - Student Documents/' . $label . ($ext ? '.' . $ext : '');
+                    $zipPath = $basePath . '/' . $label . ($ext ? '.' . $ext : '');
                     $zip->addFile($absolutePath, $zipPath);
                     $filesAdded++;
                 }
             }
 
-            // 2. 02 - Student ID
-            try {
-                $htmlId = view('admin.students.partials.index.print_id', ['students' => [$student]])->render();
-                $zip->addFromString($basePath . '/02 - Student ID/AMIS_' . $student->student_number . '_ID.html', $htmlId);
-                $filesAdded++;
-            } catch (\Exception $e) {
-                // If rendering ID template fails, write details as text fallback
-                $fallbackIdText = "Student ID Card Details\n====================\nID: " . $student->student_number . "\nName: " . $fullName;
-                $zip->addFromString($basePath . '/02 - Student ID/AMIS_' . $student->student_number . '_ID_Details.txt', $fallbackIdText);
-                $filesAdded++;
-            }
-
-            // Prepare common variables for texts
-            $homeAddress = implode(', ', array_filter([$appl->home_street_address, $appl->home_city, $appl->home_state_province]));
-            if (empty($homeAddress)) {
-                $homeAddress = $appl->home_address ?: '-';
-            }
-            
-            $emergencyName = $appl->emergency_name ?: '-';
-            if (empty($emergencyName) || strtolower($emergencyName) === 'emergency contact') {
-                $emergencyName = trim(($appl->father_first_name ?? '') . ' ' . ($appl->father_last_name ?? '')) ?: (trim(($appl->mother_first_name ?? '') . ' ' . ($appl->mother_last_name ?? '')) ?: 'Registrar Office');
-            }
-            
-            $emergencyPhone = $appl->emergency_phone ?: '-';
-            if (empty($emergencyPhone)) {
-                $emergencyPhone = $appl->parent_mobile ?: ($appl->mobile_number ?: '+63 900 000 0000');
-            }
-
-            $studentMobile = trim(($appl->mobile_country_code ?? '').' '.($appl->mobile_number ?? '')) ?: '-';
-            $parentMobile = trim(($appl->parent_country_code ?? '').' '.($appl->parent_mobile ?? '')) ?: '-';
-            
-            $fatherName = trim(($appl->father_first_name ?? '').' '.($appl->father_last_name ?? '')) ?: '-';
-            $motherName = trim(($appl->mother_first_name ?? '').' '.($appl->mother_last_name ?? '')) ?: '-';
-            
-            $advisorObj = $student->studentSection->section?->grade_advisor ?? null;
-            $advisorName = $advisorObj ? html_entity_decode(trim($advisorObj->teacher_name), ENT_QUOTES, 'UTF-8') : 'N/A';
-            if (empty($advisorName) || $advisorName === 'N/A') {
-                $advisories = config('class_advisories') ?? [];
-                $allAdvisories = array_merge($advisories['elementary'] ?? [], $advisories['high_school'] ?? []);
-                $targetGrade = strtolower(trim($student->grade_level ?? ''));
-                foreach ($allAdvisories as $adv) {
-                    $advGradeLower = strtolower($adv['grade_level'] ?? '');
-                    $advKeyLower = strtolower($adv['grade'] ?? '');
-                    if ($targetGrade !== '' && (
-                        str_contains($targetGrade, $advGradeLower) || 
-                        str_contains($advGradeLower, $targetGrade) || 
-                        $targetGrade === $advKeyLower
-                    )) {
-                        $advisorName = $adv['teacher'];
-                        break;
-                    }
-                }
-            }
-            if (empty($advisorName)) {
-                $advisorName = 'N/A';
-            }
-
-            // 3. 03 - Account Credentials
+            // 3. Account Credentials
             $credentialsHtml = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
 <head>
     <title>Student Account Credentials</title>
@@ -1048,143 +1003,14 @@ class AdminStudentController extends Controller
     </div>
     <div class=\"card\">
         <div class=\"field\"><span class=\"label\">Student ID:</span><br><span class=\"value\">" . htmlspecialchars($student->student_number) . "</span></div>
-        <div class=\"field\"><span class=\"label\">Student Name:</span><br><span class=\"value\">" . htmlspecialchars($fullName) . "</span></div>
-        <div class=\"field\"><span class=\"label\">Grade & Section:</span><br><span class=\"value\">" . htmlspecialchars($student->grade_level . ' - ' . $sectionFolder) . "</span></div>
+        <div class=\"field\"><span class=\"label\">Student Name:</span><br><span class=\"value\">" . htmlspecialchars($studentFolderName) . "</span></div>
+        <div class=\"field\"><span class=\"label\">Grade Level:</span><br><span class=\"value\">" . htmlspecialchars($student->grade_level) . "</span></div>
         <div class=\"field\"><span class=\"label\">School Email:</span><br><span class=\"value\">" . htmlspecialchars($student->school_email ?: 'N/A') . "</span></div>
         <div class=\"field\"><span class=\"label\">Temporary Password:</span><br><span class=\"value highlight\">" . htmlspecialchars($student->temp_password ?: 'Password already changed or set') . "</span></div>
-        <div class=\"field\"><span class=\"label\">Microsoft Teams Email:</span><br><span class=\"value\">" . htmlspecialchars($student->ms_email ?: 'N/A') . "</span></div>
-        <div class=\"field\"><span class=\"label\">Teams Sync Status:</span><br><span class=\"value\">" . htmlspecialchars($student->ms_license_active ? 'Active License' : 'Inactive License') . "</span></div>
-        <div class=\"field\"><span class=\"label\">Temporary Password Set At:</span><br><span class=\"value\">" . htmlspecialchars($student->temp_password_set_at ? $student->temp_password_set_at->format('Y-m-d H:i:s') : 'N/A') . "</span></div>
     </div>
 </body>
 </html>";
-            $zip->addFromString($basePath . '/03 - Account Credentials/AMIS_' . $student->student_number . '_Credentials.doc', $credentialsHtml);
-            $filesAdded++;
-
-            // 4. 04 - Enrollment Records
-            $medicalHistoryHtml = '';
-            if ($appl->medical_has_concern) {
-                $medicalHistoryHtml = "<tr><td class=\"label\">Medical History/Concerns</td><td class=\"value\">" . htmlspecialchars($appl->health_conditions ?: 'Has documented concern') . "</td></tr>";
-            }
-
-            $enrollmentHtml = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-<head>
-    <title>Official Enrollment Record Sheet</title>
-    <style>
-        body { font-family: Arial, sans-serif; font-size: 10pt; color: #334155; line-height: 1.4; }
-        .header { text-align: center; border-bottom: 2px solid #059669; padding-bottom: 15px; margin-bottom: 25px; }
-        .school-name { font-size: 16pt; font-weight: bold; color: #0f172a; margin: 0; text-transform: uppercase; }
-        .doc-title { font-size: 12pt; font-weight: bold; color: #059669; text-transform: uppercase; margin: 5px 0 0 0; }
-        .section-header { font-size: 11pt; font-weight: bold; color: #ffffff; background-color: #059669; padding: 6px 12px; margin-top: 20px; margin-bottom: 10px; text-transform: uppercase; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-        td { padding: 6px 10px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
-        .label { font-weight: bold; color: #64748b; width: 35%; }
-        .value { color: #0f172a; }
-    </style>
-</head>
-<body>
-    <div class=\"header\">
-        <div class=\"school-name\">Al Munawwara Islamic School</div>
-        <div class=\"doc-title\">Official Student Enrollment Record Sheet</div>
-    </div>
-    
-    <div class=\"section-header\">Student Information</div>
-    <table>
-        <tr><td class=\"label\">Student ID</td><td class=\"value\">" . htmlspecialchars($student->student_number) . "</td></tr>
-        <tr><td class=\"label\">LRN</td><td class=\"value\">" . htmlspecialchars($appl->lrn ?: 'N/A') . "</td></tr>
-        <tr><td class=\"label\">Full Name</td><td class=\"value\">" . htmlspecialchars($fullName) . "</td></tr>
-        <tr><td class=\"label\">Grade Level</td><td class=\"value\">" . htmlspecialchars($student->grade_level) . "</td></tr>
-        <tr><td class=\"label\">Section</td><td class=\"value\">" . htmlspecialchars($sectionFolder) . "</td></tr>
-        <tr><td class=\"label\">Grade Advisor</td><td class=\"value\">" . htmlspecialchars($advisorName) . "</td></tr>
-        <tr><td class=\"label\">School Year</td><td class=\"value\">" . htmlspecialchars($student->school_year) . "</td></tr>
-        <tr><td class=\"label\">Learning Mode</td><td class=\"value\">" . htmlspecialchars($appl->learning_mode ?: 'N/A') . "</td></tr>
-        <tr><td class=\"label\">Student Type</td><td class=\"value\">" . htmlspecialchars($appl->student_type ?: 'N/A') . "</td></tr>
-        <tr><td class=\"label\">Gender</td><td class=\"value\">" . htmlspecialchars($appl->gender ?: 'N/A') . "</td></tr>
-        <tr><td class=\"label\">Date of Birth</td><td class=\"value\">" . htmlspecialchars($appl->date_of_birth ?: 'N/A') . "</td></tr>
-        <tr><td class=\"label\">Place of Birth</td><td class=\"value\">" . htmlspecialchars($appl->place_of_birth ?: 'N/A') . "</td></tr>
-        <tr><td class=\"label\">Religion</td><td class=\"value\">" . htmlspecialchars($appl->religion ?: 'N/A') . "</td></tr>
-        <tr><td class=\"label\">Nationality/Ethnicity</td><td class=\"value\">" . htmlspecialchars($appl->ethnicity ?: 'N/A') . "</td></tr>
-        <tr><td class=\"label\">Student Mobile</td><td class=\"value\">" . htmlspecialchars($studentMobile) . "</td></tr>
-        <tr><td class=\"label\">School Email</td><td class=\"value\">" . htmlspecialchars($student->school_email ?: 'N/A') . "</td></tr>
-        <tr><td class=\"label\">Residence Address</td><td class=\"value\">" . htmlspecialchars($appl->address ?: $appl->home_address ?: 'N/A') . "</td></tr>
-    </table>
-
-    <div class=\"section-header\">Parent & Guardian Information</div>
-    <table>
-        <tr><td class=\"label\">Father's Name</td><td class=\"value\">" . htmlspecialchars($fatherName) . "</td></tr>
-        <tr><td class=\"label\">Father's Occupation</td><td class=\"value\">" . htmlspecialchars($appl->father_occupation ?: 'N/A') . "</td></tr>
-        <tr><td class=\"label\">Mother's Name</td><td class=\"value\">" . htmlspecialchars($motherName) . "</td></tr>
-        <tr><td class=\"label\">Mother's Occupation</td><td class=\"value\">" . htmlspecialchars($appl->mother_occupation ?: 'N/A') . "</td></tr>
-        <tr><td class=\"label\">Parent Email</td><td class=\"value\">" . htmlspecialchars($appl->parent_email ?: 'N/A') . "</td></tr>
-        <tr><td class=\"label\">Parent Mobile</td><td class=\"value\">" . htmlspecialchars($parentMobile) . "</td></tr>
-        <tr><td class=\"label\">Home Address</td><td class=\"value\">" . htmlspecialchars($homeAddress) . "</td></tr>
-    </table>
-
-    <div class=\"section-header\">Emergency Contact Details</div>
-    <table>
-        <tr><td class=\"label\">Contact Person</td><td class=\"value\">" . htmlspecialchars($emergencyName) . "</td></tr>
-        <tr><td class=\"label\">Relationship</td><td class=\"value\">" . htmlspecialchars($appl->emergency_relationship ?: 'N/A') . "</td></tr>
-        <tr><td class=\"label\">Contact Number</td><td class=\"value\">" . htmlspecialchars($emergencyPhone) . "</td></tr>
-        " . $medicalHistoryHtml . "
-    </table>
-</body>
-</html>";
-            $zip->addFromString($basePath . '/04 - Enrollment Records/AMIS_' . $student->student_number . '_Enrollment_Record.doc', $enrollmentHtml);
-            $filesAdded++;
-
-            // 5. 05 - Academic Records
-            $subjectsRowsHtml = '';
-            if ($student->studentSection && $student->studentSection->section && $student->studentSection->section->subjects && $student->studentSection->section->subjects->isNotEmpty()) {
-                foreach ($student->studentSection->section->subjects as $secSubject) {
-                    $subjectsRowsHtml .= "<tr><td>" . htmlspecialchars($secSubject->subject_name) . "</td><td>" . htmlspecialchars($secSubject->teacher_name ?: 'N/A') . "</td></tr>";
-                }
-            } else {
-                $subjectsRowsHtml = "<tr><td colspan=\"2\" style=\"text-align: center; color: #64748b;\">No subjects currently enrolled or assigned.</td></tr>";
-            }
-
-            $academicHtml = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-<head>
-    <title>Student Academic Subject List</title>
-    <style>
-        body { font-family: Arial, sans-serif; font-size: 11pt; color: #334155; line-height: 1.5; }
-        .header { text-align: center; border-bottom: 2px solid #059669; padding-bottom: 15px; margin-bottom: 30px; }
-        .school-name { font-size: 16pt; font-weight: bold; color: #0f172a; margin: 0; text-transform: uppercase; }
-        .doc-title { font-size: 12pt; font-weight: bold; color: #059669; text-transform: uppercase; margin: 5px 0 0 0; }
-        .student-info { margin-bottom: 20px; font-size: 11pt; }
-        .info-row { margin-bottom: 5px; }
-        .info-label { font-weight: bold; color: #64748b; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th { background-color: #059669; color: #ffffff; text-align: left; padding: 8px 12px; font-weight: bold; font-size: 10pt; text-transform: uppercase; }
-        td { padding: 10px 12px; border-bottom: 1px solid #cbd5e1; font-size: 10pt; color: #0f172a; }
-        tr:nth-child(even) { background-color: #f8fafc; }
-    </style>
-</head>
-<body>
-    <div class=\"header\">
-        <div class=\"school-name\">Al Munawwara Islamic School</div>
-        <div class=\"doc-title\">Student Academic Subject List</div>
-    </div>
-    
-    <div class=\"student-info\">
-        <div class=\"info-row\"><span class=\"info-label\">Student ID:</span> <span>" . htmlspecialchars($student->student_number) . "</span></div>
-        <div class=\"info-row\"><span class=\"info-label\">Student Name:</span> <span>" . htmlspecialchars($fullName) . "</span></div>
-        <div class=\"info-row\"><span class=\"info-label\">Grade & Section:</span> <span>" . htmlspecialchars($student->grade_level . ' - ' . $sectionFolder) . "</span></div>
-    </div>
-
-    <table>
-        <thead>
-            <tr>
-                <th style=\"width: 50%;\">Subject Name</th>
-                <th style=\"width: 50%;\">Subject Teacher</th>
-            </tr>
-        </thead>
-        <tbody>
-            " . $subjectsRowsHtml . "
-        </tbody>
-    </table>
-</body>
-</html>";
-            $zip->addFromString($basePath . '/05 - Academic Records/AMIS_' . $student->student_number . '_Academic_Records.doc', $academicHtml);
+            $zip->addFromString($basePath . '/Account Credentials - ' . $studentFolderName . '.doc', $credentialsHtml);
             $filesAdded++;
         }
 
