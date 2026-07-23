@@ -272,6 +272,18 @@ Route::name('admin.')->group(function () {
         Route::patch('/administration/users/{user}/security', [AdministrationController::class, 'usersSecurityUpdate'])->name('administration.users.security.update');
 
         Route::get('/website/announcements', [AdminAnnouncementController::class, 'index'])->name('website.announcements.index');
+
+        // Email Composer & Bulk Email System
+        Route::prefix('email-composer')->name('email-composer.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\EmailComposerController::class, 'index'])->name('index');
+            Route::get('/create', [\App\Http\Controllers\Admin\EmailComposerController::class, 'create'])->name('create');
+            Route::post('/send-test', [\App\Http\Controllers\Admin\EmailComposerController::class, 'sendTest'])->name('send-test');
+            Route::post('/send-bulk', [\App\Http\Controllers\Admin\EmailComposerController::class, 'sendBulk'])->name('send-bulk');
+            Route::get('/templates', [\App\Http\Controllers\Admin\EmailComposerController::class, 'templates'])->name('templates');
+            Route::post('/templates', [\App\Http\Controllers\Admin\EmailComposerController::class, 'storeTemplate'])->name('templates.store');
+            Route::delete('/templates/{template}', [\App\Http\Controllers\Admin\EmailComposerController::class, 'destroyTemplate'])->name('templates.destroy');
+            Route::get('/logs', [\App\Http\Controllers\Admin\EmailComposerController::class, 'logs'])->name('logs');
+        });
         Route::get('/website/announcements/create', [AdminAnnouncementController::class, 'create'])->name('website.announcements.create');
         Route::post('/website/announcements', [AdminAnnouncementController::class, 'store'])->name('website.announcements.store');
         Route::get('/website/announcements/{id}/edit', [AdminAnnouncementController::class, 'edit'])->name('website.announcements.edit');
