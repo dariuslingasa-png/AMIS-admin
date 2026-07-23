@@ -184,6 +184,43 @@
                     </div>
                 </div>
 
+                {{-- Multi-SMTP Auto Switcher & Daily Rate Limit Card --}}
+                @if(isset($smtpPoolMetrics))
+                    <div class="overflow-hidden rounded-2xl border border-indigo-200 bg-white shadow-sm">
+                        <div class="border-b border-indigo-100 px-6 py-4 bg-indigo-50/50 flex items-center justify-between">
+                            <h3 class="text-xs font-black uppercase tracking-wider text-indigo-700 flex items-center gap-2">
+                                <i data-lucide="refresh-cw" class="w-4 h-4 text-indigo-600"></i>
+                                Multi-SMTP Pool & Rate-Limit Switcher
+                            </h3>
+                            <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-extrabold text-emerald-800">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                Auto-Failover Active
+                            </span>
+                        </div>
+                        <div class="p-4 space-y-3">
+                            @foreach($smtpPoolMetrics['mailers'] as $m)
+                                <div class="p-3 rounded-xl border {{ $m['mailer'] === $smtpPoolMetrics['active_mailer'] ? 'border-emerald-200 bg-emerald-50/40' : 'border-slate-100 bg-slate-50/50' }}">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-xs font-black uppercase text-slate-700">{{ $m['mailer'] }}</span>
+                                            @if($m['mailer'] === $smtpPoolMetrics['active_mailer'])
+                                                <span class="px-2 py-0.5 text-[9px] font-black uppercase bg-emerald-500 text-white rounded-md">PRIMARY ACTIVE</span>
+                                            @endif
+                                        </div>
+                                        <span class="text-xs font-bold {{ $m['limit_reached'] ? 'text-rose-600' : 'text-slate-600' }}">
+                                            {{ $m['daily_count'] }} / {{ $m['daily_limit'] }} sends today
+                                        </span>
+                                    </div>
+                                    <div class="mt-2 h-1.5 w-full rounded-full bg-slate-200 overflow-hidden">
+                                        <div class="h-full rounded-full {{ $m['limit_reached'] ? 'bg-rose-500' : 'bg-indigo-600' }}" style="width: {{ min(100, round(($m['daily_count'] / $m['daily_limit']) * 100)) }}%"></div>
+                                    </div>
+                                    <p class="mt-1 text-[10px] font-medium text-slate-400">Account: {{ $m['username'] }} ({{ $m['host'] }})</p>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
                 {{-- Mailer Usage Breakdown --}}
                 <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                     <div class="border-b border-slate-100 px-6 py-4">

@@ -270,4 +270,49 @@ class AdminSupportTicketController extends Controller
 
         return redirect()->route('admin.support.index')->with('success', 'Support department settings saved successfully.');
     }
+
+    /**
+     * Send email reply to ticket requester with image/attachment upload support.
+     */
+    public function reply(Request $request, SupportTicket $ticket)
+    {
+        $request->validate([
+            'subject' => 'required|string|max:255',
+            'message' => 'required|string',
+            'attachment' => 'nullable|file|mimes:jpg,jpeg,png,gif,webp,pdf,doc,docx|max:10240',
+            'status' => 'nullable|string|in:open,in_progress,resolved',
+        ]);
+
+        $attachmentPath = null;
+        if ($request->hasFile('attachment')) {
+            $file = $request->file('attachment');
+            $fileName = 'reply_' . $ticket->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('support_replies', $fileName, 'public');
+            $attachmentPath = storage_path('app/public/' . $path);
+        }
+
+        $mailable = new \App\Mail\TicketReplyMailable(
+            replySubject: $request->subject,
+            replyMessage: $request->message,
+            recipientName: $ticket->full_name ?? 'User',
+            referenceNumber: $ticket->reference_number ?? ('AMIS-' . $ticket->id),
+            attachmentPath: $attachmentPath
+        );
+
+        $rotator = app(\App\Services\System\SmartSmtpRotatorService::class);
+        $result = $rotator->sendMail($ticket->email, $mailable);
+
+        if ($request->filled('status')) {
+            $ticket->update(['status' => $request->status]);
+        }
+
+        AdminAuditLog::record(
+            'support_ticket_reply_sent',
+            true,
+            "Sent reply email to {$ticket->email} for Ticket #{$ticket->id} using {$result['mailer_used']}.",
+            ['ticket_id' => $ticket->id, 'mailer' => $result['mailer_used']]
+        );
+
+        return back()->with('success', "Reply email dispatched successfully to {$ticket->email} using SMTP ({$result['mailer_used']})!");
+    }
 }

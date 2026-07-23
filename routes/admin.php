@@ -444,6 +444,7 @@ Route::name('admin.')->group(function () {
             Route::post('/settings', [AdminSupportTicketController::class, 'saveSettings'])->name('settings.save');
             Route::get('/screenshot', [AdminSupportTicketController::class, 'viewScreenshot'])->name('screenshot');
             Route::get('/{ticket}', [AdminSupportTicketController::class, 'show'])->name('show');
+            Route::post('/{ticket}/reply', [AdminSupportTicketController::class, 'reply'])->name('reply');
             Route::patch('/{ticket}/status', [AdminSupportTicketController::class, 'updateStatus'])->name('status');
         });
         Route::prefix('registrations')->name('registrations.')->group(function () {

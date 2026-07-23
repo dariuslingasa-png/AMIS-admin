@@ -200,6 +200,60 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Email Reply & Image Attachment Upload Card -->
+                <div class="bg-white dark:bg-gray-800 rounded-2xl border border-rose-200 dark:border-rose-900/50 p-6 shadow-md shadow-rose-900/5">
+                    <h2 class="text-sm font-black uppercase tracking-wider text-rose-700 dark:text-rose-400 mb-4 flex items-center gap-2">
+                        <i data-lucide="send" class="w-4 h-4"></i>
+                        Send Reply Email (Auto-Failover Multi-SMTP)
+                    </h2>
+
+                    <form method="POST" action="{{ route('admin.support.reply', $ticket) }}" enctype="multipart/form-data" class="space-y-4">
+                        @csrf
+
+                        <div>
+                            <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-1">Email Subject</label>
+                            <input type="text" name="subject" value="Re: {{ $ticket->subject }}" required
+                                   class="w-full h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-800 outline-none transition focus:border-rose-500 focus:ring-4 focus:ring-rose-100">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-1">Message Content</label>
+                            <textarea name="message" rows="5" required placeholder="Type your response to {{ $ticket->full_name }} here..."
+                                      class="w-full rounded-xl border border-slate-200 bg-white p-4 text-sm font-medium text-slate-800 outline-none transition focus:border-rose-500 focus:ring-4 focus:ring-rose-100"></textarea>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-1">
+                                    🖼️ Upload Image / Attachment (Optional)
+                                </label>
+                                <input type="file" name="attachment" accept="image/*,.pdf,.doc,.docx"
+                                       class="w-full text-xs font-semibold text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-rose-50 file:text-rose-700 hover:file:bg-rose-100 cursor-pointer">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-1">Update Ticket Status</label>
+                                <select name="status" class="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 outline-none transition focus:border-rose-500">
+                                    <option value="in_progress" @selected($ticket->status === 'in_progress')>Mark In Progress</option>
+                                    <option value="resolved" @selected($ticket->status === 'resolved')>Mark Resolved</option>
+                                    <option value="open" @selected($ticket->status === 'open')>Keep Open</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="pt-2 flex items-center justify-between">
+                            <span class="text-[11px] font-medium text-slate-400 flex items-center gap-1">
+                                <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-500"></i>
+                                Multi-SMTP Auto Switcher Protected
+                            </span>
+                            <button type="submit" class="inline-flex h-11 items-center gap-2 rounded-xl bg-rose-700 px-6 text-xs font-black uppercase tracking-wider text-white shadow-md shadow-rose-900/10 transition hover:bg-rose-800 active:scale-[0.98] cursor-pointer">
+                                <i data-lucide="send" class="w-4 h-4"></i>
+                                Send Reply Email
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
 
             <!-- Ticket Control Panels (Right Sidebar) -->

@@ -151,9 +151,13 @@ class SystemHealthService
             }
         }
 
+        $smtpRotator = app(SmartSmtpRotatorService::class);
+        $smtpPoolMetrics = $smtpRotator->getPoolMetrics();
+
         return [
             'healthStatus' => $healthStatus,
             'emailStats' => $emailStats,
+            'smtpPoolMetrics' => $smtpPoolMetrics,
             'dbConnected' => $dbConnected,
             'dbLatencyMs' => $dbLatencyMs,
             'tableCount' => $tableCount,
