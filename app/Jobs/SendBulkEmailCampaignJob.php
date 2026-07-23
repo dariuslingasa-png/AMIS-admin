@@ -67,7 +67,8 @@ class SendBulkEmailCampaignJob implements ShouldQueue
                 $mailable = new GenericComposerMailable(
                     customSubject: $campaign->subject,
                     bodyHtml: $campaign->body_html,
-                    attachmentPaths: $attachmentPaths
+                    attachmentPaths: $attachmentPaths,
+                    senderName: 'AMIS Information Technology'
                 );
 
                 $res = $rotatorService->sendMail($recipientEmail, $mailable);
