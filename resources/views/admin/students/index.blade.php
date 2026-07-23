@@ -292,15 +292,31 @@
         }
     });
 
+    function addZipLog(msg) {
+        const consoleEl = document.getElementById('zip-logs-console');
+        if (!consoleEl) return;
+        const time = new Date().toLocaleTimeString('en-US', { hour12: false });
+        const line = document.createElement('div');
+        line.innerHTML = `<span class="text-slate-500">[${time}]</span> ${msg}`;
+        consoleEl.appendChild(line);
+        consoleEl.scrollTop = consoleEl.scrollHeight;
+    }
+
     function downloadEnrolmentPngZip(url) {
         const modal = document.getElementById('zip-loading-modal');
         const bar = document.getElementById('zip-progress-bar');
         const text = document.getElementById('zip-progress-text');
+        const badge = document.getElementById('zip-counter-badge');
+        const consoleEl = document.getElementById('zip-logs-console');
         
         if (modal) modal.classList.remove('hidden');
         if (bar) bar.style.width = '3%';
         if (text) text.innerHTML = '<span class="font-bold text-violet-600">Step 1 of 3:</span> Connecting to server & fetching student database...';
+        if (badge) badge.innerText = 'Initializing...';
+        if (consoleEl) consoleEl.innerHTML = '';
         
+        addZipLog('📡 Connecting to server and fetching student records...');
+
         const oldIframe = document.getElementById('zip-iframe');
         if (oldIframe) oldIframe.remove();
         
@@ -324,42 +340,71 @@
             const text = document.getElementById('zip-progress-text');
             if (bar) bar.style.width = '10%';
             if (text) text.innerHTML = '<span class="font-bold text-violet-600">Step 2 of 3:</span> Compiling templates & loading student photos...';
+            addZipLog('⚙️ HTML2Canvas image engine initialized.');
         }
-        if (event.data && event.data.type === 'zip_progress') {
+        if (event.data && (event.data.type === 'zip_progress' || event.data.type === 'zip_log')) {
             const bar = document.getElementById('zip-progress-bar');
             const text = document.getElementById('zip-progress-text');
-            const scaledPercent = Math.round(10 + (event.data.percent * 0.85));
+            const badge = document.getElementById('zip-counter-badge');
+            const scaledPercent = Math.round(10 + ((event.data.percent || 0) * 0.85));
+            
             if (bar) bar.style.width = scaledPercent + '%';
-            if (text) text.innerHTML = `<span class="font-bold text-violet-600">Step 3 of 3:</span> ${event.data.text}`;
+            if (event.data.current && event.data.total) {
+                if (badge) badge.innerText = `${event.data.current} / ${event.data.total} Students (${scaledPercent}%)`;
+                if (text) text.innerHTML = `<span class="font-bold text-violet-600">Step 3 of 3:</span> Processing Student ${event.data.current} of ${event.data.total}...`;
+            }
+            if (event.data.message) {
+                addZipLog(event.data.message);
+            }
         }
         if (event.data && event.data.type === 'zip_done') {
             const bar = document.getElementById('zip-progress-bar');
             const text = document.getElementById('zip-progress-text');
+            const badge = document.getElementById('zip-counter-badge');
+            
             if (bar) bar.style.width = '100%';
+            if (badge) badge.innerText = 'Completed 100%';
             if (text) text.innerHTML = '<span class="font-bold text-emerald-600">✔ ZIP Generated Successfully!</span> Download starting...';
+            addZipLog(event.data.message || '⚡ ZIP Archive generated & download started!');
+            
             setTimeout(() => {
                 const modal = document.getElementById('zip-loading-modal');
                 if (modal) modal.classList.add('hidden');
                 const iframe = document.getElementById('zip-iframe');
                 if (iframe) iframe.remove();
-            }, 3000);
+            }, 3500);
         }
     });
     </script>
 
     <!-- ZIP PNG Loading Modal -->
     <div id="zip-loading-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-md transition-all duration-300">
-        <div class="relative w-full max-w-md scale-95 transform rounded-2xl border border-slate-200/80 bg-white p-8 shadow-2xl transition-all duration-300 dark:border-slate-800 dark:bg-slate-900 text-center">
-            <div class="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-violet-50 dark:bg-violet-950/30">
-                <svg class="h-8 w-8 animate-spin text-violet-600" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
+        <div class="relative w-full max-w-lg scale-95 transform rounded-2xl border border-slate-200/80 bg-white p-6 shadow-2xl transition-all duration-300 dark:border-slate-800 dark:bg-slate-900 text-center">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+                <div class="flex items-center gap-2">
+                    <svg class="h-5 w-5 animate-spin text-violet-600" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <h3 class="text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white">Generating Instant JPG ZIP Archive</h3>
+                </div>
+                <span id="zip-counter-badge" class="px-3 py-1 rounded-full text-xs font-black bg-violet-100 text-violet-800 dark:bg-violet-950/80 dark:text-violet-300">
+                    0 / 0 Students
+                </span>
             </div>
-            <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">Generating Instant JPG ZIP Archive</h3>
-            <p id="zip-progress-text" class="text-sm text-slate-500 dark:text-slate-400 mb-6">Loading student application forms... Please wait.</p>
-            <div class="h-1.5 w-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+
+            <p id="zip-progress-text" class="text-xs font-bold text-slate-600 dark:text-slate-300 mb-3 text-left">Loading student application forms... Please wait.</p>
+            
+            <div class="h-2 w-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden mb-4 border border-slate-200/50">
                 <div id="zip-progress-bar" class="h-full rounded-full bg-violet-600 transition-all duration-200" style="width: 0%"></div>
+            </div>
+
+            <!-- Terminal Console Logs Box -->
+            <div class="text-left">
+                <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-1">Live Processing Logs:</span>
+                <div id="zip-logs-console" class="h-40 overflow-y-auto rounded-xl bg-slate-950 p-3 font-mono text-[11px] leading-relaxed text-emerald-400 border border-slate-800 shadow-inner">
+                    <div class="text-slate-500 italic">Initializing generator log...</div>
+                </div>
             </div>
         </div>
     </div>

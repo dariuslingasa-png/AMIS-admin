@@ -756,15 +756,17 @@
                     }
                     if (window.parent && window.parent !== window) {
                         window.parent.postMessage({
-                            type: 'zip_progress',
+                            type: 'zip_log',
+                            current: i + 1,
+                            total: totalStudents,
                             percent: pct,
-                            text: `Rendering Student ${i + 1} of ${totalStudents} (Page ${pageNum}/2)...`
+                            message: `[${i + 1}/${totalStudents}] Processing: ${studentName.replace(/_/g, ' ')} (Page ${pageNum}/2)`
                         }, '*');
                     }
                     
                     try {
                         const canvas = await html2canvas(pageEl, {
-                            scale: 1.3,
+                            scale: 1.15,
                             useCORS: true,
                             logging: false,
                             allowTaint: true,
@@ -773,7 +775,7 @@
                             removeContainer: true
                         });
                         
-                        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.88));
+                        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.85));
                         zip.file(`${basePath}/${studentName}_Page_${pageNum}.jpg`, blob);
                         
                     } catch (err) {
@@ -788,9 +790,9 @@
             if (text) text.innerText = 'Creating ZIP archive... Please wait.';
             if (window.parent && window.parent !== window) {
                 window.parent.postMessage({
-                    type: 'zip_progress',
+                    type: 'zip_log',
                     percent: 98,
-                    text: 'Creating ZIP archive... Please wait.'
+                    message: '📦 Compiling JPG files into ZIP archive...'
                 }, '*');
             }
             
@@ -807,7 +809,10 @@
                 document.body.removeChild(link);
                 setTimeout(() => URL.revokeObjectURL(url), 100);
                 if (window.parent && window.parent !== window) {
-                    window.parent.postMessage({ type: 'zip_done' }, '*');
+                    window.parent.postMessage({
+                        type: 'zip_done',
+                        message: '⚡ ZIP Archive generated & download started!'
+                    }, '*');
                 }
             } catch (zipErr) {
                 console.error('Error generating ZIP:', zipErr);
