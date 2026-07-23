@@ -246,7 +246,7 @@
                                 @foreach ($emailStats['recent'] as $log)
                                     <tr class="hover:bg-slate-50/50 transition-colors">
                                         <td class="px-6 py-3 whitespace-nowrap">
-                                            <span class="text-xs font-semibold text-slate-600">{{ $log->sent_at?->format('M d, g:i A') ?? '—' }}</span>
+                                            <span class="text-xs font-semibold text-slate-600">{{ !empty($log->sent_at ?? $log->created_at ?? null) ? \Carbon\Carbon::parse($log->sent_at ?? $log->created_at)->format('M d, g:i A') : '—' }}</span>
                                         </td>
                                         <td class="px-6 py-3 max-w-[200px]">
                                             <span class="text-xs font-semibold text-slate-700 truncate block">{{ \Illuminate\Support\Str::limit($log->to_addresses, 40) }}</span>
