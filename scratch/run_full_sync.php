@@ -4,9 +4,9 @@ $app = require_once __DIR__ . '/../bootstrap/app.php';
 $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
 $kernel->bootstrap();
 
-$controller = new \App\Http\Controllers\AdminStudentDashboardController();
+$controller = new \App\Http\Controllers\Admin\EnrollmentReportController();
 $request = new \Illuminate\Http\Request();
-echo "Starting full sync from AdminStudentDashboardController::syncNow...\n";
+echo "Starting full sync from EnrollmentReportController::syncNow...\n";
 $response = $controller->syncNow($request);
 echo "Response status: " . $response->status() . "\n";
 echo "Response body: " . $response->content() . "\n";

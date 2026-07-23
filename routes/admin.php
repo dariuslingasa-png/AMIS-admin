@@ -13,10 +13,21 @@ use App\Http\Controllers\Admin\AttendanceController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EnrollmentAnalyticsController;
 use App\Http\Controllers\Admin\EnrollmentController;
+use App\Http\Controllers\Admin\EnrollmentReportController;
 use App\Http\Controllers\Admin\GoogleDriveAuthController;
 use App\Http\Controllers\Admin\RegistrationController;
 use App\Http\Controllers\Admin\RequirementController;
+use App\Http\Controllers\Admin\SectionController;
 use App\Http\Controllers\Admin\SecurityWorkspaceController;
+use App\Http\Controllers\Admin\StudentBatchImportController;
+use App\Http\Controllers\Admin\StudentComparisonController;
+use App\Http\Controllers\Admin\StudentController;
+use App\Http\Controllers\Admin\StudentDashboardController;
+use App\Http\Controllers\Admin\StudentExportController;
+use App\Http\Controllers\Admin\StudentIdController;
+use App\Http\Controllers\Admin\StudentPhotoController;
+use App\Http\Controllers\Admin\StudentPrintController;
+use App\Http\Controllers\Admin\StudentRosterController;
 use App\Http\Controllers\Admin\SystemManagementController;
 use App\Http\Controllers\AdminAcademicController;
 use App\Http\Controllers\AdminAcademicSubjectController;
@@ -34,8 +45,6 @@ use App\Http\Controllers\AdminMsTeamsController;
 use App\Http\Controllers\AdminPaymentController;
 use App\Http\Controllers\AdminSoaController;
 use App\Http\Controllers\AdminStudentAccountController;
-use App\Http\Controllers\AdminStudentController;
-use App\Http\Controllers\AdminStudentDashboardController;
 use App\Http\Controllers\AdminStudentFamilyController;
 use App\Http\Controllers\AdminStudentProcessController;
 use App\Http\Controllers\AdminUserController;
@@ -136,64 +145,63 @@ Route::name('admin.')->group(function () {
             Route::post('/{applicant}/verify-section', [ApprovalController::class, 'verifySection'])->name('verify-section');
         });
 
-        Route::get('/students', [AdminStudentController::class, 'index'])->name('students.index');
-        Route::get('/students/dashboard', [AdminStudentDashboardController::class, 'dashboard'])->name('students.dashboard');
-        Route::get('/students/dashboard/sections/{section}/roster-print', [AdminStudentDashboardController::class, 'rosterPrint'])->name('students.roster-print');
-        Route::get('/students/dashboard/sections/{section}/id-roster-print', [AdminStudentDashboardController::class, 'idRosterPrint'])->name('students.id-roster-print');
+        Route::get('/students', [StudentController::class, 'index'])->name('students.index');
+        Route::get('/students/dashboard', [StudentDashboardController::class, 'dashboard'])->name('students.dashboard');
+        Route::get('/students/dashboard/sections/{section}/roster-print', [SectionController::class, 'rosterPrint'])->name('students.roster-print');
+        Route::get('/students/dashboard/sections/{section}/id-roster-print', [SectionController::class, 'idRosterPrint'])->name('students.id-roster-print');
         Route::get('/students/history', [AdminStudentProcessController::class, 'history'])->name('students.history');
         Route::get('/students/accounts', [AdminStudentProcessController::class, 'accounts'])->name('students.accounts');
-        Route::get('/students/audit-logs', [AdminStudentController::class, 'auditLogs'])->name('students.audit-logs');
+        Route::get('/students/audit-logs', [StudentComparisonController::class, 'auditLogs'])->name('students.audit-logs');
         Route::redirect('/students/documents', '/students')->name('students.documents');
         Route::get('/students/verification', [AdminStudentProcessController::class, 'verification'])->name('students.verification');
         Route::redirect('/students/promotions', '/students')->name('students.promotions');
-        Route::get('/students/occupancy', [AdminStudentDashboardController::class, 'occupancy'])->name('students.occupancy');
-        Route::post('/students/occupancy/create-section', [AdminStudentDashboardController::class, 'storeSection'])->name('students.occupancy.store-section');
-        Route::post('/students/occupancy/bulk-json-import', [AdminStudentDashboardController::class, 'bulkJsonImport'])->name('students.occupancy.bulk-json-import');
-        Route::post('/students/occupancy/preview-json-import', [AdminStudentDashboardController::class, 'previewJsonImport'])->name('students.occupancy.preview-json-import');
-        Route::put('/students/occupancy/sections/{section}', [AdminStudentDashboardController::class, 'updateSection'])->name('students.occupancy.update-section');
-        Route::get('/students/occupancy/assign-students-page', [AdminStudentDashboardController::class, 'assignStudentsPage'])->name('students.occupancy.assign-page');
-        Route::get('/students/occupancy/sections/{section}/manage', [AdminStudentDashboardController::class, 'manageSection'])->name('students.occupancy.manage-section');
-        Route::delete('/students/occupancy/sections/{section}', [AdminStudentDashboardController::class, 'destroySection'])->name('students.occupancy.delete-section');
-        Route::delete('/students/occupancy/grade/{grade}/delete-sections', [AdminStudentDashboardController::class, 'destroyGradeSections'])->name('students.occupancy.delete-grade-sections');
-        Route::post('/students/occupancy/sections/{section}/assign-students', [AdminStudentDashboardController::class, 'assignStudentsToSection'])->name('students.occupancy.assign-students');
-        Route::delete('/students/occupancy/sections/remove-student/{studentSection}', [AdminStudentDashboardController::class, 'removeStudentFromSection'])->name('students.occupancy.remove-student');
-        Route::get('/students/occupancy/grade/{grade}/roster-print', [AdminStudentDashboardController::class, 'gradeRosterPrint'])->name('students.grade-roster-print');
-        Route::get('/students/occupancy/grade/{grade}/id-print', [AdminStudentDashboardController::class, 'gradeIdPrint'])->name('students.grade-id-print');
-        Route::get('/students/reports', [AdminStudentDashboardController::class, 'reports'])->name('students.reports');
-        Route::get('/students/attendance', [AdminStudentDashboardController::class, 'attendance'])->name('students.attendance');
-        Route::get('/students/reports/data', [AdminStudentDashboardController::class, 'reportsData'])->name('students.reports.data');
-        Route::get('/students/reports/enrollment-payments', [AdminStudentDashboardController::class, 'enrollmentPaymentsReportData'])->name('students.reports.enrollment-payments');
-        Route::get('/students/reports/class-roster', [AdminStudentDashboardController::class, 'classRosterData'])->name('students.reports.class-roster');
-        Route::post('/students/reports/sync', [AdminStudentDashboardController::class, 'syncNow'])->name('students.reports.sync');
-        Route::get('/students/reports/print-all', [AdminStudentDashboardController::class, 'printAllRosters'])->name('students.print-all-rosters');
+        Route::get('/students/occupancy', [SectionController::class, 'occupancy'])->name('students.occupancy');
+        Route::post('/students/occupancy/create-section', [SectionController::class, 'storeSection'])->name('students.occupancy.store-section');
+        Route::post('/students/occupancy/bulk-json-import', [StudentBatchImportController::class, 'bulkJsonImport'])->name('students.occupancy.bulk-json-import');
+        Route::post('/students/occupancy/preview-json-import', [StudentBatchImportController::class, 'previewJsonImport'])->name('students.occupancy.preview-json-import');
+        Route::put('/students/occupancy/sections/{section}', [SectionController::class, 'updateSection'])->name('students.occupancy.update-section');
+        Route::get('/students/occupancy/sections/{section}/manage', [SectionController::class, 'manageSection'])->name('students.occupancy.manage-section');
+        Route::delete('/students/occupancy/sections/{section}', [SectionController::class, 'destroySection'])->name('students.occupancy.delete-section');
+        Route::delete('/students/occupancy/grade/{grade}/delete-sections', [SectionController::class, 'destroyGradeSections'])->name('students.occupancy.delete-grade-sections');
+        Route::post('/students/occupancy/sections/{section}/assign-students', [SectionController::class, 'assignStudentsToSection'])->name('students.occupancy.assign-students');
+        Route::delete('/students/occupancy/sections/remove-student/{studentSection}', [SectionController::class, 'removeStudentFromSection'])->name('students.occupancy.remove-student');
+        Route::get('/students/occupancy/grade/{grade}/roster-print', [SectionController::class, 'gradeRosterPrint'])->name('students.grade-roster-print');
+        Route::get('/students/occupancy/grade/{grade}/id-print', [SectionController::class, 'gradeIdPrint'])->name('students.grade-id-print');
+        Route::get('/students/reports', [EnrollmentReportController::class, 'reports'])->name('students.reports');
+        Route::get('/students/attendance', [EnrollmentReportController::class, 'attendance'])->name('students.attendance');
+        Route::get('/students/reports/data', [EnrollmentReportController::class, 'reportsData'])->name('students.reports.data');
+        Route::get('/students/reports/enrollment-payments', [EnrollmentReportController::class, 'enrollmentPaymentsReportData'])->name('students.reports.enrollment-payments');
+        Route::get('/students/reports/class-roster', [SectionController::class, 'classRosterData'])->name('students.reports.class-roster');
+        Route::post('/students/reports/sync', [EnrollmentReportController::class, 'syncNow'])->name('students.reports.sync');
+        Route::get('/students/reports/print-all', [SectionController::class, 'printAllRosters'])->name('students.print-all-rosters');
         Route::get('/google-drive/auth', [GoogleDriveAuthController::class, 'redirect'])->name('google-drive.auth');
         Route::get('/google-drive/callback', [GoogleDriveAuthController::class, 'callback'])->name('google-drive.callback');
         Route::get('/auth/google-drive/callback', [GoogleDriveAuthController::class, 'callback'])->name('google-drive.callback.auth');
-        Route::post('/students/reports/sync-google-drive', [AdminStudentDashboardController::class, 'syncGoogleDrive'])->name('students.reports.sync-google-drive');
+        Route::post('/students/reports/sync-google-drive', [EnrollmentReportController::class, 'syncGoogleDrive'])->name('students.reports.sync-google-drive');
         Route::get('/students/families', [AdminStudentFamilyController::class, 'families'])->name('students.families');
-        Route::get('/students/export-canva', [AdminStudentController::class, 'exportCanva'])->name('students.export-canva');
-        Route::get('/students/export-verification-db', [AdminStudentController::class, 'exportVerificationDatabase'])->name('students.export-verification-db');
-        Route::get('/students/download-docs-zip', [AdminStudentController::class, 'downloadDocumentsZip'])->name('students.download-docs-zip');
-        Route::get('/students/download-enrolment-forms-zip', [AdminStudentController::class, 'downloadEnrolmentFormsZip'])->name('students.download-enrolment-forms-zip');
-        Route::get('/students/comparison', [AdminStudentController::class, 'comparison'])->name('students.comparison');
-        Route::post('/students/comparison/sync', [AdminStudentController::class, 'syncComparisonCsv'])->name('students.comparison.sync');
-        Route::post('/students/comparison/update-field', [AdminStudentController::class, 'updateField'])->name('students.comparison.update-field');
-        Route::post('/students/bulk-print-list', [AdminStudentController::class, 'bulkPrintList'])->name('students.bulk-print-list');
-        Route::get('/students/print-enrolment-forms-batch', [AdminStudentController::class, 'printEnrolmentFormsBatch'])->name('students.print-enrolment-forms-batch');
-        Route::get('/students/{student}', [AdminStudentController::class, 'show'])->name('students.show');
-        Route::get('/students/{student}/id-editor', [AdminStudentController::class, 'idEditor'])->name('students.id-editor');
-        Route::get('/students/{student}/print-enrolment-form', [AdminStudentController::class, 'printEnrolmentForm'])->name('students.print-enrolment-form');
-        Route::post('/students/{student}/update-profile', [AdminStudentController::class, 'updateProfile'])->name('students.update-profile');
-        Route::post('/students/{student}/update-photo', [AdminStudentController::class, 'updatePhoto'])->name('students.update-photo');
-        Route::post('/students/{student}/update-section', [AdminStudentController::class, 'updateSection'])->name('students.update-section');
+        Route::get('/students/export-canva', [StudentExportController::class, 'exportCanva'])->name('students.export-canva');
+        Route::get('/students/export-verification-db', [StudentExportController::class, 'exportVerificationDatabase'])->name('students.export-verification-db');
+        Route::get('/students/download-docs-zip', [StudentExportController::class, 'downloadDocumentsZip'])->name('students.download-docs-zip');
+        Route::get('/students/download-enrolment-forms-zip', [StudentExportController::class, 'downloadEnrolmentFormsZip'])->name('students.download-enrolment-forms-zip');
+        Route::get('/students/comparison', [StudentComparisonController::class, 'comparison'])->name('students.comparison');
+        Route::post('/students/comparison/sync', [StudentComparisonController::class, 'syncComparisonCsv'])->name('students.comparison.sync');
+        Route::post('/students/comparison/update-field', [StudentController::class, 'updateField'])->name('students.comparison.update-field');
+        Route::post('/students/bulk-print-list', [StudentPrintController::class, 'bulkPrintList'])->name('students.bulk-print-list');
+        Route::get('/students/print-enrolment-forms-batch', [StudentPrintController::class, 'printEnrolmentFormsBatch'])->name('students.print-enrolment-forms-batch');
+        Route::get('/students/{student}', [StudentController::class, 'show'])->name('students.show');
+        Route::get('/students/{student}/id-editor', [StudentIdController::class, 'idEditor'])->name('students.id-editor');
+        Route::get('/students/{student}/print-enrolment-form', [StudentPrintController::class, 'printEnrolmentForm'])->name('students.print-enrolment-form');
+        Route::post('/students/{student}/update-profile', [StudentController::class, 'updateProfile'])->name('students.update-profile');
+        Route::post('/students/{student}/update-photo', [StudentPhotoController::class, 'updatePhoto'])->name('students.update-photo');
+        Route::post('/students/{student}/update-section', [StudentRosterController::class, 'updateSection'])->name('students.update-section');
         Route::post('/students/{student}/update-status', [AdminStudentAccountController::class, 'updateStatus'])->name('students.update-status');
         Route::post('/students/{student}/update-email', [AdminStudentAccountController::class, 'updateEmail'])->name('students.update-email');
-        Route::post('/students/{student}/update-id-font-sizes', [AdminStudentController::class, 'updateIdFontSizes'])->name('students.update-id-font-sizes');
-        Route::post('/students/{student}/delete-photo', [AdminStudentController::class, 'deletePhoto'])->name('students.delete-photo');
-        Route::post('/students/{student}/sync-microsoft-photo', [AdminStudentController::class, 'syncMicrosoftPhoto'])->name('students.sync-microsoft-photo');
-        Route::post('/students/{student}/toggle-requirements-lock', [AdminStudentController::class, 'toggleRequirementsLock'])->name('students.toggle-requirements-lock');
+        Route::post('/students/{student}/update-id-font-sizes', [StudentIdController::class, 'updateIdFontSizes'])->name('students.update-id-font-sizes');
+        Route::post('/students/{student}/delete-photo', [StudentPhotoController::class, 'deletePhoto'])->name('students.delete-photo');
+        Route::post('/students/{student}/sync-microsoft-photo', [StudentPhotoController::class, 'syncMicrosoftPhoto'])->name('students.sync-microsoft-photo');
+        Route::post('/students/{student}/toggle-requirements-lock', [StudentController::class, 'toggleRequirementsLock'])->name('students.toggle-requirements-lock');
         Route::post('/students/{student}/resend', [AdminStudentAccountController::class, 'resendCredentials'])->name('students.resend');
-        Route::delete('/students/{student}', [AdminStudentController::class, 'destroy'])->name('students.destroy');
+        Route::delete('/students/{student}', [StudentController::class, 'destroy'])->name('students.destroy');
 
         Route::get('/soa', [AdminSoaController::class, 'index'])->name('soa.index');
         Route::get('/soa/{account}', [AdminSoaController::class, 'show'])->name('soa.show');
@@ -253,7 +261,6 @@ Route::name('admin.')->group(function () {
         Route::patch('/admins/{user}/accept', [AdminUserController::class, 'accept'])->name('admins.accept');
         Route::delete('/admins/{user}', [AdminUserController::class, 'destroy'])->name('admins.destroy');
 
-        // Administration Workspace
         Route::get('/administration/users', [AdministrationController::class, 'usersIndex'])->name('administration.users.index');
         Route::get('/administration/users/create', [AdministrationController::class, 'usersCreate'])->name('administration.users.create');
         Route::post('/administration/users', [AdministrationController::class, 'usersStore'])->name('administration.users.store');
@@ -261,7 +268,6 @@ Route::name('admin.')->group(function () {
         Route::get('/administration/users/{user}/security', [AdministrationController::class, 'usersSecurity'])->name('administration.users.security');
         Route::patch('/administration/users/{user}/security', [AdministrationController::class, 'usersSecurityUpdate'])->name('administration.users.security.update');
 
-        // Website Announcements Workspace
         Route::get('/website/announcements', [AdminAnnouncementController::class, 'index'])->name('website.announcements.index');
         Route::get('/website/announcements/create', [AdminAnnouncementController::class, 'create'])->name('website.announcements.create');
         Route::post('/website/announcements', [AdminAnnouncementController::class, 'store'])->name('website.announcements.store');
@@ -269,7 +275,6 @@ Route::name('admin.')->group(function () {
         Route::put('/website/announcements/{id}', [AdminAnnouncementController::class, 'update'])->name('website.announcements.update');
         Route::delete('/website/announcements/{id}', [AdminAnnouncementController::class, 'destroy'])->name('website.announcements.destroy');
 
-        // Access Control Workspace
         Route::get('/access-control/roles', [AccessControlController::class, 'rolesIndex'])->name('access-control.roles.index');
         Route::post('/access-control/roles', [AccessControlController::class, 'rolesStore'])->name('access-control.roles.store');
         Route::patch('/access-control/roles/{role}', [AccessControlController::class, 'rolesUpdate'])->name('access-control.roles.update');
@@ -280,7 +285,6 @@ Route::name('admin.')->group(function () {
         Route::patch('/access-control/assignment/{user}', [AccessControlController::class, 'assignmentUpdate'])->name('access-control.assignment.update');
         Route::get('/access-control/policies', [AccessControlController::class, 'policiesIndex'])->name('access-control.policies.index');
 
-        // Security Workspace
         Route::get('/security-workspace/metrics', [SecurityWorkspaceController::class, 'securityMetrics'])->name('security-workspace.metrics');
         Route::get('/security-workspace/login-activity', [SecurityWorkspaceController::class, 'loginActivity'])->name('security-workspace.login-activity');
         Route::get('/security-workspace/sessions', [SecurityWorkspaceController::class, 'activeSessions'])->name('security-workspace.sessions.index');
@@ -289,7 +293,6 @@ Route::name('admin.')->group(function () {
         Route::get('/security-workspace/audit-logs', [SecurityWorkspaceController::class, 'auditLogs'])->name('security-workspace.audit-logs');
         Route::get('/security-workspace/alerts', [SecurityWorkspaceController::class, 'securityAlerts'])->name('security-workspace.alerts.index');
 
-        // System Management Workspace
         Route::get('/system-management/backups', [SystemManagementController::class, 'backupsIndex'])->name('system-management.backups.index');
         Route::post('/system-management/backups/create', [SystemManagementController::class, 'backupsCreate'])->name('system-management.backups.create');
         Route::post('/system-management/backups/trigger-full', [SystemManagementController::class, 'backupsTriggerFull'])->name('system-management.backups.trigger-full');
@@ -338,7 +341,6 @@ Route::name('admin.')->group(function () {
             Route::get('/calendar', [AdminAcademicController::class, 'calendar'])->name('calendar');
             Route::get('/operations', [AdminAcademicController::class, 'operations'])->name('operations');
 
-            // School Years CRUD (Decoupled Refactored Architecture)
             Route::get('/school-years-list', [SchoolYearController::class, 'index'])->name('school-years.index');
             Route::get('/school-years-list/create', [SchoolYearController::class, 'create'])->name('school-years.create');
             Route::post('/school-years-list', [SchoolYearController::class, 'store'])->name('school-years.store');
@@ -347,7 +349,6 @@ Route::name('admin.')->group(function () {
             Route::post('/school-years-list/{school_year}/toggle-active', [SchoolYearController::class, 'toggleActive'])->name('school-years.toggle-active');
             Route::post('/school-years-list/{school_year}/toggle-status', [SchoolYearController::class, 'toggleStatus'])->name('school-years.toggle-status');
 
-            // Grade Levels CRUD (Decoupled Refactored Architecture)
             Route::get('/grade-levels-list', [GradeLevelController::class, 'index'])->name('grade-levels.index');
             Route::get('/grade-levels-list/create', [GradeLevelController::class, 'create'])->name('grade-levels.create');
             Route::post('/grade-levels-list', [GradeLevelController::class, 'store'])->name('grade-levels.store');

@@ -99,7 +99,7 @@ class SectionOccupancyTest extends TestCase
         $response->assertSeeText('Section Occupancy');
         $response->assertSeeText('Official Students');
         $response->assertSeeText('Grade 1');
-        $response->assertSeeText('F2F - Boys'); // F2F section representation
+        $response->assertSeeText('A - Boys'); // F2F section representation
         $response->assertSeeText('HUDHAYFAH IBN AL-YAMAN - Boys'); // Normalized name mapping
         $response->assertSeeText('ABUBAKR IBN AFFAN');
         $response->assertSeeText('STU20260001');

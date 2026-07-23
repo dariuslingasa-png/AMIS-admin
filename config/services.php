@@ -85,4 +85,8 @@ return [
         'folder_id' => env('GOOGLE_DRIVE_FOLDER_ID'),
     ],
 
+    'amis' => [
+        'api_token' => env('AMIS_API_TOKEN', 'amis-scan-key-2026-secure'),
+    ],
+
 ];

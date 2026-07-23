@@ -12,8 +12,8 @@ class ApiTokenMiddleware
     {
         $token = $request->bearerToken();
         
-        // Retrieve configure token from env with a secure fallback
-        $configuredToken = env('AMIS_API_TOKEN', 'amis-scan-key-2026-secure');
+        // Retrieve configured token from config (safe under config:cache)
+        $configuredToken = config('services.amis.api_token', 'amis-scan-key-2026-secure');
 
         if (!$token || $token !== $configuredToken) {
             return response()->json([

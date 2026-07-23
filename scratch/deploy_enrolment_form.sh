@@ -9,9 +9,9 @@ ARCHIVE_NAME="print_enrolment_form_deploy.tar.gz"
 
 echo "=== 1. Bundling modified files in amis_admin ==="
 tar -czf $ARCHIVE_NAME \
-    app/Http/Controllers/AdminStudentController.php \
-    app/Http/Controllers/AdminStudentDashboardController.php \
-    app/Http/Controllers/AdminStudentAccountController.php \
+    app/Http/Controllers/Admin/ \
+    app/Http/Middleware/ApiTokenMiddleware.php \
+    config/services.php \
     routes/admin.php \
     resources/views/admin/students/ \
     resources/css/ \
@@ -25,14 +25,14 @@ echo "=== 3. Extracting bundle on production and clearing caches ==="
 ssh -o StrictHostKeyChecking=no -p $REMOTE_PORT $REMOTE_USER@$REMOTE_HOST "
     cd $REMOTE_PATH && \
     tar -xzf $ARCHIVE_NAME && \
-    rm $ARCHIVE_NAME && \
+    rm -f app/Http/Controllers/AdminStudentController.php app/Http/Controllers/AdminStudentDashboardController.php && \
+    rm -f $ARCHIVE_NAME && \
     php artisan optimize:clear && \
     php artisan route:clear && \
     php artisan config:clear && \
     php artisan view:clear
 "
 
-# Clean up local archive
 rm -f $ARCHIVE_NAME
 
-echo "=== Print Enrollment Application Form feature deployed successfully to production! ==="
+echo "=== Production Deployment Completed Successfully! ==="
