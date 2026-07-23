@@ -84,6 +84,14 @@ Route::name('admin.')->group(function () {
     Route::middleware(['auth', 'admin'])->group(function () {
         Route::get('/dashboard', DashboardController::class)->name('dashboard');
 
+        // System Notifications API
+        Route::prefix('notifications')->name('notifications.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\SystemNotificationController::class, 'index'])->name('index');
+            Route::post('/{id}/read', [\App\Http\Controllers\Admin\SystemNotificationController::class, 'markAsRead'])->name('read');
+            Route::post('/mark-all-read', [\App\Http\Controllers\Admin\SystemNotificationController::class, 'markAllAsRead'])->name('mark-all-read');
+            Route::delete('/clear', [\App\Http\Controllers\Admin\SystemNotificationController::class, 'clearAll'])->name('clear');
+        });
+
         Route::prefix('attendance')->name('attendance.')->group(function () {
             Route::get('/', [AttendanceController::class, 'index'])->name('index');
             Route::get('/scanner', [AttendanceController::class, 'scanner'])->name('scanner');

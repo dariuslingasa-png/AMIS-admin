@@ -49,7 +49,7 @@
                     <div class="text-lg font-black text-slate-900 truncate">
                         {{ $lastSuccessful['created_at'] ?? 'No Records Yet' }}
                     </div>
-                    <p class="mt-1 text-xs text-slate-500 truncate">Recipient: darius.lingasa@gmail.com</p>
+                    <p class="mt-1 text-xs text-emerald-600 font-bold truncate">In-App Notification &amp; Audit Log Active</p>
                 </div>
             </div>
 

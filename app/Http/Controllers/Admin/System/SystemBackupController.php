@@ -143,7 +143,13 @@ class SystemBackupController extends Controller
         try {
             \App\Jobs\ProcessAmisBackupJob::dispatch();
             AdminAuditLog::record('database_backup_triggered_full', true, "Dispatched background backup job via Queue.");
-            return back()->with('success', 'Full system backup job queued in the background successfully! You will receive an email upon completion.');
+            \App\Models\SystemNotification::notifyAdmin(
+                'Full Backup Queued',
+                'Background system backup process was queued by ' . (auth()->user()?->name ?? 'Administrator') . '.',
+                'info',
+                route('admin.system-management.backups.index')
+            );
+            return back()->with('success', 'Full system backup job queued in the background successfully! You will receive an in-app notification upon completion.');
         } catch (\Exception $e) {
             AdminAuditLog::record('database_backup_triggered_failed', false, "Trigger full backup failed: " . $e->getMessage());
             return back()->withErrors(['error' => 'Full backup dispatch failed: ' . $e->getMessage()]);

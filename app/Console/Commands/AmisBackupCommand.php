@@ -284,6 +284,17 @@ class AmisBackupCommand extends Command
     private function sendSuccessEmail(string $filename, string $formattedSize, float $executionTime, string $timestamp, array $includedItems): void
     {
         try {
+            \App\Models\SystemNotification::notifyAdmin(
+                'Full System Backup Completed',
+                "System backup snapshot '{$filename}' ({$formattedSize}) completed in {$executionTime}s.",
+                'success',
+                route('admin.system-management.backups.index')
+            );
+        } catch (\Exception $e) {
+            Log::error('Failed to dispatch in-app backup success notification: ' . $e->getMessage());
+        }
+
+        try {
             $targetEmail = 'darius.lingasa@gmail.com';
             Mail::to($targetEmail)->send(new BackupSuccessMail($filename, $formattedSize, $executionTime, $timestamp, $includedItems));
             Log::info("Backup success notification dispatched to {$targetEmail}");
@@ -294,6 +305,17 @@ class AmisBackupCommand extends Command
 
     private function sendFailureEmail(string $errorMsg, float $executionTime): void
     {
+        try {
+            \App\Models\SystemNotification::notifyAdmin(
+                'Full System Backup Failed',
+                "Automated system backup failed: {$errorMsg}",
+                'error',
+                route('admin.system-management.backups.index')
+            );
+        } catch (\Exception $e) {
+            Log::error('Failed to dispatch in-app backup failure notification: ' . $e->getMessage());
+        }
+
         try {
             $targetEmail = 'darius.lingasa@gmail.com';
             Mail::to($targetEmail)->send(new BackupFailedMail($errorMsg, $executionTime));
