@@ -157,7 +157,7 @@ class StudentController extends Controller
             default => $query->orderBy('students.id', 'desc'),
         };
 
-        $isPrint = $request->boolean('print_info') || $request->boolean('print_credentials');
+        $isPrint = $request->boolean('print_info') || $request->boolean('print_credentials') || $request->boolean('print_id');
 
         if ($isPrint) {
             $students = $query->get();
