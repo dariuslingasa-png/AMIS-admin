@@ -252,8 +252,14 @@
             const el = document.querySelector('[x-data]');
             if (el && window.Alpine) {
                 const data = window.Alpine.$data(el);
-                if (data && (data.openEditModal || data.showIdPreview || data.openPasswordModal || data.openStudentJsonModal || data.preview)) {
-                    alpineModalOpen = true;
+                if (data) {
+                    const editOpen = data.openEditModal === true;
+                    const idOpen = data.showIdPreview === true;
+                    const passOpen = data.openPasswordModal === true;
+                    const prevOpen = data.preview === true;
+                    if (editOpen || idOpen || passOpen || prevOpen) {
+                        alpineModalOpen = true;
+                    }
                 }
             }
         } catch (e) {}
@@ -265,10 +271,10 @@
         const optionsOpen = optionsModal && !optionsModal.classList.contains('hidden');
 
         if (alpineModalOpen || cropOpen || optionsOpen) {
-            document.body.style.overflow = 'hidden';
+            document.body.style.setProperty('overflow', 'hidden', 'important');
             document.body.classList.add('overflow-hidden');
         } else {
-            document.body.style.overflow = '';
+            document.body.style.removeProperty('overflow');
             document.body.classList.remove('overflow-hidden');
         }
         window.AMIS_SINGLE_STUDENT_JSON = @json($singleStudentJsonPretty);
@@ -290,8 +296,6 @@
          gradeFontSize: {{ $student->id_grade_font_size ?: 25 }},
          idFontSize: {{ $student->id_num_font_size ?: 10 }},
          openPasswordModal: false,
-         openStudentJsonModal: false,
-         singleStudentJson: window.AMIS_SINGLE_STUDENT_JSON,
          editSection: 'all',
          copySuccess: false,
          activeTab: 'overview',
@@ -454,39 +458,6 @@
             <span class="text-xs font-extrabold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">Student Administration</span>
         </div>
         <div class="flex items-center gap-2">
-            <!-- Student JSON Payload Button -->
-            <button type="button" @click="openStudentJsonModal = true"
-               class="inline-flex items-center gap-2 rounded-xl border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 px-4 py-2 text-sm font-bold text-emerald-800 dark:text-emerald-300 shadow-sm transition hover:bg-emerald-100 dark:hover:bg-emerald-900/60 active:scale-[0.98] cursor-pointer"
-               title="View & Copy Student JSON Payload">
-                <i data-lucide="file-json" class="h-4 w-4 text-emerald-600"></i>
-                <span>JSON Payload</span>
-            </button>
-
-            @unless ($isTeacherAdminViewer)
-                <!-- Upload / Edit Photo Button (Always Available) -->
-                <button type="button" onclick="openPhotoOptionsModal()"
-                   class="inline-flex items-center gap-2 rounded-xl border border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-950/40 px-4 py-2 text-sm font-bold text-blue-800 dark:text-blue-300 shadow-sm transition hover:bg-blue-100 dark:hover:bg-blue-900/60 active:scale-[0.98] cursor-pointer"
-                   title="Upload, Crop, or Replace Student Photo">
-                    <i data-lucide="camera" class="h-4 w-4 text-blue-600 dark:text-blue-400"></i>
-                    <span>Edit Photo</span>
-                </button>
-            @endunless
-
-            @unless ($isTeacherAdminViewer)
-                @if ($isRequirementsComplete)
-                    <span class="inline-flex items-center gap-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 px-3.5 py-2 text-xs font-black uppercase tracking-wider shadow-2xs" title="Profile is locked">
-                        <i data-lucide="lock" class="h-4 w-4 text-amber-600"></i>
-                        <span>Profile Locked</span>
-                    </span>
-                @else
-                    <button @click="openEditModal = true; editSection = 'all'"
-                            class="inline-flex items-center gap-2 rounded-xl border border-transparent bg-emerald-600 px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700 active:scale-[0.98] cursor-pointer">
-                        <i data-lucide="edit" class="h-4 w-4"></i>
-                        <span>Edit Profile</span>
-                    </button>
-                @endif
-            @endunless
-
             <a href="{{ route('admin.students.index') }}"
                class="inline-flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2 text-sm font-bold text-slate-700 dark:text-slate-300 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98]">
                 <i data-lucide="chevron-left" class="h-4 w-4"></i>
@@ -536,25 +507,6 @@
                                 <span class="text-[9px] font-black uppercase tracking-wider opacity-90">NO PHOTO</span>
                             </div>
                         @endif
-
-                        @unless ($isTeacherAdminViewer)
-                            <!-- Permanent Corner Camera Badge inside photo box -->
-                            <div class="absolute bottom-1 right-1 bg-emerald-600/90 text-white p-1 rounded-lg backdrop-blur-xs shadow-md border border-white/40 flex items-center justify-center">
-                                <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" />
-                                </svg>
-                            </div>
-
-                            <!-- Hover overlay for photo editing -->
-                            <div class="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition duration-200 text-white gap-1 select-none pointer-events-none">
-                                <svg class="w-7 h-7 text-white drop-shadow" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" />
-                                </svg>
-                                <span class="text-[9px] font-black uppercase tracking-wider">EDIT PHOTO</span>
-                            </div>
-                        @endunless
                     </div>
                     
                     @unless ($isTeacherAdminViewer)
@@ -2499,43 +2451,5 @@
             }
         }
     }
-
     </script>
-
-    <!-- Student JSON Payload Modal -->
-    <div x-cloak x-show="openStudentJsonModal"
-         style="display: none; z-index: 99999;"
-         class="fixed inset-0 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-fade-in">
-        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col"
-             @click.outside="openStudentJsonModal = false">
-            <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
-                <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                    <i data-lucide="file-json" class="w-5 h-5 text-emerald-600"></i>
-                    <span>Student JSON Record Payload ({{ $student->applicant->first_name ?? '' }} {{ $student->applicant->last_name ?? '' }})</span>
-                </h3>
-                <button type="button" @click="openStudentJsonModal = false" class="text-slate-400 hover:text-slate-600 transition cursor-pointer">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-            </div>
-            <div class="p-6 space-y-4">
-                <p class="text-xs font-semibold text-slate-500">
-                    This is the standardized JSON record payload for this student. You can copy it directly or use it in the Section Occupancy JSON Batch Sync.
-                </p>
-                <textarea readonly rows="11" x-text="singleStudentJson"
-                          class="w-full p-3.5 rounded-xl border border-slate-200 bg-slate-900 font-mono text-xs text-emerald-400 outline-none leading-relaxed shadow-inner select-all"></textarea>
-
-                <div class="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
-                    <a href="{{ route('admin.students.occupancy') }}" class="text-xs font-bold text-slate-600 hover:text-emerald-700 underline flex items-center gap-1.5">
-                        <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
-                        <span>Go to Section Occupancy JSON Sync</span>
-                    </a>
-                    <button type="button" @click="navigator.clipboard.writeText(singleStudentJson); alert('Copied student JSON payload to clipboard!');"
-                            class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-md cursor-pointer flex items-center gap-2 active:scale-95">
-                        <i data-lucide="copy" class="w-4 h-4"></i>
-                        <span>Copy JSON to Clipboard</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
 </x-admin-layout>

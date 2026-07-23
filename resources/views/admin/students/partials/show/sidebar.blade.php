@@ -168,13 +168,6 @@
                 </a>
             @endif
 
-            <!-- 3. Print Enrollment Confirmation -->
-            <a href="{{ route('admin.students.index', ['search' => $student->student_number, 'print_info' => 1]) }}" target="_blank"
-               class="w-full inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98] transition cursor-pointer">
-                <i data-lucide="file-check" class="h-4 w-4 text-slate-500"></i>
-                <span>Print Enrollment Confirmation</span>
-            </a>
-
             <!-- 4. Print Credentials Slip -->
             <a href="{{ route('admin.students.index', ['search' => $student->student_number, 'print_credentials' => 1]) }}" target="_blank"
                class="w-full inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98] transition cursor-pointer">
@@ -202,22 +195,6 @@
                 <i data-lucide="folder-archive" class="h-4 w-4 text-slate-500"></i>
                 <span>Download Documents ZIP</span>
             </a>
-
-            <!-- 8. Copy Student JSON Data -->
-            <button type="button" @click="openStudentJsonModal = true"
-               class="w-full inline-flex h-10 items-center gap-2 rounded-xl border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 px-3 text-xs font-bold text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 transition active:scale-[0.98] cursor-pointer">
-                <i data-lucide="file-json" class="h-4 w-4 text-emerald-600"></i>
-                <span>Copy Student JSON Data</span>
-            </button>
-
-            <!-- 9. Upload / Edit Student Photo -->
-            @unless ($isTeacherAdminViewer)
-                <button type="button" onclick="openPhotoOptionsModal()"
-                   class="w-full inline-flex h-10 items-center gap-2 rounded-xl border border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-950/40 px-3 text-xs font-bold text-blue-800 dark:text-blue-300 hover:bg-blue-100 transition active:scale-[0.98] cursor-pointer">
-                    <i data-lucide="camera" class="h-4 w-4 text-blue-600"></i>
-                    <span>Upload / Edit Student Photo</span>
-                </button>
-            @endunless
         </div>
     </x-card>
 
