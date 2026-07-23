@@ -16,24 +16,24 @@ class SystemDevOpsController extends Controller
         $this->devOpsService = $devOpsService;
     }
 
-    private function ensureSuperAdmin(): void
+    private function ensureAdminAccess(): void
     {
         $role = auth()->user()?->role;
-        if ($role !== 'super_admin') {
-            abort(403, 'Unauthorized. DevOps operations and Maintenance Mode controls are strictly restricted to Super Administrators.');
+        if (!in_array($role, ['super_admin', 'admin'])) {
+            abort(403, 'Unauthorized. DevOps operations and Maintenance Mode controls are restricted to Administrators.');
         }
     }
 
     public function index()
     {
-        $this->ensureSuperAdmin();
+        $this->ensureAdminAccess();
         $metrics = $this->devOpsService->getDevOpsMetrics();
         return view('admin.system.devops.index', $metrics);
     }
 
     public function dbOptimize(Request $request)
     {
-        $this->ensureSuperAdmin();
+        $this->ensureAdminAccess();
         try {
             $this->devOpsService->optimizeDatabaseTables();
             AdminAuditLog::record('system_db_optimized', true, "Executed OPTIMIZE & ANALYZE TABLE on core database tables.");
@@ -46,7 +46,7 @@ class SystemDevOpsController extends Controller
 
     public function toggleMaintenanceMode(Request $request)
     {
-        $this->ensureSuperAdmin();
+        $this->ensureAdminAccess();
         try {
             $status = $this->devOpsService->toggleMaintenanceMode();
             if ($status === 'off') {
@@ -64,7 +64,7 @@ class SystemDevOpsController extends Controller
 
     public function retryFailedJobs(Request $request)
     {
-        $this->ensureSuperAdmin();
+        $this->ensureAdminAccess();
         try {
             $this->devOpsService->retryFailedQueueJobs();
             AdminAuditLog::record('system_queue_failed_retried', true, "Retried all failed background queue jobs.");
@@ -76,7 +76,7 @@ class SystemDevOpsController extends Controller
 
     public function flushFailedJobs(Request $request)
     {
-        $this->ensureSuperAdmin();
+        $this->ensureAdminAccess();
         try {
             $this->devOpsService->flushFailedQueueJobs();
             AdminAuditLog::record('system_queue_failed_flushed', true, "Flushed and cleared failed jobs table.");
