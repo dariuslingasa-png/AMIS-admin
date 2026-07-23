@@ -279,8 +279,11 @@ Route::name('admin.')->group(function () {
             Route::get('/create', [\App\Http\Controllers\Admin\EmailComposerController::class, 'create'])->name('create');
             Route::post('/send-test', [\App\Http\Controllers\Admin\EmailComposerController::class, 'sendTest'])->name('send-test');
             Route::post('/send-bulk', [\App\Http\Controllers\Admin\EmailComposerController::class, 'sendBulk'])->name('send-bulk');
+            Route::post('/save-draft', [\App\Http\Controllers\Admin\EmailComposerController::class, 'saveDraft'])->name('drafts.save');
+            Route::delete('/drafts/{draft}', [\App\Http\Controllers\Admin\EmailComposerController::class, 'destroyDraft'])->name('drafts.destroy');
             Route::get('/templates', [\App\Http\Controllers\Admin\EmailComposerController::class, 'templates'])->name('templates');
             Route::post('/templates', [\App\Http\Controllers\Admin\EmailComposerController::class, 'storeTemplate'])->name('templates.store');
+            Route::post('/templates/{template}/duplicate', [\App\Http\Controllers\Admin\EmailComposerController::class, 'duplicateTemplate'])->name('templates.duplicate');
             Route::delete('/templates/{template}', [\App\Http\Controllers\Admin\EmailComposerController::class, 'destroyTemplate'])->name('templates.destroy');
             Route::get('/logs', [\App\Http\Controllers\Admin\EmailComposerController::class, 'logs'])->name('logs');
         });

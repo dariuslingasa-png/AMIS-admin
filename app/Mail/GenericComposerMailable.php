@@ -19,17 +19,35 @@ class GenericComposerMailable extends Mailable
         public string $bodyHtml,
         public array $attachmentPaths = [],
         public string $senderName = 'AMIS Information Technology',
-        public string $senderEmail = 'info@amis.edu.ph'
+        public string $senderEmail = 'info@amis.edu.ph',
+        public array $ccEmails = [],
+        public array $bccEmails = []
     ) {}
 
     public function envelope(): Envelope
     {
+        $ccAddresses = [];
+        foreach ($this->ccEmails as $email) {
+            if (filter_var(trim($email), FILTER_VALIDATE_EMAIL)) {
+                $ccAddresses[] = new Address(trim($email));
+            }
+        }
+
+        $bccAddresses = [];
+        foreach ($this->bccEmails as $email) {
+            if (filter_var(trim($email), FILTER_VALIDATE_EMAIL)) {
+                $bccAddresses[] = new Address(trim($email));
+            }
+        }
+
         return new Envelope(
             from: new Address(
                 $this->senderEmail ?: (config('mail.from.address') ?: 'info@amis.edu.ph'),
                 $this->senderName ?: 'AMIS Information Technology'
             ),
             subject: $this->customSubject,
+            cc: $ccAddresses,
+            bcc: $bccAddresses,
         );
     }
 

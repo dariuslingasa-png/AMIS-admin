@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class BulkEmailCampaign extends Model
+class EmailDraft extends Model
 {
     use HasFactory;
 
@@ -13,26 +13,16 @@ class BulkEmailCampaign extends Model
         'title',
         'subject',
         'body_html',
-        'sender_email',
-        'sender_name',
-        'cc_emails',
-        'bcc_emails',
         'recipient_type',
         'recipient_filter',
-        'recipient_count',
-        'sent_count',
-        'failed_count',
-        'status',
+        'cc_emails',
+        'bcc_emails',
         'attachments_json',
-        'error_log',
         'created_by',
     ];
 
     protected $casts = [
         'attachments_json' => 'array',
-        'recipient_count' => 'integer',
-        'sent_count' => 'integer',
-        'failed_count' => 'integer',
     ];
 
     public function creator()

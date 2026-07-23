@@ -53,22 +53,37 @@ class SendBulkEmailCampaignJob implements ShouldQueue
             return;
         }
 
+        // Parse CC & BCC emails
+        $ccEmails = array_filter(array_map('trim', explode(',', $campaign->cc_emails ?? '')));
+        $bccEmails = array_filter(array_map('trim', explode(',', $campaign->bcc_emails ?? '')));
+
         $sentCount = 0;
         $failedCount = 0;
         $attachmentPaths = $campaign->attachments_json ?: [];
 
-        foreach ($recipients as $recipientName => $recipientEmail) {
+        foreach ($recipients as $recipientEmail => $recipientData) {
+            if (!is_array($recipientData)) {
+                $recipientData = ['email' => $recipientEmail, 'name' => $recipientEmail];
+            }
+
             if (!filter_var($recipientEmail, FILTER_VALIDATE_EMAIL)) {
                 $failedCount++;
                 continue;
             }
 
             try {
+                // Dynamic template variable replacement per recipient
+                $customizedBody = $composerService->renderTemplateVariables($campaign->body_html, $recipientData);
+                $customizedSubject = $composerService->renderTemplateVariables($campaign->subject, $recipientData);
+
                 $mailable = new GenericComposerMailable(
-                    customSubject: $campaign->subject,
-                    bodyHtml: $campaign->body_html,
+                    customSubject: $customizedSubject,
+                    bodyHtml: $customizedBody,
                     attachmentPaths: $attachmentPaths,
-                    senderName: 'AMIS Information Technology'
+                    senderName: $campaign->sender_name ?: 'AMIS Information Technology',
+                    senderEmail: $campaign->sender_email ?: config('mail.from.address'),
+                    ccEmails: $ccEmails,
+                    bccEmails: $bccEmails
                 );
 
                 $res = $rotatorService->sendMail($recipientEmail, $mailable);
@@ -78,10 +93,13 @@ class SendBulkEmailCampaignJob implements ShouldQueue
                 EmailLog::create([
                     'mailer' => $res['mailer_used'] ?? 'smtp',
                     'transport' => 'smtp',
-                    'from_address' => config('mail.from.address'),
+                    'from_address' => $campaign->sender_email ?: config('mail.from.address'),
                     'to_addresses' => $recipientEmail,
-                    'subject' => $campaign->subject,
+                    'cc_addresses' => implode(', ', $ccEmails),
+                    'bcc_addresses' => implode(', ', $bccEmails),
+                    'subject' => $customizedSubject,
                     'status' => 'sent',
+                    'attachments_count' => count($attachmentPaths),
                     'sent_at' => now(),
                 ]);
             } catch (\Throwable $e) {
@@ -91,7 +109,7 @@ class SendBulkEmailCampaignJob implements ShouldQueue
                 EmailLog::create([
                     'mailer' => 'smtp',
                     'transport' => 'smtp',
-                    'from_address' => config('mail.from.address'),
+                    'from_address' => $campaign->sender_email ?: config('mail.from.address'),
                     'to_addresses' => $recipientEmail,
                     'subject' => $campaign->subject,
                     'status' => 'failed',

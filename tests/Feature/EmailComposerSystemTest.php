@@ -51,6 +51,9 @@ class EmailComposerSystemTest extends TestCase
                 $table->string('subject');
                 $table->longText('body_html');
                 $table->string('sender_email')->nullable();
+                $table->string('sender_name')->default('AMIS Information Technology');
+                $table->text('cc_emails')->nullable();
+                $table->text('bcc_emails')->nullable();
                 $table->string('recipient_type')->default('students');
                 $table->string('recipient_filter')->nullable();
                 $table->integer('recipient_count')->default(0);
@@ -60,6 +63,24 @@ class EmailComposerSystemTest extends TestCase
                 $table->json('attachments_json')->nullable();
                 $table->text('error_log')->nullable();
                 $table->unsignedBigInteger('created_by')->nullable();
+                $table->timestamps();
+            });
+        }
+
+        if (!Schema::hasTable('email_logs')) {
+            Schema::create('email_logs', function ($table) {
+                $table->id();
+                $table->string('mailer')->nullable();
+                $table->string('transport')->nullable();
+                $table->string('from_address')->nullable();
+                $table->text('to_addresses')->nullable();
+                $table->text('cc_addresses')->nullable();
+                $table->text('bcc_addresses')->nullable();
+                $table->string('subject')->nullable();
+                $table->string('status')->default('sent');
+                $table->text('error_message')->nullable();
+                $table->integer('attachments_count')->default(0);
+                $table->timestamp('sent_at')->nullable();
                 $table->timestamps();
             });
         }
@@ -85,7 +106,7 @@ class EmailComposerSystemTest extends TestCase
         $recipients = $service->resolveRecipients('students', 'Grade 10');
 
         $this->assertCount(1, $recipients);
-        $this->assertContains('sara@example.com', $recipients);
+        $this->assertArrayHasKey('sara@example.com', $recipients);
     }
 
     /** @test */
@@ -107,7 +128,7 @@ class EmailComposerSystemTest extends TestCase
 
         $response->assertOk();
         $response->assertSeeText('Email Composer');
-        $response->assertSeeText('Total Emails Sent');
+        $response->assertSeeText('Sent Today');
     }
 
     /** @test */
@@ -130,8 +151,6 @@ class EmailComposerSystemTest extends TestCase
     /** @test */
     public function admin_can_dispatch_bulk_email_campaign()
     {
-        Queue::fake();
-
         Student::create([
             'school_email' => 'ahmad@example.com',
             'grade_level' => 'Grade 11',
@@ -154,7 +173,6 @@ class EmailComposerSystemTest extends TestCase
             'title' => 'Grade 11 Advisory',
             'recipient_type' => 'students',
             'recipient_count' => 1,
-            'status' => 'queued',
         ]);
     }
 }

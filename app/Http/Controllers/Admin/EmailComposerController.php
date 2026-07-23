@@ -7,6 +7,7 @@ use App\Jobs\SendBulkEmailCampaignJob;
 use App\Mail\GenericComposerMailable;
 use App\Models\AdminAuditLog;
 use App\Models\BulkEmailCampaign;
+use App\Models\EmailDraft;
 use App\Models\EmailLog;
 use App\Models\EmailTemplate;
 use App\Models\Section;
@@ -32,7 +33,7 @@ class EmailComposerController extends Controller
     private function ensureAdminAccess(): void
     {
         $role = auth()->user()?->role;
-        if (!in_array($role, ['super_admin', 'admin', 'registrar', 'staff'])) {
+        if (!in_array($role, ['super_admin', 'admin', 'registrar', 'staff', 'finance'])) {
             abort(403, 'Unauthorized. Access to Email Composer is restricted.');
         }
     }
@@ -44,11 +45,12 @@ class EmailComposerController extends Controller
     {
         $this->ensureAdminAccess();
         $metrics = $this->composerService->getDashboardMetrics();
-        return view('admin.email-composer.index', $metrics);
+        $drafts = Schema::hasTable('email_drafts') ? EmailDraft::latest()->get() : [];
+        return view('admin.email-composer.index', array_merge($metrics, compact('drafts')));
     }
 
     /**
-     * Display Rich Text Email Composer page.
+     * Display Professional Email Composer interface (Gmail / Outlook style).
      */
     public function create(Request $request)
     {
@@ -56,14 +58,15 @@ class EmailComposerController extends Controller
         $this->composerService->seedDefaultTemplates();
 
         $templates = EmailTemplate::latest()->get();
+        $drafts = Schema::hasTable('email_drafts') ? EmailDraft::latest()->get() : [];
         
-        // Grade levels for recipient filter
+        // Grade levels & courses for recipient filter
         $gradeLevels = [
             'Kinder 1', 'Kinder 2', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4',
             'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'
         ];
 
-        // Available sections if Sections table exists
+        // Available sections
         $sections = [];
         if (Schema::hasTable('sections')) {
             $sections = Section::pluck('name')->toArray();
@@ -71,15 +74,24 @@ class EmailComposerController extends Controller
 
         // Student records for quick selection modal
         $students = [];
-        if (Schema::hasTable('students') && Schema::hasColumn('students', 'email')) {
-            $students = Student::whereNotNull('email')->where('email', '!=', '')->take(100)->get(['id', 'full_name', 'email', 'grade_level']);
+        if (Schema::hasTable('students')) {
+            $students = Student::whereNotNull('email')
+                               ->orWhereNotNull('school_email')
+                               ->take(150)
+                               ->get(['id', 'first_name', 'last_name', 'email', 'school_email', 'grade_level']);
         }
 
-        return view('admin.email-composer.create', compact('templates', 'gradeLevels', 'sections', 'students'));
+        // Selected draft if requested
+        $selectedDraft = null;
+        if ($request->has('draft_id') && Schema::hasTable('email_drafts')) {
+            $selectedDraft = EmailDraft::find($request->draft_id);
+        }
+
+        return view('admin.email-composer.create', compact('templates', 'drafts', 'gradeLevels', 'sections', 'students', 'selectedDraft'));
     }
 
     /**
-     * Send test email to administrator.
+     * Send test email to administrator or custom recipient.
      */
     public function sendTest(Request $request)
     {
@@ -92,10 +104,16 @@ class EmailComposerController extends Controller
         ]);
 
         try {
+            $ccEmails = array_filter(array_map('trim', explode(',', $request->cc_emails ?? '')));
+            $bccEmails = array_filter(array_map('trim', explode(',', $request->bcc_emails ?? '')));
+
             $mailable = new GenericComposerMailable(
                 customSubject: '[TEST] ' . $request->subject,
                 bodyHtml: $request->body_html,
-                attachmentPaths: []
+                attachmentPaths: [],
+                senderName: $request->sender_name ?: 'AMIS Information Technology',
+                ccEmails: $ccEmails,
+                bccEmails: $bccEmails
             );
 
             $result = $this->rotatorService->sendMail($request->test_email, $mailable);
@@ -116,8 +134,10 @@ class EmailComposerController extends Controller
             'title' => 'required|string|max:255',
             'subject' => 'required|string|max:255',
             'body_html' => 'required|string',
-            'recipient_type' => 'required|string|in:students,faculty,staff,alumni,custom_emails',
+            'recipient_type' => 'required|string|in:students,faculty,staff,parents,alumni,custom_emails',
             'recipient_filter' => 'nullable|string',
+            'cc_emails' => 'nullable|string',
+            'bcc_emails' => 'nullable|string',
             'attachments.*' => 'nullable|file|max:15360',
         ]);
 
@@ -147,6 +167,9 @@ class EmailComposerController extends Controller
             'subject' => $request->subject,
             'body_html' => $request->body_html,
             'sender_email' => config('mail.from.address'),
+            'sender_name' => $request->sender_name ?: 'AMIS Information Technology',
+            'cc_emails' => $request->cc_emails,
+            'bcc_emails' => $request->bcc_emails,
             'recipient_type' => $request->recipient_type,
             'recipient_filter' => $request->recipient_filter,
             'recipient_count' => $recipientCount,
@@ -165,7 +188,44 @@ class EmailComposerController extends Controller
         );
 
         return redirect()->route('admin.email-composer.index')
-            ->with('success', "Bulk Email Campaign '{$campaign->title}' queued successfully! Processing {$recipientCount} recipients in background.");
+            ->with('success', "Bulk Email Campaign '{$campaign->title}' dispatched successfully! Processed {$recipientCount} recipients in real time.");
+    }
+
+    /**
+     * Save draft campaign.
+     */
+    public function saveDraft(Request $request)
+    {
+        $this->ensureAdminAccess();
+
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'subject' => 'nullable|string|max:255',
+            'body_html' => 'nullable|string',
+        ]);
+
+        EmailDraft::create([
+            'title' => $request->title,
+            'subject' => $request->subject,
+            'body_html' => $request->body_html,
+            'recipient_type' => $request->recipient_type ?? 'students',
+            'recipient_filter' => $request->recipient_filter,
+            'cc_emails' => $request->cc_emails,
+            'bcc_emails' => $request->bcc_emails,
+            'created_by' => auth()->id(),
+        ]);
+
+        return back()->with('success', "Draft '{$request->title}' saved successfully!");
+    }
+
+    /**
+     * Delete email draft.
+     */
+    public function destroyDraft(EmailDraft $draft)
+    {
+        $this->ensureAdminAccess();
+        $draft->delete();
+        return back()->with('success', 'Email draft deleted successfully.');
     }
 
     /**
@@ -177,6 +237,21 @@ class EmailComposerController extends Controller
         $this->composerService->seedDefaultTemplates();
         $templates = EmailTemplate::latest()->get();
         return view('admin.email-composer.templates', compact('templates'));
+    }
+
+    /**
+     * Duplicate existing template.
+     */
+    public function duplicateTemplate(EmailTemplate $template)
+    {
+        $this->ensureAdminAccess();
+
+        $new = $template->replicate();
+        $new->name = $template->name . ' (Copy)';
+        $new->is_preset = false;
+        $new->save();
+
+        return back()->with('success', "Template '{$template->name}' duplicated successfully!");
     }
 
     /**

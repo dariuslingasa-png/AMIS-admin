@@ -1,39 +1,55 @@
 <x-admin-layout title="Email Composer & Bulk Messaging">
     <div class="space-y-6">
-        <!-- Header Banner Component (UNIFIED COLOR & DESIGN) -->
+        <!-- Header Banner Component -->
         <x-system-nav title="Email Composer & Bulk Dispatch" subtitle="Compose rich text HTML emails, select recipients from Student & Faculty records, attach documents, and dispatch bulk email queues with automatic Multi-SMTP failover." activeTab="email">
-            <a href="{{ route('admin.email-composer.create') }}"
-               class="inline-flex h-12 items-center gap-2.5 rounded-2xl bg-gradient-to-r from-indigo-500 to-emerald-500 px-6 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-indigo-950/40 transition hover:scale-[1.02] active:scale-[0.98] cursor-pointer">
-                <i data-lucide="pen-tool" class="w-4 h-4"></i>
-                <span>Compose New Email</span>
-            </a>
-            <a href="{{ route('admin.email-composer.templates') }}"
-               class="inline-flex h-12 items-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-5 text-xs font-black uppercase tracking-wider text-white backdrop-blur-xs transition hover:bg-white/20 cursor-pointer">
-                <i data-lucide="layout-template" class="w-4 h-4 text-indigo-300"></i>
-                <span>Templates Directory</span>
-            </a>
+            <div class="flex items-center gap-3">
+                <a href="{{ route('admin.email-composer.create') }}"
+                   class="inline-flex h-12 items-center gap-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-indigo-500 px-6 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-emerald-950/40 transition hover:scale-[1.02] active:scale-[0.98] cursor-pointer">
+                    <i data-lucide="pen-tool" class="w-4 h-4"></i>
+                    <span>Compose New Email</span>
+                </a>
+                <a href="{{ route('admin.email-composer.templates') }}"
+                   class="inline-flex h-12 items-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-5 text-xs font-black uppercase tracking-wider text-white backdrop-blur-xs transition hover:bg-white/20 cursor-pointer">
+                    <i data-lucide="layout-template" class="w-4 h-4 text-emerald-300"></i>
+                    <span>Templates Directory</span>
+                </a>
+            </div>
         </x-system-nav>
 
         @if (session('success'))
-            <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-800 flex items-center gap-2">
-                <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-600"></i>
+            <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-800 flex items-center gap-2 shadow-xs">
+                <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-600 flex-shrink-0"></i>
                 <span>{{ session('success') }}</span>
             </div>
         @endif
 
         <!-- Metric KPI Cards -->
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <!-- Total Sent -->
+            <!-- Emails Sent Today -->
             <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
                 <div class="flex items-center justify-between text-slate-500">
-                    <span class="text-xs font-black uppercase tracking-wider">Total Emails Sent</span>
+                    <span class="text-xs font-black uppercase tracking-wider">Sent Today / Total</span>
                     <div class="rounded-2xl bg-emerald-50 p-2 text-emerald-600">
                         <i data-lucide="send" class="w-5 h-5"></i>
                     </div>
                 </div>
                 <div class="mt-3">
-                    <div class="text-2xl font-black text-slate-900">{{ number_format($totalSent) }}</div>
+                    <div class="text-2xl font-black text-slate-900">{{ number_format($sentToday) }} <span class="text-xs font-bold text-slate-400">/ {{ number_format($totalSent) }}</span></div>
                     <p class="mt-1 text-xs font-semibold text-emerald-600">Verified System Deliveries</p>
+                </div>
+            </div>
+
+            <!-- Pending Queue -->
+            <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div class="flex items-center justify-between text-slate-500">
+                    <span class="text-xs font-black uppercase tracking-wider">Pending Queue</span>
+                    <div class="rounded-2xl bg-amber-50 p-2 text-amber-600">
+                        <i data-lucide="clock" class="w-5 h-5"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <div class="text-2xl font-black text-slate-900">{{ number_format($pendingQueue) }}</div>
+                    <p class="mt-1 text-xs font-semibold text-amber-600">Queue Processing Campaigns</p>
                 </div>
             </div>
 
@@ -51,7 +67,7 @@
                 </div>
             </div>
 
-            <!-- SMTP Failover State -->
+            <!-- Active SMTP Mailer -->
             <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
                 <div class="flex items-center justify-between text-slate-500">
                     <span class="text-xs font-black uppercase tracking-wider">Active SMTP Mailer</span>
@@ -64,21 +80,40 @@
                     <p class="mt-1 text-xs font-semibold text-indigo-600">Multi-SMTP Pool Protection</p>
                 </div>
             </div>
+        </div>
 
-            <!-- Email Presets -->
-            <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div class="flex items-center justify-between text-slate-500">
-                    <span class="text-xs font-black uppercase tracking-wider">Reusable Templates</span>
-                    <div class="rounded-2xl bg-violet-50 p-2 text-violet-600">
-                        <i data-lucide="file-text" class="w-5 h-5"></i>
-                    </div>
+        <!-- Saved Drafts Section (If any) -->
+        @if(count($drafts) > 0)
+            <div class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+                <div class="border-b border-slate-100 px-6 py-4 flex items-center justify-between bg-slate-50">
+                    <h3 class="text-sm font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                        <i data-lucide="save" class="w-4 h-4 text-emerald-600"></i> Saved Draft Campaigns
+                    </h3>
+                    <span class="text-xs font-bold text-slate-500">{{ count($drafts) }} saved drafts</span>
                 </div>
-                <div class="mt-3">
-                    <div class="text-2xl font-black text-slate-900">{{ $presetTemplatesCount }}</div>
-                    <p class="mt-1 text-xs font-semibold text-violet-600">Available Presets & Layouts</p>
+                <div class="divide-y divide-slate-100">
+                    @foreach($drafts as $d)
+                        <div class="px-6 py-3.5 flex items-center justify-between hover:bg-slate-50 transition">
+                            <div>
+                                <span class="font-extrabold text-slate-900 block text-xs">{{ $d->title }}</span>
+                                <span class="text-slate-400 text-[11px] font-medium truncate block max-w-md">{{ $d->subject ?: '(No Subject)' }}</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <a href="{{ route('admin.email-composer.create', ['draft_id' => $d->id]) }}"
+                                   class="px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs font-black uppercase text-emerald-700 hover:bg-emerald-100 transition">
+                                    Load & Edit
+                                </a>
+                                <form method="POST" action="{{ route('admin.email-composer.drafts.destroy', $d) }}" onsubmit="return confirm('Delete this draft?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="text-xs font-bold text-rose-500 hover:text-rose-700">Delete</button>
+                                </form>
+                            </div>
+                        </div>
+                    @endforeach
                 </div>
             </div>
-        </div>
+        @endif
 
         <!-- Bulk Campaigns Monitor Table -->
         <div class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
@@ -88,7 +123,7 @@
                     <p class="text-xs font-medium text-slate-500">Queue processing status and delivery completion counts</p>
                 </div>
                 <a href="{{ route('admin.email-composer.logs') }}" class="text-xs font-extrabold text-indigo-600 hover:text-indigo-800 hover:underline flex items-center gap-1">
-                    View Full Logs <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                    View Audit Logs <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
                 </a>
             </div>
 
@@ -148,7 +183,7 @@
                                             $pct = min(100, round(($c->sent_count / $total) * 100));
                                         @endphp
                                         <div class="h-1.5 w-36 bg-slate-100 rounded-full overflow-hidden">
-                                            <div class="h-full bg-indigo-600 rounded-full transition-all duration-500" style="width: {{ $pct }}%"></div>
+                                            <div class="h-full bg-emerald-600 rounded-full transition-all duration-500" style="width: {{ $pct }}%"></div>
                                         </div>
                                     </td>
                                     <td class="px-6 py-4 text-slate-400 font-normal">

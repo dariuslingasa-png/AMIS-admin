@@ -1,30 +1,26 @@
 <x-admin-layout title="Email Activity Logs">
     <div class="space-y-6">
-        <!-- Top Action Bar -->
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-                <span class="text-xs font-black uppercase tracking-wider text-indigo-600">Audit & Delivery Log Workspace</span>
-                <h1 class="text-2xl font-black text-slate-900">Email System Delivery Audit Trail</h1>
-            </div>
-            <div class="flex items-center gap-3">
-                <a href="{{ route('admin.email-composer.index') }}" class="inline-flex h-10 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-50 transition">
-                    <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Dashboard
-                </a>
-            </div>
-        </div>
+        <!-- Top Workspace Banner -->
+        <x-system-nav title="Email Delivery Audit Logs" subtitle="Inspect full delivery audit trail, recipient addresses, CC/BCC logs, SMTP mailer choices, status flags, and error tracebacks." activeTab="email">
+            <a href="{{ route('admin.email-composer.index') }}"
+               class="inline-flex h-11 items-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-4 text-xs font-black uppercase tracking-wider text-white backdrop-blur-xs transition hover:bg-white/20 cursor-pointer shadow-sm">
+                <i data-lucide="arrow-left" class="w-4 h-4 text-emerald-400"></i>
+                <span>Dashboard</span>
+            </a>
+        </x-system-nav>
 
         <!-- Filter Card -->
         <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
             <form method="GET" action="{{ route('admin.email-composer.logs') }}" class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                    <label class="block text-xs font-extrabold uppercase text-slate-500 mb-1">Search Recipient or Subject</label>
+                    <label class="block text-xs font-extrabold uppercase text-slate-600 mb-1">Search Recipient or Subject</label>
                     <input type="text" name="search" value="{{ request('search') }}" placeholder="Search email address, subject..."
-                           class="w-full h-10 rounded-xl border border-slate-200 px-3 text-xs font-semibold text-slate-800">
+                           class="w-full h-10 rounded-xl border border-slate-200 px-3 text-xs font-semibold text-slate-900 outline-none focus:border-emerald-500">
                 </div>
 
                 <div>
-                    <label class="block text-xs font-extrabold uppercase text-slate-500 mb-1">Status</label>
-                    <select name="status" class="w-full h-10 rounded-xl border border-slate-200 px-3 text-xs font-bold text-slate-700">
+                    <label class="block text-xs font-extrabold uppercase text-slate-600 mb-1">Status</label>
+                    <select name="status" class="w-full h-10 rounded-xl border border-slate-200 px-3 text-xs font-bold text-slate-900">
                         <option value="">All Statuses</option>
                         <option value="sent" @selected(request('status') === 'sent')>Sent</option>
                         <option value="failed" @selected(request('status') === 'failed')>Failed</option>
@@ -32,10 +28,10 @@
                 </div>
 
                 <div class="flex items-end gap-2">
-                    <button type="submit" class="h-10 px-5 rounded-xl bg-indigo-600 text-white text-xs font-black uppercase tracking-wider hover:bg-indigo-700 cursor-pointer">
+                    <button type="submit" class="h-10 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase tracking-wider shadow-md transition cursor-pointer">
                         Filter Logs
                     </button>
-                    <a href="{{ route('admin.email-composer.logs') }}" class="h-10 px-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-600 text-xs font-bold flex items-center justify-center hover:bg-slate-100">
+                    <a href="{{ route('admin.email-composer.logs') }}" class="h-10 px-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 text-xs font-bold flex items-center justify-center hover:bg-slate-100">
                         Reset
                     </a>
                 </div>
@@ -51,7 +47,7 @@
                             <th class="px-6 py-3">Timestamp</th>
                             <th class="px-6 py-3">Recipient Email</th>
                             <th class="px-6 py-3">Subject</th>
-                            <th class="px-6 py-3">SMTP Mailer</th>
+                            <th class="px-6 py-3">Mailer Pool</th>
                             <th class="px-6 py-3">Status</th>
                             <th class="px-6 py-3">Details / Errors</th>
                         </tr>
@@ -64,11 +60,14 @@
                                 </td>
                                 <td class="px-6 py-4 font-bold text-slate-900">
                                     {{ $l->to_addresses }}
+                                    @if(!empty($l->cc_addresses))
+                                        <span class="text-[10px] text-indigo-600 block font-normal">CC: {{ $l->cc_addresses }}</span>
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4 max-w-xs truncate">
                                     {{ $l->subject }}
                                 </td>
-                                <td class="px-6 py-4 uppercase font-bold text-indigo-600">
+                                <td class="px-6 py-4 uppercase font-bold text-emerald-700">
                                     {{ $l->mailer }}
                                 </td>
                                 <td class="px-6 py-4">

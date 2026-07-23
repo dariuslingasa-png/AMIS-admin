@@ -15,12 +15,15 @@ return new class extends Migration
                 $table->string('subject');
                 $table->longText('body_html');
                 $table->string('sender_email')->nullable();
-                $table->string('recipient_type')->default('students'); // students, faculty, staff, alumni, custom_emails, section, grade_level
-                $table->string('recipient_filter')->nullable(); // grade level or section name or custom emails
+                $table->string('sender_name')->default('AMIS Information Technology');
+                $table->text('cc_emails')->nullable();
+                $table->text('bcc_emails')->nullable();
+                $table->string('recipient_type')->default('students');
+                $table->string('recipient_filter')->nullable();
                 $table->integer('recipient_count')->default(0);
                 $table->integer('sent_count')->default(0);
                 $table->integer('failed_count')->default(0);
-                $table->string('status')->default('draft'); // draft, queued, sending, completed, failed
+                $table->string('status')->default('draft');
                 $table->json('attachments_json')->nullable();
                 $table->text('error_log')->nullable();
                 $table->unsignedBigInteger('created_by')->nullable();
