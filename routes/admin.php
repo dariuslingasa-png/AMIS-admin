@@ -28,7 +28,10 @@ use App\Http\Controllers\Admin\StudentIdController;
 use App\Http\Controllers\Admin\StudentPhotoController;
 use App\Http\Controllers\Admin\StudentPrintController;
 use App\Http\Controllers\Admin\StudentRosterController;
-use App\Http\Controllers\Admin\SystemManagementController;
+use App\Http\Controllers\Admin\System\SystemBackupController;
+use App\Http\Controllers\Admin\System\SystemDevOpsController;
+use App\Http\Controllers\Admin\System\SystemHealthController;
+use App\Http\Controllers\Admin\System\SystemLogController;
 use App\Http\Controllers\AdminAcademicController;
 use App\Http\Controllers\AdminAcademicSubjectController;
 use App\Http\Controllers\AdminAcademicTeacherController;
@@ -293,28 +296,36 @@ Route::name('admin.')->group(function () {
         Route::get('/security-workspace/audit-logs', [SecurityWorkspaceController::class, 'auditLogs'])->name('security-workspace.audit-logs');
         Route::get('/security-workspace/alerts', [SecurityWorkspaceController::class, 'securityAlerts'])->name('security-workspace.alerts.index');
 
-        Route::get('/system-management/backups', [SystemManagementController::class, 'backupsIndex'])->name('system-management.backups.index');
-        Route::post('/system-management/backups/create', [SystemManagementController::class, 'backupsCreate'])->name('system-management.backups.create');
-        Route::post('/system-management/backups/trigger-full', [SystemManagementController::class, 'backupsTriggerFull'])->name('system-management.backups.trigger-full');
-        Route::get('/system-management/backups/{filename}/download', [SystemManagementController::class, 'backupsDownload'])->name('system-management.backups.download');
-        Route::post('/system-management/backups/{filename}/google-drive', [SystemManagementController::class, 'backupsUploadToDrive'])->name('system-management.backups.google-drive');
-        Route::delete('/system-management/backups/{filename}', [SystemManagementController::class, 'backupsDestroy'])->name('system-management.backups.destroy');
-        Route::post('/system-management/backups/restore', [SystemManagementController::class, 'backupsRestore'])->name('system-management.backups.restore');
-        Route::post('/system-management/backups/schedule', [SystemManagementController::class, 'backupsSaveSchedule'])->name('system-management.backups.schedule');
-        Route::post('/system-management/backups/prune', [SystemManagementController::class, 'pruneOldBackups'])->name('system-management.backups.prune');
-        Route::get('/system-management/health', [SystemManagementController::class, 'systemHealth'])->name('system-management.health.index');
-        Route::post('/system-management/health/test-email', [SystemManagementController::class, 'sendTestEmail'])->name('system-management.health.test-email');
-        Route::post('/system-management/health/ping', [SystemManagementController::class, 'pingDiagnostics'])->name('system-management.health.ping');
-        Route::post('/system-management/cache/clear', [SystemManagementController::class, 'clearCache'])->name('system-management.cache.clear');
-        Route::post('/system-management/cache/warmup', [SystemManagementController::class, 'warmupCache'])->name('system-management.cache.warmup');
-        Route::get('/system-management/logs', [SystemManagementController::class, 'logsIndex'])->name('system-management.logs.index');
-        Route::post('/system-management/logs/clear', [SystemManagementController::class, 'clearLogs'])->name('system-management.logs.clear');
-        Route::get('/system-management/devops', [SystemManagementController::class, 'devopsIndex'])->name('system-management.devops.index');
-        Route::post('/system-management/devops/db-optimize', [SystemManagementController::class, 'dbOptimize'])->name('system-management.devops.db-optimize');
-        Route::post('/system-management/devops/maintenance', [SystemManagementController::class, 'toggleMaintenanceMode'])->name('system-management.devops.maintenance');
-        Route::post('/system-management/devops/queue/retry', [SystemManagementController::class, 'retryFailedJobs'])->name('system-management.devops.queue.retry');
-        Route::post('/system-management/devops/queue/flush', [SystemManagementController::class, 'flushFailedJobs'])->name('system-management.devops.queue.flush');
-        Route::get('/system-management/integrations', [SystemManagementController::class, 'integrationsIndex'])->name('system-management.integrations.index');
+        // System Management Workspace
+        Route::prefix('system-management')->name('system-management.')->group(function () {
+            Route::get('/backups', [SystemBackupController::class, 'index'])->name('backups.index');
+            Route::post('/backups/create', [SystemBackupController::class, 'create'])->name('backups.create');
+            Route::post('/backups/trigger-full', [SystemBackupController::class, 'triggerFull'])->name('backups.trigger-full');
+            Route::get('/backups/{filename}/download', [SystemBackupController::class, 'download'])->name('backups.download');
+            Route::post('/backups/{filename}/google-drive', [SystemBackupController::class, 'uploadToDrive'])->name('backups.google-drive');
+            Route::delete('/backups/{filename}', [SystemBackupController::class, 'destroy'])->name('backups.destroy');
+            Route::post('/backups/restore', [SystemBackupController::class, 'restore'])->name('backups.restore');
+            Route::post('/backups/schedule', [SystemBackupController::class, 'saveSchedule'])->name('backups.schedule');
+            Route::post('/backups/prune', [SystemBackupController::class, 'pruneOldBackups'])->name('backups.prune');
+
+            Route::get('/health', [SystemHealthController::class, 'index'])->name('health.index');
+            Route::post('/health/test-email', [SystemHealthController::class, 'sendTestEmail'])->name('health.test-email');
+            Route::post('/health/ping', [SystemHealthController::class, 'pingDiagnostics'])->name('health.ping');
+
+            Route::post('/cache/clear', [SystemHealthController::class, 'clearCache'])->name('cache.clear');
+            Route::post('/cache/warmup', [SystemHealthController::class, 'warmupCache'])->name('cache.warmup');
+
+            Route::get('/logs', [SystemLogController::class, 'index'])->name('logs.index');
+            Route::post('/logs/clear', [SystemLogController::class, 'clearLogs'])->name('logs.clear');
+
+            Route::get('/devops', [SystemDevOpsController::class, 'index'])->name('devops.index');
+            Route::post('/devops/db-optimize', [SystemDevOpsController::class, 'dbOptimize'])->name('devops.db-optimize');
+            Route::post('/devops/maintenance', [SystemDevOpsController::class, 'toggleMaintenanceMode'])->name('devops.maintenance');
+            Route::post('/devops/queue/retry', [SystemDevOpsController::class, 'retryFailedJobs'])->name('devops.queue.retry');
+            Route::post('/devops/queue/flush', [SystemDevOpsController::class, 'flushFailedJobs'])->name('devops.queue.flush');
+
+            Route::get('/integrations', [SystemLogController::class, 'integrationsIndex'])->name('integrations.index');
+        });
 
         Route::get('/settings/discounts', [AdminDiscountSettingsController::class, 'edit'])->name('settings.discounts');
         Route::patch('/settings/discounts', [AdminDiscountSettingsController::class, 'update'])->name('settings.discounts.update');

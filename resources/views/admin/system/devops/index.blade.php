@@ -1,30 +1,7 @@
 <x-admin-layout title="DevOps Control Center">
     <div class="space-y-6">
-        <!-- Banner -->
-        <section class="overflow-hidden rounded-3xl border border-slate-700/30 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 p-6 text-white shadow-xl shadow-slate-900/10">
-            <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-                <div>
-                    <span class="inline-flex rounded-full bg-white/10 px-3 py-1 text-xs font-black uppercase tracking-[0.22em] text-slate-200">System Management</span>
-                    <h1 class="mt-4 text-3xl font-black tracking-tight flex items-center gap-3">
-                        <i data-lucide="cpu" class="w-8 h-8 text-indigo-400"></i>
-                        <span>DevOps Operations & Control Center</span>
-                    </h1>
-                    <p class="mt-2 max-w-2xl text-sm font-medium leading-6 text-slate-300">
-                        Environment inspection, database table defragmentation, maintenance mode switches, queue workers, and server state management.
-                    </p>
-                </div>
-                <div class="flex flex-wrap items-center gap-2.5">
-                    <a href="{{ route('admin.system-management.health.index') }}" class="inline-flex items-center gap-2 rounded-2xl bg-white/10 border border-white/20 px-4 py-2.5 text-xs font-black text-white hover:bg-white/20 transition cursor-pointer backdrop-blur-xs">
-                        <i data-lucide="activity" class="w-4 h-4 text-emerald-300"></i>
-                        <span>System Health</span>
-                    </a>
-                    <a href="{{ route('admin.system-management.logs.index') }}" class="inline-flex items-center gap-2 rounded-2xl bg-sky-500/20 border border-sky-400/40 px-4 py-2.5 text-xs font-black text-sky-200 hover:bg-sky-500/30 transition cursor-pointer backdrop-blur-xs">
-                        <i data-lucide="terminal" class="w-4 h-4 text-sky-300"></i>
-                        <span>Live Logs</span>
-                    </a>
-                </div>
-            </div>
-        </section>
+        <!-- Reusable Workspace Header Component -->
+        <x-system-nav title="DevOps Operations & Control Center" subtitle="Environment inspection, database table defragmentation, maintenance mode switches, queue workers, and server state management." activeTab="devops" />
 
         @if (session('success'))
             <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-800">

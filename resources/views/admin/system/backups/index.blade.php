@@ -1,17 +1,7 @@
 <x-admin-layout title="Backup Center">
     <div class="space-y-6">
-        <!-- Banner -->
-        <section class="overflow-hidden rounded-3xl border border-slate-700/30 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 p-6 text-white shadow-xl shadow-slate-900/10">
-            <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-                <div>
-                    <span class="inline-flex rounded-full bg-white/10 px-3 py-1 text-xs font-black uppercase tracking-[0.22em] text-slate-200">System Management</span>
-                    <h1 class="mt-4 text-3xl font-black tracking-tight">Backup Center</h1>
-                    <p class="mt-2 max-w-2xl text-sm font-medium leading-6 text-slate-300">
-                        Disaster recovery backups, local snapshots, automated cron scheduling, and Google Drive cloud backups.
-                    </p>
-                </div>
-            </div>
-        </section>
+        <!-- Reusable Workspace Header Component -->
+        <x-system-nav title="Database & System Backup Center" subtitle="Disaster recovery backups, local snapshots, automated cron scheduling, and Google Drive cloud backups." activeTab="backups" />
 
         @if (session('success'))
             <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-800">

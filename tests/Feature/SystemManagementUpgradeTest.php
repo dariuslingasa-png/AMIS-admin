@@ -47,7 +47,7 @@ class SystemManagementUpgradeTest extends TestCase
         $response = $this->actingAs($admin)->get(route('admin.system-management.logs.index'));
 
         $response->assertOk();
-        $response->assertSeeText('Live System Error Logs');
+        $response->assertSeeText('Live System Error Log Viewer');
         $response->assertSeeText('laravel.log');
     }
 
@@ -110,10 +110,10 @@ class SystemManagementUpgradeTest extends TestCase
         $response->assertOk();
         $response->assertJsonStructure([
             'success',
-            'diagnostics' => [
-                'database',
+            'results' => [
+                'mariadb',
                 'gdrive',
-                'microsoft',
+                'm365',
             ],
             'timestamp',
         ]);
