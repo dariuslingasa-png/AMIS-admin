@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>This site is under maintenance - Al-Munawwara Islamic School</title>
+    <title>This site is under maintenance - Al Munawara Islamic School</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -33,7 +33,7 @@
         <div class="flex flex-col items-center justify-center space-y-2">
             <img src="https://admin.amis.edu.ph/images/AMIS_Logo.svg" alt="AMIS Logo" class="w-20 h-20 sm:w-24 sm:h-24 object-contain mx-auto" onerror="this.onerror=null; this.src='/images/AMIS_Logo.svg';">
             <h2 class="font-arabic text-2xl sm:text-3xl text-emerald-800 font-bold leading-none mt-1">المدرسة المنورة الإسلامية</h2>
-            <h1 class="text-xs font-black uppercase tracking-[0.2em] text-slate-500">Al-Munawwara Islamic School</h1>
+            <h1 class="text-xs font-black uppercase tracking-[0.2em] text-slate-500">Al Munawara Islamic School</h1>
         </div>
 
         <!-- Soft Emerald Circular Background Container -->
@@ -85,7 +85,7 @@
             <a href="https://amis.edu.ph" class="hover:text-emerald-700 transition">amis.edu.ph</a>
         </div>
         <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-            &copy; {{ date('Y') }} Al-Munawwara Islamic School. All rights reserved.
+            &copy; {{ date('Y') }} Al Munawara Islamic School. All rights reserved.
         </p>
     </footer>
 
