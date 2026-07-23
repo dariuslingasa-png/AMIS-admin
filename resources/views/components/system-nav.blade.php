@@ -26,31 +26,5 @@
                 {{ $subtitle }}
             </p>
         </div>
-
-        <div class="flex flex-wrap items-center gap-2.5">
-            <a href="{{ route('admin.system-management.health.index') }}" 
-               class="inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-black transition cursor-pointer backdrop-blur-xs {{ $activeTab === 'health' ? 'bg-emerald-500/30 border border-emerald-400/60 text-emerald-200' : 'bg-white/10 border border-white/20 text-white hover:bg-white/20' }}">
-                <i data-lucide="activity" class="w-4 h-4 text-emerald-300"></i>
-                <span>System Health</span>
-            </a>
-
-            <a href="{{ route('admin.system-management.devops.index') }}" 
-               class="inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-black transition cursor-pointer backdrop-blur-xs {{ $activeTab === 'devops' ? 'bg-indigo-500/30 border border-indigo-400/60 text-indigo-200' : 'bg-white/10 border border-white/20 text-white hover:bg-white/20' }}">
-                <i data-lucide="cpu" class="w-4 h-4 text-indigo-300"></i>
-                <span>DevOps Control</span>
-            </a>
-
-            <a href="{{ route('admin.system-management.backups.index') }}" 
-               class="inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-black transition cursor-pointer backdrop-blur-xs {{ $activeTab === 'backups' ? 'bg-violet-500/30 border border-violet-400/60 text-violet-200' : 'bg-white/10 border border-white/20 text-white hover:bg-white/20' }}">
-                <i data-lucide="database" class="w-4 h-4 text-violet-300"></i>
-                <span>Backup Center</span>
-            </a>
-
-            <a href="{{ route('admin.system-management.logs.index') }}" 
-               class="inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-black transition cursor-pointer backdrop-blur-xs {{ $activeTab === 'logs' ? 'bg-sky-500/30 border border-sky-400/60 text-sky-200' : 'bg-white/10 border border-white/20 text-white hover:bg-white/20' }}">
-                <i data-lucide="terminal" class="w-4 h-4 text-sky-300"></i>
-                <span>Live Logs</span>
-            </a>
-        </div>
     </div>
 </section>

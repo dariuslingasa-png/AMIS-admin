@@ -153,6 +153,8 @@
             'links' => [
                 ['Backup Center', 'database', route('admin.system-management.backups.index'), request()->routeIs('admin.system-management.backups.*')],
                 ['System Health', 'heart-pulse', route('admin.system-management.health.index'), request()->routeIs('admin.system-management.health.*')],
+                ['DevOps Control', 'cpu', route('admin.system-management.devops.index'), request()->routeIs('admin.system-management.devops.*')],
+                ['Live System Logs', 'terminal', route('admin.system-management.logs.index'), request()->routeIs('admin.system-management.logs.*')],
                 ['Integrations', 'plug', route('admin.system-management.integrations.index'), request()->routeIs('admin.system-management.integrations.*')],
             ],
         ],
