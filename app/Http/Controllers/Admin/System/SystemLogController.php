@@ -86,6 +86,34 @@ class SystemLogController extends Controller
     public function integrationsIndex()
     {
         $this->ensureSuperOrAdmin();
-        return view('admin.system.integrations.index');
+
+        $integrations = [
+            'microsoft_entra' => [
+                'description' => 'Single Sign-on identity configuration for MS365 accounts.',
+                'configured' => filled(config('services.azure.client_id')),
+                'client_id' => config('services.azure.client_id', 'Not Set'),
+                'tenant_id' => config('services.azure.tenant_id', 'Not Set'),
+                'redirect_uri' => config('services.azure.redirect', '/auth/callback'),
+            ],
+            'microsoft_graph' => [
+                'description' => 'Active Directory and Microsoft Teams roster sync provisioning.',
+                'configured' => filled(config('services.azure.client_secret')),
+                'scopes' => 'User.Read, TeamMember.ReadWrite.All, Directory.Read.All',
+            ],
+            'google_drive' => [
+                'description' => 'Cloud backup storage directory integration for database snapshots.',
+                'configured' => filled(env('GOOGLE_DRIVE_FOLDER_ID')),
+                'folder_id' => env('GOOGLE_DRIVE_FOLDER_ID', 'Not Configured'),
+            ],
+            'email' => [
+                'description' => 'SMTP mail gateway and Multi-SMTP failover rotator.',
+                'configured' => config('mail.default') !== 'log' && filled(config('mail.mailers.smtp.host')),
+                'host' => config('mail.mailers.smtp.host', '127.0.0.1'),
+                'port' => config('mail.mailers.smtp.port', 587),
+                'encryption' => config('mail.mailers.smtp.scheme', 'TLS'),
+            ],
+        ];
+
+        return view('admin.system.integrations.index', compact('integrations'));
     }
 }
