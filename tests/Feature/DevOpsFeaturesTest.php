@@ -28,7 +28,15 @@ class DevOpsFeaturesTest extends TestCase
         parent::tearDown();
     }
 
-    private function createAdmin()
+    private function createSuperAdmin()
+    {
+        return User::factory()->create([
+            'role' => 'super_admin',
+            'account_status' => 'verified',
+        ]);
+    }
+
+    private function createRegularAdmin()
     {
         return User::factory()->create([
             'role' => 'admin',
@@ -47,11 +55,23 @@ class DevOpsFeaturesTest extends TestCase
     }
 
     /** @test */
-    public function admins_can_view_devops_control_center()
+    public function regular_admins_cannot_access_devops_control_center()
     {
-        $admin = $this->createAdmin();
+        $admin = $this->createRegularAdmin();
 
-        $response = $this->actingAs($admin)->get(route('admin.system-management.devops.index'));
+        $this->actingAs($admin)->get(route('admin.system-management.devops.index'))
+            ->assertStatus(403);
+
+        $this->actingAs($admin)->post(route('admin.system-management.devops.db-optimize'))
+            ->assertStatus(403);
+    }
+
+    /** @test */
+    public function super_admins_can_view_devops_control_center()
+    {
+        $superAdmin = $this->createSuperAdmin();
+
+        $response = $this->actingAs($superAdmin)->get(route('admin.system-management.devops.index'));
 
         $response->assertOk();
         $response->assertSeeText('DevOps Operations');
@@ -61,23 +81,23 @@ class DevOpsFeaturesTest extends TestCase
     }
 
     /** @test */
-    public function admins_can_run_database_table_optimization()
+    public function super_admins_can_run_database_table_optimization()
     {
-        $admin = $this->createAdmin();
+        $superAdmin = $this->createSuperAdmin();
 
-        $response = $this->actingAs($admin)->post(route('admin.system-management.devops.db-optimize'));
+        $response = $this->actingAs($superAdmin)->post(route('admin.system-management.devops.db-optimize'));
 
         $response->assertRedirect();
         $response->assertSessionHas('success');
     }
 
     /** @test */
-    public function admins_can_toggle_system_maintenance_mode()
+    public function super_admins_can_toggle_system_maintenance_mode()
     {
-        $admin = $this->createAdmin();
+        $superAdmin = $this->createSuperAdmin();
 
         // Enable maintenance mode
-        $response = $this->actingAs($admin)->post(route('admin.system-management.devops.maintenance'));
+        $response = $this->actingAs($superAdmin)->post(route('admin.system-management.devops.maintenance'));
         $response->assertRedirect();
         $response->assertSessionHas('success');
         $this->assertTrue(app()->isDownForMaintenance());
@@ -88,15 +108,15 @@ class DevOpsFeaturesTest extends TestCase
     }
 
     /** @test */
-    public function admins_can_retry_and_flush_queue_jobs()
+    public function super_admins_can_retry_and_flush_queue_jobs()
     {
-        $admin = $this->createAdmin();
+        $superAdmin = $this->createSuperAdmin();
 
-        $response = $this->actingAs($admin)->post(route('admin.system-management.devops.queue.retry'));
+        $response = $this->actingAs($superAdmin)->post(route('admin.system-management.devops.queue.retry'));
         $response->assertRedirect();
         $response->assertSessionHas('success');
 
-        $response = $this->actingAs($admin)->post(route('admin.system-management.devops.queue.flush'));
+        $response = $this->actingAs($superAdmin)->post(route('admin.system-management.devops.queue.flush'));
         $response->assertRedirect();
         $response->assertSessionHas('success');
     }

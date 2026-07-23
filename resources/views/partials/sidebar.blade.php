@@ -191,6 +191,18 @@
         }, $workspaceSections);
     }
 
+    $isSuperAdmin = Auth::user()?->role === 'super_admin';
+    if (!$isSuperAdmin) {
+        $workspaceSections = array_map(function ($section) {
+            if ($section['title'] === 'System Management') {
+                $section['links'] = array_values(array_filter($section['links'], function ($link) {
+                    return $link[0] !== 'DevOps Control';
+                }));
+            }
+            return $section;
+        }, $workspaceSections);
+    }
+
     $workspaceSections = array_filter($workspaceSections, function($section) {
         return !($section['hidden'] ?? false);
     });
