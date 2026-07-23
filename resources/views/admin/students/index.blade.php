@@ -356,7 +356,7 @@
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
             </div>
-            <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">Generating PNG ZIP Archive</h3>
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">Generating Instant JPG ZIP Archive</h3>
             <p id="zip-progress-text" class="text-sm text-slate-500 dark:text-slate-400 mb-6">Loading student application forms... Please wait.</p>
             <div class="h-1.5 w-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
                 <div id="zip-progress-bar" class="h-full rounded-full bg-violet-600 transition-all duration-200" style="width: 0%"></div>

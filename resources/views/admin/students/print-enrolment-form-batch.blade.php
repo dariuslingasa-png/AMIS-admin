@@ -764,15 +764,17 @@
                     
                     try {
                         const canvas = await html2canvas(pageEl, {
-                            scale: 2,
+                            scale: 1.3,
                             useCORS: true,
                             logging: false,
                             allowTaint: true,
-                            backgroundColor: '#ffffff'
+                            backgroundColor: '#ffffff',
+                            imageTimeout: 0,
+                            removeContainer: true
                         });
                         
-                        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-                        zip.file(`${basePath}/${studentName}_Page_${pageNum}.png`, blob);
+                        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.88));
+                        zip.file(`${basePath}/${studentName}_Page_${pageNum}.jpg`, blob);
                         
                     } catch (err) {
                         console.error(`Failed to render ${studentName} page ${pageNum}:`, err);
@@ -793,13 +795,13 @@
             }
             
             try {
-                const content = await zip.generateAsync({ type: 'blob' });
+                const content = await zip.generateAsync({ type: 'blob', compression: 'STORE' });
                 const url = URL.createObjectURL(content);
                 const link = document.createElement('a');
                 const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
                 const gradeClean = "{{ str_replace(' ', '_', $gradeTitle ?? 'Batch') }}";
                 link.href = url;
-                link.download = `Enrollment_Forms_SY_2026-2027_${gradeClean}_${dateStr}_PNG.zip`;
+                link.download = `Enrollment_Forms_SY_2026-2027_${gradeClean}_${dateStr}_JPG.zip`;
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
