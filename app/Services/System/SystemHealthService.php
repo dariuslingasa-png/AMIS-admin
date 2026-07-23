@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class SystemHealthService
@@ -56,7 +57,7 @@ class SystemHealthService
         $localSnapshotsCount = 0;
         $localSnapshotsSizeBytes = 0;
         if (file_exists($backupDir)) {
-            $files = glob($backupDir . '/*.sql');
+            $files = glob($backupDir . '/*.*');
             if ($files) {
                 $localSnapshotsCount = count($files);
                 foreach ($files as $file) {
@@ -70,7 +71,6 @@ class SystemHealthService
         $gdriveConfigured = $gdriveService->isConfigured();
         $gdriveQuota = $gdriveConfigured ? $gdriveService->getStorageQuota() : null;
 
-        $m365Service = app(MicrosoftGraphService::class);
         $m365Configured = false;
         try {
             $m365Configured = filled(config('services.microsoft.tenant_id')) &&
@@ -78,7 +78,82 @@ class SystemHealthService
                               filled(config('services.microsoft.client_secret'));
         } catch (\Exception $e) {}
 
+        // Construct healthStatus array required by Blade view
+        $healthStatus = [
+            'mariadb' => [
+                'name' => 'MariaDB Database',
+                'connected' => $dbConnected,
+                'version' => 'MariaDB 10.x / MySQL',
+                'metrics' => $dbConnected ? "{$dbLatencyMs} ms latency ({$tableCount} tables, " . $this->formatBytes($totalDatabaseSizeBytes) . ")" : 'Disconnected',
+            ],
+            'server_disk' => [
+                'name' => 'Server Storage',
+                'connected' => $diskUsagePercent < 90,
+                'version' => 'Local File System',
+                'metrics' => "{$this->formatBytes($usedSpaceBytes)} / {$this->formatBytes($totalSpaceBytes)} ({$diskUsagePercent}% used)",
+            ],
+            'gdrive' => [
+                'name' => 'Google Drive API',
+                'connected' => $gdriveConfigured,
+                'version' => 'Google Drive OAuth v2',
+                'metrics' => $gdriveConfigured ? 'Connected & Configured' : 'Not Connected / Token Expired',
+            ],
+            'm365' => [
+                'name' => 'Microsoft Graph API',
+                'connected' => $m365Configured,
+                'version' => 'Azure AD Tenant',
+                'metrics' => $m365Configured ? 'Tenant Credentials Valid' : 'Missing Tenant Secrets',
+            ],
+            'php_engine' => [
+                'name' => 'PHP Runtime Engine',
+                'connected' => true,
+                'version' => 'PHP ' . PHP_VERSION,
+                'metrics' => 'Laravel ' . app()->version(),
+            ],
+        ];
+
+        // Email Tracking Stats
+        $hasEmailLogs = Schema::hasTable('email_logs');
+        $emailStats = [
+            'available' => $hasEmailLogs,
+            'today' => $hasEmailLogs ? DB::table('email_logs')->whereDate('created_at', now()->today())->count() : 0,
+            'failed_today' => $hasEmailLogs ? DB::table('email_logs')->whereDate('created_at', now()->today())->where('status', 'failed')->count() : 0,
+            'this_week' => $hasEmailLogs ? DB::table('email_logs')->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count() : 0,
+            'this_month' => $hasEmailLogs ? DB::table('email_logs')->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->count() : 0,
+            'daily_chart' => [],
+            'mailer_breakdown' => $hasEmailLogs ? DB::table('email_logs')->select('mailer', DB::raw('COUNT(*) as total'), DB::raw('SUM(CASE WHEN status="sent" THEN 1 ELSE 0 END) as sent_count'), DB::raw('SUM(CASE WHEN status="failed" THEN 1 ELSE 0 END) as failed_count'))->groupBy('mailer')->get() : collect([]),
+            'recent' => $hasEmailLogs ? DB::table('email_logs')->latest()->take(10)->get() : collect([]),
+            'smtp_config' => [
+                'default_mailer' => config('mail.default', 'smtp'),
+                'from_address' => config('mail.from.address', 'support@amis.edu.ph'),
+                'from_name' => config('mail.from.name', 'AMIS Portal'),
+                'mailers' => [
+                    'smtp' => [
+                        'is_default' => config('mail.default') === 'smtp',
+                        'host' => config('mail.mailers.smtp.host', 'smtp.gmail.com'),
+                        'port' => config('mail.mailers.smtp.port', 587),
+                        'encryption' => config('mail.mailers.smtp.encryption', 'tls'),
+                        'transport' => 'smtp',
+                    ],
+                ],
+            ],
+        ];
+
+        if ($hasEmailLogs) {
+            for ($i = 6; $i >= 0; $i--) {
+                $date = now()->subDays($i);
+                $cnt = DB::table('email_logs')->whereDate('created_at', $date->toDateString())->count();
+                $emailStats['daily_chart'][] = [
+                    'day' => $date->format('D'),
+                    'label' => $date->format('M d'),
+                    'count' => $cnt,
+                ];
+            }
+        }
+
         return [
+            'healthStatus' => $healthStatus,
+            'emailStats' => $emailStats,
             'dbConnected' => $dbConnected,
             'dbLatencyMs' => $dbLatencyMs,
             'tableCount' => $tableCount,
