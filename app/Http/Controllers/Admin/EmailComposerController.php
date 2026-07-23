@@ -75,10 +75,9 @@ class EmailComposerController extends Controller
         // Student records for quick selection modal
         $students = [];
         if (Schema::hasTable('students')) {
-            $students = Student::whereNotNull('email')
-                               ->orWhereNotNull('school_email')
-                               ->take(150)
-                               ->get(['id', 'first_name', 'last_name', 'email', 'school_email', 'grade_level']);
+            $students = Student::where(function($q) {
+                $q->whereNotNull('email')->orWhereNotNull('school_email');
+            })->take(150)->get();
         }
 
         // Selected draft if requested

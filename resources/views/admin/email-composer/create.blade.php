@@ -395,7 +395,7 @@
                                     <div class="flex items-center gap-3">
                                         <input type="checkbox" value="{{ $emailVal }}" x-model="selectedStudents" class="rounded text-emerald-600 focus:ring-emerald-500 w-4 h-4">
                                         <div>
-                                            <span class="text-xs font-extrabold text-slate-900 block">{{ $st->first_name }} {{ $st->last_name }}</span>
+                                            <span class="text-xs font-extrabold text-slate-900 block">{{ $st->full_name ?? trim(($st->first_name ?? '') . ' ' . ($st->last_name ?? '')) ?: 'Student' }}</span>
                                             <span class="text-[11px] text-slate-400 block">{{ $emailVal }}</span>
                                         </div>
                                     </div>
