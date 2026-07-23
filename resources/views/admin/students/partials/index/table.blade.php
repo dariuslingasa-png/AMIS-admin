@@ -40,7 +40,7 @@
                         </a>
                         <span class="hidden print:inline">Grade</span>
                     </th>
-                    <th class="w-48 px-5 py-4 font-bold">{{ $isTeacherAdminViewer ? 'School Email' : 'School Email / Temp Pass' }}</th>
+                    <th class="w-36 px-5 py-4 font-bold">Section</th>
                     <th class="w-40 px-5 py-4 font-bold print:hidden">MS Sync State</th>
                     <th class="w-36 px-5 py-4 text-right font-bold print:hidden">Action</th>
                 </tr>
@@ -136,52 +136,17 @@
                             {{ $student->grade_level ?? '-' }}
                         </td>
 
+                        <!-- Section / Class Occupancy -->
+                        <td class="px-5 py-4 font-extrabold text-slate-700">
+                            @if($student->studentSection && $student->studentSection->section)
+                                <span class="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-extrabold text-emerald-800 ring-1 ring-emerald-200/80">
+                                    {{ $student->studentSection->section->name }}
+                                </span>
+                            @else
+                                <span class="text-slate-400 font-normal text-xs">-</span>
+                            @endif
+                        </td>
 
-                         <!-- School Email / Temp Pass -->
-                         <td class="px-5 py-4 text-xs">
-                             <div class="flex items-start justify-between gap-1.5">
-                                 <div class="min-w-0 flex-1">
-                                     <div class="font-semibold text-slate-800 break-all select-all">{{ $student->school_email ?? '-' }}</div>
-                                     @unless ($isTeacherAdminViewer)
-                                     <div class="mt-1 flex flex-wrap items-center gap-1.5 print:hidden">
-                                         <span class="text-slate-400 font-extrabold uppercase tracking-wider text-[10px]">Pass:</span>
-                                         @if ($isHashed || blank($student->temp_password))
-                                             <span class="text-slate-550 font-semibold text-[10px]">-</span>
-                                         @else
-                                             <span class="font-mono bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-[11px] text-slate-800 dark:text-slate-200 select-all font-semibold">{{ $student->temp_password }}</span>
-                                         @endif
-                                         @if ($student->password_changed_at)
-                                             <span class="inline-flex items-center gap-0.5 rounded bg-emerald-50 px-1.5 py-0.5 text-[9px] font-extrabold text-emerald-700 ring-1 ring-emerald-100 uppercase" title="Password changed on {{ $student->password_changed_at->format('M d, Y h:i A') }}">
-                                                 <svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check inline-block"><path d="M20 6 9 17l-5-5"/></svg>
-                                                 Changed
-                                             </span>
-                                         @elseif ($student->ms_user_id)
-                                             <span class="inline-flex items-center rounded bg-amber-50 px-1.5 py-0.5 text-[9px] font-extrabold text-amber-700 ring-1 ring-amber-100 uppercase">
-                                                 Temporary
-                                             </span>
-                                         @else
-                                             <span class="inline-flex items-center rounded bg-slate-100 px-1.5 py-0.5 text-[9px] font-extrabold text-slate-500 ring-1 ring-slate-200 uppercase">
-                                                 No Account
-                                             </span>
-                                         @endif
-                                     </div>
-                                     @endunless
-                                 </div>
-                                 @if ($student->school_email)
-                                     @php
-                                         $emailVal = $student->school_email;
-                                         $passVal = ($isHashed || blank($student->temp_password)) ? '' : $student->temp_password;
-                                         $copyVal = (!$isTeacherAdminViewer && $passVal) ? "Email: {$emailVal}\nPassword: {$passVal}" : $emailVal;
-                                     @endphp
-                                     <button onclick="copyToClipboard(this.getAttribute('data-copy'), this)" 
-                                             data-copy="{{ $copyVal }}" 
-                                             class="text-slate-400 hover:text-slate-655 transition-colors duration-100 cursor-pointer p-1 rounded hover:bg-slate-100 print:hidden flex items-center justify-center border-0 bg-transparent shrink-0 mt-0.5" 
-                                             title="{{ $isTeacherAdminViewer ? 'Copy Email' : 'Copy Email & Password' }}">
-                                         <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-                                     </button>
-                                 @endif
-                             </div>
-                         </td>
 
                         <!-- MS Sync status -->
                         <td class="px-5 py-4 print:hidden">

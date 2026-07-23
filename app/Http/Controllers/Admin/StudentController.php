@@ -162,15 +162,52 @@ class StudentController extends Controller
             $students = $query->paginate(25)->withQueryString();
         }
 
+        $totalStudents = Student::count();
+        $f2fStudents = Student::whereHas('applicant', function ($q) {
+            $q->where('learning_mode', 'like', '%face-to-face%')
+              ->orWhere('learning_mode', 'like', '%f2f%')
+              ->orWhere('learning_mode', 'like', '%face_to_face%');
+        })->count();
+        $flexibleStudents = Student::whereHas('applicant', function ($q) {
+            $q->where('learning_mode', 'like', '%flexible%')
+              ->orWhere('learning_mode', 'like', '%online%')
+              ->orWhere('learning_mode', 'like', '%odl%');
+        })->count();
+        $passwordsChanged = Student::whereNotNull('password_changed_at')->count();
+        $passwordsTemp = Student::whereNull('password_changed_at')->whereNotNull('ms_user_id')->count();
+        $noMsAccounts = Student::whereNull('ms_user_id')->count();
+
         $stats = [
-            'total' => Student::count(),
+            'total' => $totalStudents,
+            'total_students' => $totalStudents,
+            'f2f_students' => $f2fStudents,
+            'flexible_students' => $flexibleStudents,
+            'passwords_changed' => $passwordsChanged,
+            'passwords_temp' => $passwordsTemp,
+            'no_ms_accounts' => $noMsAccounts,
             'active_ms' => Student::where('ms_license_active', true)->whereNotNull('ms_user_id')->count(),
-            'no_account' => Student::whereNull('ms_user_id')->count(),
-            'password_changed' => Student::whereNotNull('password_changed_at')->count(),
+            'no_account' => $noMsAccounts,
+            'password_changed' => $passwordsChanged,
         ];
 
+        $passwordByGrade = DB::table('students')
+            ->leftJoin('enrollment_applicants', 'enrollment_applicants.id', '=', 'students.enrollment_applicant_id')
+            ->select(
+                'students.grade_level',
+                DB::raw('COUNT(students.id) as total'),
+                DB::raw("COUNT(CASE WHEN LOWER(enrollment_applicants.learning_mode) LIKE '%face%' OR LOWER(enrollment_applicants.learning_mode) LIKE '%f2f%' THEN 1 END) as f2f"),
+                DB::raw("COUNT(CASE WHEN LOWER(enrollment_applicants.learning_mode) LIKE '%flexible%' OR LOWER(enrollment_applicants.learning_mode) LIKE '%online%' OR LOWER(enrollment_applicants.learning_mode) LIKE '%odl%' THEN 1 END) as odl"),
+                DB::raw('COUNT(CASE WHEN students.password_changed_at IS NOT NULL THEN 1 END) as changed'),
+                DB::raw('COUNT(CASE WHEN students.password_changed_at IS NULL AND students.ms_user_id IS NOT NULL THEN 1 END) as temp'),
+                DB::raw('COUNT(CASE WHEN students.ms_user_id IS NULL THEN 1 END) as no_account')
+            )
+            ->groupBy('students.grade_level')
+            ->get();
+
         $analytics = [
-            'total_students' => $stats['total'],
+            'total_students' => $totalStudents,
+            'filtered_total' => $isPrint ? count($students) : $students->total(),
+            'password_by_grade' => $passwordByGrade,
         ];
 
         return view('admin.students.index', compact('students', 'stats', 'analytics', 'gradeOrder', 'isPrint'));
