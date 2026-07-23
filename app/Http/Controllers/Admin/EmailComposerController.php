@@ -72,12 +72,22 @@ class EmailComposerController extends Controller
             $sections = Section::pluck('name')->toArray();
         }
 
-        // Student records for quick selection modal
+        // Student records for quick selection modal safely checked against schema
         $students = [];
         if (Schema::hasTable('students')) {
-            $students = Student::where(function($q) {
-                $q->whereNotNull('email')->orWhereNotNull('school_email');
-            })->take(150)->get();
+            $hasEmail = Schema::hasColumn('students', 'email');
+            $hasSchoolEmail = Schema::hasColumn('students', 'school_email');
+            $hasMsEmail = Schema::hasColumn('students', 'ms_email');
+
+            $query = Student::query();
+            if ($hasEmail || $hasSchoolEmail || $hasMsEmail) {
+                $query->where(function ($q) use ($hasEmail, $hasSchoolEmail, $hasMsEmail) {
+                    if ($hasEmail) $q->orWhereNotNull('email');
+                    if ($hasSchoolEmail) $q->orWhereNotNull('school_email');
+                    if ($hasMsEmail) $q->orWhereNotNull('ms_email');
+                });
+            }
+            $students = $query->take(150)->get();
         }
 
         // Selected draft if requested

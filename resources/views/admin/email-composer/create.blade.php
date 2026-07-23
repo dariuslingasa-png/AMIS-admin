@@ -389,7 +389,7 @@
                     </div>
                     <div class="p-4 overflow-y-auto flex-1 divide-y divide-slate-100">
                         @foreach($students as $st)
-                            @php $emailVal = $st->email ?? $st->school_email; @endphp
+                            @php $emailVal = $st->school_email ?? $st->email ?? $st->ms_email; @endphp
                             @if($emailVal)
                                 <label class="flex items-center justify-between py-2.5 px-3 hover:bg-slate-50 rounded-xl cursor-pointer">
                                     <div class="flex items-center gap-3">
