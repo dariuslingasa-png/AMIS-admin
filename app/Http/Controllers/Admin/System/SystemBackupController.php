@@ -33,7 +33,7 @@ class SystemBackupController extends Controller
     {
         $role = auth()->user()?->role;
         if ($role !== 'super_admin') {
-            abort(403, 'Unauthorized. This operation requires Super Admin privileges.');
+            abort(403, 'Unauthorized. Destructive operations require Super Admin privileges.');
         }
     }
 
@@ -124,7 +124,7 @@ class SystemBackupController extends Controller
 
     public function create(Request $request)
     {
-        $this->ensureSuperAdmin();
+        $this->ensureSuperOrAdmin();
 
         try {
             Artisan::call('amis:backup');
@@ -138,7 +138,7 @@ class SystemBackupController extends Controller
 
     public function triggerFull(Request $request)
     {
-        $this->ensureSuperAdmin();
+        $this->ensureSuperOrAdmin();
 
         try {
             \App\Jobs\ProcessAmisBackupJob::dispatch();
@@ -152,7 +152,7 @@ class SystemBackupController extends Controller
 
     public function download(string $filename)
     {
-        $this->ensureSuperAdmin();
+        $this->ensureSuperOrAdmin();
 
         $path = storage_path('app/backups/' . basename($filename));
         if (!file_exists($path)) {
