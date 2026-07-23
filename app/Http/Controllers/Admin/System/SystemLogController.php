@@ -90,27 +90,27 @@ class SystemLogController extends Controller
         $integrations = [
             'microsoft_entra' => [
                 'description' => 'Single Sign-on identity configuration for MS365 accounts.',
-                'configured' => filled(config('services.azure.client_id')),
-                'client_id' => config('services.azure.client_id', 'Not Set'),
-                'tenant_id' => config('services.azure.tenant_id', 'Not Set'),
-                'redirect_uri' => config('services.azure.redirect', '/auth/callback'),
+                'configured' => filled(config('services.microsoft.client_id') ?? env('MICROSOFT_CLIENT_ID')),
+                'client_id' => config('services.microsoft.client_id') ?? env('MICROSOFT_CLIENT_ID') ?? 'Not Set',
+                'tenant_id' => config('services.microsoft.tenant_id') ?? env('MICROSOFT_TENANT_ID') ?? 'Not Set',
+                'redirect_uri' => config('services.microsoft.redirect_uri') ?? env('MICROSOFT_REDIRECT_URI') ?? '/auth/microsoft/callback',
             ],
             'microsoft_graph' => [
                 'description' => 'Active Directory and Microsoft Teams roster sync provisioning.',
-                'configured' => filled(config('services.azure.client_secret')),
+                'configured' => filled(config('services.microsoft.client_secret') ?? env('MICROSOFT_CLIENT_SECRET')),
                 'scopes' => 'User.Read, TeamMember.ReadWrite.All, Directory.Read.All',
             ],
             'google_drive' => [
                 'description' => 'Cloud backup storage directory integration for database snapshots.',
-                'configured' => filled(env('GOOGLE_DRIVE_FOLDER_ID')),
-                'folder_id' => env('GOOGLE_DRIVE_FOLDER_ID', 'Not Configured'),
+                'configured' => filled(config('services.google_drive.folder_id') ?? env('GOOGLE_DRIVE_FOLDER_ID')),
+                'folder_id' => config('services.google_drive.folder_id') ?? env('GOOGLE_DRIVE_FOLDER_ID') ?? 'Not Configured',
             ],
             'email' => [
                 'description' => 'SMTP mail gateway and Multi-SMTP failover rotator.',
-                'configured' => config('mail.default') !== 'log' && filled(config('mail.mailers.smtp.host')),
-                'host' => config('mail.mailers.smtp.host', '127.0.0.1'),
-                'port' => config('mail.mailers.smtp.port', 587),
-                'encryption' => config('mail.mailers.smtp.scheme', 'TLS'),
+                'configured' => filled(config('mail.mailers.smtp.host') ?? env('MAIL_HOST')),
+                'host' => config('mail.mailers.smtp.host') ?? env('MAIL_HOST') ?? 'mail.amis.edu.ph',
+                'port' => config('mail.mailers.smtp.port') ?? env('MAIL_PORT') ?? 587,
+                'encryption' => config('mail.mailers.smtp.encryption') ?? env('MAIL_ENCRYPTION') ?? 'SSL/TLS',
             ],
         ];
 
