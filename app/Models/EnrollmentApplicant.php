@@ -242,7 +242,35 @@ class EnrollmentApplicant extends Model
 
     public function setMiddleNameAttribute($value)
     {
-        $this->attributes['middle_name'] = $value !== null ? mb_strtoupper($value, 'UTF-8') : null;
+        if ($value !== null && trim((string)$value) !== '') {
+            $trimmed = trim((string)$value);
+            $firstChar = mb_substr($trimmed, 0, 1, 'UTF-8');
+            $this->attributes['middle_name'] = mb_strtoupper(($firstChar === '.') ? '.' : $firstChar . '.', 'UTF-8');
+        } else {
+            $this->attributes['middle_name'] = null;
+        }
+    }
+
+    public function setFatherMiddleNameAttribute($value)
+    {
+        if ($value !== null && trim((string)$value) !== '') {
+            $trimmed = trim((string)$value);
+            $firstChar = mb_substr($trimmed, 0, 1, 'UTF-8');
+            $this->attributes['father_middle_name'] = mb_strtoupper(($firstChar === '.') ? '.' : $firstChar . '.', 'UTF-8');
+        } else {
+            $this->attributes['father_middle_name'] = null;
+        }
+    }
+
+    public function setMotherMiddleNameAttribute($value)
+    {
+        if ($value !== null && trim((string)$value) !== '') {
+            $trimmed = trim((string)$value);
+            $firstChar = mb_substr($trimmed, 0, 1, 'UTF-8');
+            $this->attributes['mother_middle_name'] = mb_strtoupper(($firstChar === '.') ? '.' : $firstChar . '.', 'UTF-8');
+        } else {
+            $this->attributes['mother_middle_name'] = null;
+        }
     }
 
     public function setLastNameAttribute($value)

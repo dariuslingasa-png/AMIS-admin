@@ -190,7 +190,15 @@
                 <span class="label-text">First</span>
             </div>
             <div>
-                <input type="text" class="input-line" value="{{ mb_strtoupper($app->middle_name ?? '') }}" style="{{ $getDynamicStyle($app->middle_name ?? '', '0.96rem', '0.84rem', '0.72rem', '0.60rem', 22, 32, 42) }}">
+                @php
+                    $rawMiddle = trim($app->middle_name ?? '');
+                    $mDisplay = '';
+                    if ($rawMiddle !== '') {
+                        $fChar = mb_substr($rawMiddle, 0, 1, 'UTF-8');
+                        $mDisplay = ($fChar === '.') ? '.' : mb_strtoupper($fChar, 'UTF-8') . '.';
+                    }
+                @endphp
+                <input type="text" class="input-line" value="{{ $mDisplay }}" style="{{ $getDynamicStyle($mDisplay, '0.96rem', '0.84rem', '0.72rem', '0.60rem', 22, 32, 42) }}">
                 <span class="label-text">Middle</span>
             </div>
             <div>
