@@ -36,12 +36,27 @@ class AmisBackupCommand extends Command
         $fullBackupZipFile = $tempDir . '/full-backup.zip';
 
         try {
-            // 1. Ensure Rclone Binary is Available
-            $rclonePath = $this->ensureRcloneBinary();
+            // 1. Ensure Rclone Binary is Available (optional for cloud sync)
+            $rclonePath = null;
+            try {
+                $rclonePath = $this->ensureRcloneBinary();
+            } catch (\Exception $e) {
+                Log::warning('Rclone binary download/check skipped: ' . $e->getMessage());
+            }
 
             // 2. Backup Database (SQL)
             $this->info('Dumping database...');
             $this->dumpDatabase($dbFile);
+
+            // Save permanent copy of SQL dump to local storage/app/backups/
+            $localBackupDir = storage_path('app/backups');
+            if (!file_exists($localBackupDir)) {
+                mkdir($localBackupDir, 0755, true);
+            }
+            $permanentSqlFile = $localBackupDir . "/amis_backup_{$dateStr}_" . time() . ".sql";
+            if (file_exists($dbFile)) {
+                copy($dbFile, $permanentSqlFile);
+            }
 
             // 3. Backup Uploads and Media (Zip)
             $this->info('Creating storage archive...');
@@ -51,37 +66,45 @@ class AmisBackupCommand extends Command
             $this->info('Creating full backup archive...');
             $this->createFullBackupZip($fullBackupZipFile, $dbFile, $storageZipFile);
 
-            // 5. Generate Rclone config dynamically
-            $this->info('Configuring rclone...');
-            $configPath = $this->generateRcloneConfig($tempDir);
+            // 5. Attempt Google Drive Upload if configured
+            $gdriveStatusMsg = 'Local backup saved.';
+            try {
+                if ($rclonePath) {
+                    $this->info('Configuring rclone...');
+                    $configPath = $this->generateRcloneConfig($tempDir);
 
-            // 6. Upload to Google Drive using rclone
-            $this->info('Uploading backups to Google Drive...');
-            $this->uploadToDrive($rclonePath, $configPath, $tempDir, $dateStr);
+                    $this->info('Uploading backups to Google Drive...');
+                    $this->uploadToDrive($rclonePath, $configPath, $tempDir, $dateStr);
 
-            // 7. Run grandfather-father-son backup rotation policy
-            $this->info('Running Google Drive retention rotation policy...');
-            $this->rotateBackups($rclonePath, $configPath);
+                    $this->info('Running Google Drive retention rotation policy...');
+                    $this->rotateBackups($rclonePath, $configPath);
 
-            // 8. Clean up local files
-            $this->info('Cleaning up local temp files...');
-            $this->cleanLocalDirectory($tempDir);
-            if (file_exists($configPath)) {
-                unlink($configPath);
+                    if (file_exists($configPath)) {
+                        unlink($configPath);
+                    }
+                    $gdriveStatusMsg .= ' Cloud upload to Google Drive completed.';
+                }
+            } catch (\Exception $gdriveEx) {
+                Log::warning('Google Drive sync skipped/failed: ' . $gdriveEx->getMessage());
+                $gdriveStatusMsg .= ' Google Drive sync skipped (' . (str_contains($gdriveEx->getMessage(), 'invalid_grant') ? 'token expired / disconnected' : 'not configured') . ').';
             }
 
+            // 6. Clean up temp files
+            $this->info('Cleaning up temp files...');
+            $this->cleanLocalDirectory($tempDir);
+
             $executionTime = round(microtime(true) - $startTime, 2);
-            $totalSize = file_exists($fullBackupZipFile) ? filesize($fullBackupZipFile) : 0;
+            $totalSize = file_exists($permanentSqlFile) ? filesize($permanentSqlFile) : 0;
             $formattedSize = $this->formatBytes($totalSize);
 
-            // 9. Log Success Audit
+            // 7. Log Success Audit
             $this->audit(
                 'database_backup_automated_success',
                 true,
-                "Automated backup completed successfully. Total Size: {$formattedSize}. Time: {$executionTime}s."
+                "Automated backup completed. {$gdriveStatusMsg} Size: {$formattedSize}. Time: {$executionTime}s."
             );
 
-            $this->info('Backup process finished successfully!');
+            $this->info("Backup process finished successfully! ({$gdriveStatusMsg})");
         } catch (\Exception $e) {
             $executionTime = round(microtime(true) - $startTime, 2);
             Log::error('Automated backup failed: ' . $e->getMessage());

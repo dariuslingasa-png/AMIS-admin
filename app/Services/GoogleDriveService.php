@@ -139,11 +139,14 @@ class GoogleDriveService
         ]);
 
         if (!$response->successful()) {
-            Log::error('Google Drive OAuth Token Refresh Failed', [
-                'status' => $response->status(),
-                'body' => $response->body(),
-            ]);
-            throw new \Exception('Failed to refresh Google Drive access token: ' . $response->body());
+            $body = $response->body();
+            if (!str_contains($body, 'invalid_grant')) {
+                Log::warning('Google Drive OAuth Token Refresh Failed', [
+                    'status' => $response->status(),
+                    'body' => $body,
+                ]);
+            }
+            throw new \Exception('Failed to refresh Google Drive access token: ' . $body);
         }
 
         return $response->json('access_token');
@@ -177,7 +180,7 @@ class GoogleDriveService
                 }
             }
         } catch (\Exception $e) {
-            Log::error('Failed to fetch Google Drive storage quota: ' . $e->getMessage());
+            // Silently return null when token is invalid or quota call fails to prevent laravel.log spamming
         }
 
         return null;
