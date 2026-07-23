@@ -1,17 +1,15 @@
 <x-admin-layout title="System Logs">
     <div class="space-y-6" x-data="{ levelFilter: '' }">
-        <!-- Reusable Workspace Header Component -->
-        <x-system-nav title="Live System Error Log Viewer" subtitle="Parses real-time laravel.log events with timestamp filters, environment tags, and severity level badges." activeTab="logs" />
-
-        <div class="flex justify-end">
-            <form method="POST" action="{{ route('admin.system-management.logs.clear') }}" onsubmit="return confirm('Are you sure you want to clear and truncate laravel.log? This cannot be undone!')" class="inline">
+        <!-- Reusable Workspace Header Component (SINGLE BANNER) -->
+        <x-system-nav title="Live System Error Log Viewer" subtitle="Parses real-time laravel.log events with timestamp filters, environment tags, and severity level badges." activeTab="logs">
+            <form method="POST" action="{{ route('admin.system-management.logs.clear') }}" onsubmit="return confirm('Are you sure you want to clear and truncate laravel.log? This cannot be undone!')">
                 @csrf
-                <button type="submit" class="inline-flex items-center gap-2 rounded-2xl bg-rose-600 hover:bg-rose-700 px-4 py-2 text-xs font-black text-white shadow-md transition cursor-pointer">
+                <button type="submit" class="inline-flex items-center gap-2 rounded-2xl bg-rose-600 hover:bg-rose-700 px-4 py-2.5 text-xs font-black uppercase tracking-wider text-white shadow-md transition cursor-pointer">
                     <i data-lucide="trash-2" class="w-4 h-4"></i>
                     <span>Clear Log File</span>
                 </button>
             </form>
-        </div>
+        </x-system-nav>
 
         <!-- Stats Bar & Level Filters -->
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl border border-slate-200 bg-white shadow-sm">

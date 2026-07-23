@@ -1,7 +1,25 @@
 <x-admin-layout title="Backup Center">
     <div class="space-y-6">
-        <!-- Reusable Workspace Header Component -->
-        <x-system-nav title="Database & System Backup Center" subtitle="Disaster recovery backups, local snapshots, automated cron scheduling, and Google Drive cloud backups." activeTab="backups" />
+        <!-- Reusable Workspace Header Component (SINGLE BANNER) -->
+        <x-system-nav title="Database & System Backup Center" subtitle="Disaster recovery backups, local snapshots, automated cron scheduling, and Google Drive cloud backups." activeTab="backups">
+            <form method="POST" action="{{ route('admin.system-management.backups.trigger-full') }}">
+                @csrf
+                <button type="submit" onclick="return confirm('Start a full application & database backup now?')"
+                        class="inline-flex h-12 items-center gap-2.5 rounded-2xl bg-gradient-to-r from-indigo-500 to-emerald-500 px-6 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-indigo-950/40 transition hover:scale-[1.02] active:scale-[0.98] cursor-pointer">
+                    <i data-lucide="archive" class="w-5 h-5"></i>
+                    <span>Create Full Application Backup Now</span>
+                </button>
+            </form>
+
+            <form method="POST" action="{{ route('admin.system-management.backups.create') }}">
+                @csrf
+                <button type="submit" onclick="return confirm('Create an instant local SQL database snapshot?')"
+                        class="inline-flex h-12 items-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-5 text-xs font-black uppercase tracking-wider text-white backdrop-blur-xs transition hover:bg-white/20 cursor-pointer">
+                    <i data-lucide="database" class="w-4 h-4 text-slate-300"></i>
+                    <span>Quick SQL Snapshot</span>
+                </button>
+            </form>
+        </x-system-nav>
 
         @if (session('success'))
             <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-800 flex items-center gap-2">
@@ -16,40 +34,6 @@
                 <span>{{ $errors->first() }}</span>
             </div>
         @endif
-
-        <!-- Quick Disaster Recovery Actions Banner -->
-        <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 rounded-3xl border border-indigo-700/40 bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900 p-6 text-white shadow-xl shadow-indigo-950/20">
-            <div>
-                <div class="flex items-center gap-2">
-                    <span class="inline-flex rounded-full bg-indigo-500/20 px-3 py-1 text-xs font-black uppercase tracking-wider text-indigo-300 border border-indigo-400/30">
-                        ⚡ Disaster Recovery Controls
-                    </span>
-                </div>
-                <h2 class="mt-2 text-2xl font-black tracking-tight text-white">Full Application & Database Backup</h2>
-                <p class="text-xs text-slate-300 mt-1 max-w-xl leading-relaxed">
-                    Generate an instant full backup archive (Complete MySQL Database dump + Project source code + All uploaded images & documents) with email report to <strong>darius.lingasa@gmail.com</strong>.
-                </p>
-            </div>
-            <div class="flex items-center gap-3 flex-wrap">
-                <form method="POST" action="{{ route('admin.system-management.backups.trigger-full') }}">
-                    @csrf
-                    <button type="submit" onclick="return confirm('Start a full application & database backup now?')"
-                            class="inline-flex h-12 items-center gap-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-emerald-600 px-6 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-indigo-900/40 transition hover:scale-[1.02] active:scale-[0.98] cursor-pointer">
-                        <i data-lucide="archive" class="w-5 h-5"></i>
-                        <span>Create Full Application Backup Now</span>
-                    </button>
-                </form>
-
-                <form method="POST" action="{{ route('admin.system-management.backups.create') }}">
-                    @csrf
-                    <button type="submit" onclick="return confirm('Create an instant local SQL database snapshot?')"
-                            class="inline-flex h-12 items-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-5 text-xs font-black uppercase tracking-wider text-white backdrop-blur-xs transition hover:bg-white/20 cursor-pointer">
-                        <i data-lucide="database" class="w-4 h-4 text-slate-300"></i>
-                        <span>Quick SQL Snapshot</span>
-                    </button>
-                </form>
-            </div>
-        </div>
 
         <!-- Disaster Recovery Metric Cards -->
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

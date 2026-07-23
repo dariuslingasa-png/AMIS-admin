@@ -1,34 +1,18 @@
 <x-admin-layout title="Email Composer & Bulk Messaging">
     <div class="space-y-6">
-        <!-- Header Banner -->
-        <section class="overflow-hidden rounded-3xl border border-indigo-800/40 bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 p-6 text-white shadow-xl">
-            <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                <div>
-                    <span class="inline-flex rounded-full bg-indigo-500/20 px-3 py-1 text-xs font-black uppercase tracking-[0.2em] text-indigo-300 border border-indigo-400/30">
-                        Institutional Email System
-                    </span>
-                    <h1 class="mt-3 text-3xl font-black tracking-tight flex items-center gap-3">
-                        <i data-lucide="mail-plus" class="w-8 h-8 text-indigo-400"></i>
-                        <span>Email Composer & Bulk Dispatch</span>
-                    </h1>
-                    <p class="mt-2 max-w-2xl text-sm font-medium leading-relaxed text-slate-300">
-                        Compose rich text HTML emails, select recipients from Student & Faculty records, attach documents, and dispatch bulk email queues with automatic Multi-SMTP failover.
-                    </p>
-                </div>
-                <div class="flex items-center gap-3 flex-wrap">
-                    <a href="{{ route('admin.email-composer.create') }}"
-                       class="inline-flex h-12 items-center gap-2.5 rounded-2xl bg-gradient-to-r from-indigo-500 to-emerald-500 px-6 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-indigo-950/40 transition hover:scale-[1.02] active:scale-[0.98] cursor-pointer">
-                        <i data-lucide="pen-tool" class="w-4 h-4"></i>
-                        <span>Compose New Email</span>
-                    </a>
-                    <a href="{{ route('admin.email-composer.templates') }}"
-                       class="inline-flex h-12 items-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-5 text-xs font-black uppercase tracking-wider text-white backdrop-blur-xs transition hover:bg-white/20 cursor-pointer">
-                        <i data-lucide="layout-template" class="w-4 h-4 text-indigo-300"></i>
-                        <span>Templates Directory</span>
-                    </a>
-                </div>
-            </div>
-        </section>
+        <!-- Header Banner Component (UNIFIED COLOR & DESIGN) -->
+        <x-system-nav title="Email Composer & Bulk Dispatch" subtitle="Compose rich text HTML emails, select recipients from Student & Faculty records, attach documents, and dispatch bulk email queues with automatic Multi-SMTP failover." activeTab="email">
+            <a href="{{ route('admin.email-composer.create') }}"
+               class="inline-flex h-12 items-center gap-2.5 rounded-2xl bg-gradient-to-r from-indigo-500 to-emerald-500 px-6 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-indigo-950/40 transition hover:scale-[1.02] active:scale-[0.98] cursor-pointer">
+                <i data-lucide="pen-tool" class="w-4 h-4"></i>
+                <span>Compose New Email</span>
+            </a>
+            <a href="{{ route('admin.email-composer.templates') }}"
+               class="inline-flex h-12 items-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-5 text-xs font-black uppercase tracking-wider text-white backdrop-blur-xs transition hover:bg-white/20 cursor-pointer">
+                <i data-lucide="layout-template" class="w-4 h-4 text-indigo-300"></i>
+                <span>Templates Directory</span>
+            </a>
+        </x-system-nav>
 
         @if (session('success'))
             <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-800 flex items-center gap-2">

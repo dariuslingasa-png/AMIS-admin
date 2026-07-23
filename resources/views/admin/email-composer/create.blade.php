@@ -29,18 +29,12 @@
             }
         }
     }">
-        <!-- Top Action Bar -->
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-                <span class="text-xs font-black uppercase tracking-wider text-indigo-600">Email Composer Workspace</span>
-                <h1 class="text-2xl font-black text-slate-900">Compose & Dispatch Email</h1>
-            </div>
-            <div class="flex items-center gap-3">
-                <a href="{{ route('admin.email-composer.index') }}" class="inline-flex h-10 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-50 transition">
-                    <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Dashboard
-                </a>
-            </div>
-        </div>
+        <!-- Top Banner Component (UNIFIED COLOR & DESIGN) -->
+        <x-system-nav title="Compose & Dispatch Email" subtitle="Compose rich text HTML emails, select recipients, upload attachments, and preview layout before dispatch." activeTab="email">
+            <a href="{{ route('admin.email-composer.index') }}" class="inline-flex h-10 items-center gap-1.5 rounded-xl border border-white/20 bg-white/10 px-4 text-xs font-bold text-white backdrop-blur-xs hover:bg-white/20 transition">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Dashboard
+            </a>
+        </x-system-nav>
 
         @if ($errors->any())
             <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700 flex items-center gap-2">

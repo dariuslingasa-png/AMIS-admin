@@ -155,8 +155,8 @@ class EmailComposerController extends Controller
             'created_by' => auth()->id(),
         ]);
 
-        // Dispatch background queue job
-        SendBulkEmailCampaignJob::dispatch($campaign->id);
+        // Dispatch bulk email campaign immediately
+        SendBulkEmailCampaignJob::dispatchSync($campaign->id);
 
         AdminAuditLog::record(
             'bulk_email_campaign_queued',
