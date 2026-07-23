@@ -47,17 +47,43 @@ class SystemDevOpsController extends Controller
     public function toggleMaintenanceMode(Request $request)
     {
         $this->ensureAdminAccess();
+        $portal = $request->input('portal', 'admin');
+
         try {
-            $status = $this->devOpsService->toggleMaintenanceMode();
-            if ($status === 'off') {
-                AdminAuditLog::record('system_maintenance_disabled', true, "Turned off Maintenance Mode. Portal is now LIVE to public.");
-                return back()->with('success', 'Maintenance Mode disabled. The portal is now LIVE and accessible to the public!');
+            if ($portal === 'all_on') {
+                foreach (['enrollment', 'teacher', 'student'] as $p) {
+                    if (!$this->devOpsService->isPortalDown($p)) {
+                        $this->devOpsService->togglePortalMaintenance($p);
+                    }
+                }
+                AdminAuditLog::record('system_maintenance_all_enabled', true, "Enabled Maintenance Mode on all public portals (Enrollment, Teacher, Student).");
+                \App\Models\SystemNotification::notifyAdmin('All Public Portals Locked', 'Enrollment, Teacher, and Student portals were placed into Maintenance Mode.', 'warning', route('admin.system-management.devops.index'));
+                return back()->with('success', 'All public portals (Enrollment, Teacher, Student) are now locked in Maintenance Mode!');
+            }
+
+            if ($portal === 'all_off') {
+                foreach (['admin', 'enrollment', 'teacher', 'student'] as $p) {
+                    if ($this->devOpsService->isPortalDown($p)) {
+                        $this->devOpsService->togglePortalMaintenance($p);
+                    }
+                }
+                AdminAuditLog::record('system_maintenance_all_disabled', true, "Turned off Maintenance Mode across all portals.");
+                \App\Models\SystemNotification::notifyAdmin('All Portals LIVE', 'All AMIS portals are now LIVE and accessible to users.', 'success', route('admin.system-management.devops.index'));
+                return back()->with('success', 'All AMIS portals are now LIVE and accepting public traffic!');
+            }
+
+            $res = $this->devOpsService->togglePortalMaintenance($portal);
+            if ($res['status'] === 'off') {
+                AdminAuditLog::record('system_maintenance_disabled', true, "Turned off Maintenance Mode for {$res['portal']}.");
+                \App\Models\SystemNotification::notifyAdmin("{$res['portal']} LIVE", "{$res['portal']} is now LIVE and accessible.", 'success', route('admin.system-management.devops.index'));
+                return back()->with('success', "Maintenance Mode disabled for {$res['portal']}. It is now LIVE!");
             } else {
-                AdminAuditLog::record('system_maintenance_enabled', true, "Enabled Maintenance Mode with secret bypass token.");
-                return back()->with('success', "Maintenance Mode ENABLED! Public access is locked. Use your Secret Admin Bypass Link: {$status}");
+                AdminAuditLog::record('system_maintenance_enabled', true, "Enabled Maintenance Mode for {$res['portal']}.");
+                \App\Models\SystemNotification::notifyAdmin("{$res['portal']} Locked", "{$res['portal']} is now locked in Maintenance Mode.", 'warning', route('admin.system-management.devops.index'));
+                return back()->with('success', "Maintenance Mode ENABLED for {$res['portal']}! Public access is locked. Bypass Link: " . ($res['secret'] ?? 'Active'));
             }
         } catch (\Exception $e) {
-            AdminAuditLog::record('system_maintenance_toggle_failed', false, "Failed to toggle maintenance mode: " . $e->getMessage());
+            AdminAuditLog::record('system_maintenance_toggle_failed', false, "Failed to toggle maintenance mode for {$portal}: " . $e->getMessage());
             return back()->withErrors(['error' => 'Failed to toggle maintenance mode: ' . $e->getMessage()]);
         }
     }

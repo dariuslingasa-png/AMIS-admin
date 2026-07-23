@@ -17,59 +17,96 @@
 
         <!-- Grid Layout: Maintenance Switch & Environment Audit -->
         <div class="grid gap-6 lg:grid-cols-2">
-            <!-- 1. System Maintenance Mode Control -->
-            <div class="overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col justify-between">
+        <!-- 1. System Multi-Portal Maintenance & Access Control -->
+        <div class="overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-sm lg:col-span-2">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
                 <div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-black uppercase tracking-wider text-slate-400">Public Access Status</span>
-                        @if($isMaintenanceMode)
-                            <span class="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-black uppercase tracking-wider text-amber-700 ring-1 ring-amber-200">
-                                <span class="h-2 w-2 rounded-full bg-amber-500 animate-ping"></span>
-                                Maintenance Mode ACTIVE
-                            </span>
-                        @else
-                            <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-black uppercase tracking-wider text-emerald-700 ring-1 ring-emerald-200">
-                                <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
-                                Portal LIVE to Public
-                            </span>
-                        @endif
-                    </div>
-
-                    <div class="mt-4">
-                        <h3 class="text-lg font-black text-slate-900">System Maintenance Mode Switch</h3>
-                        <p class="text-xs font-semibold text-slate-500 mt-1 leading-relaxed">
-                            Lock public user access during major database updates or system upgrades. Generates a secret admin bypass key for logged-in administrators.
-                        </p>
-                    </div>
-
-                    @if($maintenanceSecret)
-                        <div class="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-2xl text-xs font-medium text-amber-900 space-y-1">
-                            <span class="font-extrabold uppercase text-[10px] text-amber-700 tracking-wider">Secret Admin Bypass Link:</span>
-                            <div class="font-mono text-[11px] break-all select-all font-bold text-amber-950 bg-amber-100/70 p-2 rounded-xl border border-amber-300/50">
-                                {{ $maintenanceSecret }}
-                            </div>
-                        </div>
-                    @endif
+                    <h3 class="text-base font-black text-slate-900 flex items-center gap-2">
+                        <i data-lucide="shield-alert" class="w-5 h-5 text-indigo-600"></i>
+                        <span>AMIS Portals Maintenance & Shutdown Control</span>
+                    </h3>
+                    <p class="text-xs font-semibold text-slate-500 mt-1 leading-relaxed">
+                        Individually or globally lock public user access during major database updates, grading periods, or scheduled maintenance.
+                    </p>
                 </div>
-
-                <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">
-                    <span class="text-xs font-bold text-slate-500">Toggle Maintenance State</span>
-                    <form method="POST" action="{{ route('admin.system-management.devops.maintenance') }}" onsubmit="return confirm('Are you sure you want to toggle System Maintenance Mode?')">
+                <div class="flex items-center gap-2 shrink-0">
+                    <form method="POST" action="{{ route('admin.system-management.devops.maintenance') }}" onsubmit="return confirm('Lock ALL public portals (Enrollment, Teacher, Student) in Maintenance Mode?')">
                         @csrf
-                        @if($isMaintenanceMode)
-                            <button type="submit" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black transition shadow-md cursor-pointer flex items-center gap-2">
-                                <i data-lucide="play" class="w-4 h-4"></i>
-                                <span>Turn OFF Maintenance Mode (Go LIVE)</span>
-                            </button>
-                        @else
-                            <button type="submit" class="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-black transition shadow-md cursor-pointer flex items-center gap-2">
-                                <i data-lucide="pause-circle" class="w-4 h-4"></i>
-                                <span>Enable Maintenance Mode</span>
-                            </button>
-                        @endif
+                        <input type="hidden" name="portal" value="all_on">
+                        <button type="submit" class="px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-black transition shadow-sm cursor-pointer flex items-center gap-1.5">
+                            <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+                            <span>Lock All Public</span>
+                        </button>
+                    </form>
+
+                    <form method="POST" action="{{ route('admin.system-management.devops.maintenance') }}" onsubmit="return confirm('Bring ALL AMIS portals LIVE to the public?')">
+                        @csrf
+                        <input type="hidden" name="portal" value="all_off">
+                        <button type="submit" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black transition shadow-sm cursor-pointer flex items-center gap-1.5">
+                            <i data-lucide="globe" class="w-3.5 h-3.5"></i>
+                            <span>Bring All LIVE</span>
+                        </button>
                     </form>
                 </div>
             </div>
+
+            <!-- Portal Grid (4 Portals) -->
+            <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                @foreach($portalsMaintenance as $key => $p)
+                    <div class="rounded-2xl border border-slate-200 bg-slate-50/60 p-4 flex flex-col justify-between space-y-4 hover:border-slate-300 transition">
+                        <div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-[10px] font-black uppercase tracking-wider text-slate-400">{{ $p['badge'] }}</span>
+                                @if($p['is_down'])
+                                    <span class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-black uppercase text-amber-800">
+                                        <span class="h-1.5 w-1.5 rounded-full bg-amber-600 animate-ping"></span>
+                                        MAINTENANCE
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-black uppercase text-emerald-800">
+                                        <span class="h-1.5 w-1.5 rounded-full bg-emerald-600"></span>
+                                        LIVE
+                                    </span>
+                                @endif
+                            </div>
+
+                            <h4 class="text-sm font-black text-slate-900 mt-2">{{ $p['name'] }}</h4>
+                            <a href="https://{{ $p['domain'] }}" target="_blank" class="text-[11px] font-bold text-indigo-600 hover:underline inline-flex items-center gap-1 mt-0.5">
+                                <span>{{ $p['domain'] }}</span>
+                                <i data-lucide="external-link" class="w-3 h-3"></i>
+                            </a>
+
+                            @if($p['secret'])
+                                <div class="mt-3 p-2 bg-amber-50 border border-amber-200 rounded-xl text-[10px] space-y-1">
+                                    <span class="font-extrabold uppercase text-[9px] text-amber-700 tracking-wider">Secret Bypass Link:</span>
+                                    <div class="font-mono text-[10px] break-all select-all font-bold text-amber-950 bg-amber-100/70 p-1.5 rounded-lg border border-amber-300/50">
+                                        {{ $p['secret'] }}
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+
+                        <div class="pt-3 border-t border-slate-200/80">
+                            <form method="POST" action="{{ route('admin.system-management.devops.maintenance') }}" onsubmit="return confirm('Toggle Maintenance Mode for {{ $p['name'] }}?')">
+                                @csrf
+                                <input type="hidden" name="portal" value="{{ $key }}">
+                                @if($p['is_down'])
+                                    <button type="submit" class="w-full py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black transition shadow-xs cursor-pointer flex items-center justify-center gap-1.5">
+                                        <i data-lucide="play" class="w-3.5 h-3.5"></i>
+                                        <span>Turn LIVE</span>
+                                    </button>
+                                @else
+                                    <button type="submit" class="w-full py-2 px-3 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-black transition shadow-xs cursor-pointer flex items-center justify-center gap-1.5">
+                                        <i data-lucide="pause-circle" class="w-3.5 h-3.5"></i>
+                                        <span>Maintenance Mode</span>
+                                    </button>
+                                @endif
+                            </form>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
 
             <!-- 2. Environment Configuration Inspector -->
             <div class="overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">

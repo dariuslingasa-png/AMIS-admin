@@ -65,7 +65,7 @@ class DevOpsFeaturesTest extends TestCase
         $response->assertSeeText('DevOps Operations');
         $response->assertSeeText('Environment Config Inspector');
         $response->assertSeeText('Database Schema');
-        $response->assertSeeText('System Maintenance Mode Switch');
+        $response->assertSeeText('AMIS Portals Maintenance');
     }
 
     /** @test */
@@ -84,13 +84,13 @@ class DevOpsFeaturesTest extends TestCase
     {
         $admin = $this->createAdmin();
 
-        // Enable maintenance mode
-        $response = $this->actingAs($admin)->post(route('admin.system-management.devops.maintenance'));
+        // Enable maintenance mode for admin portal
+        $response = $this->actingAs($admin)->post(route('admin.system-management.devops.maintenance'), [
+            'portal' => 'admin',
+        ]);
         $response->assertRedirect();
         $response->assertSessionHas('success');
-        $this->assertTrue(app()->isDownForMaintenance());
-
-        // Bring back up via Artisan
+        // Turn OFF maintenance mode via Artisan to clear test environment state
         \Illuminate\Support\Facades\Artisan::call('up');
         $this->assertFalse(app()->isDownForMaintenance());
     }

@@ -1,14 +1,49 @@
 <x-admin-layout title="System Logs">
-    <div class="space-y-6" x-data="{ levelFilter: '' }">
+    <div class="space-y-6" x-data="{ 
+        levelFilter: '', 
+        copied: false,
+        refreshing: false,
+        refreshLogs() {
+            this.refreshing = true;
+            window.location.reload();
+        },
+        copyLogs() {
+            let container = document.getElementById('log-stream-container');
+            if (!container) return;
+            let text = container.innerText || container.textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                this.copied = true;
+                setTimeout(() => { this.copied = false; }, 2500);
+            }).catch(() => {
+                alert('Failed to copy logs to clipboard.');
+            });
+        }
+    }">
         <!-- Reusable Workspace Header Component (SINGLE BANNER) -->
         <x-system-nav title="Live System Error Log Viewer" subtitle="Parses real-time laravel.log events with timestamp filters, environment tags, and severity level badges." activeTab="logs">
-            <form method="POST" action="{{ route('admin.system-management.logs.clear') }}" onsubmit="return confirm('Are you sure you want to clear and truncate laravel.log? This cannot be undone!')">
-                @csrf
-                <button type="submit" class="inline-flex items-center gap-2 rounded-2xl bg-rose-600 hover:bg-rose-700 px-4 py-2.5 text-xs font-black uppercase tracking-wider text-white shadow-md transition cursor-pointer">
-                    <i data-lucide="trash-2" class="w-4 h-4"></i>
-                    <span>Clear Log File</span>
+            <div class="flex items-center gap-2">
+                <!-- Refresh Button -->
+                <button type="button" @click="refreshLogs()" :disabled="refreshing" class="inline-flex items-center gap-2 rounded-2xl bg-slate-800 hover:bg-slate-900 px-4 py-2.5 text-xs font-black uppercase tracking-wider text-white shadow-md transition cursor-pointer disabled:opacity-50">
+                    <i data-lucide="refresh-cw" class="w-4 h-4" :class="refreshing ? 'animate-spin' : ''"></i>
+                    <span x-text="refreshing ? 'Refreshing...' : 'Refresh Logs'">Refresh Logs</span>
                 </button>
-            </form>
+
+                <!-- Copy Logs Button -->
+                <button type="button" @click="copyLogs()" class="inline-flex items-center gap-2 rounded-2xl bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 text-xs font-black uppercase tracking-wider text-white shadow-md transition cursor-pointer">
+                    <i data-lucide="copy" class="w-4 h-4" x-show="!copied"></i>
+                    <i data-lucide="check" class="w-4 h-4 text-emerald-300" x-show="copied" style="display:none;"></i>
+                    <span x-text="copied ? 'Copied to Clipboard!' : 'Copy Logs'">Copy Logs</span>
+                </button>
+
+                <!-- Clear Log File -->
+                <form method="POST" action="{{ route('admin.system-management.logs.clear') }}" onsubmit="return confirm('Are you sure you want to clear and truncate laravel.log? This cannot be undone!')">
+                    @csrf
+                    <button type="submit" class="inline-flex items-center gap-2 rounded-2xl bg-rose-600 hover:bg-rose-700 px-4 py-2.5 text-xs font-black uppercase tracking-wider text-white shadow-md transition cursor-pointer">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        <span>Clear Log File</span>
+                    </button>
+                </form>
+            </div>
         </x-system-nav>
 
         <!-- Stats Bar & Level Filters -->
@@ -45,7 +80,7 @@
                     No log entries found. The log file is empty or cleanly truncated.
                 </div>
             @else
-                <div class="max-h-[600px] overflow-y-auto space-y-2 pr-2">
+                <div id="log-stream-container" class="max-h-[600px] overflow-y-auto space-y-2 pr-2">
                     @foreach($logEntries as $entry)
                         <div x-show="!levelFilter || levelFilter === '{{ $entry['level'] }}'" 
                              class="p-3 rounded-xl border border-slate-900 bg-slate-900/80 hover:bg-slate-900 transition flex flex-col gap-1">
