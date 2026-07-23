@@ -1,4 +1,8 @@
 <x-admin-layout title="Professional Email Composer">
+    <!-- Quill WYSIWYG Editor Styles & Scripts -->
+    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
+
     <div class="space-y-6" x-data="{
         showCc: false,
         showBcc: false,
@@ -21,36 +25,43 @@
         loadTemplate(subjectVal, bodyVal) {
             this.subject = subjectVal;
             this.contentHtml = bodyVal;
-            this.updateEditorContent(bodyVal);
+            const el = document.getElementById('rich-editor');
+            if (el) el.value = bodyVal;
+            if (window.quillInstance) {
+                window.quillInstance.clipboard.dangerouslyPasteHTML(bodyVal);
+            }
         },
 
         insertVariable(tag) {
-            if (window.tinymce && window.tinymce.get('rich-editor')) {
-                window.tinymce.get('rich-editor').insertContent(tag);
+            if (window.quillInstance) {
+                const range = window.quillInstance.getSelection(true);
+                const index = range ? range.index : window.quillInstance.getLength();
+                window.quillInstance.insertText(index, tag);
+                const html = window.quillInstance.getSemanticHTML();
+                this.contentHtml = html;
+                const el = document.getElementById('rich-editor');
+                if (el) el.value = html;
             } else {
                 this.contentHtml += ' ' + tag;
                 const el = document.getElementById('rich-editor');
                 if (el) el.value += ' ' + tag;
             }
-        },
-
-        execCmd(cmd, value = null) {
-            document.execCommand(cmd, false, value);
-            this.syncContent();
-        },
-
-        updateEditorContent(val) {
-            if (window.tinymce && window.tinymce.get('rich-editor')) {
-                window.tinymce.get('rich-editor').setContent(val);
-            } else {
+        applyTextColor(colorHex) {
+            if (window.quillInstance) {
+                window.quillInstance.format('color', colorHex);
+                const html = window.quillInstance.getSemanticHTML();
+                this.contentHtml = html;
                 const el = document.getElementById('rich-editor');
-                if (el) el.value = val;
+                if (el) el.value = html;
             }
         },
 
         syncContent() {
-            if (window.tinymce && window.tinymce.get('rich-editor')) {
-                this.contentHtml = window.tinymce.get('rich-editor').getContent();
+            if (window.quillInstance) {
+                const html = window.quillInstance.getSemanticHTML();
+                this.contentHtml = html;
+                const el = document.getElementById('rich-editor');
+                if (el) el.value = html;
             } else {
                 const el = document.getElementById('rich-editor');
                 if (el) this.contentHtml = el.value;
@@ -115,12 +126,12 @@
                             </h2>
                             <div class="flex items-center gap-2">
                                 <button type="button" @click="showCc = !showCc"
-                                        class="px-2.5 py-1 text-xs font-bold rounded-lg border border-slate-200 hover:bg-slate-50 transition"
+                                        class="px-2.5 py-1 text-xs font-bold rounded-lg border border-slate-200 hover:bg-slate-50 transition cursor-pointer"
                                         :class="showCc ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 'text-slate-600'">
                                     + CC
                                 </button>
                                 <button type="button" @click="showBcc = !showBcc"
-                                        class="px-2.5 py-1 text-xs font-bold rounded-lg border border-slate-200 hover:bg-slate-50 transition"
+                                        class="px-2.5 py-1 text-xs font-bold rounded-lg border border-slate-200 hover:bg-slate-50 transition cursor-pointer"
                                         :class="showBcc ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 'text-slate-600'">
                                     + BCC
                                 </button>
@@ -165,12 +176,12 @@
                         </div>
                     </div>
 
-                    <!-- WYSIWYG Rich Text Editor Card -->
+                    <!-- WYSIWYG Visual Rich Text Editor Card -->
                     <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm space-y-4">
                         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                             <h2 class="text-sm font-black uppercase tracking-wider text-slate-900 flex items-center gap-2">
                                 <i data-lucide="file-text" class="w-4 h-4 text-emerald-600"></i>
-                                <span>Rich Text Email Body</span>
+                                <span>WYSIWYG Rich Text Email Body</span>
                             </h2>
                             <div class="flex items-center gap-2">
                                 <button type="button" @click="syncContent(); showPreviewModal = true;"
@@ -185,43 +196,55 @@
                         <div class="bg-slate-50 rounded-2xl p-3 border border-slate-200/70 space-y-2">
                             <span class="text-[11px] font-black uppercase tracking-wider text-slate-500 block">Click to Insert Dynamic Student Variable Tag:</span>
                             <div class="flex items-center gap-1.5 flex-wrap">
-                                <button type="button" @click="insertVariable('{student_name}')" class="px-2.5 py-1 text-xs font-bold bg-white border border-slate-200 rounded-lg hover:border-emerald-500 hover:text-emerald-700 transition shadow-2xs">
+                                <button type="button" @click="insertVariable('{student_name}')" class="px-2.5 py-1 text-xs font-bold bg-white border border-slate-200 rounded-lg hover:border-emerald-500 hover:text-emerald-700 transition shadow-2xs cursor-pointer">
                                     👤 {student_name}
                                 </button>
-                                <button type="button" @click="insertVariable('{student_id}')" class="px-2.5 py-1 text-xs font-bold bg-white border border-slate-200 rounded-lg hover:border-emerald-500 hover:text-emerald-700 transition shadow-2xs">
+                                <button type="button" @click="insertVariable('{student_id}')" class="px-2.5 py-1 text-xs font-bold bg-white border border-slate-200 rounded-lg hover:border-emerald-500 hover:text-emerald-700 transition shadow-2xs cursor-pointer">
                                     🆔 {student_id}
                                 </button>
-                                <button type="button" @click="insertVariable('{grade_level}')" class="px-2.5 py-1 text-xs font-bold bg-white border border-slate-200 rounded-lg hover:border-emerald-500 hover:text-emerald-700 transition shadow-2xs">
+                                <button type="button" @click="insertVariable('{grade_level}')" class="px-2.5 py-1 text-xs font-bold bg-white border border-slate-200 rounded-lg hover:border-emerald-500 hover:text-emerald-700 transition shadow-2xs cursor-pointer">
                                     🎓 {grade_level}
                                 </button>
-                                <button type="button" @click="insertVariable('{school_year}')" class="px-2.5 py-1 text-xs font-bold bg-white border border-slate-200 rounded-lg hover:border-emerald-500 hover:text-emerald-700 transition shadow-2xs">
+                                <button type="button" @click="insertVariable('{school_year}')" class="px-2.5 py-1 text-xs font-bold bg-white border border-slate-200 rounded-lg hover:border-emerald-500 hover:text-emerald-700 transition shadow-2xs cursor-pointer">
                                     📅 {school_year}
                                 </button>
-                                <button type="button" @click="insertVariable('{current_date}')" class="px-2.5 py-1 text-xs font-bold bg-white border border-slate-200 rounded-lg hover:border-emerald-500 hover:text-emerald-700 transition shadow-2xs">
+                                <button type="button" @click="insertVariable('{current_date}')" class="px-2.5 py-1 text-xs font-bold bg-white border border-slate-200 rounded-lg hover:border-emerald-500 hover:text-emerald-700 transition shadow-2xs cursor-pointer">
                                     🕒 {current_date}
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Emojis & Table Templates Bar -->
-                        <div class="flex items-center gap-2 flex-wrap text-xs">
-                            <span class="font-bold text-slate-400">Quick Emojis:</span>
-                            <button type="button" @click="insertVariable('😊')" class="hover:scale-125 transition">😊</button>
-                            <button type="button" @click="insertVariable('📢')" class="hover:scale-125 transition">📢</button>
-                            <button type="button" @click="insertVariable('📌')" class="hover:scale-125 transition">📌</button>
-                            <button type="button" @click="insertVariable('🎓')" class="hover:scale-125 transition">🎓</button>
-                            <button type="button" @click="insertVariable('⚠️')" class="hover:scale-125 transition">⚠️</button>
-                            <button type="button" @click="insertVariable('✅')" class="hover:scale-125 transition">✅</button>
-                            <button type="button" @click="insertVariable('📜')" class="hover:scale-125 transition">📜</button>
-                            <button type="button" @click="insertVariable('💳')" class="hover:scale-125 transition">💳</button>
+                        <!-- Quick Text Color Preset Palette Bar -->
+                        <div class="flex items-center gap-2 flex-wrap text-xs pt-1">
+                            <span class="font-extrabold uppercase tracking-wider text-slate-500 text-[11px]">Quick Text Color:</span>
+                            <button type="button" @click="applyTextColor('#dc2626')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold text-white bg-red-600 hover:bg-red-700 transition cursor-pointer shadow-2xs">
+                                <span class="w-2.5 h-2.5 rounded-full bg-white"></span> Red
+                            </button>
+                            <button type="button" @click="applyTextColor('#2563eb')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 transition cursor-pointer shadow-2xs">
+                                <span class="w-2.5 h-2.5 rounded-full bg-white"></span> Blue
+                            </button>
+                            <button type="button" @click="applyTextColor('#059669')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition cursor-pointer shadow-2xs">
+                                <span class="w-2.5 h-2.5 rounded-full bg-white"></span> Green
+                            </button>
+                            <button type="button" @click="applyTextColor('#4f46e5')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition cursor-pointer shadow-2xs">
+                                <span class="w-2.5 h-2.5 rounded-full bg-white"></span> Indigo
+                            </button>
+                            <button type="button" @click="applyTextColor('#7c3aed')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold text-white bg-purple-600 hover:bg-purple-700 transition cursor-pointer shadow-2xs">
+                                <span class="w-2.5 h-2.5 rounded-full bg-white"></span> Purple
+                            </button>
+                            <button type="button" @click="applyTextColor('#d97706')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 transition cursor-pointer shadow-2xs">
+                                <span class="w-2.5 h-2.5 rounded-full bg-white"></span> Amber
+                            </button>
+                            <button type="button" @click="applyTextColor('#0f172a')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 transition cursor-pointer shadow-2xs">
+                                <span class="w-2.5 h-2.5 rounded-full bg-white"></span> Dark Slate
+                            </button>
                         </div>
 
-                        <!-- Textarea Body -->
-                        <div>
-                            <textarea id="rich-editor" name="body_html" rows="14" x-model="contentHtml"
-                                      class="w-full rounded-2xl border border-slate-200 p-4 text-sm font-medium text-slate-900 bg-slate-50/30 outline-none transition focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10"
-                                      placeholder="Write your email content or select a template preset from the sidebar..."></textarea>
+                        <!-- Visual Editor Container -->
+                        <div class="overflow-hidden rounded-2xl border border-slate-200 shadow-2xs">
+                            <div id="editor-container" class="min-h-[300px] bg-white text-slate-900 text-sm font-sans p-4"></div>
                         </div>
+                        <input type="hidden" id="rich-editor" name="body_html" :value="contentHtml">
                     </div>
 
                     <!-- File & Media Attachments Card -->
@@ -252,7 +275,7 @@
                                 <i data-lucide="users" class="w-4 h-4 text-indigo-600"></i>
                                 <span>Target Recipients</span>
                             </h2>
-                            <button type="button" @click="showRecipientModal = true" class="text-xs font-bold text-indigo-600 hover:underline">
+                            <button type="button" @click="showRecipientModal = true" class="text-xs font-bold text-indigo-600 hover:underline cursor-pointer">
                                 Multi-Select
                             </button>
                         </div>
@@ -414,7 +437,7 @@
             </div>
         </template>
 
-        <!-- Preview Modal -->
+        <!-- Live Preview Modal -->
         <template x-teleport="body">
             <div x-show="showPreviewModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-xs" x-cloak>
                 <div class="w-full max-w-4xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
@@ -451,4 +474,45 @@
             </div>
         </template>
     </div>
+
+    <!-- Quill Editor Initialization Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (window.Quill) {
+                const quill = new Quill('#editor-container', {
+                    theme: 'snow',
+                    modules: {
+                        toolbar: [
+                            [{ 'header': [1, 2, 3, false] }],
+                            ['bold', 'italic', 'underline', 'strike'],
+                            [{ 'color': [] }, { 'background': [] }],
+                            [{ 'align': [] }],
+                            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                            ['link', 'clean']
+                        ]
+                    }
+                });
+
+                // Load initial HTML into Quill
+                const initialVal = document.getElementById('rich-editor')?.value || '';
+                if (initialVal) {
+                    quill.clipboard.dangerouslyPasteHTML(initialVal);
+                }
+
+                quill.on('text-change', function () {
+                    const html = quill.getSemanticHTML();
+                    const el = document.getElementById('rich-editor');
+                    if (el) el.value = html;
+                    if (window.Alpine) {
+                        const root = document.querySelector('[x-data]');
+                        if (root && Alpine.$data(root)) {
+                            Alpine.$data(root).contentHtml = html;
+                        }
+                    }
+                });
+
+                window.quillInstance = quill;
+            }
+        });
+    </script>
 </x-admin-layout>
