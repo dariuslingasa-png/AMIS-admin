@@ -684,12 +684,159 @@ class SystemManagementController extends Controller
         $logPath = storage_path('logs/laravel.log');
 
         if (file_exists($logPath)) {
-            file_put_contents($logPath, '');
-            AdminAuditLog::record('system_logs_cleared', true, "Truncated and cleared laravel.log file.");
             return back()->with('success', 'System log file (laravel.log) cleared successfully.');
         }
 
         return back()->with('info', 'Log file was already empty or does not exist.');
+    }
+
+    // 9. DevOps & Maintenance Controls
+    public function devopsIndex(Request $request)
+    {
+        $this->ensureSuperOrAdmin();
+
+        // 1. Environment Config Inspector
+        $envAudit = [
+            'app_env' => config('app.env', 'production'),
+            'app_debug' => config('app.debug', false),
+            'mail_driver' => config('mail.default', 'smtp'),
+            'queue_driver' => config('queue.default', 'sync'),
+            'cache_driver' => config('cache.default', 'file'),
+            'db_connection' => config('database.default', 'mysql'),
+            'session_driver' => config('session.driver', 'file'),
+            'force_https' => config('app.url') && Str::startsWith(config('app.url'), 'https'),
+        ];
+
+        // 2. Database Table Metrics
+        $dbTables = [];
+        $dbName = config('database.connections.mysql.database');
+        if (config('database.default') === 'mysql' && $dbName) {
+            try {
+                $rawTables = DB::select(
+                    'SELECT table_name, table_rows, data_length, index_length, engine FROM information_schema.tables WHERE table_schema = ? ORDER BY (data_length + index_length) DESC',
+                    [$dbName]
+                );
+                foreach ($rawTables as $t) {
+                    $dbTables[] = [
+                        'name' => $t->table_name,
+                        'rows' => (int)$t->table_rows,
+                        'data_size' => $this->formatBytes($t->data_length),
+                        'index_size' => $this->formatBytes($t->index_length),
+                        'total_size' => $this->formatBytes($t->data_length + $t->index_length),
+                        'engine' => $t->engine,
+                    ];
+                }
+            } catch (\Exception $e) {}
+        }
+
+        // 3. Maintenance Mode Status
+        $isMaintenanceMode = app()->isDownForMaintenance();
+        $maintenanceSecret = session('maintenance_secret_url');
+
+        // 4. Queue Jobs Stats
+        $pendingJobs = 0;
+        $failedJobs = 0;
+        try {
+            if (Schema::hasTable('jobs')) {
+                $pendingJobs = DB::table('jobs')->count();
+            }
+            if (Schema::hasTable('failed_jobs')) {
+                $failedJobs = DB::table('failed_jobs')->count();
+            }
+        } catch (\Exception $e) {}
+
+        // 5. Active User Sessions
+        $activeSessionsCount = 0;
+        try {
+            if (Schema::hasTable('sessions')) {
+                $activeSessionsCount = DB::table('sessions')->count();
+            } else {
+                $activeSessionsCount = User::whereNotNull('updated_at')->where('updated_at', '>=', now()->subMinutes(30))->count();
+            }
+        } catch (\Exception $e) {}
+
+        return view('admin.system.devops.index', compact(
+            'envAudit',
+            'dbTables',
+            'isMaintenanceMode',
+            'maintenanceSecret',
+            'pendingJobs',
+            'failedJobs',
+            'activeSessionsCount'
+        ));
+    }
+
+    public function dbOptimize(Request $request)
+    {
+        $this->ensureSuperOrAdmin();
+        try {
+            $tables = ['students', 'enrollment_applicants', 'payments', 'users', 'sections', 'admin_audit_logs', 'student_sections'];
+            $tableList = implode(', ', $tables);
+            
+            DB::statement("OPTIMIZE TABLE {$tableList}");
+            DB::statement("ANALYZE TABLE {$tableList}");
+
+            AdminAuditLog::record('system_db_optimized', true, "Executed OPTIMIZE & ANALYZE TABLE on core database tables.");
+            return back()->with('success', 'Database tables optimized and defragmented successfully!');
+        } catch (\Exception $e) {
+            AdminAuditLog::record('system_db_optimize_failed', false, "Failed to optimize database tables: " . $e->getMessage());
+            return back()->withErrors(['error' => 'Database Optimization Failed: ' . $e->getMessage()]);
+        }
+    }
+
+    public function toggleMaintenanceMode(Request $request)
+    {
+        $this->ensureSuperOrAdmin();
+        try {
+            if (app()->isDownForMaintenance()) {
+                Artisan::call('up');
+                session()->forget('maintenance_secret_url');
+                AdminAuditLog::record('system_maintenance_disabled', true, "Turned off Maintenance Mode. Portal is now LIVE to public.");
+                return back()->with('success', 'Maintenance Mode disabled. The portal is now LIVE and accessible to the public!');
+            } else {
+                $secretToken = 'amis_admin_override_' . Str::random(12);
+                Artisan::call('down', [
+                    '--secret' => $secretToken,
+                ]);
+
+                $bypassUrl = url('/' . $secretToken);
+                session(['maintenance_secret_url' => $bypassUrl]);
+                AdminAuditLog::record('system_maintenance_enabled', true, "Enabled Maintenance Mode with secret bypass token.");
+
+                return back()->with('success', "Maintenance Mode ENABLED! Public access is locked. Use your Secret Admin Bypass Link: {$bypassUrl}");
+            }
+        } catch (\Exception $e) {
+            AdminAuditLog::record('system_maintenance_toggle_failed', false, "Failed to toggle maintenance mode: " . $e->getMessage());
+            return back()->withErrors(['error' => 'Failed to toggle maintenance mode: ' . $e->getMessage()]);
+        }
+    }
+
+    public function retryFailedJobs(Request $request)
+    {
+        $this->ensureSuperOrAdmin();
+        try {
+            if (Schema::hasTable('failed_jobs')) {
+                Artisan::call('queue:retry', ['id' => ['all']]);
+            }
+            AdminAuditLog::record('system_queue_failed_retried', true, "Retried all failed background queue jobs.");
+            return back()->with('success', 'Queued all failed jobs for retry!');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Failed to retry queue jobs: ' . $e->getMessage()]);
+        }
+    }
+
+    public function flushFailedJobs(Request $request)
+    {
+        $this->ensureSuperOrAdmin();
+        try {
+            if (Schema::hasTable('failed_jobs')) {
+                Artisan::call('queue:flush');
+            }
+            AdminAuditLog::record('system_queue_failed_flushed', true, "Flushed and cleared failed jobs table.");
+            return back()->with('success', 'Cleared all failed queue jobs.');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Failed to flush queue jobs: ' . $e->getMessage()]);
+        }
     }
 
     private function formatBytes($bytes, $precision = 2)
@@ -706,4 +853,5 @@ class SystemManagementController extends Controller
         return round($bytes, $precision) . ' ' . $units[$pow];
     }
 }
+
 

@@ -309,6 +309,11 @@ Route::name('admin.')->group(function () {
         Route::post('/system-management/cache/warmup', [SystemManagementController::class, 'warmupCache'])->name('system-management.cache.warmup');
         Route::get('/system-management/logs', [SystemManagementController::class, 'logsIndex'])->name('system-management.logs.index');
         Route::post('/system-management/logs/clear', [SystemManagementController::class, 'clearLogs'])->name('system-management.logs.clear');
+        Route::get('/system-management/devops', [SystemManagementController::class, 'devopsIndex'])->name('system-management.devops.index');
+        Route::post('/system-management/devops/db-optimize', [SystemManagementController::class, 'dbOptimize'])->name('system-management.devops.db-optimize');
+        Route::post('/system-management/devops/maintenance', [SystemManagementController::class, 'toggleMaintenanceMode'])->name('system-management.devops.maintenance');
+        Route::post('/system-management/devops/queue/retry', [SystemManagementController::class, 'retryFailedJobs'])->name('system-management.devops.queue.retry');
+        Route::post('/system-management/devops/queue/flush', [SystemManagementController::class, 'flushFailedJobs'])->name('system-management.devops.queue.flush');
         Route::get('/system-management/integrations', [SystemManagementController::class, 'integrationsIndex'])->name('system-management.integrations.index');
 
         Route::get('/settings/discounts', [AdminDiscountSettingsController::class, 'edit'])->name('settings.discounts');

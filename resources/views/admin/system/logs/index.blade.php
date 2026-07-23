@@ -14,6 +14,10 @@
                     </p>
                 </div>
                 <div class="flex flex-wrap items-center gap-3">
+                    <a href="{{ route('admin.system-management.devops.index') }}" class="inline-flex items-center gap-2 rounded-2xl bg-indigo-500/20 border border-indigo-400/40 px-4 py-2.5 text-xs font-black text-indigo-200 hover:bg-indigo-500/30 transition cursor-pointer backdrop-blur-xs">
+                        <i data-lucide="cpu" class="w-4 h-4 text-indigo-300"></i>
+                        <span>DevOps Control</span>
+                    </a>
                     <a href="{{ route('admin.system-management.health.index') }}" class="inline-flex items-center gap-2 rounded-2xl bg-white/10 border border-white/20 px-4 py-2.5 text-xs font-black text-white hover:bg-white/20 transition cursor-pointer backdrop-blur-xs">
                         <i data-lucide="activity" class="w-4 h-4 text-emerald-300"></i>
                         <span>System Health</span>

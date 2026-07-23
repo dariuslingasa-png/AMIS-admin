@@ -11,6 +11,10 @@
                     </p>
                 </div>
                 <div class="flex flex-wrap items-center gap-2.5">
+                    <a href="{{ route('admin.system-management.devops.index') }}" class="inline-flex items-center gap-1.5 rounded-2xl bg-indigo-500/20 border border-indigo-400/40 px-3.5 py-2.5 text-xs font-black text-indigo-200 hover:bg-indigo-500/30 transition cursor-pointer backdrop-blur-xs" title="Open DevOps Control Center">
+                        <i data-lucide="cpu" class="w-4 h-4 text-indigo-300"></i>
+                        <span>DevOps Control</span>
+                    </a>
                     <form method="POST" action="{{ route('admin.system-management.cache.clear') }}" class="inline">
                         @csrf
                         <button type="submit" class="inline-flex items-center gap-1.5 rounded-2xl bg-amber-500/20 border border-amber-400/40 px-3.5 py-2.5 text-xs font-black text-amber-200 hover:bg-amber-500/30 transition cursor-pointer backdrop-blur-xs" title="Clear all compiled framework & config caches">
