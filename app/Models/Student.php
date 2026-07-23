@@ -102,6 +102,11 @@ class Student extends Model
         return $this->hasMany(StudentMsTeam::class);
     }
 
+    public function getEmailAttribute(): ?string
+    {
+        return $this->school_email ?? $this->ms_email;
+    }
+
     public function getObfuscatedIdAttribute(): string
     {
         $offset = 987654;

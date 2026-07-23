@@ -38,7 +38,7 @@ class EmailComposerService
                 }
                 $students = $query->get();
                 foreach ($students as $st) {
-                    $e = $st->email ?? $st->school_email ?? $st->ms_email;
+                    $e = $st->school_email ?? $st->ms_email ?? $st->email;
                     if (filled($e) && filter_var($e, FILTER_VALIDATE_EMAIL)) {
                         $name = trim(($st->first_name ?? '') . ' ' . ($st->last_name ?? '')) ?: ($st->full_name ?? 'Student');
                         $emails[$e] = [
@@ -101,7 +101,7 @@ class EmailComposerService
                 if (Schema::hasTable('students')) {
                     $alumni = Student::where('status', 'graduated')->get();
                     foreach ($alumni as $st) {
-                        $e = $st->email ?? $st->school_email ?? $st->ms_email;
+                        $e = $st->school_email ?? $st->ms_email ?? $st->email;
                         if (filled($e) && filter_var($e, FILTER_VALIDATE_EMAIL)) {
                             $emails[$e] = [
                                 'email' => $e,
