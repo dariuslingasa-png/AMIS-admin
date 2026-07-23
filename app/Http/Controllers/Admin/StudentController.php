@@ -67,8 +67,6 @@ class StudentController extends Controller
                                         ->orWhere('father_last_name', 'like', "%{$term}%")
                                         ->orWhere('mother_first_name', 'like', "%{$term}%")
                                         ->orWhere('mother_last_name', 'like', "%{$term}%")
-                                        ->orWhere('guardian_first_name', 'like', "%{$term}%")
-                                        ->orWhere('guardian_last_name', 'like', "%{$term}%")
                                         ->orWhere('emergency_name', 'like', "%{$term}%");
                                 });
                         });
