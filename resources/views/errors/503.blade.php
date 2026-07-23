@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>System Maintenance - Al-Munawwara Islamic School</title>
+    <title>This site is under maintenance - Al-Munawwara Islamic School</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -21,67 +21,71 @@
         }
     </script>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col justify-between items-center p-4 sm:p-6 selection:bg-emerald-600 selection:text-white">
-    <!-- Top Spacer -->
-    <div></div>
-
-    <!-- Clean Plain Light Mode Maintenance Card -->
-    <main class="w-full max-w-lg mx-auto my-auto">
-        <div class="rounded-3xl border border-slate-200 bg-white p-8 sm:p-10 shadow-sm text-center space-y-6">
-            <!-- Logo -->
-            <div class="flex justify-center">
-                <img src="https://admin.amis.edu.ph/images/AMIS_Logo.svg" alt="AMIS Logo" class="w-20 h-20 sm:w-24 sm:h-24 object-contain mx-auto" onerror="this.onerror=null; this.src='/images/AMIS_Logo.svg';">
+<body class="bg-white text-slate-800 font-sans min-h-screen flex flex-col justify-between items-center p-4 sm:p-6 overflow-hidden selection:bg-sky-500 selection:text-white">
+    
+    <!-- Top Branding Bar -->
+    <header class="w-full max-w-4xl mx-auto flex items-center justify-between py-4 border-b border-slate-100">
+        <div class="flex items-center gap-3">
+            <img src="https://admin.amis.edu.ph/images/AMIS_Logo.svg" alt="AMIS Logo" class="w-10 h-10 object-contain" onerror="this.onerror=null; this.src='/images/AMIS_Logo.svg';">
+            <div>
+                <h2 class="font-arabic text-lg text-emerald-800 font-bold leading-none">المدرسة المنورة الإسلامية</h2>
+                <h1 class="text-[10px] font-black uppercase tracking-wider text-slate-400 mt-0.5">Al-Munawwara Islamic School</h1>
             </div>
+        </div>
+        <div class="flex items-center gap-4 text-xs font-semibold text-slate-500">
+            <a href="mailto:info@amis.edu.ph" class="hover:text-sky-600 transition">info@amis.edu.ph</a>
+            <span class="hidden sm:inline">•</span>
+            <a href="https://amis.edu.ph" class="hidden sm:inline hover:text-sky-600 transition">amis.edu.ph</a>
+        </div>
+    </header>
 
-            <!-- Arabic & English Header -->
-            <div class="space-y-1">
-                <h2 class="font-arabic text-2xl sm:text-3xl text-emerald-800 font-bold leading-normal">
-                    المدرسة المنورة الإسلامية
-                </h2>
-                <h1 class="text-xs font-black uppercase tracking-[0.2em] text-slate-500">
-                    Al-Munawwara Islamic School
-                </h1>
-            </div>
+    <!-- Main Center Maintenance Section -->
+    <main class="w-full max-w-3xl mx-auto my-auto py-8 relative flex flex-col items-center justify-center">
+        <!-- Soft Circular Background Container -->
+        <div class="w-[340px] h-[340px] sm:w-[460px] sm:h-[460px] rounded-full bg-sky-50/80 border border-sky-100/60 flex flex-col items-center justify-center text-center p-6 sm:p-10 relative z-10 shadow-sm">
+            
+            <!-- Main Text Header -->
+            <h2 class="text-2xl sm:text-4xl font-extrabold text-slate-800 tracking-tight leading-tight max-w-xs sm:max-w-md">
+                This site is under maintenance
+            </h2>
+            <p class="text-xs sm:text-base font-medium text-slate-500 mt-3 max-w-xs sm:max-w-sm">
+                We're preparing to serve you better.
+            </p>
 
-            <!-- Status Tag Badge -->
-            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold uppercase tracking-wider">
-                <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-                <span>System Maintenance</span>
-            </div>
+            <!-- Unplugged Power Cable Illustration -->
+            <div class="relative w-full max-w-xs sm:max-w-sm flex items-center justify-center mt-8">
+                <!-- Cable Wire Left -->
+                <div class="h-1 bg-sky-300 rounded-full flex-1"></div>
 
-            <!-- Maintenance Messages (English Only, No Glow) -->
-            <div class="space-y-3 pt-2">
-                <h3 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                    Portal Temporarily Offline
-                </h3>
+                <!-- Plug Connectors -->
+                <div class="flex items-center gap-2.5 mx-2">
+                    <!-- Male Plug -->
+                    <svg class="w-14 h-10 text-sky-600" viewBox="0 0 54 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M2 17C2 15.3431 3.34315 14 5 14H18C19.6569 14 21 15.3431 21 17V23C21 24.6569 19.6569 26 18 26H5C3.34315 26 2 24.6569 2 23V17Z" fill="#38BDF8" stroke="#0284C7" stroke-width="2.5"/>
+                        <rect x="21" y="7" width="18" height="26" rx="4" fill="#BAE6FD" stroke="#0284C7" stroke-width="3"/>
+                        <rect x="39" y="12" width="11" height="4" rx="1.5" fill="#0284C7"/>
+                        <rect x="39" y="24" width="11" height="4" rx="1.5" fill="#0284C7"/>
+                    </svg>
 
-                <p class="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium max-w-md mx-auto">
-                    We are currently performing scheduled system enhancements and upgrades to bring you an improved experience. We apologize for any inconvenience and will be back online shortly. Thank you for your patience.
-                </p>
-            </div>
+                    <!-- Female Socket -->
+                    <svg class="w-14 h-10 text-sky-600" viewBox="0 0 54 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="2" y="7" width="20" height="26" rx="4" fill="#BAE6FD" stroke="#0284C7" stroke-width="3"/>
+                        <path d="M22 17C22 15.3431 23.3431 14 25 14H38C39.6569 14 41 15.3431 41 17V23C41 24.6569 39.6569 26 38 26H25C23.3431 26 22 24.6569 22 23V17Z" fill="#38BDF8" stroke="#0284C7" stroke-width="2.5"/>
+                        <line x1="2" y1="14" x2="6" y2="14" stroke="#0284C7" stroke-width="2.5" stroke-linecap="round"/>
+                        <line x1="2" y1="26" x2="6" y2="26" stroke="#0284C7" stroke-width="2.5" stroke-linecap="round"/>
+                    </svg>
+                </div>
 
-            <!-- Simple Progress Line -->
-            <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                <div class="bg-emerald-600 h-full w-2/3 rounded-full"></div>
-            </div>
-
-            <!-- Contact & Domain Info -->
-            <div class="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-500 font-semibold">
-                <a href="mailto:info@amis.edu.ph" class="hover:text-emerald-700 transition flex items-center gap-1.5">
-                    <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 002-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                    <span>info@amis.edu.ph</span>
-                </a>
-                <a href="https://amis.edu.ph" class="hover:text-emerald-700 transition flex items-center gap-1.5">
-                    <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
-                    <span>amis.edu.ph</span>
-                </a>
+                <!-- Cable Wire Right -->
+                <div class="h-1 bg-sky-300 rounded-full flex-1"></div>
             </div>
         </div>
     </main>
 
-    <!-- Footer Copyright -->
-    <footer class="text-center py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+    <!-- Bottom Copyright & Footer -->
+    <footer class="w-full max-w-4xl mx-auto py-4 border-t border-slate-100 text-center text-xs font-semibold text-slate-400 uppercase tracking-wider">
         &copy; {{ date('Y') }} Al-Munawwara Islamic School. All rights reserved.
     </footer>
+
 </body>
 </html>
