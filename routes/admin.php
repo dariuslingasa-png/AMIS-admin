@@ -301,7 +301,14 @@ Route::name('admin.')->group(function () {
         Route::delete('/system-management/backups/{filename}', [SystemManagementController::class, 'backupsDestroy'])->name('system-management.backups.destroy');
         Route::post('/system-management/backups/restore', [SystemManagementController::class, 'backupsRestore'])->name('system-management.backups.restore');
         Route::post('/system-management/backups/schedule', [SystemManagementController::class, 'backupsSaveSchedule'])->name('system-management.backups.schedule');
+        Route::post('/system-management/backups/prune', [SystemManagementController::class, 'pruneOldBackups'])->name('system-management.backups.prune');
         Route::get('/system-management/health', [SystemManagementController::class, 'systemHealth'])->name('system-management.health.index');
+        Route::post('/system-management/health/test-email', [SystemManagementController::class, 'sendTestEmail'])->name('system-management.health.test-email');
+        Route::post('/system-management/health/ping', [SystemManagementController::class, 'pingDiagnostics'])->name('system-management.health.ping');
+        Route::post('/system-management/cache/clear', [SystemManagementController::class, 'clearCache'])->name('system-management.cache.clear');
+        Route::post('/system-management/cache/warmup', [SystemManagementController::class, 'warmupCache'])->name('system-management.cache.warmup');
+        Route::get('/system-management/logs', [SystemManagementController::class, 'logsIndex'])->name('system-management.logs.index');
+        Route::post('/system-management/logs/clear', [SystemManagementController::class, 'clearLogs'])->name('system-management.logs.clear');
         Route::get('/system-management/integrations', [SystemManagementController::class, 'integrationsIndex'])->name('system-management.integrations.index');
 
         Route::get('/settings/discounts', [AdminDiscountSettingsController::class, 'edit'])->name('settings.discounts');

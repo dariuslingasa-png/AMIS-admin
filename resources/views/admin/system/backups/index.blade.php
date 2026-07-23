@@ -33,7 +33,19 @@
                     <!-- Actions header -->
                     <div class="px-4 py-4 sm:px-6 border-b border-slate-200/60 bg-slate-50/50 flex flex-wrap items-center justify-between gap-3">
                         <span class="text-xs font-extrabold text-slate-500 uppercase">Snapshot Files</span>
-                        <div class="flex items-center gap-2">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <form method="POST" action="{{ route('admin.system-management.backups.prune') }}" onsubmit="return confirm('Prune older SQL backups from server disk storage?')" class="flex items-center gap-1">
+                                @csrf
+                                <select name="days" class="h-9 px-2 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-700 outline-none">
+                                    <option value="14">Prune &gt; 14 Days</option>
+                                    <option value="30" selected>Prune &gt; 30 Days</option>
+                                    <option value="60">Prune &gt; 60 Days</option>
+                                </select>
+                                <button type="submit" class="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-amber-600 px-3 text-xs font-bold text-white shadow-sm transition hover:bg-amber-700 cursor-pointer" title="Auto-delete old backups to free server disk space">
+                                    <i data-lucide="scissors" class="h-3.5 w-3.5"></i>
+                                    Prune Disk
+                                </button>
+                            </form>
                             <form method="POST" action="{{ route('admin.system-management.backups.create') }}">
                                 @csrf
                                 <button type="submit" class="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-slate-900 px-4 text-xs font-bold text-white transition hover:bg-slate-800 cursor-pointer">

@@ -1,14 +1,73 @@
 <x-admin-layout title="System Health">
     <div class="space-y-6">
         <!-- Banner -->
-        <section class="overflow-hidden rounded-3xl border border-slate-700/30 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 p-6 text-white shadow-xl shadow-slate-900/10">
+        <section class="overflow-hidden rounded-3xl border border-slate-700/30 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 p-6 text-white shadow-xl shadow-slate-900/10" x-data="{ openSmtpModal: false, pinging: false, pingResults: null }">
             <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                 <div>
                     <span class="inline-flex rounded-full bg-white/10 px-3 py-1 text-xs font-black uppercase tracking-[0.22em] text-slate-200">System Management</span>
-                    <h1 class="mt-4 text-3xl font-black tracking-tight">System Health</h1>
+                    <h1 class="mt-4 text-3xl font-black tracking-tight">System Health & Operations</h1>
                     <p class="mt-2 max-w-2xl text-sm font-medium leading-6 text-slate-300">
-                        Monitor live database latency, disk consumption, external API connections, and core service uptime thresholds.
+                        Monitor live database latency, disk consumption, external API connections, performance caches, and diagnostic tools.
                     </p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2.5">
+                    <form method="POST" action="{{ route('admin.system-management.cache.clear') }}" class="inline">
+                        @csrf
+                        <button type="submit" class="inline-flex items-center gap-1.5 rounded-2xl bg-amber-500/20 border border-amber-400/40 px-3.5 py-2.5 text-xs font-black text-amber-200 hover:bg-amber-500/30 transition cursor-pointer backdrop-blur-xs" title="Clear all compiled framework & config caches">
+                            <i data-lucide="zap" class="w-4 h-4 text-amber-300"></i>
+                            <span>Clear Cache</span>
+                        </button>
+                    </form>
+                    <form method="POST" action="{{ route('admin.system-management.cache.warmup') }}" class="inline">
+                        @csrf
+                        <button type="submit" class="inline-flex items-center gap-1.5 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 px-3.5 py-2.5 text-xs font-black text-emerald-200 hover:bg-emerald-500/30 transition cursor-pointer backdrop-blur-xs" title="Rebuild and warm up production framework caches">
+                            <i data-lucide="flame" class="w-4 h-4 text-emerald-300"></i>
+                            <span>Warmup Cache</span>
+                        </button>
+                    </form>
+                    <button type="button" @click="openSmtpModal = true" class="inline-flex items-center gap-1.5 rounded-2xl bg-violet-500/20 border border-violet-400/40 px-3.5 py-2.5 text-xs font-black text-violet-200 hover:bg-violet-500/30 transition cursor-pointer backdrop-blur-xs" title="Send SMTP Test Email">
+                        <i data-lucide="mail-check" class="w-4 h-4 text-violet-300"></i>
+                        <span>Test Email</span>
+                    </button>
+                    <a href="{{ route('admin.system-management.logs.index') }}" class="inline-flex items-center gap-1.5 rounded-2xl bg-sky-500/20 border border-sky-400/40 px-3.5 py-2.5 text-xs font-black text-sky-200 hover:bg-sky-500/30 transition cursor-pointer backdrop-blur-xs" title="Inspect live laravel.log file">
+                        <i data-lucide="terminal" class="w-4 h-4 text-sky-300"></i>
+                        <span>Live Logs</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- SMTP Test Email Modal -->
+            <div x-cloak x-show="openSmtpModal" style="display: none; z-index: 99999;" class="fixed inset-0 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-fade-in text-slate-900">
+                <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col" @click.outside="openSmtpModal = false">
+                    <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
+                        <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <i data-lucide="mail-check" class="w-5 h-5 text-violet-600"></i>
+                            <span>Send SMTP Diagnostic Email</span>
+                        </h3>
+                        <button type="button" @click="openSmtpModal = false" class="text-slate-400 hover:text-slate-600 transition">
+                            <i data-lucide="x" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                    <form method="POST" action="{{ route('admin.system-management.health.test-email') }}" class="p-6 space-y-4">
+                        @csrf
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Target Recipient Email</label>
+                            <input type="email" name="email" required placeholder="admin@amis.edu.ph" value="{{ auth()->user()?->email }}"
+                                   class="w-full h-11 px-3.5 rounded-xl border border-slate-200 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-violet-500">
+                        </div>
+                        <div class="p-3 bg-violet-50 dark:bg-violet-950/50 rounded-xl text-xs font-medium text-violet-800 dark:text-violet-300 leading-relaxed">
+                            Sends a live diagnostic test message via the configured SMTP Mailer (<strong class="font-bold">{{ config('mail.mailers.smtp.host') }}</strong>).
+                        </div>
+                        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                            <button type="button" @click="openSmtpModal = false" class="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition cursor-pointer">
+                                Cancel
+                            </button>
+                            <button type="submit" class="px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold transition shadow-md cursor-pointer flex items-center gap-1.5">
+                                <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                                <span>Send Test Email</span>
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </section>

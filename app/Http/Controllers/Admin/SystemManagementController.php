@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Artisan;
 
 class SystemManagementController extends Controller
 {
@@ -499,6 +500,198 @@ class SystemManagementController extends Controller
         return view('admin.system.integrations.index', compact('integrations'));
     }
 
+    // 4. Cache & Performance Controls
+    public function clearCache(Request $request)
+    {
+        $this->ensureSuperOrAdmin();
+        try {
+            Artisan::call('optimize:clear');
+            AdminAuditLog::record('system_cache_cleared', true, "Cleared all Laravel framework caches (config, route, view, event).");
+            return back()->with('success', 'Framework caches (Config, Route, View, Compiled) cleared successfully!');
+        } catch (\Exception $e) {
+            AdminAuditLog::record('system_cache_clear_failed', false, "Failed to clear framework caches: " . $e->getMessage());
+            return back()->withErrors(['error' => 'Failed to clear caches: ' . $e->getMessage()]);
+        }
+    }
+
+    public function warmupCache(Request $request)
+    {
+        $this->ensureSuperOrAdmin();
+        try {
+            Artisan::call('config:cache');
+            Artisan::call('route:cache');
+            Artisan::call('view:cache');
+            AdminAuditLog::record('system_cache_warmed', true, "Warmed up and rebuilt all production framework caches.");
+            return back()->with('success', 'Production caches (Config, Routes, Views) built and warmed up successfully!');
+        } catch (\Exception $e) {
+            AdminAuditLog::record('system_cache_warmup_failed', false, "Failed to warm up framework caches: " . $e->getMessage());
+            return back()->withErrors(['error' => 'Failed to warm up caches: ' . $e->getMessage()]);
+        }
+    }
+
+    // 5. SMTP Test Email Diagnostic
+    public function sendTestEmail(Request $request)
+    {
+        $this->ensureSuperOrAdmin();
+        $validated = $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        $recipient = $validated['email'];
+        $subject = 'AMIS System Management - SMTP Diagnostic Test Email';
+
+        try {
+            Mail::raw("This is a diagnostic test email sent from AMIS Admin System Management at " . now()->format('Y-m-d H:i:s T') . ".\n\nIf you received this message, your SMTP Mailer configuration is 100% operational and healthy!", function ($message) use ($recipient, $subject) {
+                $message->to($recipient)->subject($subject);
+            });
+
+            AdminAuditLog::record('system_smtp_test_sent', true, "Successfully sent SMTP diagnostic test email to {$recipient}");
+            return back()->with('success', "Diagnostic test email sent successfully to {$recipient}! Please check your inbox/spam folder.");
+        } catch (\Exception $e) {
+            AdminAuditLog::record('system_smtp_test_failed', false, "Failed to send SMTP diagnostic test email to {$recipient}: " . $e->getMessage());
+            return back()->withErrors(['error' => "SMTP Delivery Failed: " . $e->getMessage()]);
+        }
+    }
+
+    // 6. Smart Backup Auto-Pruning
+    public function pruneOldBackups(Request $request)
+    {
+        $this->ensureSuperOrAdmin();
+        $validated = $request->validate([
+            'days' => 'required|integer|min:1|max:365',
+        ]);
+
+        $days = (int)$validated['days'];
+        $cutoff = time() - ($days * 86400);
+        $directory = storage_path('app/backups');
+
+        if (!file_exists($directory)) {
+            return back()->with('info', 'No backup directory found to prune.');
+        }
+
+        $files = glob($directory . '/*.sql');
+        $deletedCount = 0;
+        $freedBytes = 0;
+
+        if ($files !== false) {
+            foreach ($files as $file) {
+                if (filemtime($file) < $cutoff) {
+                    $freedBytes += filesize($file);
+                    unlink($file);
+                    $deletedCount++;
+                }
+            }
+        }
+
+        $formattedFreed = $this->formatBytes($freedBytes);
+        AdminAuditLog::record('system_backups_pruned', true, "Pruned {$deletedCount} backup files older than {$days} days, freeing {$formattedFreed} of storage.");
+
+        return back()->with('success', "Smart Prune complete: Removed {$deletedCount} local backup files older than {$days} days, freeing {$formattedFreed} of storage space!");
+    }
+
+    // 7. Real-Time Service Health Pings (AJAX)
+    public function pingDiagnostics(Request $request)
+    {
+        $this->ensureSuperOrAdmin();
+        $results = [];
+
+        // DB Ping
+        $start = microtime(true);
+        try {
+            DB::connection()->getPdo();
+            $dbLatency = round((microtime(true) - $start) * 1000, 2);
+            $results['database'] = ['healthy' => true, 'latency_ms' => $dbLatency, 'message' => 'MariaDB Operational (' . $dbLatency . 'ms)'];
+        } catch (\Exception $e) {
+            $results['database'] = ['healthy' => false, 'latency_ms' => 0, 'message' => 'DB Connection Failed: ' . $e->getMessage()];
+        }
+
+        // Google Drive Ping
+        $start = microtime(true);
+        try {
+            $driveService = new \App\Services\GoogleDriveService();
+            $quota = $driveService->getStorageQuota();
+            $gdriveLatency = round((microtime(true) - $start) * 1000, 2);
+            $results['gdrive'] = ['healthy' => ($quota !== null), 'latency_ms' => $gdriveLatency, 'message' => $quota ? 'Drive API Responding (' . $gdriveLatency . 'ms)' : 'Drive API Not Connected'];
+        } catch (\Exception $e) {
+            $results['gdrive'] = ['healthy' => false, 'latency_ms' => 0, 'message' => 'Drive API Error: ' . $e->getMessage()];
+        }
+
+        // Microsoft Graph Ping
+        $start = microtime(true);
+        $msConfigured = filled(config('services.microsoft.client_id')) && filled(config('services.microsoft.tenant_id'));
+        if ($msConfigured) {
+            try {
+                $response = Http::asForm()->post(
+                    "https://login.microsoftonline.com/" . config('services.microsoft.tenant_id') . "/oauth2/v2.0/token",
+                    [
+                        'client_id' => config('services.microsoft.client_id'),
+                        'client_secret' => config('services.microsoft.client_secret'),
+                        'grant_type' => 'client_credentials',
+                        'scope' => 'https://graph.microsoft.com/.default',
+                    ]
+                );
+                $msLatency = round((microtime(true) - $start) * 1000, 2);
+                $results['microsoft'] = ['healthy' => $response->successful(), 'latency_ms' => $msLatency, 'message' => $response->successful() ? 'Graph API Responding (' . $msLatency . 'ms)' : 'Auth Failed (' . $response->status() . ')'];
+            } catch (\Exception $e) {
+                $results['microsoft'] = ['healthy' => false, 'latency_ms' => 0, 'message' => 'Graph API Error: ' . $e->getMessage()];
+            }
+        } else {
+            $results['microsoft'] = ['healthy' => false, 'latency_ms' => 0, 'message' => 'Microsoft OAuth credentials missing in .env'];
+        }
+
+        return response()->json([
+            'success' => true,
+            'diagnostics' => $results,
+            'timestamp' => now()->format('Y-m-d H:i:s T'),
+        ]);
+    }
+
+    // 8. Live Log Viewer & Log Clearing
+    public function logsIndex(Request $request)
+    {
+        $this->ensureSuperOrAdmin();
+        $logPath = storage_path('logs/laravel.log');
+        $logEntries = [];
+        $logSize = 0;
+
+        if (file_exists($logPath)) {
+            $logSize = filesize($logPath);
+            $rawContent = file_get_contents($logPath);
+            
+            // Extract log entries using regex
+            preg_match_all('/\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\] ([a-zA-Z0-9_\-]+)\.([A-Z]+): (.*?)(?=\[\d{4}-\d{2}-\d{2}|\z)/s', $rawContent, $matches, PREG_SET_ORDER);
+
+            foreach (array_reverse($matches) as $index => $match) {
+                if ($index >= 300) break; // Limit to last 300 entries
+                $logEntries[] = [
+                    'index' => $index + 1,
+                    'timestamp' => $match[1],
+                    'environment' => $match[2],
+                    'level' => strtoupper($match[3]),
+                    'message' => trim($match[4]),
+                ];
+            }
+        }
+
+        $formattedLogSize = $this->formatBytes($logSize);
+
+        return view('admin.system.logs.index', compact('logEntries', 'formattedLogSize', 'logPath'));
+    }
+
+    public function clearLogs(Request $request)
+    {
+        $this->ensureSuperOrAdmin();
+        $logPath = storage_path('logs/laravel.log');
+
+        if (file_exists($logPath)) {
+            file_put_contents($logPath, '');
+            AdminAuditLog::record('system_logs_cleared', true, "Truncated and cleared laravel.log file.");
+            return back()->with('success', 'System log file (laravel.log) cleared successfully.');
+        }
+
+        return back()->with('info', 'Log file was already empty or does not exist.');
+    }
+
     private function formatBytes($bytes, $precision = 2)
     {
         if ($bytes <= 0) {
@@ -513,3 +706,4 @@ class SystemManagementController extends Controller
         return round($bytes, $precision) . ' ' . $units[$pow];
     }
 }
+
