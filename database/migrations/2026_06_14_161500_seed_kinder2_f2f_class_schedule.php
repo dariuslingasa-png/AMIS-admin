@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
 use App\Models\Section;
 use App\Models\SectionSubject;
+use Illuminate\Database\Migrations\Migration;
 
 return new class extends Migration
 {
@@ -12,8 +12,8 @@ return new class extends Migration
         $sections = Section::where('grade_level', 'Kinder 2')
             ->where(function ($query) {
                 $query->where('learning_mode', 'Face-to-Face')
-                      ->orWhere('learning_mode', 'F2F')
-                      ->orWhere('learning_mode', 'like', '%Face%');
+                    ->orWhere('learning_mode', 'F2F')
+                    ->orWhere('learning_mode', 'like', '%Face%');
             })
             ->get();
 
@@ -96,8 +96,8 @@ return new class extends Migration
         $sections = Section::where('grade_level', 'Kinder 2')
             ->where(function ($query) {
                 $query->where('learning_mode', 'Face-to-Face')
-                      ->orWhere('learning_mode', 'F2F')
-                      ->orWhere('learning_mode', 'like', '%Face%');
+                    ->orWhere('learning_mode', 'F2F')
+                    ->orWhere('learning_mode', 'like', '%Face%');
             })
             ->get();
 

@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
@@ -37,7 +36,7 @@ return new class extends Migration
                     $updates['last_name'] = mb_strtoupper($applicant->last_name, 'UTF-8');
                 }
 
-                if (!empty($updates)) {
+                if (! empty($updates)) {
                     DB::table('enrollment_applicants')->where('id', $applicant->id)->update($updates);
                 }
             });

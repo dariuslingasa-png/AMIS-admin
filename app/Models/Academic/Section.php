@@ -2,9 +2,9 @@
 
 namespace App\Models\Academic;
 
-use Illuminate\Database\Eloquent\Model;
 use App\Models\ClassAdvisoryAssignment;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Model;
 
 class Section extends Model
 {
@@ -51,48 +51,49 @@ class Section extends Model
     public function getGradeAdvisorAttribute()
     {
         $assignment = ClassAdvisoryAssignment::where('status', 'active')
-            ->whereHas('section', function($q) {
+            ->whereHas('section', function ($q) {
                 $q->where('grade_level', $this->grade_level);
             })
             ->first();
-            
+
         if ($assignment) {
             return $assignment;
         }
-        
+
         $elementary = config('class_advisories.elementary', []);
         $highSchool = config('class_advisories.high_school', []);
         $allAdvisors = array_merge($elementary, $highSchool);
-        
+
         foreach ($allAdvisors as $adv) {
             if ($adv['grade_level'] === $this->grade_level) {
                 $teacherName = $adv['teacher'];
-                
+
                 $cleanName = trim(str_ireplace('TEACHER ', '', $teacherName));
                 $user = User::where('role', 'teacher')
-                    ->where(function($query) use ($cleanName) {
+                    ->where(function ($query) use ($cleanName) {
                         $query->where('name', $cleanName)
-                              ->orWhere('name', 'like', '%' . $cleanName . '%');
+                            ->orWhere('name', 'like', '%'.$cleanName.'%');
                     })
                     ->first();
-                
-                return (object)[
+
+                return (object) [
                     'teacher_name' => $teacherName,
-                    'teacher_email' => $user ? $user->email : null
+                    'teacher_email' => $user ? $user->email : null,
                 ];
             }
         }
-        
+
         return null;
     }
 
     public function getDisplayNameAttribute(): string
     {
-        $grade  = $this->grade_level;
-        $name   = $this->official_name ?: ($this->name && $this->name !== 'A' ? $this->name : 'General');
-        $shift  = $this->shift ?? 'F2F';
+        $grade = $this->grade_level;
+        $name = $this->official_name ?: ($this->name && $this->name !== 'A' ? $this->name : 'General');
+        $shift = $this->shift ?? 'F2F';
         $gender = ucfirst($this->gender === 'male' ? 'Boys' : ($this->gender === 'female' ? 'Girls' : 'Merge'));
-        $year   = $this->school_year ?? '2026-2027';
+        $year = $this->school_year ?? '2026-2027';
+
         return "{$grade} - {$name} {$shift} {$gender} {$year}";
     }
 

@@ -4,8 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Academic\ClassScheduleRequest;
 use App\Models\ClassSchedule;
+use App\Models\MsTeam;
+use App\Models\Section;
+use App\Models\StudentSection;
 use App\Services\Admin\Academic\ClassScheduleService;
 use App\Services\Admin\Academic\SectionSubjectSyncService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
@@ -13,8 +17,8 @@ use Illuminate\Support\Facades\Log;
 class AdminClassScheduleController extends Controller
 {
     public function __construct(
-        private readonly ClassScheduleService        $schedules,
-        private readonly SectionSubjectSyncService   $subjectSync,
+        private readonly ClassScheduleService $schedules,
+        private readonly SectionSubjectSyncService $subjectSync,
     ) {}
 
     public function index(Request $request)
@@ -23,16 +27,16 @@ class AdminClassScheduleController extends Controller
 
         $mode = $request->query('mode', 'f2f');
 
-        $sections = \App\Models\Section::withCount('students')
+        $sections = Section::withCount('students')
             ->orderByRaw("FIELD(grade_level,'Kinder 1','Kinder 2','Grade 1','Grade 2','Grade 3','Grade 4','Grade 5','Grade 6','Grade 7','Grade 8','Grade 9','Grade 10','Grade 11','Grade 12')")
             ->get();
 
-        $f2fSections    = $sections->filter(fn($s) => str_contains($s->learning_mode ?? '', 'Face') || str_contains($s->learning_mode ?? '', 'f2f'));
-        $onlineSections = $sections->filter(fn($s) => str_contains($s->learning_mode ?? '', 'Online') || str_contains($s->learning_mode ?? '', 'Flexible'));
+        $f2fSections = $sections->filter(fn ($s) => str_contains($s->learning_mode ?? '', 'Face') || str_contains($s->learning_mode ?? '', 'f2f'));
+        $onlineSections = $sections->filter(fn ($s) => str_contains($s->learning_mode ?? '', 'Online') || str_contains($s->learning_mode ?? '', 'Flexible'));
 
-        $advisories      = $this->schedules->advisories();
+        $advisories = $this->schedules->advisories();
         $advisoryByGrade = $advisories->keyBy('grade_level');
-        $teachers        = $this->schedules->allTeachersForPicker();
+        $teachers = $this->schedules->allTeachersForPicker();
 
         $sectionIds = $sections->pluck('id');
         $schedulesBySection = ClassSchedule::whereIn('section_id', $sectionIds)
@@ -41,8 +45,8 @@ class AdminClassScheduleController extends Controller
             ->sortBy([['day_index', 'asc'], ['start_minutes', 'asc']])
             ->groupBy('section_id');
 
-        $days            = $this->schedules->days();
-        $timeOptions     = $this->schedules->timeOptions();
+        $days = $this->schedules->days();
+        $timeOptions = $this->schedules->timeOptions();
 
         $unmatchedCount = ClassSchedule::whereIn('section_id', $sectionIds)
             ->where('teacher_status', 'unmatched')
@@ -56,7 +60,7 @@ class AdminClassScheduleController extends Controller
         $activeGradeLevel = $activeSection?->grade_level ?? '';
 
         // All sections for the Active Sections Catalog
-        $allSections = \App\Models\Section::withCount(['students as enrolled_count' => fn($q) => $q->where('ms_status', 'enrolled')])
+        $allSections = Section::withCount(['students as enrolled_count' => fn ($q) => $q->where('ms_status', 'enrolled')])
             ->withCount('subjects')
             ->orderBy('grade_level')
             ->orderBy('learning_mode')
@@ -68,23 +72,23 @@ class AdminClassScheduleController extends Controller
             'Kinder 1' => 1, 'Kinder 2' => 2,
             'Grade 1' => 3, 'Grade 2' => 4, 'Grade 3' => 5, 'Grade 4' => 6,
             'Grade 5' => 7, 'Grade 6' => 8, 'Grade 7' => 9, 'Grade 8' => 10,
-            'Grade 9' => 11, 'Grade 10' => 12, 'Grade 11' => 13, 'Grade 12' => 14
+            'Grade 9' => 11, 'Grade 10' => 12, 'Grade 11' => 13, 'Grade 12' => 14,
         ];
-        $groupedSections = $allSections->groupBy('grade_level')->sortBy(fn($v, $k) => $gradeOrder[$k] ?? 99);
+        $groupedSections = $allSections->groupBy('grade_level')->sortBy(fn ($v, $k) => $gradeOrder[$k] ?? 99);
 
-        $f2fCount      = $allSections->where('learning_mode', 'Face-to-Face')->count();
-        $flexCount     = $allSections->filter(fn($s) => str_contains($s->learning_mode ?? '', 'Flexible'))->count();
-        $totalEnrolled = \App\Models\StudentSection::where('ms_status', 'enrolled')->count();
+        $f2fCount = $allSections->where('learning_mode', 'Face-to-Face')->count();
+        $flexCount = $allSections->filter(fn ($s) => str_contains($s->learning_mode ?? '', 'Flexible'))->count();
+        $totalEnrolled = StudentSection::where('ms_status', 'enrolled')->count();
 
         $sectionsStats = [
             'total_sections' => $allSections->count(),
-            'f2f_count'      => $f2fCount,
-            'flex_count'     => $flexCount,
+            'f2f_count' => $f2fCount,
+            'flex_count' => $flexCount,
             'total_enrolled' => $totalEnrolled,
         ];
 
         $schoolYear = config('services.school.year');
-        $gradeTeams = \App\Models\MsTeam::where('type', 'grade')
+        $gradeTeams = MsTeam::where('type', 'grade')
             ->where('school_year', $schoolYear)
             ->get()
             ->keyBy('grade_level');
@@ -117,7 +121,7 @@ class AdminClassScheduleController extends Controller
         $validated = $request->validated();
         $sectionId = $validated['section_id'];
 
-        if (!empty($validated['spans_all_days'])) {
+        if (! empty($validated['spans_all_days'])) {
             $this->schedules->store(array_merge($validated, ['day' => 'Sunday', 'spans_all_days' => true]));
         } else {
             $days = explode(',', $validated['day']);
@@ -147,7 +151,7 @@ class AdminClassScheduleController extends Controller
 
         $this->schedules->update($schedule, array_merge($validated, [
             'day' => $singleDay,
-            'spans_all_days' => !empty($validated['spans_all_days']),
+            'spans_all_days' => ! empty($validated['spans_all_days']),
         ]));
 
         return back()
@@ -185,13 +189,13 @@ class AdminClassScheduleController extends Controller
         $updated = $this->schedules->resolveTeacher($schedule, $request->teacher_key);
 
         return response()->json([
-            'success'      => true,
-            'teacher_key'  => $updated->teacher_key,
+            'success' => true,
+            'teacher_key' => $updated->teacher_key,
             'teacher_status' => $updated->teacher_status,
         ]);
     }
 
-    public function togglePublish(\App\Models\Section $section): \Illuminate\Http\RedirectResponse
+    public function togglePublish(Section $section): RedirectResponse
     {
         Gate::authorize('manage-academic');
 
@@ -207,7 +211,7 @@ class AdminClassScheduleController extends Controller
         }
 
         return back()->with('success', "Schedule {$status} successfully.")
-                     ->with('reopen_add_modal', false);
+            ->with('reopen_add_modal', false);
     }
 
     public function exportJson($sectionId)
@@ -225,18 +229,18 @@ class AdminClassScheduleController extends Controller
                 $s->start_time,
                 $s->end_time,
                 $s->spans_all_days ? '1' : '0',
-                $s->is_special ? '1' : '0'
+                $s->is_special ? '1' : '0',
             ]));
 
-            if (!isset($grouped[$key])) {
+            if (! isset($grouped[$key])) {
                 $grouped[$key] = [
                     'subject_name' => $s->subject_name,
                     'teacher_display' => $s->teacher_display ?? '',
                     'days' => [],
                     'start_time' => substr($s->start_time, 0, 5),
                     'end_time' => substr($s->end_time, 0, 5),
-                    'spans_all_days' => (bool)$s->spans_all_days,
-                    'is_special' => (bool)$s->is_special,
+                    'spans_all_days' => (bool) $s->spans_all_days,
+                    'is_special' => (bool) $s->is_special,
                 ];
             }
             $grouped[$key]['days'][] = $s->day;
@@ -269,7 +273,7 @@ class AdminClassScheduleController extends Controller
         $jsonStr = $request->schedule_json;
         $items = json_decode($jsonStr, true);
 
-        if (!is_array($items)) {
+        if (! is_array($items)) {
             return back()->withErrors(['schedule_json' => 'Invalid JSON format. Must be a JSON array of schedule objects.']);
         }
 
@@ -285,13 +289,13 @@ class AdminClassScheduleController extends Controller
             }
         }
 
-        $section = \App\Models\Section::findOrFail($sectionId);
+        $section = Section::findOrFail($sectionId);
 
         // Delete existing schedules for this section
         ClassSchedule::where('section_id', $sectionId)->delete();
 
         foreach ($items as $item) {
-            if (!empty($item['spans_all_days'])) {
+            if (! empty($item['spans_all_days'])) {
                 $this->schedules->store([
                     'section_id' => $sectionId,
                     'subject_name' => $item['subject_name'],
@@ -300,7 +304,7 @@ class AdminClassScheduleController extends Controller
                     'start_time' => $item['start_time'],
                     'end_time' => $item['end_time'],
                     'spans_all_days' => true,
-                    'is_special' => !empty($item['is_special']),
+                    'is_special' => ! empty($item['is_special']),
                     'mode' => str_contains($section->learning_mode ?? '', 'Face') || str_contains($section->learning_mode ?? '', 'f2f') ? 'f2f' : 'online',
                     'school_year' => config('services.school.year', '2026-2027'),
                 ]);
@@ -308,7 +312,9 @@ class AdminClassScheduleController extends Controller
                 $days = explode(',', $item['day']);
                 foreach ($days as $day) {
                     $dayTrimmed = trim($day);
-                    if (empty($dayTrimmed)) continue;
+                    if (empty($dayTrimmed)) {
+                        continue;
+                    }
 
                     $this->schedules->store([
                         'section_id' => $sectionId,
@@ -318,7 +324,7 @@ class AdminClassScheduleController extends Controller
                         'start_time' => $item['start_time'],
                         'end_time' => $item['end_time'],
                         'spans_all_days' => false,
-                        'is_special' => !empty($item['is_special']),
+                        'is_special' => ! empty($item['is_special']),
                         'mode' => str_contains($section->learning_mode ?? '', 'Face') || str_contains($section->learning_mode ?? '', 'f2f') ? 'f2f' : 'online',
                         'school_year' => config('services.school.year', '2026-2027'),
                     ]);

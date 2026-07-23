@@ -1,5 +1,9 @@
 <?php
 
+use App\Http\Middleware\AdminOnly;
+use App\Http\Middleware\IdleTimeout;
+use App\Http\Middleware\TrustCloudflareHeaders;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -15,20 +19,20 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->prepend(\App\Http\Middleware\TrustCloudflareHeaders::class);
-        $middleware->append(\App\Http\Middleware\IdleTimeout::class);
+        $middleware->prepend(TrustCloudflareHeaders::class);
+        $middleware->append(IdleTimeout::class);
 
         $middleware->redirectGuestsTo(fn () => route('admin.login'));
 
         $middleware->alias([
-            'admin' => \App\Http\Middleware\AdminOnly::class,
+            'admin' => AdminOnly::class,
         ]);
 
         $middleware->validateCsrfTokens(except: [
             'messenger/webhook',
         ]);
     })
-    ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule) {
+    ->withSchedule(function (Schedule $schedule) {
         // Run backup twice daily (12:00 AM Midnight and 12:00 PM Noon) in Philippine Time (Asia/Manila)
         $schedule->command('amis:backup')
             ->twiceDaily(0, 12)

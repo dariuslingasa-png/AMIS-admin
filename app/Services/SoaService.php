@@ -3,11 +3,13 @@
 namespace App\Services;
 
 use App\Models\EnrollmentApplicant;
+use App\Models\Payment;
 use App\Models\SchoolFee;
 use App\Models\SoaMonthlyBilling;
 use App\Models\Student;
 use App\Models\StudentAccount;
 use App\Models\StudentAccountPayment;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 class SoaService
@@ -19,14 +21,14 @@ class SoaService
     {
         $fee = SchoolFee::forGrade($applicant->grade_level, $applicant->school_year);
 
-        if (!$fee) {
+        if (! $fee) {
             throw new \Exception("No school fees found for {$applicant->grade_level} SY {$applicant->school_year}");
         }
 
-        $tuition            = (float) $fee->tuition_fee;
-        $misc               = (float) $fee->misc_fee;
-        $books              = (float) $fee->books_fee;
-        
+        $tuition = (float) $fee->tuition_fee;
+        $misc = (float) $fee->misc_fee;
+        $books = (float) $fee->books_fee;
+
         // Find all enrollees in the same family batch to dynamically allocate/split the verified downpayment and apply correct uniform sibling discounts!
         $familyEnrollees = EnrollmentApplicant::where(function ($query) use ($applicant) {
             if ($applicant->family_application_id) {
@@ -35,8 +37,8 @@ class SoaService
                 $query->where('user_id', $applicant->user_id);
             }
         })
-        ->orderBy('id')
-        ->get();
+            ->orderBy('id')
+            ->get();
         $familyApplicantIds = $familyEnrollees->pluck('id')->all();
 
         // Enforce the uniform school Sibling Discount Policy:
@@ -53,7 +55,7 @@ class SoaService
         }
 
         $discountAmount = round($tuition * ($discountPercentage / 100), 2);
-        
+
         // Sync correct uniform discount details back to the applicant record for consistent UI
         $applicant->update([
             'discount_type' => $discountPercentage > 0 ? 'sibling' : null,
@@ -62,20 +64,20 @@ class SoaService
         ]);
 
         $discountedTuition = max(0, $tuition - $discountAmount);
-        $gross             = $discountedTuition + $misc + $books;
-        
+        $gross = $discountedTuition + $misc + $books;
+
         // Sum total family verified payments
-        $verifiedPayments = \App\Models\Payment::whereIn('enrollment_applicant_id', $familyApplicantIds)
+        $verifiedPayments = Payment::whereIn('enrollment_applicant_id', $familyApplicantIds)
             ->where('status', 'verified')
             ->get();
         $totalVerifiedAmount = (float) $verifiedPayments->sum('amount');
-        
+
         $enrollPaid = 0.00;
         $excessPaid = 0.00;
         $enrolleeCount = $familyEnrollees->count();
         $enrollmentFee = (float) config('services.school.enrollment_fee', 4000);
         $financeCheckedBy = (string) config('services.school.finance_checked_by', 'System / Finance');
-        
+
         if ($totalVerifiedAmount > 0 && $enrolleeCount > 0) {
             $requiredEnrollmentTotal = $enrollmentFee * $enrolleeCount;
             if ($totalVerifiedAmount <= $requiredEnrollmentTotal) {
@@ -95,24 +97,24 @@ class SoaService
         }
 
         $account = StudentAccount::create([
-            'student_id'              => $student->id,
+            'student_id' => $student->id,
             'enrollment_applicant_id' => $applicant->id,
-            'school_year'             => $applicant->school_year,
-            'grade_level'             => $applicant->grade_level,
-            'tuition_fee'             => $tuition,
-            'monthly_tuition'         => 0.00, // will be updated after initial payment deductions
-            'miscellaneous_fee'       => $misc,
-            'books_fee'               => $books,
-            'sibling_order'           => $applicant->sibling_order,
-            'discount_type'           => $discountPercentage > 0 ? ($applicant->discount_type ?: 'sibling') : null,
-            'discount_percentage'     => $discountPercentage,
-            'discount_amount'         => $discountAmount,
-            'gross_total'             => $gross,
-            'enrollment_fee_paid'     => $enrollPaid,
-            'total_balance'           => $gross,
-            'amount_paid'             => 0.00,
-            'remaining_balance'       => $gross,
-            'status'                  => 'unpaid',
+            'school_year' => $applicant->school_year,
+            'grade_level' => $applicant->grade_level,
+            'tuition_fee' => $tuition,
+            'monthly_tuition' => 0.00, // will be updated after initial payment deductions
+            'miscellaneous_fee' => $misc,
+            'books_fee' => $books,
+            'sibling_order' => $applicant->sibling_order,
+            'discount_type' => $discountPercentage > 0 ? ($applicant->discount_type ?: 'sibling') : null,
+            'discount_percentage' => $discountPercentage,
+            'discount_amount' => $discountAmount,
+            'gross_total' => $gross,
+            'enrollment_fee_paid' => $enrollPaid,
+            'total_balance' => $gross,
+            'amount_paid' => 0.00,
+            'remaining_balance' => $gross,
+            'status' => 'unpaid',
         ]);
 
         // Copy/Create the enrollment fee and excess payments inside student_account_payments
@@ -122,36 +124,36 @@ class SoaService
             $sourcePaymentMethod = strtolower(trim((string) $repPayment->method));
             $paymentMethod = $this->studentAccountPaymentMethod($sourcePaymentMethod);
             $paymentMethodRemark = $paymentMethod === $sourcePaymentMethod ? '' : ' Original payment method: '.$sourcePaymentMethod.'.';
-            
+
             // 1. Create Enrollment Fee payment record.
             StudentAccountPayment::create([
                 'student_account_id' => $account->id,
-                'student_id'         => $student->id,
-                'method'             => $paymentMethod,
-                'reference_no'       => $repPayment->reference_no,
-                'or_number'          => $repPayment->or_number ?? $repPayment->reference_no,
-                'checked_by'         => $financeCheckedBy,
-                'amount'             => $enrollPaid, // Allocated paid enrollment downpayment!
-                'status'             => 'verified',
-                'remarks'            => 'Paid Enrollment Fee (Allocated)'.$paymentMethodRemark,
-                'paid_at'            => $repPayment->paid_at ?? now(),
-                'verified_at'        => $repPayment->verified_at ?? now(),
+                'student_id' => $student->id,
+                'method' => $paymentMethod,
+                'reference_no' => $repPayment->reference_no,
+                'or_number' => $repPayment->or_number ?? $repPayment->reference_no,
+                'checked_by' => $financeCheckedBy,
+                'amount' => $enrollPaid, // Allocated paid enrollment downpayment!
+                'status' => 'verified',
+                'remarks' => 'Paid Enrollment Fee (Allocated)'.$paymentMethodRemark,
+                'paid_at' => $repPayment->paid_at ?? now(),
+                'verified_at' => $repPayment->verified_at ?? now(),
             ]);
 
             // 2. If there is excess, create a separate verified payment record for the additional SOA paid!
             if ($excessPaid > 0) {
                 StudentAccountPayment::create([
                     'student_account_id' => $account->id,
-                    'student_id'         => $student->id,
-                    'method'             => $paymentMethod,
-                    'reference_no'       => $repPayment->reference_no,
-                    'or_number'          => ($repPayment->or_number ?? $repPayment->reference_no) . '-EXCESS',
-                    'checked_by'         => $financeCheckedBy,
-                    'amount'             => $excessPaid, // Additional SOA paid!
-                    'status'             => 'verified',
-                    'remarks'            => 'Paid Additional SOA Paid (Allocated Excess)'.$paymentMethodRemark,
-                    'paid_at'            => $repPayment->paid_at ?? now(),
-                    'verified_at'        => $repPayment->verified_at ?? now(),
+                    'student_id' => $student->id,
+                    'method' => $paymentMethod,
+                    'reference_no' => $repPayment->reference_no,
+                    'or_number' => ($repPayment->or_number ?? $repPayment->reference_no).'-EXCESS',
+                    'checked_by' => $financeCheckedBy,
+                    'amount' => $excessPaid, // Additional SOA paid!
+                    'status' => 'verified',
+                    'remarks' => 'Paid Additional SOA Paid (Allocated Excess)'.$paymentMethodRemark,
+                    'paid_at' => $repPayment->paid_at ?? now(),
+                    'verified_at' => $repPayment->verified_at ?? now(),
                 ]);
             }
         }
@@ -199,12 +201,12 @@ class SoaService
 
         try {
             // Retrieve the column type definition via raw SQL to get the exact enum values on MySQL/MariaDB
-            $results = \Illuminate\Support\Facades\DB::select("SHOW COLUMNS FROM student_account_payments LIKE 'method'");
-            if (!empty($results)) {
+            $results = DB::select("SHOW COLUMNS FROM student_account_payments LIKE 'method'");
+            if (! empty($results)) {
                 $type = strtolower($results[0]->Type ?? $results[0]->type ?? '');
                 if (str_contains($type, 'enum(')) {
                     preg_match_all("/'([^']+)'/", $type, $matches);
-                    if (!empty($matches[1])) {
+                    if (! empty($matches[1])) {
                         return in_array($method, $matches[1], true);
                     }
                 } else {
@@ -223,6 +225,7 @@ class SoaService
                 if ($definition === 'enum') {
                     return false;
                 }
+
                 return true;
             } catch (\Throwable) {
                 return false;
@@ -247,21 +250,21 @@ class SoaService
             4 => ['October',   "{$startYear}-10-15", $monthlyTuition, 'Monthly Tuition'],
             5 => ['November',  "{$startYear}-11-15", $monthlyTuition, 'Monthly Tuition'],
             6 => ['December',  "{$startYear}-12-15", $monthlyTuition, 'Monthly Tuition'],
-            7 => ['January',   ($startYear + 1) . '-01-15', $monthlyTuition, 'Monthly Tuition'],
-            8 => ['February',  ($startYear + 1) . '-02-15', $monthlyTuition, 'Monthly Tuition'],
-            9 => ['March',     ($startYear + 1) . '-03-15', $monthlyTuition, 'Monthly Tuition'],
+            7 => ['January',   ($startYear + 1).'-01-15', $monthlyTuition, 'Monthly Tuition'],
+            8 => ['February',  ($startYear + 1).'-02-15', $monthlyTuition, 'Monthly Tuition'],
+            9 => ['March',     ($startYear + 1).'-03-15', $monthlyTuition, 'Monthly Tuition'],
         ];
 
         foreach ($months as $num => [$name, $due, $amount, $desc]) {
             SoaMonthlyBilling::create([
                 'student_account_id' => $account->id,
-                'student_id'         => $student->id,
-                'month_number'       => $num,
-                'month_name'         => $name,
-                'due_date'           => $due,
-                'amount_due'         => $amount,
-                'description'        => $desc,
-                'status'             => 'unpaid',
+                'student_id' => $student->id,
+                'month_number' => $num,
+                'month_name' => $name,
+                'due_date' => $due,
+                'amount_due' => $amount,
+                'description' => $desc,
+                'status' => 'unpaid',
             ]);
         }
     }

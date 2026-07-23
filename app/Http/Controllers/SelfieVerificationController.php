@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class SelfieVerificationController extends Controller
 {
@@ -40,7 +40,7 @@ class SelfieVerificationController extends Controller
             'success' => true,
             'session_id' => $sessionId,
             'session_url' => $sessionUrl,
-            'qr_code_url' => 'https://quickchart.io/qr?text=' . urlencode($sessionUrl) . '&dark=047857&light=ffffff&margin=1&format=png&size=300',
+            'qr_code_url' => 'https://quickchart.io/qr?text='.urlencode($sessionUrl).'&dark=047857&light=ffffff&margin=1&format=png&size=300',
         ]);
     }
 
@@ -48,7 +48,7 @@ class SelfieVerificationController extends Controller
     {
         $data = Cache::get("selfie_session_{$sessionId}");
 
-        if (!$data) {
+        if (! $data) {
             return redirect()->route('selfie.index')->with('error', 'Session expired or invalid.');
         }
 
@@ -61,7 +61,7 @@ class SelfieVerificationController extends Controller
     {
         $data = Cache::get("selfie_session_{$sessionId}");
 
-        if (!$data) {
+        if (! $data) {
             return response()->json(['status' => 'expired']);
         }
 
@@ -78,7 +78,7 @@ class SelfieVerificationController extends Controller
     {
         $data = Cache::get("selfie_session_{$sessionId}");
 
-        if (!$data) {
+        if (! $data) {
             return response()->json(['success' => false, 'message' => 'Session expired or invalid.'], 404);
         }
 
@@ -99,7 +99,7 @@ class SelfieVerificationController extends Controller
             return response()->json(['success' => false, 'message' => 'Invalid image format.'], 400);
         }
 
-        $filename = "selfies/selfie_{$sessionId}_" . time() . ".png";
+        $filename = "selfies/selfie_{$sessionId}_".time().'.png';
         Storage::disk('public')->put($filename, $imageData);
         $publicUrl = Storage::disk('public')->url($filename);
 

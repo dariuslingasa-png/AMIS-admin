@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('students', function (Blueprint $table) {
-            if (!Schema::hasColumn('students', 'ms_license_active')) {
+            if (! Schema::hasColumn('students', 'ms_license_active')) {
                 $table->boolean('ms_license_active')->nullable()->after('mfa_enabled');
             }
         });

@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
@@ -109,7 +110,7 @@ class AdminAuthController extends Controller
                 ->withErrors(['email' => 'Microsoft sign-in is not configured.']);
         }
 
-        $response = \Illuminate\Support\Facades\Http::asForm()->post(
+        $response = Http::asForm()->post(
             "https://login.microsoftonline.com/{$tenantId}/oauth2/v2.0/token",
             [
                 'client_id' => $clientId,
@@ -125,7 +126,7 @@ class AdminAuthController extends Controller
         }
 
         $accessToken = $response->json('access_token');
-        $userInfo = \Illuminate\Support\Facades\Http::withToken($accessToken)
+        $userInfo = Http::withToken($accessToken)
             ->get('https://graph.microsoft.com/v1.0/me')
             ->json();
 

@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (!Schema::hasColumn('students', 'is_requirements_locked')) {
+        if (! Schema::hasColumn('students', 'is_requirements_locked')) {
             Schema::table('students', function (Blueprint $table) {
                 $table->boolean('is_requirements_locked')->default(false)->after('ms_account_enabled');
             });

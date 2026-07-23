@@ -3,15 +3,15 @@
 namespace App\Console\Commands;
 
 use App\Models\EnrollmentApplicant;
-use App\Console\Commands\FixDisplayNames;
+use App\Models\Student;
 use App\Services\MicrosoftGraphService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 class UppercaseMicrosoftNames extends Command
 {
-    protected $signature   = 'ms:uppercase-names {--dry-run : Check without updating}';
+    protected $signature = 'ms:uppercase-names {--dry-run : Check without updating}';
+
     protected $description = 'Scan and update all student names (local database and Microsoft Azure AD) to uppercase';
 
     public function handle(): int
@@ -24,11 +24,11 @@ class UppercaseMicrosoftNames extends Command
 
         // --- 1. Update Local Database Names ---
         $this->info('Scanning local database for lowercase names...');
-        
+
         $applicants = EnrollmentApplicant::where(function ($q) {
             $q->whereRaw('BINARY first_name != UPPER(first_name)')
-              ->orWhereRaw('BINARY middle_name != UPPER(middle_name)')
-              ->orWhereRaw('BINARY last_name != UPPER(last_name)');
+                ->orWhereRaw('BINARY middle_name != UPPER(middle_name)')
+                ->orWhereRaw('BINARY last_name != UPPER(last_name)');
         })->get();
 
         $this->info("Found {$applicants->count()} applicants with lowercase name fields.");
@@ -43,7 +43,7 @@ class UppercaseMicrosoftNames extends Command
 
                 $this->line("  Local ID {$app->id}: \"{$oldName}\" -> \"{$newName}\"");
 
-                if (!$dryRun) {
+                if (! $dryRun) {
                     $app->update([
                         'first_name' => $firstName,
                         'middle_name' => $middleName,
@@ -56,16 +56,17 @@ class UppercaseMicrosoftNames extends Command
 
         // --- 2. Update Microsoft Azure AD Names ---
         $this->info('Connecting to Microsoft Graph and listing tenant users...');
-        
+
         try {
-            $graph = new MicrosoftGraphService();
+            $graph = new MicrosoftGraphService;
             $users = $graph->listTenantStudents();
         } catch (\Exception $e) {
-            $this->error('Failed to connect to Microsoft Graph: ' . $e->getMessage());
+            $this->error('Failed to connect to Microsoft Graph: '.$e->getMessage());
+
             return Command::FAILURE;
         }
 
-        $this->info('Scanning ' . count($users) . ' Microsoft users...');
+        $this->info('Scanning '.count($users).' Microsoft users...');
         $toUpdate = [];
 
         foreach ($users as $user) {
@@ -81,7 +82,7 @@ class UppercaseMicrosoftNames extends Command
 
             // ONLY process users whose UPN prefix starts with '26' (e.g., 260181datumanong@amis.edu.ph)
             $upnPrefix = explode('@', $upn)[0] ?? '';
-            if (!preg_match('/^26/', $upnPrefix)) {
+            if (! preg_match('/^26/', $upnPrefix)) {
                 continue;
             }
 
@@ -93,7 +94,7 @@ class UppercaseMicrosoftNames extends Command
                     $lastName = trim($parts[0]);
                     $rest = array_slice($parts, 1);
                     $firstNameMiddleName = trim(implode(' ', $rest));
-                    $newName = $firstNameMiddleName . ' ' . $lastName;
+                    $newName = $firstNameMiddleName.' '.$lastName;
                 }
             }
 
@@ -102,10 +103,10 @@ class UppercaseMicrosoftNames extends Command
             $newName = trim(preg_replace('/\s+/', ' ', $newName));
 
             // 3. Match with local student record to get precise first_name and last_name
-            $student = \App\Models\Student::with('applicant')
+            $student = Student::with('applicant')
                 ->where(function ($q) use ($upn) {
                     $q->where('school_email', $upn)
-                      ->orWhere('ms_email', $upn);
+                        ->orWhere('ms_email', $upn);
                 })->first();
 
             $newGivenName = mb_strtoupper($givenName, 'UTF-8');
@@ -147,11 +148,11 @@ class UppercaseMicrosoftNames extends Command
             }
         }
 
-        $this->info("Found " . count($toUpdate) . " Microsoft users requiring name casing updates.");
+        $this->info('Found '.count($toUpdate).' Microsoft users requiring name casing updates.');
 
         if (count($toUpdate) > 0) {
             $token = null;
-            if (!$dryRun) {
+            if (! $dryRun) {
                 $refClass = new \ReflectionClass($graph);
                 $refMethod = $refClass->getMethod('getAccessToken');
                 $refMethod->setAccessible(true);
@@ -164,26 +165,26 @@ class UppercaseMicrosoftNames extends Command
                 $this->line("    GivenName: \"{$item['old_given']}\" -> \"{$item['new_given']}\"");
                 $this->line("    Surname: \"{$item['old_surname']}\" -> \"{$item['new_surname']}\"");
 
-                if (!$dryRun) {
+                if (! $dryRun) {
                     // Update via Microsoft Graph API PATCH /users/{id}
                     $response = Http::withToken($token)
                         ->patch("https://graph.microsoft.com/v1.0/users/{$item['id']}", [
                             'displayName' => $item['new_display'],
-                            'givenName'   => $item['new_given'] ?: null,
-                            'surname'     => $item['new_surname'] ?: null,
+                            'givenName' => $item['new_given'] ?: null,
+                            'surname' => $item['new_surname'] ?: null,
                         ]);
 
                     if ($response->successful() || $response->status() === 204) {
-                        $this->info("    ✓ Updated successfully");
+                        $this->info('    ✓ Updated successfully');
                     } else {
-                        $this->error("    ✗ Failed to update: " . $response->body());
+                        $this->error('    ✗ Failed to update: '.$response->body());
                     }
 
                     // Sleep 100ms to avoid rate limiting
                     usleep(100000);
                 }
             }
-            
+
             $this->info('Microsoft Azure AD names update complete.');
         } else {
             $this->info('All Microsoft user display names are already in uppercase.');

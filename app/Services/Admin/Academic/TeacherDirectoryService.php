@@ -2,12 +2,20 @@
 
 namespace App\Services\Admin\Academic;
 
+use App\Models\AdminAuditLog;
+use App\Models\ClassSchedule;
+use App\Models\SectionSubject;
+use App\Models\Student;
+use App\Models\Subject;
+use App\Models\TeacherSubjectAssignment;
+use App\Models\User;
 use App\Repositories\AcademicRepository;
 use App\Repositories\TeacherRepository;
 use App\Services\ImageOptimizerService;
-use App\Models\TeacherSubjectAssignment;
+use App\Services\MicrosoftGraphService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class TeacherDirectoryService
@@ -17,8 +25,7 @@ class TeacherDirectoryService
         private readonly TeacherRepository $teachers,
         private readonly TeacherAccountService $accounts,
         private readonly TeacherSubjectAssignmentService $assignments
-    ) {
-    }
+    ) {}
 
     public function indexPayload(?string $editId = null): array
     {
@@ -34,8 +41,8 @@ class TeacherDirectoryService
             $teacherGroups->push(['name' => 'Unassigned Department', 'teachers' => $unassigned]);
         }
 
-        $dbEmails = \App\Models\User::where('email', 'like', '%@amis.edu.ph')->pluck('email');
-        $studentEmails = \App\Models\Student::whereNotNull('school_email')->pluck('school_email');
+        $dbEmails = User::where('email', 'like', '%@amis.edu.ph')->pluck('email');
+        $studentEmails = Student::whereNotNull('school_email')->pluck('school_email');
         $teacherEmails = collect($teachers)->pluck('email');
         $emailBank = $dbEmails->merge($studentEmails)->merge($teacherEmails)->unique()->sort()->values()->all();
 
@@ -137,19 +144,20 @@ class TeacherDirectoryService
             ->all();
 
         // Retrieve teacher schedules
-        $scheduleService = app(\App\Services\Admin\Academic\ClassScheduleService::class);
-        $rawSchedules = \App\Models\SectionSubject::with('section')
+        $scheduleService = app(ClassScheduleService::class);
+        $rawSchedules = SectionSubject::with('section')
             ->get()
-            ->filter(fn($ss) => strtolower(trim($ss->teacher_name)) === strtolower(trim($teacher['name'])));
-        
-        $schedules = $rawSchedules->map(function($ss) use ($scheduleService) {
+            ->filter(fn ($ss) => strtolower(trim($ss->teacher_name)) === strtolower(trim($teacher['name'])));
+
+        $schedules = $rawSchedules->map(function ($ss) use ($scheduleService) {
             $presented = $scheduleService->present($ss);
-            $presented['section_name'] = $ss->section ? ($ss->section->grade_level . ' - ' . ($ss->section->name ?? 'General')) : 'Unknown';
+            $presented['section_name'] = $ss->section ? ($ss->section->grade_level.' - '.($ss->section->name ?? 'General')) : 'Unknown';
+
             return $presented;
         })
-        ->sortBy([['day_index', 'asc'], ['start_minutes', 'asc']])
-        ->values()
-        ->all();
+            ->sortBy([['day_index', 'asc'], ['start_minutes', 'asc']])
+            ->values()
+            ->all();
 
         return [
             'teacher' => $teacher,
@@ -229,7 +237,7 @@ class TeacherDirectoryService
     private function subjectLoad(array $teacher): array
     {
         $target = 8;
-        $allSubjects = \App\Models\Subject::where('status', 'active')
+        $allSubjects = Subject::where('status', 'active')
             ->orderBy('grade_level')
             ->orderBy('name')
             ->get();
@@ -237,14 +245,14 @@ class TeacherDirectoryService
         $teacherId = $teacher['id'] ?? '';
         $teacherName = $teacher['name'] ?? '';
 
-        $assignedSchedules = \App\Models\ClassSchedule::where(function ($query) use ($teacherId, $teacherName) {
-                if (!empty($teacherId)) {
-                    $query->where('teacher_key', $teacherId);
-                }
-                if (!empty($teacherName)) {
-                    $query->orWhere('teacher_display', $teacherName);
-                }
-            })
+        $assignedSchedules = ClassSchedule::where(function ($query) use ($teacherId, $teacherName) {
+            if (! empty($teacherId)) {
+                $query->where('teacher_key', $teacherId);
+            }
+            if (! empty($teacherName)) {
+                $query->orWhere('teacher_display', $teacherName);
+            }
+        })
             ->get()
             ->filter(function ($s) {
                 $sub = strtolower($s->subject_name);
@@ -253,11 +261,12 @@ class TeacherDirectoryService
                         return false;
                     }
                 }
+
                 return true;
             });
 
         $subjectsList = $assignedSchedules->pluck('subject_name')->unique()->values()->all();
-        $count = $assignedSchedules->unique(fn($s) => $s->section_id . '-' . $s->subject_name)->count();
+        $count = $assignedSchedules->unique(fn ($s) => $s->section_id.'-'.$s->subject_name)->count();
 
         return [
             'subjects' => $subjectsList,
@@ -290,13 +299,13 @@ class TeacherDirectoryService
     private function storePhoto(Request $request, string $id): string
     {
         $file = $request->file('photo');
-        $optimizer = new ImageOptimizerService();
+        $optimizer = new ImageOptimizerService;
         if ($optimizer->isOptimizable($file->getClientMimeType())) {
-            return 'storage/' . $optimizer->optimize($file, 'public', 'images/teachers', $id)['optimized'];
+            return 'storage/'.$optimizer->optimize($file, 'public', 'images/teachers', $id)['optimized'];
         }
         $extension = $file->getClientOriginalExtension() ?: $file->guessExtension() ?: 'bin';
 
-        return 'storage/' . $file->storeAs('images/teachers/original', "{$id}.{$extension}", 'public');
+        return 'storage/'.$file->storeAs('images/teachers/original', "{$id}.{$extension}", 'public');
     }
 
     private function teacherEmail(string $name): string
@@ -309,7 +318,7 @@ class TeacherDirectoryService
         $cleanName = Str::of($name)->replaceMatches('/^(teacher|ust\.|ustadz\.?|ustadh\.?|ustadha\.?|sir\.?|ma\'am\.?|maam\.?|ms\.?|mrs\.?|mr\.?)\s+/i', '')->ascii()->lower()->replaceMatches('/[^a-z\s]/', '')->squish();
         $parts = explode(' ', (string) $cleanName);
 
-        return count($parts) >= 2 ? 'tr.' . substr($parts[0], 0, 1) . end($parts) . '@amis.edu.ph' : 'tr.' . $cleanName . '@amis.edu.ph';
+        return count($parts) >= 2 ? 'tr.'.substr($parts[0], 0, 1).end($parts).'@amis.edu.ph' : 'tr.'.$cleanName.'@amis.edu.ph';
     }
 
     private function teacherId(string $name): string
@@ -332,20 +341,20 @@ class TeacherDirectoryService
     public function delete(string $id): void
     {
         $teacher = $this->findRaw($id);
-        if (!$teacher) {
+        if (! $teacher) {
             return;
         }
 
         // Find matching local user first to get their microsoft_id, UPN, or local username
         $localUser = null;
         $slug = Str::slug($teacher['name'] ?? '');
-        if (!empty($teacher['email']) || !empty($slug) || !empty($id)) {
-            $localUser = \App\Models\User::where('role', 'teacher')
+        if (! empty($teacher['email']) || ! empty($slug) || ! empty($id)) {
+            $localUser = User::where('role', 'teacher')
                 ->where(function ($query) use ($teacher, $id, $slug) {
-                    if (!empty($teacher['email'])) {
+                    if (! empty($teacher['email'])) {
                         $query->orWhere('email', $teacher['email']);
                     }
-                    if (!empty($slug)) {
+                    if (! empty($slug)) {
                         $query->orWhere('username', $slug);
                         $query->orWhere('name', $teacher['name']);
                     }
@@ -357,29 +366,29 @@ class TeacherDirectoryService
 
         // 1. Delete Microsoft 365 account if configured
         $microsoftIdentifier = $localUser?->microsoft_id ?? $localUser?->email ?? $teacher['email'] ?? null;
-        if (!empty($microsoftIdentifier)) {
+        if (! empty($microsoftIdentifier)) {
             try {
-                $graph = new \App\Services\MicrosoftGraphService();
+                $graph = new MicrosoftGraphService;
                 if ($graph->userExists($microsoftIdentifier)) {
                     $graph->deleteAzureUser($microsoftIdentifier);
                     try {
-                        \App\Models\AdminAuditLog::record('teacher_microsoft_deleted', true, "Deleted Microsoft account for teacher {$microsoftIdentifier}");
+                        AdminAuditLog::record('teacher_microsoft_deleted', true, "Deleted Microsoft account for teacher {$microsoftIdentifier}");
                     } catch (\Throwable $e) {
-                        \Illuminate\Support\Facades\Log::error("Failed to log audit for Microsoft user deletion: " . $e->getMessage());
+                        Log::error('Failed to log audit for Microsoft user deletion: '.$e->getMessage());
                     }
                 }
             } catch (\Throwable $exception) {
-                \Illuminate\Support\Facades\Log::error("Failed to delete Microsoft account for teacher {$microsoftIdentifier}: " . $exception->getMessage());
+                Log::error("Failed to delete Microsoft account for teacher {$microsoftIdentifier}: ".$exception->getMessage());
             }
         }
 
         // 2. Delete matching user from DB
-        \App\Models\User::where('role', 'teacher')
+        User::where('role', 'teacher')
             ->where(function ($query) use ($teacher, $id, $slug) {
-                if (!empty($teacher['email'])) {
+                if (! empty($teacher['email'])) {
                     $query->orWhere('email', $teacher['email']);
                 }
-                if (!empty($slug)) {
+                if (! empty($slug)) {
                     $query->orWhere('username', $slug);
                     $query->orWhere('name', $teacher['name']);
                 }
@@ -389,7 +398,7 @@ class TeacherDirectoryService
             ->delete();
 
         // 3. Delete subject assignments
-        \App\Models\TeacherSubjectAssignment::where('teacher_key', $id)
+        TeacherSubjectAssignment::where('teacher_key', $id)
             ->orWhere('teacher_key', Str::slug($id))
             ->orWhere('teacher_name', $teacher['name'])
             ->delete();
@@ -399,7 +408,7 @@ class TeacherDirectoryService
         unset($overrides[$id]);
         unset($overrides[Str::slug($id)]);
         foreach ($overrides as $key => $val) {
-            if ((isset($val['email']) && !empty($teacher['email']) && strtolower($val['email']) === strtolower($teacher['email'])) ||
+            if ((isset($val['email']) && ! empty($teacher['email']) && strtolower($val['email']) === strtolower($teacher['email'])) ||
                 (isset($val['name']) && strtolower($val['name']) === strtolower($teacher['name']))) {
                 unset($overrides[$key]);
             }

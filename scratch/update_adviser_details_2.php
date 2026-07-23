@@ -1,12 +1,13 @@
 <?php
 
-require __DIR__ . '/../vendor/autoload.php';
-$app = require_once __DIR__ . '/../bootstrap/app.php';
-$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+require __DIR__.'/../vendor/autoload.php';
+$app = require_once __DIR__.'/../bootstrap/app.php';
+$kernel = $app->make(Kernel::class);
 $kernel->bootstrap();
 
 use App\Models\User;
 use App\Repositories\TeacherRepository;
+use Illuminate\Contracts\Console\Kernel;
 
 $updates = [
     'teacher-monisa-gegare-balandan' => [
@@ -50,7 +51,7 @@ $repo = app(TeacherRepository::class);
 $overrides = $repo->overrides();
 
 foreach ($updates as $id => $data) {
-    if (!isset($overrides[$id])) {
+    if (! isset($overrides[$id])) {
         echo "Warning: Override for {$id} not found in overrides file. Creating one.\n";
         $overrides[$id] = [
             'id' => $id,
@@ -64,38 +65,38 @@ foreach ($updates as $id => $data) {
             'birthdate' => '',
             'address' => '',
             'password_changed' => 'No',
-            'temporary_password' => 'Amis@' . strtoupper(Str::random(5)) . rand(10, 99),
+            'temporary_password' => 'Amis@'.strtoupper(Str::random(5)).rand(10, 99),
             'microsoft_sync' => false,
             'subjects' => [],
         ];
     }
-    
+
     $oldEmail = $overrides[$id]['email'] ?? null;
-    
+
     // Update JSON override fields
     $overrides[$id]['email'] = $data['email'];
     $overrides[$id]['contact_number'] = $data['contact_number'];
     $overrides[$id]['first_name'] = $data['first_name'];
     $overrides[$id]['middle_name'] = $data['middle_name'];
     $overrides[$id]['last_name'] = $data['last_name'];
-    
+
     echo "Updating {$id}:\n";
-    echo "  Email: " . ($oldEmail ? "{$oldEmail} -> " : "") . "{$data['email']}\n";
+    echo '  Email: '.($oldEmail ? "{$oldEmail} -> " : '')."{$data['email']}\n";
     echo "  Contact: {$data['contact_number']}\n";
-    echo "  Name: {$data['first_name']} " . ($data['middle_name'] ? $data['middle_name'] . " " : "") . "{$data['last_name']}\n";
-    
+    echo "  Name: {$data['first_name']} ".($data['middle_name'] ? $data['middle_name'].' ' : '')."{$data['last_name']}\n";
+
     // Find database user (check by old email, new email, or username/id)
     $user = null;
     if ($oldEmail) {
         $user = User::where('email', $oldEmail)->first();
     }
-    if (!$user) {
+    if (! $user) {
         $user = User::where('email', $data['email'])->first();
     }
-    if (!$user) {
+    if (! $user) {
         $user = User::where('username', $id)->first();
     }
-    
+
     if ($user) {
         $user->update([
             'email' => $data['email'],

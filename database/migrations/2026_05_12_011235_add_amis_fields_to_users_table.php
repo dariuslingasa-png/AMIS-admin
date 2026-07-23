@@ -13,13 +13,13 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             // Only add columns that don't already exist
-            if (!Schema::hasColumn('users', 'username')) {
+            if (! Schema::hasColumn('users', 'username')) {
                 $table->string('username')->unique()->after('email');
             }
-            if (!Schema::hasColumn('users', 'role')) {
+            if (! Schema::hasColumn('users', 'role')) {
                 $table->enum('role', ['admin', 'staff', 'applicant'])->default('applicant')->after('username');
             }
-            if (!Schema::hasColumn('users', 'account_status')) {
+            if (! Schema::hasColumn('users', 'account_status')) {
                 $table->enum('account_status', ['pending', 'verified', 'suspended'])->default('pending')->after('role');
             }
         });

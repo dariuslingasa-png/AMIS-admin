@@ -53,7 +53,7 @@ class AutomaticBackupSystemTest extends TestCase
         });
 
         $backupDir = storage_path('app/backups');
-        $files = glob($backupDir . '/*.zip');
+        $files = glob($backupDir.'/*.zip');
         $this->assertNotEmpty($files, 'ZIP backup file was not created in storage/app/backups.');
     }
 

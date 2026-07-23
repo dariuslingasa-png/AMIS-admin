@@ -5,6 +5,9 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Schema;
@@ -65,37 +68,37 @@ class User extends Authenticatable
         ];
     }
 
-    public function enrollmentApplicant(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function enrollmentApplicant(): HasOne
     {
         return $this->hasOne(EnrollmentApplicant::class);
     }
 
-    public function linkedIdentities(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function linkedIdentities(): HasMany
     {
         return $this->hasMany(LinkedIdentity::class);
     }
 
-    public function logs(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function logs(): HasMany
     {
         return $this->hasMany(EbookAccessLog::class, 'user_id');
     }
 
-    public function ebooks(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function ebooks(): HasMany
     {
         return $this->hasMany(Ebook::class, 'created_by');
     }
 
-    public function enrollmentApplicants(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function enrollmentApplicants(): HasMany
     {
         return $this->hasMany(EnrollmentApplicant::class);
     }
 
-    public function students(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function students(): HasMany
     {
         return $this->hasMany(Student::class);
     }
 
-    public function roles(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function roles(): BelongsToMany
     {
         return $this->belongsToMany(Role::class, 'role_user');
     }
@@ -139,6 +142,7 @@ class User extends Authenticatable
         if ($this->relationLoaded('roles') || $this->roles()->exists()) {
             return $this->roles->pluck('slug')->intersect(self::ADMIN_PORTAL_ROLE_SLUGS)->isNotEmpty();
         }
+
         return in_array($this->role, self::ADMIN_PORTAL_ROLE_SLUGS, true);
     }
 

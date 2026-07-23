@@ -15,28 +15,28 @@ class StudentIdController extends Controller
 
         $student->load([
             'applicant.user',
-            'studentSection.section'
+            'studentSection.section',
         ]);
 
         $applicant = $student->applicant;
         $lastName = $applicant ? trim($applicant->last_name) : 'STUDENT';
         $firstName = $applicant ? trim($applicant->first_name) : 'PROFILE';
         $middleName = $applicant ? trim($applicant->middle_name) : '';
-        $middleInitial = $middleName ? (substr($middleName, 0, 1) . '.') : '';
+        $middleInitial = $middleName ? (substr($middleName, 0, 1).'.') : '';
 
         $displayGrade = $student->grade_level;
         if ($student->studentSection?->section) {
             $sec = $student->studentSection->section;
             if (str_contains(strtolower($sec->learning_mode), 'online') || str_contains(strtolower($sec->learning_mode), 'odl')) {
-                $displayGrade = $student->grade_level . ' - ' . ($sec->official_name ?: $sec->name);
+                $displayGrade = $student->grade_level.' - '.($sec->official_name ?: $sec->name);
             }
         }
 
         $studentNumber = $student->student_number;
-        $hash = base64_encode((int)$studentNumber + 987654);
+        $hash = base64_encode((int) $studentNumber + 987654);
 
         $photoUrl = $student->photo_2x2_url ? route('public.student.photo', ['hash' => $hash]) : ($applicant?->photo_2x2_url ? EnrollmentStorage::url($applicant->photo_2x2_url) : '');
-        $qrCodeUrl = 'https://quickchart.io/qr?text=' . urlencode('https://amis.edu.ph/v/' . $hash) . '&dark=000000&light=ffffff&margin=1&format=png&size=300';
+        $qrCodeUrl = 'https://quickchart.io/qr?text='.urlencode('https://amis.edu.ph/v/'.$hash).'&dark=000000&light=ffffff&margin=1&format=png&size=300';
 
         $emergencyName = $applicant?->emergency_name ?: 'Emergency Contact';
         $emergencyPhone = $applicant?->emergency_phone ?: ($applicant?->parent_mobile ?: ($applicant?->mobile_number ?: '+63 900 000 0000'));
@@ -44,7 +44,7 @@ class StudentIdController extends Controller
 
         $sectionId = $student->studentSection?->section_id;
         if ($sectionId) {
-            $siblingsQuery = Student::whereHas('studentSection', function($q) use ($sectionId) {
+            $siblingsQuery = Student::whereHas('studentSection', function ($q) use ($sectionId) {
                 $q->where('section_id', $sectionId);
             });
         } else {
@@ -57,14 +57,16 @@ class StudentIdController extends Controller
         $prevStudentId = ($currentIndex !== false && isset($orderedStudents[$currentIndex - 1])) ? $orderedStudents[$currentIndex - 1] : null;
         $nextStudentId = ($currentIndex !== false && isset($orderedStudents[$currentIndex + 1])) ? $orderedStudents[$currentIndex + 1] : null;
 
-        $getInlineBase64 = function($url) {
-            if (!$url) return '';
+        $getInlineBase64 = function ($url) {
+            if (! $url) {
+                return '';
+            }
             try {
                 if (str_starts_with($url, 'http')) {
                     $arrContextOptions = [
-                        "ssl" => [
-                            "verify_peer" => false,
-                            "verify_peer_name" => false,
+                        'ssl' => [
+                            'verify_peer' => false,
+                            'verify_peer_name' => false,
                         ],
                     ];
                     $data = file_get_contents($url, false, stream_context_create($arrContextOptions));
@@ -73,17 +75,22 @@ class StudentIdController extends Controller
                 }
                 if ($data) {
                     $type = 'image/png';
-                    if (str_contains($url, '.jpg') || str_contains($url, '.jpeg')) $type = 'image/jpeg';
-                    return 'data:' . $type . ';base64,' . base64_encode($data);
+                    if (str_contains($url, '.jpg') || str_contains($url, '.jpeg')) {
+                        $type = 'image/jpeg';
+                    }
+
+                    return 'data:'.$type.';base64,'.base64_encode($data);
                 }
-            } catch (\Throwable $e) {}
+            } catch (\Throwable $e) {
+            }
+
             return '';
         };
 
         $qrCodeBase64 = $getInlineBase64($qrCodeUrl);
         $photoBase64 = $photoUrl ? $getInlineBase64($photoUrl) : '';
 
-        $signatureRawUrl = 'https://quickchart.io/qr?text=' . urlencode('https://amis.edu.ph/signature') . '&dark=000000&light=ffffff&margin=1&format=png&size=200';
+        $signatureRawUrl = 'https://quickchart.io/qr?text='.urlencode('https://amis.edu.ph/signature').'&dark=000000&light=ffffff&margin=1&format=png&size=200';
         $signatureQrBase64 = $getInlineBase64($signatureRawUrl);
 
         $lastNameLen = strlen($lastName);
@@ -110,7 +117,7 @@ class StudentIdController extends Controller
             $lastNameStyle = 'white-space: nowrap;';
         }
 
-        $displayFirstName = trim($firstName . ' ' . $middleInitial);
+        $displayFirstName = trim($firstName.' '.$middleInitial);
         $firstNameLen = strlen($displayFirstName);
         $displayFirstNameFontSize = $firstNameLen > 25 ? 14 : ($firstNameLen > 18 ? 16 : 18);
 

@@ -11,6 +11,7 @@ use Illuminate\Support\Str;
 class TestEnrollmentAnalyticsSeeder extends Seeder
 {
     private const SCHOOL_YEAR = '2026-2027';
+
     private const COUNT = 420;
 
     public function run(): void
@@ -81,7 +82,7 @@ class TestEnrollmentAnalyticsSeeder extends Seeder
                     $now
                 ));
 
-                if (!$familyApplicationId) {
+                if (! $familyApplicationId) {
                     $familyApplicationId = $applicantId;
                     DB::table('enrollment_applicants')
                         ->where('id', $applicantId)
@@ -202,7 +203,7 @@ class TestEnrollmentAnalyticsSeeder extends Seeder
 
     private function syncSlotCounts(array $slotCounters): void
     {
-        if (!Schema::hasTable('grade_levels')) {
+        if (! Schema::hasTable('grade_levels')) {
             return;
         }
 
@@ -214,7 +215,7 @@ class TestEnrollmentAnalyticsSeeder extends Seeder
                 ->where('school_year', self::SCHOOL_YEAR)
                 ->update(['enrolled_count' => $faceToFaceCount]);
 
-            if (!Schema::hasTable('grade_shift_slots') || !Schema::hasTable('enrollment_shifts')) {
+            if (! Schema::hasTable('grade_shift_slots') || ! Schema::hasTable('enrollment_shifts')) {
                 continue;
             }
 

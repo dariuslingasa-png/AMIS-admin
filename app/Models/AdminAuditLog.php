@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Str;
 
 class AdminAuditLog extends Model
 {
@@ -41,7 +42,7 @@ class AdminAuditLog extends Model
             'event' => $event,
             'email' => $user?->email,
             'ip_address' => $request?->ip(),
-            'user_agent' => \Illuminate\Support\Str::limit((string) $request?->userAgent(), 1000, ''),
+            'user_agent' => Str::limit((string) $request?->userAgent(), 1000, ''),
             'successful' => $successful,
             'message' => $message,
             'metadata' => $metadata ?: null,

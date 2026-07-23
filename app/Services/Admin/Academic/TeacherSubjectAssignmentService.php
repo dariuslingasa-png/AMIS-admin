@@ -101,7 +101,7 @@ class TeacherSubjectAssignmentService
             $parts = explode(' · ', $name, 2);
             $name = trim($parts[0]);
             $gradeLevel = trim($parts[1]);
-        } elseif (!empty($teacher['sections']) && str_contains($teacher['sections'], ' / ')) {
+        } elseif (! empty($teacher['sections']) && str_contains($teacher['sections'], ' / ')) {
             $parts = explode(' / ', $teacher['sections']);
             $gradeLevel = trim(end($parts));
         }

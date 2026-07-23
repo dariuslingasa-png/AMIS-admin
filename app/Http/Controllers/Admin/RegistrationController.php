@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\MicrosoftTeam;
+use App\Models\MicrosoftTeamMembership;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -14,7 +16,7 @@ class RegistrationController extends Controller
         if ($tab === 'rosters') {
             $tab = 'teams';
         }
-        if (!in_array($tab, ['submissions', 'students', 'teams'])) {
+        if (! in_array($tab, ['submissions', 'students', 'teams'])) {
             $tab = 'submissions';
         }
 
@@ -64,42 +66,42 @@ class RegistrationController extends Controller
             );
 
         if ($search) {
-            $query1->where(function($q) use ($search) {
+            $query1->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%")
-                  ->orWhere('message', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhere('message', 'like', "%{$search}%");
             });
 
-            $query2->where(function($q) use ($search) {
+            $query2->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%")
-                  ->orWhere('message', 'like', "%{$search}%")
-                  ->orWhere('address', 'like', "%{$search}%")
-                  ->orWhere('level', 'like', "%{$search}%")
-                  ->orWhere('grade_level', 'like', "%{$search}%")
-                  ->orWhere('ms_teams', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhere('message', 'like', "%{$search}%")
+                    ->orWhere('address', 'like', "%{$search}%")
+                    ->orWhere('level', 'like', "%{$search}%")
+                    ->orWhere('grade_level', 'like', "%{$search}%")
+                    ->orWhere('ms_teams', 'like', "%{$search}%");
             });
         }
 
         if ($levelFilter && $levelFilter !== 'all') {
             if (strtolower($levelFilter) === 'beginner') {
-                $query1->where(function($q) {
+                $query1->where(function ($q) {
                     $q->where('message', 'like', '%beginner%')
-                      ->orWhere('message', 'like', '%cannot%');
+                        ->orWhere('message', 'like', '%cannot%');
                 });
-                $query2->where(function($q) {
+                $query2->where(function ($q) {
                     $q->where('level', 'like', '%beginner%')
-                      ->orWhere('level', 'like', '%cannot%')
-                      ->orWhere('message', 'like', '%beginner%')
-                      ->orWhere('message', 'like', '%cannot%');
+                        ->orWhere('level', 'like', '%cannot%')
+                        ->orWhere('message', 'like', '%beginner%')
+                        ->orWhere('message', 'like', '%cannot%');
                 });
             } else {
                 $query1->where('message', 'like', "%{$levelFilter}%");
-                $query2->where(function($q) use ($levelFilter) {
+                $query2->where(function ($q) use ($levelFilter) {
                     $q->where('level', 'like', "%{$levelFilter}%")
-                      ->orWhere('message', 'like', "%{$levelFilter}%");
+                        ->orWhere('message', 'like', "%{$levelFilter}%");
                 });
             }
         }
@@ -142,42 +144,42 @@ class RegistrationController extends Controller
             );
 
         if ($search) {
-            $statsQuery1->where(function($q) use ($search) {
+            $statsQuery1->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%")
-                  ->orWhere('message', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhere('message', 'like', "%{$search}%");
             });
 
-            $statsQuery2->where(function($q) use ($search) {
+            $statsQuery2->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%")
-                  ->orWhere('message', 'like', "%{$search}%")
-                  ->orWhere('address', 'like', "%{$search}%")
-                  ->orWhere('level', 'like', "%{$search}%")
-                  ->orWhere('grade_level', 'like', "%{$search}%")
-                  ->orWhere('ms_teams', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhere('message', 'like', "%{$search}%")
+                    ->orWhere('address', 'like', "%{$search}%")
+                    ->orWhere('level', 'like', "%{$search}%")
+                    ->orWhere('grade_level', 'like', "%{$search}%")
+                    ->orWhere('ms_teams', 'like', "%{$search}%");
             });
         }
 
         if ($levelFilter && $levelFilter !== 'all') {
             if (strtolower($levelFilter) === 'beginner') {
-                $statsQuery1->where(function($q) {
+                $statsQuery1->where(function ($q) {
                     $q->where('message', 'like', '%beginner%')
-                      ->orWhere('message', 'like', '%cannot%');
+                        ->orWhere('message', 'like', '%cannot%');
                 });
-                $statsQuery2->where(function($q) {
+                $statsQuery2->where(function ($q) {
                     $q->where('level', 'like', '%beginner%')
-                      ->orWhere('level', 'like', '%cannot%')
-                      ->orWhere('message', 'like', '%beginner%')
-                      ->orWhere('message', 'like', '%cannot%');
+                        ->orWhere('level', 'like', '%cannot%')
+                        ->orWhere('message', 'like', '%beginner%')
+                        ->orWhere('message', 'like', '%cannot%');
                 });
             } else {
                 $statsQuery1->where('message', 'like', "%{$levelFilter}%");
-                $statsQuery2->where(function($q) use ($levelFilter) {
+                $statsQuery2->where(function ($q) use ($levelFilter) {
                     $q->where('level', 'like', "%{$levelFilter}%")
-                      ->orWhere('message', 'like', "%{$levelFilter}%");
+                        ->orWhere('message', 'like', "%{$levelFilter}%");
                 });
             }
         }
@@ -188,41 +190,41 @@ class RegistrationController extends Controller
         $q2Stats = DB::table('halaqah_registrations');
 
         if ($search) {
-            $q1Stats->where(function($q) use ($search) {
+            $q1Stats->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%")
-                  ->orWhere('message', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhere('message', 'like', "%{$search}%");
             });
-            $q2Stats->where(function($q) use ($search) {
+            $q2Stats->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%")
-                  ->orWhere('message', 'like', "%{$search}%")
-                  ->orWhere('address', 'like', "%{$search}%")
-                  ->orWhere('level', 'like', "%{$search}%")
-                  ->orWhere('grade_level', 'like', "%{$search}%")
-                  ->orWhere('ms_teams', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhere('message', 'like', "%{$search}%")
+                    ->orWhere('address', 'like', "%{$search}%")
+                    ->orWhere('level', 'like', "%{$search}%")
+                    ->orWhere('grade_level', 'like', "%{$search}%")
+                    ->orWhere('ms_teams', 'like', "%{$search}%");
             });
         }
 
         if ($levelFilter && $levelFilter !== 'all') {
             if (strtolower($levelFilter) === 'beginner') {
-                $q1Stats->where(function($q) {
+                $q1Stats->where(function ($q) {
                     $q->where('message', 'like', '%beginner%')
-                      ->orWhere('message', 'like', '%cannot%');
+                        ->orWhere('message', 'like', '%cannot%');
                 });
-                $q2Stats->where(function($q) {
+                $q2Stats->where(function ($q) {
                     $q->where('level', 'like', '%beginner%')
-                      ->orWhere('level', 'like', '%cannot%')
-                      ->orWhere('message', 'like', '%beginner%')
-                      ->orWhere('message', 'like', '%cannot%');
+                        ->orWhere('level', 'like', '%cannot%')
+                        ->orWhere('message', 'like', '%beginner%')
+                        ->orWhere('message', 'like', '%cannot%');
                 });
             } else {
                 $q1Stats->where('message', 'like', "%{$levelFilter}%");
-                $q2Stats->where(function($q) use ($levelFilter) {
+                $q2Stats->where(function ($q) use ($levelFilter) {
                     $q->where('level', 'like', "%{$levelFilter}%")
-                      ->orWhere('message', 'like', "%{$levelFilter}%");
+                        ->orWhere('message', 'like', "%{$levelFilter}%");
                 });
             }
         }
@@ -234,7 +236,7 @@ class RegistrationController extends Controller
         $q1CannotRead = clone $q1Stats;
         $q1CannotRead->where('message', 'like', '%Cannot read%');
         $q2CannotRead = clone $q2Stats;
-        $q2CannotRead->where(function($q) {
+        $q2CannotRead->where(function ($q) {
             $q->where('level', 'like', '%Cannot read%')->orWhere('message', 'like', '%Cannot read%');
         });
         $cannotReadCount = $q1CannotRead->count() + $q2CannotRead->count();
@@ -242,7 +244,7 @@ class RegistrationController extends Controller
         $q1CanRead = clone $q1Stats;
         $q1CanRead->where('message', 'like', '%Can read%');
         $q2CanRead = clone $q2Stats;
-        $q2CanRead->where(function($q) {
+        $q2CanRead->where(function ($q) {
             $q->where('level', 'like', '%Can read%')->orWhere('message', 'like', '%Can read%');
         });
         $canReadCount = $q1CanRead->count() + $q2CanRead->count();
@@ -259,6 +261,7 @@ class RegistrationController extends Controller
 
         if ($request->has('print')) {
             $registrations = $finalQuery->orderBy('created_at', 'desc')->get();
+
             return view('admin.registrations.print_halaqah', compact('registrations', 'tab'));
         }
 
@@ -268,13 +271,13 @@ class RegistrationController extends Controller
         $team = null;
         $memberships = null;
         $teams = collect();
-        
+
         if ($selectedTeamId) {
-            $team = \App\Models\MicrosoftTeam::with(['mapping.schoolYear', 'mapping.gradeLevel', 'mapping.section'])
+            $team = MicrosoftTeam::with(['mapping.schoolYear', 'mapping.gradeLevel', 'mapping.section'])
                 ->where('team_category', 'halaqah')
                 ->find($selectedTeamId);
             if ($team) {
-                $memberships = \App\Models\MicrosoftTeamMembership::with(['student', 'faculty'])
+                $memberships = MicrosoftTeamMembership::with(['student', 'faculty'])
                     ->where('microsoft_team_local_id', $team->id)
                     ->when($request->filled('member_search'), function ($q) use ($request) {
                         $search = $request->string('member_search')->trim();
@@ -292,9 +295,9 @@ class RegistrationController extends Controller
                     ->withQueryString();
             }
         }
-        
-        if (!$team) {
-            $teams = \App\Models\MicrosoftTeam::with(['mapping.schoolYear', 'mapping.gradeLevel', 'mapping.section'])
+
+        if (! $team) {
+            $teams = MicrosoftTeam::with(['mapping.schoolYear', 'mapping.gradeLevel', 'mapping.section'])
                 ->where('team_category', 'halaqah')
                 ->when($request->filled('team_search'), function ($q) use ($request) {
                     $q->where('display_name', 'like', '%'.$request->string('team_search')->trim().'%');
@@ -306,12 +309,12 @@ class RegistrationController extends Controller
 
         return view('admin.registrations.halaqah', compact(
             'tab',
-            'registrations', 
-            'search', 
-            'status', 
+            'registrations',
+            'search',
+            'status',
             'levelFilter',
-            'totalCount', 
-            'newCount', 
+            'totalCount',
+            'newCount',
             'approvedCount',
             'cannotReadCount',
             'canReadCount',
@@ -327,12 +330,12 @@ class RegistrationController extends Controller
         $table = $source === 'halaqah_registrations' ? 'halaqah_registrations' : 'contact_submissions';
 
         $submission = DB::table($table)->where('id', $id)->first();
-        if (!$submission) {
+        if (! $submission) {
             return back()->with('error', 'Registration not found.');
         }
 
         $newStatus = $submission->status === 'approved' ? 'new' : 'approved';
-        
+
         DB::table($table)->where('id', $id)->update([
             'status' => $newStatus,
             'responded_at' => $newStatus === 'approved' ? now() : null,
@@ -340,7 +343,7 @@ class RegistrationController extends Controller
 
         return redirect()->route('admin.registrations.halaqah', [
             'tab' => $request->input('tab', 'submissions'),
-            'level' => $request->input('level')
+            'level' => $request->input('level'),
         ])->with('status', 'Registration status updated successfully.');
     }
 
@@ -350,10 +353,10 @@ class RegistrationController extends Controller
         $table = $source === 'halaqah_registrations' ? 'halaqah_registrations' : 'contact_submissions';
 
         DB::table($table)->where('id', $id)->delete();
+
         return redirect()->route('admin.registrations.halaqah', [
             'tab' => $request->input('tab', 'submissions'),
-            'level' => $request->input('level')
+            'level' => $request->input('level'),
         ])->with('status', 'Registration deleted successfully.');
     }
-
 }

@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
 use App\Models\AdminAuditLog;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class AdminUserController extends Controller
 {
@@ -44,7 +44,7 @@ class AdminUserController extends Controller
                     'microsoft_login_denied',
                     'logout',
                     'previous_session_revoked',
-                    'teacher_password_changed_onboarding'
+                    'teacher_password_changed_onboarding',
                 ]);
             })->whereNotNull('user_id');
         } elseif ($tab === 'unknown') {
@@ -52,7 +52,7 @@ class AdminUserController extends Controller
                 $q->whereIn('event', [
                     'login_failed',
                     'login_denied',
-                    'microsoft_login_denied'
+                    'microsoft_login_denied',
                 ]);
             })->whereNull('user_id');
         } elseif ($tab === 'approve') {
@@ -64,7 +64,7 @@ class AdminUserController extends Controller
                     'section_verified',
                     'payment_approved',
                     'payment_rejected',
-                    'payment_reminder_sent'
+                    'payment_reminder_sent',
                 ])->orWhere('event', 'like', 'document%');
             });
         } else { // 'system' tab
@@ -84,7 +84,7 @@ class AdminUserController extends Controller
                     'section_verified',
                     'payment_approved',
                     'payment_rejected',
-                    'payment_reminder_sent'
+                    'payment_reminder_sent',
                 ])->where('event', 'not like', 'document%');
             });
         }
@@ -93,13 +93,13 @@ class AdminUserController extends Controller
         if (filled($search)) {
             $query->where(function ($q) use ($search) {
                 $q->where('event', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('message', 'like', "%{$search}%")
-                  ->orWhere('ip_address', 'like', "%{$search}%")
-                  ->orWhereHas('user', function ($u) use ($search) {
-                      $u->where('name', 'like', "%{$search}%")
-                        ->orWhere('email', 'like', "%{$search}%");
-                  });
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('message', 'like', "%{$search}%")
+                    ->orWhere('ip_address', 'like', "%{$search}%")
+                    ->orWhereHas('user', function ($u) use ($search) {
+                        $u->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -118,18 +118,18 @@ class AdminUserController extends Controller
                 'login_failed',
                 'login_denied',
                 'microsoft_login_success',
-                'microsoft_login_denied'
+                'microsoft_login_denied',
             ]);
 
         // Apply Search
         if (filled($search)) {
             $query->where(function ($q) use ($search) {
                 $q->where('email', 'like', "%{$search}%")
-                  ->orWhere('ip_address', 'like', "%{$search}%")
-                  ->orWhereHas('user', function ($u) use ($search) {
-                      $u->where('name', 'like', "%{$search}%")
-                        ->orWhere('email', 'like', "%{$search}%");
-                  });
+                    ->orWhere('ip_address', 'like', "%{$search}%")
+                    ->orWhereHas('user', function ($u) use ($search) {
+                        $u->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -182,7 +182,7 @@ class AdminUserController extends Controller
 
         // 1. Determine Device
         $device = 'Desktop';
-        if (str_contains($ua, 'mobi') || str_contains($ua, 'iphone') || str_contains($ua, 'ipod') || str_contains($ua, 'android') && !str_contains($ua, 'tablet')) {
+        if (str_contains($ua, 'mobi') || str_contains($ua, 'iphone') || str_contains($ua, 'ipod') || str_contains($ua, 'android') && ! str_contains($ua, 'tablet')) {
             $device = 'Mobile';
         } elseif (str_contains($ua, 'ipad') || str_contains($ua, 'playbook') || str_contains($ua, 'tablet')) {
             $device = 'Tablet';
@@ -194,7 +194,7 @@ class AdminUserController extends Controller
             $browser = 'Microsoft Edge';
         } elseif (str_contains($ua, 'chrome') || str_contains($ua, 'crios')) {
             $browser = 'Google Chrome';
-        } elseif (str_contains($ua, 'safari') && !str_contains($ua, 'chrome') && !str_contains($ua, 'chromium')) {
+        } elseif (str_contains($ua, 'safari') && ! str_contains($ua, 'chrome') && ! str_contains($ua, 'chromium')) {
             $browser = 'Safari';
         } elseif (str_contains($ua, 'firefox') || str_contains($ua, 'fxios')) {
             $browser = 'Mozilla Firefox';
@@ -277,20 +277,20 @@ class AdminUserController extends Controller
         $this->ensureSystemAdmin();
 
         $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:users,email',
-            'role'     => 'required|in:admin,finance,staff',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'role' => 'required|in:admin,finance,staff',
             'password' => 'required|string|min:8|confirmed',
         ]);
 
         User::create([
-            'name'              => $request->name,
-            'email'             => $request->email,
-            'username'          => $this->uniqueUsername($request->name),
-            'password'          => Hash::make($request->password),
-            'role'              => $request->role,
-            'access_permissions'=> $this->defaultPermissionsForRole($request->role),
-            'account_status'    => 'verified',
+            'name' => $request->name,
+            'email' => $request->email,
+            'username' => $this->uniqueUsername($request->name),
+            'password' => Hash::make($request->password),
+            'role' => $request->role,
+            'access_permissions' => $this->defaultPermissionsForRole($request->role),
+            'account_status' => 'verified',
             'email_verified_at' => now(),
         ]);
 
@@ -310,7 +310,8 @@ class AdminUserController extends Controller
         }
 
         $user->delete();
-        return back()->with('success', "Admin account removed.");
+
+        return back()->with('success', 'Admin account removed.');
     }
 
     public function updateRole(Request $request, User $user)

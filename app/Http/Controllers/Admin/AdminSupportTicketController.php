@@ -3,12 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\SupportTicket;
+use App\Mail\TicketReplyMailable;
 use App\Models\AdminAuditLog;
+use App\Models\SupportSetting;
+use App\Models\SupportTicket;
+use App\Services\System\SmartSmtpRotatorService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use App\Models\SupportSetting;
-use Illuminate\Support\Facades\Schema;
 
 class AdminSupportTicketController extends Controller
 {
@@ -29,11 +30,11 @@ class AdminSupportTicketController extends Controller
             } else {
                 $query->where(function ($q) use ($search) {
                     $q->where('full_name', 'like', "%{$search}%")
-                      ->orWhere('email', 'like', "%{$search}%")
-                      ->orWhere('student_full_name', 'like', "%{$search}%")
-                      ->orWhere('amis_id', 'like', "%{$search}%")
-                      ->orWhere('subject', 'like', "%{$search}%")
-                      ->orWhere('description', 'like', "%{$search}%");
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('student_full_name', 'like', "%{$search}%")
+                        ->orWhere('amis_id', 'like', "%{$search}%")
+                        ->orWhere('subject', 'like', "%{$search}%")
+                        ->orWhere('description', 'like', "%{$search}%");
                 });
             }
         }
@@ -63,7 +64,7 @@ class AdminSupportTicketController extends Controller
             'Enrollment Concern',
             'Payment Concern',
             'Microsoft Account Issue',
-            'General Inquiry'
+            'General Inquiry',
         ];
 
         // Grade Levels for filter dropdown
@@ -81,20 +82,20 @@ class AdminSupportTicketController extends Controller
             'Grade 9',
             'Grade 10',
             'Grade 11',
-            'Grade 12'
+            'Grade 12',
         ];
 
         // Status choices & labels
         $statusLabels = [
             'open' => 'Open',
             'in_progress' => 'In Progress',
-            'resolved' => 'Resolved'
+            'resolved' => 'Resolved',
         ];
 
         $statusBadges = [
             'open' => 'rose',
             'in_progress' => 'amber',
-            'resolved' => 'emerald'
+            'resolved' => 'emerald',
         ];
 
         // KPI Counts
@@ -106,11 +107,11 @@ class AdminSupportTicketController extends Controller
         ];
 
         return view('admin.support.index', compact(
-            'tickets', 
-            'concernTypes', 
-            'gradeLevels', 
-            'statusLabels', 
-            'statusBadges', 
+            'tickets',
+            'concernTypes',
+            'gradeLevels',
+            'statusLabels',
+            'statusBadges',
             'kpis'
         ));
     }
@@ -123,13 +124,13 @@ class AdminSupportTicketController extends Controller
         $statusLabels = [
             'open' => 'Open',
             'in_progress' => 'In Progress',
-            'resolved' => 'Resolved'
+            'resolved' => 'Resolved',
         ];
 
         $statusBadges = [
             'open' => 'rose',
             'in_progress' => 'amber',
-            'resolved' => 'emerald'
+            'resolved' => 'emerald',
         ];
 
         return view('admin.support.show', compact('ticket', 'statusLabels', 'statusBadges'));
@@ -141,7 +142,7 @@ class AdminSupportTicketController extends Controller
     public function updateStatus(Request $request, SupportTicket $ticket)
     {
         $request->validate([
-            'status' => 'required|string|in:open,in_progress,resolved'
+            'status' => 'required|string|in:open,in_progress,resolved',
         ]);
 
         $oldStatus = $ticket->status;
@@ -149,17 +150,17 @@ class AdminSupportTicketController extends Controller
 
         // Audit Log entry
         AdminAuditLog::record(
-            'support_ticket_status_updated', 
-            true, 
-            "Support Ticket #{$ticket->id} ({$ticket->reference_number}) status updated from '{$oldStatus}' to '{$request->status}' by Admin.", 
+            'support_ticket_status_updated',
+            true,
+            "Support Ticket #{$ticket->id} ({$ticket->reference_number}) status updated from '{$oldStatus}' to '{$request->status}' by Admin.",
             [
                 'ticket_id' => $ticket->id,
                 'old_status' => $oldStatus,
-                'new_status' => $request->status
+                'new_status' => $request->status,
             ]
         );
 
-        return back()->with('success', "Ticket status updated to " . ucfirst(str_replace('_', ' ', $request->status)) . " successfully.");
+        return back()->with('success', 'Ticket status updated to '.ucfirst(str_replace('_', ' ', $request->status)).' successfully.');
     }
 
     /**
@@ -227,12 +228,12 @@ class AdminSupportTicketController extends Controller
             'Payment Concern',
             'Microsoft Account Issue',
             'Document Request',
-            'General Inquiry'
+            'General Inquiry',
         ];
 
         $settings = [];
         foreach ($concernTypes as $type) {
-            $settings[$type] = SupportSetting::getValue('support_email_' . $type);
+            $settings[$type] = SupportSetting::getValue('support_email_'.$type);
         }
 
         return view('admin.support.settings', compact('concernTypes', 'settings'));
@@ -250,7 +251,7 @@ class AdminSupportTicketController extends Controller
             'Payment Concern',
             'Microsoft Account Issue',
             'Document Request',
-            'General Inquiry'
+            'General Inquiry',
         ];
 
         $rules = [];
@@ -263,7 +264,7 @@ class AdminSupportTicketController extends Controller
         foreach ($concernTypes as $type) {
             $inputName = str_replace(' ', '_', $type);
             $email = $validated[$inputName] ?? null;
-            SupportSetting::setValue('support_email_' . $type, $email);
+            SupportSetting::setValue('support_email_'.$type, $email);
         }
 
         AdminAuditLog::record('support_settings_updated', true, 'Updated support department notification emails.');
@@ -286,20 +287,20 @@ class AdminSupportTicketController extends Controller
         $attachmentPath = null;
         if ($request->hasFile('attachment')) {
             $file = $request->file('attachment');
-            $fileName = 'reply_' . $ticket->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $fileName = 'reply_'.$ticket->id.'_'.time().'.'.$file->getClientOriginalExtension();
             $path = $file->storeAs('support_replies', $fileName, 'public');
-            $attachmentPath = storage_path('app/public/' . $path);
+            $attachmentPath = storage_path('app/public/'.$path);
         }
 
-        $mailable = new \App\Mail\TicketReplyMailable(
+        $mailable = new TicketReplyMailable(
             replySubject: $request->subject,
             replyMessage: $request->message,
             recipientName: $ticket->full_name ?? 'User',
-            referenceNumber: $ticket->reference_number ?? ('AMIS-' . $ticket->id),
+            referenceNumber: $ticket->reference_number ?? ('AMIS-'.$ticket->id),
             attachmentPath: $attachmentPath
         );
 
-        $rotator = app(\App\Services\System\SmartSmtpRotatorService::class);
+        $rotator = app(SmartSmtpRotatorService::class);
         $result = $rotator->sendMail($ticket->email, $mailable);
 
         if ($request->filled('status')) {

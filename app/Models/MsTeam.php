@@ -49,6 +49,7 @@ class MsTeam extends Model
     public function channelForGender(string $gender): ?MsTeamChannel
     {
         $filter = strtolower($gender) === 'male' ? 'male' : 'female';
+
         return $this->channels()->where('gender_filter', $filter)->first();
     }
 }

@@ -4,8 +4,8 @@ namespace App\Console\Commands;
 
 use App\Models\Student;
 use App\Services\MicrosoftGraphService;
-use Illuminate\Console\Command;
 use Carbon\Carbon;
+use Illuminate\Console\Command;
 
 class SyncMicrosoftPasswords extends Command
 {
@@ -22,15 +22,16 @@ class SyncMicrosoftPasswords extends Command
         }
 
         $this->info('Connecting to Microsoft Graph...');
-        $graph = new MicrosoftGraphService();
+        $graph = new MicrosoftGraphService;
 
         try {
             $this->info('Fetching tenant users from Microsoft Graph...');
             $azureUsers = $graph->listTenantStudents();
-            $azureByEmail = collect($azureUsers)->keyBy(fn($u) => strtolower($u['userPrincipalName'] ?? ''));
+            $azureByEmail = collect($azureUsers)->keyBy(fn ($u) => strtolower($u['userPrincipalName'] ?? ''));
             $azureById = collect($azureUsers)->keyBy('id');
         } catch (\Exception $e) {
-            $this->error('Failed to retrieve tenant users: ' . $e->getMessage());
+            $this->error('Failed to retrieve tenant users: '.$e->getMessage());
+
             return Command::FAILURE;
         }
 
@@ -54,23 +55,25 @@ class SyncMicrosoftPasswords extends Command
 
             $azUser = $azureByEmail->get($email) ?? $azureById->get($msUserId);
 
-            if (!$azUser) {
+            if (! $azUser) {
                 $notFoundCount++;
                 $bar->advance();
+
                 continue;
             }
 
             // Sync ms_user_id locally if not set
-            if (empty($student->ms_user_id) && !empty($azUser['id']) && !$dryRun) {
+            if (empty($student->ms_user_id) && ! empty($azUser['id']) && ! $dryRun) {
                 $student->update(['ms_user_id' => $azUser['id']]);
             }
 
             $lastPwChangeStr = $azUser['lastPasswordChangeDateTime'] ?? null;
             $createdStr = $azUser['createdDateTime'] ?? null;
 
-            if (!$lastPwChangeStr) {
+            if (! $lastPwChangeStr) {
                 $notChangedCount++;
                 $bar->advance();
+
                 continue;
             }
 
@@ -80,7 +83,7 @@ class SyncMicrosoftPasswords extends Command
             // Backfill temp_password_set_at if empty
             if (empty($student->temp_password_set_at)) {
                 $defaultSetAt = $student->ms_account_created_at ?? $student->created_at ?? $msCreated;
-                if (!$dryRun) {
+                if (! $dryRun) {
                     $student->update(['temp_password_set_at' => $defaultSetAt]);
                 }
                 $student->temp_password_set_at = $defaultSetAt;
@@ -100,13 +103,13 @@ class SyncMicrosoftPasswords extends Command
 
             if ($hasChanged) {
                 $changedCount++;
-                if (!$dryRun && ($student->password_changed_at === null || !$student->password_changed_at->eq($msPwChange))) {
+                if (! $dryRun && ($student->password_changed_at === null || ! $student->password_changed_at->eq($msPwChange))) {
                     $student->update(['password_changed_at' => $msPwChange]);
                     $updatedCount++;
                 }
             } else {
                 $notChangedCount++;
-                if (!$dryRun && $student->password_changed_at !== null) {
+                if (! $dryRun && $student->password_changed_at !== null) {
                     $student->update(['password_changed_at' => null]);
                     $updatedCount++;
                 }
@@ -122,7 +125,7 @@ class SyncMicrosoftPasswords extends Command
         $this->line("  - Changed Password: {$changedCount}");
         $this->line("  - Still Using Temp Password: {$notChangedCount}");
         $this->line("  - Account not found in M365: {$notFoundCount}");
-        if (!$dryRun) {
+        if (! $dryRun) {
             $this->line("  - Local database records updated: {$updatedCount}");
         }
 

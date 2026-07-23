@@ -86,7 +86,7 @@ return new class extends Migration
 
     private function stringColumn(Blueprint $table, string $name, string $after, int $length = 255): void
     {
-        if (!Schema::hasColumn($table->getTable(), $name)) {
+        if (! Schema::hasColumn($table->getTable(), $name)) {
             $column = $table->string($name, $length)->nullable();
             if (Schema::hasColumn($table->getTable(), $after)) {
                 $column->after($after);
@@ -96,7 +96,7 @@ return new class extends Migration
 
     private function textColumn(Blueprint $table, string $name, string $after): void
     {
-        if (!Schema::hasColumn($table->getTable(), $name)) {
+        if (! Schema::hasColumn($table->getTable(), $name)) {
             $column = $table->text($name)->nullable();
             if (Schema::hasColumn($table->getTable(), $after)) {
                 $column->after($after);
@@ -106,7 +106,7 @@ return new class extends Migration
 
     private function booleanColumn(Blueprint $table, string $name, string $after): void
     {
-        if (!Schema::hasColumn($table->getTable(), $name)) {
+        if (! Schema::hasColumn($table->getTable(), $name)) {
             $column = $table->boolean($name)->nullable();
             if (Schema::hasColumn($table->getTable(), $after)) {
                 $column->after($after);
@@ -116,7 +116,7 @@ return new class extends Migration
 
     private function jsonColumn(Blueprint $table, string $name, string $after): void
     {
-        if (!Schema::hasColumn($table->getTable(), $name)) {
+        if (! Schema::hasColumn($table->getTable(), $name)) {
             $column = $table->json($name)->nullable();
             if (Schema::hasColumn($table->getTable(), $after)) {
                 $column->after($after);

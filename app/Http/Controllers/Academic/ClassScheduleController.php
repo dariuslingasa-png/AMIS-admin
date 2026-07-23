@@ -29,18 +29,21 @@ class ClassScheduleController extends Controller
     public function store(StoreClassScheduleRequest $request): RedirectResponse
     {
         $this->classScheduleService->create($request->validated());
+
         return back()->with('success', 'Class schedule created successfully.');
     }
 
     public function update(StoreClassScheduleRequest $request, ClassSchedule $schedule): RedirectResponse
     {
         $this->classScheduleService->update($schedule, $request->validated());
+
         return back()->with('success', 'Class schedule updated successfully.');
     }
 
     public function destroy(ClassSchedule $schedule): RedirectResponse
     {
         $this->classScheduleService->delete($schedule);
+
         return back()->with('success', 'Class schedule deleted successfully.');
     }
 }

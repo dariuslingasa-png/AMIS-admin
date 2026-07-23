@@ -67,6 +67,7 @@ class RemoveTeamMembers extends Command
             } catch (\Throwable $e) {
                 $this->error('  Failed to list members: '.$e->getMessage());
                 Log::error("Failed to list team members for {$teamId}: ".$e->getMessage());
+
                 continue;
             }
 
@@ -78,18 +79,21 @@ class RemoveTeamMembers extends Command
 
                 if (in_array('owner', $roles, true)) {
                     $this->line("  - Keep Owner: {$displayName} ({$email})");
+
                     continue;
                 }
 
                 if (! $membershipId) {
                     $totalFailed++;
                     $this->error("  Missing membership ID for {$displayName} ({$email})");
+
                     continue;
                 }
 
                 $totalFound++;
                 if ($dryRun) {
                     $this->info("  [Dry Run] Would remove: {$displayName} ({$email})");
+
                     continue;
                 }
 
@@ -111,6 +115,7 @@ class RemoveTeamMembers extends Command
 
             if ($dryRun) {
                 $this->info("  [Dry Run] Would delete Team: [{$teamName}] ({$teamId})");
+
                 continue;
             }
 

@@ -13,7 +13,7 @@ class AdminAnnouncementController extends Controller
     private function ensureAdmin()
     {
         $user = auth()->user();
-        if (!$user || (!$user->hasRole('super_admin') && !$user->hasRole('admin'))) {
+        if (! $user || (! $user->hasRole('super_admin') && ! $user->hasRole('admin'))) {
             abort(403, 'Unauthorized. Super Admin or Admin role required.');
         }
     }
@@ -23,6 +23,7 @@ class AdminAnnouncementController extends Controller
         if (app()->environment('production')) {
             return '/home2/amisdavc/amis.edu.ph/public';
         }
+
         return base_path('../amis_website/public');
     }
 
@@ -35,10 +36,10 @@ class AdminAnnouncementController extends Controller
         $query = Announcement::query();
 
         if (filled($search)) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('content', 'like', "%{$search}%")
-                  ->orWhere('author', 'like', "%{$search}%");
+                    ->orWhere('content', 'like', "%{$search}%")
+                    ->orWhere('author', 'like', "%{$search}%");
             });
         }
 
@@ -50,6 +51,7 @@ class AdminAnnouncementController extends Controller
     public function create()
     {
         $this->ensureAdmin();
+
         return view('admin.website.announcements.create');
     }
 
@@ -70,23 +72,23 @@ class AdminAnnouncementController extends Controller
             'event_venue' => 'nullable|string|max:255',
         ]);
 
-        $validated['uuid'] = (string) \Illuminate\Support\Str::uuid();
+        $validated['uuid'] = (string) Str::uuid();
         $validated['is_online'] = $request->has('is_online');
 
         $imagePaths = [];
         if ($request->hasFile('image_files')) {
             foreach ($request->file('image_files') as $file) {
-                $filename = 'announcement_' . time() . '_' . Str::random(6) . '.' . $file->getClientOriginalExtension();
-                
+                $filename = 'announcement_'.time().'_'.Str::random(6).'.'.$file->getClientOriginalExtension();
+
                 $websitePublic = $this->getWebsitePublicPath();
-                $targetDir = $websitePublic . '/images/announcements';
-                
-                if (!File::isDirectory($targetDir)) {
+                $targetDir = $websitePublic.'/images/announcements';
+
+                if (! File::isDirectory($targetDir)) {
                     File::makeDirectory($targetDir, 0755, true, true);
                 }
-                
+
                 $file->move($targetDir, $filename);
-                $imagePaths[] = '/images/announcements/' . $filename;
+                $imagePaths[] = '/images/announcements/'.$filename;
             }
             $validated['image'] = json_encode($imagePaths);
         } else {
@@ -102,6 +104,7 @@ class AdminAnnouncementController extends Controller
     {
         $this->ensureAdmin();
         $announcement = Announcement::findOrFail($id);
+
         return view('admin.website.announcements.edit', compact('announcement'));
     }
 
@@ -126,19 +129,19 @@ class AdminAnnouncementController extends Controller
         $validated['is_online'] = $request->has('is_online');
 
         $remainingImages = json_decode($request->input('remaining_images', '[]'), true);
-        if (!is_array($remainingImages)) {
+        if (! is_array($remainingImages)) {
             $remainingImages = [];
         }
 
         // Delete old image files that were removed by the user
         $oldImages = json_decode($announcement->image, true);
-        if (!is_array($oldImages)) {
+        if (! is_array($oldImages)) {
             $oldImages = $announcement->image ? [$announcement->image] : [];
         }
         foreach ($oldImages as $oldImage) {
-            if ($oldImage && !in_array($oldImage, $remainingImages)) {
+            if ($oldImage && ! in_array($oldImage, $remainingImages)) {
                 if (str_starts_with($oldImage, '/images/announcements/')) {
-                    $oldFile = $this->getWebsitePublicPath() . $oldImage;
+                    $oldFile = $this->getWebsitePublicPath().$oldImage;
                     if (File::exists($oldFile)) {
                         @unlink($oldFile);
                     }
@@ -149,14 +152,14 @@ class AdminAnnouncementController extends Controller
         // Upload new image files if any
         if ($request->hasFile('image_files')) {
             foreach ($request->file('image_files') as $file) {
-                $filename = 'announcement_' . time() . '_' . Str::random(6) . '.' . $file->getClientOriginalExtension();
+                $filename = 'announcement_'.time().'_'.Str::random(6).'.'.$file->getClientOriginalExtension();
                 $websitePublic = $this->getWebsitePublicPath();
-                $targetDir = $websitePublic . '/images/announcements';
-                if (!File::isDirectory($targetDir)) {
+                $targetDir = $websitePublic.'/images/announcements';
+                if (! File::isDirectory($targetDir)) {
                     File::makeDirectory($targetDir, 0755, true, true);
                 }
                 $file->move($targetDir, $filename);
-                $remainingImages[] = '/images/announcements/' . $filename;
+                $remainingImages[] = '/images/announcements/'.$filename;
             }
         }
 
@@ -174,12 +177,12 @@ class AdminAnnouncementController extends Controller
 
         // Delete associated image files
         $images = json_decode($announcement->image, true);
-        if (!is_array($images)) {
+        if (! is_array($images)) {
             $images = $announcement->image ? [$announcement->image] : [];
         }
         foreach ($images as $img) {
             if ($img && str_starts_with($img, '/images/announcements/')) {
-                $oldFile = $this->getWebsitePublicPath() . $img;
+                $oldFile = $this->getWebsitePublicPath().$img;
                 if (File::exists($oldFile)) {
                     @unlink($oldFile);
                 }

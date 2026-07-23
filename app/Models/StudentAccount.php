@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 
 class StudentAccount extends Model
 {
@@ -17,17 +18,17 @@ class StudentAccount extends Model
     ];
 
     protected $casts = [
-        'tuition_fee'         => 'decimal:2',
-        'monthly_tuition'     => 'decimal:2',
-        'miscellaneous_fee'   => 'decimal:2',
-        'books_fee'           => 'decimal:2',
+        'tuition_fee' => 'decimal:2',
+        'monthly_tuition' => 'decimal:2',
+        'miscellaneous_fee' => 'decimal:2',
+        'books_fee' => 'decimal:2',
         'discount_percentage' => 'decimal:2',
-        'discount_amount'     => 'decimal:2',
-        'gross_total'         => 'decimal:2',
+        'discount_amount' => 'decimal:2',
+        'gross_total' => 'decimal:2',
         'enrollment_fee_paid' => 'decimal:2',
-        'total_balance'       => 'decimal:2',
-        'amount_paid'         => 'decimal:2',
-        'remaining_balance'   => 'decimal:2',
+        'total_balance' => 'decimal:2',
+        'amount_paid' => 'decimal:2',
+        'remaining_balance' => 'decimal:2',
     ];
 
     public function student(): BelongsTo
@@ -53,15 +54,15 @@ class StudentAccount extends Model
     /** Recalculate and save running totals after a payment is verified */
     public function recalculate(): void
     {
-        \Illuminate\Support\Facades\DB::transaction(function () {
+        DB::transaction(function () {
             $paid = (float) $this->payments()->where('status', 'verified')->sum('amount');
             $remaining = $this->total_balance - $paid;
             $status = $remaining <= 0 ? 'paid' : ($paid > 0 ? 'partial' : 'unpaid');
 
             $this->update([
-                'amount_paid'       => $paid,
+                'amount_paid' => $paid,
                 'remaining_balance' => max(0, $remaining),
-                'status'            => $status,
+                'status' => $status,
             ]);
 
             // Chronological Waterfall Payment Allocation
@@ -73,13 +74,13 @@ class StudentAccount extends Model
                 $due = (float) $billing->amount_due;
                 if ($tempPaid >= $due) {
                     $billing->update([
-                        'status'  => 'paid',
+                        'status' => 'paid',
                         'paid_at' => $billing->paid_at ?? now(),
                     ]);
                     $tempPaid -= $due;
                 } else {
                     $billing->update([
-                        'status'  => 'unpaid',
+                        'status' => 'unpaid',
                         'paid_at' => null,
                     ]);
                 }

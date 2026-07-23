@@ -7,6 +7,7 @@ use App\Models\ClassAdvisoryAssignment;
 use App\Models\EnrollmentApplicant;
 use App\Models\Section;
 use App\Models\Student;
+use App\Models\StudentSection;
 use App\Models\User;
 use App\Services\GoogleDriveUploadService;
 use App\Services\MicrosoftGraphService;
@@ -34,19 +35,19 @@ class EnrollmentReportController extends Controller
         $highSchool = config('class_advisories.high_school', []);
         $allConfig = array_merge($elementary, $highSchool);
         foreach ($allConfig as $adv) {
-            if (!empty($adv['teacher'])) {
+            if (! empty($adv['teacher'])) {
                 $teacherName = $adv['teacher'];
                 $cleanName = trim(str_ireplace('TEACHER ', '', $teacherName));
                 $user = User::where('role', 'teacher')
-                    ->where(function($query) use ($cleanName) {
+                    ->where(function ($query) use ($cleanName) {
                         $query->where('name', $cleanName)
-                              ->orWhere('name', 'like', '%' . $cleanName . '%');
+                            ->orWhere('name', 'like', '%'.$cleanName.'%');
                     })
                     ->first();
                 if ($user && $user->email) {
                     $configAdvisors[] = [
                         'name' => $teacherName,
-                        'email' => $user->email
+                        'email' => $user->email,
                     ];
                 }
             }
@@ -78,19 +79,19 @@ class EnrollmentReportController extends Controller
         $highSchool = config('class_advisories.high_school', []);
         $allConfig = array_merge($elementary, $highSchool);
         foreach ($allConfig as $adv) {
-            if (!empty($adv['teacher'])) {
+            if (! empty($adv['teacher'])) {
                 $teacherName = $adv['teacher'];
                 $cleanName = trim(str_ireplace('TEACHER ', '', $teacherName));
                 $user = User::where('role', 'teacher')
-                    ->where(function($query) use ($cleanName) {
+                    ->where(function ($query) use ($cleanName) {
                         $query->where('name', $cleanName)
-                              ->orWhere('name', 'like', '%' . $cleanName . '%');
+                            ->orWhere('name', 'like', '%'.$cleanName.'%');
                     })
                     ->first();
                 if ($user && $user->email) {
                     $configAdvisors[] = [
                         'name' => $teacherName,
-                        'email' => $user->email
+                        'email' => $user->email,
                     ];
                 }
             }
@@ -139,7 +140,7 @@ class EnrollmentReportController extends Controller
                 $query->where(function ($q) {
                     $q->whereHas('studentSection.section', function ($qs) {
                         $qs->where('learning_mode', 'Flexible Online Learning')
-                           ->where('shift', '1st Shift');
+                            ->where('shift', '1st Shift');
                     })->orWhereHas('applicant', function ($qa) {
                         $qa->where('learning_mode', 'like', '%1st Shift%');
                     });
@@ -148,7 +149,7 @@ class EnrollmentReportController extends Controller
                 $query->where(function ($q) {
                     $q->whereHas('studentSection.section', function ($qs) {
                         $qs->where('learning_mode', 'Flexible Online Learning')
-                           ->where('shift', '2nd Shift');
+                            ->where('shift', '2nd Shift');
                     })->orWhereHas('applicant', function ($qa) {
                         $qa->where('learning_mode', 'like', '%2nd Shift%');
                     });
@@ -169,13 +170,13 @@ class EnrollmentReportController extends Controller
             $allConfig = array_merge($elementary, $highSchool);
             $configGradeLevels = [];
             foreach ($allConfig as $adv) {
-                if (!empty($adv['teacher'])) {
+                if (! empty($adv['teacher'])) {
                     $teacherName = $adv['teacher'];
                     $cleanName = trim(str_ireplace('TEACHER ', '', $teacherName));
                     $user = User::where('role', 'teacher')
-                        ->where(function($query) use ($cleanName) {
+                        ->where(function ($query) use ($cleanName) {
                             $query->where('name', $cleanName)
-                                  ->orWhere('name', 'like', '%' . $cleanName . '%');
+                                ->orWhere('name', 'like', '%'.$cleanName.'%');
                         })
                         ->first();
                     if ($user && $user->email === $adviserEmail) {
@@ -188,7 +189,7 @@ class EnrollmentReportController extends Controller
                 $q->whereHas('studentSection', function ($qs) use ($sectionIds) {
                     $qs->whereIn('section_id', $sectionIds);
                 });
-                if (!empty($configGradeLevels)) {
+                if (! empty($configGradeLevels)) {
                     $q->orWhereIn('grade_level', $configGradeLevels);
                 }
             });
@@ -212,15 +213,15 @@ class EnrollmentReportController extends Controller
                 case 'logged_in':
                     $query->where(function ($q) {
                         $q->whereNotNull('last_login_at')
-                          ->orWhereNotNull('ms_last_sign_in_at')
-                          ->orWhereNotNull('password_changed_at');
+                            ->orWhereNotNull('ms_last_sign_in_at')
+                            ->orWhereNotNull('password_changed_at');
                     });
                     break;
                 case 'never_signed_in':
                     $query->whereNotNull('ms_user_id')
-                          ->whereNull('last_login_at')
-                          ->whereNull('ms_last_sign_in_at')
-                          ->whereNull('password_changed_at');
+                        ->whereNull('last_login_at')
+                        ->whereNull('ms_last_sign_in_at')
+                        ->whereNull('password_changed_at');
                     break;
                 case 'joined_teams':
                     $query->whereNotNull('ms_user_id')->whereNotNull('ms_teams_enrolled_at');
@@ -260,7 +261,7 @@ class EnrollmentReportController extends Controller
                     $query->where('ms_teams_meetings_attended', '>', 0);
                     break;
                 case 'no_call':
-                    $query->where(fn($q) => $q->whereNull('ms_teams_meetings_attended')->orWhere('ms_teams_meetings_attended', 0));
+                    $query->where(fn ($q) => $q->whereNull('ms_teams_meetings_attended')->orWhere('ms_teams_meetings_attended', 0));
                     break;
             }
         }
@@ -269,7 +270,7 @@ class EnrollmentReportController extends Controller
             $parts = explode(' to ', $request->date_range);
             if (count($parts) === 2) {
                 $start = trim($parts[0]);
-                $end = trim($parts[1]) . ' 23:59:59';
+                $end = trim($parts[1]).' 23:59:59';
                 $query->whereBetween('created_at', [$start, $end]);
             } else {
                 $date = trim($parts[0]);
@@ -281,15 +282,15 @@ class EnrollmentReportController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('student_number', 'like', "%{$search}%")
-                  ->orWhere('school_email', 'like', "%{$search}%")
-                  ->orWhere('ms_email', 'like', "%{$search}%")
-                  ->orWhereHas('applicant', function ($qa) use ($search) {
-                      $qa->where('first_name', 'like', "%{$search}%")
-                         ->orWhere('last_name', 'like', "%{$search}%")
-                         ->orWhere('middle_name', 'like', "%{$search}%")
-                         ->orWhereRaw("CONCAT(first_name, ' ', last_name) like ?", ["%{$search}%"])
-                         ->orWhereRaw("CONCAT(last_name, ', ', first_name) like ?", ["%{$search}%"]);
-                  });
+                    ->orWhere('school_email', 'like', "%{$search}%")
+                    ->orWhere('ms_email', 'like', "%{$search}%")
+                    ->orWhereHas('applicant', function ($qa) use ($search) {
+                        $qa->where('first_name', 'like', "%{$search}%")
+                            ->orWhere('last_name', 'like', "%{$search}%")
+                            ->orWhere('middle_name', 'like', "%{$search}%")
+                            ->orWhereRaw("CONCAT(first_name, ' ', last_name) like ?", ["%{$search}%"])
+                            ->orWhereRaw("CONCAT(last_name, ', ', first_name) like ?", ["%{$search}%"]);
+                    });
             });
         }
 
@@ -301,19 +302,19 @@ class EnrollmentReportController extends Controller
         $unlicensedCount = $accountsGenerated - $licensedCount;
         $activeAccounts = $allFilteredStudents->whereNotNull('ms_user_id')->where('ms_account_enabled', true)->count();
         $inactiveAccounts = $accountsGenerated - $activeAccounts;
-        $loggedInCount = $allFilteredStudents->whereNotNull('ms_user_id')->filter(fn($s) => $s->last_login_at !== null || $s->password_changed_at !== null || $s->ms_last_sign_in_at !== null)->count();
+        $loggedInCount = $allFilteredStudents->whereNotNull('ms_user_id')->filter(fn ($s) => $s->last_login_at !== null || $s->password_changed_at !== null || $s->ms_last_sign_in_at !== null)->count();
         $neverSignedIn = $accountsGenerated - $loggedInCount;
 
         $joinedTeams = $allFilteredStudents->whereNotNull('ms_user_id')->whereNotNull('ms_teams_enrolled_at')->count();
         $notJoinedTeams = $accountsGenerated - $joinedTeams;
 
-        $assignedClass = $allFilteredStudents->filter(fn($s) => $s->studentSection !== null)->count();
+        $assignedClass = $allFilteredStudents->filter(fn ($s) => $s->studentSection !== null)->count();
         $withoutClass = $totalRegistered - $assignedClass;
 
-        $joinedClass = $allFilteredStudents->filter(fn($s) => $s->studentSection !== null && $s->studentSection->ms_status === 'enrolled')->count();
+        $joinedClass = $allFilteredStudents->filter(fn ($s) => $s->studentSection !== null && $s->studentSection->ms_status === 'enrolled')->count();
         $notJoinedClass = $assignedClass - $joinedClass;
 
-        $getLearningModeClass = function($s) {
+        $getLearningModeClass = function ($s) {
             $mode = null;
             $shift = null;
             if ($s->studentSection && $s->studentSection->section) {
@@ -323,8 +324,8 @@ class EnrollmentReportController extends Controller
                 $mode = $s->applicant->learning_mode;
             }
 
-            $modeStr = strtolower((string)$mode);
-            $shiftStr = strtolower((string)$shift);
+            $modeStr = strtolower((string) $mode);
+            $shiftStr = strtolower((string) $shift);
 
             if (str_contains($modeStr, 'face')) {
                 return 'f2f';
@@ -337,15 +338,16 @@ class EnrollmentReportController extends Controller
                     return 'odl_1st';
                 }
             }
+
             return 'unknown';
         };
 
-        $odl1Count = $allFilteredStudents->filter(fn($s) => $getLearningModeClass($s) === 'odl_1st')->count();
-        $odl2Count = $allFilteredStudents->filter(fn($s) => $getLearningModeClass($s) === 'odl_2nd')->count();
-        $f2fCount = $allFilteredStudents->filter(fn($s) => $getLearningModeClass($s) === 'f2f')->count();
+        $odl1Count = $allFilteredStudents->filter(fn ($s) => $getLearningModeClass($s) === 'odl_1st')->count();
+        $odl2Count = $allFilteredStudents->filter(fn ($s) => $getLearningModeClass($s) === 'odl_2nd')->count();
+        $f2fCount = $allFilteredStudents->filter(fn ($s) => $getLearningModeClass($s) === 'f2f')->count();
 
-        $boyCount = $allFilteredStudents->filter(fn($s) => $s->applicant && strtolower($s->applicant->gender ?? '') === 'male')->count();
-        $girlCount = $allFilteredStudents->filter(fn($s) => $s->applicant && strtolower($s->applicant->gender ?? '') === 'female')->count();
+        $boyCount = $allFilteredStudents->filter(fn ($s) => $s->applicant && strtolower($s->applicant->gender ?? '') === 'male')->count();
+        $girlCount = $allFilteredStudents->filter(fn ($s) => $s->applicant && strtolower($s->applicant->gender ?? '') === 'female')->count();
 
         $tempPasswordNotChanged = $allFilteredStudents->whereNotNull('ms_user_id')->whereNotNull('temp_password')->whereNull('password_changed_at')->count();
         $passwordChanged = $allFilteredStudents->whereNotNull('ms_user_id')->whereNotNull('password_changed_at')->count();
@@ -353,7 +355,7 @@ class EnrollmentReportController extends Controller
         $latestSignIn = $allFilteredStudents->max('last_login_at') ?? $allFilteredStudents->max('ms_last_sign_in_at');
         $latestSignInStr = $latestSignIn ? Carbon::parse($latestSignIn)->diffForHumans() : 'No activity';
 
-        $teamsAppUsed = $allFilteredStudents->filter(fn($s) => !is_null($s->ms_teams_last_activity_at))->count();
+        $teamsAppUsed = $allFilteredStudents->filter(fn ($s) => ! is_null($s->ms_teams_last_activity_at))->count();
         $teamsAppNeverUsed = $totalRegistered - $teamsAppUsed;
 
         $summary = [
@@ -393,16 +395,16 @@ class EnrollmentReportController extends Controller
             return [
                 'grade_level' => $gradeLevel,
                 'total' => $gradeStudents->count(),
-                'odl_1st' => $gradeStudents->filter(fn($s) => $getLearningModeClass($s) === 'odl_1st')->count(),
-                'odl_2nd' => $gradeStudents->filter(fn($s) => $getLearningModeClass($s) === 'odl_2nd')->count(),
-                'f2f' => $gradeStudents->filter(fn($s) => $getLearningModeClass($s) === 'f2f')->count(),
+                'odl_1st' => $gradeStudents->filter(fn ($s) => $getLearningModeClass($s) === 'odl_1st')->count(),
+                'odl_2nd' => $gradeStudents->filter(fn ($s) => $getLearningModeClass($s) === 'odl_2nd')->count(),
+                'f2f' => $gradeStudents->filter(fn ($s) => $getLearningModeClass($s) === 'f2f')->count(),
                 'accounts' => $gradeMs->count(),
-                'logged_in' => $gradeMs->filter(fn($s) => $s->last_login_at !== null || $s->password_changed_at !== null || $s->ms_last_sign_in_at !== null)->count(),
+                'logged_in' => $gradeMs->filter(fn ($s) => $s->last_login_at !== null || $s->password_changed_at !== null || $s->ms_last_sign_in_at !== null)->count(),
                 'joined_teams' => $gradeMs->whereNotNull('ms_teams_enrolled_at')->count(),
-                'joined_class' => $gradeStudents->filter(fn($s) => $s->studentSection !== null && $s->studentSection->ms_status === 'enrolled')->count(),
+                'joined_class' => $gradeStudents->filter(fn ($s) => $s->studentSection !== null && $s->studentSection->ms_status === 'enrolled')->count(),
                 'password_changed' => $gradeMs->whereNotNull('password_changed_at')->count(),
             ];
-        })->filter(fn($g) => $g['total'] > 0)->values();
+        })->filter(fn ($g) => $g['total'] > 0)->values();
 
         $charts = [
             'gradeDistribution' => [
@@ -444,8 +446,8 @@ class EnrollmentReportController extends Controller
             ->orderBy('id')
             ->paginate($perPage);
 
-        $studentsList = collect($paginated->items())->map(function($s) {
-            $name = $s->applicant ? strtoupper($s->applicant->last_name . ', ' . $s->applicant->first_name) : 'UNREGISTERED';
+        $studentsList = collect($paginated->items())->map(function ($s) {
+            $name = $s->applicant ? strtoupper($s->applicant->last_name.', '.$s->applicant->first_name) : 'UNREGISTERED';
             $lastSignIn = $s->last_login_at ? $s->last_login_at->format('Y-m-d H:i A') : ($s->ms_last_sign_in_at ? $s->ms_last_sign_in_at->format('Y-m-d H:i A') : 'NEVER');
             $teamsLastActivity = $s->ms_teams_last_activity_at ? $s->ms_teams_last_activity_at->format('Y-m-d') : null;
 
@@ -490,25 +492,25 @@ class EnrollmentReportController extends Controller
 
     public function syncNow(Request $request)
     {
-        $graph = new MicrosoftGraphService();
+        $graph = new MicrosoftGraphService;
         try {
             $azureUsers = $graph->listTenantStudents();
             $studentSkuId = config('services.microsoft.student_sku_id');
 
-            if (!$studentSkuId) {
+            if (! $studentSkuId) {
                 throw new \Exception('Student SKU ID is not configured in services.php.');
             }
 
-            $azureByEmail = collect($azureUsers)->keyBy(fn($u) => strtolower($u['userPrincipalName'] ?? ''));
+            $azureByEmail = collect($azureUsers)->keyBy(fn ($u) => strtolower($u['userPrincipalName'] ?? ''));
 
-            Student::whereNotNull('school_email')->chunkById(100, function($students) use ($azureByEmail, $studentSkuId) {
+            Student::whereNotNull('school_email')->chunkById(100, function ($students) use ($azureByEmail, $studentSkuId) {
                 foreach ($students as $student) {
                     $email = strtolower($student->school_email ?? '');
                     $azUser = $azureByEmail->get($email);
 
                     if ($azUser) {
                         $hasLicense = collect($azUser['assignedLicenses'] ?? [])
-                            ->contains(fn($lic) => strtolower($lic['skuId'] ?? '') === strtolower($studentSkuId));
+                            ->contains(fn ($lic) => strtolower($lic['skuId'] ?? '') === strtolower($studentSkuId));
 
                         $updateData = [
                             'ms_user_id' => $azUser['id'],
@@ -517,11 +519,11 @@ class EnrollmentReportController extends Controller
                             'ms_account_enabled' => (bool) ($azUser['accountEnabled'] ?? true),
                         ];
 
-                        if (!empty($azUser['createdDateTime'])) {
+                        if (! empty($azUser['createdDateTime'])) {
                             $updateData['ms_account_created_at'] = Carbon::parse($azUser['createdDateTime']);
                         }
 
-                        if (!empty($azUser['signInActivity']['lastSignInDateTime'])) {
+                        if (! empty($azUser['signInActivity']['lastSignInDateTime'])) {
                             $updateData['ms_last_sign_in_at'] = Carbon::parse($azUser['signInActivity']['lastSignInDateTime']);
                         }
 
@@ -541,11 +543,11 @@ class EnrollmentReportController extends Controller
                     $studentEmails = [];
                     foreach ($members as $member) {
                         $roles = $member['roles'] ?? [];
-                        if (!in_array('owner', $roles, true)) {
-                            if (!empty($member['userId'])) {
+                        if (! in_array('owner', $roles, true)) {
+                            if (! empty($member['userId'])) {
                                 $studentMsIds[] = $member['userId'];
                             }
-                            if (!empty($member['email'])) {
+                            if (! empty($member['email'])) {
                                 $studentEmails[] = strtolower($member['email']);
                             }
                         }
@@ -554,18 +556,18 @@ class EnrollmentReportController extends Controller
                     $studentsInGraph = Student::whereIn('ms_user_id', $studentMsIds)
                         ->orWhere(function ($q) use ($studentEmails) {
                             $q->whereIn('school_email', $studentEmails)
-                              ->orWhereIn('ms_email', $studentEmails);
+                                ->orWhereIn('ms_email', $studentEmails);
                         })
                         ->get();
 
                     foreach ($studentsInGraph as $student) {
-                        $studentSection = \App\Models\StudentSection::where('student_id', $student->id)
+                        $studentSection = StudentSection::where('student_id', $student->id)
                             ->where('section_id', $section->id)
                             ->first();
 
-                        if (!$studentSection) {
-                            \App\Models\StudentSection::where('student_id', $student->id)->delete();
-                            \App\Models\StudentSection::create([
+                        if (! $studentSection) {
+                            StudentSection::where('student_id', $student->id)->delete();
+                            StudentSection::create([
                                 'student_id' => $student->id,
                                 'section_id' => $section->id,
                                 'ms_status' => 'enrolled',
@@ -579,7 +581,7 @@ class EnrollmentReportController extends Controller
                         }
                     }
 
-                    $localEnrolled = \App\Models\StudentSection::where('section_id', $section->id)
+                    $localEnrolled = StudentSection::where('section_id', $section->id)
                         ->where('ms_status', 'enrolled')
                         ->get();
 
@@ -596,26 +598,26 @@ class EnrollmentReportController extends Controller
                             }
                         }
 
-                        if (!$isEnrolledInGraph) {
+                        if (! $isEnrolledInGraph) {
                             $dbSec->update(['ms_status' => 'pending']);
                         }
                     }
                 } catch (\Exception $e) {
-                    Log::warning("syncNow: Failed to sync team members for section {$section->id}: " . $e->getMessage());
+                    Log::warning("syncNow: Failed to sync team members for section {$section->id}: ".$e->getMessage());
                 }
             }
 
             try {
                 $teamsActivity = $graph->getTeamsUserActivityReport('D30');
 
-                if (!empty($teamsActivity)) {
-                    Student::whereNotNull('ms_user_id')->chunkById(100, function($students) use ($teamsActivity) {
+                if (! empty($teamsActivity)) {
+                    Student::whereNotNull('ms_user_id')->chunkById(100, function ($students) use ($teamsActivity) {
                         foreach ($students as $student) {
                             $userId = strtolower($student->ms_user_id ?? '');
-                            $email  = strtolower($student->school_email ?? $student->ms_email ?? '');
+                            $email = strtolower($student->school_email ?? $student->ms_email ?? '');
 
-                            $activity = $teamsActivity['id:' . $userId]
-                                     ?? $teamsActivity['upn:' . $email]
+                            $activity = $teamsActivity['id:'.$userId]
+                                     ?? $teamsActivity['upn:'.$email]
                                      ?? null;
 
                             if ($activity) {
@@ -623,7 +625,7 @@ class EnrollmentReportController extends Controller
                                     'ms_teams_meetings_attended' => $activity['meetings_attended'] ?? 0,
                                 ];
 
-                                if (!empty($activity['last_activity_date'])) {
+                                if (! empty($activity['last_activity_date'])) {
                                     $updateData['ms_teams_last_activity_at'] = Carbon::parse($activity['last_activity_date'])->startOfDay();
                                 }
 
@@ -633,7 +635,7 @@ class EnrollmentReportController extends Controller
                     });
                 }
             } catch (\Exception $e) {
-                Log::warning('Teams activity sync failed (non-fatal): ' . $e->getMessage());
+                Log::warning('Teams activity sync failed (non-fatal): '.$e->getMessage());
             }
 
             Cache::put('ms_last_sync_time', now()->format('Y-m-d H:i:s'), 86400);
@@ -641,13 +643,14 @@ class EnrollmentReportController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Microsoft Graph data and Team memberships synchronized successfully.',
-                'last_sync' => now()->format('Y-m-d H:i:s')
+                'last_sync' => now()->format('Y-m-d H:i:s'),
             ]);
         } catch (\Exception $e) {
-            Log::error('Microsoft Graph Dashboard syncNow failed: ' . $e->getMessage());
+            Log::error('Microsoft Graph Dashboard syncNow failed: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Sync failed: ' . $e->getMessage()
+                'message' => 'Sync failed: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -657,23 +660,23 @@ class EnrollmentReportController extends Controller
         $query = EnrollmentApplicant::with('payment');
 
         if ($request->filled('search')) {
-            $search = '%' . trim($request->search) . '%';
-            $query->where(function($q) use ($search) {
+            $search = '%'.trim($request->search).'%';
+            $query->where(function ($q) use ($search) {
                 $q->where('first_name', 'like', $search)
-                  ->orWhere('last_name', 'like', $search)
-                  ->orWhere('middle_name', 'like', $search)
-                  ->orWhere('id', 'like', $search)
-                  ->orWhere('email', 'like', $search)
-                  ->orWhere('parent_email', 'like', $search)
-                  ->orWhere('father_first_name', 'like', $search)
-                  ->orWhere('father_last_name', 'like', $search)
-                  ->orWhere('mother_first_name', 'like', $search)
-                  ->orWhere('mother_last_name', 'like', $search)
-                  ->orWhere('contact_number', 'like', $search)
-                  ->orWhere('mobile_number', 'like', $search)
-                  ->orWhereHas('payment', function($qp) use ($search) {
-                      $qp->where('reference_no', 'like', $search);
-                  });
+                    ->orWhere('last_name', 'like', $search)
+                    ->orWhere('middle_name', 'like', $search)
+                    ->orWhere('id', 'like', $search)
+                    ->orWhere('email', 'like', $search)
+                    ->orWhere('parent_email', 'like', $search)
+                    ->orWhere('father_first_name', 'like', $search)
+                    ->orWhere('father_last_name', 'like', $search)
+                    ->orWhere('mother_first_name', 'like', $search)
+                    ->orWhere('mother_last_name', 'like', $search)
+                    ->orWhere('contact_number', 'like', $search)
+                    ->orWhere('mobile_number', 'like', $search)
+                    ->orWhereHas('payment', function ($qp) use ($search) {
+                        $qp->where('reference_no', 'like', $search);
+                    });
             });
         }
 
@@ -704,7 +707,7 @@ class EnrollmentReportController extends Controller
         $groups = [];
 
         foreach ($applicants as $app) {
-            $fullName = trim($app->first_name . ' ' . $app->middle_name . ' ' . $app->last_name);
+            $fullName = trim($app->first_name.' '.$app->middle_name.' '.$app->last_name);
             $fullName = strtoupper($fullName);
             $studentInfo = [
                 'id' => $app->id,
@@ -714,13 +717,13 @@ class EnrollmentReportController extends Controller
             ];
 
             $familyId = $app->family_application_id !== null ? trim($app->family_application_id) : '';
-            $groupKey = ($familyId !== '') ? 'fam_' . $familyId : 'solo_' . $app->id;
+            $groupKey = ($familyId !== '') ? 'fam_'.$familyId : 'solo_'.$app->id;
 
-            if (!isset($groups[$groupKey])) {
+            if (! isset($groups[$groupKey])) {
                 $hasPaymentProof = false;
                 $paymentDetails = null;
 
-                if ($app->payment && (!empty($app->payment->receipt_url) || !empty($app->payment->reference_no))) {
+                if ($app->payment && (! empty($app->payment->receipt_url) || ! empty($app->payment->reference_no))) {
                     $hasPaymentProof = true;
                     $paymentDetails = [
                         'method' => strtoupper($app->payment->method ?: 'N/A'),
@@ -731,7 +734,7 @@ class EnrollmentReportController extends Controller
                     ];
                 }
 
-                $parentName = trim(($app->father_first_name ? $app->father_first_name . ' ' . $app->father_last_name : '') . ' / ' . ($app->mother_first_name ? $app->mother_first_name . ' ' . $app->mother_last_name : ''));
+                $parentName = trim(($app->father_first_name ? $app->father_first_name.' '.$app->father_last_name : '').' / '.($app->mother_first_name ? $app->mother_first_name.' '.$app->mother_last_name : ''));
                 $parentName = trim($parentName, ' /');
 
                 $groups[$groupKey] = [
@@ -748,7 +751,7 @@ class EnrollmentReportController extends Controller
 
             $groups[$groupKey]['students'][] = $studentInfo;
 
-            if ($app->payment && (!empty($app->payment->receipt_url) || !empty($app->payment->reference_no))) {
+            if ($app->payment && (! empty($app->payment->receipt_url) || ! empty($app->payment->reference_no))) {
                 $groups[$groupKey]['has_payment'] = true;
                 $groups[$groupKey]['payment'] = [
                     'method' => strtoupper($app->payment->method ?: 'N/A'),
@@ -764,7 +767,7 @@ class EnrollmentReportController extends Controller
         $approvedNoPayment = [];
 
         foreach ($groups as $groupKey => $group) {
-            usort($group['students'], function($a, $b) {
+            usort($group['students'], function ($a, $b) {
                 return $a['id'] <=> $b['id'];
             });
 
@@ -800,12 +803,12 @@ class EnrollmentReportController extends Controller
             ->where('status', 'approved');
 
         if ($request->filled('search')) {
-            $search = '%' . trim($request->search) . '%';
-            $query->where(function($q) use ($search) {
+            $search = '%'.trim($request->search).'%';
+            $query->where(function ($q) use ($search) {
                 $q->where('first_name', 'like', $search)
-                  ->orWhere('last_name', 'like', $search)
-                  ->orWhere('id', 'like', $search)
-                  ->orWhere('email', 'like', $search);
+                    ->orWhere('last_name', 'like', $search)
+                    ->orWhere('id', 'like', $search)
+                    ->orWhere('email', 'like', $search);
             });
         }
 
@@ -820,10 +823,10 @@ class EnrollmentReportController extends Controller
         $applicants = $query->get();
         $driveUploadService = app(GoogleDriveUploadService::class);
 
-        if (!$driveUploadService) {
+        if (! $driveUploadService) {
             return response()->json([
                 'success' => false,
-                'message' => 'Google Drive upload service could not be initialized.'
+                'message' => 'Google Drive upload service could not be initialized.',
             ]);
         }
 
@@ -837,14 +840,14 @@ class EnrollmentReportController extends Controller
                 $syncedCount++;
             } else {
                 $failedCount++;
-                $errors[] = $applicant->full_name . ': ' . $res['message'];
+                $errors[] = $applicant->full_name.': '.$res['message'];
             }
         }
 
         return response()->json([
             'success' => true,
-            'message' => "Successfully synced {$syncedCount} enrollees to Google Drive." . ($failedCount > 0 ? " Failed for {$failedCount} enrollees." : ""),
-            'errors' => $errors
+            'message' => "Successfully synced {$syncedCount} enrollees to Google Drive.".($failedCount > 0 ? " Failed for {$failedCount} enrollees." : ''),
+            'errors' => $errors,
         ]);
     }
 }

@@ -2,25 +2,26 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
+use App\Models\SoaMonthlyBilling;
 use App\Models\StudentAccount;
 use App\Models\StudentAccountPayment;
-use App\Models\SoaMonthlyBilling;
 use Carbon\Carbon;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Schema;
 
 class SoaMockPaymentSeeder extends Seeder
 {
     public function run()
     {
         // Disable foreign key constraints to safely truncate
-        \Illuminate\Support\Facades\Schema::disableForeignKeyConstraints();
+        Schema::disableForeignKeyConstraints();
         StudentAccountPayment::truncate();
-        \Illuminate\Support\Facades\Schema::enableForeignKeyConstraints();
+        Schema::enableForeignKeyConstraints();
 
         // Reset all monthly billings to unpaid
         SoaMonthlyBilling::query()->update([
             'status' => 'unpaid',
-            'paid_at' => null
+            'paid_at' => null,
         ]);
 
         // Reset all student account balances
@@ -64,16 +65,16 @@ class SoaMockPaymentSeeder extends Seeder
             if ($rand > 30 && $rand <= 80) {
                 // Tier 2: 50% Partially Paid (Randomly pay 1 to 6 months of installments)
                 $monthsPaidCount = rand(1, 6);
-                
+
                 // Let's create multiple monthly payments to simulate sequential payment history!
                 for ($i = 0; $i < $monthsPaidCount; $i++) {
                     $dueDate = $billings[$i]->due_date ?? Carbon::now()->subMonths($monthsPaidCount - $i);
                     $paidDate = Carbon::parse($dueDate)->subDays(rand(1, 5)); // paid a few days before due date
-                    
+
                     $paymentsToCreate[] = [
                         'amount' => $monthlyAmount,
                         'date' => $paidDate,
-                        'purpose' => 'Tuition Fee - ' . ($billings[$i]->month_name ?: 'Monthly Installment'),
+                        'purpose' => 'Tuition Fee - '.($billings[$i]->month_name ?: 'Monthly Installment'),
                     ];
                 }
             } else {
@@ -82,11 +83,11 @@ class SoaMockPaymentSeeder extends Seeder
                 foreach ($billings as $index => $billing) {
                     $dueDate = $billing->due_date ?? Carbon::now()->subMonths(count($billings) - $index);
                     $paidDate = Carbon::parse($dueDate)->subDays(rand(1, 5));
-                    
+
                     $paymentsToCreate[] = [
                         'amount' => (float) $billing->amount_due,
                         'date' => $paidDate,
-                        'purpose' => 'Tuition Fee - ' . ($billing->month_name ?: 'Monthly Installment'),
+                        'purpose' => 'Tuition Fee - '.($billing->month_name ?: 'Monthly Installment'),
                     ];
                 }
             }
@@ -95,13 +96,13 @@ class SoaMockPaymentSeeder extends Seeder
             foreach ($paymentsToCreate as $pData) {
                 $method = $methods[array_rand($methods)];
                 $checker = $checkers[array_rand($checkers)];
-                
+
                 StudentAccountPayment::create([
                     'student_account_id' => $account->id,
                     'student_id' => $account->student_id,
                     'method' => $method,
-                    'reference_no' => $method === 'cash' ? null : ('REF' . rand(10000000, 99999999)),
-                    'or_number' => '7010' . rand(1000, 9999),
+                    'reference_no' => $method === 'cash' ? null : ('REF'.rand(10000000, 99999999)),
+                    'or_number' => '7010'.rand(1000, 9999),
                     'amount' => $pData['amount'],
                     'remarks' => $pData['purpose'],
                     'status' => 'verified',

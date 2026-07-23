@@ -19,7 +19,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        if (!Schema::hasColumn('enrollment_applicants', 'affidavit_data')) {
+        if (! Schema::hasColumn('enrollment_applicants', 'affidavit_data')) {
             return;
         }
 

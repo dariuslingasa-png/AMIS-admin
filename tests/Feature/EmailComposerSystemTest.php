@@ -2,15 +2,12 @@
 
 namespace Tests\Feature;
 
-use App\Models\BulkEmailCampaign;
-use App\Models\EmailTemplate;
 use App\Models\Student;
 use App\Models\User;
 use App\Services\Email\EmailComposerService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
@@ -32,7 +29,7 @@ class EmailComposerSystemTest extends TestCase
     {
         parent::setUp();
 
-        if (!Schema::hasTable('email_templates')) {
+        if (! Schema::hasTable('email_templates')) {
             Schema::create('email_templates', function ($table) {
                 $table->id();
                 $table->string('name');
@@ -44,7 +41,7 @@ class EmailComposerSystemTest extends TestCase
             });
         }
 
-        if (!Schema::hasTable('bulk_email_campaigns')) {
+        if (! Schema::hasTable('bulk_email_campaigns')) {
             Schema::create('bulk_email_campaigns', function ($table) {
                 $table->id();
                 $table->string('title');
@@ -67,7 +64,7 @@ class EmailComposerSystemTest extends TestCase
             });
         }
 
-        if (!Schema::hasTable('email_logs')) {
+        if (! Schema::hasTable('email_logs')) {
             Schema::create('email_logs', function ($table) {
                 $table->id();
                 $table->string('mailer')->nullable();
@@ -102,7 +99,7 @@ class EmailComposerSystemTest extends TestCase
             'grade_level' => 'Grade 10',
         ]);
 
-        $service = new EmailComposerService();
+        $service = new EmailComposerService;
         $recipients = $service->resolveRecipients('students', 'Grade 10');
 
         $this->assertCount(1, $recipients);
@@ -115,7 +112,7 @@ class EmailComposerSystemTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
 
         $fakeExe = UploadedFile::fake()->create('malicious.exe', 100);
-        $service = new EmailComposerService();
+        $service = new EmailComposerService;
         $service->validateAttachments([$fakeExe]);
     }
 

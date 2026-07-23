@@ -17,7 +17,7 @@ class GoogleDriveUploadService
 
     public function uploadApplicantFiles(EnrollmentApplicant $applicant): array
     {
-        if (!$this->driveService->isConfigured()) {
+        if (! $this->driveService->isConfigured()) {
             return ['success' => false, 'message' => 'Google Drive is not configured in .env'];
         }
 
@@ -28,13 +28,13 @@ class GoogleDriveUploadService
 
             // 2. Resolve Student Folder (e.g. "SOFIA ALIM HUSNAIN")
             $studentName = trim(html_entity_decode(
-                ($applicant->first_name ?? '') . ' ' . 
-                ($applicant->middle_name ?? '') . ' ' . 
-                ($applicant->last_name ?? ''), 
-                ENT_QUOTES, 
+                ($applicant->first_name ?? '').' '.
+                ($applicant->middle_name ?? '').' '.
+                ($applicant->last_name ?? ''),
+                ENT_QUOTES,
                 'UTF-8'
             ));
-            $studentName = strtoupper($studentName) ?: 'STUDENT_' . $applicant->id;
+            $studentName = strtoupper($studentName) ?: 'STUDENT_'.$applicant->id;
             $studentFolderId = $this->driveService->findOrCreateFolder($studentName, $gradeFolderId);
 
             $uploadedFiles = [];
@@ -44,8 +44,8 @@ class GoogleDriveUploadService
                 $receiptPath = EnrollmentStorage::getAbsolutePath($applicant->payment->receipt_url);
                 if ($receiptPath && file_exists($receiptPath)) {
                     $ext = pathinfo($receiptPath, PATHINFO_EXTENSION);
-                    $filename = 'Proof_of_Payment_' . $applicant->id . '.' . $ext;
-                    
+                    $filename = 'Proof_of_Payment_'.$applicant->id.'.'.$ext;
+
                     $ok = $this->driveService->uploadFileToFolder($receiptPath, $filename, $studentFolderId);
                     if ($ok) {
                         $uploadedFiles[] = $filename;
@@ -68,8 +68,8 @@ class GoogleDriveUploadService
                     $docPath = EnrollmentStorage::getAbsolutePath($applicant->$field);
                     if ($docPath && file_exists($docPath)) {
                         $ext = pathinfo($docPath, PATHINFO_EXTENSION);
-                        $filename = $label . '_' . $applicant->id . '.' . $ext;
-                        
+                        $filename = $label.'_'.$applicant->id.'.'.$ext;
+
                         $ok = $this->driveService->uploadFileToFolder($docPath, $filename, $studentFolderId);
                         if ($ok) {
                             $uploadedFiles[] = $filename;
@@ -81,14 +81,15 @@ class GoogleDriveUploadService
             return [
                 'success' => true,
                 'files' => $uploadedFiles,
-                'student_folder_id' => $studentFolderId
+                'student_folder_id' => $studentFolderId,
             ];
 
         } catch (\Exception $e) {
-            Log::error('Google Drive Upload Service Failed for applicant #' . $applicant->id . ': ' . $e->getMessage());
+            Log::error('Google Drive Upload Service Failed for applicant #'.$applicant->id.': '.$e->getMessage());
+
             return [
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ];
         }
     }

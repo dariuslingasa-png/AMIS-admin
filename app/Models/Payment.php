@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Payment extends Model
 {
@@ -23,9 +24,9 @@ class Payment extends Model
     ];
 
     protected $casts = [
-        'paid_at'     => 'datetime',
+        'paid_at' => 'datetime',
         'verified_at' => 'datetime',
-        'amount'      => 'decimal:2',
+        'amount' => 'decimal:2',
     ];
 
     public function user(): BelongsTo
@@ -43,16 +44,16 @@ class Payment extends Model
         return $this->belongsTo(Invoice::class, 'invoice_id');
     }
 
-    public function advancePayment(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function advancePayment(): HasOne
     {
         return $this->hasOne(AdvancePayment::class, 'source_payment_id');
     }
 
     public function getMethodLabelAttribute(): string
     {
-        return match($this->method) {
+        return match ($this->method) {
             'gcash' => 'GCash',
-            'bdo'   => 'BDO Bank Transfer',
+            'bdo' => 'BDO Bank Transfer',
             default => ucfirst($this->method),
         };
     }
@@ -68,6 +69,7 @@ class Payment extends Model
                 return $decoded[0];
             }
         }
+
         return $value;
     }
 
@@ -83,6 +85,7 @@ class Payment extends Model
                 return $decoded;
             }
         }
+
         return [$value];
     }
 }

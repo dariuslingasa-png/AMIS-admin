@@ -40,7 +40,8 @@ class SmartSmtpRotatorService
      */
     public function getDailyCount(string $mailer): int
     {
-        $key = 'smtp_daily_count_' . $mailer . '_' . date('Y-m-d');
+        $key = 'smtp_daily_count_'.$mailer.'_'.date('Y-m-d');
+
         return (int) Cache::get($key, 0);
     }
 
@@ -49,7 +50,7 @@ class SmartSmtpRotatorService
      */
     public function incrementDailyCount(string $mailer): void
     {
-        $key = 'smtp_daily_count_' . $mailer . '_' . date('Y-m-d');
+        $key = 'smtp_daily_count_'.$mailer.'_'.date('Y-m-d');
         $count = (int) Cache::get($key, 0);
         Cache::put($key, $count + 1, now()->endOfDay());
     }
@@ -68,6 +69,7 @@ class SmartSmtpRotatorService
             // Skip mailers that reached daily quota
             if ($count >= $this->dailyLimit) {
                 Log::warning("SmartSmtpRotator: Mailer '{$mailer}' reached daily limit of {$this->dailyLimit} sends. Auto-switching to next SMTP.");
+
                 continue;
             }
 
@@ -75,7 +77,8 @@ class SmartSmtpRotatorService
                 Mail::mailer($mailer)->to($to)->send($mailable);
                 $this->incrementDailyCount($mailer);
 
-                Log::info("SmartSmtpRotator: Email sent successfully via mailer '{$mailer}' (Daily count: " . ($count + 1) . ")");
+                Log::info("SmartSmtpRotator: Email sent successfully via mailer '{$mailer}' (Daily count: ".($count + 1).')');
+
                 return [
                     'success' => true,
                     'mailer_used' => $mailer,
@@ -84,7 +87,7 @@ class SmartSmtpRotatorService
                 ];
             } catch (\Throwable $e) {
                 $lastException = $e;
-                Log::error("SmartSmtpRotator: Mailer '{$mailer}' failed: " . $e->getMessage() . ". Switching to backup SMTP...");
+                Log::error("SmartSmtpRotator: Mailer '{$mailer}' failed: ".$e->getMessage().'. Switching to backup SMTP...');
             }
         }
 
@@ -110,7 +113,7 @@ class SmartSmtpRotatorService
             $count = $this->getDailyCount($mailer);
             $isLimitReached = $count >= $this->dailyLimit;
 
-            if (!$activeMailer && !$isLimitReached) {
+            if (! $activeMailer && ! $isLimitReached) {
                 $activeMailer = $mailer;
             }
 

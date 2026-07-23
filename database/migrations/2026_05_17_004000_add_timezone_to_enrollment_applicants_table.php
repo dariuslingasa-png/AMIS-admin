@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('enrollment_applicants', function (Blueprint $table) {
-            if (!Schema::hasColumn('enrollment_applicants', 'timezone')) {
+            if (! Schema::hasColumn('enrollment_applicants', 'timezone')) {
                 $table->string('timezone', 64)->nullable()->after('learning_mode');
             }
         });

@@ -14,6 +14,7 @@ use App\Models\StudentAccountPayment;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
@@ -235,6 +236,7 @@ class AdminPaymentController extends Controller
                 'total' => $families->count(),
                 'is_paginated' => false,
             ];
+
             return view('admin.payments.print-report', [
                 'families' => $families,
                 'pageInfo' => $pageInfo,
@@ -242,15 +244,15 @@ class AdminPaymentController extends Controller
         }
 
         $perPage = 20;
-        $page = \Illuminate\Pagination\LengthAwarePaginator::resolveCurrentPage();
+        $page = LengthAwarePaginator::resolveCurrentPage();
 
-        $paginatedFamilies = new \Illuminate\Pagination\LengthAwarePaginator(
+        $paginatedFamilies = new LengthAwarePaginator(
             $families->forPage($page, $perPage)->values(),
             $families->count(),
             $perPage,
             $page,
             [
-                'path' => \Illuminate\Pagination\LengthAwarePaginator::resolveCurrentPath(),
+                'path' => LengthAwarePaginator::resolveCurrentPath(),
                 'query' => $request->query(),
             ]
         );
@@ -283,14 +285,15 @@ class AdminPaymentController extends Controller
         set_time_limit(300);
 
         try {
-            \Illuminate\Support\Facades\Artisan::call('finance:send-reports', [
+            Artisan::call('finance:send-reports', [
                 'email' => $email,
             ]);
 
-            return back()->with('success', 'All finance reports have been generated and sent to ' . $email . ' successfully!');
+            return back()->with('success', 'All finance reports have been generated and sent to '.$email.' successfully!');
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error("Failed to generate/email finance reports: " . $e->getMessage());
-            return back()->with('error', 'Failed to send reports: ' . $e->getMessage());
+            Log::error('Failed to generate/email finance reports: '.$e->getMessage());
+
+            return back()->with('error', 'Failed to send reports: '.$e->getMessage());
         }
     }
 
@@ -601,7 +604,7 @@ class AdminPaymentController extends Controller
     {
         abort_unless(
             auth()->user() && (
-                auth()->user()->canReviewEnrollmentPayments() || 
+                auth()->user()->canReviewEnrollmentPayments() ||
                 auth()->user()->hasAdminPortalAccess()
             ),
             403

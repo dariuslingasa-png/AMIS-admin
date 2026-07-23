@@ -5,8 +5,8 @@ namespace App\Console\Commands;
 use App\Models\Student;
 use App\Services\MicrosoftGraphService;
 use Illuminate\Console\Command;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class RegenerateHashedPasswords extends Command
 {
@@ -27,6 +27,7 @@ class RegenerateHashedPasswords extends Command
 
         if ($students->isEmpty()) {
             $this->info('No students with hashed/lost temporary passwords found.');
+
             return 0;
         }
 
@@ -34,14 +35,14 @@ class RegenerateHashedPasswords extends Command
 
         $run = $this->option('run');
 
-        if (!$run) {
+        if (! $run) {
             $this->warn('DRY RUN: No database or Microsoft changes will be made. Run with --run to apply changes.');
         }
 
         $headers = ['Student #', 'Name', 'School Email', 'New Temp Pass', 'Microsoft Sync'];
         $rows = [];
 
-        $graph = new MicrosoftGraphService();
+        $graph = new MicrosoftGraphService;
         $total = $students->count();
 
         foreach ($students as $index => $student) {
@@ -52,7 +53,7 @@ class RegenerateHashedPasswords extends Command
             $this->info("[{$currentNum}/{$total}] Processing: {$student->school_email}...");
 
             // Generate new temp password in the exact AMIS format: Amis@XXXXXxx
-            $newTempPass = 'Amis@' . strtoupper(Str::random(5)) . rand(10, 99);
+            $newTempPass = 'Amis@'.strtoupper(Str::random(5)).rand(10, 99);
 
             $syncStatus = 'Pending';
 
@@ -65,8 +66,8 @@ class RegenerateHashedPasswords extends Command
                         $syncStatus = 'NO EMAIL';
                     }
                 } catch (\Throwable $e) {
-                    $syncStatus = 'FAILED: ' . $e->getMessage();
-                    Log::error("Failed to sync regenerated password for {$student->school_email}: " . $e->getMessage());
+                    $syncStatus = 'FAILED: '.$e->getMessage();
+                    Log::error("Failed to sync regenerated password for {$student->school_email}: ".$e->getMessage());
                 }
 
                 // Update database
@@ -84,7 +85,7 @@ class RegenerateHashedPasswords extends Command
                 $fullName,
                 $student->school_email,
                 $newTempPass,
-                $syncStatus
+                $syncStatus,
             ];
         }
 

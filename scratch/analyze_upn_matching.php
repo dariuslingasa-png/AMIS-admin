@@ -1,10 +1,15 @@
 <?php
-require __DIR__ . '/../vendor/autoload.php';
-$app = require_once __DIR__ . '/../bootstrap/app.php';
-$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+
+use App\Models\Student;
+use App\Services\MicrosoftGraphService;
+use Illuminate\Contracts\Console\Kernel;
+
+require __DIR__.'/../vendor/autoload.php';
+$app = require_once __DIR__.'/../bootstrap/app.php';
+$kernel = $app->make(Kernel::class);
 $kernel->bootstrap();
 
-$graph = new \App\Services\MicrosoftGraphService();
+$graph = new MicrosoftGraphService;
 $azureUsers = $graph->listTenantStudents();
 
 $prefixCounts = [];
@@ -16,19 +21,19 @@ foreach ($azureUsers as $u) {
     }
 }
 
-echo "Total UPNs with digit prefix: " . count($prefixCounts) . "\n";
+echo 'Total UPNs with digit prefix: '.count($prefixCounts)."\n";
 echo "Prefixes with multiple UPNs (duplicates/shares):\n";
 $multiCount = 0;
 foreach ($prefixCounts as $pref => $upns) {
     if (count($upns) > 1) {
         $multiCount++;
-        echo "  Prefix {$pref}: " . implode(', ', $upns) . "\n";
+        echo "  Prefix {$pref}: ".implode(', ', $upns)."\n";
     }
 }
 echo "Total prefixes with multiple UPNs: {$multiCount}\n";
 
 // Check match with students in DB
-$dbStudentNumbers = \App\Models\Student::pluck('student_number')->toArray();
+$dbStudentNumbers = Student::pluck('student_number')->toArray();
 $matched = 0;
 $notInDb = [];
 foreach ($prefixCounts as $pref => $upns) {
@@ -38,5 +43,5 @@ foreach ($prefixCounts as $pref => $upns) {
         $notInDb[] = $pref;
     }
 }
-echo "Matched with DB student numbers: {$matched} / " . count($dbStudentNumbers) . "\n";
-echo "Prefixes not in DB (first 10): " . implode(', ', array_slice($notInDb, 0, 10)) . "\n";
+echo "Matched with DB student numbers: {$matched} / ".count($dbStudentNumbers)."\n";
+echo 'Prefixes not in DB (first 10): '.implode(', ', array_slice($notInDb, 0, 10))."\n";

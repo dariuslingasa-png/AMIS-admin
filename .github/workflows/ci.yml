@@ -1,0 +1,70 @@
+name: AMIS Enterprise CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, final-school-website ]
+  pull_request:
+    branches: [ main, final-school-website ]
+
+jobs:
+  code-quality-and-tests:
+    name: Code Quality, Static Analysis & Unit Tests
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: secret_root_pass
+          MYSQL_DATABASE: amis_test
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP Environment
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, pdo_mysql, gd, redis, zip, bcmath, intl
+          coverage: none
+
+      - name: Get Composer Cache Directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache Composer Dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install Composer Dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Check Code Formatting (Laravel Pint)
+        run: vendor/bin/pint --test
+
+      - name: Run Static Analysis (PHPStan)
+        run: vendor/bin/phpstan analyse --memory-limit=1G
+
+      - name: Run Test Suite (PHPUnit)
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: amis_test
+          DB_USERNAME: root
+          DB_PASSWORD: secret_root_pass
+          CACHE_STORE: redis
+          QUEUE_CONNECTION: redis
+        run: php vendor/bin/phpunit

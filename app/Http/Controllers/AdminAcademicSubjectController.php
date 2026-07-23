@@ -9,9 +9,7 @@ use Illuminate\Support\Facades\Gate;
 
 class AdminAcademicSubjectController extends Controller
 {
-    public function __construct(private readonly SubjectCatalogService $subjects)
-    {
-    }
+    public function __construct(private readonly SubjectCatalogService $subjects) {}
 
     public function store(SubjectRequest $request)
     {

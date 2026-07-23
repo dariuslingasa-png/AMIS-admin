@@ -12,7 +12,7 @@ class SchoolYearService
     public function create(array $data): SchoolYear
     {
         return DB::transaction(function () use ($data) {
-            if (!empty($data['is_active'])) {
+            if (! empty($data['is_active'])) {
                 SchoolYear::query()->update(['is_active' => false]);
             }
 
@@ -27,7 +27,7 @@ class SchoolYearService
     public function update(SchoolYear $schoolYear, array $data): SchoolYear
     {
         return DB::transaction(function () use ($schoolYear, $data) {
-            if (!empty($data['is_active'])) {
+            if (! empty($data['is_active'])) {
                 SchoolYear::query()->where('id', '!=', $schoolYear->id)->update(['is_active' => false]);
             }
 

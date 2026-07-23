@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AdminAuditLog;
 use App\Models\Student;
 use App\Services\MicrosoftGraphService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Str;
 
 class AdminStudentAccountController extends Controller
 {
@@ -32,12 +32,12 @@ class AdminStudentAccountController extends Controller
         if ($isReset) {
             $msError = null;
             try {
-                $graph = new MicrosoftGraphService();
+                $graph = new MicrosoftGraphService;
                 $token = (new \ReflectionMethod($graph, 'getAccessToken'))->invoke($graph);
                 $response = Http::withToken($token)
                     ->patch("https://graph.microsoft.com/v1.0/users/{$student->school_email}", [
                         'passwordProfile' => [
-                            'password'                      => $tempPassword,
+                            'password' => $tempPassword,
                             'forceChangePasswordNextSignIn' => false,
                         ],
                     ]);
@@ -47,23 +47,23 @@ class AdminStudentAccountController extends Controller
                 } else {
                     // Update database only if Microsoft Graph succeeds!
                     $student->update([
-                        'temp_password'       => $tempPassword,
+                        'temp_password' => $tempPassword,
                         'password_changed_at' => null,
                         'credentials_sent_at' => now(),
                     ]);
 
-                    \App\Models\AdminAuditLog::record('password_reset_resend', true, "Manually reset Microsoft password for {$student->school_email} using {$resetFormat} format", [
+                    AdminAuditLog::record('password_reset_resend', true, "Manually reset Microsoft password for {$student->school_email} using {$resetFormat} format", [
                         'email' => $student->school_email,
                         'reset_format' => $resetFormat,
                     ]);
                 }
             } catch (\Exception $e) {
                 $msError = $e->getMessage();
-                Log::error('Failed to reset Microsoft password during manual admin reset: ' . $msError);
+                Log::error('Failed to reset Microsoft password during manual admin reset: '.$msError);
             }
 
             if ($msError) {
-                return back()->withErrors(['error' => 'Failed to reset password on Microsoft Office 365: ' . $msError . '. Local database and email were not changed.']);
+                return back()->withErrors(['error' => 'Failed to reset password on Microsoft Office 365: '.$msError.'. Local database and email were not changed.']);
             }
 
             // Do not send credentials email automatically on manual reset
@@ -72,11 +72,11 @@ class AdminStudentAccountController extends Controller
             //     $this->sendCredentialsEmail($applicant, $student, $tempPassword);
             // }
 
-            return back()->with('success', 'Password successfully reset to ' . $tempPassword . ' on Microsoft Office 365.');
+            return back()->with('success', 'Password successfully reset to '.$tempPassword.' on Microsoft Office 365.');
         }
 
         $isHashed = str_starts_with($tempPassword ?? '', '$');
-        
+
         if (blank($tempPassword) || $isHashed) {
             $tempPassword = '(Already changed / set by student)';
         }
@@ -90,7 +90,7 @@ class AdminStudentAccountController extends Controller
             $this->sendCredentialsEmail($applicant, $student, $tempPassword);
         }
 
-        return back()->with('success', 'Credentials resent to ' . ($parentEmail ?? 'parent') . '.');
+        return back()->with('success', 'Credentials resent to '.($parentEmail ?? 'parent').'.');
     }
 
     private function sendCredentialsEmail($applicant, Student $student, string $tempPassword): void
@@ -100,17 +100,17 @@ class AdminStudentAccountController extends Controller
         $html = '<!DOCTYPE html><html><body style="font-family:Inter,Arial,sans-serif;background:#f3f4f6;padding:40px 20px;">
         <table width="520" style="background:white;border-radius:16px;overflow:hidden;margin:0 auto;box-shadow:0 4px 12px rgba(0,0,0,0.08);">
         <tr><td style="background:linear-gradient(135deg,#059669,#047857);padding:28px;text-align:center;">
-            <img src="' . asset('images/AMIS_Logo.png') . '" width="56" height="56" style="margin-bottom:10px;">
+            <img src="'.asset('images/AMIS_Logo.png').'" width="56" height="56" style="margin-bottom:10px;">
             <h2 style="color:white;margin:0;font-size:18px;">Student Credentials</h2>
-            <p style="color:rgba(255,255,255,0.85);font-size:13px;margin:4px 0 0;">Al Munawwara Islamic School — SY ' . $student->school_year . '</p>
+            <p style="color:rgba(255,255,255,0.85);font-size:13px;margin:4px 0 0;">Al Munawwara Islamic School — SY '.$student->school_year.'</p>
         </td></tr>
         <tr><td style="padding:28px 36px;">
-            <p style="color:#374151;font-size:14px;margin:0 0 20px;">Here are the updated credentials for <strong>' . $applicant->first_name . ' ' . $applicant->last_name . '</strong>:</p>
+            <p style="color:#374151;font-size:14px;margin:0 0 20px;">Here are the updated credentials for <strong>'.$applicant->first_name.' '.$applicant->last_name.'</strong>:</p>
             <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:18px;margin-bottom:20px;">
                 <table width="100%">
-                    <tr><td style="font-size:13px;color:#6b7280;padding:5px 0;width:140px;">Student Number</td><td style="font-size:15px;font-weight:800;color:#059669;">' . $student->student_number . '</td></tr>
-                    <tr><td style="font-size:13px;color:#6b7280;padding:5px 0;">School Email</td><td style="font-size:14px;font-weight:600;color:#111827;">' . $student->school_email . '</td></tr>
-                    <tr><td style="font-size:13px;color:#6b7280;padding:5px 0;">Password</td><td style="font-size:14px;font-weight:600;color:#111827;letter-spacing:0.05em;">' . $tempPassword . '</td></tr>
+                    <tr><td style="font-size:13px;color:#6b7280;padding:5px 0;width:140px;">Student Number</td><td style="font-size:15px;font-weight:800;color:#059669;">'.$student->student_number.'</td></tr>
+                    <tr><td style="font-size:13px;color:#6b7280;padding:5px 0;">School Email</td><td style="font-size:14px;font-weight:600;color:#111827;">'.$student->school_email.'</td></tr>
+                    <tr><td style="font-size:13px;color:#6b7280;padding:5px 0;">Password</td><td style="font-size:14px;font-weight:600;color:#111827;letter-spacing:0.05em;">'.$tempPassword.'</td></tr>
                 </table>
             </div>
             <p style="color:#6b7280;font-size:13px;">Login at <a href="https://portal.office.com" style="color:#059669;">portal.office.com</a> and change your password on first login.</p>
@@ -118,9 +118,9 @@ class AdminStudentAccountController extends Controller
         </table></body></html>';
 
         try {
-            Mail::html($html, fn($m) => $m->to($parentEmail)->subject('AMIS — Student Credentials'));
+            Mail::html($html, fn ($m) => $m->to($parentEmail)->subject('AMIS — Student Credentials'));
         } catch (\Exception $e) {
-            Log::error('Failed to resend credentials: ' . $e->getMessage());
+            Log::error('Failed to resend credentials: '.$e->getMessage());
         }
     }
 
@@ -133,7 +133,7 @@ class AdminStudentAccountController extends Controller
         $status = $data['status'];
         $user = $student->user;
 
-        if (!$user) {
+        if (! $user) {
             return back()->withErrors(['error' => 'Student user record not found.']);
         }
 
@@ -141,7 +141,7 @@ class AdminStudentAccountController extends Controller
             'account_status' => $status,
         ]);
 
-        $graph = new MicrosoftGraphService();
+        $graph = new MicrosoftGraphService;
         $email = $student->school_email;
         $studentSkuId = config('services.microsoft.student_sku_id');
         $msError = null;
@@ -155,7 +155,7 @@ class AdminStudentAccountController extends Controller
 
                     if ($studentSkuId) {
                         $graph->assignLicense($msUserId, [$studentSkuId], []);
-                        \App\Models\AdminAuditLog::record('license_assigned', true, "Assigned student license to student {$email} via status change to verified", [
+                        AdminAuditLog::record('license_assigned', true, "Assigned student license to student {$email} via status change to verified", [
                             'email' => $email,
                             'sku_id' => $studentSkuId,
                             'ms_user_id' => $msUserId,
@@ -167,7 +167,7 @@ class AdminStudentAccountController extends Controller
                     if ($studentSkuId) {
                         try {
                             $graph->assignLicense($msUserId, [], [$studentSkuId]);
-                            \App\Models\AdminAuditLog::record('license_revoked', true, "Revoked student license from student {$email} via status change to {$status}", [
+                            AdminAuditLog::record('license_revoked', true, "Revoked student license from student {$email} via status change to {$status}", [
                                 'email' => $email,
                                 'sku_id' => $studentSkuId,
                                 'ms_user_id' => $msUserId,
@@ -199,8 +199,8 @@ class AdminStudentAccountController extends Controller
                 'required',
                 'email',
                 'regex:/^[a-zA-Z0-9._%+-]+@amis\.edu\.ph$/i',
-                'unique:students,school_email,' . $student->id,
-                'unique:users,email,' . ($student->user_id ?? 'NULL'),
+                'unique:students,school_email,'.$student->id,
+                'unique:users,email,'.($student->user_id ?? 'NULL'),
             ],
         ], [
             'email.regex' => 'The email must be a valid @amis.edu.ph address.',
@@ -211,7 +211,7 @@ class AdminStudentAccountController extends Controller
         $newEmail = strtolower(trim($request->email));
 
         if ($oldEmail === $newEmail) {
-            return back()->with('success', 'Email is already set to ' . $newEmail);
+            return back()->with('success', 'Email is already set to '.$newEmail);
         }
 
         $student->update([
@@ -227,11 +227,11 @@ class AdminStudentAccountController extends Controller
         $msError = null;
 
         try {
-            $graph = new MicrosoftGraphService();
+            $graph = new MicrosoftGraphService;
             if ($student->ms_user_id || $graph->userExists($oldEmail)) {
                 $msUserId = $student->ms_user_id ?: $graph->resolveUserId($oldEmail);
                 $token = (new \ReflectionMethod($graph, 'getAccessToken'))->invoke($graph);
-                
+
                 $mailNickname = strstr($newEmail, '@', true);
 
                 $response = Http::withToken($token)
@@ -244,10 +244,10 @@ class AdminStudentAccountController extends Controller
                 if ($response->failed()) {
                     $msError = $response->json()['error']['message'] ?? 'Microsoft API returned an error.';
                 } else {
-                    if (!$student->ms_user_id) {
+                    if (! $student->ms_user_id) {
                         $student->update(['ms_user_id' => $msUserId]);
                     }
-                    \App\Models\AdminAuditLog::record('email_renamed', true, "Renamed student Microsoft account from {$oldEmail} to {$newEmail}", [
+                    AdminAuditLog::record('email_renamed', true, "Renamed student Microsoft account from {$oldEmail} to {$newEmail}", [
                         'old_email' => $oldEmail,
                         'new_email' => $newEmail,
                         'ms_user_id' => $msUserId,
@@ -256,7 +256,7 @@ class AdminStudentAccountController extends Controller
             }
         } catch (\Throwable $e) {
             $msError = $e->getMessage();
-            Log::error("Failed to update student Microsoft email from {$oldEmail} to {$newEmail}: " . $msError);
+            Log::error("Failed to update student Microsoft email from {$oldEmail} to {$newEmail}: ".$msError);
         }
 
         if ($msError) {

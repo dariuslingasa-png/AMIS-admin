@@ -41,7 +41,7 @@ class Subject extends Model
     public function students()
     {
         return $this->belongsToMany(Student::class, 'student_subjects')
-                    ->withPivot('school_year')
-                    ->withTimestamps();
+            ->withPivot('school_year')
+            ->withTimestamps();
     }
 }

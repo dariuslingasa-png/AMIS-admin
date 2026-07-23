@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Academic\ClassAdvisoryAssignmentRequest;
 use App\Http\Requests\Academic\SubjectRequest;
+use App\Models\Section;
+use App\Models\SectionSubject;
 use App\Models\Subject;
 use App\Repositories\AcademicRepository;
-use App\Services\Admin\Academic\ClassAdvisoryAssignmentService;
 use App\Services\Admin\Academic\AcademicPageService;
+use App\Services\Admin\Academic\ClassAdvisoryAssignmentService;
 use App\Services\Admin\Academic\SubjectCatalogService;
 use App\Services\Admin\Academic\TeacherDirectoryService;
 use Illuminate\Support\Facades\Gate;
@@ -20,8 +22,7 @@ class AdminAcademicController extends Controller
         private readonly SubjectCatalogService $subjects,
         private readonly ClassAdvisoryAssignmentService $advisories,
         private readonly TeacherDirectoryService $teachers
-    ) {
-    }
+    ) {}
 
     public function dashboard()
     {
@@ -102,27 +103,27 @@ class AdminAcademicController extends Controller
     {
         Gate::authorize('manage-academic');
 
-        $schedules = \App\Models\SectionSubject::with('section')->get();
+        $schedules = SectionSubject::with('section')->get();
 
         $teachers = $schedules->pluck('teacher_name')
-            ->filter(fn($name) => !empty($name) && strtolower($name) !== 'teacher pending')
-            ->map(fn($n) => strtoupper(trim($n)))
+            ->filter(fn ($name) => ! empty($name) && strtolower($name) !== 'teacher pending')
+            ->map(fn ($n) => strtoupper(trim($n)))
             ->unique()
             ->sort()
             ->values();
 
-        $sections = \App\Models\Section::orderBy('grade_level')->get()->map(function($s) {
+        $sections = Section::orderBy('grade_level')->get()->map(function ($s) {
             return [
                 'id' => $s->id,
                 'name' => strtoupper($s->official_name ?: $s->name ?: 'General'),
                 'grade_level' => $s->grade_level,
-                'display_name' => strtoupper($s->grade_level . ' - ' . ($s->official_name ?: $s->name ?: 'General')),
+                'display_name' => strtoupper($s->grade_level.' - '.($s->official_name ?: $s->name ?: 'General')),
             ];
         });
 
         $subjects = $schedules->pluck('subject_name')
             ->filter()
-            ->map(fn($n) => strtoupper(trim($n)))
+            ->map(fn ($n) => strtoupper(trim($n)))
             ->unique()
             ->sort()
             ->values();

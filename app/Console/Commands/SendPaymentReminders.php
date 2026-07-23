@@ -2,10 +2,10 @@
 
 namespace App\Console\Commands;
 
+use App\Mail\PaymentReminderMail;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
-use App\Mail\PaymentReminderMail;
 
 class SendPaymentReminders extends Command
 {
@@ -41,25 +41,26 @@ class SendPaymentReminders extends Command
         $totalStudents = count($studentEmails);
         $totalRecipients = count($allEmails);
 
-        $this->info("==================================================");
-        $this->info("      AL MUNAWWARA MONTHLY PAYMENT REMINDER      ");
-        $this->info("==================================================");
-        $this->info("Active Student Records Filter Applied:");
+        $this->info('==================================================');
+        $this->info('      AL MUNAWWARA MONTHLY PAYMENT REMINDER      ');
+        $this->info('==================================================');
+        $this->info('Active Student Records Filter Applied:');
         $this->info("  - Unique Parent Emails: {$totalParents}");
         $this->info("  - Unique Student Emails: {$totalStudents}");
         $this->info("  - Total Unique Recipients: {$totalRecipients}");
-        $this->info("==================================================");
+        $this->info('==================================================');
 
         // 3. Handle Preview Mode
         $previewAddress = $this->option('preview');
         if ($previewAddress) {
             $this->info("Sending test/preview email to: {$previewAddress}...");
             try {
-                Mail::to($previewAddress)->send(new PaymentReminderMail());
+                Mail::to($previewAddress)->send(new PaymentReminderMail);
                 $this->info("SUCCESS: Test email successfully sent to {$previewAddress}!");
             } catch (\Exception $e) {
-                $this->error("ERROR sending preview email: " . $e->getMessage());
+                $this->error('ERROR sending preview email: '.$e->getMessage());
             }
+
             return Command::SUCCESS;
         }
 
@@ -67,18 +68,19 @@ class SendPaymentReminders extends Command
         $actuallySend = $this->option('send');
         if ($actuallySend) {
             $this->error("Bulk payment reminders via SMTP have been disabled to prevent exceeding the server's hourly sending limits (max 500/hour).");
-            $this->info("Please use the single-student payment reminder feature on the aging report page instead.");
+            $this->info('Please use the single-student payment reminder feature on the aging report page instead.');
+
             return Command::FAILURE;
         }
 
         // 5. Default: Dry Run Mode
         $this->warn("\n*** CURRENTLY IN DRY-RUN / PREVIEW MODE ***");
-        $this->info("No emails were dispatched to parents/students (wag muna send).");
-        $this->info("To send a test copy to yourself/finance to see how it looks, run:");
-        $this->comment("  php artisan email:send-payment-reminder --preview=your-email@example.com");
+        $this->info('No emails were dispatched to parents/students (wag muna send).');
+        $this->info('To send a test copy to yourself/finance to see how it looks, run:');
+        $this->comment('  php artisan email:send-payment-reminder --preview=your-email@example.com');
         $this->info("\nTo dispatch this reminder to all {$totalRecipients} recipients, run:");
-        $this->comment("  php artisan email:send-payment-reminder --send");
-        $this->info("==================================================");
+        $this->comment('  php artisan email:send-payment-reminder --send');
+        $this->info('==================================================');
 
         return Command::SUCCESS;
     }

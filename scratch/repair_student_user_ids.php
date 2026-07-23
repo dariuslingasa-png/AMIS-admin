@@ -1,6 +1,7 @@
 <?php
-require __DIR__ . '/../vendor/autoload.php';
-$app = require __DIR__ . '/../bootstrap/app.php';
+
+require __DIR__.'/../vendor/autoload.php';
+$app = require __DIR__.'/../bootstrap/app.php';
 $app->make('Illuminate\Contracts\Console\Kernel')->bootstrap();
 
 use App\Models\Student;
@@ -14,11 +15,12 @@ while (ob_get_level() > 0) {
 }
 ob_implicit_flush(true);
 
-function log_msg($msg) {
-    echo "[" . date('Y-m-d H:i:s') . "] " . $msg . "\n";
+function log_msg($msg)
+{
+    echo '['.date('Y-m-d H:i:s').'] '.$msg."\n";
 }
 
-log_msg("Starting repair...");
+log_msg('Starting repair...');
 
 try {
     $studentsCount = Student::count();
@@ -31,32 +33,32 @@ try {
         foreach ($students as $student) {
             try {
                 $email = $student->school_email;
-                if (!$email) {
+                if (! $email) {
                     continue;
                 }
 
                 // 1. Find or create the student's unique User record
                 $studentUser = User::where('email', $email)->first();
-                if (!$studentUser) {
+                if (! $studentUser) {
                     $prefix = explode('@', $email)[0];
                     $username = $prefix;
                     if (User::where('username', $username)->exists()) {
-                        $username = $prefix . '_' . $student->student_number;
+                        $username = $prefix.'_'.$student->student_number;
                     }
 
                     $name = $student->student_number;
                     $applicant = $student->applicant;
                     if ($applicant) {
-                        $name = trim(($applicant->first_name ?? '') . ' ' . ($applicant->last_name ?? ''));
+                        $name = trim(($applicant->first_name ?? '').' '.($applicant->last_name ?? ''));
                     }
 
                     $studentUser = User::create([
-                        'name'              => $name ?: $prefix,
-                        'email'             => $email,
-                        'username'          => $username,
-                        'password'          => Hash::make(Str::random(32)),
-                        'role'              => 'student',
-                        'account_status'    => 'verified',
+                        'name' => $name ?: $prefix,
+                        'email' => $email,
+                        'username' => $username,
+                        'password' => Hash::make(Str::random(32)),
+                        'role' => 'student',
+                        'account_status' => 'verified',
                         'email_verified_at' => now(),
                     ]);
                     $createdUserCount++;
@@ -75,17 +77,17 @@ try {
                     $student->save();
                     $repairedCount++;
                 }
-            } catch (\Throwable $e) {
-                log_msg("Error processing student ID {$student->id} ({$student->student_number}): " . $e->getMessage());
+            } catch (Throwable $e) {
+                log_msg("Error processing student ID {$student->id} ({$student->student_number}): ".$e->getMessage());
             }
         }
         log_msg("Processed a chunk. Total Repaired: {$repairedCount}, Total Created Users: {$createdUserCount}");
     });
 
-    log_msg("COMPLETED REPAIR successfully!");
+    log_msg('COMPLETED REPAIR successfully!');
     log_msg("Created student User accounts: {$createdUserCount}");
     log_msg("Repaired/updated Student records: {$repairedCount}");
 
-} catch (\Throwable $e) {
-    log_msg("FATAL ERROR: " . $e->getMessage() . "\n" . $e->getTraceAsString());
+} catch (Throwable $e) {
+    log_msg('FATAL ERROR: '.$e->getMessage()."\n".$e->getTraceAsString());
 }

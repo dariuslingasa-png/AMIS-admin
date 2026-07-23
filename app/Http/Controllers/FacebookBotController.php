@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Cache;
 use App\Models\EnrollmentApplicant;
 use App\Models\Student;
 use App\Services\MicrosoftGraphService;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
@@ -38,7 +39,7 @@ class FacebookBotController extends Controller
     public function handle(Request $request)
     {
         $payload = $request->all();
-        Log::info("Facebook Webhook Received:", $payload);
+        Log::info('Facebook Webhook Received:', $payload);
 
         // Ensure message comes from a page subscription
         if (isset($payload['object']) && $payload['object'] === 'page') {
@@ -53,16 +54,17 @@ class FacebookBotController extends Controller
                             $this->processMessage($senderPsid, $postbackPayload);
                         }
                         // 2. Handle normal messages
-                        elseif (isset($event['message']) && !isset($event['message']['is_echo'])) {
+                        elseif (isset($event['message']) && ! isset($event['message']['is_echo'])) {
                             // Check if it's a quick reply payload or standard text
-                            $messageText = $event['message']['quick_reply']['payload'] 
-                                           ?? $event['message']['text'] 
+                            $messageText = $event['message']['quick_reply']['payload']
+                                           ?? $event['message']['text']
                                            ?? '';
                             $this->processMessage($senderPsid, trim($messageText));
                         }
                     }
                 }
             }
+
             return response('EVENT_RECEIVED', 200);
         }
 
@@ -86,12 +88,13 @@ class FacebookBotController extends Controller
             Cache::forget($sessionKey);
             $this->sendMessage($senderPsid, "Checking ID: {$cleanMessageText}...");
             $statusResult = $this->lookupEnrollmentStatusById($cleanMessageText);
-            
+
             if (str_contains($statusResult, '❌')) {
                 $this->sendNoRecordFoundButtons($senderPsid, $statusResult, 'RETRY_ENROLLMENT_STATUS');
             } else {
                 $this->sendMessage($senderPsid, $statusResult);
             }
+
             return;
         }
 
@@ -101,15 +104,16 @@ class FacebookBotController extends Controller
                 [
                     'type' => 'web_url',
                     'title' => 'Go to Support Portal',
-                    'url' => 'https://support.amis.edu.ph'
+                    'url' => 'https://support.amis.edu.ph',
                 ],
                 [
                     'type' => 'postback',
                     'title' => 'Back to Menu',
-                    'payload' => 'GET_STARTED'
-                ]
+                    'payload' => 'GET_STARTED',
+                ],
             ];
             $this->sendButtonMessage($senderPsid, "Need help or have inquiries? 🚀\n\nYou can submit a support ticket directly through our new AMIS Support Portal! Click the button below to proceed:", $buttons);
+
             return;
         }
 
@@ -118,10 +122,11 @@ class FacebookBotController extends Controller
         if (in_array($normalizedText, $menuTriggers)) {
             $session = [
                 'step' => 0,
-                'data' => []
+                'data' => [],
             ];
             Cache::put($sessionKey, $session, now()->addMinutes(15));
             $this->sendMainMenu($senderPsid);
+
             return;
         }
 
@@ -129,7 +134,7 @@ class FacebookBotController extends Controller
         if ($normalizedText === 'retry_enrollment_status') {
             $session = [
                 'step' => 1,
-                'data' => []
+                'data' => [],
             ];
             Cache::put($sessionKey, $session, now()->addMinutes(15));
 
@@ -139,6 +144,7 @@ class FacebookBotController extends Controller
                 ['content_type' => 'text', 'title' => '🏠 Main Menu',  'payload' => 'GET_STARTED'],
             ];
             $this->sendMessageWithQuickReplies($senderPsid, "📋 Let's try again. Are you a New or Old student?", $quickReplies);
+
             return;
         }
 
@@ -146,7 +152,7 @@ class FacebookBotController extends Controller
         if ($normalizedText === 'retry_resend_credentials') {
             $session = [
                 'step' => 10,
-                'data' => []
+                'data' => [],
             ];
             Cache::put($sessionKey, $session, now()->addMinutes(15));
 
@@ -156,6 +162,7 @@ class FacebookBotController extends Controller
                 ['content_type' => 'text', 'title' => '🏠 Main Menu',  'payload' => 'GET_STARTED'],
             ];
             $this->sendMessageWithQuickReplies($senderPsid, "🔐 Let's try again. Are you a New or Old student?", $quickReplies);
+
             return;
         }
 
@@ -164,7 +171,7 @@ class FacebookBotController extends Controller
         if (in_array($normalizedText, $enrollmentTriggers)) {
             $session = [
                 'step' => 1,
-                'data' => []
+                'data' => [],
             ];
             Cache::put($sessionKey, $session, now()->addMinutes(15));
 
@@ -174,6 +181,7 @@ class FacebookBotController extends Controller
                 ['content_type' => 'text', 'title' => '🏠 Main Menu',   'payload' => 'GET_STARTED'],
             ];
             $this->sendMessageWithQuickReplies($senderPsid, "📋 Enrollment Status Check\n\nAre you a New or Old student?", $quickReplies);
+
             return;
         }
 
@@ -182,7 +190,7 @@ class FacebookBotController extends Controller
         if (in_array($normalizedText, $resendTriggers)) {
             $session = [
                 'step' => 10,
-                'data' => []
+                'data' => [],
             ];
             Cache::put($sessionKey, $session, now()->addMinutes(15));
 
@@ -192,6 +200,7 @@ class FacebookBotController extends Controller
                 ['content_type' => 'text', 'title' => '🏠 Main Menu',  'payload' => 'GET_STARTED'],
             ];
             $this->sendMessageWithQuickReplies($senderPsid, "🔐 Resend M365 Credentials\n\nNote: This will resend your official AMIS @amis.edu.ph email credentials.\n\nAre you a New or Old student?", $quickReplies);
+
             return;
         }
 
@@ -200,7 +209,7 @@ class FacebookBotController extends Controller
                 $this->sendMainMenu($senderPsid);
                 break;
 
-            // --- ENROLLMENT FLOW ---
+                // --- ENROLLMENT FLOW ---
             case 1:
                 $selection = strtolower(trim($messageText));
                 if ($selection === 'new' || $selection === 'new student' || str_contains($selection, 'new')) {
@@ -209,7 +218,7 @@ class FacebookBotController extends Controller
                     Cache::put($sessionKey, $session, now()->addMinutes(15));
 
                     $quickReplies = [
-                        ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+                        ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED'],
                     ];
                     $this->sendMessageWithQuickReplies($senderPsid, "Please reply with the student's FULL NAME:", $quickReplies);
                 } elseif ($selection === 'old' || $selection === 'old student' || str_contains($selection, 'old')) {
@@ -218,14 +227,14 @@ class FacebookBotController extends Controller
                     Cache::put($sessionKey, $session, now()->addMinutes(15));
 
                     $quickReplies = [
-                        ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+                        ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED'],
                     ];
                     $this->sendMessageWithQuickReplies($senderPsid, "Please reply with the student's FULL NAME or Student ID/AMIS ID:", $quickReplies);
                 } else {
                     $buttons = [
                         ['type' => 'postback', 'title' => 'NEW', 'payload' => 'ENROLLMENT_STUDENT_NEW'],
                         ['type' => 'postback', 'title' => 'OLD', 'payload' => 'ENROLLMENT_STUDENT_OLD'],
-                        ['type' => 'postback', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+                        ['type' => 'postback', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED'],
                     ];
                     $this->sendButtonMessage($senderPsid, "⚠️ Invalid selection. Please choose:\n\nAre you an Old or New student?", $buttons);
                 }
@@ -237,29 +246,31 @@ class FacebookBotController extends Controller
                 if ($studentClass === 'new') {
                     $errorMsg = null;
                     $cleanedName = $this->validateAndCleanName($cleanMessageText, $errorMsg);
-                    if (!$cleanedName) {
+                    if (! $cleanedName) {
                         $quickReplies = [
-                            ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+                            ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED'],
                         ];
-                        $this->sendMessageWithQuickReplies($senderPsid, "⚠️ " . ($errorMsg ?? "Please enter the student's full name."), $quickReplies);
+                        $this->sendMessageWithQuickReplies($senderPsid, '⚠️ '.($errorMsg ?? "Please enter the student's full name."), $quickReplies);
+
                         return;
                     }
                     $session['data']['type'] = 'name';
                     $session['data']['name'] = $cleanedName;
                 } else {
-                    $isId = preg_match('/^\d{4,8}$/', $cleanMessageText) || 
-                            preg_match('/^amis-\d+/i', $cleanMessageText) || 
+                    $isId = preg_match('/^\d{4,8}$/', $cleanMessageText) ||
+                            preg_match('/^amis-\d+/i', $cleanMessageText) ||
                             preg_match('/^amis\d+/i', $cleanMessageText);
                     if ($isId) {
                         $config = $this->getValidationConfig();
                         $idConfig = $config['student_lookup']['amis_id'] ?? null;
                         if ($idConfig && isset($idConfig['pattern'])) {
                             $numericPart = preg_replace('/\D/', '', $cleanMessageText);
-                            if (!preg_match('/' . $idConfig['pattern'] . '/', $numericPart)) {
+                            if (! preg_match('/'.$idConfig['pattern'].'/', $numericPart)) {
                                 $quickReplies = [
-                                    ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+                                    ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED'],
                                 ];
-                                $this->sendMessageWithQuickReplies($senderPsid, "⚠️ " . ($idConfig['message'] ?? "Please enter a valid 6-digit AMIS ID."), $quickReplies);
+                                $this->sendMessageWithQuickReplies($senderPsid, '⚠️ '.($idConfig['message'] ?? 'Please enter a valid 6-digit AMIS ID.'), $quickReplies);
+
                                 return;
                             }
                         }
@@ -268,11 +279,12 @@ class FacebookBotController extends Controller
                     } else {
                         $errorMsg = null;
                         $cleanedName = $this->validateAndCleanName($cleanMessageText, $errorMsg);
-                        if (!$cleanedName) {
+                        if (! $cleanedName) {
                             $quickReplies = [
-                                ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+                                ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED'],
                             ];
-                            $this->sendMessageWithQuickReplies($senderPsid, "⚠️ " . ($errorMsg ?? "Please enter the student's full name."), $quickReplies);
+                            $this->sendMessageWithQuickReplies($senderPsid, '⚠️ '.($errorMsg ?? "Please enter the student's full name."), $quickReplies);
+
                             return;
                         }
                         $session['data']['type'] = 'name';
@@ -300,11 +312,12 @@ class FacebookBotController extends Controller
             case 3:
                 $errorMsg = null;
                 $normalizedGrade = $this->validateAndNormalizeGradeLevel($messageText, $errorMsg);
-                if (!$normalizedGrade) {
+                if (! $normalizedGrade) {
                     $quickReplies = [
-                        ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+                        ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED'],
                     ];
-                    $this->sendMessageWithQuickReplies($senderPsid, "⚠️ " . ($errorMsg ?? "Please enter a valid grade level."), $quickReplies);
+                    $this->sendMessageWithQuickReplies($senderPsid, '⚠️ '.($errorMsg ?? 'Please enter a valid grade level.'), $quickReplies);
+
                     return;
                 }
                 $session['data']['grade'] = $normalizedGrade;
@@ -312,7 +325,7 @@ class FacebookBotController extends Controller
                 Cache::put($sessionKey, $session, now()->addMinutes(15));
 
                 $quickReplies = [
-                    ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+                    ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED'],
                 ];
                 $this->sendMessageWithQuickReplies($senderPsid, "What is the student's BIRTHDATE? (Format: MM-DD-YYYY, e.g. 04-30-2020, April 30 2020 or any po)", $quickReplies);
                 break;
@@ -321,11 +334,12 @@ class FacebookBotController extends Controller
                 $birthdate = trim($messageText);
                 $errorMsg = null;
                 $formattedBirthdate = $this->validateAndNormalizeBirthdate($birthdate, $errorMsg);
-                if (!$formattedBirthdate) {
+                if (! $formattedBirthdate) {
                     $quickReplies = [
-                        ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+                        ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED'],
                     ];
-                    $this->sendMessageWithQuickReplies($senderPsid, "⚠️ " . ($errorMsg ?? "Please enter the student's complete birthdate."), $quickReplies);
+                    $this->sendMessageWithQuickReplies($senderPsid, '⚠️ '.($errorMsg ?? "Please enter the student's complete birthdate."), $quickReplies);
+
                     return;
                 }
                 $grade = $session['data']['grade'];
@@ -339,7 +353,7 @@ class FacebookBotController extends Controller
                     $statusResult = $this->lookupEnrollmentStatusByIDGradeBirthdate($studentId, $grade, $formattedBirthdate);
                 } else {
                     $name = $session['data']['name'];
-                    $this->sendMessage($senderPsid, "Checking status for " . strtoupper($name) . "...");
+                    $this->sendMessage($senderPsid, 'Checking status for '.strtoupper($name).'...');
                     $statusResult = $this->lookupEnrollmentStatus($name, $grade, $formattedBirthdate);
                 }
 
@@ -351,7 +365,7 @@ class FacebookBotController extends Controller
                 }
                 break;
 
-            // --- RESEND CREDENTIALS FLOW ---
+                // --- RESEND CREDENTIALS FLOW ---
             case 10:
                 $selection = strtolower(trim($messageText));
                 if ($selection === 'new' || $selection === 'new student' || str_contains($selection, 'new')) {
@@ -360,7 +374,7 @@ class FacebookBotController extends Controller
                     Cache::put($sessionKey, $session, now()->addMinutes(15));
 
                     $quickReplies = [
-                        ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+                        ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED'],
                     ];
                     $this->sendMessageWithQuickReplies($senderPsid, "Please reply with the student's FULL NAME:", $quickReplies);
                 } elseif ($selection === 'old' || $selection === 'old student' || str_contains($selection, 'old')) {
@@ -369,14 +383,14 @@ class FacebookBotController extends Controller
                     Cache::put($sessionKey, $session, now()->addMinutes(15));
 
                     $quickReplies = [
-                        ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+                        ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED'],
                     ];
                     $this->sendMessageWithQuickReplies($senderPsid, "Please reply with the student's FULL NAME, AMIS ID, or School Email:", $quickReplies);
                 } else {
                     $buttons = [
                         ['type' => 'postback', 'title' => 'NEW', 'payload' => 'CREDENTIALS_STUDENT_NEW'],
                         ['type' => 'postback', 'title' => 'OLD', 'payload' => 'CREDENTIALS_STUDENT_OLD'],
-                        ['type' => 'postback', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+                        ['type' => 'postback', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED'],
                     ];
                     $this->sendButtonMessage($senderPsid, "⚠️ Invalid selection. Please choose:\n\nAre you an Old or New student?", $buttons);
                 }
@@ -388,32 +402,34 @@ class FacebookBotController extends Controller
                 if ($studentClass === 'new') {
                     $errorMsg = null;
                     $cleanedName = $this->validateAndCleanName($cleanMessageText, $errorMsg);
-                    if (!$cleanedName) {
+                    if (! $cleanedName) {
                         $quickReplies = [
-                            ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+                            ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED'],
                         ];
-                        $this->sendMessageWithQuickReplies($senderPsid, "⚠️ " . ($errorMsg ?? "Please enter the student's full name."), $quickReplies);
+                        $this->sendMessageWithQuickReplies($senderPsid, '⚠️ '.($errorMsg ?? "Please enter the student's full name."), $quickReplies);
+
                         return;
                     }
                     $session['data']['type'] = 'name';
                     $session['data']['name'] = $cleanedName;
                 } else {
-                    $isIdOrEmail = preg_match('/^\d{4,8}$/', $cleanMessageText) || 
-                                   preg_match('/^amis-\d+/i', $cleanMessageText) || 
-                                   preg_match('/^amis\d+/i', $cleanMessageText) || 
+                    $isIdOrEmail = preg_match('/^\d{4,8}$/', $cleanMessageText) ||
+                                   preg_match('/^amis-\d+/i', $cleanMessageText) ||
+                                   preg_match('/^amis\d+/i', $cleanMessageText) ||
                                    str_contains($cleanMessageText, '@');
                     if ($isIdOrEmail) {
                         $isEmail = str_contains($cleanMessageText, '@');
-                        if (!$isEmail) {
+                        if (! $isEmail) {
                             $config = $this->getValidationConfig();
                             $idConfig = $config['student_lookup']['amis_id'] ?? null;
                             if ($idConfig && isset($idConfig['pattern'])) {
                                 $numericPart = preg_replace('/\D/', '', $cleanMessageText);
-                                if (!preg_match('/' . $idConfig['pattern'] . '/', $numericPart)) {
+                                if (! preg_match('/'.$idConfig['pattern'].'/', $numericPart)) {
                                     $quickReplies = [
-                                        ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+                                        ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED'],
                                     ];
-                                    $this->sendMessageWithQuickReplies($senderPsid, "⚠️ " . ($idConfig['message'] ?? "Please enter a valid 6-digit AMIS ID."), $quickReplies);
+                                    $this->sendMessageWithQuickReplies($senderPsid, '⚠️ '.($idConfig['message'] ?? 'Please enter a valid 6-digit AMIS ID.'), $quickReplies);
+
                                     return;
                                 }
                             }
@@ -423,23 +439,24 @@ class FacebookBotController extends Controller
                     } else {
                         $errorMsg = null;
                         $cleanedName = $this->validateAndCleanName($cleanMessageText, $errorMsg);
-                        if (!$cleanedName) {
+                        if (! $cleanedName) {
                             $quickReplies = [
-                                ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+                                ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED'],
                             ];
-                            $this->sendMessageWithQuickReplies($senderPsid, "⚠️ " . ($errorMsg ?? "Please enter the student's full name."), $quickReplies);
+                            $this->sendMessageWithQuickReplies($senderPsid, '⚠️ '.($errorMsg ?? "Please enter the student's full name."), $quickReplies);
+
                             return;
                         }
                         $session['data']['type'] = 'name';
                         $session['data']['name'] = $cleanedName;
                     }
                 }
-                
+
                 $session['step'] = 12;
                 Cache::put($sessionKey, $session, now()->addMinutes(15));
 
                 $quickReplies = [
-                    ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+                    ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED'],
                 ];
                 $this->sendMessageWithQuickReplies($senderPsid, "To verify your identity, what is the student's BIRTHDATE? (Format: MM-DD-YYYY, e.g. 04-30-2010)", $quickReplies);
                 break;
@@ -448,11 +465,12 @@ class FacebookBotController extends Controller
                 $birthdate = trim($messageText);
                 $errorMsg = null;
                 $formattedBirthdate = $this->validateAndNormalizeBirthdate($birthdate, $errorMsg);
-                if (!$formattedBirthdate) {
+                if (! $formattedBirthdate) {
                     $quickReplies = [
-                        ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+                        ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED'],
                     ];
-                    $this->sendMessageWithQuickReplies($senderPsid, "⚠️ " . ($errorMsg ?? "Please enter the student's complete birthdate."), $quickReplies);
+                    $this->sendMessageWithQuickReplies($senderPsid, '⚠️ '.($errorMsg ?? "Please enter the student's complete birthdate."), $quickReplies);
+
                     return;
                 }
                 $session['data']['birthdate'] = $formattedBirthdate;
@@ -460,20 +478,21 @@ class FacebookBotController extends Controller
                 Cache::put($sessionKey, $session, now()->addMinutes(15));
 
                 $quickReplies = [
-                    ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+                    ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED'],
                 ];
-                $this->sendMessageWithQuickReplies($senderPsid, "What is the GRADE LEVEL? (e.g., Grade 1, Grade 5, Kinder)", $quickReplies);
+                $this->sendMessageWithQuickReplies($senderPsid, 'What is the GRADE LEVEL? (e.g., Grade 1, Grade 5, Kinder)', $quickReplies);
                 break;
 
             case 13:
                 $grade = trim($messageText);
                 $errorMsg = null;
                 $normalizedGrade = $this->validateAndNormalizeGradeLevel($grade, $errorMsg);
-                if (!$normalizedGrade) {
+                if (! $normalizedGrade) {
                     $quickReplies = [
-                        ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED']
+                        ['content_type' => 'text', 'title' => 'Back to Menu', 'payload' => 'GET_STARTED'],
                     ];
-                    $this->sendMessageWithQuickReplies($senderPsid, "⚠️ " . ($errorMsg ?? "Please enter a valid grade level."), $quickReplies);
+                    $this->sendMessageWithQuickReplies($senderPsid, '⚠️ '.($errorMsg ?? 'Please enter a valid grade level.'), $quickReplies);
+
                     return;
                 }
                 $birthdate = $session['data']['birthdate'];
@@ -487,7 +506,7 @@ class FacebookBotController extends Controller
                     $result = $this->handleBotResendCredentialsById($studentId, $normalizedGrade, $birthdate);
                 } else {
                     $name = $session['data']['name'];
-                    $this->sendMessage($senderPsid, "Verifying details for " . strtoupper($name) . "...");
+                    $this->sendMessage($senderPsid, 'Verifying details for '.strtoupper($name).'...');
                     $result = $this->handleBotResendCredentialsByName($name, $normalizedGrade, $birthdate);
                 }
 
@@ -512,8 +531,8 @@ class FacebookBotController extends Controller
             ->orWhere('id', $id)
             ->first();
 
-        if (!$applicant) {
-            $student = \App\Models\Student::where('student_number', $id)
+        if (! $applicant) {
+            $student = Student::where('student_number', $id)
                 ->orWhere('school_email', $id)
                 ->orWhere('ms_email', $id)
                 ->first();
@@ -522,7 +541,7 @@ class FacebookBotController extends Controller
             }
         }
 
-        if (!$applicant) {
+        if (! $applicant) {
             return "❌ No Record Found\n\nWe couldn't find any enrollment record with ID/Number: {$id}. Please make sure the ID/Number is correct.";
         }
 
@@ -539,10 +558,10 @@ class FacebookBotController extends Controller
         $lastName = count($parts) > 1 ? end($parts) : '';
 
         $normalizedGrade = $this->normalizeGradeLevel($grade);
-        
-        $query = EnrollmentApplicant::where(function($q) use ($firstName, $lastName) {
+
+        $query = EnrollmentApplicant::where(function ($q) use ($firstName, $lastName) {
             $q->where('first_name', 'like', "%{$firstName}%")
-              ->where('last_name', 'like', "%{$lastName}%");
+                ->where('last_name', 'like', "%{$lastName}%");
         });
 
         if ($normalizedGrade) {
@@ -556,7 +575,7 @@ class FacebookBotController extends Controller
 
         $applicant = $query->first();
 
-        if (!$applicant) {
+        if (! $applicant) {
             return "❌ No Record Found\n\nWe couldn't find any enrollment record for this student. Please make sure the spelling and birthdate are correct.";
         }
 
@@ -568,14 +587,14 @@ class FacebookBotController extends Controller
      */
     private function formatStatusResponse($applicant)
     {
-        $fullName = strtoupper(trim($applicant->first_name . ' ' . $applicant->last_name));
+        $fullName = strtoupper(trim($applicant->first_name.' '.$applicant->last_name));
 
         switch (strtolower($applicant->status)) {
             case 'approved':
             case 'registered':
                 $student = $applicant->student;
                 $msg = "✅ Account Created\n\nGreat news! The enrollment for {$fullName} has been approved, and the account is created in the system.";
-                
+
                 $amisId = $student->student_number ?? $applicant->amis_student_id ?? null;
                 if ($amisId) {
                     $msg .= "\n\nAMIS Student ID: {$amisId}";
@@ -590,12 +609,12 @@ class FacebookBotController extends Controller
                 }
 
                 return $msg;
-            
+
             case 'submitted':
             case 'pending':
             case 'under_review':
                 return "⏳ Pending Enrollment\n\nWe found the record for {$fullName}. The status is currently PENDING or under review by the admin. Please wait for an email or SMS notification for the next steps.";
-            
+
             case 'rejected':
             case 'disapproved':
             case 'cancelled':
@@ -615,6 +634,7 @@ class FacebookBotController extends Controller
         if (file_exists($path)) {
             return json_decode(file_get_contents($path), true);
         }
+
         return null;
     }
 
@@ -640,13 +660,14 @@ class FacebookBotController extends Controller
 
         // Special characters / numbers check
         $allowedSpecials = $nameConfig['allow_special_characters'] ?? ['.', '-', "'", 'Ñ', 'ñ'];
-        $escapedSpecials = array_map(function($char) {
+        $escapedSpecials = array_map(function ($char) {
             return preg_quote($char, '/');
         }, $allowedSpecials);
-        
-        $pattern = '/^[\p{L}\s' . implode('', $escapedSpecials) . ']+$/u';
-        if (!preg_match($pattern, $name)) {
+
+        $pattern = '/^[\p{L}\s'.implode('', $escapedSpecials).']+$/u';
+        if (! preg_match($pattern, $name)) {
             $errorMsg = $msg;
+
             return null;
         }
 
@@ -654,6 +675,7 @@ class FacebookBotController extends Controller
         $parts = explode(' ', $name);
         if (count($parts) < 2) {
             $errorMsg = $msg;
+
             return null;
         }
 
@@ -662,10 +684,12 @@ class FacebookBotController extends Controller
         if ($nameConfig) {
             if (isset($nameConfig['min_length']) && $len < $nameConfig['min_length']) {
                 $errorMsg = $msg;
+
                 return null;
             }
             if (isset($nameConfig['max_length']) && $len > $nameConfig['max_length']) {
                 $errorMsg = $msg;
+
                 return null;
             }
         }
@@ -685,7 +709,7 @@ class FacebookBotController extends Controller
     {
         $config = $this->getValidationConfig();
         $gradeConfig = $config['student_lookup']['grade_level'] ?? null;
-        $msg = $gradeConfig['message'] ?? "Please enter a valid grade level.";
+        $msg = $gradeConfig['message'] ?? 'Please enter a valid grade level.';
 
         $cleanInput = strtoupper(preg_replace('/\s+/', ' ', trim($input)));
 
@@ -701,7 +725,7 @@ class FacebookBotController extends Controller
             }
         }
 
-        if (!$normalizedKey && $gradeConfig && isset($gradeConfig['accepted_formats'])) {
+        if (! $normalizedKey && $gradeConfig && isset($gradeConfig['accepted_formats'])) {
             foreach ($gradeConfig['accepted_formats'] as $format) {
                 if (strtoupper(trim($format)) === $cleanInput) {
                     break;
@@ -709,7 +733,7 @@ class FacebookBotController extends Controller
             }
         }
 
-        if (!$normalizedKey) {
+        if (! $normalizedKey) {
             $cleanedForFuzzy = preg_replace('/[^A-Z0-9]/', '', $cleanInput);
             if (str_starts_with($cleanedForFuzzy, 'KINDER') || str_starts_with($cleanedForFuzzy, 'KINDERGARTEN')) {
                 $cleanedForFuzzy = str_replace(['KINDERGARTEN', 'KINDER'], 'K', $cleanedForFuzzy);
@@ -722,16 +746,19 @@ class FacebookBotController extends Controller
             }
         }
 
-        if (!$normalizedKey) {
+        if (! $normalizedKey) {
             $errorMsg = $msg;
+
             return null;
         }
 
         if (str_starts_with($normalizedKey, 'K')) {
             $num = substr($normalizedKey, 1);
+
             return "Kinder {$num}";
         } elseif (str_starts_with($normalizedKey, 'G')) {
             $num = substr($normalizedKey, 1);
+
             return "Grade {$num}";
         }
 
@@ -750,17 +777,18 @@ class FacebookBotController extends Controller
         $input = trim($input);
 
         // A complete birthdate must contain a 4-digit year (e.g. 1900-2099)
-        if (!preg_match('/\b(19\d{2}|20\d{2})\b/', $input, $yearMatches)) {
+        if (! preg_match('/\b(19\d{2}|20\d{2})\b/', $input, $yearMatches)) {
             $errorMsg = $msg;
+
             return null;
         }
-        $year = (int)$yearMatches[1];
+        $year = (int) $yearMatches[1];
 
         // 1. Try MM-DD-YYYY / MM/DD/YYYY / MM DD YYYY
         if (preg_match('/^(\d{1,2})[-\/\s](\d{1,2})[-\/\s](\d{4})$/', $input, $matches)) {
-            $month = (int)$matches[1];
-            $day = (int)$matches[2];
-            $yearVal = (int)$matches[3];
+            $month = (int) $matches[1];
+            $day = (int) $matches[2];
+            $yearVal = (int) $matches[3];
             if (checkdate($month, $day, $yearVal)) {
                 return sprintf('%04d-%02d-%02d', $yearVal, $month, $day);
             }
@@ -768,9 +796,9 @@ class FacebookBotController extends Controller
 
         // 2. Try YYYY-MM-DD / YYYY/MM/DD / YYYY MM DD
         if (preg_match('/^(\d{4})[-\/\s](\d{1,2})[-\/\s](\d{1,2})$/', $input, $matches)) {
-            $yearVal = (int)$matches[1];
-            $month = (int)$matches[2];
-            $day = (int)$matches[3];
+            $yearVal = (int) $matches[1];
+            $month = (int) $matches[2];
+            $day = (int) $matches[3];
             if (checkdate($month, $day, $yearVal)) {
                 return sprintf('%04d-%02d-%02d', $yearVal, $month, $day);
             }
@@ -778,11 +806,11 @@ class FacebookBotController extends Controller
 
         // 3. Match month text name formats
         $monthPattern = '(jan|january|feb|february|mar|march|apr|april|may|jun|june|jul|july|aug|august|sep|september|oct|october|nov|november|dec|december)';
-        
+
         // Month Day Year: e.g., "August 29 1997" or "August 29, 1997"
-        if (preg_match('/^' . $monthPattern . '\s+(\d{1,2})[,\s]+\d{4}$/i', $input, $matches)) {
+        if (preg_match('/^'.$monthPattern.'\s+(\d{1,2})[,\s]+\d{4}$/i', $input, $matches)) {
             $monthStr = strtolower($matches[1]);
-            $day = (int)$matches[2];
+            $day = (int) $matches[2];
             $month = $this->monthNameToNumber($monthStr);
             if ($month && checkdate($month, $day, $year)) {
                 return sprintf('%04d-%02d-%02d', $year, $month, $day);
@@ -790,8 +818,8 @@ class FacebookBotController extends Controller
         }
 
         // Day Month Year: e.g., "29 August 1997" or "29 Aug, 1997"
-        if (preg_match('/^(\d{1,2})\s+' . $monthPattern . '[,\s]+\d{4}$/i', $input, $matches)) {
-            $day = (int)$matches[1];
+        if (preg_match('/^(\d{1,2})\s+'.$monthPattern.'[,\s]+\d{4}$/i', $input, $matches)) {
+            $day = (int) $matches[1];
             $monthStr = strtolower($matches[2]);
             $month = $this->monthNameToNumber($monthStr);
             if ($month && checkdate($month, $day, $year)) {
@@ -800,13 +828,13 @@ class FacebookBotController extends Controller
         }
 
         // Fallback using strtotime if it matches standard date with month, day and year
-        $hasMonthName = preg_match('/' . $monthPattern . '/i', $input);
+        $hasMonthName = preg_match('/'.$monthPattern.'/i', $input);
         $hasDigits = preg_match_all('/\b\d{1,2}\b/', $input, $digitMatches);
-        
+
         if ($hasMonthName && count($digitMatches[0]) >= 1) {
             $timestamp = strtotime($input);
             if ($timestamp !== false) {
-                $parsedYear = (int)date('Y', $timestamp);
+                $parsedYear = (int) date('Y', $timestamp);
                 if ($parsedYear === $year) {
                     return date('Y-m-d', $timestamp);
                 }
@@ -814,6 +842,7 @@ class FacebookBotController extends Controller
         }
 
         $errorMsg = $msg;
+
         return null;
     }
 
@@ -834,8 +863,9 @@ class FacebookBotController extends Controller
             'sep' => 9, 'september' => 9,
             'oct' => 10, 'october' => 10,
             'nov' => 11, 'november' => 11,
-            'dec' => 12, 'december' => 12
+            'dec' => 12, 'december' => 12,
         ];
+
         return $months[strtolower($name)] ?? null;
     }
 
@@ -845,6 +875,7 @@ class FacebookBotController extends Controller
     private function parseBirthdate($input)
     {
         $errorMsg = null;
+
         return $this->validateAndNormalizeBirthdate($input, $errorMsg);
     }
 
@@ -855,6 +886,7 @@ class FacebookBotController extends Controller
     {
         $errorMsg = null;
         $norm = $this->validateAndNormalizeGradeLevel($input, $errorMsg);
+
         return $norm ?: $input;
     }
 
@@ -864,6 +896,7 @@ class FacebookBotController extends Controller
     private function isValidGradeLevel($input)
     {
         $errorMsg = null;
+
         return $this->validateAndNormalizeGradeLevel($input, $errorMsg) !== null;
     }
 
@@ -874,8 +907,9 @@ class FacebookBotController extends Controller
     {
         $accessToken = config('services.facebook.page_access_token');
 
-        if (!$accessToken) {
-            Log::error("Messenger page access token is not set in config/services.php");
+        if (! $accessToken) {
+            Log::error('Messenger page access token is not set in config/services.php');
+
             return;
         }
 
@@ -883,14 +917,14 @@ class FacebookBotController extends Controller
 
         $response = Http::post("https://graph.facebook.com/v19.0/me/messages?access_token={$accessToken}", [
             'recipient' => [
-                'id' => $recipientPsid
+                'id' => $recipientPsid,
             ],
             'message' => [
-                'text' => $messageText
-            ]
+                'text' => $messageText,
+            ],
         ]);
 
-        Log::info("Facebook Send Response Status: " . $response->status() . " Body: " . $response->body());
+        Log::info('Facebook Send Response Status: '.$response->status().' Body: '.$response->body());
     }
 
     /**
@@ -904,38 +938,38 @@ class FacebookBotController extends Controller
         // Generic Template carousel — 3 cards
         $elements = [
             [
-                'title'     => '📋 Enrollment Status',
-                'subtitle'  => 'Check if your child\'s enrollment has been approved.',
+                'title' => '📋 Enrollment Status',
+                'subtitle' => 'Check if your child\'s enrollment has been approved.',
                 'image_url' => 'https://admin.amis.edu.ph/images/AMIS_Logo.png',
-                'buttons'   => [
+                'buttons' => [
                     [
-                        'type'    => 'postback',
-                        'title'   => 'Check Status',
+                        'type' => 'postback',
+                        'title' => 'Check Status',
                         'payload' => 'CHECK_ENROLLMENT_STATUS',
                     ],
                 ],
             ],
             [
-                'title'     => '🔐 Resend Credentials',
-                'subtitle'  => 'Get your Microsoft 365 school email & password.',
+                'title' => '🔐 Resend Credentials',
+                'subtitle' => 'Get your Microsoft 365 school email & password.',
                 'image_url' => 'https://admin.amis.edu.ph/images/AMIS_Logo.png',
-                'buttons'   => [
+                'buttons' => [
                     [
-                        'type'    => 'postback',
-                        'title'   => 'Resend Credentials',
+                        'type' => 'postback',
+                        'title' => 'Resend Credentials',
                         'payload' => 'RESEND_CREDENTIALS',
                     ],
                 ],
             ],
             [
-                'title'     => '💬 Inquiries & Support',
-                'subtitle'  => 'Submit a ticket for login issues, documents, and more.',
+                'title' => '💬 Inquiries & Support',
+                'subtitle' => 'Submit a ticket for login issues, documents, and more.',
                 'image_url' => 'https://admin.amis.edu.ph/images/AMIS_Logo.png',
-                'buttons'   => [
+                'buttons' => [
                     [
                         'type' => 'web_url',
                         'title' => 'Open Support Portal',
-                        'url'  => 'https://support.amis.edu.ph',
+                        'url' => 'https://support.amis.edu.ph',
                     ],
                 ],
             ],
@@ -953,18 +987,18 @@ class FacebookBotController extends Controller
             [
                 'type' => 'postback',
                 'title' => '🔄 Try Again',
-                'payload' => $retryPayload
+                'payload' => $retryPayload,
             ],
             [
                 'type' => 'web_url',
                 'title' => '💬 Contact IT Support',
-                'url' => 'https://amis.edu.ph'
+                'url' => 'https://amis.edu.ph',
             ],
             [
                 'type' => 'web_url',
                 'title' => '📝 Online Enrollment',
-                'url' => 'https://enrollment.amis.edu.ph'
-            ]
+                'url' => 'https://enrollment.amis.edu.ph',
+            ],
         ];
 
         $this->sendButtonMessage($recipientPsid, $text, $buttons);
@@ -977,8 +1011,9 @@ class FacebookBotController extends Controller
     {
         $accessToken = config('services.facebook.page_access_token');
 
-        if (!$accessToken) {
-            Log::error("Messenger page access token is not set in config/services.php");
+        if (! $accessToken) {
+            Log::error('Messenger page access token is not set in config/services.php');
+
             return;
         }
 
@@ -986,7 +1021,7 @@ class FacebookBotController extends Controller
 
         $response = Http::post("https://graph.facebook.com/v19.0/me/messages?access_token={$accessToken}", [
             'recipient' => [
-                'id' => $recipientPsid
+                'id' => $recipientPsid,
             ],
             'message' => [
                 'attachment' => [
@@ -994,13 +1029,13 @@ class FacebookBotController extends Controller
                     'payload' => [
                         'template_type' => 'button',
                         'text' => $text,
-                        'buttons' => $buttons
-                    ]
-                ]
-            ]
+                        'buttons' => $buttons,
+                    ],
+                ],
+            ],
         ]);
 
-        Log::info("Facebook Send Button Template Response Status: " . $response->status() . " Body: " . $response->body());
+        Log::info('Facebook Send Button Template Response Status: '.$response->status().' Body: '.$response->body());
     }
 
     /**
@@ -1010,8 +1045,9 @@ class FacebookBotController extends Controller
     {
         $accessToken = config('services.facebook.page_access_token');
 
-        if (!$accessToken) {
-            Log::error("Messenger page access token is not set in config/services.php");
+        if (! $accessToken) {
+            Log::error('Messenger page access token is not set in config/services.php');
+
             return;
         }
 
@@ -1019,20 +1055,20 @@ class FacebookBotController extends Controller
 
         $response = Http::post("https://graph.facebook.com/v19.0/me/messages?access_token={$accessToken}", [
             'recipient' => [
-                'id' => $recipientPsid
+                'id' => $recipientPsid,
             ],
             'message' => [
                 'attachment' => [
                     'type' => 'template',
                     'payload' => [
                         'template_type' => 'generic',
-                        'elements' => $elements
-                    ]
-                ]
-            ]
+                        'elements' => $elements,
+                    ],
+                ],
+            ],
         ]);
 
-        Log::info("Facebook Send Carousel Response Status: " . $response->status() . " Body: " . $response->body());
+        Log::info('Facebook Send Carousel Response Status: '.$response->status().' Body: '.$response->body());
     }
 
     /**
@@ -1042,8 +1078,9 @@ class FacebookBotController extends Controller
     {
         $accessToken = config('services.facebook.page_access_token');
 
-        if (!$accessToken) {
-            Log::error("Messenger page access token is not set in config/services.php");
+        if (! $accessToken) {
+            Log::error('Messenger page access token is not set in config/services.php');
+
             return;
         }
 
@@ -1051,15 +1088,15 @@ class FacebookBotController extends Controller
 
         $response = Http::post("https://graph.facebook.com/v19.0/me/messages?access_token={$accessToken}", [
             'recipient' => [
-                'id' => $recipientPsid
+                'id' => $recipientPsid,
             ],
             'message' => [
                 'text' => $text,
-                'quick_replies' => $quickReplies
-            ]
+                'quick_replies' => $quickReplies,
+            ],
         ]);
 
-        Log::info("Facebook Send Quick Replies Response Status: " . $response->status() . " Body: " . $response->body());
+        Log::info('Facebook Send Quick Replies Response Status: '.$response->status().' Body: '.$response->body());
     }
 
     /**
@@ -1069,28 +1106,28 @@ class FacebookBotController extends Controller
     {
         $accessToken = config('services.facebook.page_access_token');
 
-        if (!$accessToken) {
+        if (! $accessToken) {
             return response()->json(['error' => 'Messenger token not set in config/services.php'], 500);
         }
 
         $response = Http::post("https://graph.facebook.com/v19.0/me/messenger_profile?access_token={$accessToken}", [
             'get_started' => [
-                'payload' => 'GET_STARTED'
+                'payload' => 'GET_STARTED',
             ],
             'ice_breakers' => [
                 [
                     'question' => 'Enrollment Status',
-                    'payload' => 'CHECK_ENROLLMENT_STATUS'
+                    'payload' => 'CHECK_ENROLLMENT_STATUS',
                 ],
                 [
                     'question' => 'Resend M365 Credentials',
-                    'payload' => 'RESEND_CREDENTIALS'
+                    'payload' => 'RESEND_CREDENTIALS',
                 ],
                 [
                     'question' => 'Inquiries & Concerns',
-                    'payload' => 'INQUIRIES_COMING_SOON'
-                ]
-            ]
+                    'payload' => 'INQUIRIES_COMING_SOON',
+                ],
+            ],
         ]);
 
         return response()->json([
@@ -1108,13 +1145,13 @@ class FacebookBotController extends Controller
         $normalizedGrade = $this->normalizeGradeLevel($grade);
         $formattedBirthdate = $this->parseBirthdate($birthdate);
 
-        if (!$formattedBirthdate) {
+        if (! $formattedBirthdate) {
             return "❌ Invalid birthdate format.\n\nPlease try again with a valid format (e.g. MM-DD-YYYY or Month DD, YYYY).";
         }
 
-        $query = EnrollmentApplicant::where(function($q) use ($id) {
+        $query = EnrollmentApplicant::where(function ($q) use ($id) {
             $q->where('amis_student_id', $id)
-              ->orWhere('id', $id);
+                ->orWhere('id', $id);
         });
 
         if ($normalizedGrade) {
@@ -1124,7 +1161,7 @@ class FacebookBotController extends Controller
         $query->whereDate('date_of_birth', $formattedBirthdate);
         $applicant = $query->first();
 
-        if (!$applicant) {
+        if (! $applicant) {
             // Also try looking up via Student's student_number / email
             $student = Student::where('student_number', $id)
                 ->orWhere('school_email', $id)
@@ -1135,20 +1172,20 @@ class FacebookBotController extends Controller
                 // Double check grade and birthdate for this applicant
                 $appGrade = $this->normalizeGradeLevel($applicant->grade_level);
                 $appBirthdate = $applicant->date_of_birth;
-                if ($appBirthdate && $appBirthdate instanceof \Carbon\Carbon) {
+                if ($appBirthdate && $appBirthdate instanceof Carbon) {
                     $appBirthdate = $appBirthdate->format('Y-m-d');
-                } else if ($appBirthdate) {
-                    $appBirthdate = date('Y-m-d', strtotime((string)$appBirthdate));
+                } elseif ($appBirthdate) {
+                    $appBirthdate = date('Y-m-d', strtotime((string) $appBirthdate));
                 }
-                
-                if (($normalizedGrade && $appGrade !== $normalizedGrade) || 
+
+                if (($normalizedGrade && $appGrade !== $normalizedGrade) ||
                     ($appBirthdate !== $formattedBirthdate)) {
                     $applicant = null; // Mismatch
                 }
             }
         }
 
-        if (!$applicant) {
+        if (! $applicant) {
             return "❌ No Record Found\n\nWe couldn't find any enrollment record with ID: {$id}, Grade: {$grade}, and Birthdate: {$birthdate}. Please verify your details.";
         }
 
@@ -1161,11 +1198,11 @@ class FacebookBotController extends Controller
     private function resetMicrosoftPasswordAndEmail(Student $student, EnrollmentApplicant $applicant)
     {
         // Generate temporary password
-        $tempPassword = 'Amis@' . strtoupper(Str::random(5)) . rand(10, 99);
+        $tempPassword = 'Amis@'.strtoupper(Str::random(5)).rand(10, 99);
 
         // Update database (reset password_changed_at so it counts as "temporary password")
         $student->update([
-            'temp_password'       => $tempPassword,
+            'temp_password' => $tempPassword,
             'password_changed_at' => null,
             'credentials_sent_at' => now(),
         ]);
@@ -1175,12 +1212,12 @@ class FacebookBotController extends Controller
 
         // Reset password in Microsoft Graph AD
         try {
-            $graph = new MicrosoftGraphService();
+            $graph = new MicrosoftGraphService;
             $token = (new \ReflectionMethod($graph, 'getAccessToken'))->invoke($graph);
             $response = Http::withToken($token)
                 ->patch("https://graph.microsoft.com/v1.0/users/{$student->school_email}", [
                     'passwordProfile' => [
-                        'password'                      => $tempPassword,
+                        'password' => $tempPassword,
                         'forceChangePasswordNextSignIn' => true,
                     ],
                 ]);
@@ -1190,14 +1227,14 @@ class FacebookBotController extends Controller
                 $msError = $response->json()['error']['message'] ?? 'Microsoft API error';
             }
         } catch (\Exception $e) {
-            Log::error('Failed to reset Microsoft password via Facebook Bot: ' . $e->getMessage());
+            Log::error('Failed to reset Microsoft password via Facebook Bot: '.$e->getMessage());
             $msError = $e->getMessage();
         }
 
-        if (!$msSuccess) {
+        if (! $msSuccess) {
             return [
                 'success' => false,
-                'error' => "⚠️ Connection Error\n\nWe verified the account, but failed to sync the password change with Microsoft 365: " . ($msError ?? 'Unknown error') . "\n\nPlease try again later or contact the school administrator."
+                'error' => "⚠️ Connection Error\n\nWe verified the account, but failed to sync the password change with Microsoft 365: ".($msError ?? 'Unknown error')."\n\nPlease try again later or contact the school administrator.",
             ];
         }
 
@@ -1212,26 +1249,26 @@ class FacebookBotController extends Controller
                     <p style="color:rgba(255,255,255,0.85);font-size:13px;margin:4px 0 0;">Al Munawwara Islamic School</p>
                 </td></tr>
                 <tr><td style="padding:28px 36px;">
-                    <p style="color:#374151;font-size:14px;margin:0 0 20px;">The credentials for student <strong>' . $applicant->first_name . ' ' . $applicant->last_name . '</strong> have been resent via the Facebook chatbot:</p>
+                    <p style="color:#374151;font-size:14px;margin:0 0 20px;">The credentials for student <strong>'.$applicant->first_name.' '.$applicant->last_name.'</strong> have been resent via the Facebook chatbot:</p>
                     <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:18px;margin-bottom:20px;">
                         <table width="100%">
-                            <tr><td style="font-size:13px;color:#6b7280;padding:5px 0;width:140px;">Student Number</td><td style="font-size:15px;font-weight:800;color:#059669;">' . $student->student_number . '</td></tr>
-                            <tr><td style="font-size:13px;color:#6b7280;padding:5px 0;">School Email</td><td style="font-size:14px;font-weight:600;color:#111827;">' . $student->school_email . '</td></tr>
-                            <tr><td style="font-size:13px;color:#6b7280;padding:5px 0;">New Temp Password</td><td style="font-size:14px;font-weight:600;color:#111827;letter-spacing:0.05em;">' . $tempPassword . '</td></tr>
+                            <tr><td style="font-size:13px;color:#6b7280;padding:5px 0;width:140px;">Student Number</td><td style="font-size:15px;font-weight:800;color:#059669;">'.$student->student_number.'</td></tr>
+                            <tr><td style="font-size:13px;color:#6b7280;padding:5px 0;">School Email</td><td style="font-size:14px;font-weight:600;color:#111827;">'.$student->school_email.'</td></tr>
+                            <tr><td style="font-size:13px;color:#6b7280;padding:5px 0;">New Temp Password</td><td style="font-size:14px;font-weight:600;color:#111827;letter-spacing:0.05em;">'.$tempPassword.'</td></tr>
                         </table>
                     </div>
                     <p style="color:#6b7280;font-size:13px;">Login at <a href="https://portal.office.com" style="color:#059669;">portal.office.com</a> and change your password on first login.</p>
                 </td></tr>
                 </table></body></html>';
-                Mail::html($html, fn($m) => $m->to($parentEmail)->subject('AMIS — Student Credentials Resent'));
+                Mail::html($html, fn ($m) => $m->to($parentEmail)->subject('AMIS — Student Credentials Resent'));
             } catch (\Exception $e) {
-                Log::error('Failed to send bot password reset email: ' . $e->getMessage());
+                Log::error('Failed to send bot password reset email: '.$e->getMessage());
             }
         }
 
         return [
             'success' => true,
-            'temp_password' => $tempPassword
+            'temp_password' => $tempPassword,
         ];
     }
 
@@ -1247,13 +1284,13 @@ class FacebookBotController extends Controller
         $normalizedGrade = $this->normalizeGradeLevel($grade);
         $formattedBirthdate = $this->parseBirthdate($birthdate);
 
-        if (!$formattedBirthdate) {
+        if (! $formattedBirthdate) {
             return "❌ Invalid birthdate format.\n\nPlease try again with a valid format (e.g. MM-DD-YYYY or Month DD, YYYY).";
         }
 
-        $query = EnrollmentApplicant::where(function($q) use ($firstName, $lastName) {
+        $query = EnrollmentApplicant::where(function ($q) use ($firstName, $lastName) {
             $q->where('first_name', 'like', "%{$firstName}%")
-              ->where('last_name', 'like', "%{$lastName}%");
+                ->where('last_name', 'like', "%{$lastName}%");
         });
 
         if ($normalizedGrade) {
@@ -1266,13 +1303,14 @@ class FacebookBotController extends Controller
         if ($applicant) {
             $status = strtolower($applicant->status ?? '');
             if (in_array($status, ['submitted', 'pending', 'under_review'])) {
-                $fullName = strtoupper(trim($applicant->first_name . ' ' . $applicant->last_name));
+                $fullName = strtoupper(trim($applicant->first_name.' '.$applicant->last_name));
+
                 return "⏳ Pending Enrollment\n\nWe found the record for {$fullName}. The status is currently PENDING or under review by the admin. Please wait for an email or SMS notification for the next steps.";
             }
         }
 
-        if (!$applicant) {
-            return "❌ Student Account Not Found\n\nWe couldn't find any student account for " . strtoupper($name) . " with Grade: {$grade} and Birthdate: {$birthdate}. Please verify and try again.";
+        if (! $applicant) {
+            return "❌ Student Account Not Found\n\nWe couldn't find any student account for ".strtoupper($name)." with Grade: {$grade} and Birthdate: {$birthdate}. Please verify and try again.";
         }
 
         $student = $applicant->student;
@@ -1283,7 +1321,7 @@ class FacebookBotController extends Controller
         $isOld = (strtolower($applicant->student_type ?? '') === 'old');
         $hasAmisEmail = false;
         if ($student) {
-            if (str_contains(strtolower($student->school_email ?? ''), '@amis.edu.ph') || 
+            if (str_contains(strtolower($student->school_email ?? ''), '@amis.edu.ph') ||
                 str_contains(strtolower($student->ms_email ?? ''), '@amis.edu.ph')) {
                 $hasAmisEmail = true;
             }
@@ -1293,7 +1331,7 @@ class FacebookBotController extends Controller
         }
 
         if ($isApproved || $isOld || $hasAmisEmail) {
-            if (!$student) {
+            if (! $student) {
                 return "❌ Student Account Not Found\n\nWe verified your enrollment is approved/old, but your Microsoft 365 credentials have not been created yet. Please contact the school administrator.";
             }
         } else {
@@ -1303,12 +1341,12 @@ class FacebookBotController extends Controller
         // Perform credentials reset
         $resetResult = $this->resetMicrosoftPasswordAndEmail($student, $applicant);
 
-        if (!$resetResult['success']) {
+        if (! $resetResult['success']) {
             return $resetResult['error'];
         }
 
         $tempPassword = $resetResult['temp_password'];
-        $fullName = strtoupper(trim($applicant->first_name . ' ' . $applicant->last_name));
+        $fullName = strtoupper(trim($applicant->first_name.' '.$applicant->last_name));
         $amisId = $student->student_number ?? $applicant->amis_student_id ?? 'N/A';
 
         // Display Full Name, AMIS ID, School Email, and Temp Password
@@ -1324,7 +1362,7 @@ class FacebookBotController extends Controller
         $normalizedGrade = $this->normalizeGradeLevel($grade);
         $formattedBirthdate = $this->parseBirthdate($birthdate);
 
-        if (!$formattedBirthdate) {
+        if (! $formattedBirthdate) {
             return "❌ Invalid birthdate format.\n\nPlease try again with a valid format (e.g. MM-DD-YYYY or Month DD, YYYY).";
         }
 
@@ -1346,25 +1384,25 @@ class FacebookBotController extends Controller
             }
         }
 
-        if (!$applicant) {
+        if (! $applicant) {
             return "❌ Student Account Not Found\n\nWe couldn't find any student or enrollment record with ID: {$id}. Please verify and try again.";
         }
-        
+
         // Verify grade and birthdate
         $appGrade = $this->normalizeGradeLevel($applicant->grade_level);
         $appBirthdate = $applicant->date_of_birth;
-        if ($appBirthdate && $appBirthdate instanceof \Carbon\Carbon) {
+        if ($appBirthdate && $appBirthdate instanceof Carbon) {
             $appBirthdate = $appBirthdate->format('Y-m-d');
-        } else if ($appBirthdate) {
-            $appBirthdate = date('Y-m-d', strtotime((string)$appBirthdate));
+        } elseif ($appBirthdate) {
+            $appBirthdate = date('Y-m-d', strtotime((string) $appBirthdate));
         }
 
-        if (($normalizedGrade && $appGrade !== $normalizedGrade) || 
+        if (($normalizedGrade && $appGrade !== $normalizedGrade) ||
             ($appBirthdate !== $formattedBirthdate)) {
             return "❌ Verification Failed\n\nThe grade level or birthdate you provided does not match our records. Please make sure the student ID, grade level, and birthdate are correct.";
         }
 
-        $fullName = strtoupper(trim($applicant->first_name . ' ' . $applicant->last_name));
+        $fullName = strtoupper(trim($applicant->first_name.' '.$applicant->last_name));
         $status = strtolower($applicant->status ?? '');
 
         // Check if pending first
@@ -1377,7 +1415,7 @@ class FacebookBotController extends Controller
         $isOld = (strtolower($applicant->student_type ?? '') === 'old');
         $hasAmisEmail = false;
         if ($student) {
-            if (str_contains(strtolower($student->school_email ?? ''), '@amis.edu.ph') || 
+            if (str_contains(strtolower($student->school_email ?? ''), '@amis.edu.ph') ||
                 str_contains(strtolower($student->ms_email ?? ''), '@amis.edu.ph')) {
                 $hasAmisEmail = true;
             }
@@ -1387,7 +1425,7 @@ class FacebookBotController extends Controller
         }
 
         if ($isApproved || $isOld || $hasAmisEmail) {
-            if (!$student) {
+            if (! $student) {
                 return "❌ Student Account Not Found\n\nWe verified your enrollment is approved/old, but your Microsoft 365 credentials have not been created yet. Please contact the school administrator.";
             }
         } else {
@@ -1397,7 +1435,7 @@ class FacebookBotController extends Controller
         // Perform credentials reset
         $resetResult = $this->resetMicrosoftPasswordAndEmail($student, $applicant);
 
-        if (!$resetResult['success']) {
+        if (! $resetResult['success']) {
             return $resetResult['error'];
         }
 
@@ -1408,4 +1446,3 @@ class FacebookBotController extends Controller
         return "✅ Credentials Sent Successfully!\n\nHere are the student's M365 details:\n👤 Full Name: {$fullName}\n🆔 AMIS ID: {$amisId}\n📧 School Email: {$student->school_email}\n🔑 Temp Password: {$tempPassword}\n\nPlease login to portal.office.com and change your password on first login.";
     }
 }
-

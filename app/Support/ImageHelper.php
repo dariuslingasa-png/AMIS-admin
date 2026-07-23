@@ -7,8 +7,8 @@ class ImageHelper
     /**
      * Resolve the URL/path of a specific thumbnail size based on the optimized image path.
      *
-     * @param string|null $path The optimized image path.
-     * @param string $size 'small', 'medium', or 'large'.
+     * @param  string|null  $path  The optimized image path.
+     * @param  string  $size  'small', 'medium', or 'large'.
      * @return string|null Resolved path or null.
      */
     public static function thumb(?string $path, string $size = 'medium'): ?string
@@ -28,13 +28,14 @@ class ImageHelper
         }
 
         // Fallback: if it's a legacy teacher photo path under images/teachers/ (e.g. "images/teachers/john_doe.jpg")
-        if (str_contains($path, 'images/teachers/') && !str_contains($path, '/original/') && !str_contains($path, '/thumbnails/')) {
+        if (str_contains($path, 'images/teachers/') && ! str_contains($path, '/original/') && ! str_contains($path, '/thumbnails/')) {
             $dir = dirname($path);
             $filename = pathinfo($path, PATHINFO_FILENAME);
             $thumbPath = "{$dir}/thumbnails/{$size}/{$filename}.webp";
             if (file_exists(public_path($thumbPath))) {
                 return $thumbPath;
             }
+
             return $path;
         }
 

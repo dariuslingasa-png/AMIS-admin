@@ -5,7 +5,9 @@ namespace App\Services\Admin\Academic;
 use App\Models\ClassAdvisoryAssignment;
 use App\Models\ClassAdvisoryAssignmentHistory;
 use App\Models\Section;
+use App\Services\MicrosoftGraphService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class ClassAdvisoryAssignmentService
 {
@@ -32,12 +34,12 @@ class ClassAdvisoryAssignmentService
 
         // Automatically sync advisor to MS Teams if section team exists
         $section = Section::find($sectionId);
-        if ($section && $section->ms_team_id && !empty($teacher['email'])) {
+        if ($section && $section->ms_team_id && ! empty($teacher['email'])) {
             try {
-                $graph = new \App\Services\MicrosoftGraphService();
+                $graph = new MicrosoftGraphService;
                 $graph->addTeamOwner($section->ms_team_id, $teacher['email']);
             } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::warning("Could not add advisor {$teacher['email']} as Team owner during assignment: " . $e->getMessage());
+                Log::warning("Could not add advisor {$teacher['email']} as Team owner during assignment: ".$e->getMessage());
             }
         }
     }

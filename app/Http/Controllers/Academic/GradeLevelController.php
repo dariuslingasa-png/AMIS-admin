@@ -15,6 +15,7 @@ class GradeLevelController extends Controller
     public function index(): View
     {
         $gradeLevels = GradeLevel::query()->orderBy('sort_order')->get();
+
         return view('admin.academic.grade-levels.index', compact('gradeLevels'));
     }
 
@@ -66,7 +67,7 @@ class GradeLevelController extends Controller
 
     public function toggleActive(GradeLevel $gradeLevel): RedirectResponse
     {
-        $gradeLevel->update(['is_active' => !$gradeLevel->is_active]);
+        $gradeLevel->update(['is_active' => ! $gradeLevel->is_active]);
 
         AdminAuditLog::create([
             'user_id' => auth()->id(),

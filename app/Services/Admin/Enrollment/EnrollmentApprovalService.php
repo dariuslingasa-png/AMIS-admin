@@ -2,6 +2,7 @@
 
 namespace App\Services\Admin\Enrollment;
 
+use App\Console\Commands\FixDisplayNames;
 use App\Mail\EnrollmentOnboardingMail;
 use App\Models\AdminAuditLog;
 use App\Models\EnrollmentApplicant;
@@ -9,12 +10,16 @@ use App\Models\EnrollmentSetting;
 use App\Models\Payment;
 use App\Models\SchoolFee;
 use App\Models\Student;
+use App\Models\User;
+use App\Services\GoogleDriveUploadService;
 use App\Services\MicrosoftGraphService;
 use App\Services\MsTeamsEnrollmentService;
 use App\Services\SoaService;
 use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -52,10 +57,10 @@ class EnrollmentApprovalService
 
             // Sync enrollees files to Google Drive on approval
             try {
-                $driveUploadService = app(\App\Services\GoogleDriveUploadService::class);
+                $driveUploadService = app(GoogleDriveUploadService::class);
                 $driveUploadService->uploadApplicantFiles($applicant);
             } catch (\Throwable $e) {
-                Log::error('Auto Google Drive upload failed on backfill: ' . $e->getMessage());
+                Log::error('Auto Google Drive upload failed on backfill: '.$e->getMessage());
             }
 
             if (! $applicant->student->account && $this->shouldGenerateSoa($applicant)) {
@@ -67,17 +72,15 @@ class EnrollmentApprovalService
             return 'Student already onboarded. Microsoft profile photo sync was retried. Files synced to Google Drive.';
         }
 
-
-
         // ── Duplicate student guard ────────────────────────────────────────────
         // Prevent creating a second student record (and MS account) for the same
         // person when a parent submitted multiple enrollment applications.
         // We match by first name + last name + date of birth (case-insensitive).
         $duplicateStudent = Student::whereHas('applicant', function ($q) use ($applicant) {
-                $q->whereRaw('LOWER(TRIM(first_name)) = ?', [mb_strtolower(trim((string) $applicant->first_name))])
-                  ->whereRaw('LOWER(TRIM(last_name)) = ?',  [mb_strtolower(trim((string) $applicant->last_name))])
-                  ->where('date_of_birth', $applicant->date_of_birth);
-            })
+            $q->whereRaw('LOWER(TRIM(first_name)) = ?', [mb_strtolower(trim((string) $applicant->first_name))])
+                ->whereRaw('LOWER(TRIM(last_name)) = ?', [mb_strtolower(trim((string) $applicant->last_name))])
+                ->where('date_of_birth', $applicant->date_of_birth);
+        })
             ->where('school_year', $applicant->school_year ?? config('services.school.year'))
             ->first();
 
@@ -87,20 +90,20 @@ class EnrollmentApprovalService
                 false,
                 "Approval blocked for applicant #{$applicant->id} — duplicate student detected: #{$duplicateStudent->student_number}",
                 [
-                    'applicant_id'    => $applicant->id,
-                    'applicant_name'  => trim("{$applicant->first_name} {$applicant->last_name}"),
-                    'existing_student'=> $duplicateStudent->student_number,
-                    'existing_email'  => $duplicateStudent->school_email,
+                    'applicant_id' => $applicant->id,
+                    'applicant_name' => trim("{$applicant->first_name} {$applicant->last_name}"),
+                    'existing_student' => $duplicateStudent->student_number,
+                    'existing_email' => $duplicateStudent->school_email,
                 ]
             );
 
             throw ValidationException::withMessages([
                 'status' => "⚠️ Duplicate student detected!\n\n"
-                    . "A student with the same name and date of birth already exists:\n"
-                    . "• Student #: {$duplicateStudent->student_number}\n"
-                    . "• School Email: {$duplicateStudent->school_email}\n\n"
-                    . "Do NOT approve this application. Instead, link this applicant to the existing student record to avoid creating a duplicate Microsoft account.\n\n"
-                    . "If this is a different student with the same name and birthdate, contact IT to resolve manually.",
+                    ."A student with the same name and date of birth already exists:\n"
+                    ."• Student #: {$duplicateStudent->student_number}\n"
+                    ."• School Email: {$duplicateStudent->school_email}\n\n"
+                    ."Do NOT approve this application. Instead, link this applicant to the existing student record to avoid creating a duplicate Microsoft account.\n\n"
+                    .'If this is a different student with the same name and birthdate, contact IT to resolve manually.',
             ]);
         }
         // ── End duplicate guard ───────────────────────────────────────────────
@@ -148,24 +151,24 @@ class EnrollmentApprovalService
             $credentialsInfo = " (Email: {$schoolEmail} | Temp Pass: {$tempPassword})";
 
             if ($msError) {
-                return 'Application approved. Student number generated.' . $credentialsInfo . ' Note: Microsoft account creation failed. Please create it manually. Error: '.$msError;
+                return 'Application approved. Student number generated.'.$credentialsInfo.' Note: Microsoft account creation failed. Please create it manually. Error: '.$msError;
             }
 
             return match ($onboardingStatus) {
-                'sent' => 'Application approved.' . $credentialsInfo . ' Student credentials were generated and sent to the parent.',
-                'missing_payment_proof' => 'Application approved.' . $credentialsInfo . ' Student credentials were generated. Welcome email was not sent because no payment proof is uploaded yet.',
-                'missing_recipient' => 'Application approved.' . $credentialsInfo . ' Student credentials were generated. Welcome email was not sent because no valid recipient email was found.',
-                'failed' => 'Application approved.' . $credentialsInfo . ' Student credentials were generated. Welcome email failed to send; please check the mail logs.',
-                default => 'Application approved.' . $credentialsInfo . ' Student credentials were generated. Welcome email auto-send is currently disabled.',
+                'sent' => 'Application approved.'.$credentialsInfo.' Student credentials were generated and sent to the parent.',
+                'missing_payment_proof' => 'Application approved.'.$credentialsInfo.' Student credentials were generated. Welcome email was not sent because no payment proof is uploaded yet.',
+                'missing_recipient' => 'Application approved.'.$credentialsInfo.' Student credentials were generated. Welcome email was not sent because no valid recipient email was found.',
+                'failed' => 'Application approved.'.$credentialsInfo.' Student credentials were generated. Welcome email failed to send; please check the mail logs.',
+                default => 'Application approved.'.$credentialsInfo.' Student credentials were generated. Welcome email auto-send is currently disabled.',
             };
         });
 
         // Sync enrollees files to Google Drive on approval
         try {
-            $driveUploadService = app(\App\Services\GoogleDriveUploadService::class);
+            $driveUploadService = app(GoogleDriveUploadService::class);
             $driveUploadService->uploadApplicantFiles($applicant);
         } catch (\Throwable $e) {
-            Log::error('Auto Google Drive upload failed on approval transaction success: ' . $e->getMessage());
+            Log::error('Auto Google Drive upload failed on approval transaction success: '.$e->getMessage());
         }
 
         return $result;
@@ -181,11 +184,12 @@ class EnrollmentApprovalService
         if ($dob) {
             $ts = strtotime((string) $dob);
             if ($ts !== false) {
-                return ucfirst(strtolower(date('M', $ts))) . date('d', $ts) . date('Y', $ts) . '@';
+                return ucfirst(strtolower(date('M', $ts))).date('d', $ts).date('Y', $ts).'@';
             }
         }
+
         // Fallback: strong password compliant with MS Graph requirements
-        return 'Amis@' . rand(10000, 99999);
+        return 'Amis@'.rand(10000, 99999);
     }
 
     private function generateStudentNumber(EnrollmentApplicant $applicant): string
@@ -291,7 +295,7 @@ class EnrollmentApprovalService
         string $tempPassword,
     ): array {
         try {
-            $displayName = \App\Console\Commands\FixDisplayNames::buildM365DisplayName(
+            $displayName = FixDisplayNames::buildM365DisplayName(
                 $applicant->first_name,
                 $applicant->middle_name,
                 $applicant->last_name
@@ -330,7 +334,7 @@ class EnrollmentApprovalService
                 try {
                     $graph->disablePerUserMfa($msUserId);
                 } catch (\Throwable $mfaEx) {
-                    Log::warning("Could not disable MFA for {$schoolEmail}: " . $mfaEx->getMessage());
+                    Log::warning("Could not disable MFA for {$schoolEmail}: ".$mfaEx->getMessage());
                 }
             }
 
@@ -354,25 +358,25 @@ class EnrollmentApprovalService
     ): Student {
         try {
             // Find or create a unique User record for this student school email UPN
-            $studentUser = \App\Models\User::where('email', $schoolEmail)->first();
-            if (!$studentUser) {
+            $studentUser = User::where('email', $schoolEmail)->first();
+            if (! $studentUser) {
                 $prefix = explode('@', $schoolEmail)[0];
                 $username = $prefix;
-                if (\App\Models\User::where('username', $username)->exists()) {
-                    $username = $prefix . '_' . $studentNumber;
+                if (User::where('username', $username)->exists()) {
+                    $username = $prefix.'_'.$studentNumber;
                 }
-                $studentUser = \App\Models\User::create([
-                    'name'              => trim(($applicant->first_name ?? '') . ' ' . ($applicant->last_name ?? '')),
-                    'email'             => $schoolEmail,
-                    'username'          => $username,
-                    'password'          => Hash::make(Str::random(32)),
-                    'role'              => 'student',
-                    'account_status'    => 'verified',
+                $studentUser = User::create([
+                    'name' => trim(($applicant->first_name ?? '').' '.($applicant->last_name ?? '')),
+                    'email' => $schoolEmail,
+                    'username' => $username,
+                    'password' => Hash::make(Str::random(32)),
+                    'role' => 'student',
+                    'account_status' => 'verified',
                     'email_verified_at' => now(),
                 ]);
             } else {
                 $studentUser->update([
-                    'role'           => 'student',
+                    'role' => 'student',
                     'account_status' => 'verified',
                 ]);
             }
@@ -494,7 +498,7 @@ class EnrollmentApprovalService
 
         // 2. If local resolution failed or if it's a URL, try fetching via HTTP
         $urlCandidates = [];
-        if (!$bytes) {
+        if (! $bytes) {
             if (filter_var($urlOrPath, FILTER_VALIDATE_URL)) {
                 $urlCandidates[] = $urlOrPath;
             } else {
@@ -506,35 +510,35 @@ class EnrollmentApprovalService
                 if (str_contains($storageUrl, '127.0.0.1') || str_contains($storageUrl, 'localhost')) {
                     $storageUrl = 'https://enrollment.amis.edu.ph/storage';
                 }
-                $urlCandidates[] = rtrim($storageUrl, '/') . '/' . ltrim($urlOrPath, '/');
+                $urlCandidates[] = rtrim($storageUrl, '/').'/'.ltrim($urlOrPath, '/');
 
                 // Explicit production enrollment URL fallback
-                $urlCandidates[] = 'https://enrollment.amis.edu.ph/storage/' . ltrim($urlOrPath, '/');
+                $urlCandidates[] = 'https://enrollment.amis.edu.ph/storage/'.ltrim($urlOrPath, '/');
 
                 // Admin site APP_URL fallback (in case of symlinks served directly)
                 $appUrl = config('app.url');
-                if ($appUrl && !str_contains($appUrl, '127.0.0.1') && !str_contains($appUrl, 'localhost')) {
-                    $urlCandidates[] = rtrim($appUrl, '/') . '/storage/' . ltrim($urlOrPath, '/');
+                if ($appUrl && ! str_contains($appUrl, '127.0.0.1') && ! str_contains($appUrl, 'localhost')) {
+                    $urlCandidates[] = rtrim($appUrl, '/').'/storage/'.ltrim($urlOrPath, '/');
                 }
 
                 // Explicit production admin URL fallback
-                $urlCandidates[] = 'https://admin.amis.edu.ph/storage/' . ltrim($urlOrPath, '/');
+                $urlCandidates[] = 'https://admin.amis.edu.ph/storage/'.ltrim($urlOrPath, '/');
             }
 
             $urlCandidates = array_values(array_unique($urlCandidates));
 
             foreach ($urlCandidates as $url) {
                 try {
-                    $response = \Illuminate\Support\Facades\Http::timeout(10)->withoutVerifying()->get($url);
+                    $response = Http::timeout(10)->withoutVerifying()->get($url);
                     if ($response->successful()) {
                         $bytes = $response->body();
                         $contentType = $response->header('Content-Type');
 
                         // Parse Content-Type or extract from path extension
-                        if (!$contentType || !str_starts_with(strtolower($contentType), 'image/')) {
+                        if (! $contentType || ! str_starts_with(strtolower($contentType), 'image/')) {
                             $ext = strtolower(pathinfo(parse_url($url, PHP_URL_PATH) ?? '', PATHINFO_EXTENSION));
                             $contentType = match ($ext) {
-                                'png'  => 'image/png',
+                                'png' => 'image/png',
                                 'webp' => 'image/webp',
                                 default => 'image/jpeg',
                             };
@@ -543,15 +547,15 @@ class EnrollmentApprovalService
                         $resolvedPathOrUrl = $url;
                         break; // Found and loaded
                     } else {
-                        Log::warning("Failed to fetch photo from URL {$url}: Status Code " . $response->status());
+                        Log::warning("Failed to fetch photo from URL {$url}: Status Code ".$response->status());
                     }
                 } catch (\Throwable $e) {
-                    Log::warning("Failed to fetch photo from URL {$url}: " . $e->getMessage());
+                    Log::warning("Failed to fetch photo from URL {$url}: ".$e->getMessage());
                 }
             }
         }
 
-        if (!$bytes) {
+        if (! $bytes) {
             // Retrieve candidate local paths for logging
             $optimizedPath = preg_replace('#thumbnails/(small|medium|large)/#', 'optimized/', $urlOrPath);
             $variantPaths = collect([
@@ -570,6 +574,7 @@ class EnrollmentApprovalService
             $searchedCandidatesStr = implode(', ', $candidates);
             $triedUrlsStr = implode(', ', $urlCandidates);
             Log::error("Microsoft profile photo sync failed: 2x2 photo not found for applicant {$applicant->id}. Searched local candidates: [{$searchedCandidatesStr}]. Tried HTTP URLs: [{$triedUrlsStr}].");
+
             return null;
         }
 
@@ -883,7 +888,7 @@ class EnrollmentApprovalService
         return $default;
     }
 
-    private function onboardingRecipients(EnrollmentApplicant $applicant): \Illuminate\Support\Collection
+    private function onboardingRecipients(EnrollmentApplicant $applicant): Collection
     {
         return collect([$applicant->parent_email ?: null, $applicant->email ?: null])
             ->filter(fn ($email) => $email && $email !== 'NA' && filter_var($email, FILTER_VALIDATE_EMAIL))

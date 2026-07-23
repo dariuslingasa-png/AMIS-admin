@@ -30,8 +30,9 @@ class SendBulkEmailCampaignJob implements ShouldQueue
         SmartSmtpRotatorService $rotatorService
     ): void {
         $campaign = BulkEmailCampaign::find($this->campaignId);
-        if (!$campaign) {
+        if (! $campaign) {
             Log::error("SendBulkEmailCampaignJob: Campaign ID {$this->campaignId} not found.");
+
             return;
         }
 
@@ -50,6 +51,7 @@ class SendBulkEmailCampaignJob implements ShouldQueue
                 'status' => 'failed',
                 'error_log' => 'No valid email recipients found for the selected filter target.',
             ]);
+
             return;
         }
 
@@ -62,12 +64,13 @@ class SendBulkEmailCampaignJob implements ShouldQueue
         $attachmentPaths = $campaign->attachments_json ?: [];
 
         foreach ($recipients as $recipientEmail => $recipientData) {
-            if (!is_array($recipientData)) {
+            if (! is_array($recipientData)) {
                 $recipientData = ['email' => $recipientEmail, 'name' => $recipientEmail];
             }
 
-            if (!filter_var($recipientEmail, FILTER_VALIDATE_EMAIL)) {
+            if (! filter_var($recipientEmail, FILTER_VALIDATE_EMAIL)) {
                 $failedCount++;
+
                 continue;
             }
 
@@ -104,7 +107,7 @@ class SendBulkEmailCampaignJob implements ShouldQueue
                 ]);
             } catch (\Throwable $e) {
                 $failedCount++;
-                Log::error("SendBulkEmailCampaignJob: Failed sending to {$recipientEmail}: " . $e->getMessage());
+                Log::error("SendBulkEmailCampaignJob: Failed sending to {$recipientEmail}: ".$e->getMessage());
 
                 EmailLog::create([
                     'mailer' => 'smtp',

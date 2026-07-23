@@ -1,14 +1,17 @@
 <?php
-require __DIR__ . '/vendor/autoload.php';
-$app = require_once __DIR__ . '/bootstrap/app.php';
-$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+
+use Illuminate\Contracts\Console\Kernel;
+
+require __DIR__.'/vendor/autoload.php';
+$app = require_once __DIR__.'/bootstrap/app.php';
+$kernel = $app->make(Kernel::class);
 $kernel->bootstrap();
 
 // Total applicants
-$total = \DB::table('enrollment_applicants')->count();
+$total = DB::table('enrollment_applicants')->count();
 
 // Count with LRN (not null, not empty, not NA, not N/A, not EMPTY)
-$withLrn = \DB::table('enrollment_applicants')
+$withLrn = DB::table('enrollment_applicants')
     ->whereNotNull('lrn')
     ->where('lrn', '!=', '')
     ->where('lrn', '!=', 'NA')
@@ -20,12 +23,12 @@ $withLrn = \DB::table('enrollment_applicants')
 $withoutLrn = $total - $withLrn;
 
 echo "LRN Statistics:\n";
-echo "  Total Students/Applicants: " . $total . "\n";
-echo "  Students with VALID LRN: " . $withLrn . "\n";
-echo "  Students WITHOUT LRN: " . $withoutLrn . "\n";
+echo '  Total Students/Applicants: '.$total."\n";
+echo '  Students with VALID LRN: '.$withLrn."\n";
+echo '  Students WITHOUT LRN: '.$withoutLrn."\n";
 
 // Show some examples of valid LRNs
-$examples = \DB::table('enrollment_applicants')
+$examples = DB::table('enrollment_applicants')
     ->whereNotNull('lrn')
     ->where('lrn', '!=', '')
     ->where('lrn', '!=', 'NA')

@@ -65,20 +65,20 @@ class ClassScheduleService
         $matched = $this->matcher->match($data['teacher_display'] ?? '');
 
         return ClassSchedule::create([
-            'section_id'     => $data['section_id'],
-            'subject_name'   => $data['subject_name'],
+            'section_id' => $data['section_id'],
+            'subject_name' => $data['subject_name'],
             'spans_all_days' => (bool) ($data['spans_all_days'] ?? false),
-            'is_special'     => (bool) ($data['is_special'] ?? false),
-            'color_class'    => $data['color_class'] ?? $this->inferColorClass($data['subject_name']),
-            'teacher_key'    => $matched['key'],
-            'teacher_display'=> $matched['display'],
+            'is_special' => (bool) ($data['is_special'] ?? false),
+            'color_class' => $data['color_class'] ?? $this->inferColorClass($data['subject_name']),
+            'teacher_key' => $matched['key'],
+            'teacher_display' => $matched['display'],
             'teacher_status' => $matched['status'],
-            'day'            => $data['day'],
-            'start_time'     => $data['start_time'],
-            'end_time'       => $data['end_time'],
-            'mode'           => $data['mode'] ?? 'f2f',
-            'school_year'    => $data['school_year'] ?? '2026-2027',
-            'created_by'     => auth()->id(),
+            'day' => $data['day'],
+            'start_time' => $data['start_time'],
+            'end_time' => $data['end_time'],
+            'mode' => $data['mode'] ?? 'f2f',
+            'school_year' => $data['school_year'] ?? '2026-2027',
+            'created_by' => auth()->id(),
         ]);
     }
 
@@ -95,19 +95,19 @@ class ClassScheduleService
         $matched = $this->matcher->match($rawTeacher);
 
         $schedule->update([
-            'section_id'     => $data['section_id'],
-            'subject_name'   => $data['subject_name'],
+            'section_id' => $data['section_id'],
+            'subject_name' => $data['subject_name'],
             'spans_all_days' => (bool) ($data['spans_all_days'] ?? false),
-            'is_special'     => (bool) ($data['is_special'] ?? false),
-            'color_class'    => $data['color_class'] ?? $this->inferColorClass($data['subject_name']),
-            'teacher_key'    => $matched['key'],
-            'teacher_display'=> $matched['display'],
+            'is_special' => (bool) ($data['is_special'] ?? false),
+            'color_class' => $data['color_class'] ?? $this->inferColorClass($data['subject_name']),
+            'teacher_key' => $matched['key'],
+            'teacher_display' => $matched['display'],
             'teacher_status' => $matched['status'],
-            'day'            => $data['day'],
-            'start_time'     => $data['start_time'],
-            'end_time'       => $data['end_time'],
-            'mode'           => $data['mode'] ?? $schedule->mode,
-            'school_year'    => $data['school_year'] ?? $schedule->school_year,
+            'day' => $data['day'],
+            'start_time' => $data['start_time'],
+            'end_time' => $data['end_time'],
+            'mode' => $data['mode'] ?? $schedule->mode,
+            'school_year' => $data['school_year'] ?? $schedule->school_year,
         ]);
 
         // Find and update sibling records on other days that belong to the same week slot
@@ -119,15 +119,15 @@ class ClassScheduleService
             ->get()
             ->each(function ($sibling) use ($schedule) {
                 $sibling->update([
-                    'subject_name'   => $schedule->subject_name,
-                    'teacher_key'    => $schedule->teacher_key,
-                    'teacher_display'=> $schedule->teacher_display,
+                    'subject_name' => $schedule->subject_name,
+                    'teacher_key' => $schedule->teacher_key,
+                    'teacher_display' => $schedule->teacher_display,
                     'teacher_status' => $schedule->teacher_status,
-                    'start_time'     => $schedule->start_time,
-                    'end_time'       => $schedule->end_time,
-                    'color_class'    => $schedule->color_class,
-                    'mode'           => $schedule->mode,
-                    'school_year'    => $schedule->school_year,
+                    'start_time' => $schedule->start_time,
+                    'end_time' => $schedule->end_time,
+                    'color_class' => $schedule->color_class,
+                    'mode' => $schedule->mode,
+                    'school_year' => $schedule->school_year,
                 ]);
             });
 
@@ -141,7 +141,7 @@ class ClassScheduleService
     public function resolveTeacher(ClassSchedule $schedule, string $teacherKey): ClassSchedule
     {
         $schedule->update([
-            'teacher_key'    => $teacherKey,
+            'teacher_key' => $teacherKey,
             'teacher_status' => 'matched',
         ]);
 
@@ -158,41 +158,41 @@ class ClassScheduleService
             : ($s->teacher_display ?? 'Teacher pending');
 
         $start = substr($s->start_time, 0, 5);
-        $end   = substr($s->end_time, 0, 5);
+        $end = substr($s->end_time, 0, 5);
 
         return [
-            'id'             => $s->id,
-            'section_id'     => $s->section_id,
-            'subject_name'   => $s->subject_name,
-            'teacher_name'   => $teacherName,
-            'teacher_key'    => $s->teacher_key,
-            'teacher_display'=> $s->teacher_display,
+            'id' => $s->id,
+            'section_id' => $s->section_id,
+            'subject_name' => $s->subject_name,
+            'teacher_name' => $teacherName,
+            'teacher_key' => $s->teacher_key,
+            'teacher_display' => $s->teacher_display,
             'teacher_status' => $s->teacher_status,
-            'day'            => $s->day,
-            'day_index'      => array_search($s->day, self::DAYS, true) ?: 0,
-            'start_time'     => $start,
-            'end_time'       => $end,
-            'start_minutes'  => $s->startMinutes(),
-            'end_minutes'    => $s->endMinutes(),
-            'duration_min'   => $s->endMinutes() - $s->startMinutes(),
+            'day' => $s->day,
+            'day_index' => array_search($s->day, self::DAYS, true) ?: 0,
+            'start_time' => $start,
+            'end_time' => $end,
+            'start_minutes' => $s->startMinutes(),
+            'end_minutes' => $s->endMinutes(),
+            'duration_min' => $s->endMinutes() - $s->startMinutes(),
             'spans_all_days' => $s->spans_all_days,
-            'is_special'     => $s->is_special,
-            'color_class'    => $s->color_class ?? $this->inferColorClass($s->subject_name),
-            'mode'           => $s->mode,
-            'time_label'     => $this->timeLabel($start) . ' – ' . $this->timeLabel($end),
-            'payload'        => [
-                'id'              => $s->id,
-                'section_id'      => $s->section_id,
-                'subject_name'    => $s->subject_name,
+            'is_special' => $s->is_special,
+            'color_class' => $s->color_class ?? $this->inferColorClass($s->subject_name),
+            'mode' => $s->mode,
+            'time_label' => $this->timeLabel($start).' – '.$this->timeLabel($end),
+            'payload' => [
+                'id' => $s->id,
+                'section_id' => $s->section_id,
+                'subject_name' => $s->subject_name,
                 'teacher_display' => $s->teacher_display,
-                'teacher_key'     => $s->teacher_key,
-                'teacher_status'  => $s->teacher_status,
-                'day'             => $s->day,
-                'start_time'      => $start,
-                'end_time'        => $end,
-                'spans_all_days'  => $s->spans_all_days,
-                'is_special'      => $s->is_special,
-                'mode'            => $s->mode,
+                'teacher_key' => $s->teacher_key,
+                'teacher_status' => $s->teacher_status,
+                'day' => $s->day,
+                'start_time' => $start,
+                'end_time' => $end,
+                'spans_all_days' => $s->spans_all_days,
+                'is_special' => $s->is_special,
+                'mode' => $s->mode,
             ],
         ];
     }
@@ -209,6 +209,7 @@ class ClassScheduleService
             $value = sprintf('%02d:%02d', intdiv($minutes, 60), $minutes % 60);
             $times[$value] = $this->timeLabel($value);
         }
+
         return $times;
     }
 
@@ -217,9 +218,9 @@ class ClassScheduleService
     private function ensureNoConflict(array $data, ?int $ignoreId = null): void
     {
         [$startH, $startM] = array_map('intval', explode(':', $data['start_time']));
-        [$endH, $endM]     = array_map('intval', explode(':', $data['end_time']));
+        [$endH, $endM] = array_map('intval', explode(':', $data['end_time']));
         $startMin = $startH * 60 + $startM;
-        $endMin   = $endH * 60 + $endM;
+        $endMin = $endH * 60 + $endM;
 
         if ($endMin <= $startMin) {
             throw ValidationException::withMessages(['end_time' => 'End time must be after start time.']);
@@ -233,7 +234,7 @@ class ClassScheduleService
 
         foreach ($conflicts as $entry) {
             $eStart = $entry->startMinutes();
-            $eEnd   = $entry->endMinutes();
+            $eEnd = $entry->endMinutes();
             if ($startMin < $eEnd && $eStart < $endMin) {
                 throw ValidationException::withMessages([
                     'start_time' => 'This section already has a class during that time slot.',
@@ -245,12 +246,25 @@ class ClassScheduleService
     private function inferColorClass(string $subject): string
     {
         $s = mb_strtolower($subject);
-        if (str_contains($s, "qur'an") || str_contains($s, 'quran')) return 'quran';
-        if (str_contains($s, 'hadith'))   return 'hadith';
-        if (str_contains($s, 'arabic'))   return 'arabic';
-        if (str_contains($s, 'recess') || str_contains($s, 'break')) return 'recess';
-        if (str_contains($s, 'assembly') || str_contains($s, 'departure')) return 'event';
-        if (str_contains($s, 'meeting') || str_contains($s, 'circle') || str_contains($s, 'wrap')) return 'event';
+        if (str_contains($s, "qur'an") || str_contains($s, 'quran')) {
+            return 'quran';
+        }
+        if (str_contains($s, 'hadith')) {
+            return 'hadith';
+        }
+        if (str_contains($s, 'arabic')) {
+            return 'arabic';
+        }
+        if (str_contains($s, 'recess') || str_contains($s, 'break')) {
+            return 'recess';
+        }
+        if (str_contains($s, 'assembly') || str_contains($s, 'departure')) {
+            return 'event';
+        }
+        if (str_contains($s, 'meeting') || str_contains($s, 'circle') || str_contains($s, 'wrap')) {
+            return 'event';
+        }
+
         return 'academic';
     }
 

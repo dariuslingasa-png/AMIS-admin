@@ -52,18 +52,18 @@ class MsTeamsProvisioningService
 
         // 1. Create the Team
         $msTeamData = $this->graph->createTeam($teamName, "AMIS {$grade} team for {$schoolYear}");
-        $msTeamId   = $this->waitForTeam($msTeamData['id']);
+        $msTeamId = $this->waitForTeam($msTeamData['id']);
 
         // 2. Save to DB
         $team = MsTeam::create([
-            'ms_team_id'   => $msTeamId,
+            'ms_team_id' => $msTeamId,
             'display_name' => $teamName,
-            'type'         => 'grade',
-            'shift'        => null,
-            'grade_level'  => $grade,
-            'subject_id'   => null,
-            'school_year'  => $schoolYear,
-            'team_url'     => "https://teams.microsoft.com/l/team/{$msTeamId}",
+            'type' => 'grade',
+            'shift' => null,
+            'grade_level' => $grade,
+            'subject_id' => null,
+            'school_year' => $schoolYear,
+            'team_url' => "https://teams.microsoft.com/l/team/{$msTeamId}",
         ]);
 
         // 3. Create all 6 private channels
@@ -72,7 +72,7 @@ class MsTeamsProvisioningService
             sleep(1); // small delay between channel creations
         }
 
-        Log::info("Provisioned grade team: {$teamName} [{$msTeamId}] with " . count(self::CHANNELS) . " channels");
+        Log::info("Provisioned grade team: {$teamName} [{$msTeamId}] with ".count(self::CHANNELS).' channels');
 
         return $team->load('channels');
     }
@@ -91,15 +91,16 @@ class MsTeamsProvisioningService
                 $channelData = $this->graph->createPrivateChannel($msTeamId, $channelName, $adminUpn);
 
                 MsTeamChannel::create([
-                    'ms_team_id_fk'        => $team->id,
-                    'ms_channel_id'        => $channelData['id'],
-                    'display_name'         => $channelName,
-                    'gender_filter'        => $genderFilter,
-                    'is_private'           => true,
+                    'ms_team_id_fk' => $team->id,
+                    'ms_channel_id' => $channelData['id'],
+                    'display_name' => $channelName,
+                    'gender_filter' => $genderFilter,
+                    'is_private' => true,
                     'learning_mode_filter' => $learningModeFilter,
                 ]);
 
                 Log::info("Created channel [{$channelName}] in {$team->display_name}");
+
                 return;
 
             } catch (\Exception $e) {
@@ -108,7 +109,8 @@ class MsTeamsProvisioningService
                     Log::warning("429 on channel [{$channelName}], retrying in 10s...");
                     sleep(10);
                 } else {
-                    Log::error("Failed to create channel [{$channelName}] in {$team->display_name}: " . $e->getMessage());
+                    Log::error("Failed to create channel [{$channelName}] in {$team->display_name}: ".$e->getMessage());
+
                     return;
                 }
             }
@@ -121,11 +123,14 @@ class MsTeamsProvisioningService
             sleep(3);
             try {
                 $team = $this->graph->getTeam($teamId);
-                if (!empty($team['id'])) return $team['id'];
+                if (! empty($team['id'])) {
+                    return $team['id'];
+                }
             } catch (\Exception) {
                 // Not ready yet
             }
         }
+
         return $teamId;
     }
 }

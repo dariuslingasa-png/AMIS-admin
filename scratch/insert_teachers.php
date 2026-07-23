@@ -1,12 +1,13 @@
 <?php
 
-require __DIR__ . '/../vendor/autoload.php';
-$app = require_once __DIR__ . '/../bootstrap/app.php';
-$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+require __DIR__.'/../vendor/autoload.php';
+$app = require_once __DIR__.'/../bootstrap/app.php';
+$kernel = $app->make(Kernel::class);
 $kernel->bootstrap();
 
 use App\Models\User;
 use App\Repositories\TeacherRepository;
+use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Support\Str;
 
 $teachersData = [
@@ -246,7 +247,7 @@ $overrides = $repo->overrides();
 foreach ($teachersData as $item) {
     $id = $item['id'];
     $exists = isset($overrides[$id]);
-    
+
     if ($exists) {
         echo "Updating existing override: {$id} ({$item['name']})\n";
         $overrides[$id]['name'] = $item['name'];
@@ -260,7 +261,7 @@ foreach ($teachersData as $item) {
         $overrides[$id]['microsoft_sync'] = false;
     } else {
         echo "Creating new override: {$id} ({$item['name']})\n";
-        $password = 'Amis@' . strtoupper(Str::random(5)) . rand(10, 99);
+        $password = 'Amis@'.strtoupper(Str::random(5)).rand(10, 99);
         $overrides[$id] = [
             'id' => $id,
             'name' => $item['name'],
@@ -283,13 +284,13 @@ foreach ($teachersData as $item) {
             'subjects' => [],
         ];
     }
-    
+
     // Update or create DB User
     $tempPassword = $overrides[$id]['temporary_password'] ?? 'Amis@ABCDE12';
     $user = User::where('email', $item['email'])
         ->orWhere('username', $id)
         ->first();
-    
+
     if ($user) {
         $user->update([
             'name' => $item['name'],

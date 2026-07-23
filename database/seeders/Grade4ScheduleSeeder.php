@@ -13,7 +13,7 @@ class Grade4ScheduleSeeder extends Seeder
         // 1. Resolve Grade 4 sections dynamically
         $sections = Section::where(function ($q) {
             $q->where('grade_level', 'like', '%Grade 4%')
-              ->orWhere('grade_level', 'like', '%G4%');
+                ->orWhere('grade_level', 'like', '%G4%');
         })->get();
 
         $sectionMap = [];
@@ -21,9 +21,9 @@ class Grade4ScheduleSeeder extends Seeder
             $shift = strtolower($s->shift ?? '');
             $gender = strtolower($s->gender ?? 'male');
             $modeLower = strtolower($s->learning_mode ?? '');
-            
+
             $isF2F = str_contains($modeLower, 'face-to-face') || str_contains($modeLower, 'f2f');
-            
+
             // Normalize shift
             $is1st = true;
             if (str_contains($shift, '2nd') || str_contains($shift, 'second')) {
@@ -33,36 +33,37 @@ class Grade4ScheduleSeeder extends Seeder
                     $is1st = false;
                 }
             }
-            
+
             // Normalize gender
             $isFemale = false;
             if (str_contains($gender, 'girl') || str_contains($gender, 'female')) {
                 $isFemale = true;
             }
-            
+
             if ($isF2F) {
-                $key = 'f2f_' . ($isFemale ? 'female' : 'male');
+                $key = 'f2f_'.($isFemale ? 'female' : 'male');
             } else {
-                $key = ($is1st ? '1st' : '2nd') . '_' . ($isFemale ? 'female' : 'male');
+                $key = ($is1st ? '1st' : '2nd').'_'.($isFemale ? 'female' : 'male');
             }
-            
+
             $sectionMap[$key] = $s->id;
         }
 
         // Extract resolved IDs
-        $id1stMale   = $sectionMap['1st_male'] ?? null;
+        $id1stMale = $sectionMap['1st_male'] ?? null;
         $id1stFemale = $sectionMap['1st_female'] ?? null;
-        $id2ndMale   = $sectionMap['2nd_male'] ?? null;
+        $id2ndMale = $sectionMap['2nd_male'] ?? null;
         $id2ndFemale = $sectionMap['2nd_female'] ?? null;
-        $idF2FMale   = $sectionMap['f2f_male'] ?? null;
+        $idF2FMale = $sectionMap['f2f_male'] ?? null;
         $idF2FFemale = $sectionMap['f2f_female'] ?? null;
 
         $targetSectionIds = array_filter([
-            $id1stMale, $id1stFemale, $id2ndMale, $id2ndFemale, $idF2FMale, $idF2FFemale
+            $id1stMale, $id1stFemale, $id2ndMale, $id2ndFemale, $idF2FMale, $idF2FFemale,
         ]);
 
         if (empty($targetSectionIds)) {
-            $this->command->error("No Grade 4 sections found.");
+            $this->command->error('No Grade 4 sections found.');
+
             return;
         }
 
@@ -72,7 +73,7 @@ class Grade4ScheduleSeeder extends Seeder
         $schedules = [];
 
         // Helper to generate schedule list for a section ID
-        $get1stShiftMaleSchedule = function($sectionId) {
+        $get1stShiftMaleSchedule = function ($sectionId) {
             return [
                 // Slot 1: 12:40-13:20
                 ['section_id' => $sectionId, 'subject_name' => 'Arabic', 'teacher_name' => 'Ust. Ali', 'schedule' => 'Sunday 12:40-13:20'],
@@ -97,7 +98,7 @@ class Grade4ScheduleSeeder extends Seeder
             ];
         };
 
-        $get1stShiftFemaleSchedule = function($sectionId) {
+        $get1stShiftFemaleSchedule = function ($sectionId) {
             return [
                 // Slot 1: 12:40-13:20
                 ['section_id' => $sectionId, 'subject_name' => 'SHAF', 'teacher_name' => 'Ust. Raslina', 'schedule' => 'Sunday 12:40-13:20'],

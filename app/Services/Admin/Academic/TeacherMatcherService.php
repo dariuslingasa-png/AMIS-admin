@@ -2,6 +2,9 @@
 
 namespace App\Services\Admin\Academic;
 
+use App\Models\User;
+use App\Repositories\TeacherRepository;
+use App\Support\ImageHelper;
 use Illuminate\Support\Str;
 
 /**
@@ -45,7 +48,7 @@ class TeacherMatcherService
     /**
      * Match a raw teacher name string against the teacher database.
      *
-     * @param  string $rawName  e.g. "Ust. Saliha", "Tchr. Ayah", "Ayah"
+     * @param  string  $rawName  e.g. "Ust. Saliha", "Tchr. Ayah", "Ayah"
      * @return array{key: string|null, display: string, status: string}
      */
     public function match(string $rawName): array
@@ -81,16 +84,16 @@ class TeacherMatcherService
                     $parts = explode(' ', $nameWithoutTitle);
                     $firstName = $parts[0] ?? '';
                 }
-                
+
                 $normalizedFirstName = $this->normalize($firstName);
                 $normalizedId = str_replace('-', ' ', $this->normalize($teacher['id']));
-                
+
                 $compactNormalized = str_replace(' ', '', $normalized);
                 $compactFirstName = str_replace(' ', '', $normalizedFirstName);
                 $compactId = str_replace(' ', '', $normalizedId);
 
                 // Handle special spelling variations (e.g., Normayla matching Normylah)
-                $isNormaMatch = (str_starts_with($compactNormalized, 'norma') || str_starts_with($compactNormalized, 'normy')) && 
+                $isNormaMatch = (str_starts_with($compactNormalized, 'norma') || str_starts_with($compactNormalized, 'normy')) &&
                                (str_starts_with($compactId, 'teachernormylah') || str_starts_with($compactId, 'normylah'));
 
                 $firstNameWords = explode(' ', $normalizedFirstName);
@@ -128,26 +131,26 @@ class TeacherMatcherService
         // Rule 6: Exactly 1 match
         if (count($matches) === 1) {
             return [
-                'key'     => $matches[0]['id'],
+                'key' => $matches[0]['id'],
                 'display' => $rawName,
-                'status'  => 'matched',
+                'status' => 'matched',
             ];
         }
 
         // Rule 7: Multiple matches — flag for manual selection
         if (count($matches) > 1) {
             return [
-                'key'     => null,
+                'key' => null,
                 'display' => $rawName,
-                'status'  => 'manual',
+                'status' => 'manual',
             ];
         }
 
         // Rule 8: No match — do NOT auto-create
         return [
-            'key'     => null,
+            'key' => null,
             'display' => $rawName,
-            'status'  => 'unmatched',
+            'status' => 'unmatched',
         ];
     }
 
@@ -157,6 +160,7 @@ class TeacherMatcherService
     public function resolveDisplay(string $key): ?string
     {
         $teacher = collect($this->allTeachers())->firstWhere('id', $key);
+
         return $teacher['name'] ?? null;
     }
 
@@ -169,31 +173,31 @@ class TeacherMatcherService
             return $this->teacherList;
         }
 
-        /** @var \App\Repositories\TeacherRepository $repo */
-        $repo = app(\App\Repositories\TeacherRepository::class);
+        /** @var TeacherRepository $repo */
+        $repo = app(TeacherRepository::class);
         $overrides = $repo->overrides();
 
         // Base teachers from advisories
         $advisory = collect(config('class_advisories', []))
             ->flatMap(fn ($rows) => collect($rows))
             ->map(fn ($row) => [
-                'id'   => Str::slug(Str::of($row['teacher'] ?? '')->ascii()),
+                'id' => Str::slug(Str::of($row['teacher'] ?? '')->ascii()),
                 'name' => $row['teacher'] ?? '',
                 'first_name' => explode(' ', str_replace(['TEACHER ', 'USTADZ ', 'USTADHA ', 'ALIM '], '', $row['teacher'] ?? ''))[0] ?? '',
             ]);
 
         // Teachers from overrides JSON
         $fromOverrides = collect($overrides)->map(fn ($data, $id) => [
-            'id'   => $id,
+            'id' => $id,
             'name' => $data['name'] ?? '',
             'first_name' => $data['first_name'] ?? '',
         ])->values();
 
         // Teachers from database
-        $dbTeachers = \App\Models\User::where('role', 'teacher')
+        $dbTeachers = User::where('role', 'teacher')
             ->get()
             ->map(fn ($u) => [
-                'id'   => $u->username ?: Str::slug(Str::of($u->name)->ascii()),
+                'id' => $u->username ?: Str::slug(Str::of($u->name)->ascii()),
                 'name' => $u->name,
                 'first_name' => explode(' ', str_replace(['TEACHER ', 'USTADZ ', 'USTADHA ', 'ALIM '], '', $u->name))[0] ?? '',
             ]);
@@ -222,8 +226,9 @@ class TeacherMatcherService
                 }
             }
             if ($photoPath) {
-                return str_contains($photoPath, 'images/teachers/') ? asset($photoPath) : asset(\App\Support\ImageHelper::thumb($photoPath, 'medium'));
+                return str_contains($photoPath, 'images/teachers/') ? asset($photoPath) : asset(ImageHelper::thumb($photoPath, 'medium'));
             }
+
             return null;
         };
 
@@ -238,6 +243,7 @@ class TeacherMatcherService
             ->map(function ($t) use ($getPhotoUrl) {
                 $t['photo_url'] = $getPhotoUrl($t['id'], $t['name']);
                 $t['short_name'] = $this->getShortName($t['name']);
+
                 return $t;
             })
             ->all();
@@ -259,17 +265,29 @@ class TeacherMatcherService
 
         foreach (self::TITLE_PATTERNS as $pattern) {
             if (preg_match($pattern, $fullName)) {
-                if (preg_match('/^ust/i', $fullName)) $matchedPrefix = 'Ustadz';
-                elseif (preg_match('/^ustadh/i', $fullName)) $matchedPrefix = 'Ustadz';
-                elseif (preg_match('/^ustadza/i', $fullName)) $matchedPrefix = 'Ustadha';
-                elseif (preg_match('/^ustadha/i', $fullName)) $matchedPrefix = 'Ustadha';
-                elseif (preg_match('/^alim/i', $fullName)) $matchedPrefix = 'Alim';
-                elseif (preg_match('/^alima/i', $fullName)) $matchedPrefix = 'Alima';
-                elseif (preg_match('/^sir/i', $fullName)) $matchedPrefix = 'Sir';
-                elseif (preg_match('/^ma/i', $fullName)) $matchedPrefix = 'Maam';
-                elseif (preg_match('/^ms/i', $fullName)) $matchedPrefix = 'Ms';
-                elseif (preg_match('/^mrs/i', $fullName)) $matchedPrefix = 'Mrs';
-                elseif (preg_match('/^mr/i', $fullName)) $matchedPrefix = 'Mr';
+                if (preg_match('/^ust/i', $fullName)) {
+                    $matchedPrefix = 'Ustadz';
+                } elseif (preg_match('/^ustadh/i', $fullName)) {
+                    $matchedPrefix = 'Ustadz';
+                } elseif (preg_match('/^ustadza/i', $fullName)) {
+                    $matchedPrefix = 'Ustadha';
+                } elseif (preg_match('/^ustadha/i', $fullName)) {
+                    $matchedPrefix = 'Ustadha';
+                } elseif (preg_match('/^alim/i', $fullName)) {
+                    $matchedPrefix = 'Alim';
+                } elseif (preg_match('/^alima/i', $fullName)) {
+                    $matchedPrefix = 'Alima';
+                } elseif (preg_match('/^sir/i', $fullName)) {
+                    $matchedPrefix = 'Sir';
+                } elseif (preg_match('/^ma/i', $fullName)) {
+                    $matchedPrefix = 'Maam';
+                } elseif (preg_match('/^ms/i', $fullName)) {
+                    $matchedPrefix = 'Ms';
+                } elseif (preg_match('/^mrs/i', $fullName)) {
+                    $matchedPrefix = 'Mrs';
+                } elseif (preg_match('/^mr/i', $fullName)) {
+                    $matchedPrefix = 'Mr';
+                }
 
                 $bareName = preg_replace($pattern, '', $fullName);
                 break;
@@ -279,7 +297,7 @@ class TeacherMatcherService
         $words = explode(' ', trim($bareName));
         $firstName = ucfirst(strtolower($words[0] ?? ''));
 
-        return trim($matchedPrefix . ' ' . $firstName);
+        return trim($matchedPrefix.' '.$firstName);
     }
 
     /**
@@ -294,6 +312,7 @@ class TeacherMatcherService
                 return trim($stripped);
             }
         }
+
         return trim($name);
     }
 
@@ -305,6 +324,7 @@ class TeacherMatcherService
         $name = mb_strtolower($name);
         $name = str_replace('.', '', $name);
         $name = preg_replace('/\s+/', ' ', $name);
+
         return trim($name);
     }
 }

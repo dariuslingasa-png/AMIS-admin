@@ -11,8 +11,8 @@ use App\Services\Admin\Enrollment\EnrollmentReviewService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class ApplicantController extends Controller
 {
@@ -122,7 +122,7 @@ class ApplicantController extends Controller
             'duplicateCount' => (function () {
                 // Count applicants that share the same first_name + last_name + date_of_birth
                 // (read-only — no edits or deletes)
-                return \App\Models\EnrollmentApplicant::query()
+                return EnrollmentApplicant::query()
                     ->whereNotIn('status', ['draft'])
                     ->whereNotNull('date_of_birth')
                     ->selectRaw('LOWER(TRIM(first_name)) as fn, LOWER(TRIM(last_name)) as ln, date_of_birth, COUNT(*) as cnt')
@@ -224,7 +224,7 @@ class ApplicantController extends Controller
 
         return view('admin.applicants.show', [
             'applicant' => $applicant,
-            'siblings'  => $siblings,
+            'siblings' => $siblings,
             'enrollmentSetting' => EnrollmentSetting::current(),
             ...$this->reviewService->detailData($applicant),
         ]);
@@ -247,7 +247,7 @@ class ApplicantController extends Controller
 
         return view('admin.applicants.review', [
             'applicant' => $applicant,
-            'siblings'  => $siblings,
+            'siblings' => $siblings,
             'enrollmentSetting' => EnrollmentSetting::current(),
             ...$this->reviewService->detailData($applicant),
         ]);
@@ -267,18 +267,18 @@ class ApplicantController extends Controller
     public function emailRegistry(Request $request)
     {
         $validated = $request->validate([
-            'recipient_email'     => 'required|email',
-            'payment_filter'      => 'nullable|string|in:all,paid,pending,no_payment',
-            'limit_count'         => 'nullable|integer|min:1',
-            'message_body'        => 'nullable|string',
+            'recipient_email' => 'required|email',
+            'payment_filter' => 'nullable|string|in:all,paid,pending,no_payment',
+            'limit_count' => 'nullable|integer|min:1',
+            'message_body' => 'nullable|string',
             'fetch_families_only' => 'nullable|boolean',
-            'family_no'           => 'nullable|integer',
+            'family_no' => 'nullable|integer',
         ]);
 
         $recipientEmail = $validated['recipient_email'];
-        $paymentFilter  = $validated['payment_filter'] ?? 'all';
-        $limitCount     = $validated['limit_count'] ?? null;
-        $messageBody    = $validated['message_body'] ?? "Assalamualaikum Sir,\n\nHere is the list of enrollment families.\n\n-IT Staff";
+        $paymentFilter = $validated['payment_filter'] ?? 'all';
+        $limitCount = $validated['limit_count'] ?? null;
+        $messageBody = $validated['message_body'] ?? "Assalamualaikum Sir,\n\nHere is the list of enrollment families.\n\n-IT Staff";
 
         try {
             // Retrieve all families from the query (using a very high perPage limit to avoid pagination)
@@ -297,6 +297,7 @@ class ApplicantController extends Controller
                     if ($paymentFilter === 'no_payment') {
                         return $family['payment_status'] === 'No Payment';
                     }
+
                     return true;
                 })->values();
             }
@@ -309,10 +310,10 @@ class ApplicantController extends Controller
             // Return family list only if requested
             if ($request->boolean('fetch_families_only')) {
                 return response()->json([
-                    'success'  => true,
+                    'success' => true,
                     'families' => $families->map(function ($f) {
                         return [
-                            'family_no'    => $f['family_no'],
+                            'family_no' => $f['family_no'],
                             'family_label' => $f['family_label'],
                         ];
                     })->values(),
@@ -331,10 +332,10 @@ class ApplicantController extends Controller
             if ($families->isEmpty()) {
                 // If it is a specific family request and not found, we don't send fallback email.
                 // Otherwise, send the fallback "No Families Found" email.
-                if (!$request->has('family_no')) {
+                if (! $request->has('family_no')) {
                     Mail::send('emails.applicants-registry', [
                         'messageBody' => $messageBody,
-                        'families'    => [],
+                        'families' => [],
                     ], function ($message) use ($recipientEmail) {
                         $message->to($recipientEmail)
                             ->subject('AMIS Families Registry Report - No Families Found');
@@ -352,7 +353,7 @@ class ApplicantController extends Controller
                                 if (blank($rUrl)) {
                                     continue;
                                 }
-                                
+
                                 // Normalize if it is a full URL
                                 if (filter_var($rUrl, FILTER_VALIDATE_URL)) {
                                     $parsedPath = parse_url($rUrl, PHP_URL_PATH);
@@ -364,21 +365,21 @@ class ApplicantController extends Controller
                                 } else {
                                     $rUrlPath = ltrim($rUrl, '/');
                                 }
-                                
+
                                 // Check multiple possible paths to locate the file in local/cPanel environment
                                 $searchPaths = [
-                                    base_path('../amis_enrollment/storage/app/public/' . $rUrlPath),
-                                    base_path('../amis_enrollment/public/storage/' . $rUrlPath),
-                                    base_path('../enrollment/storage/app/public/' . $rUrlPath),
-                                    base_path('../enrollment/public/storage/' . $rUrlPath),
-                                    base_path('../../amis_enrollment/storage/app/public/' . $rUrlPath),
-                                    base_path('../../public_html/amis_enrollment/storage/app/public/' . $rUrlPath),
-                                    base_path('../../public_html/storage/' . $rUrlPath),
-                                    storage_path('app/public/' . $rUrlPath),
-                                    public_path('storage/' . $rUrlPath),
+                                    base_path('../amis_enrollment/storage/app/public/'.$rUrlPath),
+                                    base_path('../amis_enrollment/public/storage/'.$rUrlPath),
+                                    base_path('../enrollment/storage/app/public/'.$rUrlPath),
+                                    base_path('../enrollment/public/storage/'.$rUrlPath),
+                                    base_path('../../amis_enrollment/storage/app/public/'.$rUrlPath),
+                                    base_path('../../public_html/amis_enrollment/storage/app/public/'.$rUrlPath),
+                                    base_path('../../public_html/storage/'.$rUrlPath),
+                                    storage_path('app/public/'.$rUrlPath),
+                                    public_path('storage/'.$rUrlPath),
                                     public_path($rUrlPath),
                                 ];
-                                
+
                                 $localPath = null;
                                 foreach ($searchPaths as $path) {
                                     if (file_exists($path)) {
@@ -386,28 +387,28 @@ class ApplicantController extends Controller
                                         break;
                                     }
                                 }
-                                
+
                                 // Fallback: Download file if it is a URL and not found locally
-                                if (!$localPath && filter_var($rUrl, FILTER_VALIDATE_URL)) {
+                                if (! $localPath && filter_var($rUrl, FILTER_VALIDATE_URL)) {
                                     try {
                                         $tempContent = @file_get_contents($rUrl);
                                         if ($tempContent !== false) {
                                             $tempDir = storage_path('app/temp_attachments');
-                                            if (!file_exists($tempDir)) {
+                                            if (! file_exists($tempDir)) {
                                                 @mkdir($tempDir, 0755, true);
                                             }
                                             $ext = strtolower(pathinfo(parse_url($rUrl, PHP_URL_PATH), PATHINFO_EXTENSION)) ?: 'jpg';
-                                            $tempFile = $tempDir . '/' . uniqid('proof_', true) . '.' . $ext;
+                                            $tempFile = $tempDir.'/'.uniqid('proof_', true).'.'.$ext;
                                             if (@file_put_contents($tempFile, $tempContent) !== false) {
                                                 $localPath = $tempFile;
                                                 $tempFilesToDelete[] = $tempFile;
                                             }
                                         }
                                     } catch (\Throwable $e) {
-                                        \Log::warning('Failed to download receipt from URL: ' . $rUrl . ' - ' . $e->getMessage());
+                                        \Log::warning('Failed to download receipt from URL: '.$rUrl.' - '.$e->getMessage());
                                     }
                                 }
-                                
+
                                 if ($localPath) {
                                     $ext = strtolower(pathinfo($localPath, PATHINFO_EXTENSION));
                                     $mime = match ($ext) {
@@ -419,8 +420,8 @@ class ApplicantController extends Controller
                                         default => 'application/octet-stream'
                                     };
                                     $appNo = str_pad($family['family_no'], 4, '0', STR_PAD_LEFT);
-                                    $filename = 'payment-proof-' . $appNo . (count($receipts) > 1 ? '-' . ($idx + 1) : '') . '.' . $ext;
-                                    
+                                    $filename = 'payment-proof-'.$appNo.(count($receipts) > 1 ? '-'.($idx + 1) : '').'.'.$ext;
+
                                     $alreadyAdded = false;
                                     foreach ($attachments as $att) {
                                         if ($att['path'] === $localPath) {
@@ -428,11 +429,11 @@ class ApplicantController extends Controller
                                             break;
                                         }
                                     }
-                                    
-                                    if (!$alreadyAdded) {
+
+                                    if (! $alreadyAdded) {
                                         $attachments[] = [
                                             'path' => $localPath,
-                                            'as'   => $filename,
+                                            'as' => $filename,
                                             'mime' => $mime,
                                         ];
                                     }
@@ -442,15 +443,15 @@ class ApplicantController extends Controller
 
                         $lastName = strtoupper(trim(explode(',', $family['family_label'])[0]));
                         $appNo = str_pad($family['family_no'], 4, '0', STR_PAD_LEFT);
-                        $subjectLine = 'AMIS Family Registry Report - ' . $lastName . ' - Application #' . $appNo;
+                        $subjectLine = 'AMIS Family Registry Report - '.$lastName.' - Application #'.$appNo;
 
                         Mail::send('emails.applicants-registry', [
                             'messageBody' => $messageBody,
-                            'families'    => [$family],
+                            'families' => [$family],
                         ], function ($message) use ($recipientEmail, $subjectLine, $attachments) {
                             $message->to($recipientEmail)
                                 ->subject($subjectLine);
-                            
+
                             // Clear reply/thread headers to prevent grouping in Gmail
                             $symfonyMessage = $message->getSymfonyMessage();
                             $headers = $symfonyMessage->getHeaders();
@@ -458,13 +459,13 @@ class ApplicantController extends Controller
                             $headers->remove('References');
                             $headers->remove('threadId');
                             $headers->remove('reply_message_id');
-                            
+
                             // Add unique header to force separate thread
                             $headers->addTextHeader('X-Entity-Ref-ID', uniqid('amis-', true));
-                            
+
                             foreach ($attachments as $attachment) {
                                 $message->attach($attachment['path'], [
-                                    'as'   => $attachment['as'],
+                                    'as' => $attachment['as'],
                                     'mime' => $attachment['mime'],
                                 ]);
                             }
@@ -487,16 +488,16 @@ class ApplicantController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Successfully sent ' . count($families) . ' families registry email report(s) to ' . $recipientEmail,
+                'message' => 'Successfully sent '.count($families).' families registry email report(s) to '.$recipientEmail,
             ]);
         } catch (\Throwable $exception) {
-            Log::error('Failed to send registry email: ' . $exception->getMessage(), [
+            Log::error('Failed to send registry email: '.$exception->getMessage(), [
                 'trace' => $exception->getTraceAsString(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to send email: ' . $exception->getMessage(),
+                'message' => 'Failed to send email: '.$exception->getMessage(),
             ], 500);
         }
     }

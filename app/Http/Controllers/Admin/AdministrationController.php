@@ -3,13 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
-use App\Models\Role;
 use App\Models\AdminAuditLog;
+use App\Models\Role;
+use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class AdministrationController extends Controller
@@ -17,7 +16,7 @@ class AdministrationController extends Controller
     private function ensureSuperOrAdmin()
     {
         $user = auth()->user();
-        if (!$user || (!$user->hasRole('super_admin') && !$user->hasRole('admin'))) {
+        if (! $user || (! $user->hasRole('super_admin') && ! $user->hasRole('admin'))) {
             abort(403, 'Unauthorized. Super Admin or Admin role required.');
         }
     }
@@ -30,19 +29,19 @@ class AdministrationController extends Controller
         $status = $request->query('status');
 
         $query = User::with('roles')
-            ->where(function($q) {
+            ->where(function ($q) {
                 // Only load admin/portal roles or users that have admin/portal roles
                 $q->whereIn('role', User::ADMIN_PORTAL_ROLES)
-                  ->orWhereHas('roles', function($r) {
-                      $r->whereIn('slug', User::ADMIN_PORTAL_ROLE_SLUGS);
-                  });
+                    ->orWhereHas('roles', function ($r) {
+                        $r->whereIn('slug', User::ADMIN_PORTAL_ROLE_SLUGS);
+                    });
             });
 
         if (filled($search)) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('username', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('username', 'like', "%{$search}%");
             });
         }
 
@@ -67,6 +66,7 @@ class AdministrationController extends Controller
     {
         $this->ensureSuperOrAdmin();
         $roles = Role::orderBy('hierarchy_level', 'desc')->get();
+
         return view('admin.administration.users.create', compact('roles'));
     }
 
@@ -82,9 +82,9 @@ class AdministrationController extends Controller
         ]);
 
         $role = Role::findOrFail($validated['role_id']);
-        
+
         // Super admin protection: Only super admins can assign super admin role
-        if ($role->slug === 'super_admin' && !auth()->user()->hasRole('super_admin')) {
+        if ($role->slug === 'super_admin' && ! auth()->user()->hasRole('super_admin')) {
             return back()->withErrors(['role_id' => 'Only Super Administrators can create Super Admin accounts.'])->withInput();
         }
 
@@ -93,7 +93,7 @@ class AdministrationController extends Controller
         $username = $baseUsername;
         $counter = 1;
         while (User::where('username', $username)->exists()) {
-            $username = $baseUsername . $counter;
+            $username = $baseUsername.$counter;
             $counter++;
         }
 
@@ -133,12 +133,12 @@ class AdministrationController extends Controller
         $currentUserMaxHierarchy = auth()->user()->roles()->max('hierarchy_level') ?: 80;
         $targetUserMaxHierarchy = $user->roles()->max('hierarchy_level') ?: 10;
 
-        if ($targetUserMaxHierarchy >= $currentUserMaxHierarchy && !auth()->user()->hasRole('super_admin')) {
+        if ($targetUserMaxHierarchy >= $currentUserMaxHierarchy && ! auth()->user()->hasRole('super_admin')) {
             return back()->withErrors(['error' => 'Permission denied. You cannot modify status for a user with equal or higher role ranking.']);
         }
 
         $user->update([
-            'account_status' => $validated['account_status']
+            'account_status' => $validated['account_status'],
         ]);
 
         AdminAuditLog::record('administration_user_status_updated', true, "Updated account status for {$user->email} to {$validated['account_status']}");
@@ -154,7 +154,7 @@ class AdministrationController extends Controller
         $currentUserMaxHierarchy = auth()->user()->roles()->max('hierarchy_level') ?: 80;
         $targetUserMaxHierarchy = $user->roles()->max('hierarchy_level') ?: 10;
 
-        if ($targetUserMaxHierarchy > $currentUserMaxHierarchy && !auth()->user()->hasRole('super_admin')) {
+        if ($targetUserMaxHierarchy > $currentUserMaxHierarchy && ! auth()->user()->hasRole('super_admin')) {
             abort(403, 'Permission denied. Cannot view security configurations of a higher-ranking administrator.');
         }
 
@@ -180,7 +180,7 @@ class AdministrationController extends Controller
         $currentUserMaxHierarchy = auth()->user()->roles()->max('hierarchy_level') ?: 80;
         $targetUserMaxHierarchy = $user->roles()->max('hierarchy_level') ?: 10;
 
-        if ($targetUserMaxHierarchy >= $currentUserMaxHierarchy && !auth()->user()->hasRole('super_admin') && $user->id !== auth()->id()) {
+        if ($targetUserMaxHierarchy >= $currentUserMaxHierarchy && ! auth()->user()->hasRole('super_admin') && $user->id !== auth()->id()) {
             return back()->withErrors(['error' => 'Permission denied. Cannot modify credentials of a user with equal or higher role ranking.']);
         }
 
@@ -189,7 +189,7 @@ class AdministrationController extends Controller
         ]);
 
         $user->update([
-            'password' => Hash::make($request->password)
+            'password' => Hash::make($request->password),
         ]);
 
         AdminAuditLog::record('administration_user_password_reset', true, "Manually reset password credentials for {$user->email}");

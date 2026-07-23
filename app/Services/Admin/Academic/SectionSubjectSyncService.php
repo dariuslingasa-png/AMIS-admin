@@ -5,7 +5,6 @@ namespace App\Services\Admin\Academic;
 use App\Models\ClassSchedule;
 use App\Models\Section;
 use App\Models\SectionSubject;
-use Illuminate\Support\Collection;
 
 /**
  * Syncs section_subjects from class_schedules for a given section.
@@ -39,49 +38,50 @@ class SectionSubjectSyncService
             ->whereNotNull('subject_name')
             ->get(['subject_name', 'teacher_display', 'teacher_key'])
             ->map(function ($s) use ($overrides) {
-                $key     = trim($s->teacher_key);
-                $tData   = $overrides[$key] ?? null;
+                $key = trim($s->teacher_key);
+                $tData = $overrides[$key] ?? null;
+
                 return [
-                    'subject_name'  => trim($s->subject_name),
-                    'teacher_name'  => trim($s->teacher_display ?? $s->subject_name),
-                    'teacher_key'   => $key,
+                    'subject_name' => trim($s->subject_name),
+                    'teacher_name' => trim($s->teacher_display ?? $s->subject_name),
+                    'teacher_key' => $key,
                     'teacher_photo' => $tData['photo'] ?? null,
                     'teacher_email' => $tData['email'] ?? null,
                 ];
             })
-            ->unique(fn($row) => $row['subject_name'] . '|' . $row['teacher_key'])
+            ->unique(fn ($row) => $row['subject_name'].'|'.$row['teacher_key'])
             ->values();
 
         // 2. Load existing section_subjects (to preserve ms_channel_id).
         $existing = SectionSubject::where('section_id', $sectionId)->get();
-        $existingMap = $existing->keyBy(fn($e) => $e->subject_name . '|' . $e->teacher_key);
+        $existingMap = $existing->keyBy(fn ($e) => $e->subject_name.'|'.$e->teacher_key);
 
-        $created   = 0;
-        $kept      = 0;
+        $created = 0;
+        $kept = 0;
         $processedKeys = [];
 
         // 3. Upsert.
         foreach ($fromSchedules as $row) {
-            $key = $row['subject_name'] . '|' . $row['teacher_key'];
+            $key = $row['subject_name'].'|'.$row['teacher_key'];
             $processedKeys[] = $key;
 
             if ($existingMap->has($key)) {
                 // Update photo/email in case they changed; keep ms_channel_id.
                 $existingMap[$key]->update([
-                    'teacher_name'  => $row['teacher_name'],
+                    'teacher_name' => $row['teacher_name'],
                     'teacher_photo' => $row['teacher_photo'],
                     'teacher_email' => $row['teacher_email'],
                 ]);
                 $kept++;
             } else {
                 SectionSubject::create([
-                    'section_id'    => $sectionId,
-                    'subject_name'  => $row['subject_name'],
-                    'teacher_name'  => $row['teacher_name'],
-                    'teacher_key'   => $row['teacher_key'],
+                    'section_id' => $sectionId,
+                    'subject_name' => $row['subject_name'],
+                    'teacher_name' => $row['teacher_name'],
+                    'teacher_key' => $row['teacher_key'],
                     'teacher_photo' => $row['teacher_photo'],
                     'teacher_email' => $row['teacher_email'],
-                    'schedule'      => null,
+                    'schedule' => null,
                     'ms_channel_id' => null,
                 ]);
                 $created++;
@@ -91,8 +91,8 @@ class SectionSubjectSyncService
         // 4. Delete stale entries no longer in class_schedules.
         $deleted = 0;
         foreach ($existing as $entry) {
-            $key = $entry->subject_name . '|' . $entry->teacher_key;
-            if (!in_array($key, $processedKeys)) {
+            $key = $entry->subject_name.'|'.$entry->teacher_key;
+            if (! in_array($key, $processedKeys)) {
                 $entry->delete();
                 $deleted++;
             }
@@ -100,7 +100,6 @@ class SectionSubjectSyncService
 
         return compact('created', 'kept', 'deleted');
     }
-
 
     /**
      * Clear all section_subjects for a section (e.g., when un-publishing).
@@ -117,10 +116,10 @@ class SectionSubjectSyncService
     private function loadTeacherOverrides(): array
     {
         $path = storage_path('app/academic_teacher_overrides.json');
-        if (!file_exists($path)) {
+        if (! file_exists($path)) {
             return [];
         }
+
         return json_decode(file_get_contents($path), true) ?? [];
     }
 }
-

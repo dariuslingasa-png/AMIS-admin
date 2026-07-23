@@ -29,7 +29,7 @@ class GenerateClassSchedule
                     ->where('school_year', $schoolYear)
                     ->exists();
 
-                if (!$exists) {
+                if (! $exists) {
                     ClassSchedule::create([
                         'section_id' => $section->id,
                         'subject_name' => $sub['subject'],
@@ -37,7 +37,7 @@ class GenerateClassSchedule
                         'start_time' => $sub['start'],
                         'end_time' => $sub['end'],
                         'color_class' => $sub['color'],
-                        'mode' => str_contains(strtolower((string)$section->learning_mode), 'flexible') ? 'online' : 'f2f',
+                        'mode' => str_contains(strtolower((string) $section->learning_mode), 'flexible') ? 'online' : 'f2f',
                         'school_year' => $schoolYear,
                         'created_by' => auth()->id(),
                     ]);

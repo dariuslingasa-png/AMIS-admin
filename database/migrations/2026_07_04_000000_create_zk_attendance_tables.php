@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (!Schema::hasTable('zk_departments')) {
+        if (! Schema::hasTable('zk_departments')) {
             Schema::create('zk_departments', function (Blueprint $table) {
                 $table->unsignedInteger('id')->primary(); // ZKTeco ID
                 $table->string('name');
@@ -16,7 +16,7 @@ return new class extends Migration
             });
         }
 
-        if (!Schema::hasTable('zk_users')) {
+        if (! Schema::hasTable('zk_users')) {
             Schema::create('zk_users', function (Blueprint $table) {
                 $table->unsignedBigInteger('employee_id')->primary(); // ZKTeco ID
                 $table->string('name')->nullable();
@@ -30,7 +30,7 @@ return new class extends Migration
             });
         }
 
-        if (!Schema::hasTable('zk_attendance_logs')) {
+        if (! Schema::hasTable('zk_attendance_logs')) {
             Schema::create('zk_attendance_logs', function (Blueprint $table) {
                 $table->id();
                 $table->unsignedBigInteger('employee_id')->index();

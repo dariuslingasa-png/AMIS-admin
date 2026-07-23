@@ -6,6 +6,7 @@ use App\Models\Section;
 use App\Models\SectionSubject;
 use App\Models\Student;
 use App\Models\StudentSection;
+use App\Models\User;
 use App\Services\MicrosoftGraphService;
 use App\Services\MsTeamsEnrollmentService;
 use Illuminate\Http\Request;
@@ -96,61 +97,66 @@ class AdminMsTeamsController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'grade_level'   => 'required|string',
+            'grade_level' => 'required|string',
             'learning_mode' => 'required|string',
-            'name'          => 'nullable|string|max:255',
-            'gender'        => 'required|in:male,female,na,merge',
-            'shift'         => 'nullable|string',
-            'school_year'   => 'required|string',
+            'name' => 'nullable|string|max:255',
+            'gender' => 'required|in:male,female,na,merge',
+            'shift' => 'nullable|string',
+            'school_year' => 'required|string',
         ]);
 
         $sectionName = $request->name ?: null;
-        $shift       = $request->learning_mode === 'Flexible Online Learning' ? $request->shift : null;
+        $shift = $request->learning_mode === 'Flexible Online Learning' ? $request->shift : null;
         $genderLabel = $request->gender === 'male' ? 'Boys' : ($request->gender === 'female' ? 'Girls' : 'Merge');
 
         // Grade prefix: Kinder 1 → K1, Kinder 2 → K2, etc.
         $grade = $request->grade_level;
-        if ($grade === 'Kinder 1') $prefix = 'K1';
-        elseif ($grade === 'Kinder 2') $prefix = 'K2';
-        else $prefix = 'G' . str_replace('Grade ', '', $grade);
+        if ($grade === 'Kinder 1') {
+            $prefix = 'K1';
+        } elseif ($grade === 'Kinder 2') {
+            $prefix = 'K2';
+        } else {
+            $prefix = 'G'.str_replace('Grade ', '', $grade);
+        }
 
         $shiftLabel = $shift ? ($shift === '1st Shift' ? '1st Shift' : '2nd Shift') : 'F2F';
-        $namePart   = $sectionName ? " - {$sectionName}" : '';
-        $teamName   = "{$prefix}{$namePart} [{$genderLabel} & {$shiftLabel}]";
+        $namePart = $sectionName ? " - {$sectionName}" : '';
+        $teamName = "{$prefix}{$namePart} [{$genderLabel} & {$shiftLabel}]";
 
-        $msTeamId = null; $msTeamUrl = null;
+        $msTeamId = null;
+        $msTeamUrl = null;
         try {
-            $graph     = new MicrosoftGraphService();
-            $result    = $graph->createTeam($teamName);
-            $msTeamId  = $graph->waitForTeam($result['id']);
+            $graph = new MicrosoftGraphService;
+            $result = $graph->createTeam($teamName);
+            $msTeamId = $graph->waitForTeam($result['id']);
             $msTeamUrl = "https://teams.microsoft.com/l/team/{$msTeamId}";
 
             $generalChannelId = $graph->getGeneralChannelId($msTeamId);
             if ($generalChannelId) {
                 $graph->postWelcomeCard($msTeamId, $generalChannelId, [
-                    'grade_level'   => $request->grade_level,
+                    'grade_level' => $request->grade_level,
                     'learning_mode' => $request->learning_mode,
-                    'shift'         => $shift,
-                    'gender'        => $request->gender,
+                    'shift' => $shift,
+                    'gender' => $request->gender,
                 ]);
             }
         } catch (\Exception $e) {
-            Log::error("Failed to create MS Team [{$teamName}]: " . $e->getMessage());
+            Log::error("Failed to create MS Team [{$teamName}]: ".$e->getMessage());
         }
 
         Section::create([
-            'name'          => $sectionName,
-            'grade_level'   => $request->grade_level,
+            'name' => $sectionName,
+            'grade_level' => $request->grade_level,
             'learning_mode' => $request->learning_mode,
-            'shift'         => $shift,
-            'gender'        => $request->gender,
-            'school_year'   => $request->school_year,
-            'ms_team_id'    => $msTeamId,
-            'ms_team_url'   => $msTeamUrl,
+            'shift' => $shift,
+            'gender' => $request->gender,
+            'school_year' => $request->school_year,
+            'ms_team_id' => $msTeamId,
+            'ms_team_url' => $msTeamUrl,
         ]);
 
         return redirect()->route('admin.academic.schedules')
-            ->with('success', "Section created successfully.");
+            ->with('success', 'Section created successfully.');
     }
 
     /**
@@ -159,32 +165,37 @@ class AdminMsTeamsController extends Controller
     public function storeSingle(Request $request)
     {
         $request->validate([
-            'grade_level'   => 'required|string',
+            'grade_level' => 'required|string',
             'learning_mode' => 'required|string',
-            'shift'         => 'nullable|string',
-            'gender'        => 'required|in:male,female,na,merge',
-            'name'          => 'nullable|string|max:255',
+            'shift' => 'nullable|string',
+            'gender' => 'required|in:male,female,na,merge',
+            'name' => 'nullable|string|max:255',
         ]);
 
         $sectionName = $request->name ?: null;
-        $shift       = $request->learning_mode === 'Flexible Online Learning' ? $request->shift : null;
+        $shift = $request->learning_mode === 'Flexible Online Learning' ? $request->shift : null;
         $genderLabel = $request->gender === 'male' ? 'Boys' : ($request->gender === 'female' ? 'Girls' : 'Merge');
 
         // Grade prefix: Kinder 1 → K1, Grade 2 → G2, etc.
         $grade = $request->grade_level;
-        if ($grade === 'Kinder 1') $prefix = 'K1';
-        elseif ($grade === 'Kinder 2') $prefix = 'K2';
-        else $prefix = 'G' . str_replace('Grade ', '', $grade);
+        if ($grade === 'Kinder 1') {
+            $prefix = 'K1';
+        } elseif ($grade === 'Kinder 2') {
+            $prefix = 'K2';
+        } else {
+            $prefix = 'G'.str_replace('Grade ', '', $grade);
+        }
 
         $shiftLabel = $shift ? ($shift === '1st Shift' ? '1st Shift' : '2nd Shift') : 'F2F';
-        $namePart   = $sectionName ? " - {$sectionName}" : '';
-        $teamName   = "{$prefix}{$namePart} [{$genderLabel} & {$shiftLabel}]";
+        $namePart = $sectionName ? " - {$sectionName}" : '';
+        $teamName = "{$prefix}{$namePart} [{$genderLabel} & {$shiftLabel}]";
 
-        $msTeamId = null; $msTeamUrl = null;
+        $msTeamId = null;
+        $msTeamUrl = null;
         try {
-            $graph    = new MicrosoftGraphService();
-            $result   = $graph->createTeam($teamName);
-            $msTeamId  = $result['id'];
+            $graph = new MicrosoftGraphService;
+            $result = $graph->createTeam($teamName);
+            $msTeamId = $result['id'];
             $msTeamUrl = "https://teams.microsoft.com/l/team/{$msTeamId}";
 
             // Wait for team to be ready, then post welcome card to General channel
@@ -192,30 +203,30 @@ class AdminMsTeamsController extends Controller
             $generalChannelId = $graph->getGeneralChannelId($msTeamId);
             if ($generalChannelId) {
                 $graph->postWelcomeCard($msTeamId, $generalChannelId, [
-                    'grade_level'   => $request->grade_level,
+                    'grade_level' => $request->grade_level,
                     'learning_mode' => $request->learning_mode,
-                    'shift'         => $shift,
-                    'gender'        => $request->gender,
+                    'shift' => $shift,
+                    'gender' => $request->gender,
                 ]);
             }
         } catch (\Exception $e) {
-            Log::error("storeSingle: Failed to create MS Team [{$teamName}]: " . $e->getMessage());
+            Log::error("storeSingle: Failed to create MS Team [{$teamName}]: ".$e->getMessage());
         }
 
         Section::create([
-            'name'          => $sectionName,
-            'grade_level'   => $request->grade_level,
+            'name' => $sectionName,
+            'grade_level' => $request->grade_level,
             'learning_mode' => $request->learning_mode,
-            'shift'         => $shift,
-            'gender'        => $request->gender,
-            'ms_team_id'    => $msTeamId,
-            'ms_team_url'   => $msTeamUrl,
+            'shift' => $shift,
+            'gender' => $request->gender,
+            'ms_team_id' => $msTeamId,
+            'ms_team_url' => $msTeamUrl,
         ]);
 
         return response()->json([
-            'success'   => true,
+            'success' => true,
             'team_name' => $teamName,
-            'has_team'  => !is_null($msTeamId),
+            'has_team' => ! is_null($msTeamId),
         ]);
     }
 
@@ -225,38 +236,43 @@ class AdminMsTeamsController extends Controller
     public function retryTeam(Section $section)
     {
         $grade = $section->grade_level;
-        if ($grade === 'Kinder 1') $prefix = 'K1';
-        elseif ($grade === 'Kinder 2') $prefix = 'K2';
-        else $prefix = 'G' . str_replace('Grade ', '', $grade);
+        if ($grade === 'Kinder 1') {
+            $prefix = 'K1';
+        } elseif ($grade === 'Kinder 2') {
+            $prefix = 'K2';
+        } else {
+            $prefix = 'G'.str_replace('Grade ', '', $grade);
+        }
 
         $genderLabel = $section->gender === 'male' ? 'Boys' : ($section->gender === 'female' ? 'Girls' : 'Merge');
-        $shiftLabel  = $section->shift ? ($section->shift === '1st Shift' ? '1st Shift' : '2nd Shift') : 'F2F';
-        $namePart    = $section->name ? " - {$section->name}" : '';
-        $teamName    = "{$prefix}{$namePart} [{$genderLabel} & {$shiftLabel}]";
+        $shiftLabel = $section->shift ? ($section->shift === '1st Shift' ? '1st Shift' : '2nd Shift') : 'F2F';
+        $namePart = $section->name ? " - {$section->name}" : '';
+        $teamName = "{$prefix}{$namePart} [{$genderLabel} & {$shiftLabel}]";
 
         try {
-            $graph    = new MicrosoftGraphService();
-            $result   = $graph->createTeam($teamName);
+            $graph = new MicrosoftGraphService;
+            $result = $graph->createTeam($teamName);
             $msTeamId = $result['id'];
             $section->update([
-                'ms_team_id'  => $msTeamId,
+                'ms_team_id' => $msTeamId,
                 'ms_team_url' => "https://teams.microsoft.com/l/team/{$msTeamId}",
             ]);
 
             // Auto-invite active advisor if assigned
             $advisor = $section->grade_advisor;
-            if ($advisor && !empty($advisor->teacher_email)) {
+            if ($advisor && ! empty($advisor->teacher_email)) {
                 try {
                     $graph->addTeamOwner($msTeamId, $advisor->teacher_email);
                 } catch (\Exception $e) {
-                    Log::warning("Could not add advisor {$advisor->teacher_email} to Team: " . $e->getMessage());
+                    Log::warning("Could not add advisor {$advisor->teacher_email} to Team: ".$e->getMessage());
                 }
             }
 
             return back()->with('success', "MS Team created: {$teamName}");
         } catch (\Exception $e) {
-            Log::error("retryTeam failed [{$teamName}]: " . $e->getMessage());
-            return back()->withErrors(['ms' => 'Failed: ' . $e->getMessage()]);
+            Log::error("retryTeam failed [{$teamName}]: ".$e->getMessage());
+
+            return back()->withErrors(['ms' => 'Failed: '.$e->getMessage()]);
         }
     }
 
@@ -281,12 +297,13 @@ class AdminMsTeamsController extends Controller
             ))
             ->values();
 
-        $teachers = \App\Models\User::where('role', 'teacher')
+        $teachers = User::where('role', 'teacher')
             ->orderBy('name')
             ->get()
-            ->map(function($user) {
-                $loadCount = \App\Models\SectionSubject::where('teacher_name', $user->name)->count();
+            ->map(function ($user) {
+                $loadCount = SectionSubject::where('teacher_name', $user->name)->count();
                 $user->load_count = $loadCount;
+
                 return $user;
             });
 
@@ -306,20 +323,24 @@ class AdminMsTeamsController extends Controller
         $genderLabel = $section->gender === 'male' ? 'Boys' : ($section->gender === 'female' ? 'Girls' : 'Merge');
 
         $grade = $section->grade_level;
-        if ($grade === 'Kinder 1') $prefix = 'K1';
-        elseif ($grade === 'Kinder 2') $prefix = 'K2';
-        else $prefix = 'G' . str_replace('Grade ', '', $grade);
+        if ($grade === 'Kinder 1') {
+            $prefix = 'K1';
+        } elseif ($grade === 'Kinder 2') {
+            $prefix = 'K2';
+        } else {
+            $prefix = 'G'.str_replace('Grade ', '', $grade);
+        }
 
-        $shiftLabel  = $section->shift ? ($section->shift === '1st Shift' ? '1st Shift' : '2nd Shift') : 'F2F';
-        $namePart    = $sectionName ? " - {$sectionName}" : '';
+        $shiftLabel = $section->shift ? ($section->shift === '1st Shift' ? '1st Shift' : '2nd Shift') : 'F2F';
+        $namePart = $sectionName ? " - {$sectionName}" : '';
         $newTeamName = "{$prefix}{$namePart} [{$genderLabel} & {$shiftLabel}]";
 
         if ($section->ms_team_id) {
             try {
-                $graph = new MicrosoftGraphService();
+                $graph = new MicrosoftGraphService;
                 $graph->renameTeam($section->ms_team_id, $newTeamName);
             } catch (\Throwable $e) {
-                Log::warning("Could not rename MS Team [{$section->ms_team_id}]: " . $e->getMessage());
+                Log::warning("Could not rename MS Team [{$section->ms_team_id}]: ".$e->getMessage());
             }
         }
 
@@ -342,16 +363,16 @@ class AdminMsTeamsController extends Controller
         // Also delete the MS Team from Azure if it exists
         if ($msTeamId) {
             try {
-                $graph = new MicrosoftGraphService();
+                $graph = new MicrosoftGraphService;
                 $graph->deleteTeam($msTeamId);
             } catch (\Exception $e) {
-                Log::warning("Could not delete MS Team [{$msTeamId}] from Azure: " . $e->getMessage());
+                Log::warning("Could not delete MS Team [{$msTeamId}] from Azure: ".$e->getMessage());
                 // Don't block — DB record is already gone
             }
         }
 
         return redirect()->route('admin.academic.schedules')
-            ->with('success', "Section \"{$section->grade_level}\" deleted." . ($msTeamId ? ' MS Team also removed from Azure.' : ''))
+            ->with('success', "Section \"{$section->grade_level}\" deleted.".($msTeamId ? ' MS Team also removed from Azure.' : ''))
             ->with('schedule_workspace', 'sections');
     }
 
@@ -361,10 +382,10 @@ class AdminMsTeamsController extends Controller
     public function storeSubject(Request $request, Section $section)
     {
         $request->validate([
-            'subject_name'   => 'required|string|max:255',
-            'teacher_name'   => 'nullable|string|max:255',
-            'schedule'       => 'nullable|string|max:255',
-            'teacher_upn'    => 'nullable|email',
+            'subject_name' => 'required|string|max:255',
+            'teacher_name' => 'nullable|string|max:255',
+            'schedule' => 'nullable|string|max:255',
+            'teacher_upn' => 'nullable|email',
             'create_channel' => 'nullable|boolean',
         ]);
 
@@ -379,15 +400,15 @@ class AdminMsTeamsController extends Controller
         $teacherInvited = false;
 
         // Create private channel in MS Teams if team exists, channel is not created yet, and create_channel is true
-        if ($section->ms_team_id && !$channelId && $createChannel) {
+        if ($section->ms_team_id && ! $channelId && $createChannel) {
             try {
-                $graph    = new MicrosoftGraphService();
+                $graph = new MicrosoftGraphService;
                 $adminUpn = config('services.microsoft.admin_upn');
 
                 // Team may still be provisioning — wait up to 10s before attempting channel creation
                 $graph->waitForTeam($section->ms_team_id, 10);
 
-                $result    = $graph->createPrivateChannel(
+                $result = $graph->createPrivateChannel(
                     $section->ms_team_id,
                     $request->subject_name,
                     $adminUpn
@@ -398,39 +419,40 @@ class AdminMsTeamsController extends Controller
                 if ($channelId) {
                     try {
                         $graph->postWelcomeCard($section->ms_team_id, $channelId, [
-                            'grade_level'   => $section->grade_level,
+                            'grade_level' => $section->grade_level,
                             'learning_mode' => $section->learning_mode,
-                            'shift'         => $section->shift,
-                            'gender'        => $section->gender,
-                            'subject'       => $request->subject_name,
-                            'teacher'       => $request->teacher_name,
-                            'schedule'      => $request->schedule,
+                            'shift' => $section->shift,
+                            'gender' => $section->gender,
+                            'subject' => $request->subject_name,
+                            'teacher' => $request->teacher_name,
+                            'schedule' => $request->schedule,
                         ]);
                     } catch (\Exception $e) {
-                        Log::warning("Could not post welcome card to channel [{$request->subject_name}]: " . $e->getMessage());
+                        Log::warning("Could not post welcome card to channel [{$request->subject_name}]: ".$e->getMessage());
                     }
                 }
             } catch (\Exception $e) {
-                Log::error("Failed to create channel [{$request->subject_name}]: " . $e->getMessage());
+                Log::error("Failed to create channel [{$request->subject_name}]: ".$e->getMessage());
+
                 return response()->json([
                     'success' => false,
-                    'message' => 'Channel creation failed: ' . $e->getMessage(),
+                    'message' => 'Channel creation failed: '.$e->getMessage(),
                 ], 422);
             }
         }
 
         if ($subject) {
             $subject->update([
-                'teacher_name'  => $request->teacher_name ?? $subject->teacher_name,
-                'schedule'      => $request->schedule ?? $subject->schedule,
+                'teacher_name' => $request->teacher_name ?? $subject->teacher_name,
+                'schedule' => $request->schedule ?? $subject->schedule,
                 'ms_channel_id' => $channelId ?? $subject->ms_channel_id,
             ]);
         } else {
             $subject = SectionSubject::create([
-                'section_id'    => $section->id,
-                'subject_name'  => $request->subject_name,
-                'teacher_name'  => $request->teacher_name,
-                'schedule'      => $request->schedule,
+                'section_id' => $section->id,
+                'subject_name' => $request->subject_name,
+                'teacher_name' => $request->teacher_name,
+                'schedule' => $request->schedule,
                 'ms_channel_id' => $channelId,
             ]);
         }
@@ -439,19 +461,19 @@ class AdminMsTeamsController extends Controller
         $activeChannelId = $channelId ?? $subject->ms_channel_id;
         if ($activeChannelId && $request->teacher_upn) {
             try {
-                $graph = new MicrosoftGraphService();
+                $graph = new MicrosoftGraphService;
                 $graph->addTeamOwner($section->ms_team_id, $request->teacher_upn);
                 $graph->addChannelOwner($section->ms_team_id, $activeChannelId, $request->teacher_upn);
                 $teacherInvited = true;
             } catch (\Exception $e) {
-                Log::warning("Could not invite teacher [{$request->teacher_upn}] as owner: " . $e->getMessage());
+                Log::warning("Could not invite teacher [{$request->teacher_upn}] as owner: ".$e->getMessage());
             }
         }
 
         return response()->json([
-            'success'         => true,
-            'subject'         => $subject,
-            'has_channel'     => !is_null($activeChannelId),
+            'success' => true,
+            'subject' => $subject,
+            'has_channel' => ! is_null($activeChannelId),
             'teacher_invited' => $teacherInvited,
         ]);
     }
@@ -464,27 +486,27 @@ class AdminMsTeamsController extends Controller
         $request->validate([
             'subject_name' => 'required|string|max:255',
             'teacher_name' => 'nullable|string|max:255',
-            'schedule'     => 'nullable|string|max:255',
+            'schedule' => 'nullable|string|max:255',
         ]);
 
         // Rename the channel in MS Teams if it exists
         if ($subject->ms_channel_id && $subject->section->ms_team_id) {
             try {
-                $graph = new MicrosoftGraphService();
+                $graph = new MicrosoftGraphService;
                 $graph->renameChannel(
                     $subject->section->ms_team_id,
                     $subject->ms_channel_id,
                     $request->subject_name
                 );
             } catch (\Exception $e) {
-                Log::warning("Could not rename channel [{$subject->ms_channel_id}]: " . $e->getMessage());
+                Log::warning("Could not rename channel [{$subject->ms_channel_id}]: ".$e->getMessage());
             }
         }
 
         $subject->update([
             'subject_name' => $request->subject_name,
             'teacher_name' => $request->teacher_name,
-            'schedule'     => $request->schedule,
+            'schedule' => $request->schedule,
         ]);
 
         return response()->json(['success' => true]);
@@ -500,12 +522,12 @@ class AdminMsTeamsController extends Controller
         ]);
 
         $section = $subject->section;
-        if (!$section?->ms_team_id || !$subject->ms_channel_id) {
+        if (! $section?->ms_team_id || ! $subject->ms_channel_id) {
             return response()->json(['success' => false, 'message' => 'Team or channel not created yet.'], 422);
         }
 
         try {
-            $graph = new MicrosoftGraphService();
+            $graph = new MicrosoftGraphService;
             $graph->addTeamOwner($section->ms_team_id, $request->teacher_upn);
             $graph->addChannelOwner($section->ms_team_id, $subject->ms_channel_id, $request->teacher_upn);
 
@@ -514,7 +536,8 @@ class AdminMsTeamsController extends Controller
                 'message' => "{$request->teacher_upn} added as Owner to Team + Channel.",
             ]);
         } catch (\Exception $e) {
-            Log::error("inviteTeacher failed [{$request->teacher_upn}]: " . $e->getMessage());
+            Log::error("inviteTeacher failed [{$request->teacher_upn}]: ".$e->getMessage());
+
             return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
         }
     }
@@ -525,6 +548,7 @@ class AdminMsTeamsController extends Controller
     public function destroySubject(SectionSubject $subject)
     {
         $subject->delete();
+
         return back()->with('success', 'Subject removed.');
     }
 
@@ -533,9 +557,10 @@ class AdminMsTeamsController extends Controller
      */
     public function fixGuestStudents()
     {
-        $students = \App\Models\Student::whereNotNull('ms_user_id')->get();
-        $fixed = 0; $failed = 0;
-        $graph = new MicrosoftGraphService();
+        $students = Student::whereNotNull('ms_user_id')->get();
+        $fixed = 0;
+        $failed = 0;
+        $graph = new MicrosoftGraphService;
 
         foreach ($students as $student) {
             try {
@@ -543,7 +568,7 @@ class AdminMsTeamsController extends Controller
                 $fixed++;
                 Log::info("Converted {$student->student_number} from Guest to Member");
             } catch (\Exception $e) {
-                Log::warning("Could not convert {$student->student_number}: " . $e->getMessage());
+                Log::warning("Could not convert {$student->student_number}: ".$e->getMessage());
                 $failed++;
             }
             sleep(1);
@@ -555,13 +580,14 @@ class AdminMsTeamsController extends Controller
     public function fixAdminAccess()
     {
         try {
-            $graph   = new MicrosoftGraphService();
+            $graph = new MicrosoftGraphService;
             $results = $graph->addAdminToAllChannels();
+
             return back()->with('success',
                 "Admin access fixed: {$results['added']} added, {$results['skipped']} already member, {$results['failed']} failed."
             );
         } catch (\Exception $e) {
-            return back()->withErrors(['ms' => 'Failed: ' . $e->getMessage()]);
+            return back()->withErrors(['ms' => 'Failed: '.$e->getMessage()]);
         }
     }
 
@@ -571,15 +597,16 @@ class AdminMsTeamsController extends Controller
     public function fixTeamOwnership()
     {
         $sections = Section::whereNotNull('ms_team_id')->get();
-        $added = 0; $failed = 0;
+        $added = 0;
+        $failed = 0;
 
-        $graph = new MicrosoftGraphService();
+        $graph = new MicrosoftGraphService;
         foreach ($sections as $section) {
             try {
                 $graph->addAdminAsTeamOwner($section->ms_team_id);
                 $added++;
             } catch (\Exception $e) {
-                Log::warning("fixTeamOwnership failed for [{$section->ms_team_id}]: " . $e->getMessage());
+                Log::warning("fixTeamOwnership failed for [{$section->ms_team_id}]: ".$e->getMessage());
                 $failed++;
             }
             sleep(1);
@@ -593,14 +620,17 @@ class AdminMsTeamsController extends Controller
      */
     public function enrollStudent(Request $request, Student $student)
     {
-        if (!$student->ms_user_id) {
+        if (! $student->ms_user_id) {
             return back()->withErrors(['ms' => 'Student has no Microsoft account yet.']);
         }
         try {
-            $service = new MsTeamsEnrollmentService(new MicrosoftGraphService());
-            $result  = $service->enrollStudent($student);
+            $service = new MsTeamsEnrollmentService(new MicrosoftGraphService);
+            $result = $service->enrollStudent($student);
             $msg = "Enrolled in {$result['enrolled']} team/channel(s).";
-            if ($result['failed'] > 0) $msg .= " {$result['failed']} failed — check logs.";
+            if ($result['failed'] > 0) {
+                $msg .= " {$result['failed']} failed — check logs.";
+            }
+
             return back()->with('success', $msg);
         } catch (\Exception $e) {
             return back()->withErrors(['ms' => $e->getMessage()]);
@@ -610,20 +640,22 @@ class AdminMsTeamsController extends Controller
     public function syncAdvisor(Request $request, Section $section)
     {
         $advisor = $section->grade_advisor;
-        if (!$advisor || empty($advisor->teacher_email)) {
+        if (! $advisor || empty($advisor->teacher_email)) {
             return response()->json(['success' => false, 'message' => 'No active advisor assigned or advisor email not found.'], 422);
         }
 
-        if (!$section->ms_team_id) {
+        if (! $section->ms_team_id) {
             return response()->json(['success' => false, 'message' => 'MS Team not created yet.'], 422);
         }
 
         try {
-            $graph = new MicrosoftGraphService();
+            $graph = new MicrosoftGraphService;
             $graph->addTeamOwner($section->ms_team_id, $advisor->teacher_email);
+
             return response()->json(['success' => true, 'message' => 'Advisor successfully synced as Team Owner.']);
         } catch (\Exception $e) {
-            Log::error("syncAdvisor failed: " . $e->getMessage());
+            Log::error('syncAdvisor failed: '.$e->getMessage());
+
             return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
         }
     }
@@ -641,7 +673,7 @@ class AdminMsTeamsController extends Controller
 
         $stats = [
             'total_sections' => $sections->count(),
-            'no_team'        => Section::whereNull('ms_team_id')->count(),
+            'no_team' => Section::whereNull('ms_team_id')->count(),
         ];
 
         return view('admin.ms-teams.structure', compact('sections', 'stats'));
@@ -653,20 +685,20 @@ class AdminMsTeamsController extends Controller
     public function structureData(Request $request)
     {
         $sectionId = $request->get('section_id');
-        $section   = Section::findOrFail($sectionId);
+        $section = Section::findOrFail($sectionId);
 
-        if (!$section->ms_team_id) {
+        if (! $section->ms_team_id) {
             return response()->json(['success' => false, 'message' => 'No MS Team linked.'], 422);
         }
 
-        $graph = new MicrosoftGraphService();
+        $graph = new MicrosoftGraphService;
 
         try {
             // 1. Get all channels
             $channels = $graph->listChannels($section->ms_team_id);
 
             // 2. Get DB subjects (private channels) keyed by ms_channel_id
-            $dbSubjects = \App\Models\SectionSubject::where('section_id', $section->id)
+            $dbSubjects = SectionSubject::where('section_id', $section->id)
                 ->whereNotNull('ms_channel_id')
                 ->get()
                 ->keyBy('ms_channel_id');
@@ -676,10 +708,10 @@ class AdminMsTeamsController extends Controller
 
             $channelData = [];
             foreach ($channels as $ch) {
-                $chId        = $ch['id'];
-                $chName      = $ch['displayName'];
-                $isPrivate   = ($ch['membershipType'] ?? 'standard') === 'private';
-                $dbSubject   = $dbSubjects->get($chId);
+                $chId = $ch['id'];
+                $chName = $ch['displayName'];
+                $isPrivate = ($ch['membershipType'] ?? 'standard') === 'private';
+                $dbSubject = $dbSubjects->get($chId);
 
                 // For private channels, fetch their own member list
                 $members = [];
@@ -689,8 +721,8 @@ class AdminMsTeamsController extends Controller
                         foreach ($rawMembers as $m) {
                             $members[] = [
                                 'displayName' => $m['displayName'] ?? 'Unknown',
-                                'email'       => $m['email'] ?? null,
-                                'role'        => in_array('owner', $m['roles'] ?? []) ? 'owner' : 'member',
+                                'email' => $m['email'] ?? null,
+                                'role' => in_array('owner', $m['roles'] ?? []) ? 'owner' : 'member',
                             ];
                         }
                     } catch (\Exception) {
@@ -701,33 +733,34 @@ class AdminMsTeamsController extends Controller
                     foreach ($teamMembers as $m) {
                         $members[] = [
                             'displayName' => $m['displayName'] ?? 'Unknown',
-                            'email'       => $m['email'] ?? null,
-                            'role'        => in_array('owner', $m['roles'] ?? []) ? 'owner' : 'member',
+                            'email' => $m['email'] ?? null,
+                            'role' => in_array('owner', $m['roles'] ?? []) ? 'owner' : 'member',
                         ];
                     }
                 }
 
                 $channelData[] = [
-                    'id'           => $chId,
-                    'name'         => $chName,
-                    'type'         => $isPrivate ? 'private' : 'standard',
+                    'id' => $chId,
+                    'name' => $chName,
+                    'type' => $isPrivate ? 'private' : 'standard',
                     'subject_name' => $dbSubject?->subject_name,
                     'teacher_name' => $dbSubject?->teacher_name,
                     'member_count' => count($members),
-                    'members'      => $members,
+                    'members' => $members,
                 ];
             }
 
             return response()->json([
-                'success'      => true,
-                'section_id'   => $section->id,
-                'team_id'      => $section->ms_team_id,
-                'team_url'     => $section->ms_team_url,
-                'channels'     => $channelData,
-                'total_members'=> count($teamMembers),
+                'success' => true,
+                'section_id' => $section->id,
+                'team_id' => $section->ms_team_id,
+                'team_url' => $section->ms_team_url,
+                'channels' => $channelData,
+                'total_members' => count($teamMembers),
             ]);
         } catch (\Exception $e) {
-            Log::error("structureData failed for section {$section->id}: " . $e->getMessage());
+            Log::error("structureData failed for section {$section->id}: ".$e->getMessage());
+
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
@@ -740,25 +773,25 @@ class AdminMsTeamsController extends Controller
         }
 
         $students = Student::with(['applicant', 'studentSection.section'])
-            ->where(function($query) use ($q) {
+            ->where(function ($query) use ($q) {
                 $query->where('student_number', 'like', "%{$q}%")
-                      ->orWhere('school_email', 'like', "%{$q}%")
-                      ->orWhere('ms_email', 'like', "%{$q}%")
-                      ->orWhereHas('applicant', function($qa) use ($q) {
-                          $qa->where('first_name', 'like', "%{$q}%")
-                             ->orWhere('last_name', 'like', "%{$q}%")
-                             ->orWhereRaw("CONCAT(first_name, ' ', last_name) like ?", ["%{$q}%"]);
-                      });
+                    ->orWhere('school_email', 'like', "%{$q}%")
+                    ->orWhere('ms_email', 'like', "%{$q}%")
+                    ->orWhereHas('applicant', function ($qa) use ($q) {
+                        $qa->where('first_name', 'like', "%{$q}%")
+                            ->orWhere('last_name', 'like', "%{$q}%")
+                            ->orWhereRaw("CONCAT(first_name, ' ', last_name) like ?", ["%{$q}%"]);
+                    });
             })
             ->limit(15)
             ->get();
 
-        $results = $students->map(function($s) {
-            $name = $s->applicant ? strtoupper($s->applicant->last_name . ', ' . $s->applicant->first_name) : 'UNREGISTERED';
+        $results = $students->map(function ($s) {
+            $name = $s->applicant ? strtoupper($s->applicant->last_name.', '.$s->applicant->first_name) : 'UNREGISTERED';
             $sectionName = $s->studentSection?->section?->name;
             $gradeLevel = $s->studentSection?->section?->grade_level;
             $currSec = $sectionName ? "{$gradeLevel} - {$sectionName}" : null;
-            
+
             return [
                 'id' => $s->id,
                 'student_number' => $s->student_number ?? 'N/A',
@@ -793,15 +826,15 @@ class AdminMsTeamsController extends Controller
         // Try to auto-enroll them in the MS Team if team id exists
         if ($section->ms_team_id && $student->ms_user_id) {
             try {
-                $service = new MsTeamsEnrollmentService(new MicrosoftGraphService());
+                $service = new MsTeamsEnrollmentService(new MicrosoftGraphService);
                 $service->enrollStudent($student);
             } catch (\Exception $e) {
-                Log::warning("Auto-enroll student {$student->id} to Team failed (non-fatal): " . $e->getMessage());
+                Log::warning("Auto-enroll student {$student->id} to Team failed (non-fatal): ".$e->getMessage());
             }
         }
 
         return redirect()->route('admin.ms-teams.show', $section)
-            ->with('success', "Student successfully assigned to this section.");
+            ->with('success', 'Student successfully assigned to this section.');
     }
 
     public function removeStudent(Request $request, Section $section, Student $student)
@@ -811,6 +844,6 @@ class AdminMsTeamsController extends Controller
             ->delete();
 
         return redirect()->route('admin.ms-teams.show', $section)
-            ->with('success', "Student removed from this section.");
+            ->with('success', 'Student removed from this section.');
     }
 }

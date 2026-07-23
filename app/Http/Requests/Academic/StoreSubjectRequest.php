@@ -14,9 +14,10 @@ class StoreSubjectRequest extends FormRequest
     public function rules(): array
     {
         $id = $this->route('subject') ?? $this->route('id');
+
         return [
             'name' => 'required|string|max:255',
-            'code' => 'required|string|max:20|unique:subjects,code,' . ($id ?? 'NULL'),
+            'code' => 'required|string|max:20|unique:subjects,code,'.($id ?? 'NULL'),
             'description' => 'nullable|string',
             'grade_level' => 'required|string|max:255',
             'school_year' => 'required|string|max:20',

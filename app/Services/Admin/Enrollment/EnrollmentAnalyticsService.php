@@ -5,9 +5,9 @@ namespace App\Services\Admin\Enrollment;
 use App\Models\EnrollmentApplicant;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Collection;
 
 class EnrollmentAnalyticsService
 {
@@ -89,10 +89,10 @@ class EnrollmentAnalyticsService
     public function gradeSlotData(string $schoolYear, Collection $gradeCounts): Collection
     {
         if (
-            !Schema::hasTable('grade_levels')
-            || !Schema::hasColumn('grade_levels', 'name')
-            || !Schema::hasColumn('grade_levels', 'capacity')
-            || !Schema::hasColumn('grade_levels', 'enrolled_count')
+            ! Schema::hasTable('grade_levels')
+            || ! Schema::hasColumn('grade_levels', 'name')
+            || ! Schema::hasColumn('grade_levels', 'capacity')
+            || ! Schema::hasColumn('grade_levels', 'enrolled_count')
         ) {
             return $this->fallbackGradeRows($gradeCounts);
         }
@@ -139,17 +139,17 @@ class EnrollmentAnalyticsService
     public function shiftSlotData(string $schoolYear): Collection
     {
         if (
-            !Schema::hasTable('grade_shift_slots')
-            || !Schema::hasTable('grade_levels')
-            || !Schema::hasTable('enrollment_shifts')
-            || !Schema::hasColumn('grade_shift_slots', 'grade_level_id')
-            || !Schema::hasColumn('grade_shift_slots', 'enrollment_shift_id')
-            || !Schema::hasColumn('grade_shift_slots', 'capacity')
-            || !Schema::hasColumn('grade_shift_slots', 'enrolled_count')
-            || !Schema::hasColumn('grade_levels', 'id')
-            || !Schema::hasColumn('grade_levels', 'name')
-            || !Schema::hasColumn('enrollment_shifts', 'id')
-            || !Schema::hasColumn('enrollment_shifts', 'name')
+            ! Schema::hasTable('grade_shift_slots')
+            || ! Schema::hasTable('grade_levels')
+            || ! Schema::hasTable('enrollment_shifts')
+            || ! Schema::hasColumn('grade_shift_slots', 'grade_level_id')
+            || ! Schema::hasColumn('grade_shift_slots', 'enrollment_shift_id')
+            || ! Schema::hasColumn('grade_shift_slots', 'capacity')
+            || ! Schema::hasColumn('grade_shift_slots', 'enrolled_count')
+            || ! Schema::hasColumn('grade_levels', 'id')
+            || ! Schema::hasColumn('grade_levels', 'name')
+            || ! Schema::hasColumn('enrollment_shifts', 'id')
+            || ! Schema::hasColumn('enrollment_shifts', 'name')
         ) {
             return collect();
         }
@@ -187,10 +187,10 @@ class EnrollmentAnalyticsService
         }
 
         $columns = [
-                'grades.name as grade',
-                'shifts.name as shift',
-                'slots.capacity',
-                'slots.enrolled_count',
+            'grades.name as grade',
+            'shifts.name as shift',
+            'slots.capacity',
+            'slots.enrolled_count',
         ];
 
         if (Schema::hasColumn('enrollment_shifts', 'start_time')) {

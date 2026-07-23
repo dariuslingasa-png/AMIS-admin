@@ -9,7 +9,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (!Schema::hasTable('discount_settings')) {
+        if (! Schema::hasTable('discount_settings')) {
             Schema::create('discount_settings', function (Blueprint $table) {
                 $table->id();
                 $table->unsignedTinyInteger('second_child_percentage')->default(10);
@@ -29,7 +29,7 @@ return new class extends Migration
             ]);
         }
 
-        if (Schema::hasTable('enrollment_applicants') && !Schema::hasColumn('enrollment_applicants', 'sibling_order')) {
+        if (Schema::hasTable('enrollment_applicants') && ! Schema::hasColumn('enrollment_applicants', 'sibling_order')) {
             Schema::table('enrollment_applicants', function (Blueprint $table) {
                 $table->unsignedSmallInteger('sibling_order')->nullable()->after('last_step');
                 $table->string('discount_type', 50)->nullable()->after('sibling_order');
@@ -38,7 +38,7 @@ return new class extends Migration
             });
         }
 
-        if (Schema::hasTable('student_accounts') && !Schema::hasColumn('student_accounts', 'sibling_order')) {
+        if (Schema::hasTable('student_accounts') && ! Schema::hasColumn('student_accounts', 'sibling_order')) {
             Schema::table('student_accounts', function (Blueprint $table) {
                 $table->unsignedSmallInteger('sibling_order')->nullable()->after('books_fee');
                 $table->string('discount_type', 50)->nullable()->after('sibling_order');

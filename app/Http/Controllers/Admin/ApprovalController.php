@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\AdminAuditLog;
 use App\Models\EnrollmentApplicant;
+use App\Models\Payment;
 use App\Services\Admin\Enrollment\EnrollmentApprovalService;
 use App\Services\Admin\Enrollment\EnrollmentReviewService;
 use Illuminate\Http\Request;
@@ -96,7 +97,7 @@ class ApprovalController extends Controller
                 $approvedCount++;
             } catch (\Throwable $e) {
                 $failedCount++;
-                $messages[] = "{$child->full_name} failed: " . $e->getMessage();
+                $messages[] = "{$child->full_name} failed: ".$e->getMessage();
             }
         }
 
@@ -106,7 +107,7 @@ class ApprovalController extends Controller
 
         if ($approvedCount === 0 && $failedCount > 0) {
             return back()->withErrors([
-                'approval' => 'No family enrollees were approved: ' . implode(' | ', $messages),
+                'approval' => 'No family enrollees were approved: '.implode(' | ', $messages),
             ]);
         }
 
@@ -118,7 +119,7 @@ class ApprovalController extends Controller
             return back()->with('success', 'All enrollees in this family are already approved.');
         }
 
-        return back()->with('success', 'Family enrollees approved successfully: ' . implode(' | ', $messages));
+        return back()->with('success', 'Family enrollees approved successfully: '.implode(' | ', $messages));
     }
 
     public function resendOnboardingInbox(EnrollmentApplicant $applicant)
@@ -144,7 +145,7 @@ class ApprovalController extends Controller
 
         $validated = $request->validate([
             'section' => 'required|in:'.implode(',', EnrollmentReviewService::VERIFY_SECTIONS),
-            'action'  => 'required|in:approve,reject',
+            'action' => 'required|in:approve,reject',
         ]);
 
         $this->reviewService->verifySection($applicant, $validated['section'], $validated['action']);
@@ -173,16 +174,16 @@ class ApprovalController extends Controller
 
         $familyId = $applicant->family_application_id ?: $applicant->id;
         $payment = $applicant->payment;
-        if (!$payment) {
-            $payment = \App\Models\Payment::whereHas('applicant', function ($query) use ($familyId) {
+        if (! $payment) {
+            $payment = Payment::whereHas('applicant', function ($query) use ($familyId) {
                 $query->where(function ($q) use ($familyId) {
                     $q->where('family_application_id', $familyId)
-                      ->orWhere('id', $familyId);
+                        ->orWhere('id', $familyId);
                 });
             })->first();
         }
 
-        if (!$payment || (float) $payment->amount >= $expectedAmount) {
+        if (! $payment || (float) $payment->amount >= $expectedAmount) {
             return;
         }
 
@@ -191,15 +192,15 @@ class ApprovalController extends Controller
             ->map(fn ($c) => $c->full_name)
             ->implode(', ');
 
-        $paymentRemark = "Payment proof amount is \u{20B1}" . number_format((float) $payment->amount, 2)
-            . " only. Please verify if this payment is intended for: {$childNames}.";
+        $paymentRemark = "Payment proof amount is \u{20B1}".number_format((float) $payment->amount, 2)
+            ." only. Please verify if this payment is intended for: {$childNames}.";
 
         foreach ($familyEnrollees as $child) {
             if ($child->status === 'approved') {
                 $existingRemarks = $child->review_remarks;
                 $child->update([
                     'review_remarks' => $existingRemarks
-                        ? $existingRemarks . "\n\n" . $paymentRemark
+                        ? $existingRemarks."\n\n".$paymentRemark
                         : $paymentRemark,
                 ]);
             }

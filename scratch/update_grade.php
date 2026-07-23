@@ -1,9 +1,12 @@
 <?php
+
+use App\Models\EnrollmentApplicant;
+
 require 'vendor/autoload.php';
 $app = require 'bootstrap/app.php';
 $app->make('Illuminate\Contracts\Console\Kernel')->bootstrap();
 
-$applicant = App\Models\EnrollmentApplicant::find(1170);
+$applicant = EnrollmentApplicant::find(1170);
 if ($applicant) {
     $oldGrade = $applicant->grade_level;
     $applicant->grade_level = 'Grade 1';

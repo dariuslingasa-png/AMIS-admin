@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Builder;
 
 class ClassSchedule extends Model
 {
@@ -27,7 +27,7 @@ class ClassSchedule extends Model
 
     protected $casts = [
         'spans_all_days' => 'boolean',
-        'is_special'     => 'boolean',
+        'is_special' => 'boolean',
     ];
 
     // ── Relationships ─────────────────────────────────────────────────────────
@@ -72,8 +72,9 @@ class ClassSchedule extends Model
     public function scopeOrdered(Builder $query): Builder
     {
         $days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
+
         return $query
-            ->orderByRaw('FIELD(day, ' . implode(',', array_fill(0, count($days), '?')) . ')', $days)
+            ->orderByRaw('FIELD(day, '.implode(',', array_fill(0, count($days), '?')).')', $days)
             ->orderBy('start_time');
     }
 
@@ -82,12 +83,14 @@ class ClassSchedule extends Model
     public function startMinutes(): int
     {
         [$h, $m] = explode(':', substr($this->start_time, 0, 5));
+
         return ($h * 60) + $m;
     }
 
     public function endMinutes(): int
     {
         [$h, $m] = explode(':', substr($this->end_time, 0, 5));
+
         return ($h * 60) + $m;
     }
 }

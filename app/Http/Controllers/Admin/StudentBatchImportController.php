@@ -29,7 +29,7 @@ class StudentBatchImportController extends Controller
             $rawJson = $request->input('json_data', '');
         }
 
-        $rawJson = trim((string)$rawJson);
+        $rawJson = trim((string) $rawJson);
 
         if (empty($rawJson)) {
             return back()->with('error', 'Please paste JSON payload text or upload a JSON file.');
@@ -37,7 +37,7 @@ class StudentBatchImportController extends Controller
 
         $items = json_decode($rawJson, true);
 
-        if (!is_array($items)) {
+        if (! is_array($items)) {
             return back()->with('error', 'Invalid JSON payload format. Please ensure it is a valid JSON array of student objects.');
         }
 
@@ -53,15 +53,17 @@ class StudentBatchImportController extends Controller
         DB::beginTransaction();
         try {
             foreach ($items as $index => $item) {
-                if (!is_array($item)) continue;
+                if (! is_array($item)) {
+                    continue;
+                }
 
-                $lrn = trim((string)($item['lrn'] ?? $item['LRN'] ?? $item['student_number'] ?? $item['student_id'] ?? ''));
-                $firstName = trim((string)($item['first_name'] ?? $item['fname'] ?? $item['first'] ?? ''));
-                $lastName = trim((string)($item['last_name'] ?? $item['lname'] ?? $item['last'] ?? ''));
-                $middleName = trim((string)($item['middle_name'] ?? $item['mname'] ?? $item['middle'] ?? ''));
-                $fullNameRaw = trim((string)($item['full_name'] ?? $item['name'] ?? ''));
+                $lrn = trim((string) ($item['lrn'] ?? $item['LRN'] ?? $item['student_number'] ?? $item['student_id'] ?? ''));
+                $firstName = trim((string) ($item['first_name'] ?? $item['fname'] ?? $item['first'] ?? ''));
+                $lastName = trim((string) ($item['last_name'] ?? $item['lname'] ?? $item['last'] ?? ''));
+                $middleName = trim((string) ($item['middle_name'] ?? $item['mname'] ?? $item['middle'] ?? ''));
+                $fullNameRaw = trim((string) ($item['full_name'] ?? $item['name'] ?? ''));
 
-                if (empty($firstName) && empty($lastName) && !empty($fullNameRaw)) {
+                if (empty($firstName) && empty($lastName) && ! empty($fullNameRaw)) {
                     if (str_contains($fullNameRaw, ',')) {
                         $parts = explode(',', $fullNameRaw, 2);
                         $lastName = trim($parts[0]);
@@ -81,28 +83,29 @@ class StudentBatchImportController extends Controller
                     }
                 }
 
-                $address = trim((string)($item['address'] ?? $item['street_address'] ?? $item['home_address'] ?? ''));
-                $gradeLevel = trim((string)($item['grade_level'] ?? $item['grade'] ?? ''));
-                $gender = strtolower(trim((string)($item['gender'] ?? $item['sex'] ?? '')));
-                $dob = trim((string)($item['date_of_birth'] ?? $item['dob'] ?? $item['birthdate'] ?? ''));
-                $pob = trim((string)($item['place_of_birth'] ?? $item['birthplace'] ?? ''));
-                $religion = trim((string)($item['religion'] ?? ''));
-                $parentName = trim((string)($item['parent_name'] ?? $item['father_name'] ?? $item['mother_name'] ?? $item['guardian'] ?? ''));
-                $parentMobile = trim((string)($item['parent_mobile'] ?? $item['phone'] ?? $item['mobile_number'] ?? $item['mobile'] ?? ''));
-                $parentEmail = strtolower(trim((string)($item['parent_email'] ?? $item['email'] ?? '')));
-                $sectionName = trim((string)($item['section'] ?? $item['section_name'] ?? ''));
+                $address = trim((string) ($item['address'] ?? $item['street_address'] ?? $item['home_address'] ?? ''));
+                $gradeLevel = trim((string) ($item['grade_level'] ?? $item['grade'] ?? ''));
+                $gender = strtolower(trim((string) ($item['gender'] ?? $item['sex'] ?? '')));
+                $dob = trim((string) ($item['date_of_birth'] ?? $item['dob'] ?? $item['birthdate'] ?? ''));
+                $pob = trim((string) ($item['place_of_birth'] ?? $item['birthplace'] ?? ''));
+                $religion = trim((string) ($item['religion'] ?? ''));
+                $parentName = trim((string) ($item['parent_name'] ?? $item['father_name'] ?? $item['mother_name'] ?? $item['guardian'] ?? ''));
+                $parentMobile = trim((string) ($item['parent_mobile'] ?? $item['phone'] ?? $item['mobile_number'] ?? $item['mobile'] ?? ''));
+                $parentEmail = strtolower(trim((string) ($item['parent_email'] ?? $item['email'] ?? '')));
+                $sectionName = trim((string) ($item['section'] ?? $item['section_name'] ?? ''));
 
                 if (empty($firstName) && empty($lastName) && empty($lrn)) {
-                    $errors[] = "Item #" . ($index + 1) . ": Skipped due to missing name and LRN.";
+                    $errors[] = 'Item #'.($index + 1).': Skipped due to missing name and LRN.';
+
                     continue;
                 }
 
                 $applicant = null;
                 $student = null;
 
-                if (!empty($lrn)) {
+                if (! empty($lrn)) {
                     $applicant = EnrollmentApplicant::where('lrn', $lrn)->first();
-                    if (!$applicant) {
+                    if (! $applicant) {
                         $student = Student::where('student_number', $lrn)->first();
                         if ($student) {
                             $applicant = $student->applicant;
@@ -110,21 +113,21 @@ class StudentBatchImportController extends Controller
                     }
                 }
 
-                if (!$applicant && (!empty($firstName) || !empty($lastName))) {
+                if (! $applicant && (! empty($firstName) || ! empty($lastName))) {
                     $cleanFirstName = trim(preg_replace('/\s+[A-Za-z]\.?$/i', '', $firstName));
                     $cleanLastName = trim($lastName);
 
                     $query = EnrollmentApplicant::query();
-                    if (!empty($cleanFirstName)) {
-                        $query->where('first_name', 'like', '%' . $cleanFirstName . '%');
+                    if (! empty($cleanFirstName)) {
+                        $query->where('first_name', 'like', '%'.$cleanFirstName.'%');
                     }
-                    if (!empty($cleanLastName)) {
-                        $query->where('last_name', 'like', '%' . $cleanLastName . '%');
+                    if (! empty($cleanLastName)) {
+                        $query->where('last_name', 'like', '%'.$cleanLastName.'%');
                     }
                     $applicant = $query->first();
 
-                    if (!$applicant && (!empty($cleanLastName) || !empty($cleanFirstName))) {
-                        $searchStr = trim($cleanFirstName . ' ' . $cleanLastName);
+                    if (! $applicant && (! empty($cleanLastName) || ! empty($cleanFirstName))) {
+                        $searchStr = trim($cleanFirstName.' '.$cleanLastName);
                         $user = User::where('name', 'like', "%{$searchStr}%")->first();
                         if ($user && $user->student) {
                             $student = $user->student;
@@ -134,37 +137,58 @@ class StudentBatchImportController extends Controller
                 }
 
                 if ($applicant) {
-                    if (!empty($lrn)) $applicant->lrn = $lrn;
-                    if (!empty($firstName)) $applicant->first_name = mb_strtoupper($firstName);
-                    if (!empty($lastName)) $applicant->last_name = mb_strtoupper($lastName);
-                    if (!empty($middleName)) $applicant->middle_name = mb_strtoupper($middleName);
-                    if (!empty($address)) {
+                    if (! empty($lrn)) {
+                        $applicant->lrn = $lrn;
+                    }
+                    if (! empty($firstName)) {
+                        $applicant->first_name = mb_strtoupper($firstName);
+                    }
+                    if (! empty($lastName)) {
+                        $applicant->last_name = mb_strtoupper($lastName);
+                    }
+                    if (! empty($middleName)) {
+                        $applicant->middle_name = mb_strtoupper($middleName);
+                    }
+                    if (! empty($address)) {
                         $applicant->address = mb_strtoupper($address);
                         $applicant->street_address = mb_strtoupper($address);
                         $applicant->home_address = mb_strtoupper($address);
                     }
-                    if (!empty($gradeLevel)) $applicant->grade_level = $gradeLevel;
-                    if (!empty($gender)) $applicant->gender = strtolower($gender);
-                    if (!empty($dob)) {
+                    if (! empty($gradeLevel)) {
+                        $applicant->grade_level = $gradeLevel;
+                    }
+                    if (! empty($gender)) {
+                        $applicant->gender = strtolower($gender);
+                    }
+                    if (! empty($dob)) {
                         try {
                             $applicant->date_of_birth = Carbon::parse($dob);
-                        } catch (\Exception $e) {}
+                        } catch (\Exception $e) {
+                        }
                     }
-                    if (!empty($pob)) $applicant->place_of_birth = mb_strtoupper($pob);
-                    if (!empty($religion)) $applicant->religion = mb_strtoupper($religion);
-                    if (!empty($parentName)) {
+                    if (! empty($pob)) {
+                        $applicant->place_of_birth = mb_strtoupper($pob);
+                    }
+                    if (! empty($religion)) {
+                        $applicant->religion = mb_strtoupper($religion);
+                    }
+                    if (! empty($parentName)) {
                         if (empty($applicant->father_first_name)) {
                             $applicant->father_first_name = mb_strtoupper($parentName);
                         }
                     }
-                    if (!empty($parentMobile)) $applicant->parent_mobile = $parentMobile;
-                    if (!empty($parentEmail)) $applicant->parent_email = strtolower($parentEmail);
+                    if (! empty($parentMobile)) {
+                        $applicant->parent_mobile = $parentMobile;
+                    }
+                    if (! empty($parentEmail)) {
+                        $applicant->parent_email = strtolower($parentEmail);
+                    }
 
                     $applicant->save();
 
                     if ($applicant->student) {
                         $student = $applicant->student;
-                        if (!empty($gradeLevel)) {
+                        if (! empty($gradeLevel)) {
                             $student->grade_level = $gradeLevel;
                             $student->save();
                         }
@@ -183,7 +207,7 @@ class StudentBatchImportController extends Controller
                         'address' => mb_strtoupper($address),
                         'street_address' => mb_strtoupper($address),
                         'home_address' => mb_strtoupper($address),
-                        'date_of_birth' => !empty($dob) ? date('Y-m-d', strtotime($dob)) : null,
+                        'date_of_birth' => ! empty($dob) ? date('Y-m-d', strtotime($dob)) : null,
                         'place_of_birth' => mb_strtoupper($pob),
                         'religion' => mb_strtoupper($religion ?: 'Islam'),
                         'father_first_name' => mb_strtoupper($parentName),
@@ -191,16 +215,16 @@ class StudentBatchImportController extends Controller
                         'parent_email' => strtolower($parentEmail),
                     ]);
 
-                    $dispName = trim(mb_strtoupper($firstName . ' ' . $lastName));
+                    $dispName = trim(mb_strtoupper($firstName.' '.$lastName));
                     $user = User::create([
                         'name' => $dispName,
-                        'email' => !empty($parentEmail) ? $parentEmail : strtolower(str_replace(' ', '', $dispName) . rand(100, 999) . '@amis.edu.ph'),
+                        'email' => ! empty($parentEmail) ? $parentEmail : strtolower(str_replace(' ', '', $dispName).rand(100, 999).'@amis.edu.ph'),
                         'password' => bcrypt('AMIS2026!'),
                         'role' => 'student',
                         'account_status' => 'verified',
                     ]);
 
-                    $studentNumber = $lrn ?: (string)rand(100000000000, 999999999999);
+                    $studentNumber = $lrn ?: (string) rand(100000000000, 999999999999);
                     $student = Student::create([
                         'user_id' => $user->id,
                         'enrollment_applicant_id' => $createdApplicant->id,
@@ -213,7 +237,7 @@ class StudentBatchImportController extends Controller
                 }
 
                 $targetSecId = $request->input('target_section_id');
-                if (!$targetSecId && !empty($sectionName)) {
+                if (! $targetSecId && ! empty($sectionName)) {
                     $secObj = Section::where('name', 'like', "%{$sectionName}%")->first();
                     if ($secObj) {
                         $targetSecId = $secObj->id;
@@ -236,10 +260,12 @@ class StudentBatchImportController extends Controller
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Error processing JSON batch: ' . $e->getMessage());
+
+            return back()->with('error', 'Error processing JSON batch: '.$e->getMessage());
         }
 
-        $msg = "Batch JSON Processing Complete! (Updated: {$updatedCount} existing students, Auto-Inserted: {$createdCount} new students" . ($assignedCount > 0 ? ", Assigned to Section: {$assignedCount}" : "") . ")";
+        $msg = "Batch JSON Processing Complete! (Updated: {$updatedCount} existing students, Auto-Inserted: {$createdCount} new students".($assignedCount > 0 ? ", Assigned to Section: {$assignedCount}" : '').')';
+
         return back()->with('success', $msg);
     }
 
@@ -262,7 +288,7 @@ class StudentBatchImportController extends Controller
         $jsonDataClean = preg_replace('/,\s*([\]}])/', '$1', $jsonData);
         $items = json_decode($jsonDataClean, true);
 
-        if (!is_array($items)) {
+        if (! is_array($items)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid JSON structure. Please check for missing brackets or quotation marks.',
@@ -278,12 +304,17 @@ class StudentBatchImportController extends Controller
         $createCount = 0;
 
         foreach ($items as $index => $item) {
-            if (!is_array($item)) continue;
+            if (! is_array($item)) {
+                continue;
+            }
 
             $getVal = function ($keys, $default = '') use ($item) {
-                foreach ((array)$keys as $k) {
-                    if (isset($item[$k]) && filled($item[$k])) return trim((string)$item[$k]);
+                foreach ((array) $keys as $k) {
+                    if (isset($item[$k]) && filled($item[$k])) {
+                        return trim((string) $item[$k]);
+                    }
                 }
+
                 return $default;
             };
 
@@ -293,7 +324,7 @@ class StudentBatchImportController extends Controller
             $middleName = $getVal(['middle_name', 'mname', 'middle']);
             $fullName = $getVal(['name', 'full_name', 'student_name']);
 
-            if (empty($firstName) && empty($lastName) && !empty($fullName)) {
+            if (empty($firstName) && empty($lastName) && ! empty($fullName)) {
                 $parts = explode(' ', $fullName);
                 if (count($parts) >= 2) {
                     $lastName = array_pop($parts);
@@ -312,25 +343,31 @@ class StudentBatchImportController extends Controller
 
             $applicant = null;
 
-            if (!empty($lrn)) {
+            if (! empty($lrn)) {
                 $applicant = EnrollmentApplicant::where('lrn', $lrn)->first();
-                if (!$applicant) {
+                if (! $applicant) {
                     $student = Student::where('student_number', $lrn)->first();
-                    if ($student) $applicant = $student->applicant;
+                    if ($student) {
+                        $applicant = $student->applicant;
+                    }
                 }
             }
 
-            if (!$applicant && (!empty($firstName) || !empty($lastName))) {
+            if (! $applicant && (! empty($firstName) || ! empty($lastName))) {
                 $cleanFirstName = trim(preg_replace('/\s+[A-Za-z]\.?$/i', '', $firstName));
                 $cleanLastName = trim($lastName);
 
                 $query = EnrollmentApplicant::query();
-                if (!empty($cleanFirstName)) $query->where('first_name', 'like', '%' . $cleanFirstName . '%');
-                if (!empty($cleanLastName)) $query->where('last_name', 'like', '%' . $cleanLastName . '%');
+                if (! empty($cleanFirstName)) {
+                    $query->where('first_name', 'like', '%'.$cleanFirstName.'%');
+                }
+                if (! empty($cleanLastName)) {
+                    $query->where('last_name', 'like', '%'.$cleanLastName.'%');
+                }
                 $applicant = $query->first();
 
-                if (!$applicant && (!empty($cleanLastName) || !empty($cleanFirstName))) {
-                    $searchStr = trim($cleanFirstName . ' ' . $cleanLastName);
+                if (! $applicant && (! empty($cleanLastName) || ! empty($cleanFirstName))) {
+                    $searchStr = trim($cleanFirstName.' '.$cleanLastName);
                     $user = User::where('name', 'like', "%{$searchStr}%")->first();
                     if ($user && $user->student) {
                         $applicant = $user->student->applicant;
@@ -349,13 +386,13 @@ class StudentBatchImportController extends Controller
                 'index' => $index + 1,
                 'status' => $status,
                 'matched_student_id' => $applicant?->student?->student_number ?? $applicant?->amis_student_id ?? null,
-                'matched_name' => $applicant ? ($applicant->last_name . ', ' . $applicant->first_name) : null,
+                'matched_name' => $applicant ? ($applicant->last_name.', '.$applicant->first_name) : null,
                 'lrn' => $lrn ?: ($applicant?->lrn ?? 'Auto-Generated'),
-                'name' => mb_strtoupper(trim($lastName . ', ' . $firstName . ' ' . $middleName)),
+                'name' => mb_strtoupper(trim($lastName.', '.$firstName.' '.$middleName)),
                 'grade_level' => $gradeLevel ?: 'Grade 1',
-                'gender' => !empty($gender) ? ucfirst(strtolower($gender)) : 'Male',
+                'gender' => ! empty($gender) ? ucfirst(strtolower($gender)) : 'Male',
                 'address' => mb_strtoupper($address ?: 'N/A'),
-                'parent' => mb_strtoupper($parentName ?: 'N/A') . ($parentMobile ? " ({$parentMobile})" : ''),
+                'parent' => mb_strtoupper($parentName ?: 'N/A').($parentMobile ? " ({$parentMobile})" : ''),
             ];
         }
 

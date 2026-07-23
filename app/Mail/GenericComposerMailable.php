@@ -66,6 +66,7 @@ class GenericComposerMailable extends Mailable
                 $attachments[] = Attachment::fromPath($path);
             }
         }
+
         return $attachments;
     }
 }

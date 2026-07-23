@@ -7,11 +7,11 @@ use App\Models\SectionSubject;
 use App\Services\MicrosoftGraphService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 class SyncFromMsTeams extends Command
 {
     protected $signature = 'ms-teams:sync-db-from-teams {--apply : Apply the changes to the database}';
+
     protected $description = 'Safely sync MS Team and channel IDs from Microsoft Teams to the DB sections and subjects (READ-ONLY to MS Teams)';
 
     public function handle(): int
@@ -23,14 +23,15 @@ class SyncFromMsTeams extends Command
         // 1. Fetch all groups from Microsoft Graph
         $this->info('Fetching all groups from Microsoft Teams...');
         try {
-            $graph = new MicrosoftGraphService();
+            $graph = new MicrosoftGraphService;
             $teams = $this->fetchTeamsFromGraph();
         } catch (\Exception $e) {
-            $this->error('Failed to connect to Microsoft Graph: ' . $e->getMessage());
+            $this->error('Failed to connect to Microsoft Graph: '.$e->getMessage());
+
             return Command::FAILURE;
         }
 
-        $this->info('Found ' . count($teams) . ' teams in Microsoft Teams.');
+        $this->info('Found '.count($teams).' teams in Microsoft Teams.');
         $this->newLine();
 
         // 2. Load all sections from the database
@@ -38,7 +39,7 @@ class SyncFromMsTeams extends Command
         $sections = Section::all()->sortBy(function ($sec) {
             return ($sec->name === 'A' || empty($sec->name)) ? 1 : 0;
         });
-        $this->info('Loaded ' . $sections->count() . ' sections from the database.');
+        $this->info('Loaded '.$sections->count().' sections from the database.');
         $this->newLine();
 
         $matchedCount = 0;
@@ -65,6 +66,7 @@ class SyncFromMsTeams extends Command
 
             if (empty($matchingTeams)) {
                 $unmatchedSections[] = $section;
+
                 continue;
             }
 
@@ -118,15 +120,15 @@ class SyncFromMsTeams extends Command
                     }
                 }
             } catch (\Exception $e) {
-                $this->error("     Error fetching channels for Team ID {$bestTeam['id']}: " . $e->getMessage());
+                $this->error("     Error fetching channels for Team ID {$bestTeam['id']}: ".$e->getMessage());
             }
             $this->newLine();
         }
 
         // Summary Report
         $this->info('--- MATCHING SUMMARY ---');
-        $this->info("Matched Sections: {$matchedCount} / " . $sections->count());
-        $this->warn("Unmatched Sections: " . count($unmatchedSections));
+        $this->info("Matched Sections: {$matchedCount} / ".$sections->count());
+        $this->warn('Unmatched Sections: '.count($unmatchedSections));
         if (count($unmatchedSections) > 0) {
             foreach ($unmatchedSections as $us) {
                 $usShift = $us->shift ?? 'F2F';
@@ -156,7 +158,7 @@ class SyncFromMsTeams extends Command
             $updatedSections = 0;
             foreach ($sectionUpdates as $update) {
                 $cleanedName = $this->cleanTeamName($update['team_name']);
-                
+
                 // Safety check: check if another section already holds this ms_team_id to prevent constraint violations
                 $existingConflict = Section::where('ms_team_id', $update['team_id'])
                     ->where('id', '!=', $update['section']->id)
@@ -164,6 +166,7 @@ class SyncFromMsTeams extends Command
 
                 if ($existingConflict) {
                     $this->warn("Skipping Section [ID {$update['section']->id}] -> matched Team ID {$update['team_id']} is already held by Section [ID {$existingConflict->id} ({$existingConflict->grade_level} - {$existingConflict->name})]");
+
                     continue;
                 }
 
@@ -175,7 +178,7 @@ class SyncFromMsTeams extends Command
                     ]);
                     $updatedSections++;
                 } catch (\Exception $e) {
-                    $this->error("Failed to update Section [ID {$update['section']->id}]: " . $e->getMessage());
+                    $this->error("Failed to update Section [ID {$update['section']->id}]: ".$e->getMessage());
                 }
             }
 
@@ -199,7 +202,7 @@ class SyncFromMsTeams extends Command
     private function fetchTeamsFromGraph(): array
     {
         $response = Http::asForm()->post(
-            "https://login.microsoftonline.com/" . config('services.microsoft.tenant_id') . "/oauth2/v2.0/token",
+            'https://login.microsoftonline.com/'.config('services.microsoft.tenant_id').'/oauth2/v2.0/token',
             [
                 'grant_type' => 'client_credentials',
                 'client_id' => config('services.microsoft.client_id'),
@@ -208,8 +211,8 @@ class SyncFromMsTeams extends Command
             ]
         );
 
-        if (!$response->successful()) {
-            throw new \Exception('Failed to obtain access token: ' . $response->body());
+        if (! $response->successful()) {
+            throw new \Exception('Failed to obtain access token: '.$response->body());
         }
 
         $token = $response->json('access_token');
@@ -222,8 +225,8 @@ class SyncFromMsTeams extends Command
                 ->timeout(60)
                 ->get($url);
 
-            if (!$res->successful()) {
-                throw new \Exception('Failed to list groups from Graph: ' . $res->body());
+            if (! $res->successful()) {
+                throw new \Exception('Failed to list groups from Graph: '.$res->body());
             }
 
             $data = $res->json();
@@ -250,7 +253,7 @@ class SyncFromMsTeams extends Command
 
         // 1. Grade level check
         $parsedGrade = $this->parseGradeLevel($teamName);
-        if (!$parsedGrade || strcasecmp($parsedGrade, $section->grade_level) !== 0) {
+        if (! $parsedGrade || strcasecmp($parsedGrade, $section->grade_level) !== 0) {
             return false;
         }
 
@@ -263,9 +266,9 @@ class SyncFromMsTeams extends Command
         // 3. Gender check (if specified in team name)
         $parsedGender = $this->parseGender($teamName);
         if ($parsedGender !== null) {
-            $dbGender   = $section->gender;
+            $dbGender = $section->gender;
             $normParsed = in_array($parsedGender, ['male', 'female'], true) ? $parsedGender : 'merge';
-            $normDb     = in_array($dbGender, ['male', 'female'], true) ? $dbGender : 'merge';
+            $normDb = in_array($dbGender, ['male', 'female'], true) ? $dbGender : 'merge';
             if ($normParsed !== $normDb) {
                 return false;
             }
@@ -322,10 +325,11 @@ class SyncFromMsTeams extends Command
             return 'Kinder 2';
         }
         for ($i = 1; $i <= 12; $i++) {
-            if (preg_match('/\b(G' . $i . '|Grade ' . $i . ')\b/i', $name)) {
-                return 'Grade ' . $i;
+            if (preg_match('/\b(G'.$i.'|Grade '.$i.')\b/i', $name)) {
+                return 'Grade '.$i;
             }
         }
+
         return null;
     }
 
@@ -337,6 +341,7 @@ class SyncFromMsTeams extends Command
         if (preg_match('/2nd\s*Shift/i', $name)) {
             return '2nd Shift';
         }
+
         return null;
     }
 
@@ -351,6 +356,7 @@ class SyncFromMsTeams extends Command
         if (preg_match('/\b(na|mixed|mix|co-ed|coed|merge|merged)\b/i', $name)) {
             return 'merge';
         }
+
         return null;
     }
 
@@ -358,19 +364,19 @@ class SyncFromMsTeams extends Command
     {
         // Strip grade prefix (e.g. G5 -, Grade 5 -, K2 -)
         $cleaned = preg_replace('/^(G\d+|K\d+|Grade\s*\d+|Kinder\s*\d+|Kindergarten\s*\d+)\b/i', '', $name);
-        
+
         // Strip shift suffix (e.g. - 1st SHIFT, - 2nd SHIFT)
         $cleaned = preg_replace('/-\s*\d+(st|nd|rd|th)\s*shift\b/i', '', $cleaned);
-        
+
         // Strip gender/brackets (e.g. (BOYS), (GIRLS), (MIX))
         $cleaned = preg_replace('/\((boys|girls|mix)\)/i', '', $cleaned);
-        
+
         // Strip info brackets (e.g. [Boys & 1st Shift])
         $cleaned = preg_replace('/\[.*\]/i', '', $cleaned);
-        
+
         // Strip leading/trailing hyphens and spaces
         $cleaned = trim($cleaned, " \t\n\r\0\x0B-");
-        
+
         return $cleaned;
     }
 
@@ -381,6 +387,7 @@ class SyncFromMsTeams extends Command
         $cleaned = str_replace('-', ' ', $cleaned);
         $cleaned = preg_replace('/[^a-z0-9\s]/', '', $cleaned);
         $cleaned = preg_replace('/\s+/', ' ', $cleaned);
+
         return trim($cleaned);
     }
 
@@ -388,21 +395,21 @@ class SyncFromMsTeams extends Command
     {
         $n1 = $this->normalizeName($name1);
         $n2 = $this->normalizeName($name2);
-        
+
         if ($n1 === $n2) {
             return true;
         }
-        
+
         if (str_contains($n1, $n2) || str_contains($n2, $n1)) {
             return true;
         }
-        
+
         $dist = levenshtein($n1, $n2);
         $maxLength = max(strlen($n1), strlen($n2));
         if ($maxLength > 0 && ($dist <= 2 || ($dist / $maxLength) <= 0.15)) {
             return true;
         }
-        
+
         return false;
     }
 
@@ -410,7 +417,7 @@ class SyncFromMsTeams extends Command
     {
         $name = strtolower(trim($name));
         $name = str_replace(["'", '-', ' '], '', $name);
-        
+
         $mappings = [
             'ap' => 'aralingpanlipunan',
             'eng' => 'english',
@@ -419,15 +426,15 @@ class SyncFromMsTeams extends Command
             'esp' => 'gmrc',
             'seerah' => 'seerahandhadith',
         ];
-        
+
         if (isset($mappings[$name])) {
             return $mappings[$name];
         }
-        
+
         if (str_starts_with($name, 'tle')) {
             return 'tle';
         }
-        
+
         return $name;
     }
 
@@ -435,6 +442,7 @@ class SyncFromMsTeams extends Command
     {
         $s1 = $this->normalizeSubjectName($subj1);
         $s2 = $this->normalizeSubjectName($subj2);
+
         return $s1 === $s2 || str_contains($s1, $s2) || str_contains($s2, $s1);
     }
 }

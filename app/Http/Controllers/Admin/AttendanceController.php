@@ -4,10 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Student;
-use App\Models\StudentSection;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class AttendanceController extends Controller
 {
@@ -33,7 +32,7 @@ class AttendanceController extends Controller
                 'enrollment_applicants.last_name',
                 'enrollment_applicants.middle_name',
                 'sections.name as section_name',
-                'students.grade_level'
+                'students.grade_level',
             ])
             ->orderBy('student_daily_attendances.created_at', 'desc')
             ->get();
@@ -48,7 +47,7 @@ class AttendanceController extends Controller
             'present' => $presentCount,
             'late' => $lateCount,
             'absent' => $absentCount,
-            'rate' => $rate
+            'rate' => $rate,
         ];
 
         return view('admin.attendance.index', compact('stats', 'todayLogs', 'today'));
@@ -60,7 +59,7 @@ class AttendanceController extends Controller
     public function scanner()
     {
         $today = Carbon::today()->toDateString();
-        
+
         // Get today's recent scans
         $recentScans = DB::table('student_daily_attendances')
             ->join('students', 'student_daily_attendances.student_id', '=', 'students.id')
@@ -74,7 +73,7 @@ class AttendanceController extends Controller
                 'enrollment_applicants.first_name',
                 'enrollment_applicants.last_name',
                 'sections.name as section_name',
-                'students.grade_level'
+                'students.grade_level',
             ])
             ->orderBy('student_daily_attendances.updated_at', 'desc')
             ->take(10)
@@ -89,7 +88,7 @@ class AttendanceController extends Controller
     public function scan(Request $request)
     {
         $request->validate([
-            'student_number' => 'required|string'
+            'student_number' => 'required|string',
         ]);
 
         $studentNumber = strtoupper(trim($request->student_number));
@@ -97,10 +96,10 @@ class AttendanceController extends Controller
         // Find the student
         $student = Student::with(['applicant', 'studentSection.section'])->where('student_number', $studentNumber)->first();
 
-        if (!$student) {
+        if (! $student) {
             return response()->json([
                 'success' => false,
-                'message' => "Student ID '{$studentNumber}' not found in registry."
+                'message' => "Student ID '{$studentNumber}' not found in registry.",
             ], 404);
         }
 
@@ -114,14 +113,14 @@ class AttendanceController extends Controller
             ->where('date', $today)
             ->first();
 
-        $fullName = strtoupper(trim(($student->applicant->first_name ?? '') . ' ' . ($student->applicant->last_name ?? '')));
-        $gradeSection = $student->grade_level . ($student->studentSection?->section?->name ? ' - ' . $student->studentSection->section->name : '');
+        $fullName = strtoupper(trim(($student->applicant->first_name ?? '').' '.($student->applicant->last_name ?? '')));
+        $gradeSection = $student->grade_level.($student->studentSection?->section?->name ? ' - '.$student->studentSection->section->name : '');
 
-        if (!$attendance) {
+        if (! $attendance) {
             // Check-in (First scan of the day)
             $expectedTime = Carbon::createFromFormat('H:i', '07:30');
             $scanTime = Carbon::createFromFormat('H:i', $currentTime->format('H:i'));
-            
+
             $status = $scanTime->greaterThan($expectedTime) ? 'LATE' : 'PRESENT';
             $remarks = $status === 'LATE' ? 'Checked in late' : 'On-time arrival';
 
@@ -132,7 +131,7 @@ class AttendanceController extends Controller
                 'status' => $status,
                 'remarks' => $remarks,
                 'created_at' => $currentTime,
-                'updated_at' => $currentTime
+                'updated_at' => $currentTime,
             ]);
 
             return response()->json([
@@ -142,24 +141,24 @@ class AttendanceController extends Controller
                 'grade_section' => $gradeSection,
                 'time' => $timeStr,
                 'status' => $status,
-                'message' => "Checked In successfully! ({$status})"
+                'message' => "Checked In successfully! ({$status})",
             ]);
         } else {
             // Check-out (Second scan of the day)
             if ($attendance->time_out !== null) {
                 return response()->json([
                     'success' => false,
-                    'message' => "{$fullName} has already completed attendance (checked in and out) for today."
+                    'message' => "{$fullName} has already completed attendance (checked in and out) for today.",
                 ], 422);
             }
 
             // Update with time_out
             $expectedOutTime = Carbon::createFromFormat('H:i', '16:00');
             $scanTime = Carbon::createFromFormat('H:i', $currentTime->format('H:i'));
-            
+
             $remarks = $attendance->remarks;
             if ($scanTime->lessThan($expectedOutTime)) {
-                $remarks .= ($remarks ? '; ' : '') . 'Early Departure';
+                $remarks .= ($remarks ? '; ' : '').'Early Departure';
             }
 
             DB::table('student_daily_attendances')
@@ -167,7 +166,7 @@ class AttendanceController extends Controller
                 ->update([
                     'time_out' => $currentTime->toTimeString(),
                     'remarks' => $remarks,
-                    'updated_at' => $currentTime
+                    'updated_at' => $currentTime,
                 ]);
 
             return response()->json([
@@ -176,7 +175,7 @@ class AttendanceController extends Controller
                 'student_name' => $fullName,
                 'grade_section' => $gradeSection,
                 'time' => $timeStr,
-                'message' => "Checked Out successfully!"
+                'message' => 'Checked Out successfully!',
             ]);
         }
     }
@@ -188,8 +187,8 @@ class AttendanceController extends Controller
     {
         $students = Student::with(['applicant', 'studentSection.section'])
             ->get()
-            ->sortBy(function($s) {
-                return strtoupper(trim(($s->applicant->last_name ?? '') . ' ' . ($s->applicant->first_name ?? '')));
+            ->sortBy(function ($s) {
+                return strtoupper(trim(($s->applicant->last_name ?? '').' '.($s->applicant->first_name ?? '')));
             });
 
         return view('admin.attendance.manual', compact('students'));
@@ -206,7 +205,7 @@ class AttendanceController extends Controller
             'status' => 'required|in:PRESENT,LATE,ABSENT',
             'time_in' => 'nullable',
             'time_out' => 'nullable',
-            'remarks' => 'nullable|string'
+            'remarks' => 'nullable|string',
         ]);
 
         $studentId = $request->student_id;
@@ -224,7 +223,7 @@ class AttendanceController extends Controller
             'time_in' => $request->time_in ?: null,
             'time_out' => $request->time_out ?: null,
             'remarks' => $request->remarks ?: null,
-            'updated_at' => now()
+            'updated_at' => now(),
         ];
 
         if ($existing) {
@@ -245,7 +244,7 @@ class AttendanceController extends Controller
     public function reports(Request $request)
     {
         $gradeLevels = ['Kinder 1', 'Kinder 2', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'];
-        
+
         $query = DB::table('student_daily_attendances')
             ->join('students', 'student_daily_attendances.student_id', '=', 'students.id')
             ->leftJoin('enrollment_applicants', 'students.enrollment_applicant_id', '=', 'enrollment_applicants.id')
@@ -257,7 +256,7 @@ class AttendanceController extends Controller
                 'enrollment_applicants.first_name',
                 'enrollment_applicants.last_name',
                 'sections.name as section_name',
-                'students.grade_level'
+                'students.grade_level',
             ]);
 
         // Filter by date range
@@ -282,8 +281,8 @@ class AttendanceController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('students.student_number', 'like', "%{$search}%")
-                  ->orWhere('enrollment_applicants.first_name', 'like', "%{$search}%")
-                  ->orWhere('enrollment_applicants.last_name', 'like', "%{$search}%");
+                    ->orWhere('enrollment_applicants.first_name', 'like', "%{$search}%")
+                    ->orWhere('enrollment_applicants.last_name', 'like', "%{$search}%");
             });
         }
 
@@ -304,23 +303,23 @@ class AttendanceController extends Controller
     private function exportCsv($data)
     {
         $headers = [
-            "Content-type"        => "text/csv",
-            "Content-Disposition" => "attachment; filename=student_attendance_report_" . date('Ymd_His') . ".csv",
-            "Pragma"              => "no-cache",
-            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
-            "Expires"             => "0"
+            'Content-type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename=student_attendance_report_'.date('Ymd_His').'.csv',
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
         ];
 
         $columns = ['Date', 'Student ID', 'Student Name', 'Grade & Section', 'Time In', 'Time Out', 'Status', 'Remarks'];
 
-        $callback = function() use($data, $columns) {
+        $callback = function () use ($data, $columns) {
             $file = fopen('php://output', 'w');
             fputcsv($file, $columns);
 
             foreach ($data as $row) {
-                $name = strtoupper(($row->last_name ?? '') . ', ' . ($row->first_name ?? ''));
-                $gradeSection = $row->grade_level . ($row->section_name ? ' - ' . $row->section_name : '');
-                
+                $name = strtoupper(($row->last_name ?? '').', '.($row->first_name ?? ''));
+                $gradeSection = $row->grade_level.($row->section_name ? ' - '.$row->section_name : '');
+
                 fputcsv($file, [
                     $row->date,
                     $row->student_number,
@@ -329,7 +328,7 @@ class AttendanceController extends Controller
                     $row->time_in ? Carbon::parse($row->time_in)->format('h:i A') : '—',
                     $row->time_out ? Carbon::parse($row->time_out)->format('h:i A') : '—',
                     $row->status,
-                    $row->remarks ?: '—'
+                    $row->remarks ?: '—',
                 ]);
             }
 

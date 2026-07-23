@@ -29,7 +29,7 @@ class SubjectService
     public function toggleStatus(Subject $subject): void
     {
         $newStatus = $subject->status === 'active' ? 'inactive' : 'active';
-        
+
         $updateData = ['status' => $newStatus];
         if ($newStatus === 'inactive') {
             $updateData['archived_at'] = now();

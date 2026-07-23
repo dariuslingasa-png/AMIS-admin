@@ -38,7 +38,7 @@ class IdentityRoutingController extends Controller
             if (empty($email)) {
                 return response()->json([
                     'error' => 'ERR_INVALID_TOKEN',
-                    'message' => 'Token email is missing or token is invalid.'
+                    'message' => 'Token email is missing or token is invalid.',
                 ], 400);
             }
 
@@ -48,21 +48,21 @@ class IdentityRoutingController extends Controller
             // We use indexed lookup to avoid lag
             $identity = LinkedIdentity::where('microsoft_email', $email)->first();
 
-            if (!$identity) {
-                throw new AccountNotRegisteredException();
+            if (! $identity) {
+                throw new AccountNotRegisteredException;
             }
 
             // Fetch the associated User
             $user = $identity->user;
-            if (!$user) {
-                throw new AccountNotRegisteredException();
+            if (! $user) {
+                throw new AccountNotRegisteredException;
             }
 
             // Check if user status is active
             if (($user->account_status ?? 'verified') !== 'verified') {
                 return response()->json([
                     'error' => 'ERR_ACCOUNT_DISABLED',
-                    'message' => 'Your account is currently disabled.'
+                    'message' => 'Your account is currently disabled.',
                 ], 403);
             }
 
@@ -75,7 +75,7 @@ class IdentityRoutingController extends Controller
             } elseif ($role === 'STUDENT') {
                 $route = '/portal/student/dashboard';
             } else {
-                throw new AccountNotRegisteredException();
+                throw new AccountNotRegisteredException;
             }
 
             // Log user into Laravel session (if session-based auth is used)
@@ -94,17 +94,18 @@ class IdentityRoutingController extends Controller
                     'name' => $user->name,
                     'role' => $user->role,
                     'email' => $user->email,
-                ]
+                ],
             ], 200);
 
         } catch (AccountNotRegisteredException $e) {
             // Re-throw or render directly to meet specs
             return $e->render($request);
         } catch (\Exception $e) {
-            Log::error('OIDC Login error: ' . $e->getMessage());
+            Log::error('OIDC Login error: '.$e->getMessage());
+
             return response()->json([
                 'error' => 'ERR_INTERNAL_SERVER_ERROR',
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
@@ -119,10 +120,10 @@ class IdentityRoutingController extends Controller
         // Must be authenticated
         $currentUser = Auth::user() ?? $request->user();
 
-        if (!$currentUser) {
+        if (! $currentUser) {
             return response()->json([
                 'error' => 'ERR_UNAUTHORIZED',
-                'message' => 'Authentication required.'
+                'message' => 'Authentication required.',
             ], 401);
         }
 
@@ -131,10 +132,10 @@ class IdentityRoutingController extends Controller
             ->where('identity_type', 'GENERATED')
             ->exists();
 
-        if (!$hasGeneratedLink) {
+        if (! $hasGeneratedLink) {
             return response()->json([
                 'error' => 'ERR_GENERATED_IDENTITY_REQUIRED',
-                'message' => 'Active user session must have a GENERATED email linked first.'
+                'message' => 'Active user session must have a GENERATED email linked first.',
             ], 403);
         }
 
@@ -157,7 +158,7 @@ class IdentityRoutingController extends Controller
             if (empty($secondaryEmail) || empty($secondaryTid)) {
                 return response()->json([
                     'error' => 'ERR_INVALID_SECONDARY_TOKEN',
-                    'message' => 'Secondary token must contain email and tid.'
+                    'message' => 'Secondary token must contain email and tid.',
                 ], 400);
             }
 
@@ -169,7 +170,7 @@ class IdentityRoutingController extends Controller
             if ($emailExists) {
                 return response()->json([
                     'error' => 'ERR_EMAIL_ALREADY_LINKED',
-                    'message' => 'The legacy email is already linked to an account.'
+                    'message' => 'The legacy email is already linked to an account.',
                 ], 422);
             }
 
@@ -184,14 +185,15 @@ class IdentityRoutingController extends Controller
             // 5. RESPONSE: Return Status 200 Success.
             return response()->json([
                 'status' => 'success',
-                'message' => 'Legacy identity linked successfully.'
+                'message' => 'Legacy identity linked successfully.',
             ], 200);
 
         } catch (\Exception $e) {
-            Log::error('Account Linking error: ' . $e->getMessage());
+            Log::error('Account Linking error: '.$e->getMessage());
+
             return response()->json([
                 'error' => 'ERR_INTERNAL_SERVER_ERROR',
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
@@ -206,6 +208,7 @@ class IdentityRoutingController extends Controller
             return null;
         }
         $payload = base64_decode(strtr($parts[1], '-_', '+/'));
+
         return json_decode((string) $payload, true);
     }
 }

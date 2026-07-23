@@ -20,7 +20,7 @@ class AdvancePayment extends Model
     ];
 
     protected $casts = [
-        'initial_amount'    => 'decimal:2',
+        'initial_amount' => 'decimal:2',
         'remaining_balance' => 'decimal:2',
     ];
 

@@ -2,8 +2,8 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -135,7 +135,7 @@ return new class extends Migration
 
             foreach ($users as $user) {
                 // Skip if role is empty or not in portal roles
-                if (empty($user->role) || !in_array($user->role, ['admin', 'finance', 'staff'])) {
+                if (empty($user->role) || ! in_array($user->role, ['admin', 'finance', 'staff'])) {
                     continue;
                 }
 
@@ -152,12 +152,12 @@ return new class extends Migration
                 if (isset($roleIds[$mappedRole])) {
                     $userRolePivot[] = [
                         'user_id' => $user->id,
-                        'role_id' => $roleIds[$mappedRole]
+                        'role_id' => $roleIds[$mappedRole],
                     ];
                 }
             }
 
-            if (!empty($userRolePivot)) {
+            if (! empty($userRolePivot)) {
                 DB::table('role_user')->insert($userRolePivot);
             }
         }

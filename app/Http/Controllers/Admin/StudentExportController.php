@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\EnrollmentApplicant;
 use App\Models\Student;
 use App\Support\EnrollmentStorage;
 use Illuminate\Http\Request;
@@ -43,8 +44,8 @@ class StudentExportController extends Controller
                             ->orWhere('students.school_email', 'like', "%{$term}%")
                             ->orWhereHas('applicant', function ($a) use ($term) {
                                 $a->where('first_name', 'like', "%{$term}%")
-                                  ->orWhere('middle_name', 'like', "%{$term}%")
-                                  ->orWhere('last_name', 'like', "%{$term}%");
+                                    ->orWhere('middle_name', 'like', "%{$term}%")
+                                    ->orWhere('last_name', 'like', "%{$term}%");
                             });
                     });
                 }
@@ -58,11 +59,11 @@ class StudentExportController extends Controller
         if ($request->filled('gender')) {
             $gender = strtolower((string) $request->gender);
             if (in_array($gender, ['male', 'female'], true)) {
-                $query->whereHas('applicant', fn($q) => $q->whereRaw('LOWER(gender) = ?', [$gender]));
+                $query->whereHas('applicant', fn ($q) => $q->whereRaw('LOWER(gender) = ?', [$gender]));
             } elseif ($gender === 'not_set') {
                 $query->where(function ($q) {
                     $q->whereDoesntHave('applicant')
-                      ->orWhereHas('applicant', fn($a) => $a->whereNull('gender')->orWhere('gender', ''));
+                        ->orWhereHas('applicant', fn ($a) => $a->whereNull('gender')->orWhere('gender', ''));
                 });
             }
         }
@@ -70,27 +71,26 @@ class StudentExportController extends Controller
         if ($request->filled('type')) {
             $type = strtolower((string) $request->type);
             if (in_array($type, ['new', 'old', 'transferee'], true)) {
-                $query->whereHas('applicant', fn($q) => $q->whereRaw('LOWER(student_type) LIKE ?', ["%{$type}%"]));
+                $query->whereHas('applicant', fn ($q) => $q->whereRaw('LOWER(student_type) LIKE ?', ["%{$type}%"]));
             }
         }
 
         if ($request->filled('mode')) {
             $mode = $request->mode;
-            $query->whereHas('applicant', fn($q) =>
-                $q->where('learning_mode', 'like', "%{$mode}%")
+            $query->whereHas('applicant', fn ($q) => $q->where('learning_mode', 'like', "%{$mode}%")
             );
         }
 
         $gradeOrder = [
             'Kinder 1', 'Kinder 2',
-            'Grade 1','Grade 2','Grade 3','Grade 4','Grade 5','Grade 6',
-            'Grade 7','Grade 8','Grade 9','Grade 10','Grade 11','Grade 12',
+            'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6',
+            'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12',
         ];
 
         $students = $query
             ->leftJoin('enrollment_applicants as sort_applicants', 'sort_applicants.id', '=', 'students.enrollment_applicant_id')
             ->select('students.*')
-            ->orderByRaw("FIELD(students.grade_level, " . implode(',', array_fill(0, count($gradeOrder), '?')) . ")", $gradeOrder)
+            ->orderByRaw('FIELD(students.grade_level, '.implode(',', array_fill(0, count($gradeOrder), '?')).')', $gradeOrder)
             ->orderByRaw("FIELD(sort_applicants.gender, 'Male', 'Female')")
             ->orderBy('sort_applicants.last_name', 'asc')
             ->orderBy('sort_applicants.first_name', 'asc')
@@ -98,10 +98,10 @@ class StudentExportController extends Controller
 
         $headers = [
             'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="AMIS_Canva_Bulk_Export_' . date('Ymd_His') . '.csv"',
+            'Content-Disposition' => 'attachment; filename="AMIS_Canva_Bulk_Export_'.date('Ymd_His').'.csv"',
         ];
 
-        $callback = function() use ($students) {
+        $callback = function () use ($students) {
             $file = fopen('php://output', 'w');
 
             fputcsv($file, [
@@ -118,39 +118,41 @@ class StudentExportController extends Controller
 
             foreach ($students as $student) {
                 $applicant = $student->applicant;
-                if (!$applicant) continue;
+                if (! $applicant) {
+                    continue;
+                }
 
-                $firstName  = mb_strtoupper(trim($applicant->first_name  ?? ''));
+                $firstName = mb_strtoupper(trim($applicant->first_name ?? ''));
                 $middleName = mb_strtoupper(trim($applicant->middle_name ?? ''));
-                $lastName   = mb_strtoupper(trim($applicant->last_name   ?? ''));
+                $lastName = mb_strtoupper(trim($applicant->last_name ?? ''));
 
                 $middleInitial = '';
                 if ($middleName !== '') {
                     $fc = mb_substr($middleName, 0, 1);
-                    $middleInitial = ($fc === '.') ? '.' : $fc . '.';
+                    $middleInitial = ($fc === '.') ? '.' : $fc.'.';
                 }
 
                 $fullNameParts = array_filter([$firstName, $middleInitial, $lastName]);
                 $fullName = html_entity_decode(implode(' ', $fullNameParts), ENT_QUOTES, 'UTF-8');
 
-                $photoUrl  = 'https://amis.edu.ph/student-photo/' . $student->obfuscated_id . '.jpg';
-                $verifyUrl = 'https://amis.edu.ph/v/' . $student->obfuscated_id;
-                $qrCodeUrl = 'https://quickchart.io/qr?text=' . urlencode($verifyUrl)
-                           . '&dark=000000&light=ffffff&margin=1&format=png&size=300';
+                $photoUrl = 'https://amis.edu.ph/student-photo/'.$student->obfuscated_id.'.jpg';
+                $verifyUrl = 'https://amis.edu.ph/v/'.$student->obfuscated_id;
+                $qrCodeUrl = 'https://quickchart.io/qr?text='.urlencode($verifyUrl)
+                           .'&dark=000000&light=ffffff&margin=1&format=png&size=300';
 
                 $lrn = trim($applicant->lrn ?? '');
 
-                $fatherFirst  = mb_strtoupper(trim($applicant->father_first_name  ?? ''));
+                $fatherFirst = mb_strtoupper(trim($applicant->father_first_name ?? ''));
                 $fatherMiddle = mb_strtoupper(trim($applicant->father_middle_name ?? ''));
-                $fatherLast   = mb_strtoupper(trim($applicant->father_last_name   ?? ''));
-                $fatherMI     = $fatherMiddle !== '' ? mb_substr($fatherMiddle, 0, 1) . '.' : '';
-                $fatherFull   = trim(implode(' ', array_filter([$fatherFirst, $fatherMI, $fatherLast])));
+                $fatherLast = mb_strtoupper(trim($applicant->father_last_name ?? ''));
+                $fatherMI = $fatherMiddle !== '' ? mb_substr($fatherMiddle, 0, 1).'.' : '';
+                $fatherFull = trim(implode(' ', array_filter([$fatherFirst, $fatherMI, $fatherLast])));
 
-                $motherFirst  = mb_strtoupper(trim($applicant->mother_first_name  ?? ''));
+                $motherFirst = mb_strtoupper(trim($applicant->mother_first_name ?? ''));
                 $motherMiddle = mb_strtoupper(trim($applicant->mother_middle_name ?? ''));
-                $motherLast   = mb_strtoupper(trim($applicant->mother_last_name   ?? ''));
-                $motherMI     = $motherMiddle !== '' ? mb_substr($motherMiddle, 0, 1) . '.' : '';
-                $motherFull   = trim(implode(' ', array_filter([$motherFirst, $motherMI, $motherLast])));
+                $motherLast = mb_strtoupper(trim($applicant->mother_last_name ?? ''));
+                $motherMI = $motherMiddle !== '' ? mb_substr($motherMiddle, 0, 1).'.' : '';
+                $motherFull = trim(implode(' ', array_filter([$motherFirst, $motherMI, $motherLast])));
 
                 $parentFull = $fatherFull ?: $motherFull;
                 $address = trim($applicant->address ?? $applicant->home_address ?? '');
@@ -178,29 +180,28 @@ class StudentExportController extends Controller
     {
         $gradeOrder = [
             'Kinder 1', 'Kinder 2',
-            'Grade 1','Grade 2','Grade 3','Grade 4','Grade 5','Grade 6',
-            'Grade 7','Grade 8','Grade 9','Grade 10','Grade 11','Grade 12',
+            'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6',
+            'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12',
         ];
 
         $students = Student::with('applicant')
-            ->when(auth()->user()?->isTeacherAdminViewer(), fn ($q) =>
-                $q->whereIn('grade_level', auth()->user()->adminVisibleGradeLevels())
+            ->when(auth()->user()?->isTeacherAdminViewer(), fn ($q) => $q->whereIn('grade_level', auth()->user()->adminVisibleGradeLevels())
             )
             ->whereHas('applicant')
             ->leftJoin('enrollment_applicants as sort_ea', 'sort_ea.id', '=', 'students.enrollment_applicant_id')
             ->select('students.*')
-            ->orderByRaw("FIELD(students.grade_level, " . implode(',', array_fill(0, count($gradeOrder), '?')) . ")", $gradeOrder)
+            ->orderByRaw('FIELD(students.grade_level, '.implode(',', array_fill(0, count($gradeOrder), '?')).')', $gradeOrder)
             ->orderBy('sort_ea.last_name', 'asc')
             ->orderBy('sort_ea.first_name', 'asc')
             ->get();
 
         $headers = [
-            'Content-Type'        => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="AMIS_Verification_Database_' . date('Ymd_His') . '.csv"',
-            'Cache-Control'       => 'max-age=0',
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="AMIS_Verification_Database_'.date('Ymd_His').'.csv"',
+            'Cache-Control' => 'max-age=0',
         ];
 
-        $callback = function() use ($students) {
+        $callback = function () use ($students) {
             $file = fopen('php://output', 'w');
 
             fputcsv($file, [
@@ -219,33 +220,35 @@ class StudentExportController extends Controller
 
             foreach ($students as $student) {
                 $applicant = $student->applicant;
-                if (!$applicant) continue;
+                if (! $applicant) {
+                    continue;
+                }
 
-                $lastName   = mb_strtoupper(trim($applicant->last_name   ?? ''));
-                $firstName  = mb_strtoupper(trim($applicant->first_name  ?? ''));
+                $lastName = mb_strtoupper(trim($applicant->last_name ?? ''));
+                $firstName = mb_strtoupper(trim($applicant->first_name ?? ''));
                 $middleName = mb_strtoupper(trim($applicant->middle_name ?? ''));
 
-                $lrn         = trim($applicant->lrn ?? '');
+                $lrn = trim($applicant->lrn ?? '');
                 $studentType = ucfirst(strtolower($applicant->student_type ?? 'New'));
                 $gender = str_contains(strtolower($applicant->gender ?? 'Male'), 'female') ? 'Female' : 'Male';
 
-                $fatherFirst  = mb_strtoupper(trim($applicant->father_first_name  ?? ''));
+                $fatherFirst = mb_strtoupper(trim($applicant->father_first_name ?? ''));
                 $fatherMiddle = mb_strtoupper(trim($applicant->father_middle_name ?? ''));
-                $fatherLast   = mb_strtoupper(trim($applicant->father_last_name   ?? ''));
-                $fatherMI     = $fatherMiddle !== '' ? mb_substr($fatherMiddle, 0, 1) . '.' : '';
-                $fatherFull   = trim(implode(' ', array_filter([$fatherFirst, $fatherMI, $fatherLast])));
+                $fatherLast = mb_strtoupper(trim($applicant->father_last_name ?? ''));
+                $fatherMI = $fatherMiddle !== '' ? mb_substr($fatherMiddle, 0, 1).'.' : '';
+                $fatherFull = trim(implode(' ', array_filter([$fatherFirst, $fatherMI, $fatherLast])));
 
-                $motherFirst  = mb_strtoupper(trim($applicant->mother_first_name  ?? ''));
+                $motherFirst = mb_strtoupper(trim($applicant->mother_first_name ?? ''));
                 $motherMiddle = mb_strtoupper(trim($applicant->mother_middle_name ?? ''));
-                $motherLast   = mb_strtoupper(trim($applicant->mother_last_name   ?? ''));
-                $motherMI     = $motherMiddle !== '' ? mb_substr($motherMiddle, 0, 1) . '.' : '';
-                $motherFull   = trim(implode(' ', array_filter([$motherFirst, $motherMI, $motherLast])));
+                $motherLast = mb_strtoupper(trim($applicant->mother_last_name ?? ''));
+                $motherMI = $motherMiddle !== '' ? mb_substr($motherMiddle, 0, 1).'.' : '';
+                $motherFull = trim(implode(' ', array_filter([$motherFirst, $motherMI, $motherLast])));
 
                 $guardianName = html_entity_decode($fatherFull ?: $motherFull, ENT_QUOTES, 'UTF-8');
 
                 $countryCode = trim($applicant->parent_country_code ?? '');
-                $mobile      = trim($applicant->parent_mobile       ?? '');
-                $contactNo   = $mobile !== '' ? ltrim("$countryCode $mobile") : '';
+                $mobile = trim($applicant->parent_mobile ?? '');
+                $contactNo = $mobile !== '' ? ltrim("$countryCode $mobile") : '';
                 $address = trim($applicant->address ?? $applicant->home_address ?? '');
 
                 fputcsv($file, [
@@ -303,8 +306,8 @@ class StudentExportController extends Controller
                                 ->orWhere('students.school_email', 'like', "%{$term}%")
                                 ->orWhereHas('applicant', function ($a) use ($term) {
                                     $a->where('first_name', 'like', "%{$term}%")
-                                      ->orWhere('middle_name', 'like', "%{$term}%")
-                                      ->orWhere('last_name', 'like', "%{$term}%");
+                                        ->orWhere('middle_name', 'like', "%{$term}%")
+                                        ->orWhere('last_name', 'like', "%{$term}%");
                                 });
                         });
                     }
@@ -324,8 +327,8 @@ class StudentExportController extends Controller
             return back()->with('error', 'No student records found matching the selected filters.');
         }
 
-        $zip = new ZipArchive();
-        $fileName = 'Official_Student_Records_SY_2026-2027_' . ($request->filled('grade') ? str_replace(' ', '_', $request->grade) : 'All_Grades') . '_' . date('Ymd_His') . '.zip';
+        $zip = new ZipArchive;
+        $fileName = 'Official_Student_Records_SY_2026-2027_'.($request->filled('grade') ? str_replace(' ', '_', $request->grade) : 'All_Grades').'_'.date('Ymd_His').'.zip';
         $tempFile = tempnam(sys_get_temp_dir(), 'zip');
 
         if ($zip->open($tempFile, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
@@ -336,13 +339,15 @@ class StudentExportController extends Controller
 
         foreach ($students as $student) {
             $appl = $student->applicant;
-            if (!$appl) continue;
+            if (! $appl) {
+                continue;
+            }
 
             $gradeFolder = trim($student->grade_level ?: 'Grade 1');
             if (preg_match('/^Grade\s*(\d+)$/i', $gradeFolder, $m)) {
-                $gShort = 'G' . $m[1];
+                $gShort = 'G'.$m[1];
             } elseif (preg_match('/^Kinder\s*(\d+)$/i', $gradeFolder, $m)) {
-                $gShort = 'K' . $m[1];
+                $gShort = 'K'.$m[1];
             } else {
                 $gShort = $gradeFolder;
             }
@@ -354,7 +359,7 @@ class StudentExportController extends Controller
             $firstName = mb_strtoupper(trim($appl->first_name ?? $student->first_name ?? 'PROFILE'));
             $studentFolderName = trim("{$lastName} {$firstName}");
             if (empty($studentFolderName)) {
-                $studentFolderName = 'STUDENT ' . $student->student_number;
+                $studentFolderName = 'STUDENT '.$student->student_number;
             }
 
             if ($isF2f) {
@@ -368,7 +373,7 @@ class StudentExportController extends Controller
             }
 
             try {
-                $siblings = $appl->user_id ? \App\Models\EnrollmentApplicant::where('user_id', $appl->user_id)->where('id', '!=', $appl->id)->get() : [];
+                $siblings = $appl->user_id ? EnrollmentApplicant::where('user_id', $appl->user_id)->where('id', '!=', $appl->id)->get() : [];
                 $enrolmentHtml = view('admin.students.print-enrolment-form', [
                     'student' => $student,
                     'applicant' => $appl,
@@ -377,7 +382,7 @@ class StudentExportController extends Controller
                 $zip->addFromString("{$basePath}/Enrollment Application Form - {$studentFolderName}.html", $enrolmentHtml);
                 $filesAdded++;
             } catch (\Exception $e) {
-                Log::warning("Failed to render enrolment form for student {$student->id}: " . $e->getMessage());
+                Log::warning("Failed to render enrolment form for student {$student->id}: ".$e->getMessage());
             }
 
             $docTypes = [
@@ -390,12 +395,14 @@ class StudentExportController extends Controller
             ];
 
             foreach ($docTypes as $label => $relativeUrl) {
-                if (empty($relativeUrl)) continue;
+                if (empty($relativeUrl)) {
+                    continue;
+                }
 
                 $absolutePath = EnrollmentStorage::getAbsolutePath($relativeUrl);
                 if ($absolutePath && file_exists($absolutePath)) {
                     $ext = pathinfo($absolutePath, PATHINFO_EXTENSION);
-                    $zipPath = $basePath . '/' . $label . ($ext ? '.' . $ext : '');
+                    $zipPath = $basePath.'/'.$label.($ext ? '.'.$ext : '');
                     $zip->addFile($absolutePath, $zipPath);
                     $filesAdded++;
                 }
@@ -406,6 +413,7 @@ class StudentExportController extends Controller
 
         if ($filesAdded === 0) {
             @unlink($tempFile);
+
             return back()->with('error', 'No document files or data could be compiled for the matched students.');
         }
 
@@ -446,8 +454,8 @@ class StudentExportController extends Controller
                                 ->orWhere('students.school_email', 'like', "%{$term}%")
                                 ->orWhereHas('applicant', function ($a) use ($term) {
                                     $a->where('first_name', 'like', "%{$term}%")
-                                      ->orWhere('middle_name', 'like', "%{$term}%")
-                                      ->orWhere('last_name', 'like', "%{$term}%");
+                                        ->orWhere('middle_name', 'like', "%{$term}%")
+                                        ->orWhere('last_name', 'like', "%{$term}%");
                                 });
                         });
                     }
@@ -467,8 +475,8 @@ class StudentExportController extends Controller
             return back()->with('error', 'No student records found matching the selected filters.');
         }
 
-        $zip = new ZipArchive();
-        $fileName = 'Enrollment_Forms_SY_2026-2027_' . ($request->filled('grade') ? str_replace(' ', '_', $request->grade) : 'All_Grades') . '_' . date('Ymd_His') . '.zip';
+        $zip = new ZipArchive;
+        $fileName = 'Enrollment_Forms_SY_2026-2027_'.($request->filled('grade') ? str_replace(' ', '_', $request->grade) : 'All_Grades').'_'.date('Ymd_His').'.zip';
         $tempFile = tempnam(sys_get_temp_dir(), 'zip');
 
         if ($zip->open($tempFile, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
@@ -476,24 +484,26 @@ class StudentExportController extends Controller
         }
 
         $filesAdded = 0;
-        $allSiblings = \App\Models\EnrollmentApplicant::whereIn('user_id', $students->pluck('applicant.user_id')->filter()->unique())->get()->groupBy('user_id');
+        $allSiblings = EnrollmentApplicant::whereIn('user_id', $students->pluck('applicant.user_id')->filter()->unique())->get()->groupBy('user_id');
 
         foreach ($students as $student) {
             $appl = $student->applicant;
-            if (!$appl) continue;
+            if (! $appl) {
+                continue;
+            }
 
             $lastName = mb_strtoupper(trim($appl->last_name ?? $student->last_name ?? 'STUDENT'));
             $firstName = mb_strtoupper(trim($appl->first_name ?? $student->first_name ?? 'PROFILE'));
             $studentFolderName = trim("{$lastName} {$firstName}");
             if (empty($studentFolderName)) {
-                $studentFolderName = 'STUDENT ' . $student->student_number;
+                $studentFolderName = 'STUDENT '.$student->student_number;
             }
 
             $gradeFolder = trim($student->grade_level ?: 'Grade 1');
             if (preg_match('/^Grade\s*(\d+)$/i', $gradeFolder, $m)) {
-                $gShort = 'G' . $m[1];
+                $gShort = 'G'.$m[1];
             } elseif (preg_match('/^Kinder\s*(\d+)$/i', $gradeFolder, $m)) {
-                $gShort = 'K' . $m[1];
+                $gShort = 'K'.$m[1];
             } else {
                 $gShort = $gradeFolder;
             }
@@ -512,7 +522,7 @@ class StudentExportController extends Controller
             }
 
             try {
-                $siblings = $appl->user_id ? ($allSiblings[$appl->user_id] ?? collect())->reject(fn($a) => $a->id === $appl->id) : collect();
+                $siblings = $appl->user_id ? ($allSiblings[$appl->user_id] ?? collect())->reject(fn ($a) => $a->id === $appl->id) : collect();
                 $enrolmentHtml = view('admin.students.print-enrolment-form', [
                     'student' => $student,
                     'applicant' => $appl,
@@ -522,7 +532,7 @@ class StudentExportController extends Controller
                 $zip->addFromString("{$basePath}/Enrollment Application Form - {$studentFolderName}.html", $enrolmentHtml);
                 $filesAdded++;
             } catch (\Exception $e) {
-                Log::warning("Failed to render enrolment form for student {$student->id}: " . $e->getMessage());
+                Log::warning("Failed to render enrolment form for student {$student->id}: ".$e->getMessage());
             }
         }
 
@@ -530,6 +540,7 @@ class StudentExportController extends Controller
 
         if ($filesAdded === 0) {
             @unlink($tempFile);
+
             return back()->with('error', 'No files could be added to the ZIP archive.');
         }
 

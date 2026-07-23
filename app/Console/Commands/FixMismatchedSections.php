@@ -7,11 +7,11 @@ use App\Models\Student;
 use App\Models\StudentSection;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class FixMismatchedSections extends Command
 {
     protected $signature = 'student:fix-mismatched-sections {--dry-run : Only show changes without applying them}';
+
     protected $description = 'Find and move students with Flexible Online Learning modes who are incorrectly assigned to Face-to-Face sections';
 
     public function handle(): void
@@ -25,12 +25,13 @@ class FixMismatchedSections extends Command
             })
             ->whereHas('applicant', function ($q) {
                 $q->where('learning_mode', 'like', '%flexible%')
-                  ->orWhere('learning_mode', 'like', '%online%');
+                    ->orWhere('learning_mode', 'like', '%online%');
             })
             ->get();
 
         if ($students->isEmpty()) {
             $this->info('No mismatched student-section assignments found.');
+
             return;
         }
 
@@ -65,6 +66,7 @@ class FixMismatchedSections extends Command
 
             if ($dryRun) {
                 $this->info("  [Dry Run] Would move to {$student->grade_level} {$targetMode} - {$shift} ({$gender})");
+
                 continue;
             }
 
@@ -75,27 +77,31 @@ class FixMismatchedSections extends Command
                 ->where('shift', $shift)
                 ->first();
 
-            if (!$targetSection) {
+            if (! $targetSection) {
                 $grade = $student->grade_level;
                 $genderLabel = $gender === 'male' ? 'Boys' : 'Girls';
                 $shiftLabel = $shift === '1st Shift' ? '1st Shift' : '2nd Shift';
-                
-                if ($grade === 'Kinder 1') $prefix = 'K1';
-                elseif ($grade === 'Kinder 2') $prefix = 'K2';
-                else $prefix = 'G' . str_replace('Grade ', '', $grade);
+
+                if ($grade === 'Kinder 1') {
+                    $prefix = 'K1';
+                } elseif ($grade === 'Kinder 2') {
+                    $prefix = 'K2';
+                } else {
+                    $prefix = 'G'.str_replace('Grade ', '', $grade);
+                }
 
                 $teamName = "{$prefix} [{$genderLabel} & {$shiftLabel}]";
 
                 $this->info("  Target section not found. Creating section: {$teamName}...");
 
                 $targetSection = Section::create([
-                    'name'          => null,
-                    'grade_level'   => $grade,
+                    'name' => null,
+                    'grade_level' => $grade,
                     'learning_mode' => $targetMode,
-                    'shift'         => $shift,
-                    'gender'        => $gender,
-                    'ms_team_id'    => null, // Admin can provision Team later
-                    'ms_team_url'   => null,
+                    'shift' => $shift,
+                    'gender' => $gender,
+                    'ms_team_id' => null, // Admin can provision Team later
+                    'ms_team_url' => null,
                 ]);
             }
 

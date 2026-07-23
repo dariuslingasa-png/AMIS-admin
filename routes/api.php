@@ -8,7 +8,7 @@ Route::middleware([ApiTokenMiddleware::class])->group(function () {
     Route::get('/students/scan-test-auth', function () {
         return response()->json([
             'success' => true,
-            'message' => 'API Authentication Successful!'
+            'message' => 'API Authentication Successful!',
         ]);
     });
 

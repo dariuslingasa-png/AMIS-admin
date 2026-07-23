@@ -1,6 +1,7 @@
 <?php
-require __DIR__ . '/../vendor/autoload.php';
-$app = require __DIR__ . '/../bootstrap/app.php';
+
+require __DIR__.'/../vendor/autoload.php';
+$app = require __DIR__.'/../bootstrap/app.php';
 $app->make('Illuminate\Contracts\Console\Kernel')->bootstrap();
 
 use App\Models\Student;
@@ -28,6 +29,6 @@ try {
     foreach ($results as $r) {
         echo "Grade: {$r->grade_level} | Total: {$r->total} | F2F: {$r->f2f} | ODL: {$r->odl} | Changed: {$r->changed}\n";
     }
-} catch (\Exception $e) {
-    echo "Error: " . $e->getMessage() . "\n";
+} catch (Exception $e) {
+    echo 'Error: '.$e->getMessage()."\n";
 }

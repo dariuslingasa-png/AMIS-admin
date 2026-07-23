@@ -1,17 +1,18 @@
 <?php
 
-require __DIR__ . '/../vendor/autoload.php';
-$app = require_once __DIR__ . '/../bootstrap/app.php';
-$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+require __DIR__.'/../vendor/autoload.php';
+$app = require_once __DIR__.'/../bootstrap/app.php';
+$kernel = $app->make(Kernel::class);
 $kernel->bootstrap();
 
 use App\Repositories\TeacherRepository;
+use Illuminate\Contracts\Console\Kernel;
 
 $sourceDir = '/home/tatsuya/Downloads/FACULTY POSTER/';
-$targetDir = __DIR__ . '/../public/images/teachers/';
+$targetDir = __DIR__.'/../public/images/teachers/';
 
 // Create target directory if it doesn't exist
-if (!is_dir($targetDir)) {
+if (! is_dir($targetDir)) {
     mkdir($targetDir, 0755, true);
 }
 
@@ -179,33 +180,33 @@ $mapping = [
 ];
 
 // Special handling for the Samsuddin file with backslash in list_dir output
-if (file_exists($sourceDir . 'AlimSamsuddin\\.png')) {
-    rename($sourceDir . 'AlimSamsuddin\\.png', $sourceDir . 'AlimSamsuddin.png');
+if (file_exists($sourceDir.'AlimSamsuddin\\.png')) {
+    rename($sourceDir.'AlimSamsuddin\\.png', $sourceDir.'AlimSamsuddin.png');
 }
 
 $repo = app(TeacherRepository::class);
 $overrides = $repo->overrides();
 
 foreach ($mapping as $sourceFile => $info) {
-    $fullSourcePath = $sourceDir . $sourceFile;
-    if (!file_exists($fullSourcePath)) {
+    $fullSourcePath = $sourceDir.$sourceFile;
+    if (! file_exists($fullSourcePath)) {
         // Try fallback without escaping if needed
         $cleanSource = str_replace('\\', '', $sourceFile);
-        $fullSourcePath = $sourceDir . $cleanSource;
+        $fullSourcePath = $sourceDir.$cleanSource;
     }
-    
+
     if (file_exists($fullSourcePath)) {
         $targetFile = $info['target'];
-        $fullTargetPath = $targetDir . $targetFile;
-        
+        $fullTargetPath = $targetDir.$targetFile;
+
         // Copy the file
         copy($fullSourcePath, $fullTargetPath);
         echo "Copied {$sourceFile} -> {$targetFile}\n";
-        
+
         // Update overrides JSON
         $id = $info['id'];
         if (isset($overrides[$id])) {
-            $overrides[$id]['photo'] = 'images/teachers/' . $targetFile;
+            $overrides[$id]['photo'] = 'images/teachers/'.$targetFile;
             echo "  Updated photo path for override ID: {$id}\n";
         }
     } else {

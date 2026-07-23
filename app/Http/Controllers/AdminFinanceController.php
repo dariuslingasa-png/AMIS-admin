@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Traits\PaymentHelperTrait;
+use App\Models\AdminAuditLog;
 use App\Models\Payment;
 use App\Models\SchoolFee;
 use App\Models\StudentAccount;
 use App\Models\StudentAccountPayment;
-use App\Models\EnrollmentApplicant;
-use App\Http\Controllers\Traits\PaymentHelperTrait;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class AdminFinanceController extends Controller
 {
@@ -34,11 +34,11 @@ class AdminFinanceController extends Controller
     public function feesStore(Request $request)
     {
         $validated = $request->validate([
-            'grade_level'  => 'required|string|max:50',
-            'school_year'  => 'required|string|max:20',
-            'tuition_fee'  => 'required|numeric|min:0',
-            'misc_fee'     => 'required|numeric|min:0',
-            'books_fee'    => 'required|numeric|min:0',
+            'grade_level' => 'required|string|max:50',
+            'school_year' => 'required|string|max:20',
+            'tuition_fee' => 'required|numeric|min:0',
+            'misc_fee' => 'required|numeric|min:0',
+            'books_fee' => 'required|numeric|min:0',
         ]);
 
         SchoolFee::updateOrCreate(
@@ -55,6 +55,7 @@ class AdminFinanceController extends Controller
     public function feesDestroy(SchoolFee $fee)
     {
         $fee->delete();
+
         return back()->with('success', 'Fee record removed.');
     }
 
@@ -64,9 +65,9 @@ class AdminFinanceController extends Controller
     public function adjustFee(Request $request, StudentAccount $account)
     {
         $validated = $request->validate([
-            'tuition_fee'       => 'required|numeric|min:0',
+            'tuition_fee' => 'required|numeric|min:0',
             'miscellaneous_fee' => 'required|numeric|min:0',
-            'books_fee'         => 'required|numeric|min:0',
+            'books_fee' => 'required|numeric|min:0',
             'adjustment_reason' => 'required|string|max:500',
         ]);
 
@@ -75,11 +76,11 @@ class AdminFinanceController extends Controller
         $gross = $discountedTuition + $validated['miscellaneous_fee'] + $validated['books_fee'];
 
         $account->update([
-            'tuition_fee'       => $validated['tuition_fee'],
+            'tuition_fee' => $validated['tuition_fee'],
             'miscellaneous_fee' => $validated['miscellaneous_fee'],
-            'books_fee'         => $validated['books_fee'],
-            'gross_total'       => $gross,
-            'total_balance'     => $gross,
+            'books_fee' => $validated['books_fee'],
+            'gross_total' => $gross,
+            'total_balance' => $gross,
         ]);
 
         $account->recalculate();
@@ -92,7 +93,7 @@ class AdminFinanceController extends Controller
         $account->monthlyBillings()->where('status', 'unpaid')->update(['amount_due' => $monthlyAmount]);
 
         $studentName = $account->student?->applicant?->full_name ?: ($account->applicant?->full_name ?: 'Student');
-        \App\Models\AdminAuditLog::record('fee_adjustment', true, "Fee adjusted for student account: {$studentName}.", [
+        AdminAuditLog::record('fee_adjustment', true, "Fee adjusted for student account: {$studentName}.", [
             'account_id' => $account->id,
             'reason' => $validated['adjustment_reason'],
         ]);
@@ -107,7 +108,7 @@ class AdminFinanceController extends Controller
     {
         $accounts = StudentAccount::with('student.applicant')->get();
 
-        $fileName = 'soa-export-' . now()->format('Ymd-His') . '.csv';
+        $fileName = 'soa-export-'.now()->format('Ymd-His').'.csv';
 
         return response()->streamDownload(function () use ($accounts) {
             $handle = fopen('php://output', 'w');
@@ -117,12 +118,12 @@ class AdminFinanceController extends Controller
                 $applicant = $account->student?->applicant;
                 fputcsv($handle, [
                     $account->student?->student_number ?? '-',
-                    $applicant ? trim($applicant->first_name . ' ' . $applicant->last_name) : '-',
+                    $applicant ? trim($applicant->first_name.' '.$applicant->last_name) : '-',
                     $account->grade_level,
                     number_format((float) $account->tuition_fee, 2),
                     number_format((float) $account->miscellaneous_fee, 2),
                     number_format((float) $account->books_fee, 2),
-                    $account->discount_percentage . '%',
+                    $account->discount_percentage.'%',
                     number_format((float) $account->discount_amount, 2),
                     number_format((float) $account->total_balance, 2),
                     number_format((float) $account->amount_paid, 2),
@@ -141,9 +142,9 @@ class AdminFinanceController extends Controller
     {
         $applicant = $account->student?->applicant ?? $account->applicant;
         $familyAccounts = $this->getFamilyAccounts($account);
-        $familyLabel = $applicant ? trim($applicant->last_name . ' Family') : 'Family';
+        $familyLabel = $applicant ? trim($applicant->last_name.' Family') : 'Family';
 
-        $fileName = 'payments-' . str_replace(' ', '_', strtolower($familyLabel)) . '-' . now()->format('Ymd') . '.csv';
+        $fileName = 'payments-'.str_replace(' ', '_', strtolower($familyLabel)).'-'.now()->format('Ymd').'.csv';
 
         return response()->streamDownload(function () use ($familyAccounts) {
             $handle = fopen('php://output', 'w');
@@ -199,8 +200,9 @@ class AdminFinanceController extends Controller
                 ->sortBy('due_date')
                 ->first();
 
-            if (!$oldestUnpaid || !$oldestUnpaid->due_date) {
+            if (! $oldestUnpaid || ! $oldestUnpaid->due_date) {
                 $aging['current']->push($account);
+
                 continue;
             }
 
@@ -239,12 +241,12 @@ class AdminFinanceController extends Controller
     public function sendReminder(Request $request, StudentAccount $account)
     {
         $applicant = $account->student?->applicant;
-        if (!$applicant) {
+        if (! $applicant) {
             return back()->withErrors(['error' => 'No applicant record found for this account.']);
         }
 
         $parentEmail = $applicant->parent_email ?: $applicant->email;
-        if (!$parentEmail || $parentEmail === 'NA') {
+        if (! $parentEmail || $parentEmail === 'NA') {
             return back()->withErrors(['error' => 'No valid parent email found.']);
         }
 
@@ -256,21 +258,21 @@ class AdminFinanceController extends Controller
             ->orderBy('due_date')
             ->get();
 
-        $overdueList = $overdueBillings->map(fn ($b) => $b->month_name . ' (Due: ' . $b->due_date . ')')->join(', ');
+        $overdueList = $overdueBillings->map(fn ($b) => $b->month_name.' (Due: '.$b->due_date.')')->join(', ');
 
         $html = $this->reminderEmailHtml($studentName, $balance, $overdueList, $account);
 
         try {
-            \Illuminate\Support\Facades\Mail::html($html, fn ($m) => $m->to($parentEmail)->subject("AMIS — Payment Reminder for {$studentName}"));
+            Mail::html($html, fn ($m) => $m->to($parentEmail)->subject("AMIS — Payment Reminder for {$studentName}"));
 
-            \App\Models\AdminAuditLog::record('payment_reminder_sent', true, "Payment reminder sent for {$studentName}.", [
+            AdminAuditLog::record('payment_reminder_sent', true, "Payment reminder sent for {$studentName}.", [
                 'account_id' => $account->id,
                 'email' => $parentEmail,
             ]);
 
             return back()->with('success', "Payment reminder sent to {$parentEmail}.");
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to send reminder: ' . $e->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to send reminder: '.$e->getMessage()]);
         }
     }
 
@@ -282,15 +284,15 @@ class AdminFinanceController extends Controller
         <table width="520" style="background:white;border-radius:16px;overflow:hidden;margin:0 auto;box-shadow:0 4px 12px rgba(0,0,0,0.08);">
         <tr><td style="background:linear-gradient(135deg,#d97706,#92400e);padding:28px;text-align:center;">
             <h2 style="color:white;margin:0;font-size:18px;">Payment Reminder</h2>
-            <p style="color:rgba(255,255,255,0.85);font-size:13px;margin:4px 0 0;">Al Munawwara Islamic School — SY ' . $schoolYear . '</p>
+            <p style="color:rgba(255,255,255,0.85);font-size:13px;margin:4px 0 0;">Al Munawwara Islamic School — SY '.$schoolYear.'</p>
         </td></tr>
         <tr><td style="padding:28px 36px;">
             <p style="color:#374151;font-size:14px;margin:0 0 20px;">Assalamualaikum,</p>
-            <p style="color:#374151;font-size:14px;margin:0 0 20px;">This is a friendly reminder that the tuition account for <strong>' . $studentName . '</strong> has an outstanding balance:</p>
+            <p style="color:#374151;font-size:14px;margin:0 0 20px;">This is a friendly reminder that the tuition account for <strong>'.$studentName.'</strong> has an outstanding balance:</p>
             <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:10px;padding:18px;margin-bottom:20px;">
                 <table width="100%">
-                    <tr><td style="font-size:13px;color:#92400e;padding:5px 0;">Remaining Balance</td><td style="font-size:18px;font-weight:800;color:#92400e;text-align:right;">PHP ' . $balance . '</td></tr>
-                    ' . ($overdueList ? '<tr><td style="font-size:13px;color:#92400e;padding:5px 0;">Overdue Months</td><td style="font-size:13px;color:#92400e;text-align:right;">' . $overdueList . '</td></tr>' : '') . '
+                    <tr><td style="font-size:13px;color:#92400e;padding:5px 0;">Remaining Balance</td><td style="font-size:18px;font-weight:800;color:#92400e;text-align:right;">PHP '.$balance.'</td></tr>
+                    '.($overdueList ? '<tr><td style="font-size:13px;color:#92400e;padding:5px 0;">Overdue Months</td><td style="font-size:13px;color:#92400e;text-align:right;">'.$overdueList.'</td></tr>' : '').'
                 </table>
             </div>
             <p style="color:#6b7280;font-size:13px;">Please settle the outstanding balance at your earliest convenience. You may pay via GCash, Maya, or BDO bank transfer.</p>
@@ -302,7 +304,7 @@ class AdminFinanceController extends Controller
     private function getFamilyAccounts(StudentAccount $account)
     {
         $applicant = $account->student?->applicant ?? $account->applicant;
-        if (!$applicant) {
+        if (! $applicant) {
             return collect([$account->load('payments')]);
         }
 

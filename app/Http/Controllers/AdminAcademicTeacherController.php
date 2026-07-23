@@ -12,9 +12,7 @@ use Illuminate\Support\Facades\Gate;
 
 class AdminAcademicTeacherController extends Controller
 {
-    public function __construct(private readonly TeacherDirectoryService $teachers)
-    {
-    }
+    public function __construct(private readonly TeacherDirectoryService $teachers) {}
 
     public function index(Request $request)
     {

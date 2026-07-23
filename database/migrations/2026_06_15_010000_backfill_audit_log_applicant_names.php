@@ -1,13 +1,10 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
 use App\Models\AdminAuditLog;
 use App\Models\EnrollmentApplicant;
 use App\Models\Payment;
 use App\Models\StudentAccount;
+use Illuminate\Database\Migrations\Migration;
 
 return new class extends Migration
 {
@@ -22,14 +19,14 @@ return new class extends Migration
             'payment_approved',
             'payment_rejected',
             'fee_adjustment',
-            'payment_reminder_sent'
+            'payment_reminder_sent',
         ])
-        ->orWhere('event', 'like', 'document%')
-        ->get();
+            ->orWhere('event', 'like', 'document%')
+            ->get();
 
         foreach ($logs as $log) {
             $metadata = $log->metadata;
-            if (!is_array($metadata)) {
+            if (! is_array($metadata)) {
                 continue;
             }
 
@@ -48,7 +45,7 @@ return new class extends Migration
             }
 
             // If not found, check paymentId
-            if (!$applicantName && $paymentId) {
+            if (! $applicantName && $paymentId) {
                 $payment = Payment::find($paymentId);
                 if ($payment && $payment->applicant) {
                     $applicantName = $payment->applicant->full_name;
@@ -56,14 +53,14 @@ return new class extends Migration
             }
 
             // If not found, check accountId
-            if (!$applicantName && $accountId) {
+            if (! $applicantName && $accountId) {
                 $account = StudentAccount::find($accountId);
                 if ($account) {
                     $applicantName = $account->student?->applicant?->full_name ?: ($account->applicant?->full_name ?: null);
                 }
             }
 
-            if (!$applicantName) {
+            if (! $applicantName) {
                 continue;
             }
 

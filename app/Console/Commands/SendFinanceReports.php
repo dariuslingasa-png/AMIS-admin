@@ -2,12 +2,13 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-use App\Models\Payment;
 use App\Http\Controllers\Traits\PaymentHelperTrait;
-use Illuminate\Support\Facades\Mail;
+use App\Models\Payment;
+use App\Support\EnrollmentStorage;
 use Dompdf\Dompdf;
 use Dompdf\Options;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Mail;
 
 class SendFinanceReports extends Command
 {
@@ -43,13 +44,13 @@ class SendFinanceReports extends Command
                 return;
             }
             $relative_class = substr($class, $len);
-            
+
             // Check src/ first, then fallback to lib/
-            $file = base_path('vendor/dompdf/dompdf/src/') . str_replace('\\', '/', $relative_class) . '.php';
-            if (!file_exists($file)) {
-                $file = base_path('vendor/dompdf/dompdf/lib/') . str_replace('\\', '/', $relative_class) . '.php';
+            $file = base_path('vendor/dompdf/dompdf/src/').str_replace('\\', '/', $relative_class).'.php';
+            if (! file_exists($file)) {
+                $file = base_path('vendor/dompdf/dompdf/lib/').str_replace('\\', '/', $relative_class).'.php';
             }
-            
+
             if (file_exists($file)) {
                 require $file;
             }
@@ -63,7 +64,7 @@ class SendFinanceReports extends Command
                 return;
             }
             $relative_class = substr($class, $len);
-            $file = $base_dir . str_replace('\\', '/', $relative_class) . '.php';
+            $file = $base_dir.str_replace('\\', '/', $relative_class).'.php';
             if (file_exists($file)) {
                 require $file;
             }
@@ -77,7 +78,7 @@ class SendFinanceReports extends Command
                 return;
             }
             $relative_class = substr($class, $len);
-            $file = $base_dir . str_replace('\\', '/', $relative_class) . '.php';
+            $file = $base_dir.str_replace('\\', '/', $relative_class).'.php';
             if (file_exists($file)) {
                 require $file;
             }
@@ -91,7 +92,7 @@ class SendFinanceReports extends Command
                 return;
             }
             $relative_class = substr($class, $len);
-            $file = $base_dir . str_replace('\\', '/', $relative_class) . '.php';
+            $file = $base_dir.str_replace('\\', '/', $relative_class).'.php';
             if (file_exists($file)) {
                 require $file;
             }
@@ -105,7 +106,7 @@ class SendFinanceReports extends Command
                 return;
             }
             $relative_class = substr($class, $len);
-            $file = $base_dir . str_replace('\\', '/', $relative_class) . '.php';
+            $file = $base_dir.str_replace('\\', '/', $relative_class).'.php';
             if (file_exists($file)) {
                 require $file;
             }
@@ -124,7 +125,8 @@ class SendFinanceReports extends Command
         $this->info("Found {$totalFamilies} families with payment submissions.");
 
         if ($totalFamilies === 0) {
-            $this->warn("No families with payment submissions found. Exiting.");
+            $this->warn('No families with payment submissions found. Exiting.');
+
             return Command::SUCCESS;
         }
 
@@ -135,7 +137,7 @@ class SendFinanceReports extends Command
 
         $this->info("Chunked into {$totalParts} parts (max {$perPage} families per PDF).");
 
-        $options = new Options();
+        $options = new Options;
         $options->set('isHtml5ParserEnabled', true);
         $options->set('isRemoteEnabled', true);
 
@@ -147,14 +149,16 @@ class SendFinanceReports extends Command
             // Prepare compressed absolute local image paths for Dompdf rendering
             foreach ($chunk as $family) {
                 foreach ($family['payments'] as $payment) {
-                    if (!$payment->receipt_url) {
+                    if (! $payment->receipt_url) {
                         $payment->rendered_image_path = null;
+
                         continue;
                     }
 
-                    $absPath = \App\Support\EnrollmentStorage::getAbsolutePath($payment->receipt_url);
-                    if (!$absPath || !is_file($absPath)) {
+                    $absPath = EnrollmentStorage::getAbsolutePath($payment->receipt_url);
+                    if (! $absPath || ! is_file($absPath)) {
                         $payment->rendered_image_path = null;
+
                         continue;
                     }
 
@@ -205,18 +209,18 @@ class SendFinanceReports extends Command
             }
 
             $this->info("Part {$partNumber} sent successfully.");
-            
+
             // Add a 2-second rate-limiting delay between emails to protect SMTP queue
             sleep(2);
-            
+
             $index++;
         }
 
         // Clean up temporary converted JPG files
-        $this->info("Cleaning up temporary receipt images...");
+        $this->info('Cleaning up temporary receipt images...');
         $tmpDir = storage_path('app/tmp_receipts');
         if (is_dir($tmpDir)) {
-            $files = glob($tmpDir . '/*.jpg');
+            $files = glob($tmpDir.'/*.jpg');
             foreach ($files as $file) {
                 if (is_file($file)) {
                     unlink($file);
@@ -225,7 +229,8 @@ class SendFinanceReports extends Command
             @rmdir($tmpDir);
         }
 
-        $this->info("All finance reports sent successfully!");
+        $this->info('All finance reports sent successfully!');
+
         return Command::SUCCESS;
     }
 
@@ -234,17 +239,17 @@ class SendFinanceReports extends Command
      */
     private function convertPdfToJpg(string $absolutePdfPath): ?string
     {
-        if (!is_file($absolutePdfPath)) {
+        if (! is_file($absolutePdfPath)) {
             return null;
         }
 
         $tmpDir = storage_path('app/tmp_receipts');
-        if (!is_dir($tmpDir)) {
+        if (! is_dir($tmpDir)) {
             mkdir($tmpDir, 0755, true);
         }
 
         $hash = md5($absolutePdfPath);
-        $jpgPath = $tmpDir . '/' . $hash . '.jpg';
+        $jpgPath = $tmpDir.'/'.$hash.'.jpg';
 
         if (is_file($jpgPath)) {
             return $jpgPath;
@@ -252,10 +257,10 @@ class SendFinanceReports extends Command
 
         $escapedOut = escapeshellarg($jpgPath);
         $escapedIn = escapeshellarg($absolutePdfPath);
-        
+
         // Command to render page 1 of PDF to JPG using Ghostscript at 90 DPI
         $cmd = "/usr/bin/gs -dNOPAUSE -sDEVICE=jpeg -r90 -sPageList=1 -sOutputFile={$escapedOut} {$escapedIn} -c quit 2>&1";
-        
+
         exec($cmd, $output, $resultCode);
 
         if ($resultCode === 0 && is_file($jpgPath)) {
@@ -271,24 +276,24 @@ class SendFinanceReports extends Command
      */
     private function compressImage(string $sourcePath): ?string
     {
-        if (!is_file($sourcePath)) {
+        if (! is_file($sourcePath)) {
             return null;
         }
 
         $tmpDir = storage_path('app/tmp_receipts');
-        if (!is_dir($tmpDir)) {
+        if (! is_dir($tmpDir)) {
             mkdir($tmpDir, 0755, true);
         }
 
-        $hash = md5($sourcePath . '_compressed');
-        $destPath = $tmpDir . '/' . $hash . '.jpg';
+        $hash = md5($sourcePath.'_compressed');
+        $destPath = $tmpDir.'/'.$hash.'.jpg';
 
         if (is_file($destPath)) {
             return $destPath;
         }
 
         $info = @getimagesize($sourcePath);
-        if (!$info) {
+        if (! $info) {
             return null;
         }
 
@@ -311,7 +316,7 @@ class SendFinanceReports extends Command
                 break;
         }
 
-        if (!$srcImg) {
+        if (! $srcImg) {
             return null;
         }
 
@@ -321,13 +326,13 @@ class SendFinanceReports extends Command
         // Resize if wider than 600px
         $newWidth = 600;
         if ($width > $newWidth) {
-            $newHeight = (int)(($height / $width) * $newWidth);
+            $newHeight = (int) (($height / $width) * $newWidth);
             $tmpImg = imagecreatetruecolor($newWidth, $newHeight);
-            
+
             // White background for transparent images
             $white = imagecolorallocate($tmpImg, 255, 255, 255);
             imagefill($tmpImg, 0, 0, $white);
-            
+
             imagecopyresampled($tmpImg, $srcImg, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
             imagedestroy($srcImg);
             $srcImg = $tmpImg;

@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\Traits;
 
-use App\Models\Payment;
 use App\Models\EnrollmentApplicant;
+use App\Models\Payment;
 use App\Models\StudentAccount;
 use App\Models\StudentAccountPayment;
 use Carbon\Carbon;
@@ -113,7 +113,7 @@ trait PaymentHelperTrait
         return $payments->mapWithKeys(function ($payment) use ($children) {
             $applicant = $payment->applicant;
 
-            if (!$applicant) {
+            if (! $applicant) {
                 return [$payment->id => collect()];
             }
 
@@ -194,7 +194,7 @@ trait PaymentHelperTrait
     {
         $applicant = $payment->applicant;
 
-        if (!$applicant) {
+        if (! $applicant) {
             return 'payment:'.$payment->id;
         }
 
@@ -232,49 +232,52 @@ trait PaymentHelperTrait
     {
         $representative = $children->first() ?: $fallback;
 
-        if (!$representative) {
+        if (! $representative) {
             return 'FAMILY';
         }
 
-        $isPlaceholder = function($str) {
-            if (blank($str)) return true;
+        $isPlaceholder = function ($str) {
+            if (blank($str)) {
+                return true;
+            }
             $s = strtolower(trim($str));
             if (in_array($s, ['asdf', 'fasdfasd', 'fasdf', 'asd', 'qwer', 'test', 'draft', 'placeholder', 'none', 'null', 'na', 'n/a'])) {
                 return true;
             }
-            if (preg_match('/^[a-z]{1,4}$/', $s) && !in_array($s, ['ali', 'abu', 'omar', 'aisha', 'nora', 'yusuf', 'sali'])) {
+            if (preg_match('/^[a-z]{1,4}$/', $s) && ! in_array($s, ['ali', 'abu', 'omar', 'aisha', 'nora', 'yusuf', 'sali'])) {
                 return true;
             }
+
             return false;
         };
 
         $lastName = null;
         $firstName = null;
 
-        if (!$isPlaceholder($representative->father_last_name) && !$isPlaceholder($representative->father_first_name)) {
+        if (! $isPlaceholder($representative->father_last_name) && ! $isPlaceholder($representative->father_first_name)) {
             $lastName = $representative->father_last_name;
             $firstName = $representative->father_first_name;
-        } elseif (!$isPlaceholder($representative->mother_last_name) && !$isPlaceholder($representative->mother_first_name)) {
+        } elseif (! $isPlaceholder($representative->mother_last_name) && ! $isPlaceholder($representative->mother_first_name)) {
             $lastName = $representative->mother_last_name;
             $firstName = $representative->mother_first_name;
         }
 
         if (blank($lastName)) {
-            $lastName = !$isPlaceholder($representative->last_name) ? $representative->last_name : null;
+            $lastName = ! $isPlaceholder($representative->last_name) ? $representative->last_name : null;
         }
 
         if (blank($lastName)) {
-            $lastName = $representative->last_name 
-                ?: $representative->father_last_name 
+            $lastName = $representative->last_name
+                ?: $representative->father_last_name
                 ?: $representative->mother_last_name;
         }
 
-        $labelName = trim(($lastName ?? '') . ' ' . ($firstName ?? ''));
+        $labelName = trim(($lastName ?? '').' '.($firstName ?? ''));
 
         if (blank($labelName)) {
             $labelName = $representative->full_name ?: $representative->emergency_name ?: $representative->user?->name ?: $representative->first_name ?: 'GUARDIAN';
         }
 
-        return 'FAMILY OF ' . strtoupper(trim($labelName));
+        return 'FAMILY OF '.strtoupper(trim($labelName));
     }
 }

@@ -9,11 +9,11 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (!Schema::hasTable('enrollment_applicants')) {
+        if (! Schema::hasTable('enrollment_applicants')) {
             return;
         }
 
-        if (!Schema::hasColumn('enrollment_applicants', 'family_application_id')) {
+        if (! Schema::hasColumn('enrollment_applicants', 'family_application_id')) {
             Schema::table('enrollment_applicants', function (Blueprint $table) {
                 $table->unsignedBigInteger('family_application_id')->nullable()->after('user_id')->index();
             });
@@ -46,7 +46,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        if (!Schema::hasTable('enrollment_applicants') || !Schema::hasColumn('enrollment_applicants', 'family_application_id')) {
+        if (! Schema::hasTable('enrollment_applicants') || ! Schema::hasColumn('enrollment_applicants', 'family_application_id')) {
             return;
         }
 

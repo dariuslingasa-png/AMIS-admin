@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (Schema::hasTable('enrollment_applicants') && !Schema::hasColumn('enrollment_applicants', 'amis_student_id')) {
+        if (Schema::hasTable('enrollment_applicants') && ! Schema::hasColumn('enrollment_applicants', 'amis_student_id')) {
             Schema::table('enrollment_applicants', function (Blueprint $table) {
                 $table->string('amis_student_id', 20)->nullable()->after('student_type');
             });

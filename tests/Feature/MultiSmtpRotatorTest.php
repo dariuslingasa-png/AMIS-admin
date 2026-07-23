@@ -30,7 +30,7 @@ class MultiSmtpRotatorTest extends TestCase
     {
         parent::setUp();
 
-        if (!Schema::hasTable('support_tickets')) {
+        if (! Schema::hasTable('support_tickets')) {
             Schema::create('support_tickets', function ($table) {
                 $table->id();
                 $table->string('reference_number')->nullable();
@@ -62,7 +62,7 @@ class MultiSmtpRotatorTest extends TestCase
     /** @test */
     public function smtp_rotator_returns_available_configured_mailers()
     {
-        $service = new SmartSmtpRotatorService();
+        $service = new SmartSmtpRotatorService;
         $pool = $service->getMailerPool();
 
         $this->assertIsArray($pool);
@@ -72,7 +72,7 @@ class MultiSmtpRotatorTest extends TestCase
     /** @test */
     public function smtp_rotator_tracks_and_increments_daily_counts()
     {
-        $service = new SmartSmtpRotatorService();
+        $service = new SmartSmtpRotatorService;
         $mailer = 'smtp';
         $initial = $service->getDailyCount($mailer);
 

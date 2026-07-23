@@ -1,12 +1,13 @@
 <?php
 
 // Bootstrap Laravel
-require __DIR__ . '/../vendor/autoload.php';
-$app = require_once __DIR__ . '/../bootstrap/app.php';
-$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+require __DIR__.'/../vendor/autoload.php';
+$app = require_once __DIR__.'/../bootstrap/app.php';
+$kernel = $app->make(Kernel::class);
 $kernel->bootstrap();
 
 use App\Models\EnrollmentApplicant;
+use Illuminate\Contracts\Console\Kernel;
 
 echo "Fetching pending applicants...\n";
 $applicants = EnrollmentApplicant::where('status', 'submitted')
@@ -24,11 +25,11 @@ $markdown .= "| ID | Name | Grade Level | Type | Learning Mode | Parent Email | 
 $markdown .= "|---|---|---|---|---|---|---|\n";
 
 foreach ($applicants as $app) {
-    $fullName = trim($app->first_name . ' ' . $app->middle_name . ' ' . $app->last_name);
+    $fullName = trim($app->first_name.' '.$app->middle_name.' '.$app->last_name);
     $fullName = strtoupper($fullName);
     $createdDate = $app->created_at ? $app->created_at->format('Y-m-d H:i:s') : 'N/A';
-    
-    $markdown .= "| {$app->id} | {$fullName} | {$app->grade_level} | {$app->student_type} | {$app->learning_mode} | " . ($app->parent_email ?: 'N/A') . " | {$createdDate} |\n";
+
+    $markdown .= "| {$app->id} | {$fullName} | {$app->grade_level} | {$app->student_type} | {$app->learning_mode} | ".($app->parent_email ?: 'N/A')." | {$createdDate} |\n";
 }
 
 $outputPath = '/home/tatsuya/.gemini/antigravity/brain/2d3e623e-0493-4375-a345-b076981341c8/pending_applicants.md';

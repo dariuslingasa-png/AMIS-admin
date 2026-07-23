@@ -36,14 +36,15 @@ class SystemDevOpsService
                 foreach ($rawTables as $t) {
                     $dbTables[] = [
                         'name' => $t->table_name,
-                        'rows' => (int)$t->table_rows,
+                        'rows' => (int) $t->table_rows,
                         'data_size' => $this->formatBytes($t->data_length),
                         'index_size' => $this->formatBytes($t->index_length),
                         'total_size' => $this->formatBytes($t->data_length + $t->index_length),
                         'engine' => $t->engine,
                     ];
                 }
-            } catch (\Exception $e) {}
+            } catch (\Exception $e) {
+            }
         }
 
         // 3. Maintenance Mode Status for All Portals
@@ -92,7 +93,8 @@ class SystemDevOpsService
             if (Schema::hasTable('failed_jobs')) {
                 $failedJobs = DB::table('failed_jobs')->count();
             }
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+        }
 
         // 5. Active User Sessions
         $activeSessionsCount = 0;
@@ -102,7 +104,8 @@ class SystemDevOpsService
             } else {
                 $activeSessionsCount = User::whereNotNull('updated_at')->where('updated_at', '>=', now()->subMinutes(30))->count();
             }
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+        }
 
         return [
             'envAudit' => $envAudit,
@@ -144,7 +147,8 @@ class SystemDevOpsService
             return app()->isDownForMaintenance();
         }
 
-        $downFile = $this->getPortalPath($key) . '/storage/framework/down';
+        $downFile = $this->getPortalPath($key).'/storage/framework/down';
+
         return file_exists($downFile);
     }
 
@@ -154,13 +158,13 @@ class SystemDevOpsService
             return session('maintenance_secret_url_admin');
         }
 
-        $downFile = $this->getPortalPath($key) . '/storage/framework/down';
+        $downFile = $this->getPortalPath($key).'/storage/framework/down';
         if (file_exists($downFile)) {
             $content = @file_get_contents($downFile);
             if ($content) {
                 $data = json_decode($content, true);
-                if (!empty($data['secret'])) {
-                    return "https://{$key}.amis.edu.ph/" . $data['secret'];
+                if (! empty($data['secret'])) {
+                    return "https://{$key}.amis.edu.ph/".$data['secret'];
                 }
             }
         }
@@ -170,29 +174,31 @@ class SystemDevOpsService
 
     public function togglePortalMaintenance(string $key): array
     {
-        $secretToken = 'amis_override_' . Str::random(12);
+        $secretToken = 'amis_override_'.Str::random(12);
 
         if ($key === 'admin') {
             if (app()->isDownForMaintenance()) {
                 Artisan::call('up');
                 session()->forget('maintenance_secret_url_admin');
+
                 return ['status' => 'off', 'portal' => 'Admin Portal'];
             } else {
                 Artisan::call('down', ['--secret' => $secretToken]);
-                $bypassUrl = url('/' . $secretToken);
+                $bypassUrl = url('/'.$secretToken);
                 session(['maintenance_secret_url_admin' => $bypassUrl]);
+
                 return ['status' => 'on', 'secret' => $bypassUrl, 'portal' => 'Admin Portal'];
             }
         }
 
         $portalPath = $this->getPortalPath($key);
-        $downFile = $portalPath . '/storage/framework/down';
+        $downFile = $portalPath.'/storage/framework/down';
         $portalNames = [
             'enrollment' => 'Enrollment Portal',
             'teacher' => 'Teacher Portal',
             'student' => 'Student Portal',
         ];
-        $name = $portalNames[$key] ?? ucfirst($key) . ' Portal';
+        $name = $portalNames[$key] ?? ucfirst($key).' Portal';
 
         if (file_exists($downFile)) {
             if (function_exists('exec')) {
@@ -201,14 +207,15 @@ class SystemDevOpsService
             if (file_exists($downFile)) {
                 @unlink($downFile);
             }
+
             return ['status' => 'off', 'portal' => $name];
         } else {
             if (function_exists('exec')) {
                 @exec("cd {$portalPath} && php artisan down --secret={$secretToken} 2>&1");
             }
-            if (!file_exists($downFile)) {
+            if (! file_exists($downFile)) {
                 $storageDir = dirname($downFile);
-                if (!is_dir($storageDir)) {
+                if (! is_dir($storageDir)) {
                     @mkdir($storageDir, 0755, true);
                 }
                 $payload = json_encode([
@@ -218,7 +225,8 @@ class SystemDevOpsService
                 ]);
                 @file_put_contents($downFile, $payload);
             }
-            $bypassUrl = "https://{$key}.amis.edu.ph/" . $secretToken;
+            $bypassUrl = "https://{$key}.amis.edu.ph/".$secretToken;
+
             return ['status' => 'on', 'secret' => $bypassUrl, 'portal' => $name];
         }
     }
@@ -227,7 +235,7 @@ class SystemDevOpsService
     {
         $tables = ['students', 'enrollment_applicants', 'payments', 'users', 'sections', 'admin_audit_logs', 'student_sections'];
         $tableList = implode(', ', $tables);
-        
+
         DB::statement("OPTIMIZE TABLE {$tableList}");
         DB::statement("ANALYZE TABLE {$tableList}");
     }
@@ -235,6 +243,7 @@ class SystemDevOpsService
     public function toggleMaintenanceMode(): string
     {
         $res = $this->togglePortalMaintenance('admin');
+
         return $res['status'] === 'off' ? 'off' : ($res['secret'] ?? 'on');
     }
 
@@ -263,6 +272,6 @@ class SystemDevOpsService
         $pow = min($pow, count($units) - 1);
         $bytes /= pow(1024, $pow);
 
-        return round($bytes, $precision) . ' ' . $units[$pow];
+        return round($bytes, $precision).' '.$units[$pow];
     }
 }

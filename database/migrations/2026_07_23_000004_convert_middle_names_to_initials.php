@@ -9,11 +9,16 @@ return new class extends Migration
     public function up(): void
     {
         $formatInitial = function (?string $val): ?string {
-            if ($val === null) return null;
+            if ($val === null) {
+                return null;
+            }
             $trimmed = trim($val);
-            if ($trimmed === '') return null;
+            if ($trimmed === '') {
+                return null;
+            }
             $firstChar = mb_substr($trimmed, 0, 1, 'UTF-8');
-            return mb_strtoupper(($firstChar === '.') ? '.' : $firstChar . '.', 'UTF-8');
+
+            return mb_strtoupper(($firstChar === '.') ? '.' : $firstChar.'.', 'UTF-8');
         };
 
         if (Schema::hasTable('enrollment_applicants')) {
@@ -24,11 +29,17 @@ return new class extends Migration
                     $moInit = $formatInitial($app->mother_middle_name ?? null);
 
                     $updates = [];
-                    if ($mInit !== $app->middle_name) $updates['middle_name'] = $mInit;
-                    if ($fInit !== $app->father_middle_name) $updates['father_middle_name'] = $fInit;
-                    if ($moInit !== $app->mother_middle_name) $updates['mother_middle_name'] = $moInit;
+                    if ($mInit !== $app->middle_name) {
+                        $updates['middle_name'] = $mInit;
+                    }
+                    if ($fInit !== $app->father_middle_name) {
+                        $updates['father_middle_name'] = $fInit;
+                    }
+                    if ($moInit !== $app->mother_middle_name) {
+                        $updates['mother_middle_name'] = $moInit;
+                    }
 
-                    if (!empty($updates)) {
+                    if (! empty($updates)) {
                         DB::table('enrollment_applicants')->where('id', $app->id)->update($updates);
                     }
                 }

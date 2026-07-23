@@ -14,8 +14,8 @@ class SoaMonthlyBilling extends Model
     ];
 
     protected $casts = [
-        'due_date'   => 'date',
-        'paid_at'    => 'datetime',
+        'due_date' => 'date',
+        'paid_at' => 'datetime',
         'amount_due' => 'decimal:2',
     ];
 

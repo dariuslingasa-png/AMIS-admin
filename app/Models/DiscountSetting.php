@@ -28,7 +28,7 @@ class DiscountSetting extends Model
 
     public function siblingPercentageForOrder(int $siblingOrder): float
     {
-        if (!$this->is_active || $siblingOrder <= 1) {
+        if (! $this->is_active || $siblingOrder <= 1) {
             return 0.0;
         }
 

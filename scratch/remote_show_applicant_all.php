@@ -1,12 +1,15 @@
 <?php
-require __DIR__ . '/vendor/autoload.php';
-$app = require_once __DIR__ . '/bootstrap/app.php';
-$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+
+use Illuminate\Contracts\Console\Kernel;
+
+require __DIR__.'/vendor/autoload.php';
+$app = require_once __DIR__.'/bootstrap/app.php';
+$kernel = $app->make(Kernel::class);
 $kernel->bootstrap();
 
-$applicant = \DB::table('enrollment_applicants')->where('id', 44)->first();
+$applicant = DB::table('enrollment_applicants')->where('id', 44)->first();
 if ($applicant) {
-    foreach ((array)$applicant as $key => $val) {
+    foreach ((array) $applicant as $key => $val) {
         if ($val !== null && $val !== '') {
             echo "  {$key}: {$val}\n";
         }

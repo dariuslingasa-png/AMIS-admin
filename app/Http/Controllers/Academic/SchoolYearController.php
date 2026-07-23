@@ -18,6 +18,7 @@ class SchoolYearController extends Controller
     public function index(): View
     {
         $schoolYears = SchoolYear::query()->orderByDesc('created_at')->get();
+
         return view('admin.academic.school-years.index', compact('schoolYears'));
     }
 
@@ -29,6 +30,7 @@ class SchoolYearController extends Controller
     public function store(StoreSchoolYearRequest $request): RedirectResponse
     {
         $this->schoolYearService->create($request->validated());
+
         return redirect()->route('admin.academic.school-years.index')
             ->with('success', 'School year created successfully.');
     }
@@ -41,6 +43,7 @@ class SchoolYearController extends Controller
     public function update(StoreSchoolYearRequest $request, SchoolYear $schoolYear): RedirectResponse
     {
         $this->schoolYearService->update($schoolYear, $request->validated());
+
         return redirect()->route('admin.academic.school-years.index')
             ->with('success', 'School year updated successfully.');
     }
@@ -48,12 +51,14 @@ class SchoolYearController extends Controller
     public function toggleActive(SchoolYear $schoolYear): RedirectResponse
     {
         $this->schoolYearService->toggleActive($schoolYear);
+
         return back()->with('success', 'School year activation status updated.');
     }
 
     public function toggleStatus(SchoolYear $schoolYear): RedirectResponse
     {
         $this->schoolYearService->toggleStatus($schoolYear);
+
         return back()->with('success', 'School year status toggled.');
     }
 }

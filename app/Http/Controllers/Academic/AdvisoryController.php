@@ -15,6 +15,7 @@ class AdvisoryController extends Controller
     public function index(): View
     {
         $advisories = Advisory::query()->with('section')->orderByDesc('assigned_at')->get();
+
         return view('admin.academic.advisory.index', compact('advisories'));
     }
 

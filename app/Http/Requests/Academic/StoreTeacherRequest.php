@@ -31,8 +31,8 @@ class StoreTeacherRequest extends FormRequest
     {
         $data = parent::validated($key, $default);
 
-        $middle = empty($data['middle_name']) ? '' : ' ' . $data['middle_name'];
-        $data['name'] = trim(($data['prefix'] ?? '') . ' ' . $data['first_name'] . $middle . ' ' . $data['last_name']);
+        $middle = empty($data['middle_name']) ? '' : ' '.$data['middle_name'];
+        $data['name'] = trim(($data['prefix'] ?? '').' '.$data['first_name'].$middle.' '.$data['last_name']);
         unset($data['prefix']);
 
         return $data;

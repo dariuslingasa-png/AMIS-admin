@@ -29,7 +29,7 @@ return new class extends Migration
                 'id_last_name_font_size',
                 'id_first_name_font_size',
                 'id_grade_font_size',
-                'id_num_font_size'
+                'id_num_font_size',
             ]);
         });
     }

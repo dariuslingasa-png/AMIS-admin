@@ -10,8 +10,8 @@ class SchoolFee extends Model
 
     protected $casts = [
         'tuition_fee' => 'decimal:2',
-        'misc_fee'    => 'decimal:2',
-        'books_fee'   => 'decimal:2',
+        'misc_fee' => 'decimal:2',
+        'books_fee' => 'decimal:2',
     ];
 
     public static function forGrade(string $gradeLevel, ?string $schoolYear = null): ?self

@@ -24,6 +24,6 @@ return new class extends Migration
             $table->string('nationality')->nullable()->after('religion');
         });
 
-        DB::statement("UPDATE enrollment_applicants SET nationality = ethnicity");
+        DB::statement('UPDATE enrollment_applicants SET nationality = ethnicity');
     }
 };

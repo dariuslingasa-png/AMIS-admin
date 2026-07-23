@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\AdminAuditLog;
 use App\Models\Student;
 use App\Services\MicrosoftGraphService;
 use Illuminate\Console\Command;
@@ -10,6 +11,7 @@ use Illuminate\Support\Facades\Log;
 class SyncMicrosoftLicenses extends Command
 {
     protected $signature = 'ms:sync-licenses {--dry-run : Only scan and update local database states without assigning licenses in Microsoft Graph}';
+
     protected $description = 'Scan student accounts in Microsoft Graph and ensure they have the Student SKU license assigned';
 
     public function handle(): int
@@ -17,8 +19,9 @@ class SyncMicrosoftLicenses extends Command
         $dryRun = $this->option('dry-run');
         $studentSkuId = config('services.microsoft.student_sku_id');
 
-        if (!$studentSkuId) {
+        if (! $studentSkuId) {
             $this->error('Student SKU ID is not configured in services.php.');
+
             return Command::FAILURE;
         }
 
@@ -27,15 +30,16 @@ class SyncMicrosoftLicenses extends Command
         }
 
         $this->info('Connecting to Microsoft Graph...');
-        $graph = new MicrosoftGraphService();
+        $graph = new MicrosoftGraphService;
 
         try {
             $this->info('Fetching tenant users from Microsoft Graph...');
             $azureUsers = $graph->listTenantStudents();
-            $azureByEmail = collect($azureUsers)->keyBy(fn($u) => strtolower($u['userPrincipalName'] ?? ''));
+            $azureByEmail = collect($azureUsers)->keyBy(fn ($u) => strtolower($u['userPrincipalName'] ?? ''));
             $azureById = collect($azureUsers)->keyBy('id');
         } catch (\Exception $e) {
-            $this->error('Failed to retrieve tenant users: ' . $e->getMessage());
+            $this->error('Failed to retrieve tenant users: '.$e->getMessage());
+
             return Command::FAILURE;
         }
 
@@ -62,20 +66,21 @@ class SyncMicrosoftLicenses extends Command
 
             $azUser = $azureByEmail->get($email) ?? $azureById->get($msUserId);
 
-            if (!$azUser) {
+            if (! $azUser) {
                 $notFoundCount++;
                 $bar->advance();
+
                 continue;
             }
 
             // Sync ms_user_id locally if not set
-            if (empty($student->ms_user_id) && !empty($azUser['id'])) {
+            if (empty($student->ms_user_id) && ! empty($azUser['id'])) {
                 $student->update(['ms_user_id' => $azUser['id']]);
                 $msUserId = $azUser['id'];
             }
 
             $hasLicense = collect($azUser['assignedLicenses'] ?? [])
-                ->contains(fn($lic) => strtolower($lic['skuId'] ?? '') === strtolower($studentSkuId));
+                ->contains(fn ($lic) => strtolower($lic['skuId'] ?? '') === strtolower($studentSkuId));
 
             if ($hasLicense) {
                 $licensedCount++;
@@ -105,20 +110,20 @@ class SyncMicrosoftLicenses extends Command
         if (count($unlicensedStudents) > 0) {
             $this->newLine();
             if ($dryRun) {
-                $this->comment("List of unlicensed student accounts (run without --dry-run to auto-assign):");
+                $this->comment('List of unlicensed student accounts (run without --dry-run to auto-assign):');
                 foreach ($unlicensedStudents as $idx => $s) {
-                    $this->line("  [" . ($idx + 1) . "] {$s->school_email} (ID: {$s->student_number})");
+                    $this->line('  ['.($idx + 1)."] {$s->school_email} (ID: {$s->student_number})");
                 }
             } else {
                 $this->info("Assigning licenses to {$unlicensedCount} accounts...");
                 foreach ($unlicensedStudents as $idx => $student) {
-                    $this->line("  [" . ($idx + 1) . "/{$unlicensedCount}] Assigning license to {$student->school_email}...");
+                    $this->line('  ['.($idx + 1)."/{$unlicensedCount}] Assigning license to {$student->school_email}...");
                     try {
                         $graph->assignLicense($student->ms_user_id, [$studentSkuId], []);
                         $student->update(['ms_license_active' => true]);
                         $assignedCount++;
 
-                        \App\Models\AdminAuditLog::record('license_assigned', true, "Synchronized and auto-assigned student license for student {$student->school_email} via Artisan command", [
+                        AdminAuditLog::record('license_assigned', true, "Synchronized and auto-assigned student license for student {$student->school_email} via Artisan command", [
                             'email' => $student->school_email,
                             'sku_id' => $studentSkuId,
                             'ms_user_id' => $student->ms_user_id,
@@ -128,8 +133,8 @@ class SyncMicrosoftLicenses extends Command
                         usleep(200000); // 0.2s
                     } catch (\Exception $ex) {
                         $failedCount++;
-                        $this->error("    Failed to assign license to {$student->school_email}: " . $ex->getMessage());
-                        Log::error("Console license assignment failed for {$student->school_email}: " . $ex->getMessage());
+                        $this->error("    Failed to assign license to {$student->school_email}: ".$ex->getMessage());
+                        Log::error("Console license assignment failed for {$student->school_email}: ".$ex->getMessage());
                     }
                 }
                 $this->info("Assigned licenses to {$assignedCount} student(s). Failed: {$failedCount}.");

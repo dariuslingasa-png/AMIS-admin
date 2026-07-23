@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Artisan;
 use Tests\TestCase;
 
 class DevOpsFeaturesTest extends TestCase
@@ -23,7 +24,7 @@ class DevOpsFeaturesTest extends TestCase
     protected function tearDown(): void
     {
         if (app()->isDownForMaintenance()) {
-            \Illuminate\Support\Facades\Artisan::call('up');
+            Artisan::call('up');
         }
         parent::tearDown();
     }
@@ -91,7 +92,7 @@ class DevOpsFeaturesTest extends TestCase
         $response->assertRedirect();
         $response->assertSessionHas('success');
         // Turn OFF maintenance mode via Artisan to clear test environment state
-        \Illuminate\Support\Facades\Artisan::call('up');
+        Artisan::call('up');
         $this->assertFalse(app()->isDownForMaintenance());
     }
 

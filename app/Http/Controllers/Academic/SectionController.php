@@ -18,6 +18,7 @@ class SectionController extends Controller
     public function index(): View
     {
         $sections = Section::query()->orderByDesc('created_at')->get();
+
         return view('admin.academic.sections.index', compact('sections'));
     }
 
@@ -29,6 +30,7 @@ class SectionController extends Controller
     public function store(StoreSectionRequest $request): RedirectResponse
     {
         $this->sectionService->create($request->validated());
+
         return redirect()->route('admin.academic.sections.index')
             ->with('success', 'Section created successfully.');
     }
@@ -41,6 +43,7 @@ class SectionController extends Controller
     public function update(StoreSectionRequest $request, Section $section): RedirectResponse
     {
         $this->sectionService->update($section, $request->validated());
+
         return redirect()->route('admin.academic.sections.index')
             ->with('success', 'Section updated successfully.');
     }
@@ -48,6 +51,7 @@ class SectionController extends Controller
     public function toggleStatus(Section $section): RedirectResponse
     {
         $this->sectionService->toggleStatus($section);
+
         return back()->with('success', 'Section status updated.');
     }
 }

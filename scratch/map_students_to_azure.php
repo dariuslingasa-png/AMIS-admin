@@ -1,13 +1,19 @@
 <?php
-require __DIR__ . '/../vendor/autoload.php';
-$app = require_once __DIR__ . '/../bootstrap/app.php';
-$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+
+use App\Models\Student;
+use App\Services\MicrosoftGraphService;
+use Illuminate\Contracts\Console\Kernel;
+use Illuminate\Support\Carbon;
+
+require __DIR__.'/../vendor/autoload.php';
+$app = require_once __DIR__.'/../bootstrap/app.php';
+$kernel = $app->make(Kernel::class);
 $kernel->bootstrap();
 
-$graph = new \App\Services\MicrosoftGraphService();
+$graph = new MicrosoftGraphService;
 echo "Fetching Azure users...\n";
 $azureUsers = $graph->listTenantStudents();
-echo "Total Azure users: " . count($azureUsers) . "\n";
+echo 'Total Azure users: '.count($azureUsers)."\n";
 
 $azureByPrefix = [];
 foreach ($azureUsers as $u) {
@@ -20,22 +26,22 @@ foreach ($azureUsers as $u) {
 
 $studentSkuId = config('services.microsoft.student_sku_id');
 $synced = 0;
-$students = \App\Models\Student::all();
+$students = Student::all();
 
 foreach ($students as $student) {
     $num = $student->student_number;
     $possibleUsers = $azureByPrefix[$num] ?? [];
-    
+
     if (empty($possibleUsers)) {
         continue;
     }
-    
+
     // Pick the first one
     $azUser = $possibleUsers[0];
-    
+
     $hasLicense = collect($azUser['assignedLicenses'] ?? [])
-        ->contains(fn($lic) => strtolower($lic['skuId'] ?? '') === strtolower($studentSkuId));
-        
+        ->contains(fn ($lic) => strtolower($lic['skuId'] ?? '') === strtolower($studentSkuId));
+
     $updateData = [
         'school_email' => $azUser['userPrincipalName'],
         'ms_email' => $azUser['userPrincipalName'],
@@ -43,15 +49,15 @@ foreach ($students as $student) {
         'ms_license_active' => $hasLicense,
         'ms_account_enabled' => (bool) ($azUser['accountEnabled'] ?? true),
     ];
-    
-    if (!empty($azUser['createdDateTime'])) {
-        $updateData['ms_account_created_at'] = \Illuminate\Support\Carbon::parse($azUser['createdDateTime']);
+
+    if (! empty($azUser['createdDateTime'])) {
+        $updateData['ms_account_created_at'] = Carbon::parse($azUser['createdDateTime']);
     }
-    
-    if (!empty($azUser['signInActivity']['lastSignInDateTime'])) {
-        $updateData['ms_last_sign_in_at'] = \Illuminate\Support\Carbon::parse($azUser['signInActivity']['lastSignInDateTime']);
+
+    if (! empty($azUser['signInActivity']['lastSignInDateTime'])) {
+        $updateData['ms_last_sign_in_at'] = Carbon::parse($azUser['signInActivity']['lastSignInDateTime']);
     }
-    
+
     $student->update($updateData);
     $synced++;
 }

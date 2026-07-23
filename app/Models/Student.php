@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Student extends Model
 {
@@ -55,19 +56,19 @@ class Student extends Model
     ];
 
     protected $casts = [
-        'credentials_sent_at'        => 'datetime',
-        'ms_account_created_at'      => 'datetime',
-        'ms_teams_enrolled_at'       => 'datetime',
-        'ms_teams_last_activity_at'  => 'datetime',
+        'credentials_sent_at' => 'datetime',
+        'ms_account_created_at' => 'datetime',
+        'ms_teams_enrolled_at' => 'datetime',
+        'ms_teams_last_activity_at' => 'datetime',
         'ms_teams_meetings_attended' => 'integer',
-        'mfa_enabled'                => 'boolean',
-        'ms_license_active'          => 'boolean',
-        'ms_account_enabled'         => 'boolean',
-        'is_requirements_locked'     => 'boolean',
-        'password_changed_at'        => 'datetime',
-        'last_login_at'              => 'datetime',
-        'temp_password_set_at'       => 'datetime',
-        'ms_last_sign_in_at'         => 'datetime',
+        'mfa_enabled' => 'boolean',
+        'ms_license_active' => 'boolean',
+        'ms_account_enabled' => 'boolean',
+        'is_requirements_locked' => 'boolean',
+        'password_changed_at' => 'datetime',
+        'last_login_at' => 'datetime',
+        'temp_password_set_at' => 'datetime',
+        'ms_last_sign_in_at' => 'datetime',
     ];
 
     public function user(): BelongsTo
@@ -80,12 +81,12 @@ class Student extends Model
         return $this->belongsTo(EnrollmentApplicant::class, 'enrollment_applicant_id');
     }
 
-    public function account(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function account(): HasOne
     {
         return $this->hasOne(StudentAccount::class);
     }
 
-    public function studentSection(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function studentSection(): HasOne
     {
         return $this->hasOne(StudentSection::class);
     }
@@ -93,8 +94,8 @@ class Student extends Model
     public function subjects()
     {
         return $this->belongsToMany(Subject::class, 'student_subjects')
-                    ->withPivot('school_year')
-                    ->withTimestamps();
+            ->withPivot('school_year')
+            ->withTimestamps();
     }
 
     public function msTeamEnrollments()
@@ -110,17 +111,19 @@ class Student extends Model
     public function getObfuscatedIdAttribute(): string
     {
         $offset = 987654;
-        $val = (int)$this->student_number + $offset;
-        return str_replace('=', '', base64_encode((string)$val));
+        $val = (int) $this->student_number + $offset;
+
+        return str_replace('=', '', base64_encode((string) $val));
     }
 
     public static function deobfuscateStudentNumber(string $hash): ?string
     {
         $decoded = base64_decode($hash);
-        if (!is_numeric($decoded)) {
+        if (! is_numeric($decoded)) {
             return null;
         }
         $offset = 987654;
-        return (string)((int)$decoded - $offset);
+
+        return (string) ((int) $decoded - $offset);
     }
 }

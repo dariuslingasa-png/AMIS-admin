@@ -23,10 +23,10 @@ class WorkflowTestingSeeder extends Seeder
             'parent-6kids@amis.test',
             'parent-3kids@amis.test',
             'parent-1kid@amis.test',
-            'parent-4kids@amis.test'
+            'parent-4kids@amis.test',
         ];
         $testUserIds = DB::table('users')->whereIn('email', $testEmails)->pluck('id');
-        
+
         if ($testUserIds->isNotEmpty()) {
             DB::table('payments')->whereIn('user_id', $testUserIds)->delete();
             DB::table('enrollment_applicants')->whereIn('user_id', $testUserIds)->delete();
@@ -175,9 +175,9 @@ class WorkflowTestingSeeder extends Seeder
                 'street_address' => 'Test Sibling St',
                 'postal_code' => '8000',
                 'address' => 'Test Sibling St, Davao City',
-                'email' => strtolower($c['first'] . '.' . $c['last'] . '@amis.test'),
+                'email' => strtolower($c['first'].'.'.$c['last'].'@amis.test'),
                 'mobile_country_code' => '+63',
-                'mobile_number' => '900' . rand(1000000, 9999999),
+                'mobile_number' => '900'.rand(1000000, 9999999),
                 'parent_mobile' => '9001234567',
                 'parent_email' => $email,
                 'emergency_name' => $familyName,
@@ -198,7 +198,7 @@ class WorkflowTestingSeeder extends Seeder
             ]);
 
             // Set the first applicant ID as the family_application_id for all siblings in the family
-            if (!$familyApplicationId) {
+            if (! $familyApplicationId) {
                 $familyApplicationId = $applicantId;
                 $primaryApplicantId = $applicantId;
                 DB::table('enrollment_applicants')
@@ -216,7 +216,7 @@ class WorkflowTestingSeeder extends Seeder
                 'method' => 'gcash',
                 'status' => 'pending', // Payment proof uploaded, pending verification
                 'receipt_url' => 'receipts/test_payment_proof.png',
-                'reference_no' => 'PAY' . strtoupper(Str::random(10)),
+                'reference_no' => 'PAY'.strtoupper(Str::random(10)),
                 'or_number' => null, // will be verified by admin
                 'paid_at' => $now,
                 'created_at' => $now,

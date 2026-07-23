@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (!Schema::hasTable('discount_settings')) {
+        if (! Schema::hasTable('discount_settings')) {
             Schema::create('discount_settings', function (Blueprint $table) {
                 $table->id();
                 $table->unsignedTinyInteger('second_child_percentage')->default(10);
@@ -19,7 +19,7 @@ return new class extends Migration
             });
         }
 
-        if (!Schema::hasTable('student_accounts')) {
+        if (! Schema::hasTable('student_accounts')) {
             Schema::create('student_accounts', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('student_id')->constrained()->onDelete('cascade');
@@ -32,7 +32,7 @@ return new class extends Migration
                 $table->decimal('monthly_tuition', 10, 2);
                 $table->decimal('miscellaneous_fee', 10, 2)->default(1900.00);
                 $table->decimal('books_fee', 10, 2);
-                
+
                 // Sibling discount fields
                 $table->unsignedSmallInteger('sibling_order')->nullable();
                 $table->string('discount_type', 50)->nullable();
@@ -53,7 +53,7 @@ return new class extends Migration
         }
 
         // Add sibling order to enrollment_applicants if not already present
-        if (Schema::hasTable('enrollment_applicants') && !Schema::hasColumn('enrollment_applicants', 'sibling_order')) {
+        if (Schema::hasTable('enrollment_applicants') && ! Schema::hasColumn('enrollment_applicants', 'sibling_order')) {
             Schema::table('enrollment_applicants', function (Blueprint $table) {
                 $table->unsignedSmallInteger('sibling_order')->nullable();
                 $table->string('discount_type', 50)->nullable();
@@ -67,7 +67,7 @@ return new class extends Migration
     {
         Schema::dropIfExists('student_accounts');
         Schema::dropIfExists('discount_settings');
-        
+
         if (Schema::hasTable('enrollment_applicants')) {
             Schema::table('enrollment_applicants', function (Blueprint $table) {
                 $table->dropColumn(['sibling_order', 'discount_type', 'discount_percentage', 'discount_amount']);

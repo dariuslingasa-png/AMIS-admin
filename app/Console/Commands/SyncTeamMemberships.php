@@ -11,6 +11,7 @@ use Illuminate\Console\Command;
 class SyncTeamMemberships extends Command
 {
     protected $signature = 'ms-teams:sync-memberships {--apply : Apply changes to the database}';
+
     protected $description = 'Sync student section memberships from Microsoft Graph Team members to local database';
 
     public function handle(MicrosoftGraphService $graph): int
@@ -23,7 +24,7 @@ class SyncTeamMemberships extends Command
             return preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $section->ms_team_id);
         });
 
-        $this->info("Found " . $sections->count() . " sections with valid MS Team IDs.");
+        $this->info('Found '.$sections->count().' sections with valid MS Team IDs.');
 
         $totalUpdated = 0;
 
@@ -33,7 +34,8 @@ class SyncTeamMemberships extends Command
             try {
                 $members = $graph->listTeamMembers($section->ms_team_id);
             } catch (\Exception $e) {
-                $this->error("  Failed to fetch members: " . $e->getMessage());
+                $this->error('  Failed to fetch members: '.$e->getMessage());
+
                 continue;
             }
 
@@ -42,30 +44,30 @@ class SyncTeamMemberships extends Command
             $studentEmails = [];
             foreach ($members as $member) {
                 $roles = $member['roles'] ?? [];
-                if (!in_array('owner', $roles, true)) {
-                    if (!empty($member['userId'])) {
+                if (! in_array('owner', $roles, true)) {
+                    if (! empty($member['userId'])) {
                         $studentMsIds[] = $member['userId'];
                     }
-                    if (!empty($member['email'])) {
+                    if (! empty($member['email'])) {
                         $studentEmails[] = strtolower($member['email']);
                     }
                 }
             }
 
-            $this->line("  Graph members: " . count($studentMsIds));
+            $this->line('  Graph members: '.count($studentMsIds));
 
             // Find students in database that have these MS IDs or emails
             $studentsInGraph = Student::whereIn('ms_user_id', $studentMsIds)
                 ->orWhere(function ($q) use ($studentEmails) {
                     $q->whereIn('school_email', $studentEmails)
-                      ->orWhereIn('ms_email', $studentEmails);
+                        ->orWhereIn('ms_email', $studentEmails);
                 })
                 ->get();
             $studentsInGraphIds = $studentsInGraph->pluck('id')->toArray();
 
             // Also keep track of found ms_user_ids and emails to verify local enrolled students
             $studentsInGraphMsIds = $studentsInGraph->pluck('ms_user_id')->filter()->toArray();
-            $studentsInGraphEmails = $studentsInGraph->map(fn($s) => strtolower($s->school_email ?? $s->ms_email ?? ''))->filter()->toArray();
+            $studentsInGraphEmails = $studentsInGraph->map(fn ($s) => strtolower($s->school_email ?? $s->ms_email ?? ''))->filter()->toArray();
 
             // 1. Update/Create student_sections for students in the MS Team
             foreach ($studentsInGraph as $student) {
@@ -73,7 +75,7 @@ class SyncTeamMemberships extends Command
                     ->where('section_id', $section->id)
                     ->first();
 
-                if (!$studentSection) {
+                if (! $studentSection) {
                     $this->warn("  [MISMATCH] Student {$student->student_number} ({$student->ms_email}) is in MS Team but NOT in DB section!");
                     if ($apply) {
                         // Check if they are already in another section and remove them
@@ -116,7 +118,7 @@ class SyncTeamMemberships extends Command
                     }
                 }
 
-                if (!$isEnrolledInGraph) {
+                if (! $isEnrolledInGraph) {
                     $studentNum = $student ? $student->student_number : 'Unknown';
                     $this->warn("  [MISMATCH] Student {$studentNum} marked as enrolled locally but NOT in MS Team!");
                     if ($apply) {
@@ -129,6 +131,7 @@ class SyncTeamMemberships extends Command
 
         $this->newLine();
         $this->info("Sync completed. Total records updated: {$totalUpdated}");
+
         return Command::SUCCESS;
     }
 }

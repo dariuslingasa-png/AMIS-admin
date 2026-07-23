@@ -3,21 +3,19 @@
 namespace App\Services\System;
 
 use App\Services\GoogleDriveService;
-use App\Services\MicrosoftGraphService;
+use App\Services\Microsoft\MicrosoftGraphAuthService;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Str;
 
 class SystemHealthService
 {
     public function getSystemHealthMetrics(): array
     {
         $dbName = config('database.connections.mysql.database');
-        
+
         // Database stats
         $dbConnected = false;
         $dbLatencyMs = 0;
@@ -35,14 +33,14 @@ class SystemHealthService
                     'SELECT COUNT(*) as tbl_count, COALESCE(SUM(data_length + index_length), 0) as total_size FROM information_schema.tables WHERE table_schema = ?',
                     [$dbName]
                 );
-                if (!empty($tablesStats)) {
+                if (! empty($tablesStats)) {
                     $tableCount = (int) ($tablesStats[0]->tbl_count ?? 0);
                     $totalDatabaseSizeBytes = (float) ($tablesStats[0]->total_size ?? 0);
                 }
             }
         } catch (\Exception $e) {
             $dbConnected = false;
-            Log::warning('SystemHealthService DB check failed: ' . $e->getMessage());
+            Log::warning('SystemHealthService DB check failed: '.$e->getMessage());
         }
 
         // Server Storage / Disk Space
@@ -57,7 +55,7 @@ class SystemHealthService
         $localSnapshotsCount = 0;
         $localSnapshotsSizeBytes = 0;
         if (file_exists($backupDir)) {
-            $files = glob($backupDir . '/*.*');
+            $files = glob($backupDir.'/*.*');
             if ($files) {
                 $localSnapshotsCount = count($files);
                 foreach ($files as $file) {
@@ -76,7 +74,8 @@ class SystemHealthService
             $m365Configured = filled(config('services.microsoft.tenant_id')) &&
                               filled(config('services.microsoft.client_id')) &&
                               filled(config('services.microsoft.client_secret'));
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+        }
 
         // Construct healthStatus array required by Blade view
         $healthStatus = [
@@ -84,7 +83,7 @@ class SystemHealthService
                 'name' => 'MariaDB Database',
                 'connected' => $dbConnected,
                 'version' => 'MariaDB 10.x / MySQL',
-                'metrics' => $dbConnected ? "{$dbLatencyMs} ms latency ({$tableCount} tables, " . $this->formatBytes($totalDatabaseSizeBytes) . ")" : 'Disconnected',
+                'metrics' => $dbConnected ? "{$dbLatencyMs} ms latency ({$tableCount} tables, ".$this->formatBytes($totalDatabaseSizeBytes).')' : 'Disconnected',
             ],
             'server_disk' => [
                 'name' => 'Server Storage',
@@ -107,8 +106,8 @@ class SystemHealthService
             'php_engine' => [
                 'name' => 'PHP Runtime Engine',
                 'connected' => true,
-                'version' => 'PHP ' . PHP_VERSION,
-                'metrics' => 'Laravel ' . app()->version(),
+                'version' => 'PHP '.PHP_VERSION,
+                'metrics' => 'Laravel '.app()->version(),
             ],
         ];
 
@@ -187,7 +186,7 @@ class SystemHealthService
             $ms = round((microtime(true) - $start) * 1000, 2);
             $results['mariadb'] = ['status' => 'online', 'latency' => $ms, 'message' => 'MariaDB database connection responsive.'];
         } catch (\Exception $e) {
-            $results['mariadb'] = ['status' => 'offline', 'latency' => null, 'message' => 'Database connection failed: ' . $e->getMessage()];
+            $results['mariadb'] = ['status' => 'offline', 'latency' => null, 'message' => 'Database connection failed: '.$e->getMessage()];
         }
 
         // 2. Google Drive API Ping
@@ -203,25 +202,25 @@ class SystemHealthService
                     $results['gdrive'] = ['status' => 'warning', 'latency' => $ms, 'message' => 'Google Drive OAuth token expired or revoked (invalid_grant).'];
                 }
             } catch (\Exception $e) {
-                $results['gdrive'] = ['status' => 'offline', 'latency' => null, 'message' => 'Google Drive ping failed: ' . $e->getMessage()];
+                $results['gdrive'] = ['status' => 'offline', 'latency' => null, 'message' => 'Google Drive ping failed: '.$e->getMessage()];
             }
         } else {
             $results['gdrive'] = ['status' => 'not_configured', 'latency' => null, 'message' => 'Google Drive API credentials not configured.'];
         }
 
         // 3. Microsoft Graph API Ping
-        $authService = app(\App\Services\Microsoft\MicrosoftGraphAuthService::class);
+        $authService = app(MicrosoftGraphAuthService::class);
         $start = microtime(true);
         try {
             $token = $authService->accessToken();
             $ms = round((microtime(true) - $start) * 1000, 2);
-            if (!empty($token)) {
+            if (! empty($token)) {
                 $results['m365'] = ['status' => 'online', 'latency' => $ms, 'message' => 'Microsoft Graph API OAuth token acquired successfully.'];
             } else {
                 $results['m365'] = ['status' => 'offline', 'latency' => null, 'message' => 'Microsoft Graph API returned empty token.'];
             }
         } catch (\Exception $e) {
-            $results['m365'] = ['status' => 'offline', 'latency' => null, 'message' => 'Microsoft Graph API connection failed: ' . $e->getMessage()];
+            $results['m365'] = ['status' => 'offline', 'latency' => null, 'message' => 'Microsoft Graph API connection failed: '.$e->getMessage()];
         }
 
         return $results;
@@ -234,11 +233,11 @@ class SystemHealthService
         $smtpPort = config('mail.mailers.smtp.port', '587');
 
         Mail::raw(
-            "Hello!\n\nThis is a live diagnostic test message sent from the {$appName} Admin Portal.\n\n" .
-            "SMTP Host: {$smtpHost}:{$smtpPort}\n" .
-            "Recipient: {$recipientEmail}\n" .
-            "Timestamp: " . now()->toDateTimeString() . "\n\n" .
-            "If you received this message, your server email configuration is operating 100% correctly.",
+            "Hello!\n\nThis is a live diagnostic test message sent from the {$appName} Admin Portal.\n\n".
+            "SMTP Host: {$smtpHost}:{$smtpPort}\n".
+            "Recipient: {$recipientEmail}\n".
+            'Timestamp: '.now()->toDateTimeString()."\n\n".
+            'If you received this message, your server email configuration is operating 100% correctly.',
             function ($message) use ($recipientEmail, $appName) {
                 $message->to($recipientEmail)
                     ->subject("{$appName} - Live SMTP Diagnostic Test");
@@ -269,6 +268,6 @@ class SystemHealthService
         $pow = min($pow, count($units) - 1);
         $bytes /= pow(1024, $pow);
 
-        return round($bytes, $precision) . ' ' . $units[$pow];
+        return round($bytes, $precision).' '.$units[$pow];
     }
 }

@@ -2,13 +2,14 @@
 
 require 'vendor/autoload.php';
 $app = require_once 'bootstrap/app.php';
-$app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+$app->make(Kernel::class)->bootstrap();
 
-use App\Models\User;
 use App\Models\EnrollmentApplicant;
 use App\Models\Payment;
-use Illuminate\Support\Facades\Hash;
+use App\Models\User;
+use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 DB::beginTransaction();
 
@@ -111,7 +112,7 @@ try {
 
     DB::commit();
     echo "Successfully inserted 1 dummy family with 2 applicants!\n";
-} catch (\Exception $e) {
+} catch (Exception $e) {
     DB::rollBack();
-    echo "Error: " . $e->getMessage() . "\n";
+    echo 'Error: '.$e->getMessage()."\n";
 }

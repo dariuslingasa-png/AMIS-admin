@@ -11,9 +11,11 @@ use App\Http\Controllers\Admin\ApplicantController;
 use App\Http\Controllers\Admin\ApprovalController;
 use App\Http\Controllers\Admin\AttendanceController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\EmailComposerController;
 use App\Http\Controllers\Admin\EnrollmentAnalyticsController;
 use App\Http\Controllers\Admin\EnrollmentController;
 use App\Http\Controllers\Admin\EnrollmentReportController;
+use App\Http\Controllers\Admin\FacultyAttendanceController;
 use App\Http\Controllers\Admin\GoogleDriveAuthController;
 use App\Http\Controllers\Admin\RegistrationController;
 use App\Http\Controllers\Admin\RequirementController;
@@ -32,6 +34,7 @@ use App\Http\Controllers\Admin\System\SystemBackupController;
 use App\Http\Controllers\Admin\System\SystemDevOpsController;
 use App\Http\Controllers\Admin\System\SystemHealthController;
 use App\Http\Controllers\Admin\System\SystemLogController;
+use App\Http\Controllers\Admin\SystemNotificationController;
 use App\Http\Controllers\AdminAcademicController;
 use App\Http\Controllers\AdminAcademicSubjectController;
 use App\Http\Controllers\AdminAcademicTeacherController;
@@ -86,10 +89,10 @@ Route::name('admin.')->group(function () {
 
         // System Notifications API
         Route::prefix('notifications')->name('notifications.')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Admin\SystemNotificationController::class, 'index'])->name('index');
-            Route::post('/{id}/read', [\App\Http\Controllers\Admin\SystemNotificationController::class, 'markAsRead'])->name('read');
-            Route::post('/mark-all-read', [\App\Http\Controllers\Admin\SystemNotificationController::class, 'markAllAsRead'])->name('mark-all-read');
-            Route::delete('/clear', [\App\Http\Controllers\Admin\SystemNotificationController::class, 'clearAll'])->name('clear');
+            Route::get('/', [SystemNotificationController::class, 'index'])->name('index');
+            Route::post('/{id}/read', [SystemNotificationController::class, 'markAsRead'])->name('read');
+            Route::post('/mark-all-read', [SystemNotificationController::class, 'markAllAsRead'])->name('mark-all-read');
+            Route::delete('/clear', [SystemNotificationController::class, 'clearAll'])->name('clear');
         });
 
         Route::prefix('attendance')->name('attendance.')->group(function () {
@@ -102,13 +105,13 @@ Route::name('admin.')->group(function () {
         });
 
         Route::prefix('faculty-attendance')->name('faculty-attendance.')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Admin\FacultyAttendanceController::class, 'index'])->name('index');
-            Route::post('/import', [\App\Http\Controllers\Admin\FacultyAttendanceController::class, 'import'])->name('import');
-            Route::post('/users', [\App\Http\Controllers\Admin\FacultyAttendanceController::class, 'storeUser'])->name('users.store');
-            Route::post('/users/{id}/delete', [\App\Http\Controllers\Admin\FacultyAttendanceController::class, 'deleteUser'])->name('users.delete');
-            Route::get('/users/download', [\App\Http\Controllers\Admin\FacultyAttendanceController::class, 'downloadUsers'])->name('users.download');
-            Route::post('/link', [\App\Http\Controllers\Admin\FacultyAttendanceController::class, 'linkBiometricProfile'])->name('link');
-            Route::post('/remarks', [\App\Http\Controllers\Admin\FacultyAttendanceController::class, 'storeRemark'])->name('remarks.store');
+            Route::get('/', [FacultyAttendanceController::class, 'index'])->name('index');
+            Route::post('/import', [FacultyAttendanceController::class, 'import'])->name('import');
+            Route::post('/users', [FacultyAttendanceController::class, 'storeUser'])->name('users.store');
+            Route::post('/users/{id}/delete', [FacultyAttendanceController::class, 'deleteUser'])->name('users.delete');
+            Route::get('/users/download', [FacultyAttendanceController::class, 'downloadUsers'])->name('users.download');
+            Route::post('/link', [FacultyAttendanceController::class, 'linkBiometricProfile'])->name('link');
+            Route::post('/remarks', [FacultyAttendanceController::class, 'storeRemark'])->name('remarks.store');
         });
 
         Route::prefix('ebook')->name('ebook.')->group(function () {
@@ -283,17 +286,17 @@ Route::name('admin.')->group(function () {
 
         // Email Composer & Bulk Email System
         Route::prefix('email-composer')->name('email-composer.')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Admin\EmailComposerController::class, 'index'])->name('index');
-            Route::get('/create', [\App\Http\Controllers\Admin\EmailComposerController::class, 'create'])->name('create');
-            Route::post('/send-test', [\App\Http\Controllers\Admin\EmailComposerController::class, 'sendTest'])->name('send-test');
-            Route::post('/send-bulk', [\App\Http\Controllers\Admin\EmailComposerController::class, 'sendBulk'])->name('send-bulk');
-            Route::post('/save-draft', [\App\Http\Controllers\Admin\EmailComposerController::class, 'saveDraft'])->name('drafts.save');
-            Route::delete('/drafts/{draft}', [\App\Http\Controllers\Admin\EmailComposerController::class, 'destroyDraft'])->name('drafts.destroy');
-            Route::get('/templates', [\App\Http\Controllers\Admin\EmailComposerController::class, 'templates'])->name('templates');
-            Route::post('/templates', [\App\Http\Controllers\Admin\EmailComposerController::class, 'storeTemplate'])->name('templates.store');
-            Route::post('/templates/{template}/duplicate', [\App\Http\Controllers\Admin\EmailComposerController::class, 'duplicateTemplate'])->name('templates.duplicate');
-            Route::delete('/templates/{template}', [\App\Http\Controllers\Admin\EmailComposerController::class, 'destroyTemplate'])->name('templates.destroy');
-            Route::get('/logs', [\App\Http\Controllers\Admin\EmailComposerController::class, 'logs'])->name('logs');
+            Route::get('/', [EmailComposerController::class, 'index'])->name('index');
+            Route::get('/create', [EmailComposerController::class, 'create'])->name('create');
+            Route::post('/send-test', [EmailComposerController::class, 'sendTest'])->name('send-test');
+            Route::post('/send-bulk', [EmailComposerController::class, 'sendBulk'])->name('send-bulk');
+            Route::post('/save-draft', [EmailComposerController::class, 'saveDraft'])->name('drafts.save');
+            Route::delete('/drafts/{draft}', [EmailComposerController::class, 'destroyDraft'])->name('drafts.destroy');
+            Route::get('/templates', [EmailComposerController::class, 'templates'])->name('templates');
+            Route::post('/templates', [EmailComposerController::class, 'storeTemplate'])->name('templates.store');
+            Route::post('/templates/{template}/duplicate', [EmailComposerController::class, 'duplicateTemplate'])->name('templates.duplicate');
+            Route::delete('/templates/{template}', [EmailComposerController::class, 'destroyTemplate'])->name('templates.destroy');
+            Route::get('/logs', [EmailComposerController::class, 'logs'])->name('logs');
         });
         Route::get('/website/announcements/create', [AdminAnnouncementController::class, 'create'])->name('website.announcements.create');
         Route::post('/website/announcements', [AdminAnnouncementController::class, 'store'])->name('website.announcements.store');

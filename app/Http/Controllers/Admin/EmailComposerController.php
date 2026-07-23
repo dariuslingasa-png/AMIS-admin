@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Schema;
 class EmailComposerController extends Controller
 {
     protected EmailComposerService $composerService;
+
     protected SmartSmtpRotatorService $rotatorService;
 
     public function __construct(
@@ -33,7 +34,7 @@ class EmailComposerController extends Controller
     private function ensureAdminAccess(): void
     {
         $role = auth()->user()?->role;
-        if (!in_array($role, ['super_admin', 'admin', 'registrar', 'staff', 'finance'])) {
+        if (! in_array($role, ['super_admin', 'admin', 'registrar', 'staff', 'finance'])) {
             abort(403, 'Unauthorized. Access to Email Composer is restricted.');
         }
     }
@@ -46,6 +47,7 @@ class EmailComposerController extends Controller
         $this->ensureAdminAccess();
         $metrics = $this->composerService->getDashboardMetrics();
         $drafts = Schema::hasTable('email_drafts') ? EmailDraft::latest()->get() : [];
+
         return view('admin.email-composer.index', array_merge($metrics, compact('drafts')));
     }
 
@@ -59,11 +61,11 @@ class EmailComposerController extends Controller
 
         $templates = EmailTemplate::latest()->get();
         $drafts = Schema::hasTable('email_drafts') ? EmailDraft::latest()->get() : [];
-        
+
         // Grade levels & courses for recipient filter
         $gradeLevels = [
             'Kinder 1', 'Kinder 2', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4',
-            'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'
+            'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12',
         ];
 
         // Available sections
@@ -82,9 +84,15 @@ class EmailComposerController extends Controller
             $query = Student::query();
             if ($hasEmail || $hasSchoolEmail || $hasMsEmail) {
                 $query->where(function ($q) use ($hasEmail, $hasSchoolEmail, $hasMsEmail) {
-                    if ($hasEmail) $q->orWhereNotNull('email');
-                    if ($hasSchoolEmail) $q->orWhereNotNull('school_email');
-                    if ($hasMsEmail) $q->orWhereNotNull('ms_email');
+                    if ($hasEmail) {
+                        $q->orWhereNotNull('email');
+                    }
+                    if ($hasSchoolEmail) {
+                        $q->orWhereNotNull('school_email');
+                    }
+                    if ($hasMsEmail) {
+                        $q->orWhereNotNull('ms_email');
+                    }
                 });
             }
             $students = $query->take(150)->get();
@@ -117,7 +125,7 @@ class EmailComposerController extends Controller
             $bccEmails = array_filter(array_map('trim', explode(',', $request->bcc_emails ?? '')));
 
             $mailable = new GenericComposerMailable(
-                customSubject: '[TEST] ' . $request->subject,
+                customSubject: '[TEST] '.$request->subject,
                 bodyHtml: $request->body_html,
                 attachmentPaths: [],
                 senderName: $request->sender_name ?: 'AMIS Information Technology',
@@ -126,9 +134,10 @@ class EmailComposerController extends Controller
             );
 
             $result = $this->rotatorService->sendMail($request->test_email, $mailable);
+
             return back()->with('success', "Test email dispatched successfully to {$request->test_email} using SMTP ({$result['mailer_used']})!");
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Test Email Failed: ' . $e->getMessage()]);
+            return back()->withErrors(['error' => 'Test Email Failed: '.$e->getMessage()]);
         }
     }
 
@@ -234,6 +243,7 @@ class EmailComposerController extends Controller
     {
         $this->ensureAdminAccess();
         $draft->delete();
+
         return back()->with('success', 'Email draft deleted successfully.');
     }
 
@@ -245,6 +255,7 @@ class EmailComposerController extends Controller
         $this->ensureAdminAccess();
         $this->composerService->seedDefaultTemplates();
         $templates = EmailTemplate::latest()->get();
+
         return view('admin.email-composer.templates', compact('templates'));
     }
 
@@ -256,7 +267,7 @@ class EmailComposerController extends Controller
         $this->ensureAdminAccess();
 
         $new = $template->replicate();
-        $new->name = $template->name . ' (Copy)';
+        $new->name = $template->name.' (Copy)';
         $new->is_preset = false;
         $new->save();
 
@@ -295,6 +306,7 @@ class EmailComposerController extends Controller
     {
         $this->ensureAdminAccess();
         $template->delete();
+
         return back()->with('success', 'Email template deleted successfully.');
     }
 
@@ -311,8 +323,8 @@ class EmailComposerController extends Controller
             $search = trim($request->search);
             $query->where(function ($q) use ($search) {
                 $q->where('to_addresses', 'like', "%{$search}%")
-                  ->orWhere('subject', 'like', "%{$search}%")
-                  ->orWhere('mailer', 'like', "%{$search}%");
+                    ->orWhere('subject', 'like', "%{$search}%")
+                    ->orWhere('mailer', 'like', "%{$search}%");
             });
         }
 

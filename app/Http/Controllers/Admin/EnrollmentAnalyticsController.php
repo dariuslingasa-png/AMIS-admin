@@ -133,8 +133,8 @@ class EnrollmentAnalyticsController extends Controller
                 WHEN learning_mode LIKE '%2nd Shift%' THEN 3
                 ELSE 4
             END ASC")
-            ->orderBy('id', 'desc')
-            ->get();
+                ->orderBy('id', 'desc')
+                ->get();
         } else {
             $reports = $query->latest()->paginate(20);
         }
@@ -223,7 +223,7 @@ class EnrollmentAnalyticsController extends Controller
 
         foreach ($gradeModeSummary as $row) {
             $grade = $row->grade_level;
-            if (!isset($gradeSummaries[$grade])) {
+            if (! isset($gradeSummaries[$grade])) {
                 continue;
             }
             $mode = $row->learning_mode;
@@ -250,8 +250,8 @@ class EnrollmentAnalyticsController extends Controller
                 WHEN learning_mode LIKE '%2nd Shift%' THEN 3
                 ELSE 4
             END ASC")
-            ->orderBy('id', 'desc')
-            ->get();
+                ->orderBy('id', 'desc')
+                ->get();
         } else {
             $reports = $query->latest()->paginate(20);
         }

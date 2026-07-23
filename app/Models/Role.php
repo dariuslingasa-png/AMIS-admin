@@ -12,7 +12,7 @@ class Role extends Model
         'slug',
         'description',
         'hierarchy_level',
-        'is_protected'
+        'is_protected',
     ];
 
     protected $casts = [

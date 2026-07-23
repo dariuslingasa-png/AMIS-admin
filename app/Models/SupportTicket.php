@@ -27,6 +27,7 @@ class SupportTicket extends Model
     public function getReferenceNumberAttribute()
     {
         $date = $this->created_at ? $this->created_at->format('Ymd') : date('Ymd');
-        return 'AMIS-' . $date . '-' . str_pad($this->id, 4, '0', STR_PAD_LEFT);
+
+        return 'AMIS-'.$date.'-'.str_pad($this->id, 4, '0', STR_PAD_LEFT);
     }
 }

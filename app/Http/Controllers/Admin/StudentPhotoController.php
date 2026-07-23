@@ -36,7 +36,7 @@ class StudentPhotoController extends Controller
                     'ip_address' => request()->ip(),
                     'user_agent' => Str::limit((string) request()->userAgent(), 1000, ''),
                     'successful' => true,
-                    'message' => 'Super Administrator updated profile photo for student UPN: ' . $student->school_email,
+                    'message' => 'Super Administrator updated profile photo for student UPN: '.$student->school_email,
                     'metadata' => [
                         'student_id' => $student->id,
                         'school_email' => $student->school_email,
@@ -73,7 +73,7 @@ class StudentPhotoController extends Controller
                 'ip_address' => request()->ip(),
                 'user_agent' => Str::limit((string) request()->userAgent(), 1000, ''),
                 'successful' => true,
-                'message' => 'Super Administrator deleted/reset profile photo for student UPN: ' . $student->school_email,
+                'message' => 'Super Administrator deleted/reset profile photo for student UPN: '.$student->school_email,
                 'metadata' => [
                     'student_id' => $student->id,
                     'school_email' => $student->school_email,
@@ -106,10 +106,10 @@ class StudentPhotoController extends Controller
         }
 
         try {
-            $graph = new MicrosoftGraphService();
+            $graph = new MicrosoftGraphService;
             $photoData = $graph->getUserPhoto($upn);
 
-            if (!$photoData || empty($photoData['bytes'])) {
+            if (! $photoData || empty($photoData['bytes'])) {
                 return response()->json([
                     'success' => false,
                     'message' => 'No profile photo found in Microsoft 365 / Azure AD for this account.',
@@ -118,7 +118,7 @@ class StudentPhotoController extends Controller
 
             $bytes = $photoData['bytes'];
             $extension = str_contains($photoData['content_type'], 'png') ? 'png' : 'jpg';
-            $filename = 'optimized/' . Str::random(40) . '.' . $extension;
+            $filename = 'optimized/'.Str::random(40).'.'.$extension;
 
             Storage::disk('public')->put($filename, $bytes);
 
@@ -133,7 +133,7 @@ class StudentPhotoController extends Controller
                     'ip_address' => request()->ip(),
                     'user_agent' => Str::limit((string) request()->userAgent(), 1000, ''),
                     'successful' => true,
-                    'message' => 'Super Administrator pulled profile photo from Microsoft M365 for student UPN: ' . $student->school_email,
+                    'message' => 'Super Administrator pulled profile photo from Microsoft M365 for student UPN: '.$student->school_email,
                     'metadata' => [
                         'student_id' => $student->id,
                         'school_email' => $student->school_email,
@@ -148,10 +148,11 @@ class StudentPhotoController extends Controller
                 ]);
             }
         } catch (\Throwable $e) {
-            Log::error("syncMicrosoftPhoto failed: " . $e->getMessage());
+            Log::error('syncMicrosoftPhoto failed: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to retrieve photo from Microsoft: ' . $e->getMessage(),
+                'message' => 'Failed to retrieve photo from Microsoft: '.$e->getMessage(),
             ], 500);
         }
 

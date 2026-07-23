@@ -19,7 +19,7 @@ class EnrollmentStorage
         $path = self::existingVariant($path, $size) ?? $path;
 
         // If file exists in local admin storage, return local route
-        if (is_file(storage_path('app/public/' . $path)) || is_file(public_path('storage/' . $path))) {
+        if (is_file(storage_path('app/public/'.$path)) || is_file(public_path('storage/'.$path))) {
             return app()->has('router')
                 ? route('admin.payments.receipt-file', ['path' => $path])
                 : asset('storage/'.$path);
@@ -28,7 +28,7 @@ class EnrollmentStorage
         // Use direct storage URL if configured to bypass admin permission/CORS checks for non-finance users
         $storageUrl = config('services.enrollment_storage_url');
         if ($storageUrl) {
-            return rtrim($storageUrl, '/') . '/' . $path;
+            return rtrim($storageUrl, '/').'/'.$path;
         }
 
         // Return the secure local proxy route to bypass CORS/ORB/symlink blocks
@@ -113,13 +113,14 @@ class EnrollmentStorage
             return null;
         }
         $path = ltrim((string) $path, '/');
-        
+
         foreach (self::roots() as $root) {
             $absolute = rtrim($root, '/').'/'.$path;
             if (is_file($absolute) && filesize($absolute) > 0) {
                 return $absolute;
             }
         }
+
         return null;
     }
 

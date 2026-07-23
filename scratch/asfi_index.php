@@ -6,27 +6,27 @@
 // ============================================================================
 
 // 1. STRICT HTTPS ENFORCEMENT REDIRECT
-$isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+$isHttps = (! empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
     || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https')
     || (isset($_SERVER['HTTP_FRONT_END_HTTPS']) && $_SERVER['HTTP_FRONT_END_HTTPS'] === 'on');
 
-if (!$isHttps) {
-    $secureUrl = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+if (! $isHttps) {
+    $secureUrl = 'https://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
     header('HTTP/1.1 301 Moved Permanently');
-    header('Location: ' . $secureUrl);
+    header('Location: '.$secureUrl);
     exit;
 }
 
 $action = $_GET['action'] ?? '';
 $sessionId = $_GET['session'] ?? ($_POST['session'] ?? '');
 
-$sessionsDir = __DIR__ . '/sessions';
-$uploadsDir = __DIR__ . '/uploads';
+$sessionsDir = __DIR__.'/sessions';
+$uploadsDir = __DIR__.'/uploads';
 
-if (!file_exists($sessionsDir)) {
+if (! file_exists($sessionsDir)) {
     @mkdir($sessionsDir, 0755, true);
 }
-if (!file_exists($uploadsDir)) {
+if (! file_exists($uploadsDir)) {
     @mkdir($uploadsDir, 0755, true);
 }
 
@@ -34,15 +34,15 @@ if (!file_exists($uploadsDir)) {
 if ($action === 'start' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json');
     $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
-    
+
     $fullName = trim(strtoupper($input['full_name'] ?? ''));
     $gradeLevel = trim($input['grade_level'] ?? '');
-    
+
     if (empty($fullName) || empty($gradeLevel)) {
         echo json_encode(['success' => false, 'message' => 'Full Name and Grade Level are required.']);
         exit;
     }
-    
+
     $newSessionId = bin2hex(random_bytes(16));
     $sessionData = [
         'session_id' => $newSessionId,
@@ -55,13 +55,13 @@ if ($action === 'start' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         'created_at' => date('Y-m-d H:i:s'),
         'completed_at' => null,
     ];
-    
-    file_put_contents($sessionsDir . '/' . $newSessionId . '.json', json_encode($sessionData));
-    
-    $baseUrl = 'https://' . $_SERVER['HTTP_HOST'];
-    $sessionUrl = $baseUrl . '/?session=' . $newSessionId;
-    $qrUrl = 'https://quickchart.io/qr?text=' . urlencode($sessionUrl) . '&dark=047857&light=ffffff&margin=1&format=png&size=350';
-    
+
+    file_put_contents($sessionsDir.'/'.$newSessionId.'.json', json_encode($sessionData));
+
+    $baseUrl = 'https://'.$_SERVER['HTTP_HOST'];
+    $sessionUrl = $baseUrl.'/?session='.$newSessionId;
+    $qrUrl = 'https://quickchart.io/qr?text='.urlencode($sessionUrl).'&dark=047857&light=ffffff&margin=1&format=png&size=350';
+
     echo json_encode([
         'success' => true,
         'session_id' => $newSessionId,
@@ -72,11 +72,11 @@ if ($action === 'start' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // 3. API: Connect Mobile Device
-if ($action === 'connect' && !empty($sessionId)) {
+if ($action === 'connect' && ! empty($sessionId)) {
     header('Content-Type: application/json');
     $cleanId = preg_replace('/[^a-zA-Z0-9]/', '', $sessionId);
-    $file = $sessionsDir . '/' . $cleanId . '.json';
-    
+    $file = $sessionsDir.'/'.$cleanId.'.json';
+
     if (file_exists($file)) {
         $data = json_decode(file_get_contents($file), true);
         if ($data['status'] === 'pending') {
@@ -92,39 +92,39 @@ if ($action === 'connect' && !empty($sessionId)) {
 }
 
 // 4. API: Check Session Status
-if ($action === 'status' && !empty($sessionId)) {
+if ($action === 'status' && ! empty($sessionId)) {
     header('Content-Type: application/json');
     $cleanId = preg_replace('/[^a-zA-Z0-9]/', '', $sessionId);
-    $file = $sessionsDir . '/' . $cleanId . '.json';
-    
-    if (!file_exists($file)) {
+    $file = $sessionsDir.'/'.$cleanId.'.json';
+
+    if (! file_exists($file)) {
         echo json_encode(['status' => 'expired']);
         exit;
     }
-    
+
     $data = json_decode(file_get_contents($file), true);
     echo json_encode($data);
     exit;
 }
 
 // 5. API: Upload Selfie
-if ($action === 'upload' && $_SERVER['REQUEST_METHOD'] === 'POST' && !empty($sessionId)) {
+if ($action === 'upload' && $_SERVER['REQUEST_METHOD'] === 'POST' && ! empty($sessionId)) {
     header('Content-Type: application/json');
     $cleanId = preg_replace('/[^a-zA-Z0-9]/', '', $sessionId);
-    $file = $sessionsDir . '/' . $cleanId . '.json';
-    
-    if (!file_exists($file)) {
+    $file = $sessionsDir.'/'.$cleanId.'.json';
+
+    if (! file_exists($file)) {
         echo json_encode(['success' => false, 'message' => 'Session expired or invalid.']);
         exit;
     }
-    
+
     $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
     $imageData = $input['image_data'] ?? '';
-    
+
     if (preg_match('/^data:image\/(\w+);base64,/', $imageData, $type)) {
         $imageData = substr($imageData, strpos($imageData, ',') + 1);
         $imageData = base64_decode($imageData);
-        
+
         if ($imageData === false) {
             echo json_encode(['success' => false, 'message' => 'Invalid image payload.']);
             exit;
@@ -133,21 +133,21 @@ if ($action === 'upload' && $_SERVER['REQUEST_METHOD'] === 'POST' && !empty($ses
         echo json_encode(['success' => false, 'message' => 'Invalid image format.']);
         exit;
     }
-    
-    $filename = 'selfie_' . $cleanId . '_' . time() . '.png';
-    file_put_contents($uploadsDir . '/' . $filename, $imageData);
-    
-    $baseUrl = 'https://' . $_SERVER['HTTP_HOST'];
-    $publicUrl = $baseUrl . '/uploads/' . $filename;
-    
+
+    $filename = 'selfie_'.$cleanId.'_'.time().'.png';
+    file_put_contents($uploadsDir.'/'.$filename, $imageData);
+
+    $baseUrl = 'https://'.$_SERVER['HTTP_HOST'];
+    $publicUrl = $baseUrl.'/uploads/'.$filename;
+
     $data = json_decode(file_get_contents($file), true);
     $data['status'] = 'completed';
     $data['liveness_verified'] = true;
     $data['selfie_url'] = $publicUrl;
     $data['completed_at'] = date('Y-m-d h:i A');
-    
+
     file_put_contents($file, json_encode($data));
-    
+
     echo json_encode([
         'success' => true,
         'selfie_url' => $publicUrl,
@@ -157,15 +157,15 @@ if ($action === 'upload' && $_SERVER['REQUEST_METHOD'] === 'POST' && !empty($ses
 }
 
 // 6. View Mode Check
-$isMobileCaptureMode = !empty($_GET['session']);
+$isMobileCaptureMode = ! empty($_GET['session']);
 $mobileSessionData = null;
 
 if ($isMobileCaptureMode) {
     $cleanId = preg_replace('/[^a-zA-Z0-9]/', '', $_GET['session']);
-    $file = $sessionsDir . '/' . $cleanId . '.json';
+    $file = $sessionsDir.'/'.$cleanId.'.json';
     if (file_exists($file)) {
         $mobileSessionData = json_decode(file_get_contents($file), true);
-        
+
         if ($mobileSessionData['status'] === 'pending') {
             $mobileSessionData['status'] = 'connected';
             $mobileSessionData['connected_device'] = $_SERVER['HTTP_USER_AGENT'] ?? 'Mobile Phone';
@@ -209,7 +209,7 @@ if ($isMobileCaptureMode) {
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-emerald-600 selection:text-white overflow-hidden">
 
-    <?php if ($isMobileCaptureMode && $mobileSessionData): ?>
+    <?php if ($isMobileCaptureMode && $mobileSessionData) { ?>
         <!-- =================================================================== -->
         <!-- MOBILE / PHONE CAMERA CAPTURE MODE (HTTPS ONLINE FULL SCREEN) -->
         <!-- =================================================================== -->
@@ -574,7 +574,7 @@ if ($isMobileCaptureMode) {
             document.addEventListener('DOMContentLoaded', () => lucide.createIcons());
         </script>
 
-    <?php else: ?>
+    <?php } else { ?>
         <!-- =================================================================== -->
         <!-- DAYLIGHT MODE PORTAL & PC QR CODE SCREEN -->
         <!-- =================================================================== -->
@@ -845,7 +845,7 @@ if ($isMobileCaptureMode) {
             }
             document.addEventListener('DOMContentLoaded', () => lucide.createIcons());
         </script>
-    <?php endif; ?>
+    <?php } ?>
 
     <footer class="border-t border-slate-200 py-4 text-center text-xs text-slate-500 bg-white">
         ASFI Student Verification Portal &bull; Al Munawwara Islamic School (Daylight Mode Tester - Strict HTTPS)

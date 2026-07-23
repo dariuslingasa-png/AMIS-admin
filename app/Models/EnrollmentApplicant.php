@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class EnrollmentApplicant extends Model
 {
@@ -25,8 +26,8 @@ class EnrollmentApplicant extends Model
             // 3. Sync name changes to student's User account name
             if (($applicant->wasChanged('first_name') || $applicant->wasChanged('middle_name') || $applicant->wasChanged('last_name') || $applicant->wasChanged('suffix')) && $applicant->student && $applicant->student->user) {
                 $user = $applicant->student->user;
-                $middleInitial = $applicant->middle_name ? mb_substr(trim($applicant->middle_name), 0, 1, 'UTF-8') . '.' : '';
-                $user->name = preg_replace('/\s+/', ' ', trim($applicant->first_name . ' ' . $middleInitial . ' ' . $applicant->last_name . ($applicant->suffix ? ' ' . $applicant->suffix : '')));
+                $middleInitial = $applicant->middle_name ? mb_substr(trim($applicant->middle_name), 0, 1, 'UTF-8').'.' : '';
+                $user->name = preg_replace('/\s+/', ' ', trim($applicant->first_name.' '.$middleInitial.' '.$applicant->last_name.($applicant->suffix ? ' '.$applicant->suffix : '')));
                 $user->saveQuietly();
             }
         });
@@ -118,14 +119,14 @@ class EnrollmentApplicant extends Model
     ];
 
     protected $casts = [
-        'date_of_birth'      => 'date',
+        'date_of_birth' => 'date',
         'family_application_id' => 'integer',
-        'last_step'          => 'integer',
-        'affidavit_data'     => 'array',
-        'document_statuses'  => 'array',
-        'sibling_order'      => 'integer',
-        'discount_percentage'=> 'decimal:2',
-        'discount_amount'    => 'decimal:2',
+        'last_step' => 'integer',
+        'affidavit_data' => 'array',
+        'document_statuses' => 'array',
+        'sibling_order' => 'integer',
+        'discount_percentage' => 'decimal:2',
+        'discount_amount' => 'decimal:2',
         'registry_email_sent_at' => 'datetime',
         'onboarding_email_sent_at' => 'datetime',
     ];
@@ -135,25 +136,26 @@ class EnrollmentApplicant extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function payment(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function payment(): HasOne
     {
         return $this->hasOne(Payment::class, 'enrollment_applicant_id');
     }
 
-    public function student(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function student(): HasOne
     {
         return $this->hasOne(Student::class, 'enrollment_applicant_id');
     }
 
-    public function invoice(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function invoice(): BelongsTo
     {
         return $this->belongsTo(Invoice::class, 'family_application_id', 'family_application_id');
     }
 
     public function getFullNameAttribute(): string
     {
-        $middleInitial = $this->middle_name ? mb_substr(trim($this->middle_name), 0, 1, 'UTF-8') . '.' : '';
-        return preg_replace('/\s+/', ' ', trim($this->first_name . ' ' . $middleInitial . ' ' . $this->last_name));
+        $middleInitial = $this->middle_name ? mb_substr(trim($this->middle_name), 0, 1, 'UTF-8').'.' : '';
+
+        return preg_replace('/\s+/', ' ', trim($this->first_name.' '.$middleInitial.' '.$this->last_name));
     }
 
     /**
@@ -162,34 +164,35 @@ class EnrollmentApplicant extends Model
     public function getCompletionPercentageAttribute(): int
     {
         $hasAcademicProof = $this->student_type === 'Old'
-            || !empty($this->report_card_url)
-            || !empty($this->affidavit_url);
+            || ! empty($this->report_card_url)
+            || ! empty($this->affidavit_url);
 
         $checks = [
             // Step 1 (weight: 5 fields)
-            !empty($this->student_type),
-            !empty($this->grade_level),
-            !empty($this->first_name),
-            !empty($this->last_name),
-            !empty($this->gender),
-            !empty($this->date_of_birth),
-            !empty($this->place_of_birth),
-            !empty($this->religion),
-            !empty($this->country),
-            !empty($this->street_address),
-            !empty($this->mobile_number),
+            ! empty($this->student_type),
+            ! empty($this->grade_level),
+            ! empty($this->first_name),
+            ! empty($this->last_name),
+            ! empty($this->gender),
+            ! empty($this->date_of_birth),
+            ! empty($this->place_of_birth),
+            ! empty($this->religion),
+            ! empty($this->country),
+            ! empty($this->street_address),
+            ! empty($this->mobile_number),
             // Step 2
-            !empty($this->parent_mobile),
+            ! empty($this->parent_mobile),
             // Step 3
-            !empty($this->emergency_name),
-            !empty($this->emergency_relationship),
-            !empty($this->emergency_phone),
+            ! empty($this->emergency_name),
+            ! empty($this->emergency_relationship),
+            ! empty($this->emergency_phone),
             // Step 5 - documents
-            !empty($this->photo_2x2_url),
+            ! empty($this->photo_2x2_url),
             $hasAcademicProof,
         ];
 
         $filled = count(array_filter($checks));
+
         return (int) round(($filled / count($checks)) * 100);
     }
 
@@ -225,10 +228,10 @@ class EnrollmentApplicant extends Model
         }
 
         $hasAcademicProof = $this->student_type === 'Old'
-            || !empty($this->report_card_url)
-            || !empty($this->affidavit_url);
+            || ! empty($this->report_card_url)
+            || ! empty($this->affidavit_url);
 
-        if (!$hasAcademicProof) {
+        if (! $hasAcademicProof) {
             $missing[] = 'Academic Proof (SF9 / Report Card or Affidavit)';
         }
 
@@ -242,10 +245,10 @@ class EnrollmentApplicant extends Model
 
     public function setMiddleNameAttribute($value)
     {
-        if ($value !== null && trim((string)$value) !== '') {
-            $trimmed = trim((string)$value);
+        if ($value !== null && trim((string) $value) !== '') {
+            $trimmed = trim((string) $value);
             $firstChar = mb_substr($trimmed, 0, 1, 'UTF-8');
-            $this->attributes['middle_name'] = mb_strtoupper(($firstChar === '.') ? '.' : $firstChar . '.', 'UTF-8');
+            $this->attributes['middle_name'] = mb_strtoupper(($firstChar === '.') ? '.' : $firstChar.'.', 'UTF-8');
         } else {
             $this->attributes['middle_name'] = null;
         }
@@ -253,10 +256,10 @@ class EnrollmentApplicant extends Model
 
     public function setFatherMiddleNameAttribute($value)
     {
-        if ($value !== null && trim((string)$value) !== '') {
-            $trimmed = trim((string)$value);
+        if ($value !== null && trim((string) $value) !== '') {
+            $trimmed = trim((string) $value);
             $firstChar = mb_substr($trimmed, 0, 1, 'UTF-8');
-            $this->attributes['father_middle_name'] = mb_strtoupper(($firstChar === '.') ? '.' : $firstChar . '.', 'UTF-8');
+            $this->attributes['father_middle_name'] = mb_strtoupper(($firstChar === '.') ? '.' : $firstChar.'.', 'UTF-8');
         } else {
             $this->attributes['father_middle_name'] = null;
         }
@@ -264,10 +267,10 @@ class EnrollmentApplicant extends Model
 
     public function setMotherMiddleNameAttribute($value)
     {
-        if ($value !== null && trim((string)$value) !== '') {
-            $trimmed = trim((string)$value);
+        if ($value !== null && trim((string) $value) !== '') {
+            $trimmed = trim((string) $value);
             $firstChar = mb_substr($trimmed, 0, 1, 'UTF-8');
-            $this->attributes['mother_middle_name'] = mb_strtoupper(($firstChar === '.') ? '.' : $firstChar . '.', 'UTF-8');
+            $this->attributes['mother_middle_name'] = mb_strtoupper(($firstChar === '.') ? '.' : $firstChar.'.', 'UTF-8');
         } else {
             $this->attributes['mother_middle_name'] = null;
         }

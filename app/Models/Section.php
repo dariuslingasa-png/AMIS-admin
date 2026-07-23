@@ -56,52 +56,53 @@ class Section extends Model
     public function getGradeAdvisorAttribute()
     {
         // 1. Check database for any active advisory assignments for this grade level
-        $assignment = \App\Models\ClassAdvisoryAssignment::where('status', 'active')
-            ->whereHas('section', function($q) {
+        $assignment = ClassAdvisoryAssignment::where('status', 'active')
+            ->whereHas('section', function ($q) {
                 $q->where('grade_level', $this->grade_level);
             })
             ->first();
-            
+
         if ($assignment) {
             return $assignment;
         }
-        
+
         // 2. Fallback to config('class_advisories') configuration
         $elementary = config('class_advisories.elementary', []);
         $highSchool = config('class_advisories.high_school', []);
         $allAdvisors = array_merge($elementary, $highSchool);
-        
+
         foreach ($allAdvisors as $adv) {
             if ($adv['grade_level'] === $this->grade_level) {
                 $teacherName = $adv['teacher'];
-                
+
                 // Lookup teacher's email from users table
                 $cleanName = trim(str_ireplace('TEACHER ', '', $teacherName));
-                $user = \App\Models\User::where('role', 'teacher')
-                    ->where(function($query) use ($cleanName) {
+                $user = User::where('role', 'teacher')
+                    ->where(function ($query) use ($cleanName) {
                         $query->where('name', $cleanName)
-                              ->orWhere('name', 'like', '%' . $cleanName . '%');
+                            ->orWhere('name', 'like', '%'.$cleanName.'%');
                     })
                     ->first();
-                
-                return (object)[
+
+                return (object) [
                     'teacher_name' => $teacherName,
-                    'teacher_email' => $user ? $user->email : null
+                    'teacher_email' => $user ? $user->email : null,
                 ];
             }
         }
-        
+
         return null;
     }
 
     /** Human-readable label */
     public function getDisplayNameAttribute(): string
     {
-        $grade  = $this->grade_level;
-        $name   = $this->official_name ?: ($this->name && $this->name !== 'A' ? $this->name : 'General');
-        $shift  = $this->shift ?? 'F2F';
+        $grade = $this->grade_level;
+        $name = $this->official_name ?: ($this->name && $this->name !== 'A' ? $this->name : 'General');
+        $shift = $this->shift ?? 'F2F';
         $gender = ucfirst($this->gender === 'male' ? 'Boys' : ($this->gender === 'female' ? 'Girls' : 'Merge'));
-        $year   = $this->school_year;
+        $year = $this->school_year;
+
         return "{$grade} - {$name} {$shift} {$gender} {$year}";
     }
 

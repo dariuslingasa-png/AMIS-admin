@@ -18,7 +18,8 @@ class SectionController extends Controller
             $applicant = $studentSection->student?->applicant;
             $lastName = strtoupper(trim($applicant?->last_name ?? ''));
             $firstName = strtoupper(trim($applicant?->first_name ?? ''));
-            return $lastName . ' ' . $firstName;
+
+            return $lastName.' '.$firstName;
         });
         $section->setRelation('students', $sortedStudents);
 
@@ -46,7 +47,8 @@ class SectionController extends Controller
             $applicant = $studentSection->student?->applicant;
             $lastName = strtoupper(trim($applicant?->last_name ?? ''));
             $firstName = strtoupper(trim($applicant?->first_name ?? ''));
-            return $lastName . ' ' . $firstName;
+
+            return $lastName.' '.$firstName;
         })->values();
         $section->setRelation('students', $sortedStudents);
 
@@ -78,7 +80,8 @@ class SectionController extends Controller
         ]);
 
         $sectionName = $section->name ?: 'Face-to-Face';
-        return back()->with('success', 'New section "' . $sectionName . '" created successfully!');
+
+        return back()->with('success', 'New section "'.$sectionName.'" created successfully!');
     }
 
     public function updateSection(Request $request, Section $section)
@@ -88,11 +91,11 @@ class SectionController extends Controller
                  strtoupper((string) $request->shift) === 'F2F';
 
         $validated = $request->validate([
-            'name'          => $isF2f ? 'nullable|string|max:255' : 'required|string|max:255',
-            'grade_level'   => 'required|string|max:100',
+            'name' => $isF2f ? 'nullable|string|max:255' : 'required|string|max:255',
+            'grade_level' => 'required|string|max:100',
             'learning_mode' => 'nullable|string|max:100',
-            'shift'         => 'nullable|string|max:100',
-            'gender'        => 'nullable|string|in:male,female,merge',
+            'shift' => 'nullable|string|max:100',
+            'gender' => 'nullable|string|in:male,female,merge',
         ]);
 
         $section->update([
@@ -104,7 +107,8 @@ class SectionController extends Controller
         ]);
 
         $sectionName = $section->name ?: 'Face-to-Face';
-        return back()->with('success', 'Section "' . $sectionName . '" updated successfully!');
+
+        return back()->with('success', 'Section "'.$sectionName.'" updated successfully!');
     }
 
     public function destroySection(Section $section)
@@ -113,7 +117,7 @@ class SectionController extends Controller
         StudentSection::where('section_id', $section->id)->delete();
         $section->delete();
 
-        return back()->with('success', 'Section "' . $sectionName . '" deleted from portal list.');
+        return back()->with('success', 'Section "'.$sectionName.'" deleted from portal list.');
     }
 
     public function destroyGradeSections($grade)
@@ -122,7 +126,7 @@ class SectionController extends Controller
         $count = $sections->count();
 
         if ($count === 0) {
-            return back()->with('error', 'No sections found in ' . $grade . '.');
+            return back()->with('error', 'No sections found in '.$grade.'.');
         }
 
         foreach ($sections as $section) {
@@ -130,7 +134,7 @@ class SectionController extends Controller
             $section->delete();
         }
 
-        return back()->with('success', 'Successfully deleted ' . $count . ' sections from ' . $grade . '.');
+        return back()->with('success', 'Successfully deleted '.$count.' sections from '.$grade.'.');
     }
 
     public function manageSection(Request $request, Section $section)
@@ -141,7 +145,8 @@ class SectionController extends Controller
             $applicant = $studentSection->student?->applicant;
             $lastName = strtoupper(trim($applicant?->last_name ?? ''));
             $firstName = strtoupper(trim($applicant?->first_name ?? ''));
-            return $lastName . ' ' . $firstName;
+
+            return $lastName.' '.$firstName;
         });
         $section->setRelation('students', $sortedEnrolled);
 
@@ -151,12 +156,12 @@ class SectionController extends Controller
             $search = trim($request->search);
             $query->where(function ($q) use ($search) {
                 $q->where('student_number', 'like', "%{$search}%")
-                  ->orWhereHas('applicant', function ($aq) use ($search) {
-                      $aq->where('first_name', 'like', "%{$search}%")
-                        ->orWhere('last_name', 'like', "%{$search}%")
-                        ->orWhere('middle_name', 'like', "%{$search}%")
-                        ->orWhere('lrn', 'like', "%{$search}%");
-                  });
+                    ->orWhereHas('applicant', function ($aq) use ($search) {
+                        $aq->where('first_name', 'like', "%{$search}%")
+                            ->orWhere('last_name', 'like', "%{$search}%")
+                            ->orWhere('middle_name', 'like', "%{$search}%")
+                            ->orWhere('lrn', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -166,9 +171,9 @@ class SectionController extends Controller
         }
 
         $query->leftJoin('enrollment_applicants', 'students.enrollment_applicant_id', '=', 'enrollment_applicants.id')
-              ->select('students.*')
-              ->orderBy('enrollment_applicants.last_name', 'asc')
-              ->orderBy('enrollment_applicants.first_name', 'asc');
+            ->select('students.*')
+            ->orderBy('enrollment_applicants.last_name', 'asc')
+            ->orderBy('enrollment_applicants.first_name', 'asc');
 
         $availableStudents = $query->paginate(50)->withQueryString();
 
@@ -184,6 +189,7 @@ class SectionController extends Controller
             ->groupBy('grade_level')
             ->sortBy(function ($secs, $gLevel) use ($gradeOrder) {
                 $idx = array_search($gLevel, $gradeOrder);
+
                 return $idx === false ? 999 : $idx;
             });
 
@@ -203,7 +209,8 @@ class SectionController extends Controller
                 $lastName = strtoupper(trim($applicant?->last_name ?? ''));
                 $firstName = strtoupper(trim($applicant?->first_name ?? ''));
                 $middleName = strtoupper(trim($applicant?->middle_name ?? ''));
-                return $lastName . ' ' . $firstName . ' ' . $middleName;
+
+                return $lastName.' '.$firstName.' '.$middleName;
             });
 
         if ($students->isEmpty()) {
@@ -226,7 +233,8 @@ class SectionController extends Controller
                 $lastName = strtoupper(trim($applicant?->last_name ?? ''));
                 $firstName = strtoupper(trim($applicant?->first_name ?? ''));
                 $middleName = strtoupper(trim($applicant?->middle_name ?? ''));
-                return $lastName . ' ' . $firstName . ' ' . $middleName;
+
+                return $lastName.' '.$firstName.' '.$middleName;
             })->values();
 
         if ($students->isEmpty()) {
@@ -246,7 +254,8 @@ class SectionController extends Controller
                     $applicant = $studentSection->student?->applicant;
                     $lastName = strtoupper(trim($applicant?->last_name ?? ''));
                     $firstName = strtoupper(trim($applicant?->first_name ?? ''));
-                    return $lastName . ' ' . $firstName;
+
+                    return $lastName.' '.$firstName;
                 });
                 $section->setRelation('students', $sortedStudents);
 
@@ -270,14 +279,15 @@ class SectionController extends Controller
 
         $sectionsGrouped = $sections->groupBy('grade_level')->sortBy(function ($sections, $gradeLevel) use ($gradeOrder) {
             $index = array_search($gradeLevel, $gradeOrder);
+
             return $index === false ? 999 : $index;
         });
 
-        $totalOfficial = Student::whereHas('user', fn($q) => $q->where('account_status', 'verified'))->count();
+        $totalOfficial = Student::whereHas('user', fn ($q) => $q->where('account_status', 'verified'))->count();
 
         $studentsByGrade = Student::with(['applicant', 'studentSection.section'])
             ->get()
-            ->sortBy(fn($s) => strtoupper(trim(($s->applicant?->last_name ?? '') . ' ' . ($s->applicant?->first_name ?? ''))))
+            ->sortBy(fn ($s) => strtoupper(trim(($s->applicant?->last_name ?? '').' '.($s->applicant?->first_name ?? ''))))
             ->groupBy('grade_level');
 
         return view('admin.students.occupancy', compact('sectionsGrouped', 'sections', 'totalOfficial', 'studentsByGrade'));
@@ -294,7 +304,7 @@ class SectionController extends Controller
         $count = 0;
         foreach ($studentIds as $studentId) {
             $student = Student::find($studentId);
-            if (!$student) {
+            if (! $student) {
                 continue;
             }
 
@@ -309,13 +319,15 @@ class SectionController extends Controller
         }
 
         $sectionName = $section->name ?: $section->displayName;
+
         return back()->with('success', "{$count} student(s) successfully added to section \"{$sectionName}\"!");
     }
 
     public function removeStudentFromSection(StudentSection $studentSection)
     {
         $studentSection->delete();
-        return back()->with('success', "Student removed from section.");
+
+        return back()->with('success', 'Student removed from section.');
     }
 
     public function printAllRosters(Request $request)
@@ -339,7 +351,8 @@ class SectionController extends Controller
                 $lastName = html_entity_decode(strtoupper(trim($applicant?->last_name ?? '')), ENT_QUOTES, 'UTF-8');
                 $firstName = html_entity_decode(strtoupper(trim($applicant?->first_name ?? '')), ENT_QUOTES, 'UTF-8');
                 $middleName = html_entity_decode(strtoupper(trim($applicant?->middle_name ?? '')), ENT_QUOTES, 'UTF-8');
-                return $lastName . ' ' . $firstName . ' ' . $middleName;
+
+                return $lastName.' '.$firstName.' '.$middleName;
             });
 
             return [$gradeLevel => $sortedStudents];
@@ -355,37 +368,38 @@ class SectionController extends Controller
     public function classRosterData(Request $request)
     {
         $gradeOrder = ['Kinder 1', 'Kinder 2', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4',
-                       'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9',
-                       'Grade 10', 'Grade 11', 'Grade 12'];
+            'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9',
+            'Grade 10', 'Grade 11', 'Grade 12'];
 
         $sections = Section::with([
-                'students.student.applicant',
-            ])
-            ->orderByRaw("FIELD(grade_level, " . implode(',', array_map(fn($g) => "'{$g}'", $gradeOrder)) . ")")
+            'students.student.applicant',
+        ])
+            ->orderByRaw('FIELD(grade_level, '.implode(',', array_map(fn ($g) => "'{$g}'", $gradeOrder)).')')
             ->orderBy('shift')
             ->orderBy('gender')
             ->get();
 
         $data = $sections->map(function ($section) {
-            $allEnrollments   = $section->students;
-            $total            = $allEnrollments->count();
-            $joined           = $allEnrollments->where('ms_status', 'enrolled')->count();
-            $notJoined        = $total - $joined;
-            $pct              = $total > 0 ? round(($joined / $total) * 100) : 0;
+            $allEnrollments = $section->students;
+            $total = $allEnrollments->count();
+            $joined = $allEnrollments->where('ms_status', 'enrolled')->count();
+            $notJoined = $total - $joined;
+            $pct = $total > 0 ? round(($joined / $total) * 100) : 0;
 
             $genderLabel = $section->gender === 'female' ? 'Girls' : 'Boys';
-            $shiftLabel  = $section->shift ? ($section->shift === '1st Shift' ? '1st Shift' : '2nd Shift') : null;
-            $isFlex      = str_contains($section->learning_mode ?? '', 'Flexible');
+            $shiftLabel = $section->shift ? ($section->shift === '1st Shift' ? '1st Shift' : '2nd Shift') : null;
+            $isFlex = str_contains($section->learning_mode ?? '', 'Flexible');
 
             $notJoinedStudents = $allEnrollments
                 ->where('ms_status', '!=', 'enrolled')
                 ->map(function ($ss) {
                     $a = $ss->student?->applicant;
+
                     return [
                         'student_number' => $ss->student?->student_number ?? 'N/A',
-                        'name'           => $a ? strtoupper("{$a->last_name}, {$a->first_name}") : 'UNREGISTERED',
-                        'ms_status'      => $ss->ms_status ?? 'pending',
-                        'email'          => $ss->student?->school_email ?? $ss->student?->ms_email ?? 'N/A',
+                        'name' => $a ? strtoupper("{$a->last_name}, {$a->first_name}") : 'UNREGISTERED',
+                        'ms_status' => $ss->ms_status ?? 'pending',
+                        'email' => $ss->student?->school_email ?? $ss->student?->ms_email ?? 'N/A',
                     ];
                 })->values()->toArray();
 
@@ -393,27 +407,28 @@ class SectionController extends Controller
                 ->where('ms_status', 'enrolled')
                 ->map(function ($ss) {
                     $a = $ss->student?->applicant;
+
                     return [
                         'student_number' => $ss->student?->student_number ?? 'N/A',
-                        'name'           => $a ? strtoupper("{$a->last_name}, {$a->first_name}") : 'UNREGISTERED',
-                        'ms_status'      => 'enrolled',
-                        'email'          => $ss->student?->school_email ?? $ss->student?->ms_email ?? 'N/A',
+                        'name' => $a ? strtoupper("{$a->last_name}, {$a->first_name}") : 'UNREGISTERED',
+                        'ms_status' => 'enrolled',
+                        'email' => $ss->student?->school_email ?? $ss->student?->ms_email ?? 'N/A',
                     ];
                 })->values()->toArray();
 
             return [
-                'id'               => $section->id,
-                'grade_level'      => $section->grade_level,
-                'name'             => $section->name,
-                'gender'           => $genderLabel,
-                'shift'            => $shiftLabel,
-                'mode'             => $isFlex ? 'ODL' : 'F2F',
-                'has_team'         => !is_null($section->ms_team_id),
-                'total'            => $total,
-                'joined'           => $joined,
-                'not_joined'       => $notJoined,
-                'pct'              => $pct,
-                'joined_students'  => $joinedStudents,
+                'id' => $section->id,
+                'grade_level' => $section->grade_level,
+                'name' => $section->name,
+                'gender' => $genderLabel,
+                'shift' => $shiftLabel,
+                'mode' => $isFlex ? 'ODL' : 'F2F',
+                'has_team' => ! is_null($section->ms_team_id),
+                'total' => $total,
+                'joined' => $joined,
+                'not_joined' => $notJoined,
+                'pct' => $pct,
+                'joined_students' => $joinedStudents,
                 'not_joined_students' => $notJoinedStudents,
             ];
         });
@@ -421,29 +436,29 @@ class SectionController extends Controller
         $gradeSummary = $data->groupBy('grade_level')->map(function ($sections, $grade) {
             return [
                 'grade_level' => $grade,
-                'total'       => $sections->sum('total'),
-                'joined'      => $sections->sum('joined'),
-                'not_joined'  => $sections->sum('not_joined'),
-                'pct'         => $sections->sum('total') > 0
+                'total' => $sections->sum('total'),
+                'joined' => $sections->sum('joined'),
+                'not_joined' => $sections->sum('not_joined'),
+                'pct' => $sections->sum('total') > 0
                     ? round(($sections->sum('joined') / $sections->sum('total')) * 100)
                     : 0,
             ];
-        })->sortBy(fn($v, $k) => array_search($k, $gradeOrder) ?? 99)->values();
+        })->sortBy(fn ($v, $k) => array_search($k, $gradeOrder) ?? 99)->values();
 
         $overall = [
-            'total'     => $data->sum('total'),
-            'joined'    => $data->sum('joined'),
-            'not_joined'=> $data->sum('not_joined'),
-            'pct'       => $data->sum('total') > 0
+            'total' => $data->sum('total'),
+            'joined' => $data->sum('joined'),
+            'not_joined' => $data->sum('not_joined'),
+            'pct' => $data->sum('total') > 0
                 ? round(($data->sum('joined') / $data->sum('total')) * 100)
                 : 0,
         ];
 
         return response()->json([
-            'success'       => true,
-            'sections'      => $data->values(),
+            'success' => true,
+            'sections' => $data->values(),
             'grade_summary' => $gradeSummary,
-            'overall'       => $overall,
+            'overall' => $overall,
         ]);
     }
 }

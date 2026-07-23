@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
-use App\Models\Role;
-use App\Models\Permission;
 use App\Models\AdminAuditLog;
+use App\Models\Permission;
+use App\Models\Role;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -15,7 +15,7 @@ class AccessControlController extends Controller
 {
     private function ensureSuperAdmin()
     {
-        if (!auth()->user() || !auth()->user()->hasRole('super_admin')) {
+        if (! auth()->user() || ! auth()->user()->hasRole('super_admin')) {
             abort(403, 'Unauthorized. Super Administrator role required.');
         }
     }
@@ -25,6 +25,7 @@ class AccessControlController extends Controller
     {
         $this->ensureSuperAdmin();
         $roles = Role::orderBy('hierarchy_level', 'desc')->get();
+
         return view('admin.access-control.roles.index', compact('roles'));
     }
 
@@ -62,7 +63,7 @@ class AccessControlController extends Controller
         }
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:roles,name,' . $role->id,
+            'name' => 'required|string|max:255|unique:roles,name,'.$role->id,
             'description' => 'nullable|string',
             'hierarchy_level' => 'required|integer|min:0|max:99',
         ]);
@@ -104,6 +105,7 @@ class AccessControlController extends Controller
         $this->ensureSuperAdmin();
         $roles = Role::with('permissions')->orderBy('hierarchy_level', 'desc')->get();
         $permissions = Permission::all()->groupBy('category');
+
         return view('admin.access-control.permissions.index', compact('roles', 'permissions'));
     }
 
@@ -120,12 +122,14 @@ class AccessControlController extends Controller
                 if ($role->slug === 'super_admin') {
                     $allPermissionIds = Permission::pluck('id')->toArray();
                     $role->permissions()->sync($allPermissionIds);
+
                     continue;
                 }
 
                 if ($role->slug === 'teacher') {
                     $viewOnlyPermissionId = Permission::where('slug', 'view_only')->value('id');
                     $role->permissions()->sync($viewOnlyPermissionId ? [$viewOnlyPermissionId] : []);
+
                     continue;
                 }
 
@@ -134,7 +138,7 @@ class AccessControlController extends Controller
             }
         });
 
-        AdminAuditLog::record('access_control_permissions_synced', true, "Synchronized the role-permission mapping matrix.");
+        AdminAuditLog::record('access_control_permissions_synced', true, 'Synchronized the role-permission mapping matrix.');
 
         return back()->with('success', 'Permission matrix updated successfully.');
     }
@@ -147,17 +151,17 @@ class AccessControlController extends Controller
         $search = $request->query('search');
 
         $query = User::with('roles')
-            ->where(function($q) {
+            ->where(function ($q) {
                 $q->whereIn('role', ['admin', 'finance', 'staff'])
-                  ->orWhereHas('roles', function($r) {
-                      $r->whereIn('slug', User::ADMIN_PORTAL_ROLE_SLUGS);
-                  });
+                    ->orWhereHas('roles', function ($r) {
+                        $r->whereIn('slug', User::ADMIN_PORTAL_ROLE_SLUGS);
+                    });
             });
 
         if (filled($search)) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
@@ -177,7 +181,7 @@ class AccessControlController extends Controller
         ]);
 
         // Prevent self-modifying super_admin role
-        if ($user->id === auth()->id() && !in_array(Role::where('slug', 'super_admin')->first()?->id, $validated['role_ids'])) {
+        if ($user->id === auth()->id() && ! in_array(Role::where('slug', 'super_admin')->first()?->id, $validated['role_ids'])) {
             return back()->withErrors(['error' => 'You cannot revoke your own Super Administrator privileges.']);
         }
 
@@ -209,6 +213,7 @@ class AccessControlController extends Controller
     public function policiesIndex()
     {
         $this->ensureSuperAdmin();
+
         return view('admin.access-control.policies.index');
     }
 }

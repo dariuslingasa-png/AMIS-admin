@@ -21,13 +21,15 @@ class RemoveDuplicateApplicant extends Command
         $duplicate = EnrollmentApplicant::find($duplicateId);
         $keep = EnrollmentApplicant::find($keepId);
 
-        if (!$duplicate) {
+        if (! $duplicate) {
             $this->error("Duplicate applicant with ID {$duplicateId} not found.");
+
             return Command::FAILURE;
         }
 
-        if (!$keep) {
+        if (! $keep) {
             $this->error("Primary applicant to keep with ID {$keepId} not found.");
+
             return Command::FAILURE;
         }
 
@@ -36,11 +38,13 @@ class RemoveDuplicateApplicant extends Command
 
         if ($duplicate->student()->exists()) {
             $this->error("Cannot delete applicant #{$duplicateId} because a Student Record already exists for them. Clean up the Student Record first.");
+
             return Command::FAILURE;
         }
 
-        if (!$this->confirm("Are you sure you want to delete applicant #{$duplicateId} and transfer any payments/dependencies to #{$keepId}?")) {
-            $this->info("Operation cancelled.");
+        if (! $this->confirm("Are you sure you want to delete applicant #{$duplicateId} and transfer any payments/dependencies to #{$keepId}?")) {
+            $this->info('Operation cancelled.');
+
             return Command::SUCCESS;
         }
 
@@ -59,9 +63,11 @@ class RemoveDuplicateApplicant extends Command
             });
 
             $this->info("✓ Successfully deleted duplicate applicant #{$duplicateId}.");
+
             return Command::SUCCESS;
         } catch (\Exception $e) {
-            $this->error("✗ An error occurred while removing the duplicate: " . $e->getMessage());
+            $this->error('✗ An error occurred while removing the duplicate: '.$e->getMessage());
+
             return Command::FAILURE;
         }
     }

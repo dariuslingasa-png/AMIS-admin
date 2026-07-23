@@ -30,13 +30,13 @@ class DashboardController extends Controller
         $slotStats = [
             'capacity' => 0,
             'enrolled' => 0,
-            'available' => 0
+            'available' => 0,
         ];
 
         if (Schema::hasTable('grade_levels')) {
             $capacity = (int) DB::table('grade_levels')->where('school_year', $schoolYear)->where('is_active', true)->sum('capacity');
             $enrolled = (int) DB::table('grade_levels')->where('school_year', $schoolYear)->where('is_active', true)->sum('enrolled_count');
-            
+
             // Also add shift capacity if present
             if (Schema::hasTable('grade_shift_slots')) {
                 $shiftCapacity = (int) DB::table('grade_shift_slots')->where('school_year', $schoolYear)->where('is_active', true)->sum('capacity');

@@ -17,18 +17,17 @@ class AdminStudentFamilyController extends Controller
             $sl = mb_strtolower($s);
             $query->where(function ($q) use ($s, $sl) {
                 $q->whereRaw('LOWER(name) LIKE ?', ["%{$sl}%"])
-                  ->orWhere('email', 'like', "%{$s}%")
-                  ->orWhereHas('students', fn($st) =>
-                      $st->where('student_number', 'like', "%{$s}%")
-                  )
-                  ->orWhereHas('students.applicant', function ($sa) use ($sl) {
-                      $sa->whereRaw('LOWER(first_name) LIKE ?', ["%{$sl}%"])
-                        ->orWhereRaw('LOWER(middle_name) LIKE ?', ["%{$sl}%"])
-                        ->orWhereRaw('LOWER(last_name) LIKE ?', ["%{$sl}%"])
-                        ->orWhereRaw("LOWER(CONCAT(first_name, ' ', last_name)) LIKE ?", ["%{$sl}%"])
-                        ->orWhereRaw("LOWER(CONCAT(first_name, ' ', IFNULL(middle_name, ''), ' ', last_name)) LIKE ?", ["%{$sl}%"])
-                        ->orWhereRaw("LOWER(CONCAT(first_name, ' ', LEFT(IFNULL(middle_name, ''), 1), '. ', last_name)) LIKE ?", ["%{$sl}%"]);
-                  });
+                    ->orWhere('email', 'like', "%{$s}%")
+                    ->orWhereHas('students', fn ($st) => $st->where('student_number', 'like', "%{$s}%")
+                    )
+                    ->orWhereHas('students.applicant', function ($sa) use ($sl) {
+                        $sa->whereRaw('LOWER(first_name) LIKE ?', ["%{$sl}%"])
+                            ->orWhereRaw('LOWER(middle_name) LIKE ?', ["%{$sl}%"])
+                            ->orWhereRaw('LOWER(last_name) LIKE ?', ["%{$sl}%"])
+                            ->orWhereRaw("LOWER(CONCAT(first_name, ' ', last_name)) LIKE ?", ["%{$sl}%"])
+                            ->orWhereRaw("LOWER(CONCAT(first_name, ' ', IFNULL(middle_name, ''), ' ', last_name)) LIKE ?", ["%{$sl}%"])
+                            ->orWhereRaw("LOWER(CONCAT(first_name, ' ', LEFT(IFNULL(middle_name, ''), 1), '. ', last_name)) LIKE ?", ["%{$sl}%"]);
+                    });
             });
         }
 
@@ -36,9 +35,9 @@ class AdminStudentFamilyController extends Controller
         if ($request->filled('children_filter')) {
             $filter = $request->children_filter;
             if (is_numeric($filter)) {
-                $query->has('students', '=', (int)$filter);
+                $query->has('students', '=', (int) $filter);
             } elseif (str_ends_with($filter, '+')) {
-                $val = (int)rtrim($filter, '+');
+                $val = (int) rtrim($filter, '+');
                 $query->has('students', '>=', $val);
             }
         }

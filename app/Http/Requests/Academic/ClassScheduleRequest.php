@@ -14,14 +14,14 @@ class ClassScheduleRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'section_id'    => ['required', 'integer', 'exists:sections,id'],
-            'subject_name'  => ['required', 'string', 'max:120'],
-            'teacher_name'  => ['nullable', 'string', 'max:120'],  // form field name
-            'day'           => ['required', 'string'],
-            'start_time'    => ['required', 'date_format:H:i'],
-            'end_time'      => ['required', 'date_format:H:i'],
-            'spans_all_days'=> ['nullable', 'boolean'],
-            'mode'          => ['nullable', 'string', 'in:f2f,online'],
+            'section_id' => ['required', 'integer', 'exists:sections,id'],
+            'subject_name' => ['required', 'string', 'max:120'],
+            'teacher_name' => ['nullable', 'string', 'max:120'],  // form field name
+            'day' => ['required', 'string'],
+            'start_time' => ['required', 'date_format:H:i'],
+            'end_time' => ['required', 'date_format:H:i'],
+            'spans_all_days' => ['nullable', 'boolean'],
+            'mode' => ['nullable', 'string', 'in:f2f,online'],
         ];
     }
 

@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (!Schema::hasTable('sections')) {
+        if (! Schema::hasTable('sections')) {
             Schema::create('sections', function (Blueprint $table) {
                 $table->id();
                 $table->string('name')->nullable();
@@ -23,7 +23,7 @@ return new class extends Migration
             });
         }
 
-        if (!Schema::hasTable('student_sections')) {
+        if (! Schema::hasTable('student_sections')) {
             Schema::create('student_sections', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('student_id')->constrained()->onDelete('cascade');
@@ -35,7 +35,7 @@ return new class extends Migration
             });
         }
 
-        if (!Schema::hasTable('class_advisory_assignments')) {
+        if (! Schema::hasTable('class_advisory_assignments')) {
             Schema::create('class_advisory_assignments', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('section_id')->constrained()->cascadeOnDelete();

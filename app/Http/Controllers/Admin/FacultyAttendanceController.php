@@ -21,14 +21,14 @@ class FacultyAttendanceController extends Controller
         $timeOut = $request->query('time_out', '16:00');
 
         $scheduleConfig = [
-            'time_in' => $timeIn . ':00',
-            'time_out' => $timeOut . ':00'
+            'time_in' => $timeIn.':00',
+            'time_out' => $timeOut.':00',
         ];
 
         // Fetch logs, users, depts from DB
-        $dbLogs = DB::table('zk_attendance_logs')->get()->map(fn($l) => (array)$l)->toArray();
-        $dbUsers = DB::table('zk_users')->get()->map(fn($u) => (array)$u)->toArray();
-        $dbDepts = DB::table('zk_departments')->get()->map(fn($d) => (array)$d)->toArray();
+        $dbLogs = DB::table('zk_attendance_logs')->get()->map(fn ($l) => (array) $l)->toArray();
+        $dbUsers = DB::table('zk_users')->get()->map(fn ($u) => (array) $u)->toArray();
+        $dbDepts = DB::table('zk_departments')->get()->map(fn ($d) => (array) $d)->toArray();
 
         // Generate report
         $report = $this->parser->generateAttendanceReport($dbLogs, $dbUsers, $dbDepts, $scheduleConfig);
@@ -47,14 +47,14 @@ class FacultyAttendanceController extends Controller
             }
         }
 
-        if ($request->has('search_id') && !empty($request->query('search_id'))) {
+        if ($request->has('search_id') && ! empty($request->query('search_id'))) {
             $myBiometricId = $request->query('search_id');
         }
 
         $selectedBiometricUser = null;
         if ($myBiometricId) {
             $selectedBiometricUser = DB::table('zk_users')->where('employee_id', $myBiometricId)->first();
-            if (!$selectedUserId) {
+            if (! $selectedUserId) {
                 // Try back-matching to local teacher user
                 $localUser = DB::table('users')->where('biometric_id', $myBiometricId)->first();
                 if ($localUser) {
@@ -68,17 +68,17 @@ class FacultyAttendanceController extends Controller
         $currentDay = now()->day;
         $defaultCutoff = $currentDay <= 15 ? '1-15' : '16-end';
 
-        $myMonth = (int)$request->query('my_month', (int)now()->month);
+        $myMonth = (int) $request->query('my_month', (int) now()->month);
         $cutoff = $request->query('my_cutoff', $defaultCutoff);
-        $myYear = (int)$request->query('my_year', (int)now()->year);
+        $myYear = (int) $request->query('my_year', (int) now()->year);
 
         if ($cutoff === '1-15') {
-            $startDate = "{$myYear}-" . str_pad($myMonth, 2, '0', STR_PAD_LEFT) . "-01";
-            $endDate = "{$myYear}-" . str_pad($myMonth, 2, '0', STR_PAD_LEFT) . "-15";
+            $startDate = "{$myYear}-".str_pad($myMonth, 2, '0', STR_PAD_LEFT).'-01';
+            $endDate = "{$myYear}-".str_pad($myMonth, 2, '0', STR_PAD_LEFT).'-15';
         } else {
-            $startDate = "{$myYear}-" . str_pad($myMonth, 2, '0', STR_PAD_LEFT) . "-16";
-            $lastDay = date('t', strtotime("{$myYear}-" . str_pad($myMonth, 2, '0', STR_PAD_LEFT) . "-01"));
-            $endDate = "{$myYear}-" . str_pad($myMonth, 2, '0', STR_PAD_LEFT) . "-{$lastDay}";
+            $startDate = "{$myYear}-".str_pad($myMonth, 2, '0', STR_PAD_LEFT).'-16';
+            $lastDay = date('t', strtotime("{$myYear}-".str_pad($myMonth, 2, '0', STR_PAD_LEFT).'-01'));
+            $endDate = "{$myYear}-".str_pad($myMonth, 2, '0', STR_PAD_LEFT)."-{$lastDay}";
         }
 
         $myLogs = [];
@@ -91,8 +91,8 @@ class FacultyAttendanceController extends Controller
 
         if ($myBiometricId) {
             $myReport = $this->parser->generateAttendanceReport(
-                DB::table('zk_attendance_logs')->where('employee_id', $myBiometricId)->get()->map(fn($l) => (array)$l)->toArray(),
-                DB::table('zk_users')->where('employee_id', $myBiometricId)->get()->map(fn($u) => (array)$u)->toArray(),
+                DB::table('zk_attendance_logs')->where('employee_id', $myBiometricId)->get()->map(fn ($l) => (array) $l)->toArray(),
+                DB::table('zk_users')->where('employee_id', $myBiometricId)->get()->map(fn ($u) => (array) $u)->toArray(),
                 $dbDepts,
                 $scheduleConfig
             );
@@ -114,7 +114,7 @@ class FacultyAttendanceController extends Controller
                 if ($dateStr > $todayStr) {
                     continue;
                 }
-                $dayOfWeek = (int)$dt->format('N'); // 1=Mon, 5=Fri, 6=Sat, 7=Sun
+                $dayOfWeek = (int) $dt->format('N'); // 1=Mon, 5=Fri, 6=Sat, 7=Sun
 
                 if (isset($existingLogsByDate[$dateStr])) {
                     $row = $existingLogsByDate[$dateStr];
@@ -122,13 +122,13 @@ class FacultyAttendanceController extends Controller
                         $mySummary['present']++;
                     }
                     if (preg_match('/(\d+)\s*mins?/', $row['late'], $m)) {
-                        $mySummary['late_minutes'] += (int)$m[1];
+                        $mySummary['late_minutes'] += (int) $m[1];
                     }
                     if (preg_match('/([\d\.]+)\s*hrs?/', $row['overtime'], $m)) {
-                        $mySummary['overtime_minutes'] += (float)$m[1] * 60;
+                        $mySummary['overtime_minutes'] += (float) $m[1] * 60;
                     }
-                    $mySummary['hours_worked'] += (float)$row['total_hours'];
-                    
+                    $mySummary['hours_worked'] += (float) $row['total_hours'];
+
                     $myLogs[] = $row;
                 } else {
                     // No biometric logs exist for this date
@@ -158,12 +158,12 @@ class FacultyAttendanceController extends Controller
                         'total_hours' => 0.0,
                         'total_hours_formatted' => '—',
                         'status' => $status,
-                        'remarks' => $remarksStr
+                        'remarks' => $remarksStr,
                     ];
                 }
             }
 
-            usort($myLogs, fn($a, $b) => strcmp($a['date'], $b['date']));
+            usort($myLogs, fn ($a, $b) => strcmp($a['date'], $b['date']));
         }
 
         $myRemarks = [];
@@ -205,9 +205,9 @@ class FacultyAttendanceController extends Controller
             $nextCutoff = '1-15';
         }
 
-        $nextStartDate = $nextCutoff === '1-15' 
-            ? "{$nextYear}-" . str_pad($nextMonth, 2, '0', STR_PAD_LEFT) . "-01"
-            : "{$nextYear}-" . str_pad($nextMonth, 2, '0', STR_PAD_LEFT) . "-16";
+        $nextStartDate = $nextCutoff === '1-15'
+            ? "{$nextYear}-".str_pad($nextMonth, 2, '0', STR_PAD_LEFT).'-01'
+            : "{$nextYear}-".str_pad($nextMonth, 2, '0', STR_PAD_LEFT).'-16';
 
         $isNextDisabled = $nextStartDate > now()->toDateString();
 
@@ -220,22 +220,22 @@ class FacultyAttendanceController extends Controller
         $search = $request->query('search');
         if ($search) {
             $search = strtolower($search);
-            $report = array_filter($report, function($row) use ($search) {
-                return str_contains(strtolower($row['name']), $search) || 
-                       str_contains(strtolower((string)$row['employee_id']), $search) ||
+            $report = array_filter($report, function ($row) use ($search) {
+                return str_contains(strtolower($row['name']), $search) ||
+                       str_contains(strtolower((string) $row['employee_id']), $search) ||
                        str_contains(strtolower($row['department']), $search) ||
                        str_contains(strtolower($row['status']), $search);
             });
         }
 
         // Pagination for overall logs
-        $page = (int)$request->query('page', 1);
+        $page = (int) $request->query('page', 1);
         $perPage = 25;
         $totalItems = count($report);
         $totalPages = max(1, ceil($totalItems / $perPage));
         $page = max(1, min($page, $totalPages));
         $offset = ($page - 1) * $perPage;
-        
+
         $paginatedReport = array_slice($report, $offset, $perPage);
 
         return view('admin.faculty-attendance.index', [
@@ -255,7 +255,7 @@ class FacultyAttendanceController extends Controller
             'displayName' => $displayName,
             'teachers' => $teachers,
             'selectedUserId' => $selectedUserId,
-            
+
             // Individual parameters
             'myBiometricId' => $myBiometricId,
             'myLogs' => $myLogs,
@@ -284,14 +284,14 @@ class FacultyAttendanceController extends Controller
         $request->validate([
             'attlog_file' => 'nullable|file',
             'user_file' => 'nullable|file',
-            'department_file' => 'nullable|file'
+            'department_file' => 'nullable|file',
         ]);
 
         $stats = [
             'users' => 0,
             'logs' => 0,
             'departments' => 0,
-            'duplicates' => 0
+            'duplicates' => 0,
         ];
 
         try {
@@ -326,7 +326,7 @@ class FacultyAttendanceController extends Controller
                             'status' => $user['status'],
                             'raw_bytes' => $user['raw_bytes'],
                             'updated_at' => now(),
-                            'created_at' => now()
+                            'created_at' => now(),
                         ]
                     );
                     $stats['users']++;
@@ -348,7 +348,7 @@ class FacultyAttendanceController extends Controller
                     } else {
                         DB::table('zk_attendance_logs')->insert(array_merge($log, [
                             'created_at' => now(),
-                            'updated_at' => now()
+                            'updated_at' => now(),
                         ]));
                         $stats['logs']++;
                     }
@@ -357,16 +357,17 @@ class FacultyAttendanceController extends Controller
 
             DB::commit();
 
-            return redirect()->back()->with('success', "Import completed successfully! " . 
-                "Imported Users: {$stats['users']}, " .
-                "Attendance Logs: {$stats['logs']}, " .
-                "Departments: {$stats['departments']}, " .
+            return redirect()->back()->with('success', 'Import completed successfully! '.
+                "Imported Users: {$stats['users']}, ".
+                "Attendance Logs: {$stats['logs']}, ".
+                "Departments: {$stats['departments']}, ".
                 "Duplicates: {$stats['duplicates']}.");
 
         } catch (\Throwable $e) {
             DB::rollBack();
-            Log::error("ZKTeco Import Error: " . $e->getMessage());
-            return redirect()->back()->with('error', "Import failed: " . $e->getMessage());
+            Log::error('ZKTeco Import Error: '.$e->getMessage());
+
+            return redirect()->back()->with('error', 'Import failed: '.$e->getMessage());
         }
     }
 
@@ -382,7 +383,7 @@ class FacultyAttendanceController extends Controller
             'card_number' => 'nullable|string|max:50',
             'privilege' => 'required|integer',
             'password' => 'nullable|string|max:20',
-            'status' => 'nullable|integer'
+            'status' => 'nullable|integer',
         ]);
 
         try {
@@ -396,13 +397,13 @@ class FacultyAttendanceController extends Controller
                     'password' => $request->password,
                     'status' => $request->status ?? 0,
                     'updated_at' => now(),
-                    'created_at' => now()
+                    'created_at' => now(),
                 ]
             );
 
-            return redirect()->back()->with('success', "Biometric user saved successfully!");
+            return redirect()->back()->with('success', 'Biometric user saved successfully!');
         } catch (\Throwable $e) {
-            return redirect()->back()->with('error', "Failed to save user: " . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to save user: '.$e->getMessage());
         }
     }
 
@@ -413,9 +414,10 @@ class FacultyAttendanceController extends Controller
     {
         try {
             DB::table('zk_users')->where('employee_id', $id)->delete();
-            return redirect()->back()->with('success', "Biometric user deleted successfully!");
+
+            return redirect()->back()->with('success', 'Biometric user deleted successfully!');
         } catch (\Throwable $e) {
-            return redirect()->back()->with('error', "Failed to delete user: " . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to delete user: '.$e->getMessage());
         }
     }
 
@@ -428,7 +430,7 @@ class FacultyAttendanceController extends Controller
             $users = DB::table('zk_users')
                 ->where('status', 0)
                 ->get()
-                ->map(fn($u) => (array)$u)
+                ->map(fn ($u) => (array) $u)
                 ->toArray();
             $binary = $this->parser->compileUsers($users);
 
@@ -437,7 +439,7 @@ class FacultyAttendanceController extends Controller
                 ->header('Content-Disposition', 'attachment; filename="user.dat"')
                 ->header('Content-Length', strlen($binary));
         } catch (\Throwable $e) {
-            return redirect()->back()->with('error', "Failed to download user.dat: " . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to download user.dat: '.$e->getMessage());
         }
     }
 
@@ -475,7 +477,7 @@ class FacultyAttendanceController extends Controller
 
             return response()->json(['success' => true, 'message' => 'Remarks updated successfully!']);
         } catch (\Throwable $e) {
-            return response()->json(['success' => false, 'message' => 'Failed to save remarks: ' . $e->getMessage()], 500);
+            return response()->json(['success' => false, 'message' => 'Failed to save remarks: '.$e->getMessage()], 500);
         }
     }
 }

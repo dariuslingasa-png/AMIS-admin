@@ -3,6 +3,7 @@
 namespace App\Services\Admin\Enrollment;
 
 use App\Models\EnrollmentApplicant;
+use App\Models\Payment;
 use App\Models\SchoolFee;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -17,24 +18,25 @@ class EnrollmentReviewService
         'draft' => 'Draft', 'ready_for_submission' => 'Ready for Submission', 'pending' => 'Pending',
         'submitted' => 'Submitted', 'under_review' => 'Under Review',
         'for_correction' => 'For Correction', 'pending_verification' => 'Pending Verification',
-        'approved' => 'Approved', 'rejected' => 'Rejected'
+        'approved' => 'Approved', 'rejected' => 'Rejected',
     ];
 
     public const STATUS_BADGES = [
         'draft' => 'badge-gray', 'ready_for_submission' => 'badge-blue', 'pending' => 'badge-yellow',
         'submitted' => 'badge-blue', 'under_review' => 'badge-purple',
         'for_correction' => 'badge-red', 'pending_verification' => 'badge-yellow',
-        'approved' => 'badge-green', 'rejected' => 'badge-red'
+        'approved' => 'badge-green', 'rejected' => 'badge-red',
     ];
 
     public const VERIFY_SECTIONS = ['student_info', 'documents', 'photo_2x2', 'report_card_affidavit'];
 
     public const PAYMENT_BADGES = ['pending' => 'badge-yellow', 'verified' => 'badge-green', 'rejected' => 'badge-red'];
+
     public const PAYMENT_LABELS = ['pending' => 'Pending', 'verified' => 'Verified', 'rejected' => 'Rejected'];
 
     public const REQUIRED_DOCUMENTS = [
         'photo_2x2' => '2x2 Photo', 'birth_cert' => 'Birth Certificate',
-        'report_card' => 'Report Card', 'affidavit' => 'Temporary Proof (Affidavit)'
+        'report_card' => 'Report Card', 'affidavit' => 'Temporary Proof (Affidavit)',
     ];
 
     public const REVIEWABLE_DOCUMENTS = ['photo_2x2', 'birth_cert', 'report_card', 'marriage_contract', 'medical_record', 'affidavit'];
@@ -50,6 +52,7 @@ class EnrollmentReviewService
                 $reqs['report_card'] = 'Report Card';
             }
         }
+
         return $reqs;
     }
 
@@ -67,6 +70,7 @@ class EnrollmentReviewService
                 return false;
             }
         }
+
         return true;
     }
 
@@ -74,31 +78,31 @@ class EnrollmentReviewService
     {
         $docStatuses = $applicant->document_statuses ?? [];
         $payment = $applicant->payment;
-        if (!$payment) {
+        if (! $payment) {
             $familyId = $applicant->family_application_id ?: $applicant->id;
-            $payment = \App\Models\Payment::whereHas('applicant', function ($query) use ($familyId) {
+            $payment = Payment::whereHas('applicant', function ($query) use ($familyId) {
                 $query->where(function ($q) use ($familyId) {
                     $q->where('family_application_id', $familyId)
-                      ->orWhere('id', $familyId);
+                        ->orWhere('id', $familyId);
                 });
             })
-            ->first();
+                ->first();
         }
         $hasPaymentProof = $payment && filled($payment->receipt_url);
         $paymentOk = $hasPaymentProof && $payment->status === 'verified';
         $allDocsOk = $this->areAllDocumentsApproved($applicant);
         $enrollmentFee = (float) config('services.school.enrollment_fee', 4000);
 
-        $familyChildren = \App\Models\EnrollmentApplicant::where(function ($query) use ($applicant) {
+        $familyChildren = EnrollmentApplicant::where(function ($query) use ($applicant) {
             if ($applicant->family_application_id) {
                 $query->where('family_application_id', $applicant->family_application_id);
             } else {
                 $query->where('user_id', $applicant->user_id);
             }
         })
-        ->whereNotIn('status', ['draft'])
-        ->orderBy('id')
-        ->get();
+            ->whereNotIn('status', ['draft'])
+            ->orderBy('id')
+            ->get();
 
         $totalFamilyChildren = $familyChildren->count();
         $expectedPayment = $enrollmentFee * $totalFamilyChildren;
@@ -276,7 +280,7 @@ class EnrollmentReviewService
                 if ($hasAffidavit) {
                     $docStatuses['affidavit'] = $action === 'approve' ? 'approved' : 'rejected';
                 }
-                if (!$hasReportCard && !$hasAffidavit) {
+                if (! $hasReportCard && ! $hasAffidavit) {
                     $docStatuses['report_card'] = $action === 'approve' ? 'approved' : 'rejected';
                 }
                 if ($action === 'reject') {
@@ -292,7 +296,7 @@ class EnrollmentReviewService
     {
         $existing = trim((string) $applicant->review_remarks);
         $applicant->update([
-            'review_remarks' => $existing ? $existing . "\n" . $remark : $remark,
+            'review_remarks' => $existing ? $existing."\n".$remark : $remark,
         ]);
     }
 
@@ -311,12 +315,14 @@ class EnrollmentReviewService
     private function studentAddress(EnrollmentApplicant $applicant): ?string
     {
         $addr = array_filter([$applicant->street_address, $applicant->city, $applicant->state_province, $applicant->postal_code, $applicant->country]);
+
         return count($addr) > 0 ? implode(', ', $addr) : $applicant->address;
     }
 
     private function homeAddress(EnrollmentApplicant $applicant): ?string
     {
         $addr = array_filter([$applicant->home_street_address, $applicant->home_city, $applicant->home_state_province, $applicant->home_postal_code]);
+
         return count($addr) > 0 ? implode(', ', $addr) : $applicant->home_address;
     }
 
@@ -328,13 +334,13 @@ class EnrollmentReviewService
     private function syncStudentAccountDiscount(?EnrollmentApplicant $applicant): void
     {
         $account = $applicant?->student?->account;
-        if (!$account) {
+        if (! $account) {
             return;
         }
 
         $discountAmount = min((float) $account->tuition_fee, (float) $applicant->discount_amount);
         $discountedTuition = max(0, (float) $account->tuition_fee - $discountAmount);
-        
+
         $billingMonthsCount = $account->monthlyBillings()->count() ?: 9;
 
         if ($billingMonthsCount === 10) {
@@ -367,14 +373,14 @@ class EnrollmentReviewService
         } else {
             // New 9-month system logic
             $gross = $discountedTuition + (float) $account->miscellaneous_fee + (float) $account->books_fee;
-            
+
             // Total balance under 9-month system is the GROSS total
             $totalBalance = $gross;
-            
+
             // Recalculate remaining balance
             $paid = $account->payments()->where('status', 'verified')->sum('amount');
             $remaining = max(0, $totalBalance - $paid);
-            
+
             // Monthly tuition is (gross - enrollment_fee_paid) / 9
             $monthlyTuition = round(($gross - (float) $account->enrollment_fee_paid) / 9, 2);
 

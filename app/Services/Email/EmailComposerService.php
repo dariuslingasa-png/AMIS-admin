@@ -3,7 +3,6 @@
 namespace App\Services\Email;
 
 use App\Models\BulkEmailCampaign;
-use App\Models\EmailLog;
 use App\Models\EmailTemplate;
 use App\Models\EnrollmentApplicant;
 use App\Models\Student;
@@ -40,7 +39,7 @@ class EmailComposerService
                 foreach ($students as $st) {
                     $e = $st->school_email ?? $st->ms_email ?? $st->email;
                     if (filled($e) && filter_var($e, FILTER_VALIDATE_EMAIL)) {
-                        $name = trim(($st->first_name ?? '') . ' ' . ($st->last_name ?? '')) ?: ($st->full_name ?? 'Student');
+                        $name = trim(($st->first_name ?? '').' '.($st->last_name ?? '')) ?: ($st->full_name ?? 'Student');
                         $emails[$e] = [
                             'email' => $e,
                             'name' => $name,
@@ -53,7 +52,7 @@ class EmailComposerService
 
             case 'faculty':
                 $facultyUsers = User::whereIn('role', ['teacher', 'faculty', 'instructor', 'adviser'])
-                                    ->whereNotNull('email')->get();
+                    ->whereNotNull('email')->get();
                 foreach ($facultyUsers as $u) {
                     if (filter_var($u->email, FILTER_VALIDATE_EMAIL)) {
                         $emails[$u->email] = [
@@ -67,7 +66,7 @@ class EmailComposerService
 
             case 'staff':
                 $staffUsers = User::whereIn('role', ['staff', 'admin', 'super_admin', 'registrar', 'finance'])
-                                  ->whereNotNull('email')->get();
+                    ->whereNotNull('email')->get();
                 foreach ($staffUsers as $u) {
                     if (filter_var($u->email, FILTER_VALIDATE_EMAIL)) {
                         $emails[$u->email] = [
@@ -82,15 +81,15 @@ class EmailComposerService
             case 'parents':
                 if (Schema::hasTable('enrollment_applicants')) {
                     $applicants = EnrollmentApplicant::whereNotNull('guardian_email')
-                                                      ->orWhereNotNull('father_email')
-                                                      ->orWhereNotNull('mother_email')->get();
+                        ->orWhereNotNull('father_email')
+                        ->orWhereNotNull('mother_email')->get();
                     foreach ($applicants as $app) {
                         $pEmail = $app->guardian_email ?: ($app->father_email ?: $app->mother_email);
                         if (filled($pEmail) && filter_var($pEmail, FILTER_VALIDATE_EMAIL)) {
                             $emails[$pEmail] = [
                                 'email' => $pEmail,
                                 'name' => $app->guardian_name ?: 'Parent / Guardian',
-                                'student_name' => trim($app->first_name . ' ' . $app->last_name),
+                                'student_name' => trim($app->first_name.' '.$app->last_name),
                             ];
                         }
                     }
@@ -105,7 +104,7 @@ class EmailComposerService
                         if (filled($e) && filter_var($e, FILTER_VALIDATE_EMAIL)) {
                             $emails[$e] = [
                                 'email' => $e,
-                                'name' => trim(($st->first_name ?? '') . ' ' . ($st->last_name ?? '')) ?: 'Alumni',
+                                'name' => trim(($st->first_name ?? '').' '.($st->last_name ?? '')) ?: 'Alumni',
                             ];
                         }
                     }
@@ -164,7 +163,7 @@ class EmailComposerService
         $validatedPaths = [];
 
         foreach ($files as $file) {
-            if (!($file instanceof UploadedFile) || !$file->isValid()) {
+            if (! ($file instanceof UploadedFile) || ! $file->isValid()) {
                 continue;
             }
 
@@ -181,8 +180,8 @@ class EmailComposerService
             }
 
             // Store validated attachment in storage/app/public/attachments/
-            $path = $file->storeAs('attachments', time() . '_' . Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) . '.' . $ext, 'public');
-            $validatedPaths[] = storage_path('app/public/' . $path);
+            $path = $file->storeAs('attachments', time().'_'.Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)).'.'.$ext, 'public');
+            $validatedPaths[] = storage_path('app/public/'.$path);
         }
 
         return $validatedPaths;
@@ -193,7 +192,7 @@ class EmailComposerService
      */
     public function seedDefaultTemplates(): void
     {
-        if (!Schema::hasTable('email_templates') || EmailTemplate::count() >= 15) {
+        if (! Schema::hasTable('email_templates') || EmailTemplate::count() >= 15) {
             return;
         }
 

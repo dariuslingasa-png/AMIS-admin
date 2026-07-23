@@ -42,8 +42,8 @@ class StudentRosterController extends Controller
         });
 
         $secName = $sectionId ? (Section::find($sectionId)->name ?? "Section #{$sectionId}") : 'Unassigned';
-        $studentName = $student->applicant ? trim($student->applicant->first_name . ' ' . $student->applicant->last_name) : $student->student_number;
-        
+        $studentName = $student->applicant ? trim($student->applicant->first_name.' '.$student->applicant->last_name) : $student->student_number;
+
         AdminAuditLog::record(
             event: 'update_student_section',
             successful: true,
@@ -60,7 +60,7 @@ class StudentRosterController extends Controller
 
         if ($student->ms_user_id) {
             try {
-                $graph = new MicrosoftGraphService();
+                $graph = new MicrosoftGraphService;
                 $service = new MsTeamsEnrollmentService($graph);
 
                 if ($oldSectionId && $oldSectionId != $sectionId) {
@@ -79,7 +79,7 @@ class StudentRosterController extends Controller
                                 $graph->removeTeamMember($oldSection->ms_team_id, $membershipId);
                             }
                         } catch (\Exception $removeEx) {
-                            Log::warning("Could not remove student {$student->id} from old Team: " . $removeEx->getMessage());
+                            Log::warning("Could not remove student {$student->id} from old Team: ".$removeEx->getMessage());
                         }
                     }
                 }
@@ -95,8 +95,9 @@ class StudentRosterController extends Controller
                     app(EnrollmentApprovalService::class)->backfillMicrosoftPhoto($student->applicant);
                 }
             } catch (\Exception $e) {
-                Log::warning("Microsoft Teams/Photo sync during section update failed: " . $e->getMessage());
-                return back()->with('success', 'Student section updated in portal database, but M365 sync failed: ' . $e->getMessage());
+                Log::warning('Microsoft Teams/Photo sync during section update failed: '.$e->getMessage());
+
+                return back()->with('success', 'Student section updated in portal database, but M365 sync failed: '.$e->getMessage());
             }
         }
 

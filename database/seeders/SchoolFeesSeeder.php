@@ -34,6 +34,6 @@ class SchoolFeesSeeder extends Seeder
             );
         }
 
-        $this->command->info('✓ School fees seeded for SY 2026-2027 (' . count($fees) . ' grade levels)');
+        $this->command->info('✓ School fees seeded for SY 2026-2027 ('.count($fees).' grade levels)');
     }
 }

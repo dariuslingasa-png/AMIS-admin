@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Models\EnrollmentApplicant;
 use App\Models\ClassAdvisoryAssignment;
+use App\Models\EnrollmentApplicant;
 use App\Models\Role;
 use App\Models\Section;
 use App\Models\Student;

@@ -2,8 +2,6 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class ZKTecoParser
@@ -14,8 +12,8 @@ class ZKTecoParser
      */
     public function parseAttendance(string $path): array
     {
-        if (!file_exists($path)) {
-            throw new \Exception("File not found: " . $path);
+        if (! file_exists($path)) {
+            throw new \Exception('File not found: '.$path);
         }
 
         $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
@@ -25,12 +23,12 @@ class ZKTecoParser
             $parts = preg_split('/\s+/', trim($line));
             if (count($parts) >= 6) {
                 $logs[] = [
-                    'employee_id' => (int)$parts[0],
-                    'datetime' => $parts[1] . ' ' . $parts[2],
-                    'verify_mode' => (int)$parts[3],
-                    'in_out_mode' => (int)$parts[4],
-                    'work_code' => (int)$parts[5],
-                    'reserved' => (int)$parts[6],
+                    'employee_id' => (int) $parts[0],
+                    'datetime' => $parts[1].' '.$parts[2],
+                    'verify_mode' => (int) $parts[3],
+                    'in_out_mode' => (int) $parts[4],
+                    'work_code' => (int) $parts[5],
+                    'reserved' => (int) $parts[6],
                 ];
             }
         }
@@ -44,8 +42,8 @@ class ZKTecoParser
      */
     public function parseUsers(string $path): array
     {
-        if (!file_exists($path)) {
-            throw new \Exception("File not found: " . $path);
+        if (! file_exists($path)) {
+            throw new \Exception('File not found: '.$path);
         }
 
         $data = file_get_contents($path);
@@ -59,7 +57,7 @@ class ZKTecoParser
 
         while ($offset + $recordSize <= $length) {
             $chunk = substr($data, $offset, $recordSize);
-            
+
             // Unpack according to structure:
             // v PIN (2 bytes)
             // C Privilege (1 byte)
@@ -73,21 +71,21 @@ class ZKTecoParser
 
             if ($unpacked) {
                 $employeeIdStr = trim($unpacked['PIN2']);
-                $employeeId = $employeeIdStr !== '' ? (int)$employeeIdStr : (int)$unpacked['PIN'];
-                
+                $employeeId = $employeeIdStr !== '' ? (int) $employeeIdStr : (int) $unpacked['PIN'];
+
                 // Clean strings from null characters
-                $name = trim(str_replace("\0", "", $unpacked['Name']));
-                $password = trim(str_replace("\0", "", $unpacked['Password']));
-                
+                $name = trim(str_replace("\0", '', $unpacked['Name']));
+                $password = trim(str_replace("\0", '', $unpacked['Password']));
+
                 // Build card number from C4 card bytes
                 $cardNum = ($unpacked['Card1'] | ($unpacked['Card2'] << 8) | ($unpacked['Card3'] << 16) | ($unpacked['Card4'] << 24));
 
                 $users[] = [
                     'employee_id' => $employeeId,
-                    'name' => $name ?: 'Employee ' . $employeeId,
-                    'department_id' => (int)$unpacked['Group'], // Default department maps to group/department index
-                    'card_number' => $cardNum ? (string)$cardNum : null,
-                    'privilege' => (int)$unpacked['Privilege'],
+                    'name' => $name ?: 'Employee '.$employeeId,
+                    'department_id' => (int) $unpacked['Group'], // Default department maps to group/department index
+                    'card_number' => $cardNum ? (string) $cardNum : null,
+                    'privilege' => (int) $unpacked['Privilege'],
                     'password' => $password ?: null,
                     'status' => 0, // default status active
                     'raw_bytes' => bin2hex($chunk),
@@ -106,25 +104,26 @@ class ZKTecoParser
      */
     public function parseDepartments(string $path): array
     {
-        if (!file_exists($path)) {
-            throw new \Exception("File not found: " . $path);
+        if (! file_exists($path)) {
+            throw new \Exception('File not found: '.$path);
         }
 
         $data = file_get_contents($path);
-        
+
         // Simple heuristic: if it contains typical text patterns, parse as tab/space separated text
-        if (!preg_match('/[\x00-\x08\x0B\x0C\x0E-\x1F]/', substr($data, 0, 500))) {
+        if (! preg_match('/[\x00-\x08\x0B\x0C\x0E-\x1F]/', substr($data, 0, 500))) {
             $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
             $departments = [];
             foreach ($lines as $line) {
                 $parts = preg_split('/\s+/', trim($line), 2);
                 if (count($parts) >= 2) {
                     $departments[] = [
-                        'id' => (int)$parts[0],
+                        'id' => (int) $parts[0],
                         'name' => trim($parts[1]),
                     ];
                 }
             }
+
             return $departments;
         }
 
@@ -138,11 +137,11 @@ class ZKTecoParser
             $chunk = substr($data, $offset, $recordSize);
             $unpacked = unpack('vID/a30Name', $chunk);
             if ($unpacked) {
-                $name = trim(str_replace("\0", "", $unpacked['Name']));
+                $name = trim(str_replace("\0", '', $unpacked['Name']));
                 if ($unpacked['ID'] > 0 || $name !== '') {
                     $departments[] = [
-                        'id' => (int)$unpacked['ID'],
-                        'name' => $name ?: 'Department ' . $unpacked['ID'],
+                        'id' => (int) $unpacked['ID'],
+                        'name' => $name ?: 'Department '.$unpacked['ID'],
                     ];
                 }
             }
@@ -157,8 +156,8 @@ class ZKTecoParser
      */
     public function parseFaceTemplates(string $path): array
     {
-        if (!file_exists($path)) {
-            throw new \Exception("File not found: " . $path);
+        if (! file_exists($path)) {
+            throw new \Exception('File not found: '.$path);
         }
 
         $data = file_get_contents($path);
@@ -177,10 +176,14 @@ class ZKTecoParser
             }
 
             while ($offset < $length) {
-                if ($length - $offset < 6) break;
+                if ($length - $offset < 6) {
+                    break;
+                }
 
                 $size = unpack('v', substr($data, $offset, 2))[1];
-                if ($size <= 0 || $size > 50000) break;
+                if ($size <= 0 || $size > 50000) {
+                    break;
+                }
 
                 if ($is8Byte && ($length - $offset >= 8)) {
                     $header = unpack('vSize/VPIN/CIndex/CValid', substr($data, $offset, 8));
@@ -188,9 +191,10 @@ class ZKTecoParser
                     $faceIndex = $header['Index'];
                     $templateLength = $size;
                     $recordSize = 8 + $size;
-                    
+
                     if ($offset + $recordSize > $length) {
                         $is8Byte = false;
+
                         continue;
                     }
                 } else {
@@ -204,7 +208,7 @@ class ZKTecoParser
                 $results[] = [
                     'user_id' => $userId,
                     'face_index' => $faceIndex,
-                    'template_length' => $templateLength
+                    'template_length' => $templateLength,
                 ];
 
                 $offset += $recordSize;
@@ -219,8 +223,8 @@ class ZKTecoParser
      */
     public function parseFingerprintTemplates(string $path): array
     {
-        if (!file_exists($path)) {
-            throw new \Exception("File not found: " . $path);
+        if (! file_exists($path)) {
+            throw new \Exception('File not found: '.$path);
         }
 
         $data = file_get_contents($path);
@@ -230,10 +234,14 @@ class ZKTecoParser
 
         if ($length >= 6) {
             while ($offset < $length) {
-                if ($length - $offset < 6) break;
+                if ($length - $offset < 6) {
+                    break;
+                }
 
                 $size = unpack('v', substr($data, $offset, 2))[1];
-                if ($size <= 0 || $size > 50000) break;
+                if ($size <= 0 || $size > 50000) {
+                    break;
+                }
 
                 // Try 6-byte header
                 $header = unpack('vSize/vPIN/CFingerID/CValid', substr($data, $offset, 6));
@@ -257,7 +265,7 @@ class ZKTecoParser
                 $results[] = [
                     'user_id' => $userId,
                     'finger_index' => $fingerIndex,
-                    'template_size' => $templateSize
+                    'template_size' => $templateSize,
                 ];
 
                 $offset += $recordSize;
@@ -301,21 +309,21 @@ class ZKTecoParser
 
         foreach ($groupedLogs as $empId => $dates) {
             $user = $userMap[$empId] ?? null;
-            $name = $user ? $user['name'] : 'Employee ' . $empId;
+            $name = $user ? $user['name'] : 'Employee '.$empId;
             $deptName = $user ? ($deptMap[$user['department_id']] ?? 'Main') : 'Main';
 
             foreach ($dates as $dateStr => $times) {
                 // Sort times ascending
                 sort($times);
-                
+
                 $timeInStr = $times[0];
                 $timeOutStr = count($times) > 1 ? end($times) : null;
 
-                $timeInDt = new \DateTime($dateStr . ' ' . $timeInStr);
-                $timeOutDt = $timeOutStr ? new \DateTime($dateStr . ' ' . $timeOutStr) : null;
+                $timeInDt = new \DateTime($dateStr.' '.$timeInStr);
+                $timeOutDt = $timeOutStr ? new \DateTime($dateStr.' '.$timeOutStr) : null;
 
-                $schedInDt = new \DateTime($dateStr . ' ' . $timeInLimit);
-                $schedOutDt = new \DateTime($dateStr . ' ' . $timeOutLimit);
+                $schedInDt = new \DateTime($dateStr.' '.$timeInLimit);
+                $schedOutDt = new \DateTime($dateStr.' '.$timeOutLimit);
 
                 // Calculate Late (minutes)
                 $lateMinutes = 0;
@@ -337,7 +345,7 @@ class ZKTecoParser
                 }
 
                 // Determine Remarks
-                if (!$timeOutDt) {
+                if (! $timeOutDt) {
                     $remarksStr = 'Missing Time Out';
                 } else {
                     $timeOutTimeStr = $timeOutDt->format('H:i:s');
@@ -392,15 +400,18 @@ class ZKTecoParser
                     'total_hours' => $totalHours,
                     'total_hours_formatted' => $totalHoursFormatted,
                     'status' => $status,
-                    'remarks' => $remarksStr
+                    'remarks' => $remarksStr,
                 ];
             }
         }
 
         // Sort report by date desc, then name asc
-        usort($report, function($a, $b) {
+        usort($report, function ($a, $b) {
             $dateCmp = strcmp($b['date'], $a['date']);
-            if ($dateCmp !== 0) return $dateCmp;
+            if ($dateCmp !== 0) {
+                return $dateCmp;
+            }
+
             return strcmp($a['name'], $b['name']);
         });
 
@@ -410,11 +421,12 @@ class ZKTecoParser
     private function formatDuration(int $minutes): string
     {
         if ($minutes < 60) {
-            return $minutes . 'm';
+            return $minutes.'m';
         }
         $hours = floor($minutes / 60);
         $mins = $minutes % 60;
-        return $hours . 'h ' . $mins . 'm';
+
+        return $hours.'h '.$mins.'m';
     }
 
     /**
@@ -424,12 +436,12 @@ class ZKTecoParser
     {
         $binary = '';
         foreach ($users as $u) {
-            $empId = (int)$u['employee_id'];
-            $privilege = (int)($u['privilege'] ?? 0);
-            $password = (string)($u['password'] ?? '');
-            $name = (string)($u['name'] ?? '');
-            $cardInt = (int)($u['card_number'] ?? 0);
-            $deptId = (int)($u['department_id'] ?? 0);
+            $empId = (int) $u['employee_id'];
+            $privilege = (int) ($u['privilege'] ?? 0);
+            $password = (string) ($u['password'] ?? '');
+            $name = (string) ($u['name'] ?? '');
+            $cardInt = (int) ($u['card_number'] ?? 0);
+            $deptId = (int) ($u['department_id'] ?? 0);
 
             $card1 = $cardInt & 0xFF;
             $card2 = ($cardInt >> 8) & 0xFF;
@@ -439,7 +451,7 @@ class ZKTecoParser
             // Pad password to 8 bytes and name to 24 bytes with null characters
             $paddedPassword = str_pad(substr($password, 0, 8), 8, "\0");
             $paddedName = str_pad(substr($name, 0, 24), 24, "\0");
-            $paddedPin2 = str_pad((string)$empId, 24, "\0");
+            $paddedPin2 = str_pad((string) $empId, 24, "\0");
 
             $binary .= pack(
                 'vCa8a24C4Cv4a24',
@@ -453,6 +465,7 @@ class ZKTecoParser
                 $paddedPin2
             );
         }
+
         return $binary;
     }
 }

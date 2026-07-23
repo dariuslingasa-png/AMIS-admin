@@ -11,7 +11,7 @@ class Permission extends Model
         'name',
         'slug',
         'description',
-        'category'
+        'category',
     ];
 
     public function roles(): BelongsToMany

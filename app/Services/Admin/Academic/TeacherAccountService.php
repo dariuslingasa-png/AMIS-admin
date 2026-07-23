@@ -13,7 +13,7 @@ class TeacherAccountService
 {
     public function generatePassword(): string
     {
-        return 'Amis@' . strtoupper(Str::random(5)) . rand(10, 99);
+        return 'Amis@'.strtoupper(Str::random(5)).rand(10, 99);
     }
 
     public function syncCreatedTeacher(array $teacher, string $password): void
@@ -73,7 +73,7 @@ class TeacherAccountService
         ]);
 
         try {
-            $graph = new MicrosoftGraphService();
+            $graph = new MicrosoftGraphService;
             if ($graph->userExists($email)) {
                 $graph->resetPassword($email, $password);
                 AdminAuditLog::record('password_reset_resend', true, "Resent and reset Microsoft account password for teacher {$email}", [
@@ -81,7 +81,7 @@ class TeacherAccountService
                 ]);
             }
         } catch (\Throwable $exception) {
-            Log::error("Teacher password reset/resend failed for {$email}: " . $exception->getMessage());
+            Log::error("Teacher password reset/resend failed for {$email}: ".$exception->getMessage());
         }
 
         return ['email' => $email, 'password' => $password];
@@ -103,7 +103,7 @@ class TeacherAccountService
         $selectedSkuId = $license === 'faculty_a1' ? config('services.microsoft.faculty_sku_id') : null;
 
         try {
-            $graph = new MicrosoftGraphService();
+            $graph = new MicrosoftGraphService;
             $this->disableOldMicrosoftAccount($graph, $oldEmail, $email, $facultySkuIds);
             $msUserId = $this->ensureMicrosoftUser($graph, $teacher, $password);
 
@@ -117,7 +117,7 @@ class TeacherAccountService
                 $graph->assignLicense($msUserId, [], $facultySkuIds);
             }
         } catch (\Throwable $exception) {
-            Log::error("Teacher Microsoft sync failed for {$email}: " . $exception->getMessage());
+            Log::error("Teacher Microsoft sync failed for {$email}: ".$exception->getMessage());
         }
     }
 

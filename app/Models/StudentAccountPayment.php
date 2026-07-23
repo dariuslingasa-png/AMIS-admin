@@ -15,8 +15,8 @@ class StudentAccountPayment extends Model
     ];
 
     protected $casts = [
-        'amount'      => 'decimal:2',
-        'paid_at'     => 'datetime',
+        'amount' => 'decimal:2',
+        'paid_at' => 'datetime',
         'verified_at' => 'datetime',
     ];
 

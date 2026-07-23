@@ -1,6 +1,7 @@
 <?php
-require __DIR__ . '/../vendor/autoload.php';
-$app = require __DIR__ . '/../bootstrap/app.php';
+
+require __DIR__.'/../vendor/autoload.php';
+$app = require __DIR__.'/../bootstrap/app.php';
 $app->make('Illuminate\Contracts\Console\Kernel')->bootstrap();
 
 use App\Models\Student;
@@ -11,7 +12,7 @@ use Illuminate\Support\Facades\Hash;
 $email = '260399szafriyah@amis.edu.ph';
 $student = Student::where('school_email', $email)->first();
 
-if (!$student) {
+if (! $student) {
     echo "Student not found!\n";
     exit(1);
 }
@@ -38,13 +39,13 @@ if ($user) {
 // 2. Update Microsoft Graph (since Microsoft AD requires >= 8 chars, we set it to amis12345)
 $msPassword = 'amis12345';
 try {
-    $graph = new MicrosoftGraphService();
+    $graph = new MicrosoftGraphService;
     $response = $graph->resetPassword($email, $msPassword);
     if ($response->successful()) {
         echo "Microsoft Graph password successfully reset to: {$msPassword}\n";
     } else {
-        echo "Microsoft Graph reset failed: " . ($response->json()['error']['message'] ?? 'Unknown Microsoft API error') . "\n";
+        echo 'Microsoft Graph reset failed: '.($response->json()['error']['message'] ?? 'Unknown Microsoft API error')."\n";
     }
-} catch (\Throwable $e) {
-    echo "Microsoft Graph error: " . $e->getMessage() . "\n";
+} catch (Throwable $e) {
+    echo 'Microsoft Graph error: '.$e->getMessage()."\n";
 }

@@ -7,10 +7,10 @@ use App\Models\Payment;
 use App\Models\Student;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Pagination\LengthAwarePaginator as Paginator;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Pagination\LengthAwarePaginator as Paginator;
 use Illuminate\Support\Collection as SupportCollection;
+use Illuminate\Support\Facades\Schema;
 
 class ApplicationQuery
 {
@@ -192,6 +192,7 @@ class ApplicationQuery
         }, SORT_REGULAR, $desc)->values();
 
         $page = Paginator::resolveCurrentPage();
+
         return new Paginator(
             $families->forPage($page, $perPage),
             $families->count(),
@@ -308,6 +309,7 @@ class ApplicationQuery
 
         if (empty($visibleGrades)) {
             $query->whereRaw('1 = 0');
+
             return;
         }
 
@@ -316,10 +318,12 @@ class ApplicationQuery
 
             if (! in_array($requestedGrade, $visibleGrades, true)) {
                 $query->whereRaw('1 = 0');
+
                 return;
             }
 
             $query->where($column, $requestedGrade);
+
             return;
         }
 
@@ -336,7 +340,7 @@ class ApplicationQuery
         $rejected = $children->where('status', 'rejected')->count();
 
         // Fetch family payments directly
-        $familyPayments = \App\Models\Payment::where(function ($query) use ($children, $representative) {
+        $familyPayments = Payment::where(function ($query) use ($children, $representative) {
             $query->whereIn('enrollment_applicant_id', $children->pluck('id'));
             if ($representative->user_id) {
                 $query->orWhere('user_id', $representative->user_id);
@@ -377,6 +381,7 @@ class ApplicationQuery
         }
 
         $phone = preg_replace('/\D+/', '', (string) $applicant->parent_mobile);
+
         return $phone !== '' ? 'phone:'.$phone : 'applicant:'.$applicant->id;
     }
 
@@ -384,6 +389,7 @@ class ApplicationQuery
     {
         $mother = trim(($applicant->mother_first_name ?? '').' '.($applicant->mother_middle_name ?? '').' '.($applicant->mother_last_name ?? ''));
         $father = trim(($applicant->father_first_name ?? '').' '.($applicant->father_middle_name ?? '').' '.($applicant->father_last_name ?? ''));
+
         return $mother ?: ($father ?: 'Parent / Guardian');
     }
 
@@ -404,6 +410,7 @@ class ApplicationQuery
         if ($statuses->contains('pending')) {
             return 'Pending';
         }
+
         return 'No Payment';
     }
 }

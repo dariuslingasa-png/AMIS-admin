@@ -2,6 +2,9 @@
 
 namespace App\Console\Commands;
 
+use App\Models\MsTeamChannel;
+use App\Models\Section;
+use App\Models\SectionSubject;
 use App\Services\MicrosoftGraphService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
@@ -29,18 +32,19 @@ class RemovePrivateChannelMembers extends Command
                 $this->info('--- DRY RUN: Channel deletions will be simulated ---');
             }
         } else {
-            $msg = $deleteChannels 
+            $msg = $deleteChannels
                 ? 'Are you sure you want to delete all student members AND permanently delete all private channels?'
                 : 'Are you sure you want to delete all student members from private channels?';
 
-            if (!$this->confirm($msg)) {
+            if (! $this->confirm($msg)) {
                 $this->info('Operation cancelled.');
+
                 return self::FAILURE;
             }
         }
 
         // Fetch sections that have a Team ID
-        $sectionsQuery = \App\Models\Section::whereNotNull('ms_team_id');
+        $sectionsQuery = Section::whereNotNull('ms_team_id');
         if ($teamIdOption) {
             $sectionsQuery->where('ms_team_id', $teamIdOption);
         }
@@ -48,10 +52,11 @@ class RemovePrivateChannelMembers extends Command
 
         if ($sections->isEmpty()) {
             $this->warn('No sections found with MS Team ID matching criteria.');
+
             return self::SUCCESS;
         }
 
-        $this->info('Checking ' . $sections->count() . ' team(s)...');
+        $this->info('Checking '.$sections->count().' team(s)...');
 
         $totalFound = 0;
         $totalRemoved = 0;
@@ -68,8 +73,9 @@ class RemovePrivateChannelMembers extends Command
             try {
                 $channels = $graph->listChannels($teamId);
             } catch (\Throwable $e) {
-                $this->error("  ✗ Failed to fetch channels: " . $e->getMessage());
-                Log::error("Failed to fetch channels for team {$teamId}: " . $e->getMessage());
+                $this->error('  ✗ Failed to fetch channels: '.$e->getMessage());
+                Log::error("Failed to fetch channels for team {$teamId}: ".$e->getMessage());
+
                 continue;
             }
 
@@ -79,11 +85,13 @@ class RemovePrivateChannelMembers extends Command
                 if ($channelIdOption) {
                     return $isPrivate && $ch['id'] === $channelIdOption;
                 }
+
                 return $isPrivate;
             });
 
             if ($privateChannels->isEmpty()) {
-                $this->line("  No private channels found in this team.");
+                $this->line('  No private channels found in this team.');
+
                 continue;
             }
 
@@ -96,8 +104,9 @@ class RemovePrivateChannelMembers extends Command
                 try {
                     $members = $graph->listChannelMembers($teamId, $channelId);
                 } catch (\Throwable $e) {
-                    $this->error("    ✗ Failed to list members: " . $e->getMessage());
-                    Log::error("Failed to list members for channel {$channelId} in team {$teamId}: " . $e->getMessage());
+                    $this->error('    ✗ Failed to list members: '.$e->getMessage());
+                    Log::error("Failed to list members for channel {$channelId} in team {$teamId}: ".$e->getMessage());
+
                     continue;
                 }
 
@@ -110,6 +119,7 @@ class RemovePrivateChannelMembers extends Command
                     // Only remove members that are not owners
                     if (in_array('owner', $roles)) {
                         $this->line("    - Keep Owner: {$displayName} ({$email})");
+
                         continue;
                     }
 
@@ -121,11 +131,11 @@ class RemovePrivateChannelMembers extends Command
                         try {
                             $graph->removeChannelMember($teamId, $channelId, $membershipId);
                             $totalRemoved++;
-                            $this->info("      ✓ Successfully removed");
+                            $this->info('      ✓ Successfully removed');
                         } catch (\Throwable $e) {
                             $totalFailed++;
-                            $this->error("      ✗ Failed to remove: " . $e->getMessage());
-                            Log::error("Failed to remove member {$membershipId} from channel {$channelId} in team {$teamId}: " . $e->getMessage());
+                            $this->error('      ✗ Failed to remove: '.$e->getMessage());
+                            Log::error("Failed to remove member {$membershipId} from channel {$channelId} in team {$teamId}: ".$e->getMessage());
                         }
                     }
                 }
@@ -141,14 +151,14 @@ class RemovePrivateChannelMembers extends Command
                             $channelsDeleted++;
 
                             // Clean DB references
-                            \App\Models\SectionSubject::where('ms_channel_id', $channelId)->update(['ms_channel_id' => null]);
-                            \App\Models\MsTeamChannel::where('ms_channel_id', $channelId)->delete();
+                            SectionSubject::where('ms_channel_id', $channelId)->update(['ms_channel_id' => null]);
+                            MsTeamChannel::where('ms_channel_id', $channelId)->delete();
 
-                            $this->info("      ✓ Channel successfully deleted and database reference cleared");
+                            $this->info('      ✓ Channel successfully deleted and database reference cleared');
                         } catch (\Throwable $e) {
                             $channelsFailed++;
-                            $this->error("      ✗ Failed to delete channel: " . $e->getMessage());
-                            Log::error("Failed to delete channel {$channelId} from team {$teamId}: " . $e->getMessage());
+                            $this->error('      ✗ Failed to delete channel: '.$e->getMessage());
+                            Log::error("Failed to delete channel {$channelId} from team {$teamId}: ".$e->getMessage());
                         }
                     }
                 }
@@ -159,10 +169,10 @@ class RemovePrivateChannelMembers extends Command
         if ($dryRun) {
             $this->info("Dry run completed. Found {$totalFound} members that would be removed.");
             if ($deleteChannels) {
-                $this->info("Dry run: Would attempt to delete all matching private channels.");
+                $this->info('Dry run: Would attempt to delete all matching private channels.');
             }
         } else {
-            $this->info("Operation completed.");
+            $this->info('Operation completed.');
             $this->info("Members: Removed {$totalRemoved} / {$totalFound} members. Failed: {$totalFailed}");
             if ($deleteChannels) {
                 $this->info("Channels: Deleted {$channelsDeleted} channels. Failed: {$channelsFailed}");

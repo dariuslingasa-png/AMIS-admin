@@ -128,7 +128,7 @@ class FamilyAccountsTest extends TestCase
         $response->assertSeeText('Family Accounts');
         $response->assertSeeText('PARENT LINGASA');
         $response->assertSeeText('parent.lingasa@gmail.com');
-        
+
         // Assert student links are rendered
         $response->assertSeeText('FATIMA LINGASA');
         $response->assertSeeText('AHMAD LINGASA');

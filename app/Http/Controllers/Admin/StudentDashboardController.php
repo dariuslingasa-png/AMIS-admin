@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Section;
 use App\Models\Student;
-
+use App\Models\StudentSection;
 use Illuminate\Support\Facades\DB;
 
 class StudentDashboardController extends Controller
@@ -16,13 +16,13 @@ class StudentDashboardController extends Controller
 
         $f2fStudents = Student::whereHas('applicant', function ($q) {
             $q->where('learning_mode', 'like', '%face-to-face%')
-              ->orWhere('learning_mode', 'like', '%f2f%')
-              ->orWhere('learning_mode', 'like', '%face_to_face%');
+                ->orWhere('learning_mode', 'like', '%f2f%')
+                ->orWhere('learning_mode', 'like', '%face_to_face%');
         })->count();
 
         $flexibleStudents = Student::whereHas('applicant', function ($q) {
             $q->where('learning_mode', 'like', '%flexible%')
-              ->orWhere('learning_mode', 'like', '%online%');
+                ->orWhere('learning_mode', 'like', '%online%');
         })->count();
 
         $msSynced = Student::whereNotNull('ms_user_id')->count();
@@ -34,7 +34,7 @@ class StudentDashboardController extends Controller
             'ms_synced' => $msSynced,
             'passwords_changed' => Student::whereNotNull('password_changed_at')->count(),
             'total_sections' => Section::count(),
-            'allocated_slots' => \App\Models\StudentSection::count(),
+            'allocated_slots' => StudentSection::count(),
         ];
 
         $sections = Section::with(['students.student.applicant'])->withCount('students')->get()->map(function ($section) {
@@ -46,6 +46,7 @@ class StudentDashboardController extends Controller
             $section->occupied = $section->students_count;
             $section->remaining = max(0, $section->capacity_limit - $section->occupied);
             $section->fill_rate = $section->capacity_limit > 0 ? min(100, round(($section->occupied / $section->capacity_limit) * 100)) : 0;
+
             return $section;
         });
 
@@ -77,21 +78,21 @@ class StudentDashboardController extends Controller
             'gender' => [
                 'labels' => ['Male', 'Female'],
                 'data' => [
-                    (int) Student::whereHas('applicant', fn($q) => $q->where('gender', 'male'))->count(),
-                    (int) Student::whereHas('applicant', fn($q) => $q->where('gender', 'female'))->count(),
-                ]
+                    (int) Student::whereHas('applicant', fn ($q) => $q->where('gender', 'male'))->count(),
+                    (int) Student::whereHas('applicant', fn ($q) => $q->where('gender', 'female'))->count(),
+                ],
             ],
             'mode' => [
                 'labels' => ['Face-to-Face', 'Flexible Learning'],
                 'data' => [
                     (int) $f2fStudents,
                     (int) $flexibleStudents,
-                ]
+                ],
             ],
             'gradeDistribution' => [
                 'labels' => $gradeCounts->pluck('grade_level')->toArray(),
-                'data' => $gradeCounts->map(fn($item) => (int) $item->count)->toArray(),
-            ]
+                'data' => $gradeCounts->map(fn ($item) => (int) $item->count)->toArray(),
+            ],
         ];
 
         return view('admin.students.dashboard', compact('stats', 'sections', 'f2fStats', 'flexibleStats', 'studentsCharts'));

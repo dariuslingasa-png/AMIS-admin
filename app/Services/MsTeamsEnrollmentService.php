@@ -19,14 +19,14 @@ class MsTeamsEnrollmentService
      */
     public function enrollStudent(Student $student): array
     {
-        if (!$student->ms_user_id) {
+        if (! $student->ms_user_id) {
             throw new \Exception("Student {$student->student_number} has no ms_user_id set.");
         }
 
-        $applicant    = $student->applicant;
-        $gender       = strtolower($applicant->gender ?? 'male');
+        $applicant = $student->applicant;
+        $gender = strtolower($applicant->gender ?? 'male');
         $learningMode = $applicant->learning_mode ?? 'Face-to-Face';
-        $results      = ['enrolled' => 0, 'failed' => 0, 'errors' => []];
+        $results = ['enrolled' => 0, 'failed' => 0, 'errors' => []];
 
         $isFlexible = str_contains(strtolower($learningMode), 'flexible') || str_contains(strtolower($learningMode), 'online');
         $shift = null;
@@ -47,16 +47,18 @@ class MsTeamsEnrollmentService
             ->where('shift', $shift)
             ->first();
 
-        if (!$section) {
+        if (! $section) {
             $results['failed']++;
             $results['errors'][] = "No matching section found for {$student->grade_level} ({$gender} · {$modeBase} · {$shift}). Please create it manually.";
             Log::warning("MsTeamsEnrollmentService: No section found for student {$student->student_number} ({$student->grade_level} · {$gender} · {$modeBase} · {$shift})");
+
             return $results;
         }
 
-        if (!$section->ms_team_id) {
+        if (! $section->ms_team_id) {
             $results['failed']++;
             $results['errors'][] = 'Section has no MS Team ID — retry via MS Teams management.';
+
             return $results;
         }
 
@@ -71,18 +73,20 @@ class MsTeamsEnrollmentService
 
             $results['enrolled']++;
         } catch (\Exception $e) {
-            Log::error("Failed to add {$student->student_number} to team {$section->ms_team_id}: " . $e->getMessage());
+            Log::error("Failed to add {$student->student_number} to team {$section->ms_team_id}: ".$e->getMessage());
             StudentSection::updateOrCreate(
                 ['student_id' => $student->id, 'section_id' => $section->id],
                 ['ms_status' => 'failed']
             );
             $results['failed']++;
-            $results['errors'][] = 'Add to team failed: ' . $e->getMessage();
+            $results['errors'][] = 'Add to team failed: '.$e->getMessage();
         }
 
         // Add student to all subject private channels
         foreach ($section->subjects as $subject) {
-            if (!$subject->ms_channel_id) continue;
+            if (! $subject->ms_channel_id) {
+                continue;
+            }
 
             try {
                 $this->graph->addChannelMember(
@@ -92,9 +96,9 @@ class MsTeamsEnrollmentService
                 );
                 $results['enrolled']++;
             } catch (\Exception $e) {
-                Log::error("Failed to add {$student->student_number} to channel [{$subject->subject_name}]: " . $e->getMessage());
+                Log::error("Failed to add {$student->student_number} to channel [{$subject->subject_name}]: ".$e->getMessage());
                 $results['failed']++;
-                $results['errors'][] = "Channel [{$subject->subject_name}]: " . $e->getMessage();
+                $results['errors'][] = "Channel [{$subject->subject_name}]: ".$e->getMessage();
             }
         }
 
@@ -104,5 +108,4 @@ class MsTeamsEnrollmentService
 
         return $results;
     }
-
 }

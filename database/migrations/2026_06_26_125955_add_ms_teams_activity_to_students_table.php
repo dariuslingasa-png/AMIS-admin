@@ -12,11 +12,11 @@ return new class extends Migration
             // Last time the student had any activity in the Teams app
             // (message sent, meeting joined, call made, file accessed, etc.)
             // Sourced from MS Graph: /reports/getTeamsUserActivityUserDetail
-            if (!Schema::hasColumn('students', 'ms_teams_last_activity_at')) {
+            if (! Schema::hasColumn('students', 'ms_teams_last_activity_at')) {
                 $table->timestamp('ms_teams_last_activity_at')->nullable()->after('ms_teams_enrolled_at');
             }
             // Total meetings joined ever (from Teams activity report)
-            if (!Schema::hasColumn('students', 'ms_teams_meetings_attended')) {
+            if (! Schema::hasColumn('students', 'ms_teams_meetings_attended')) {
                 $table->unsignedInteger('ms_teams_meetings_attended')->default(0)->after('ms_teams_last_activity_at');
             }
         });

@@ -49,7 +49,7 @@ class AdminOnly
 
         if (
             config('services.school.academic_maintenance', false)
-            && !$user->hasRole(['super_admin', 'admin'])
+            && ! $user->hasRole(['super_admin', 'admin'])
             && str_starts_with((string) $routeName, 'admin.academic.')
         ) {
             return redirect()->route('admin.dashboard')

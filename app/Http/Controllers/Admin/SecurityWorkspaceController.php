@@ -3,20 +3,18 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use App\Models\AdminAuditLog;
+use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class SecurityWorkspaceController extends Controller
 {
     private function ensureSecurityAuthorized()
     {
         $user = auth()->user();
-        if (!$user || (!$user->hasRole('super_admin') && !$user->hasRole('admin'))) {
+        if (! $user || (! $user->hasRole('super_admin') && ! $user->hasRole('admin'))) {
             abort(403, 'Unauthorized. Administrative Security privileges required.');
         }
     }
@@ -35,7 +33,7 @@ class SecurityWorkspaceController extends Controller
                 'login_failed',
                 'login_denied',
                 'microsoft_login_success',
-                'microsoft_login_denied'
+                'microsoft_login_denied',
             ]);
 
         // Filter by status/tab
@@ -49,11 +47,11 @@ class SecurityWorkspaceController extends Controller
         if (filled($search)) {
             $query->where(function ($q) use ($search) {
                 $q->where('email', 'like', "%{$search}%")
-                  ->orWhere('ip_address', 'like', "%{$search}%")
-                  ->orWhereHas('user', function ($u) use ($search) {
-                      $u->where('name', 'like', "%{$search}%")
-                        ->orWhere('email', 'like', "%{$search}%");
-                  });
+                    ->orWhere('ip_address', 'like', "%{$search}%")
+                    ->orWhereHas('user', function ($u) use ($search) {
+                        $u->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -107,14 +105,14 @@ class SecurityWorkspaceController extends Controller
             if ($sess->user_id) {
                 $user = User::find($sess->user_id);
                 // Skip students sessions, only monitor admin/staff portal accounts
-                if ($user && !$user->hasAdminPortalAccess()) {
+                if ($user && ! $user->hasAdminPortalAccess()) {
                     continue;
                 }
             }
 
             $uaInfo = $this->parseUserAgent($sess->user_agent);
-            
-            $sessions[] = (object)[
+
+            $sessions[] = (object) [
                 'id' => $sess->id,
                 'user' => $user,
                 'ip_address' => $sess->ip_address,
@@ -126,7 +124,7 @@ class SecurityWorkspaceController extends Controller
         }
 
         // Sort by last activity descending
-        usort($sessions, function($a, $b) {
+        usort($sessions, function ($a, $b) {
             return $b->last_activity->timestamp - $a->last_activity->timestamp;
         });
 
@@ -152,15 +150,15 @@ class SecurityWorkspaceController extends Controller
 
         if ($sessionData) {
             $user = $sessionData->user_id ? User::find($sessionData->user_id) : null;
-            
+
             DB::table('sessions')->where('id', $sessionId)->delete();
 
             if ($user && $user->active_admin_session_id === $sessionId) {
                 $user->update(['active_admin_session_id' => null]);
             }
 
-            AdminAuditLog::record('security_session_force_revoked', true, "Forced session revocation for: " . ($user?->email ?: 'Unknown Account') . " (IP: {$sessionData->ip_address})");
-            
+            AdminAuditLog::record('security_session_force_revoked', true, 'Forced session revocation for: '.($user?->email ?: 'Unknown Account')." (IP: {$sessionData->ip_address})");
+
             return back()->with('success', 'Active session has been successfully revoked. User was forced logged out.');
         }
 
@@ -180,13 +178,13 @@ class SecurityWorkspaceController extends Controller
                 'administration_user_status_updated',
                 'access_control_permissions_synced',
                 'access_control_user_roles_updated',
-                'security_session_force_revoked'
+                'security_session_force_revoked',
             ]);
 
         if (filled($search)) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('email', 'like', "%{$search}%")
-                  ->orWhere('message', 'like', "%{$search}%");
+                    ->orWhere('message', 'like', "%{$search}%");
             });
         }
 
@@ -207,8 +205,8 @@ class SecurityWorkspaceController extends Controller
         if (filled($search)) {
             $query->where(function ($q) use ($search) {
                 $q->where('email', 'like', "%{$search}%")
-                  ->orWhere('event', 'like', "%{$search}%")
-                  ->orWhere('message', 'like', "%{$search}%");
+                    ->orWhere('event', 'like', "%{$search}%")
+                    ->orWhere('message', 'like', "%{$search}%");
             });
         }
 
@@ -255,6 +253,7 @@ class SecurityWorkspaceController extends Controller
                 $uaInfo = $this->parseUserAgent($event->user_agent);
                 $event->browser = $uaInfo['browser'];
                 $event->device = $uaInfo['device'];
+
                 return $event;
             });
 
@@ -290,7 +289,7 @@ class SecurityWorkspaceController extends Controller
         // 3. Alerts list
         $alerts = [];
         foreach ($suspiciousIps as $ipData) {
-            $alerts[] = (object)[
+            $alerts[] = (object) [
                 'type' => 'critical',
                 'title' => 'Suspicious Probing Detected',
                 'message' => "Client IP Address {$ipData->ip_address} has triggered {$ipData->attempts} failed login events in the last 15 minutes.",
@@ -299,7 +298,7 @@ class SecurityWorkspaceController extends Controller
         }
 
         foreach ($lockedAccounts as $locked) {
-            $alerts[] = (object)[
+            $alerts[] = (object) [
                 'type' => 'warning',
                 'title' => 'Administrative Account Locked',
                 'message' => "The admin account for {$locked->name} ({$locked->email}) is currently in a disabled state.",
@@ -319,7 +318,7 @@ class SecurityWorkspaceController extends Controller
         $ua = strtolower($userAgent);
 
         $device = 'Desktop';
-        if (str_contains($ua, 'mobi') || str_contains($ua, 'iphone') || str_contains($ua, 'ipod') || str_contains($ua, 'android') && !str_contains($ua, 'tablet')) {
+        if (str_contains($ua, 'mobi') || str_contains($ua, 'iphone') || str_contains($ua, 'ipod') || str_contains($ua, 'android') && ! str_contains($ua, 'tablet')) {
             $device = 'Mobile';
         } elseif (str_contains($ua, 'ipad') || str_contains($ua, 'playbook') || str_contains($ua, 'tablet')) {
             $device = 'Tablet';
@@ -330,7 +329,7 @@ class SecurityWorkspaceController extends Controller
             $browser = 'Microsoft Edge';
         } elseif (str_contains($ua, 'chrome') || str_contains($ua, 'crios')) {
             $browser = 'Google Chrome';
-        } elseif (str_contains($ua, 'safari') && !str_contains($ua, 'chrome') && !str_contains($ua, 'chromium')) {
+        } elseif (str_contains($ua, 'safari') && ! str_contains($ua, 'chrome') && ! str_contains($ua, 'chromium')) {
             $browser = 'Safari';
         } elseif (str_contains($ua, 'firefox') || str_contains($ua, 'fxios')) {
             $browser = 'Mozilla Firefox';

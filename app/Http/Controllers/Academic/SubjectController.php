@@ -18,6 +18,7 @@ class SubjectController extends Controller
     public function index(): View
     {
         $subjects = Subject::query()->orderByDesc('created_at')->get();
+
         return view('admin.academic.subjects.index', compact('subjects'));
     }
 
@@ -29,6 +30,7 @@ class SubjectController extends Controller
     public function store(StoreSubjectRequest $request): RedirectResponse
     {
         $this->subjectService->create($request->validated());
+
         return redirect()->route('admin.academic.subjects.index')
             ->with('success', 'Subject created successfully.');
     }
@@ -41,6 +43,7 @@ class SubjectController extends Controller
     public function update(StoreSubjectRequest $request, Subject $subject): RedirectResponse
     {
         $this->subjectService->update($subject, $request->validated());
+
         return redirect()->route('admin.academic.subjects.index')
             ->with('success', 'Subject updated successfully.');
     }
@@ -48,6 +51,7 @@ class SubjectController extends Controller
     public function toggleStatus(Subject $subject): RedirectResponse
     {
         $this->subjectService->toggleStatus($subject);
+
         return back()->with('success', 'Subject status updated.');
     }
 }

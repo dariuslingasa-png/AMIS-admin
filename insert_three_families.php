@@ -2,13 +2,14 @@
 
 require 'vendor/autoload.php';
 $app = require_once 'bootstrap/app.php';
-$app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+$app->make(Kernel::class)->bootstrap();
 
-use App\Models\User;
 use App\Models\EnrollmentApplicant;
 use App\Models\Payment;
-use Illuminate\Support\Facades\Hash;
+use App\Models\User;
+use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 DB::beginTransaction();
 
@@ -55,7 +56,7 @@ try {
         'status' => 'submitted',
         'photo_2x2_url' => 'photos/jafar.jpg',
     ]);
-    
+
     // Group family
     $applicant1_1->update(['family_application_id' => $applicant1_1->id]);
 
@@ -105,7 +106,7 @@ try {
         'school_year' => '2026-2027',
         'status' => 'submitted',
     ]);
-    
+
     // Group family
     $applicant2_1->update(['family_application_id' => $applicant2_1->id]);
 
@@ -175,7 +176,7 @@ try {
         'school_year' => '2026-2027',
         'status' => 'submitted',
     ]);
-    
+
     // Group family
     $applicant3_1->update(['family_application_id' => $applicant3_1->id]);
 
@@ -234,7 +235,7 @@ try {
 
     DB::commit();
     echo "Successfully inserted 3 random families with payments!\n";
-} catch (\Exception $e) {
+} catch (Exception $e) {
     DB::rollBack();
-    echo "Error inserting dummy data: " . $e->getMessage() . "\n";
+    echo 'Error inserting dummy data: '.$e->getMessage()."\n";
 }

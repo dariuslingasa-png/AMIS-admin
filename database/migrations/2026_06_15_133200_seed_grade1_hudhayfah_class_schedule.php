@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
 use App\Models\Section;
 use App\Models\SectionSubject;
+use Illuminate\Database\Migrations\Migration;
 
 return new class extends Migration
 {

@@ -16,7 +16,7 @@ class SystemNotificationController extends Controller
         $notifications = SystemNotification::query()
             ->where(function ($q) use ($user) {
                 $q->where('user_id', $user->id)
-                  ->orWhereNull('user_id');
+                    ->orWhereNull('user_id');
             })
             ->latest()
             ->take(20)
@@ -28,7 +28,7 @@ class SystemNotificationController extends Controller
                     'message' => $item->message,
                     'type' => $item->type,
                     'action_url' => $item->action_url,
-                    'is_read' => (bool)$item->is_read,
+                    'is_read' => (bool) $item->is_read,
                     'time_ago' => $item->created_at ? $item->created_at->diffForHumans() : 'Just now',
                     'created_at_formatted' => $item->created_at ? $item->created_at->format('M d, Y h:i A') : '',
                 ];
@@ -37,7 +37,7 @@ class SystemNotificationController extends Controller
         $unreadCount = SystemNotification::query()
             ->where(function ($q) use ($user) {
                 $q->where('user_id', $user->id)
-                  ->orWhereNull('user_id');
+                    ->orWhereNull('user_id');
             })
             ->where('is_read', false)
             ->count();
@@ -57,7 +57,7 @@ class SystemNotificationController extends Controller
             ->where('id', $id)
             ->where(function ($q) use ($user) {
                 $q->where('user_id', $user->id)
-                  ->orWhereNull('user_id');
+                    ->orWhereNull('user_id');
             })
             ->first();
 
@@ -77,7 +77,7 @@ class SystemNotificationController extends Controller
         SystemNotification::query()
             ->where(function ($q) use ($user) {
                 $q->where('user_id', $user->id)
-                  ->orWhereNull('user_id');
+                    ->orWhereNull('user_id');
             })
             ->where('is_read', false)
             ->update([
@@ -95,7 +95,7 @@ class SystemNotificationController extends Controller
         SystemNotification::query()
             ->where(function ($q) use ($user) {
                 $q->where('user_id', $user->id)
-                  ->orWhereNull('user_id');
+                    ->orWhereNull('user_id');
             })
             ->delete();
 

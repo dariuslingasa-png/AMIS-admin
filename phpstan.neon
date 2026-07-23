@@ -1,0 +1,16 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    paths:
+        - app/
+
+    level: 0
+
+    treatPhpDocTypesAsCertain: false
+
+    ignoreErrors:
+        - '#Instantiated class Dompdf\\.* not found.#'
+        - '#Called .pluck. on Laravel collection, but could have been retrieved as a query.#'
+        - '#Relation .* is not found in .* model.#'
+        - '#Called .env. outside of the config directory#'

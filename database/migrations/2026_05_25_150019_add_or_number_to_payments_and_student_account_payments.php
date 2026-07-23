@@ -13,7 +13,7 @@ return new class extends Migration
     {
         if (Schema::hasTable('payments')) {
             Schema::table('payments', function (Blueprint $table) {
-                if (!Schema::hasColumn('payments', 'or_number')) {
+                if (! Schema::hasColumn('payments', 'or_number')) {
                     $table->string('or_number', 100)->nullable()->after('reference_no');
                 }
             });
@@ -21,7 +21,7 @@ return new class extends Migration
 
         if (Schema::hasTable('student_account_payments')) {
             Schema::table('student_account_payments', function (Blueprint $table) {
-                if (!Schema::hasColumn('student_account_payments', 'or_number')) {
+                if (! Schema::hasColumn('student_account_payments', 'or_number')) {
                     $table->string('or_number', 100)->nullable()->after('reference_no');
                 }
             });

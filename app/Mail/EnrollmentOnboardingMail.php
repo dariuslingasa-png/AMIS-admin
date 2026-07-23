@@ -6,6 +6,7 @@ use App\Models\EnrollmentApplicant;
 use App\Models\Student;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
@@ -24,7 +25,7 @@ class EnrollmentOnboardingMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            from: new \Illuminate\Mail\Mailables\Address('inquiries@amis.edu.ph', 'AMIS Admissions'),
+            from: new Address('inquiries@amis.edu.ph', 'AMIS Admissions'),
             subject: 'AMIS Enrollment Approved for '.$this->studentName(),
         );
     }

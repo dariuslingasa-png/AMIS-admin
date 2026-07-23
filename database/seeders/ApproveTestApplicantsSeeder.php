@@ -27,10 +27,11 @@ class ApproveTestApplicantsSeeder extends Seeder
 
         if ($applicants->isEmpty()) {
             $this->command->warn('No seeded applicants found. Please run TestEnrollmentAnalyticsSeeder first.');
+
             return;
         }
 
-        $this->command->info('Approving ' . $applicants->count() . ' test applicants...');
+        $this->command->info('Approving '.$applicants->count().' test applicants...');
 
         $approvedCount = 0;
         $year = substr(date('Y'), 2); // 26 for 2026
@@ -53,53 +54,53 @@ class ApproveTestApplicantsSeeder extends Seeder
                 $payment = Payment::updateOrCreate(
                     ['enrollment_applicant_id' => $applicant->id],
                     [
-                        'user_id'     => $applicant->user_id,
-                        'amount'      => 4000.00,
-                        'method'      => 'gcash',
-                        'status'      => 'verified',
+                        'user_id' => $applicant->user_id,
+                        'amount' => 4000.00,
+                        'method' => 'gcash',
+                        'status' => 'verified',
                         'verified_at' => $now,
-                        'paid_at'     => $now,
+                        'paid_at' => $now,
                         'receipt_url' => 'receipts/test_downpayment.png',
-                        'reference_no'=> 'SEED' . strtoupper(Str::random(10)),
+                        'reference_no' => 'SEED'.strtoupper(Str::random(10)),
                     ]
                 );
 
                 // C. Generate student credentials
                 do {
-                    $studentNumber = $year . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+                    $studentNumber = $year.str_pad($sequence, 4, '0', STR_PAD_LEFT);
                     $sequence++;
                 } while (Student::where('student_number', $studentNumber)->exists());
 
                 $lastName = strtolower(preg_replace('/\s+/', '', (string) $applicant->last_name));
-                $mailNick = $studentNumber . $lastName;
-                $schoolEmail = $mailNick . '@amis.edu.ph';
+                $mailNick = $studentNumber.$lastName;
+                $schoolEmail = $mailNick.'@amis.edu.ph';
                 $suffix = 1;
 
                 while (Student::where('school_email', $schoolEmail)->exists()) {
-                    $mailNick = $studentNumber . $lastName . $suffix;
-                    $schoolEmail = $mailNick . '@amis.edu.ph';
+                    $mailNick = $studentNumber.$lastName.$suffix;
+                    $schoolEmail = $mailNick.'@amis.edu.ph';
                     $suffix++;
                 }
 
-                $tempPassword = 'Amis@' . strtoupper(Str::random(5)) . rand(10, 99);
+                $tempPassword = 'Amis@'.strtoupper(Str::random(5)).rand(10, 99);
 
                 // E. Create Student Profile record
                 $student = Student::create([
-                    'user_id'                 => $applicant->user_id,
+                    'user_id' => $applicant->user_id,
                     'enrollment_applicant_id' => $applicant->id,
-                    'student_number'          => $studentNumber,
-                    'school_email'            => $schoolEmail,
-                    'ms_email'                => $schoolEmail,
-                    'ms_user_id'              => 'test-ms-user-' . Str::uuid(),
-                    'ms_account_created_at'   => $now,
-                    'temp_password'           => Hash::make($tempPassword),
-                    'grade_level'             => $applicant->grade_level,
-                    'school_year'             => $applicant->school_year ?? '2026-2027',
-                    'credentials_sent_at'     => $now,
+                    'student_number' => $studentNumber,
+                    'school_email' => $schoolEmail,
+                    'ms_email' => $schoolEmail,
+                    'ms_user_id' => 'test-ms-user-'.Str::uuid(),
+                    'ms_account_created_at' => $now,
+                    'temp_password' => Hash::make($tempPassword),
+                    'grade_level' => $applicant->grade_level,
+                    'school_year' => $applicant->school_year ?? '2026-2027',
+                    'credentials_sent_at' => $now,
                 ]);
 
                 // F. Generate financial Statement of Account (SOA Ledger + 10 monthly billings)
-                (new SoaService())->generate($student, $applicant);
+                (new SoaService)->generate($student, $applicant);
 
                 // G. Match and link the student to a classroom section group
                 $gender = strtolower($applicant->gender ?? 'male');
@@ -122,7 +123,7 @@ class ApproveTestApplicantsSeeder extends Seeder
                     ->where('shift', $shift)
                     ->first();
 
-                if (!$section) {
+                if (! $section) {
                     $prefix = str_replace('Grade ', 'G', $student->grade_level);
                     $prefix = str_replace('Kinder ', 'K', $prefix);
                     $genderLabel = $gender === 'male' ? 'Boys' : 'Girls';
@@ -130,13 +131,13 @@ class ApproveTestApplicantsSeeder extends Seeder
                     $teamName = "{$prefix} - [{$genderLabel} & {$shiftLabel}]";
 
                     $section = Section::create([
-                        'name'          => 'A',
-                        'grade_level'   => $student->grade_level,
+                        'name' => 'A',
+                        'grade_level' => $student->grade_level,
                         'learning_mode' => $modeBase,
-                        'shift'         => $shift,
-                        'gender'        => $gender,
-                        'ms_team_id'    => 'test-ms-team-' . Str::uuid(),
-                        'ms_team_url'   => 'https://teams.microsoft.com/l/team/test',
+                        'shift' => $shift,
+                        'gender' => $gender,
+                        'ms_team_id' => 'test-ms-team-'.Str::uuid(),
+                        'ms_team_url' => 'https://teams.microsoft.com/l/team/test',
                     ]);
                 }
 
@@ -144,14 +145,14 @@ class ApproveTestApplicantsSeeder extends Seeder
                 StudentSection::updateOrCreate(
                     ['student_id' => $student->id, 'section_id' => $section->id],
                     [
-                        'ms_status'      => 'enrolled',
+                        'ms_status' => 'enrolled',
                         'ms_enrolled_at' => $now,
                     ]
                 );
 
                 // H. Update applicant status to approved
                 $applicant->update([
-                    'status'         => 'approved',
+                    'status' => 'approved',
                     'review_remarks' => null,
                 ]);
 

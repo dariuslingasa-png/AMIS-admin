@@ -13,11 +13,12 @@ use Illuminate\Support\Str;
 class InsertStudentsFromList extends Command
 {
     protected $signature = 'ms:insert-students';
+
     protected $description = 'Parse and insert student records from the school list into the database';
 
     public function handle(): int
     {
-        $rawList = <<<LIST
+        $rawList = <<<'LIST'
 K2	MURAJI, AYRAH JULHAMID	NEW ODL
 1	ALIH, MARYAM KHAISA	NEW ODL
 1	TULABIN, IBRAHIM TARANG	OLD ODL
@@ -77,7 +78,7 @@ K2	MURAJI, AYRAH JULHAMID	NEW ODL
 LIST;
 
         $lines = explode("\n", trim($rawList));
-        $this->info("Found " . count($lines) . " students to insert.");
+        $this->info('Found '.count($lines).' students to insert.');
 
         $insertedCount = 0;
         $skippedCount = 0;
@@ -97,6 +98,7 @@ LIST;
             if (count($parts) < 3) {
                 $this->error("Skipped invalid line: {$line}");
                 $skippedCount++;
+
                 continue;
             }
 
@@ -109,7 +111,7 @@ LIST;
             if ($gradeRaw === 'K2') {
                 $grade = 'Kinder 2';
             } elseif (is_numeric($gradeRaw)) {
-                $grade = 'Grade ' . $gradeRaw;
+                $grade = 'Grade '.$gradeRaw;
             }
 
             // 2. Map Status (NEW ODL, OLD F2F, etc.)
@@ -141,7 +143,7 @@ LIST;
             $firstName = mb_strtoupper($firstName, 'UTF-8');
             $lastName = mb_strtoupper($lastName, 'UTF-8');
             $middleName = mb_strtoupper($middleName, 'UTF-8');
-            $fullName = trim($firstName . ' ' . $middleName . ' ' . $lastName);
+            $fullName = trim($firstName.' '.$middleName.' '.$lastName);
 
             // 4. Duplicate Check
             $alreadyExists = EnrollmentApplicant::where('first_name', $firstName)
@@ -152,26 +154,27 @@ LIST;
             if ($alreadyExists) {
                 $this->comment("Student already exists: {$fullName} ({$grade}) - Skipped");
                 $skippedCount++;
+
                 continue;
             }
 
-            DB::transaction(function () use ($firstName, $lastName, $middleName, $fullName, $grade, $type, $mode, &$insertedCount) {
+            DB::transaction(function () use ($firstName, $lastName, $middleName, $grade, $type, $mode, &$insertedCount) {
                 // 5. Generate Student Number
                 $num = 1;
                 do {
-                    $studentNumber = '26' . str_pad($num, 4, '0', STR_PAD_LEFT);
+                    $studentNumber = '26'.str_pad($num, 4, '0', STR_PAD_LEFT);
                     $existsNumber = Student::where('student_number', $studentNumber)->exists();
                     $num++;
                 } while ($existsNumber);
 
                 // 6. Generate Parent User (each student gets a unique parent shell account to avoid parent email duplicates)
                 $lastNameClean = strtolower(preg_replace('/[^a-zA-Z]/', '', $lastName));
-                $parentEmail = 'parent.' . $lastNameClean . '.' . rand(100, 999) . '@amis.test';
-                $parentUsername = 'parent_' . $lastNameClean . '_' . rand(100, 999);
+                $parentEmail = 'parent.'.$lastNameClean.'.'.rand(100, 999).'@amis.test';
+                $parentUsername = 'parent_'.$lastNameClean.'_'.rand(100, 999);
 
                 while (User::where('email', $parentEmail)->orWhere('username', $parentUsername)->exists()) {
-                    $parentEmail = 'parent.' . $lastNameClean . '.' . rand(100, 999) . '@amis.test';
-                    $parentUsername = 'parent_' . $lastNameClean . '_' . rand(100, 999);
+                    $parentEmail = 'parent.'.$lastNameClean.'.'.rand(100, 999).'@amis.test';
+                    $parentUsername = 'parent_'.$lastNameClean.'_'.rand(100, 999);
                 }
 
                 $parentId = DB::table('users')->insertGetId([
@@ -189,12 +192,12 @@ LIST;
                 $firstLetterOfLastName = strtolower(substr(preg_replace('/[^a-zA-Z]/', '', $lastName), 0, 1));
                 $firstGivenName = explode(' ', trim($firstName))[0];
                 $firstNameClean = strtolower(preg_replace('/[^a-zA-Z]/', '', $firstGivenName));
-                $mailNick = $studentNumber . $firstLetterOfLastName . $firstNameClean;
-                $schoolEmail = $mailNick . '@amis.edu.ph';
+                $mailNick = $studentNumber.$firstLetterOfLastName.$firstNameClean;
+                $schoolEmail = $mailNick.'@amis.edu.ph';
 
                 $suffix = 1;
                 while (Student::where('school_email', $schoolEmail)->exists() || User::where('email', $schoolEmail)->exists()) {
-                    $schoolEmail = $mailNick . $suffix . '@amis.edu.ph';
+                    $schoolEmail = $mailNick.$suffix.'@amis.edu.ph';
                     $suffix++;
                 }
 
@@ -228,7 +231,7 @@ LIST;
                 ]);
 
                 // 9. Generate Temp Password (following AMIS pattern: Amis@XXXXX99)
-                $tempPassword = 'Amis@' . strtoupper(Str::random(5)) . rand(10, 99);
+                $tempPassword = 'Amis@'.strtoupper(Str::random(5)).rand(10, 99);
 
                 // 10. Create Student
                 Student::create([

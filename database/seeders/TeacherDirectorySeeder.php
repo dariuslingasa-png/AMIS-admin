@@ -40,10 +40,10 @@ class TeacherDirectorySeeder extends Seeder
             'name' => $t['teacher'] ?? $t['name'] ?? '',
             'dept' => $t['dept'] ?? 'Elementary Department',
         ])
-        ->concat($extraTeachers)
-        ->filter(fn ($t) => !empty($t['name']))
-        ->unique('name')
-        ->values();
+            ->concat($extraTeachers)
+            ->filter(fn ($t) => ! empty($t['name']))
+            ->unique('name')
+            ->values();
 
         // 3. Load existing overrides
         $overridesPath = storage_path('app/academic_teacher_overrides.json');
@@ -64,13 +64,13 @@ class TeacherDirectorySeeder extends Seeder
             $user = User::where('role', 'teacher')
                 ->where(function ($query) use ($email, $name) {
                     $query->where('email', $email)
-                          ->orWhere('name', $name);
+                        ->orWhere('name', $name);
                 })
                 ->first();
 
-            $password = 'Amis@' . strtoupper(Str::random(5)) . rand(10, 99);
+            $password = 'Amis@'.strtoupper(Str::random(5)).rand(10, 99);
 
-            if (!$user) {
+            if (! $user) {
                 $user = User::create([
                     'name' => $name,
                     'email' => $email,
@@ -86,7 +86,7 @@ class TeacherDirectorySeeder extends Seeder
             }
 
             // Ensure override entry exists
-            if (!isset($overrides[$id])) {
+            if (! isset($overrides[$id])) {
                 $overrides[$id] = [
                     'name' => $name,
                     'email' => $email,
@@ -114,7 +114,7 @@ class TeacherDirectorySeeder extends Seeder
         // Save overrides back to JSON
         File::ensureDirectoryExists(dirname($overridesPath));
         File::put($overridesPath, json_encode($overrides, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
-        $this->command->info("Teacher overrides updated successfully.");
+        $this->command->info('Teacher overrides updated successfully.');
     }
 
     private function teacherEmail(string $name): string
@@ -132,8 +132,8 @@ class TeacherDirectorySeeder extends Seeder
             ->squish();
         $parts = explode(' ', (string) $cleanName);
 
-        return count($parts) >= 2 
-            ? 'tr.' . substr($parts[0], 0, 1) . end($parts) . '@amis.edu.ph' 
-            : 'tr.' . $cleanName . '@amis.edu.ph';
+        return count($parts) >= 2
+            ? 'tr.'.substr($parts[0], 0, 1).end($parts).'@amis.edu.ph'
+            : 'tr.'.$cleanName.'@amis.edu.ph';
     }
 }

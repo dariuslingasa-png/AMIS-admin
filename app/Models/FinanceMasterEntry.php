@@ -76,13 +76,13 @@ class FinanceMasterEntry extends Model
         if ($this->payment && $this->payment->invoice) {
             return $this->payment->invoice->payments
                 ->whereNotNull('receipt_url')
-                ->filter(fn($url) => !blank($url))
+                ->filter(fn ($url) => ! blank($url))
                 ->pluck('receipt_url')
                 ->unique()
                 ->values()
                 ->toArray();
         }
 
-        return $this->payment && !blank($this->payment->receipt_url) ? [$this->payment->receipt_url] : [];
+        return $this->payment && ! blank($this->payment->receipt_url) ? [$this->payment->receipt_url] : [];
     }
 }

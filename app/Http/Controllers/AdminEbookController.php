@@ -221,7 +221,7 @@ class AdminEbookController extends Controller
             $absolutePath = Storage::disk(self::STORAGE_DISK)->path($path);
             $this->optimizePdf($absolutePath);
         } catch (\Exception $e) {
-            Log::error("Failed to optimize PDF: " . $e->getMessage());
+            Log::error('Failed to optimize PDF: '.$e->getMessage());
         }
 
         return $path;
@@ -292,7 +292,7 @@ class AdminEbookController extends Controller
 
         $coversDir = $this->getEbookPublicCoversDir();
         if ($coversDir) {
-            $coverFile = dirname($coversDir) . '/' . $ebook->cover_image_path;
+            $coverFile = dirname($coversDir).'/'.$ebook->cover_image_path;
             if (file_exists($coverFile)) {
                 @unlink($coverFile);
             }
@@ -346,7 +346,7 @@ class AdminEbookController extends Controller
     {
         // 1. Get image info
         $info = @getimagesize($sourcePath);
-        if (!$info) {
+        if (! $info) {
             return false;
         }
 
@@ -368,7 +368,7 @@ class AdminEbookController extends Controller
                 return false;
         }
 
-        if (!$sourceImage) {
+        if (! $sourceImage) {
             return false;
         }
 
@@ -386,8 +386,9 @@ class AdminEbookController extends Controller
 
         // 4. Create new true color image
         $targetImage = imagecreatetruecolor($targetWidth, $targetHeight);
-        if (!$targetImage) {
+        if (! $targetImage) {
             imagedestroy($sourceImage);
+
             return false;
         }
 
@@ -400,9 +401,10 @@ class AdminEbookController extends Controller
         }
 
         // 5. Resample the image
-        if (!imagecopyresampled($targetImage, $sourceImage, 0, 0, 0, 0, $targetWidth, $targetHeight, $origWidth, $origHeight)) {
+        if (! imagecopyresampled($targetImage, $sourceImage, 0, 0, 0, 0, $targetWidth, $targetHeight, $origWidth, $origHeight)) {
             imagedestroy($sourceImage);
             imagedestroy($targetImage);
+
             return false;
         }
 
@@ -433,7 +435,7 @@ class AdminEbookController extends Controller
 
         $bytes /= pow(1024, $pow);
 
-        return round($bytes, $precision) . ' ' . $units[$pow];
+        return round($bytes, $precision).' '.$units[$pow];
     }
 
     /**
@@ -448,12 +450,12 @@ class AdminEbookController extends Controller
      */
     private function optimizePdf(string $pdfAbsolutePath): void
     {
-        if (!file_exists($pdfAbsolutePath)) {
+        if (! file_exists($pdfAbsolutePath)) {
             return;
         }
 
-        $tempCompressedPath = escapeshellarg($pdfAbsolutePath . '.compressed');
-        $tempLinearizedPath = escapeshellarg($pdfAbsolutePath . '.linearized');
+        $tempCompressedPath = escapeshellarg($pdfAbsolutePath.'.compressed');
+        $tempLinearizedPath = escapeshellarg($pdfAbsolutePath.'.linearized');
         $escapedPdfPath = escapeshellarg($pdfAbsolutePath);
         $logFile = escapeshellarg(storage_path('logs/pdf-optimize.log'));
 
@@ -523,14 +525,14 @@ rm -f {$tempCompressedPath} {$tempLinearizedPath}
 BASH;
 
         // Write script to temp file and run in background
-        $scriptPath = sys_get_temp_dir() . '/pdf_optimize_' . md5($pdfAbsolutePath) . '.sh';
+        $scriptPath = sys_get_temp_dir().'/pdf_optimize_'.md5($pdfAbsolutePath).'.sh';
         file_put_contents($scriptPath, $script);
         chmod($scriptPath, 0755);
 
         // nohup + & = runs in background, doesn't block PHP
         exec(sprintf('nohup bash %s > /dev/null 2>&1 &', escapeshellarg($scriptPath)));
 
-        Log::info("PDF optimization started in background: " . basename($pdfAbsolutePath));
+        Log::info('PDF optimization started in background: '.basename($pdfAbsolutePath));
     }
 
     public function getReaders(Ebook $ebook)
@@ -544,6 +546,7 @@ BASH;
                     ->where('user_id', $user->id)
                     ->orderBy('created_at', 'desc')
                     ->get();
+
                 return [
                     'name' => $user->name,
                     'email' => $user->email,
@@ -594,8 +597,9 @@ BASH;
             }
             // Mappings for Grade 1 to 10
             if (preg_match('/^(?:grade\s*)?([1-9]|10)$/', $grade, $match)) {
-                return ['Grade ' . $match[1]];
+                return ['Grade '.$match[1]];
             }
+
             // fallback
             return [ucwords($grade)];
         };
@@ -620,6 +624,7 @@ BASH;
 
         $gradeGroups = collect($displayGrades)->mapWithKeys(function ($grade) use ($ebooks, $getDisplayGrades) {
             $books = $ebooks->filter(fn ($book) => in_array($grade, $getDisplayGrades($book->grade_level), true))->values();
+
             return [$grade => $books];
         });
 

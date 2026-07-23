@@ -27,6 +27,7 @@ class IdentityRoutingTest extends TestCase
         $payload = base64_encode((string) json_encode($claims));
         $header = str_replace(['+', '/', '='], ['-', '_', ''], $header);
         $payload = str_replace(['+', '/', '='], ['-', '_', ''], $payload);
+
         return "{$header}.{$payload}.signature";
     }
 
@@ -35,16 +36,16 @@ class IdentityRoutingTest extends TestCase
     {
         $jwt = $this->createMockJwt([
             'email' => 'unregistered@amis.edu.ph',
-            'tid' => 'mock-tenant-id'
+            'tid' => 'mock-tenant-id',
         ]);
 
         $response = $this->postJson('/api/identity/login', [
-            'token' => $jwt
+            'token' => $jwt,
         ]);
 
         $response->assertStatus(401);
         $response->assertJson([
-            'error' => 'ERR_ACCOUNT_NOT_REGISTERED'
+            'error' => 'ERR_ACCOUNT_NOT_REGISTERED',
         ]);
     }
 
@@ -65,11 +66,11 @@ class IdentityRoutingTest extends TestCase
 
         $jwt = $this->createMockJwt([
             'email' => 'teacher@amis.edu.ph',
-            'tid' => 'mock-tenant-id'
+            'tid' => 'mock-tenant-id',
         ]);
 
         $response = $this->postJson('/api/identity/login', [
-            'token' => $jwt
+            'token' => $jwt,
         ]);
 
         $response->assertStatus(200);
@@ -77,14 +78,14 @@ class IdentityRoutingTest extends TestCase
             'access_token',
             'token_type',
             'route',
-            'user' => ['id', 'name', 'role', 'email']
+            'user' => ['id', 'name', 'role', 'email'],
         ]);
         $response->assertJson([
             'route' => '/portal/teacher/dashboard',
             'user' => [
                 'role' => 'teacher',
                 'email' => $user->email,
-            ]
+            ],
         ]);
 
         $this->assertAuthenticatedAs($user);
@@ -107,11 +108,11 @@ class IdentityRoutingTest extends TestCase
 
         $jwt = $this->createMockJwt([
             'email' => 'student@amis.edu.ph',
-            'tid' => 'mock-tenant-id'
+            'tid' => 'mock-tenant-id',
         ]);
 
         $response = $this->postJson('/api/identity/login', [
-            'token' => $jwt
+            'token' => $jwt,
         ]);
 
         $response->assertStatus(200);
@@ -120,7 +121,7 @@ class IdentityRoutingTest extends TestCase
             'user' => [
                 'role' => 'student',
                 'email' => $user->email,
-            ]
+            ],
         ]);
 
         $this->assertAuthenticatedAs($user);
@@ -143,16 +144,16 @@ class IdentityRoutingTest extends TestCase
 
         $jwt = $this->createMockJwt([
             'email' => 'disabled@amis.edu.ph',
-            'tid' => 'mock-tenant-id'
+            'tid' => 'mock-tenant-id',
         ]);
 
         $response = $this->postJson('/api/identity/login', [
-            'token' => $jwt
+            'token' => $jwt,
         ]);
 
         $response->assertStatus(403);
         $response->assertJson([
-            'error' => 'ERR_ACCOUNT_DISABLED'
+            'error' => 'ERR_ACCOUNT_DISABLED',
         ]);
     }
 
@@ -161,7 +162,7 @@ class IdentityRoutingTest extends TestCase
     {
         $response = $this->postJson('/api/identity/link', [
             'email' => 'legacy@amis.edu.ph',
-            'tid' => 'mock-tenant-id'
+            'tid' => 'mock-tenant-id',
         ]);
 
         $response->assertStatus(401);
@@ -176,12 +177,12 @@ class IdentityRoutingTest extends TestCase
 
         $response = $this->actingAs($user)->postJson('/api/identity/link', [
             'email' => 'legacy@amis.edu.ph',
-            'tid' => 'mock-tenant-id'
+            'tid' => 'mock-tenant-id',
         ]);
 
         $response->assertStatus(403);
         $response->assertJson([
-            'error' => 'ERR_GENERATED_IDENTITY_REQUIRED'
+            'error' => 'ERR_GENERATED_IDENTITY_REQUIRED',
         ]);
     }
 
@@ -210,16 +211,16 @@ class IdentityRoutingTest extends TestCase
 
         $jwt = $this->createMockJwt([
             'email' => 'legacy@amis.edu.ph',
-            'tid' => 'mock-tenant-id'
+            'tid' => 'mock-tenant-id',
         ]);
 
         $response = $this->actingAs($user)->postJson('/api/identity/link', [
-            'token' => $jwt
+            'token' => $jwt,
         ]);
 
         $response->assertStatus(422);
         $response->assertJson([
-            'error' => 'ERR_EMAIL_ALREADY_LINKED'
+            'error' => 'ERR_EMAIL_ALREADY_LINKED',
         ]);
     }
 
@@ -239,16 +240,16 @@ class IdentityRoutingTest extends TestCase
 
         $jwt = $this->createMockJwt([
             'email' => 'legacy@amis.edu.ph',
-            'tid' => 'mock-tenant-id'
+            'tid' => 'mock-tenant-id',
         ]);
 
         $response = $this->actingAs($user)->postJson('/api/identity/link', [
-            'token' => $jwt
+            'token' => $jwt,
         ]);
 
         $response->assertStatus(200);
         $response->assertJson([
-            'status' => 'success'
+            'status' => 'success',
         ]);
 
         $this->assertDatabaseHas('linked_identities', [

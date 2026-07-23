@@ -19,7 +19,7 @@ class SystemLogController extends Controller
     private function ensureSuperOrAdmin(): void
     {
         $role = auth()->user()?->role;
-        if (!in_array($role, ['super_admin', 'admin'])) {
+        if (! in_array($role, ['super_admin', 'admin'])) {
             abort(403, 'Unauthorized. Log inspection is restricted to Administrators.');
         }
     }
@@ -66,6 +66,7 @@ class SystemLogController extends Controller
         }
 
         $formattedLogSize = $this->healthService->formatBytes($logSize);
+
         return view('admin.system.logs.index', compact('logEntries', 'formattedLogSize', 'logPath'));
     }
 
@@ -76,7 +77,8 @@ class SystemLogController extends Controller
 
         if (file_exists($logPath)) {
             file_put_contents($logPath, '');
-            AdminAuditLog::record('system_logs_cleared', true, "Truncated and cleared laravel.log file.");
+            AdminAuditLog::record('system_logs_cleared', true, 'Truncated and cleared laravel.log file.');
+
             return back()->with('success', 'System log file (laravel.log) cleared successfully.');
         }
 
