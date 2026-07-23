@@ -8,14 +8,14 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use App\Models\AdminAuditLog;
+use App\Mail\BackupSuccessMail;
 use App\Mail\BackupFailedMail;
 use ZipArchive;
-use Symfony\Component\Process\Process;
 
 class AmisBackupCommand extends Command
 {
     protected $signature = 'amis:backup';
-    protected $description = 'Create a full SQL snapshot and media zip backup and upload to Google Drive via rclone';
+    protected $description = 'Create a complete timestamped ZIP backup of the MySQL database and application assets with integrity verification and email notifications.';
 
     public function handle()
     {
@@ -23,8 +23,8 @@ class AmisBackupCommand extends Command
         set_time_limit(0);
 
         $startTime = microtime(true);
-        $dateStr = date('Y-m-d');
-        $this->info("Starting AMIS backup process for {$dateStr}...");
+        $dateStr = date('Y-m-d_H-i-s');
+        $this->info("Starting full AMIS application backup process for {$dateStr}...");
 
         $tempDir = storage_path('app/backups/temp_' . time());
         if (!file_exists($tempDir)) {
@@ -32,110 +32,85 @@ class AmisBackupCommand extends Command
         }
 
         $dbFile = $tempDir . '/database.sql';
-        $storageZipFile = $tempDir . '/storage.zip';
-        $fullBackupZipFile = $tempDir . '/full-backup.zip';
+        $fullBackupZipFile = $tempDir . "/amis_backup_{$dateStr}.zip";
 
         try {
-            // 1. Ensure Rclone Binary is Available (optional for cloud sync)
-            $rclonePath = null;
-            try {
-                $rclonePath = $this->ensureRcloneBinary();
-            } catch (\Exception $e) {
-                Log::warning('Rclone binary download/check skipped: ' . $e->getMessage());
-            }
-
-            // 2. Backup Database (SQL)
-            $this->info('Dumping database...');
+            // 1. Dump Database (MySQL / MariaDB)
+            $this->info('1. Dumping MySQL database...');
             $this->dumpDatabase($dbFile);
 
-            // Save permanent copy of SQL dump to local storage/app/backups/
+            // 2. Verify Database Dump Integrity
+            $this->verifyDatabaseDump($dbFile);
+
+            // 3. Create Compressed Full ZIP Archive
+            $this->info('2. Compressing application assets, uploads, and database into ZIP archive...');
+            $includedItems = $this->createFullBackupZip($fullBackupZipFile, $dbFile);
+
+            // 4. Verify Archive Integrity
+            $this->info('3. Verifying archive integrity and completeness...');
+            $this->verifyArchiveIntegrity($fullBackupZipFile);
+
+            // 5. Store in Local Non-Public Backup Storage
             $localBackupDir = storage_path('app/backups');
             if (!file_exists($localBackupDir)) {
                 mkdir($localBackupDir, 0755, true);
             }
-            $permanentSqlFile = $localBackupDir . "/amis_backup_{$dateStr}_" . time() . ".sql";
+            $finalBackupPath = $localBackupDir . "/amis_backup_{$dateStr}.zip";
+            rename($fullBackupZipFile, $finalBackupPath);
+
+            // Save raw SQL dump copy as well for instant SQL restoration
+            $permanentSqlFile = $localBackupDir . "/amis_backup_{$dateStr}.sql";
             if (file_exists($dbFile)) {
                 copy($dbFile, $permanentSqlFile);
             }
 
-            // 3. Backup Uploads and Media (Zip)
-            $this->info('Creating storage archive...');
-            $this->createStorageZip($storageZipFile);
-
-            // 4. Create Full Backup (Combine SQL & Storage Zip)
-            $this->info('Creating full backup archive...');
-            $this->createFullBackupZip($fullBackupZipFile, $dbFile, $storageZipFile);
-
-            // 5. Attempt Google Drive Upload if configured
-            $gdriveStatusMsg = 'Local backup saved.';
-            try {
-                if ($rclonePath) {
-                    $this->info('Configuring rclone...');
-                    $configPath = $this->generateRcloneConfig($tempDir);
-
-                    $this->info('Uploading backups to Google Drive...');
-                    $this->uploadToDrive($rclonePath, $configPath, $tempDir, $dateStr);
-
-                    $this->info('Running Google Drive retention rotation policy...');
-                    $this->rotateBackups($rclonePath, $configPath);
-
-                    if (file_exists($configPath)) {
-                        unlink($configPath);
-                    }
-                    $gdriveStatusMsg .= ' Cloud upload to Google Drive completed.';
-                }
-            } catch (\Exception $gdriveEx) {
-                Log::warning('Google Drive sync skipped/failed: ' . $gdriveEx->getMessage());
-                $gdriveStatusMsg .= ' Google Drive sync skipped (' . (str_contains($gdriveEx->getMessage(), 'invalid_grant') ? 'token expired / disconnected' : 'not configured') . ').';
-            }
-
             // 6. Clean up temp files
-            $this->info('Cleaning up temp files...');
+            $this->info('4. Cleaning temporary working files...');
             $this->cleanLocalDirectory($tempDir);
 
             $executionTime = round(microtime(true) - $startTime, 2);
-            $totalSize = file_exists($permanentSqlFile) ? filesize($permanentSqlFile) : 0;
+            $totalSize = filesize($finalBackupPath);
             $formattedSize = $this->formatBytes($totalSize);
+            $timestamp = date('M d, Y h:i A');
 
-            // 7. Log Success Audit
+            // 7. Auto-Prune Old Backups (Retain 30 Days)
+            $this->pruneOldBackups(30);
+
+            // 8. Log Success Audit
             $this->audit(
                 'database_backup_automated_success',
                 true,
-                "Automated backup completed. {$gdriveStatusMsg} Size: {$formattedSize}. Time: {$executionTime}s."
+                "Automated backup completed successfully. File: " . basename($finalBackupPath) . " ({$formattedSize}). Time: {$executionTime}s."
             );
 
-            $this->info("Backup process finished successfully! ({$gdriveStatusMsg})");
+            // 9. Dispatch Success Email to target recipient
+            $this->sendSuccessEmail(basename($finalBackupPath), $formattedSize, $executionTime, $timestamp, $includedItems);
+
+            $this->info("=== Backup Process Completed Successfully! Size: {$formattedSize} ({$executionTime}s) ===");
+            return 0;
+
         } catch (\Exception $e) {
             $executionTime = round(microtime(true) - $startTime, 2);
             Log::error('Automated backup failed: ' . $e->getMessage());
 
-            // Clean up whatever we can locally
             if (file_exists($tempDir)) {
                 $this->cleanLocalDirectory($tempDir);
             }
-            $configPath = storage_path('app/backups/rclone.conf');
-            if (file_exists($configPath)) {
-                unlink($configPath);
-            }
 
-            // Log Failure Audit
             $this->audit(
                 'database_backup_automated_failed',
                 false,
                 'Automated backup failed: ' . $e->getMessage() . " (Time: {$executionTime}s)"
             );
 
-            // Send Email Notifications
             $this->sendFailureEmail($e->getMessage(), $executionTime);
 
-            $this->error('Backup process failed!');
+            $this->error('Backup process failed: ' . $e->getMessage());
             return 1;
         }
-
-        return 0;
     }
 
-    private function dumpDatabase(string $outputPath)
+    private function dumpDatabase(string $outputPath): void
     {
         $config = config('database.connections.mysql');
         $host = $config['host'] ?? '127.0.0.1';
@@ -164,241 +139,171 @@ class AmisBackupCommand extends Command
         }
     }
 
-    private function createStorageZip(string $outputPath)
+    private function verifyDatabaseDump(string $sqlFilePath): void
+    {
+        if (!file_exists($sqlFilePath) || filesize($sqlFilePath) < 100) {
+            throw new \Exception('Database dump verification failed: File is missing or too small.');
+        }
+
+        $sample = file_get_contents($sqlFilePath, false, null, 0, 2048);
+        if (!str_contains($sample, 'MySQL dump') && !str_contains($sample, 'CREATE TABLE') && !str_contains($sample, 'INSERT INTO')) {
+            throw new \Exception('Database dump verification failed: Invalid SQL header.');
+        }
+    }
+
+    private function createFullBackupZip(string $outputPath, string $dbFile): array
     {
         $zip = new ZipArchive();
         if ($zip->open($outputPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
-            throw new \Exception('Failed to create storage zip archive.');
+            throw new \Exception('Failed to create ZIP archive.');
         }
 
-        // 1. Zip local public storage directory
-        $publicStorage = storage_path('app/public');
-        if (file_exists($publicStorage)) {
-            $this->addFolderToZip($zip, $publicStorage, 'storage_public');
+        $includedItems = [];
+
+        // 1. Add SQL Dump
+        if (file_exists($dbFile)) {
+            $zip->addFile($dbFile, 'database.sql');
+            $includedItems[] = 'MySQL Database Dump (database.sql)';
         }
 
-        // 2. Zip Ebooks Private Storage (Disk: ebook_private)
-        $ebookPrivateRoot = config('filesystems.disks.ebook_private.root');
-        if ($ebookPrivateRoot && file_exists($ebookPrivateRoot)) {
-            $this->addFolderToZip($zip, $ebookPrivateRoot, 'ebooks_private');
+        // 2. Add Core Code & Configurations
+        $codeDirectories = ['app', 'bootstrap', 'config', 'database', 'resources', 'routes'];
+        foreach ($codeDirectories as $dir) {
+            $fullPath = base_path($dir);
+            if (file_exists($fullPath)) {
+                $this->addDirectoryToZip($zip, $fullPath, "code/{$dir}");
+                $includedItems[] = "Source Code ({$dir}/)";
+            }
         }
 
-        // 3. Zip Ebooks Public Covers Directory
-        if ($ebookPrivateRoot) {
-            $coversDir = dirname(rtrim($ebookPrivateRoot, '/')) . '/public/covers';
-            if (file_exists($coversDir)) {
-                $this->addFolderToZip($zip, $coversDir, 'ebook_covers');
+        // 3. Add Storage & Uploaded Assets
+        $storagePaths = [
+            'storage/app/public' => 'uploads/storage_public',
+            'public/uploads' => 'uploads/public_uploads',
+            'public/images' => 'uploads/public_images',
+            'public/documents' => 'uploads/public_documents',
+            'public/signatures' => 'uploads/public_signatures',
+            'public/qr' => 'uploads/public_qr',
+        ];
+
+        foreach ($storagePaths as $localRel => $zipSubDir) {
+            $fullPath = base_path($localRel);
+            if (file_exists($fullPath)) {
+                $this->addDirectoryToZip($zip, $fullPath, $zipSubDir);
+                $includedItems[] = "Media/Uploads Asset ({$localRel}/)";
             }
         }
 
         $zip->close();
 
         if (!file_exists($outputPath) || filesize($outputPath) === 0) {
-            throw new \Exception('Storage zip file is empty or could not be generated.');
+            throw new \Exception('ZIP archive file is empty or could not be generated.');
         }
+
+        return array_unique($includedItems);
     }
 
-    private function addFolderToZip(ZipArchive $zip, string $folderPath, string $zipSubFolder)
+    private function addDirectoryToZip(ZipArchive $zip, string $folderPath, string $zipSubFolder): void
     {
         $files = new \RecursiveIteratorIterator(
             new \RecursiveDirectoryIterator($folderPath, \FilesystemIterator::SKIP_DOTS),
             \RecursiveIteratorIterator::LEAVES_ONLY
         );
 
+        $excludedNames = ['vendor', 'node_modules', 'bootstrap/cache', '.git', 'laravel.log'];
+
         foreach ($files as $name => $file) {
             if (!$file->isDir()) {
                 $filePath = $file->getRealPath();
+                
+                // Exclude vendor, node_modules, .git
+                $skip = false;
+                foreach ($excludedNames as $ex) {
+                    if (str_contains($filePath, '/' . $ex . '/')) {
+                        $skip = true;
+                        break;
+                    }
+                }
+                if ($skip) {
+                    continue;
+                }
+
                 $relativePath = $zipSubFolder . '/' . substr($filePath, strlen($folderPath) + 1);
                 $zip->addFile($filePath, $relativePath);
             }
         }
     }
 
-    private function createFullBackupZip(string $outputPath, string $dbFile, string $storageZipFile)
+    private function verifyArchiveIntegrity(string $zipPath): void
     {
         $zip = new ZipArchive();
-        if ($zip->open($outputPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
-            throw new \Exception('Failed to create full backup zip archive.');
+        $res = $zip->open($zipPath, ZipArchive::CHECKCONS);
+        if ($res !== true) {
+            throw new \Exception("ZIP archive integrity check failed with error code {$res}.");
         }
 
-        if (file_exists($dbFile)) {
-            $zip->addFile($dbFile, 'database.sql');
+        $hasSql = false;
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            $stat = $zip->statIndex($i);
+            if ($stat['name'] === 'database.sql' && $stat['size'] > 0) {
+                $hasSql = true;
+                break;
+            }
         }
-        if (file_exists($storageZipFile)) {
-            $zip->addFile($storageZipFile, 'storage.zip');
-        }
-
         $zip->close();
 
-        if (!file_exists($outputPath) || filesize($outputPath) === 0) {
-            throw new \Exception('Full backup zip file is empty or could not be generated.');
+        if (!$hasSql) {
+            throw new \Exception('ZIP archive integrity check failed: database.sql is missing inside archive.');
         }
     }
 
-    private function generateRcloneConfig(string $tempDir): string
+    private function pruneOldBackups(int $retentionDays = 30): void
     {
-        $clientId = config('services.google_drive.client_id');
-        $clientSecret = config('services.google_drive.client_secret');
-        $refreshToken = config('services.google_drive.refresh_token');
-        $folderId = config('services.google_drive.folder_id');
+        $backupDir = storage_path('app/backups');
+        $cutoffTime = time() - ($retentionDays * 86400);
 
-        if (empty($clientId) || empty($clientSecret) || empty($refreshToken)) {
-            throw new \Exception('Google Drive credentials are not fully configured in config/services.php.');
+        $files = glob($backupDir . '/*.*');
+        if (!$files || count($files) <= 1) {
+            return; // Never delete if 1 or 0 backups remaining
         }
 
-        $configPath = storage_path('app/backups/rclone.conf');
-        $tokenJson = json_encode([
-            'access_token' => 'init_dummy_value',
-            'token_type' => 'Bearer',
-            'refresh_token' => $refreshToken,
-            'expiry' => '2000-01-01T00:00:00Z',
-        ]);
+        // Sort files by mtime descending (newest first)
+        usort($files, fn($a, $b) => filemtime($b) - filemtime($a));
 
-        $configContent = "[gdrive]\n" .
-            "type = drive\n" .
-            "client_id = {$clientId}\n" .
-            "client_secret = {$clientSecret}\n" .
-            "token = {$tokenJson}\n";
+        // Always keep the latest backup
+        $latestBackup = array_shift($files);
 
-        if (!empty($folderId)) {
-            $configContent .= "root_folder_id = {$folderId}\n";
+        foreach ($files as $file) {
+            if (filemtime($file) < $cutoffTime) {
+                @unlink($file);
+                Log::info("Auto-pruned expired backup file: " . basename($file));
+            }
         }
-
-        file_put_contents($configPath, $configContent);
-        return $configPath;
     }
 
-    private function ensureRcloneBinary(): string
+    private function sendSuccessEmail(string $filename, string $formattedSize, float $executionTime, string $timestamp, array $includedItems): void
     {
-        $binDir = storage_path('app/bin');
-        if (!file_exists($binDir)) {
-            mkdir($binDir, 0755, true);
+        try {
+            $targetEmail = 'darius.lingasa@gmail.com';
+            Mail::to($targetEmail)->send(new BackupSuccessMail($filename, $formattedSize, $executionTime, $timestamp, $includedItems));
+            Log::info("Backup success notification dispatched to {$targetEmail}");
+        } catch (\Exception $e) {
+            Log::error('Failed to send backup success email: ' . $e->getMessage());
         }
-        $rclonePath = $binDir . '/rclone';
-        if (file_exists($rclonePath)) {
-            return $rclonePath;
-        }
-
-        $zipPath = $binDir . '/rclone.zip';
-        $url = 'https://downloads.rclone.org/rclone-current-linux-386.zip';
-
-        // Download rclone zip
-        $fileContent = @file_get_contents($url);
-        if ($fileContent === false) {
-            throw new \Exception("Failed to download rclone from {$url}");
-        }
-        file_put_contents($zipPath, $fileContent);
-
-        // Extract zip
-        $zip = new ZipArchive();
-        if ($zip->open($zipPath) === true) {
-            for ($i = 0; $i < $zip->numFiles; $i++) {
-                $filename = $zip->getNameIndex($i);
-                if (basename($filename) === 'rclone' && !str_ends_with($filename, '/')) {
-                    copy('zip://' . $zipPath . '#' . $filename, $rclonePath);
-                    break;
-                }
-            }
-            $zip->close();
-        }
-
-        if (file_exists($zipPath)) {
-            unlink($zipPath);
-        }
-
-        if (file_exists($rclonePath)) {
-            chmod($rclonePath, 0755);
-            return $rclonePath;
-        }
-
-        throw new \Exception('Failed to install rclone binary on server.');
     }
 
-    private function uploadToDrive(string $rclonePath, string $configPath, string $tempDir, string $dateStr)
+    private function sendFailureEmail(string $errorMsg, float $executionTime): void
     {
-        // Target folder in drive: AMIS-Backups/YYYY-MM-DD/
-        $driveTarget = "gdrive:AMIS-Backups/{$dateStr}";
-
-        // Run rclone copy
-        $cmd = sprintf(
-            '%s --config %s copy %s %s',
-            escapeshellarg($rclonePath),
-            escapeshellarg($configPath),
-            escapeshellarg($tempDir),
-            escapeshellarg($driveTarget)
-        );
-
-        $output = [];
-        $returnVar = 0;
-        exec($cmd, $output, $returnVar);
-
-        if ($returnVar !== 0) {
-            $errorMsg = implode("\n", $output);
-            throw new \Exception('rclone upload failed: ' . ($errorMsg ?: 'Unknown rclone execution error.'));
+        try {
+            $targetEmail = 'darius.lingasa@gmail.com';
+            Mail::to($targetEmail)->send(new BackupFailedMail($errorMsg, $executionTime));
+            Log::info("Backup failure alert dispatched to {$targetEmail}");
+        } catch (\Exception $e) {
+            Log::error('Failed to send backup failure notification: ' . $e->getMessage());
         }
     }
 
-    private function rotateBackups(string $rclonePath, string $configPath)
-    {
-        $cmd = sprintf(
-            '%s --config %s lsf gdrive:AMIS-Backups/',
-            escapeshellarg($rclonePath),
-            escapeshellarg($configPath)
-        );
-        $output = [];
-        $returnVar = 0;
-        exec($cmd, $output, $returnVar);
-
-        if ($returnVar !== 0) {
-            Log::warning('Grandfather-father-son rotation listing failed.');
-            return;
-        }
-
-        foreach ($output as $line) {
-            $folderName = rtrim($line, '/');
-            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $folderName)) {
-                continue;
-            }
-
-            $dateTimestamp = strtotime($folderName);
-            if (!$dateTimestamp) {
-                continue;
-            }
-
-            $ageInDays = (time() - $dateTimestamp) / 86400;
-            $keep = false;
-
-            // 1. Keep all daily backups for 30 days
-            if ($ageInDays <= 30) {
-                $keep = true;
-            }
-
-            // 2. Keep weekly backups (Sundays) for 12 weeks
-            $dayOfWeek = date('w', $dateTimestamp); // 0 = Sunday
-            if ($dayOfWeek == 0 && $ageInDays <= 84) {
-                $keep = true;
-            }
-
-            // 3. Keep monthly backups (1st of month) for 12 months
-            $dayOfMonth = date('j', $dateTimestamp);
-            if ($dayOfMonth == 1 && $ageInDays <= 365) {
-                $keep = true;
-            }
-
-            if (!$keep) {
-                Log::info("Grandfather-father-son: Deleting expired cloud backup folder {$folderName}");
-                $purgeCmd = sprintf(
-                    '%s --config %s purge gdrive:AMIS-Backups/%s',
-                    escapeshellarg($rclonePath),
-                    escapeshellarg($configPath),
-                    escapeshellarg($folderName)
-                );
-                exec($purgeCmd);
-            }
-        }
-    }
-
-    private function cleanLocalDirectory(string $tempDir)
+    private function cleanLocalDirectory(string $tempDir): void
     {
         if (!file_exists($tempDir)) {
             return;
@@ -414,18 +319,6 @@ class AmisBackupCommand extends Command
         rmdir($tempDir);
     }
 
-    private function sendFailureEmail(string $errorMsg, float $executionTime)
-    {
-        try {
-            $recipient = env('SCHOOL_EMAIL', 'almunawwaraislamicschool@gmail.com');
-            $adminEmail = env('MAIL_FROM_ADDRESS', 'amisonlinesupport@gmail.com');
-
-            Mail::to([$recipient, $adminEmail])->send(new BackupFailedMail($errorMsg, $executionTime));
-        } catch (\Exception $e) {
-            Log::error('Failed to send backup failure notification: ' . $e->getMessage());
-        }
-    }
-
     private function audit(string $event, bool $successful, ?string $message = null): void
     {
         if (!Schema::hasTable('admin_audit_logs')) {
@@ -434,7 +327,7 @@ class AmisBackupCommand extends Command
 
         try {
             AdminAuditLog::create([
-                'user_id' => null, // system action
+                'user_id' => null,
                 'event' => $event,
                 'email' => 'system@amis.edu.ph',
                 'ip_address' => '127.0.0.1',
@@ -444,7 +337,7 @@ class AmisBackupCommand extends Command
                 'metadata' => null,
             ]);
         } catch (\Exception $e) {
-            Log::error('Failed to write automated backup audit log: ' . $e->getMessage());
+            Log::error('Failed to write backup audit log: ' . $e->getMessage());
         }
     }
 

@@ -90,7 +90,10 @@ class SystemManagementUpgradeTest extends TestCase
     /** @test */
     public function admins_can_prune_old_backups()
     {
-        $admin = $this->createAdmin();
+        $admin = User::factory()->create([
+            'role' => 'super_admin',
+            'account_status' => 'verified',
+        ]);
 
         $response = $this->actingAs($admin)->post(route('admin.system-management.backups.prune'), [
             'days' => 30,
