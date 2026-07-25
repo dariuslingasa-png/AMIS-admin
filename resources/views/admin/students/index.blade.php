@@ -434,8 +434,8 @@
             <!-- Microsoft Account Credentials Card -->
             <div class="space-y-3.5">
                 <!-- Email Field -->
-                <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-3.5 dark:border-slate-800 dark:bg-slate-800/50">
-                    <div class="flex items-center justify-between text-[11px] font-extrabold uppercase tracking-wider text-slate-500 mb-1.5">
+                <div class="rounded-xl border border-slate-200/80 bg-slate-50/60 p-3.5 dark:border-slate-800 dark:bg-slate-800/40">
+                    <div class="flex items-center justify-between text-[11px] font-extrabold uppercase tracking-wider text-slate-500 mb-2">
                         <span class="flex items-center gap-1.5">
                             <i data-lucide="mail" class="h-3.5 w-3.5 text-emerald-600"></i>
                             Microsoft School Email
@@ -444,18 +444,18 @@
                             Active Account
                         </span>
                     </div>
-                    <div class="flex items-center justify-between gap-2">
-                        <input type="text" id="cred-modal-email" readonly class="w-full bg-transparent font-mono text-xs font-bold text-slate-900 dark:text-white focus:outline-none selection:bg-emerald-100 selection:text-emerald-900" value="s.261125@amis.edu.ph">
-                        <button type="button" onclick="copyCredText('cred-modal-email', 'Email')" class="inline-flex h-8 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 transition cursor-pointer shadow-sm shrink-0">
-                            <i data-lucide="copy" class="h-3.5 w-3.5"></i>
+                    <div class="flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-2xs focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-900 transition-all">
+                        <input type="text" id="cred-modal-email" readonly class="w-full bg-transparent border-0 outline-none font-mono text-xs font-bold text-slate-900 dark:text-white p-0 m-0 focus:outline-none focus:ring-0 focus:border-0 selection:bg-emerald-100 selection:text-emerald-900" value="s.261125@amis.edu.ph" style="border: none !important; outline: none !important; box-shadow: none !important;">
+                        <button type="button" onclick="copyCredText('cred-modal-email', 'Email')" class="inline-flex h-7 items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-[11px] font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300 transition cursor-pointer shrink-0">
+                            <i data-lucide="copy" class="h-3 w-3"></i>
                             <span>Copy</span>
                         </button>
                     </div>
                 </div>
 
                 <!-- Password Field -->
-                <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-3.5 dark:border-slate-800 dark:bg-slate-800/50">
-                    <div class="flex items-center justify-between text-[11px] font-extrabold uppercase tracking-wider text-slate-500 mb-1.5">
+                <div class="rounded-xl border border-slate-200/80 bg-slate-50/60 p-3.5 dark:border-slate-800 dark:bg-slate-800/40">
+                    <div class="flex items-center justify-between text-[11px] font-extrabold uppercase tracking-wider text-slate-500 mb-2">
                         <span class="flex items-center gap-1.5">
                             <i data-lucide="key-round" class="h-3.5 w-3.5 text-amber-600"></i>
                             Account Password
@@ -464,16 +464,16 @@
                             Temporary Active
                         </span>
                     </div>
-                    <div class="flex items-center justify-between gap-2">
+                    <div class="flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-2xs focus-within:border-amber-500 focus-within:ring-2 focus-within:ring-amber-500/20 dark:border-slate-700 dark:bg-slate-900 transition-all">
                         <div class="relative w-full">
-                            <input type="password" id="cred-modal-password" readonly class="w-full bg-transparent font-mono text-xs font-bold text-slate-900 dark:text-white focus:outline-none selection:bg-amber-100 selection:text-amber-900" value="Amis@98213">
-                            <input type="text" id="cred-modal-password-text" readonly class="hidden w-full bg-transparent font-mono text-xs font-bold text-slate-900 dark:text-white focus:outline-none selection:bg-amber-100 selection:text-amber-900" value="Amis@98213">
+                            <input type="password" id="cred-modal-password" readonly class="w-full bg-transparent border-0 outline-none font-mono text-xs font-bold text-slate-900 dark:text-white p-0 m-0 focus:outline-none focus:ring-0 focus:border-0 selection:bg-amber-100 selection:text-amber-900" value="Amis@98213" style="border: none !important; outline: none !important; box-shadow: none !important;">
+                            <input type="text" id="cred-modal-password-text" readonly class="hidden w-full bg-transparent border-0 outline-none font-mono text-xs font-bold text-slate-900 dark:text-white p-0 m-0 focus:outline-none focus:ring-0 focus:border-0 selection:bg-amber-100 selection:text-amber-900" value="Amis@98213" style="border: none !important; outline: none !important; box-shadow: none !important;">
                         </div>
-                        <button type="button" onclick="togglePasswordVisibility()" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-200 hover:text-slate-700 transition shrink-0" title="Toggle Show/Hide Password">
+                        <button type="button" onclick="togglePasswordVisibility()" class="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition shrink-0" title="Toggle Show/Hide Password">
                             <i id="cred-modal-eye-icon" data-lucide="eye" class="h-4 w-4"></i>
                         </button>
-                        <button type="button" onclick="copyCredText('cred-modal-password-text', 'Password')" class="inline-flex h-8 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-bold text-slate-700 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-200 transition cursor-pointer shadow-sm shrink-0">
-                            <i data-lucide="copy" class="h-3.5 w-3.5"></i>
+                        <button type="button" onclick="copyCredText('cred-modal-password-text', 'Password')" class="inline-flex h-7 items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-[11px] font-bold text-slate-700 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-300 transition cursor-pointer shrink-0">
+                            <i data-lucide="copy" class="h-3 w-3"></i>
                             <span>Copy</span>
                         </button>
                     </div>
