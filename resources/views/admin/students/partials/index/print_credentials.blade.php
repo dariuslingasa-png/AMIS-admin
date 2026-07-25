@@ -55,10 +55,64 @@
     </style>
 </head>
 <body class="layout-slips">
-    <div class="toolbar">
-        <button type="button" class="btn-green" onclick="window.print()">Print / Save PDF</button>
-        <button type="button" class="btn-blue" id="btn-show-slips" onclick="switchLayout('slips')">Credential Slips</button>
-        <button type="button" class="btn-slate" id="btn-show-table" onclick="switchLayout('table')">Credential Table</button>
+    <div class="toolbar" style="display: flex; flex-direction: column; align-items: stretch; gap: 8px; padding: 12px 16px; background: #ffffff; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 1000;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            @if(isset($students) && count($students) === 1)
+                @php $singleStudent = $students->first(); @endphp
+                <h3 style="margin: 0; font-size: 13px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 6px; font-family: Inter, Arial, sans-serif;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 18v3c0 .6.4 1 1 1h4v-3h3v-3h2l1.4-1.4a6.5 6.5 0 1 0-4-4Z"/><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/></svg>
+                    <span>Microsoft Account Credentials Slip - {{ $singleStudent->student_number }}</span>
+                </h3>
+            @else
+                <h3 style="margin: 0; font-size: 13px; font-weight: 800; color: #0f172a; font-family: Inter, Arial, sans-serif;">Student Credentials Printer</h3>
+            @endif
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <button type="button" class="btn-green" onclick="window.print()">Print / Save PDF</button>
+                <button type="button" class="btn-blue" id="btn-show-slips" onclick="switchLayout('slips')">Credential Slips</button>
+                <button type="button" class="btn-slate" id="btn-show-table" onclick="switchLayout('table')">Credential Table</button>
+            </div>
+        </div>
+
+        @if(isset($students) && count($students) === 1)
+            <!-- Below Navbar Switcher Buttons (NO EMOJIS, ICON ONLY) -->
+            <div style="display: flex; align-items: center; gap: 6px; overflow-x: auto; padding-top: 6px; border-top: 1px solid #f1f5f9;">
+                <!-- ID FORM -->
+                <a href="{{ route('admin.students.index', ['search' => $singleStudent->student_number, 'print_id' => 1]) }}" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; text-decoration: none; border: 1px solid #cbd5e1; background: #ffffff; color: #475569; font-family: Inter, sans-serif;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 7h3v3H7z"/><path d="M14 7h3"/><path d="M14 11h3"/><path d="M7 14h10"/><path d="M7 17h10"/></svg>
+                    <span>ID Form</span>
+                </a>
+
+                <!-- MICROSOFT ACCOUNT FORM (ACTIVE) -->
+                <a href="{{ route('admin.students.index', ['search' => $singleStudent->student_number, 'print_credentials' => 1]) }}" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; text-decoration: none; border: 1px solid #2563eb; background: #eff6ff; color: #1d4ed8; font-family: Inter, sans-serif;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 18v3c0 .6.4 1 1 1h4v-3h3v-3h2l1.4-1.4a6.5 6.5 0 1 0-4-4Z"/><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/></svg>
+                    <span>Microsoft Account Form</span>
+                </a>
+
+                <!-- ENROLLMENT FORM -->
+                <a href="{{ route('admin.students.print-enrolment-form', $singleStudent) }}" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; text-decoration: none; border: 1px solid #cbd5e1; background: #ffffff; color: #475569; font-family: Inter, sans-serif;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>
+                    <span>Enrollment Form</span>
+                </a>
+
+                <!-- INFO FORM -->
+                <a href="{{ route('admin.students.index', ['search' => $singleStudent->student_number, 'print_info' => 1]) }}" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; text-decoration: none; border: 1px solid #cbd5e1; background: #ffffff; color: #475569; font-family: Inter, sans-serif;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    <span>Info Form</span>
+                </a>
+
+                <!-- GRADE FORM -->
+                <a href="{{ route('admin.students.show', $singleStudent) }}" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; text-decoration: none; border: 1px solid #cbd5e1; background: #ffffff; color: #475569; font-family: Inter, sans-serif;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                    <span>Grade Form</span>
+                </a>
+
+                <!-- DOCUMENTS FORM -->
+                <a href="{{ route('admin.students.download-docs-zip', ['student_id' => $singleStudent->id]) }}" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; text-decoration: none; border: 1px solid #cbd5e1; background: #ffffff; color: #475569; font-family: Inter, sans-serif;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L8.6 3.3A2 2 0 0 0 6.9 2.5H4a2 2 0 0 0-2 2v13.5a2 2 0 0 0 2 2z"/></svg>
+                    <span>Documents Form</span>
+                </a>
+            </div>
+        @endif
     </div>
 
     <main class="page">

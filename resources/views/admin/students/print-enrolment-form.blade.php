@@ -655,12 +655,60 @@
 </head>
 <body>
 
-    <!-- Top Action Bar for Screen Viewing -->
-    <div class="action-bar">
-        <h2>📄 Official Enrolment Application Form - {{ $student->student_number }}</h2>
-        <div class="btn-group">
-            <button class="btn btn-secondary" onclick="window.close()">Close Window</button>
-            <button class="btn btn-primary" onclick="triggerPrintPDF()">🖨️ Print / Save as PDF</button>
+    <!-- Top Action Bar & Student Form Switcher Navigation Bar -->
+    <div class="action-bar-container">
+        <!-- Top Row: Form Title & Action Buttons -->
+        <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid #f1f5f9; margin-bottom: 10px;">
+            <h2 style="font-size: 0.95rem; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px; margin: 0;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>
+                <span>Official Enrolment Application Form - {{ $student->student_number }}</span>
+            </h2>
+            <div style="display: flex; gap: 8px;">
+                <button onclick="window.close()" style="font-family: 'Inter', sans-serif; font-size: 0.8rem; font-weight: 700; padding: 7px 14px; border-radius: 8px; border: 1px solid #cbd5e1; background: #f8fafc; color: #334155; cursor: pointer;">Close Window</button>
+                <button onclick="triggerPrintPDF()" style="font-family: 'Inter', sans-serif; font-size: 0.8rem; font-weight: 700; padding: 7px 16px; border-radius: 8px; border: none; background: #059669; color: white; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+                    <span>Print / Save as PDF</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Below Navbar: Quick Student Form Switcher Navigation Bar (NO EMOJIS, ICON ONLY) -->
+        <div style="display: flex; align-items: center; justify-content: flex-start; gap: 6px; overflow-x: auto; padding-bottom: 2px;">
+            <!-- ID FORM -->
+            <a href="{{ route('admin.students.index', ['search' => $student->student_number, 'print_id' => 1]) }}" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; text-decoration: none; border: 1px solid #cbd5e1; background: #ffffff; color: #475569; transition: all 0.15s;" onmouseover="this.style.background='#f1f5f9';this.style.color='#0f172a'" onmouseout="this.style.background='#ffffff';this.style.color='#475569'">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 7h3v3H7z"/><path d="M14 7h3"/><path d="M14 11h3"/><path d="M7 14h10"/><path d="M7 17h10"/></svg>
+                <span>ID Form</span>
+            </a>
+
+            <!-- MICROSOFT ACCOUNT FORM -->
+            <a href="{{ route('admin.students.index', ['search' => $student->student_number, 'print_credentials' => 1]) }}" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; text-decoration: none; border: 1px solid #cbd5e1; background: #ffffff; color: #475569; transition: all 0.15s;" onmouseover="this.style.background='#f1f5f9';this.style.color='#0f172a'" onmouseout="this.style.background='#ffffff';this.style.color='#475569'">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 18v3c0 .6.4 1 1 1h4v-3h3v-3h2l1.4-1.4a6.5 6.5 0 1 0-4-4Z"/><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/></svg>
+                <span>Microsoft Account Form</span>
+            </a>
+
+            <!-- ENROLLMENT FORM (ACTIVE) -->
+            <a href="{{ route('admin.students.print-enrolment-form', $student) }}" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; text-decoration: none; border: 1px solid #059669; background: #ecfdf5; color: #047857;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>
+                <span>Enrollment Form</span>
+            </a>
+
+            <!-- INFO FORM -->
+            <a href="{{ route('admin.students.index', ['search' => $student->student_number, 'print_info' => 1]) }}" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; text-decoration: none; border: 1px solid #cbd5e1; background: #ffffff; color: #475569; transition: all 0.15s;" onmouseover="this.style.background='#f1f5f9';this.style.color='#0f172a'" onmouseout="this.style.background='#ffffff';this.style.color='#475569'">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <span>Info Form</span>
+            </a>
+
+            <!-- GRADE FORM -->
+            <a href="{{ route('admin.students.show', $student) }}" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; text-decoration: none; border: 1px solid #cbd5e1; background: #ffffff; color: #475569; transition: all 0.15s;" onmouseover="this.style.background='#f1f5f9';this.style.color='#0f172a'" onmouseout="this.style.background='#ffffff';this.style.color='#475569'">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                <span>Grade Form</span>
+            </a>
+
+            <!-- DOCUMENTS FORM -->
+            <a href="{{ route('admin.students.download-docs-zip', ['student_id' => $student->id]) }}" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; text-decoration: none; border: 1px solid #cbd5e1; background: #ffffff; color: #475569; transition: all 0.15s;" onmouseover="this.style.background='#f1f5f9';this.style.color='#0f172a'" onmouseout="this.style.background='#ffffff';this.style.color='#475569'">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L8.6 3.3A2 2 0 0 0 6.9 2.5H4a2 2 0 0 0-2 2v13.5a2 2 0 0 0 2 2z"/></svg>
+                <span>Documents Form</span>
+            </a>
         </div>
     </div>
 

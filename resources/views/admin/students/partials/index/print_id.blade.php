@@ -336,41 +336,126 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
-    <div class="toolbar" style="display: flex; gap: 8px; align-items: center;">
-        <div class="dropdown" style="position: relative; display: inline-block;">
-            <button type="button" onclick="toggleDropdown()" class="btn-png" style="display: flex; align-items: center; gap: 6px;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-                <span>Download High-Res PNGs</span>
-                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-            </button>
-            <div id="png-dropdown-menu" class="dropdown-content" style="display: none; position: absolute; right: 0; top: 100%; margin-top: 5px; background-color: #ffffff; min-width: 250px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.15); border-radius: 12px; border: 1px solid #e2e8f0; padding: 6px; z-index: 9999; flex-direction: column; gap: 4px;">
-                <button type="button" onclick="triggerDownload('front-color-back-mono')" class="dropdown-item" style="text-align: left; background: none; color: #1e293b; padding: 10px 12px; border: none; font-size: 12px; font-weight: 700; width: 100%; cursor: pointer; border-radius: 8px; display: flex; align-items: center; gap: 8px; transition: background 0.15s;">
-                    <span style="font-size: 14px;">🖨️</span>
-                    <div style="display: flex; flex-direction: column;">
-                        <span>Front Color + Back Black/White</span>
-                        <span style="font-size: 9px; font-weight: 500; color: #059669; margin-top: 2px;">★ Recommended for Smart Printers</span>
+    @if(isset($students) && count($students) === 1)
+        @php $singleStudent = $students->first(); @endphp
+        <div class="toolbar" style="display: flex; flex-direction: column; align-items: stretch; gap: 10px; padding: 12px 16px; background: #ffffff; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 1000;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; font-size: 13px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 6px; font-family: Inter, sans-serif;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 7h3v3H7z"/><path d="M14 7h3"/><path d="M14 11h3"/><path d="M7 14h10"/><path d="M7 17h10"/></svg>
+                    <span>Official Student ID Card Sheet - {{ $singleStudent->student_number }}</span>
+                </h3>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <div class="dropdown" style="position: relative; display: inline-block;">
+                        <button type="button" onclick="toggleDropdown()" class="btn-png" style="display: flex; align-items: center; gap: 6px; font-family: Inter, sans-serif;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                            <span>Download High-Res PNGs</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                        </button>
+                        <div id="png-dropdown-menu" class="dropdown-content" style="display: none; position: absolute; right: 0; top: 100%; margin-top: 5px; background-color: #ffffff; min-width: 250px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.15); border-radius: 12px; border: 1px solid #e2e8f0; padding: 6px; z-index: 9999; flex-direction: column; gap: 4px;">
+                            <button type="button" onclick="triggerDownload('front-color-back-mono')" class="dropdown-item" style="text-align: left; background: none; color: #1e293b; padding: 10px 12px; border: none; font-size: 12px; font-weight: 700; width: 100%; cursor: pointer; border-radius: 8px; display: flex; align-items: center; gap: 8px; transition: background 0.15s;">
+                                <span style="font-size: 14px;">🖨️</span>
+                                <div style="display: flex; flex-direction: column;">
+                                    <span>Front Color + Back Black/White</span>
+                                    <span style="font-size: 9px; font-weight: 500; color: #059669; margin-top: 2px;">★ Recommended for Smart Printers</span>
+                                </div>
+                            </button>
+                            <button type="button" onclick="triggerDownload('full-color')" class="dropdown-item" style="text-align: left; background: none; color: #1e293b; padding: 10px 12px; border: none; font-size: 12px; font-weight: 700; width: 100%; cursor: pointer; border-radius: 8px; display: flex; align-items: center; gap: 8px; transition: background 0.15s;">
+                                <span style="font-size: 14px;">🎨</span>
+                                <span>Both Sides Full Color</span>
+                            </button>
+                            <div style="border-top: 1px solid #f1f5f9; margin: 4px 0;"></div>
+                            <button type="button" onclick="triggerDownload('front-only')" class="dropdown-item" style="text-align: left; background: none; color: #475569; padding: 8px 12px; border: none; font-size: 12px; font-weight: 600; width: 100%; cursor: pointer; border-radius: 8px; display: flex; align-items: center; gap: 8px; transition: background 0.15s;">
+                                <span style="font-size: 14px;">🖼️</span>
+                                <span>Front Side Only (Color)</span>
+                            </button>
+                            <button type="button" onclick="triggerDownload('back-only-mono')" class="dropdown-item" style="text-align: left; background: none; color: #475569; padding: 8px 12px; border: none; font-size: 12px; font-weight: 600; width: 100%; cursor: pointer; border-radius: 8px; display: flex; align-items: center; gap: 8px; transition: background 0.15s;">
+                                <span style="font-size: 14px;">🖤</span>
+                                <span>Back Side Only (Black/White)</span>
+                            </button>
+                        </div>
                     </div>
-                </button>
-                <button type="button" onclick="triggerDownload('full-color')" class="dropdown-item" style="text-align: left; background: none; color: #1e293b; padding: 10px 12px; border: none; font-size: 12px; font-weight: 700; width: 100%; cursor: pointer; border-radius: 8px; display: flex; align-items: center; gap: 8px; transition: background 0.15s;">
-                    <span style="font-size: 14px;">🎨</span>
-                    <span>Both Sides Full Color</span>
-                </button>
-                <div style="border-top: 1px solid #f1f5f9; margin: 4px 0;"></div>
-                <button type="button" onclick="triggerDownload('front-only')" class="dropdown-item" style="text-align: left; background: none; color: #475569; padding: 8px 12px; border: none; font-size: 12px; font-weight: 600; width: 100%; cursor: pointer; border-radius: 8px; display: flex; align-items: center; gap: 8px; transition: background 0.15s;">
-                    <span style="font-size: 14px;">🖼️</span>
-                    <span>Front Side Only (Color)</span>
-                </button>
-                <button type="button" onclick="triggerDownload('back-only-mono')" class="dropdown-item" style="text-align: left; background: none; color: #475569; padding: 8px 12px; border: none; font-size: 12px; font-weight: 600; width: 100%; cursor: pointer; border-radius: 8px; display: flex; align-items: center; gap: 8px; transition: background 0.15s;">
-                    <span style="font-size: 14px;">🖤</span>
-                    <span>Back Side Only (Black/White)</span>
-                </button>
+                    <button type="button" onclick="window.print()" style="font-family: Inter, sans-serif;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+                        Print PDF / Printer
+                    </button>
+                </div>
+            </div>
+            <!-- Below Navbar Switcher Buttons (NO EMOJIS, ICON ONLY) -->
+            <div style="display: flex; align-items: center; gap: 6px; overflow-x: auto; padding-top: 6px; border-top: 1px solid #f1f5f9;">
+                <!-- ID FORM (ACTIVE) -->
+                <a href="{{ route('admin.students.index', ['search' => $singleStudent->student_number, 'print_id' => 1]) }}" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; text-decoration: none; border: 1px solid #059669; background: #ecfdf5; color: #047857; font-family: Inter, sans-serif;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 7h3v3H7z"/><path d="M14 7h3"/><path d="M14 11h3"/><path d="M7 14h10"/><path d="M7 17h10"/></svg>
+                    <span>ID Form</span>
+                </a>
+
+                <!-- MICROSOFT ACCOUNT FORM -->
+                <a href="{{ route('admin.students.index', ['search' => $singleStudent->student_number, 'print_credentials' => 1]) }}" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; text-decoration: none; border: 1px solid #cbd5e1; background: #ffffff; color: #475569; font-family: Inter, sans-serif;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 18v3c0 .6.4 1 1 1h4v-3h3v-3h2l1.4-1.4a6.5 6.5 0 1 0-4-4Z"/><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/></svg>
+                    <span>Microsoft Account Form</span>
+                </a>
+
+                <!-- ENROLLMENT FORM -->
+                <a href="{{ route('admin.students.print-enrolment-form', $singleStudent) }}" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; text-decoration: none; border: 1px solid #cbd5e1; background: #ffffff; color: #475569; font-family: Inter, sans-serif;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>
+                    <span>Enrollment Form</span>
+                </a>
+
+                <!-- INFO FORM -->
+                <a href="{{ route('admin.students.index', ['search' => $singleStudent->student_number, 'print_info' => 1]) }}" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; text-decoration: none; border: 1px solid #cbd5e1; background: #ffffff; color: #475569; font-family: Inter, sans-serif;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    <span>Info Form</span>
+                </a>
+
+                <!-- GRADE FORM -->
+                <a href="{{ route('admin.students.show', $singleStudent) }}" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; text-decoration: none; border: 1px solid #cbd5e1; background: #ffffff; color: #475569; font-family: Inter, sans-serif;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                    <span>Grade Form</span>
+                </a>
+
+                <!-- DOCUMENTS FORM -->
+                <a href="{{ route('admin.students.download-docs-zip', ['student_id' => $singleStudent->id]) }}" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; text-decoration: none; border: 1px solid #cbd5e1; background: #ffffff; color: #475569; font-family: Inter, sans-serif;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L8.6 3.3A2 2 0 0 0 6.9 2.5H4a2 2 0 0 0-2 2v13.5a2 2 0 0 0 2 2z"/></svg>
+                    <span>Documents Form</span>
+                </a>
             </div>
         </div>
-        <button type="button" onclick="window.print()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
-            Print PDF / Printer
-        </button>
-    </div>
+    @else
+        <div class="toolbar" style="display: flex; gap: 8px; align-items: center;">
+            <div class="dropdown" style="position: relative; display: inline-block;">
+                <button type="button" onclick="toggleDropdown()" class="btn-png" style="display: flex; align-items: center; gap: 6px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                    <span>Download High-Res PNGs</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+                <div id="png-dropdown-menu" class="dropdown-content" style="display: none; position: absolute; right: 0; top: 100%; margin-top: 5px; background-color: #ffffff; min-width: 250px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.15); border-radius: 12px; border: 1px solid #e2e8f0; padding: 6px; z-index: 9999; flex-direction: column; gap: 4px;">
+                    <button type="button" onclick="triggerDownload('front-color-back-mono')" class="dropdown-item" style="text-align: left; background: none; color: #1e293b; padding: 10px 12px; border: none; font-size: 12px; font-weight: 700; width: 100%; cursor: pointer; border-radius: 8px; display: flex; align-items: center; gap: 8px; transition: background 0.15s;">
+                        <span style="font-size: 14px;">🖨️</span>
+                        <div style="display: flex; flex-direction: column;">
+                            <span>Front Color + Back Black/White</span>
+                            <span style="font-size: 9px; font-weight: 500; color: #059669; margin-top: 2px;">★ Recommended for Smart Printers</span>
+                        </div>
+                    </button>
+                    <button type="button" onclick="triggerDownload('full-color')" class="dropdown-item" style="text-align: left; background: none; color: #1e293b; padding: 10px 12px; border: none; font-size: 12px; font-weight: 700; width: 100%; cursor: pointer; border-radius: 8px; display: flex; align-items: center; gap: 8px; transition: background 0.15s;">
+                        <span style="font-size: 14px;">🎨</span>
+                        <span>Both Sides Full Color</span>
+                    </button>
+                    <div style="border-top: 1px solid #f1f5f9; margin: 4px 0;"></div>
+                    <button type="button" onclick="triggerDownload('front-only')" class="dropdown-item" style="text-align: left; background: none; color: #475569; padding: 8px 12px; border: none; font-size: 12px; font-weight: 600; width: 100%; cursor: pointer; border-radius: 8px; display: flex; align-items: center; gap: 8px; transition: background 0.15s;">
+                        <span style="font-size: 14px;">🖼️</span>
+                        <span>Front Side Only (Color)</span>
+                    </button>
+                    <button type="button" onclick="triggerDownload('back-only-mono')" class="dropdown-item" style="text-align: left; background: none; color: #475569; padding: 8px 12px; border: none; font-size: 12px; font-weight: 600; width: 100%; cursor: pointer; border-radius: 8px; display: flex; align-items: center; gap: 8px; transition: background 0.15s;">
+                        <span style="font-size: 14px;">🖤</span>
+                        <span>Back Side Only (Black/White)</span>
+                    </button>
+                </div>
+            </div>
+            <button type="button" onclick="window.print()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+                Print PDF / Printer
+            </button>
+        </div>
+    @endif
 
     @php
         $getGradeColor = function($grade) {
