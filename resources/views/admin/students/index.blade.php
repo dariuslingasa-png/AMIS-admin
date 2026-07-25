@@ -410,31 +410,31 @@
     </div>
 
     <!-- Microsoft Credentials & Password Quick Modal Pop-up -->
-    <div id="credentials-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-sm transition-opacity duration-200" onclick="if(event.target === this) closeStudentCredentialsModal()">
+    <div id="credentials-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/40 backdrop-blur-sm transition-opacity duration-200" onclick="if(event.target === this) closeStudentCredentialsModal()">
         <div class="relative w-full max-w-md scale-95 transform rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl transition-all duration-200 dark:border-slate-800 dark:bg-slate-900">
             <!-- Modal Header -->
             <div class="flex items-start justify-between border-b border-slate-100 dark:border-slate-800 pb-4 mb-4">
                 <div class="flex items-center gap-3">
-                    <div id="cred-modal-avatar" class="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-amber-700 font-extrabold text-sm ring-1 ring-amber-200 overflow-hidden">
+                    <div id="cred-modal-avatar" class="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 font-extrabold text-sm ring-1 ring-emerald-200 overflow-hidden shrink-0">
                         ST
                     </div>
                     <div>
-                        <h3 id="cred-modal-name" class="text-base font-black text-slate-950 dark:text-white leading-tight">STUDENT NAME</h3>
+                        <h3 id="cred-modal-name" class="text-base font-black text-slate-900 dark:text-white leading-tight">STUDENT NAME</h3>
                         <p class="text-xs font-bold text-slate-500 mt-0.5">
                             <span id="cred-modal-id" class="text-emerald-700 font-extrabold">#261125</span> • 
                             <span id="cred-modal-grade">Grade 6</span> (<span id="cred-modal-section">Section</span>)
                         </p>
                     </div>
                 </div>
-                <button type="button" onclick="closeStudentCredentialsModal()" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition cursor-pointer">
+                <button type="button" onclick="closeStudentCredentialsModal()" class="rounded-xl p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition cursor-pointer">
                     <i data-lucide="x" class="h-5 w-5"></i>
                 </button>
             </div>
 
             <!-- Microsoft Account Credentials Card -->
-            <div class="space-y-4">
+            <div class="space-y-3.5">
                 <!-- Email Field -->
-                <div class="rounded-xl border border-slate-200 bg-slate-50/70 p-3.5 dark:border-slate-800 dark:bg-slate-800/50">
+                <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-3.5 dark:border-slate-800 dark:bg-slate-800/50">
                     <div class="flex items-center justify-between text-[11px] font-extrabold uppercase tracking-wider text-slate-500 mb-1.5">
                         <span class="flex items-center gap-1.5">
                             <i data-lucide="mail" class="h-3.5 w-3.5 text-emerald-600"></i>
@@ -454,7 +454,7 @@
                 </div>
 
                 <!-- Password Field -->
-                <div class="rounded-xl border border-slate-200 bg-slate-50/70 p-3.5 dark:border-slate-800 dark:bg-slate-800/50">
+                <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-3.5 dark:border-slate-800 dark:bg-slate-800/50">
                     <div class="flex items-center justify-between text-[11px] font-extrabold uppercase tracking-wider text-slate-500 mb-1.5">
                         <span class="flex items-center gap-1.5">
                             <i data-lucide="key-round" class="h-3.5 w-3.5 text-amber-600"></i>
@@ -478,25 +478,45 @@
                         </button>
                     </div>
                 </div>
+
+                <!-- Quick Action Buttons: Reset Password & Resend Credentials Email -->
+                <div class="grid grid-cols-2 gap-2 pt-1">
+                    <form id="cred-modal-reset-form" method="POST" action="" onsubmit="return confirm('Reset Microsoft Office 365 password to default temporary password (Amis@12345)?')">
+                        @csrf
+                        <input type="hidden" name="reset_format" value="default">
+                        <button type="submit" class="w-full inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border border-amber-300 bg-amber-50/80 px-3 text-xs font-bold text-amber-800 hover:bg-amber-100 transition cursor-pointer shadow-sm">
+                            <i data-lucide="rotate-ccw" class="h-3.5 w-3.5 text-amber-600"></i>
+                            <span>Reset Password</span>
+                        </button>
+                    </form>
+
+                    <form id="cred-modal-resend-form" method="POST" action="">
+                        @csrf
+                        <button type="submit" class="w-full inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border border-indigo-300 bg-indigo-50/80 px-3 text-xs font-bold text-indigo-800 hover:bg-indigo-100 transition cursor-pointer shadow-sm">
+                            <i data-lucide="send" class="h-3.5 w-3.5 text-indigo-600"></i>
+                            <span>Resend Email</span>
+                        </button>
+                    </form>
+                </div>
             </div>
 
             <!-- Toast Feedback Notification -->
-            <div id="cred-copy-toast" class="hidden mt-3 rounded-lg bg-emerald-900 px-3 py-2 text-center text-xs font-bold text-emerald-100 transition">
+            <div id="cred-copy-toast" class="hidden mt-3 rounded-lg bg-emerald-800 px-3 py-2 text-center text-xs font-bold text-emerald-50 transition shadow-sm">
                 <span id="cred-copy-toast-msg">Copied to clipboard!</span>
             </div>
 
-            <!-- Modal Footer Actions -->
-            <div class="mt-5 flex items-center justify-between gap-2 border-t border-slate-100 dark:border-slate-800 pt-4">
-                <button type="button" onclick="copyCombinedCredentials()" class="inline-flex h-9 items-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 px-3 text-xs font-bold text-emerald-800 hover:bg-emerald-100 transition cursor-pointer shadow-sm">
+            <!-- Modal Footer Actions (Clean soft colors, NO black blocks) -->
+            <div class="mt-4 flex items-center justify-between gap-2 border-t border-slate-100 dark:border-slate-800 pt-4">
+                <button type="button" onclick="copyCombinedCredentials()" class="inline-flex h-9 items-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 px-3.5 text-xs font-bold text-emerald-800 hover:bg-emerald-100 transition cursor-pointer shadow-sm">
                     <i data-lucide="copy-check" class="h-4 w-4 text-emerald-600"></i>
                     <span>Copy Both</span>
                 </button>
-                <div class="flex items-center gap-1.5">
-                    <a id="cred-modal-print-btn" href="#" target="_blank" class="inline-flex h-9 items-center gap-1 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 hover:bg-slate-50 transition" title="Print Credential Slip">
+                <div class="flex items-center gap-2">
+                    <a id="cred-modal-print-btn" href="#" target="_blank" class="inline-flex h-9 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition shadow-sm" title="Print Credential Slip">
                         <i data-lucide="printer" class="h-4 w-4 text-slate-500"></i>
                         <span>Print Slip</span>
                     </a>
-                    <button type="button" onclick="closeStudentCredentialsModal()" class="inline-flex h-9 items-center justify-center rounded-xl bg-slate-900 px-4 text-xs font-bold text-white hover:bg-slate-800 transition cursor-pointer">
+                    <button type="button" onclick="closeStudentCredentialsModal()" class="inline-flex h-9 items-center justify-center rounded-xl border border-slate-200 bg-slate-100 px-4 text-xs font-bold text-slate-700 hover:bg-slate-200 transition cursor-pointer">
                         Close
                     </button>
                 </div>
@@ -549,6 +569,16 @@
             const printBtn = document.getElementById('cred-modal-print-btn');
             if (printBtn && student.print_url) {
                 printBtn.href = student.print_url;
+            }
+
+            const resendForm = document.getElementById('cred-modal-resend-form');
+            if (resendForm && student.resend_url) {
+                resendForm.action = student.resend_url;
+            }
+
+            const resetForm = document.getElementById('cred-modal-reset-form');
+            if (resetForm && student.resend_url) {
+                resetForm.action = student.resend_url;
             }
 
             const modal = document.getElementById('credentials-modal');
