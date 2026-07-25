@@ -135,7 +135,11 @@
                         <td class="px-5 py-4 font-extrabold text-slate-700">
                             @php
                                 $gradeRaw = $student->grade_level ?? '-';
-                                $gradeAbbr = preg_replace('/^Grade\s*(\d+)$/i', 'G$1', $gradeRaw);
+                                $gradeAbbr = preg_replace(
+                                    ['/^Kinder\s*1$/i', '/^Kinder\s*2$/i', '/^Grade\s*(\d+)$/i'],
+                                    ['K1', 'K2', 'G$1'],
+                                    $gradeRaw
+                                );
                             @endphp
                             {{ $gradeAbbr }}
                         </td>
@@ -169,15 +173,6 @@
                         <!-- Action -->
                          <td class="px-5 py-4 text-right print:hidden">
                             <div class="flex items-center justify-end gap-1.5">
-                                @if($student->ms_user_id && ($student->ms_license_active === false || ($student->ms_license_active !== true && $msStatus !== 'enrolled')))
-                                    <form method="POST" action="{{ route('admin.ms-sync.student', $student) }}" class="inline-block">
-                                        @csrf
-                                        <button type="submit" class="inline-flex h-9 items-center gap-1.5 rounded-md border border-emerald-100 bg-emerald-50 px-2.5 text-xs font-bold text-emerald-700 transition-colors duration-100 hover:bg-emerald-100 cursor-pointer" title="Sync Microsoft account status and license">
-                                            <i data-lucide="refresh-cw" class="h-3.5 w-3.5"></i>
-                                            <span>Sync License</span>
-                                        </button>
-                                    </form>
-                                @endif
                                 <button type="button" onclick="openStudentCredentialsModal({{ json_encode([
                                     'id' => $student->id,
                                     'student_number' => $student->student_number ?? '-',
@@ -191,6 +186,7 @@
                                     'password_changed_at' => $student->password_changed_at ? $student->password_changed_at->format('M d, Y h:i A') : null,
                                     'ms_user_id' => $student->ms_user_id,
                                     'resend_url' => route('admin.students.resend', $student),
+                                    'sync_url' => route('admin.ms-sync.student', $student),
                                     'print_url' => route('admin.students.index', ['search' => $student->student_number, 'print_credentials' => 1]),
                                 ]) }})" class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-amber-200 bg-amber-50 text-amber-700 transition-colors duration-100 hover:bg-amber-100 cursor-pointer shadow-sm" title="View Microsoft Account Credentials & Password">
                                     <i data-lucide="key-round" class="h-4 w-4"></i>

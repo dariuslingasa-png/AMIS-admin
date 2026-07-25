@@ -470,22 +470,30 @@
                     </div>
                 </div>
 
-                <!-- Quick Action Buttons: Reset Password & Resend Credentials Email -->
-                <div class="grid grid-cols-2 gap-2 pt-1">
+                <!-- Quick Action Buttons: Reset Password, Resend Email & Sync License -->
+                <div class="grid grid-cols-3 gap-2 pt-1">
                     <form id="cred-modal-reset-form" method="POST" action="" onsubmit="return confirm('Reset Microsoft Office 365 password to default temporary password (Amis@12345)?')">
                         @csrf
                         <input type="hidden" name="reset_format" value="default">
-                        <button type="submit" class="w-full inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border border-amber-300 bg-amber-50/80 px-3 text-xs font-bold text-amber-800 hover:bg-amber-100 transition cursor-pointer shadow-sm">
+                        <button type="submit" class="w-full inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border border-amber-300 bg-amber-50/80 px-2 text-xs font-bold text-amber-800 hover:bg-amber-100 transition cursor-pointer shadow-sm" title="Reset Password">
                             <i data-lucide="rotate-ccw" class="h-3.5 w-3.5 text-amber-600"></i>
-                            <span>Reset Password</span>
+                            <span>Reset Pass</span>
                         </button>
                     </form>
 
                     <form id="cred-modal-resend-form" method="POST" action="">
                         @csrf
-                        <button type="submit" class="w-full inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border border-indigo-300 bg-indigo-50/80 px-3 text-xs font-bold text-indigo-800 hover:bg-indigo-100 transition cursor-pointer shadow-sm">
+                        <button type="submit" class="w-full inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border border-indigo-300 bg-indigo-50/80 px-2 text-xs font-bold text-indigo-800 hover:bg-indigo-100 transition cursor-pointer shadow-sm" title="Resend Email">
                             <i data-lucide="send" class="h-3.5 w-3.5 text-indigo-600"></i>
                             <span>Resend Email</span>
+                        </button>
+                    </form>
+
+                    <form id="cred-modal-sync-form" method="POST" action="">
+                        @csrf
+                        <button type="submit" class="w-full inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50/80 px-2 text-xs font-bold text-emerald-800 hover:bg-emerald-100 transition cursor-pointer shadow-sm" title="Sync Microsoft account status and license">
+                            <i data-lucide="refresh-cw" class="h-3.5 w-3.5 text-emerald-600"></i>
+                            <span>Sync License</span>
                         </button>
                     </form>
                 </div>
@@ -570,6 +578,11 @@
             const resetForm = document.getElementById('cred-modal-reset-form');
             if (resetForm && student.resend_url) {
                 resetForm.action = student.resend_url;
+            }
+
+            const syncForm = document.getElementById('cred-modal-sync-form');
+            if (syncForm && student.sync_url) {
+                syncForm.action = student.sync_url;
             }
 
             const modal = document.getElementById('credentials-modal');
