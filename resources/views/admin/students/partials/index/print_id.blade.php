@@ -543,7 +543,8 @@
             $fullName = html_entity_decode(implode(' ', $fullNameParts), ENT_QUOTES, 'UTF-8');
             $displayName = $fullName ? \Illuminate\Support\Str::upper($fullName) : 'STUDENT RECORD';
             
-            $photoUrl = \App\Support\EnrollmentStorage::url($applicant->photo_2x2_url);
+            $photoPath = $applicant->photo_2x2_url ?? $student->photo_url ?? null;
+            $photoUrl = \App\Support\EnrollmentStorage::url($photoPath);
             
             $emergencyAddress = trim($applicant->emergency_address ?? '');
             if (empty($emergencyAddress)) {

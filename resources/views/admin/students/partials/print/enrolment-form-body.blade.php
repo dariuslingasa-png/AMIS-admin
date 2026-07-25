@@ -76,32 +76,13 @@
         $studentAge = \Carbon\Carbon::parse($app->date_of_birth)->age;
     }
 
-    // Robust Student 2x2 Photo URL resolver (optimised to use direct storage URLs instead of heavy server-side base64 encoding)
-    $resolvePhotoUrl = function($relativePath) {
-        if (empty($relativePath)) return null;
-        $lpath = ltrim($relativePath, '/');
-        $candidates = [
-            public_path('storage/' . $lpath),
-            storage_path('app/public/' . $lpath),
-            storage_path('app/' . $lpath),
-            '/home2/amisdavc/enrollment.amis.edu.ph/storage/app/public/' . $lpath,
-            '/home2/amisdavc/enrollment.amis.edu.ph/public/storage/' . $lpath,
-            public_path($lpath)
-        ];
-        foreach ($candidates as $c) {
-            if (file_exists($c) && is_file($c)) {
-                return asset('storage/' . $lpath);
-            }
-        }
-        return null;
-    };
-
+    // Robust Student 2x2 Photo URL resolver using official EnrollmentStorage helper
     $photoSrc = null;
     if ($app && !empty($app->photo_2x2_url)) {
-        $photoSrc = $resolvePhotoUrl($app->photo_2x2_url);
+        $photoSrc = \App\Support\EnrollmentStorage::url($app->photo_2x2_url);
     }
     if (!$photoSrc && $student && !empty($student->photo_url)) {
-        $photoSrc = $resolvePhotoUrl($student->photo_url);
+        $photoSrc = \App\Support\EnrollmentStorage::url($student->photo_url);
     }
     if (!$photoSrc && $student && !empty($student->obfuscated_id)) {
         $photoSrc = 'https://amis.edu.ph/student-photo/' . $student->obfuscated_id . '.jpg';
