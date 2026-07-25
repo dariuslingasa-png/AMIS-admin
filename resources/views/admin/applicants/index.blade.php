@@ -456,7 +456,7 @@
                                     <td class="px-5 py-4">
                                         <span class="rounded-md px-2.5 py-1 text-xs font-extrabold {{ $typeClass($studentType) }}">{{ $studentType }}</span>
                                     </td>
-                                    <td class="px-5 py-4 font-bold text-slate-700">{{ $child->grade_level ?? 'Not provided' }}</td>
+                                    <td class="px-5 py-4 font-bold text-slate-700">{{ $child->grade_abbr ?? 'Not provided' }}</td>
                                     <td class="px-5 py-4"><x-badge :color="$childStatusColor[$child->status] ?? 'blue'">{{ $statusLabel }}</x-badge></td>
                                     <td class="px-5 py-4 text-right">
                                         <a href="{{ route('admin.applicants.show', $child) }}" title="View child application" class="inline-flex h-9 items-center gap-2 rounded-md border border-emerald-100 bg-white px-3 text-xs font-bold text-emerald-700 transition hover:border-emerald-200 hover:bg-emerald-50">

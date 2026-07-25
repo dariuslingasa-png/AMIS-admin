@@ -439,7 +439,7 @@
                                 {{ strtoupper($applicant->city ?? '-') }}
                             </td>
                             <td class="px-6 py-4 text-xs font-semibold text-gray-800 dark:text-white">
-                                {{ $applicant->grade_level ?? '-' }}
+                                {{ $applicant->grade_abbr ?? '-' }}
                             </td>
                             <td class="px-6 py-4">
                                 @php

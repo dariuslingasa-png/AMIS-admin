@@ -116,6 +116,24 @@ class Student extends Model
         return str_replace('=', '', base64_encode((string) $val));
     }
 
+    public static function abbreviateGrade(?string $grade): string
+    {
+        if (! $grade) {
+            return '-';
+        }
+
+        return preg_replace(
+            ['/^Kinder\s*1$/i', '/^Kinder\s*2$/i', '/^Grade\s*(\d+)$/i'],
+            ['K1', 'K2', 'G$1'],
+            trim($grade)
+        );
+    }
+
+    public function getGradeAbbrAttribute(): string
+    {
+        return self::abbreviateGrade($this->grade_level);
+    }
+
     public static function deobfuscateStudentNumber(string $hash): ?string
     {
         $decoded = base64_decode($hash);

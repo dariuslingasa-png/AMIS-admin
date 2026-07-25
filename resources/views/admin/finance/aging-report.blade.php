@@ -72,7 +72,7 @@
                                             </a>
                                             <div class="text-[10px] font-semibold text-slate-400">{{ $account->student?->student_number ?? '-' }}</div>
                                         </td>
-                                        <td class="px-4 py-3 font-semibold text-slate-700">{{ $account->grade_level }}</td>
+                                        <td class="px-4 py-3 font-semibold text-slate-700">{{ $account->grade_abbr }}</td>
                                         <td class="px-4 py-3 text-right font-black text-{{ $color }}-700 tabular-nums">PHP {{ number_format((float) $account->remaining_balance, 2) }}</td>
                                         <td class="px-4 py-3 font-semibold text-slate-600">{{ $oldestUnpaid?->month_name ?? '-' }} ({{ $oldestUnpaid?->due_date ?? '-' }})</td>
                                         <td class="px-4 py-3 text-center">

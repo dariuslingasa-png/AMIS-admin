@@ -280,4 +280,9 @@ class EnrollmentApplicant extends Model
     {
         $this->attributes['last_name'] = $value !== null ? mb_strtoupper($value, 'UTF-8') : null;
     }
+
+    public function getGradeAbbrAttribute(): string
+    {
+        return Student::abbreviateGrade($this->grade_level);
+    }
 }

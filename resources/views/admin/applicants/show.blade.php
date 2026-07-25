@@ -36,7 +36,7 @@
     $hasMedicalConcern = (bool) $applicant->medical_has_concern;
     $studentSections = [
         ['title' => 'Academic Details', 'icon' => 'graduation-cap', 'fields' => [
-            ['Student Type', $applicant->student_type], ['Grade Level', $applicant->grade_level],
+            ['Student Type', $applicant->student_type], ['Grade Level', $applicant->grade_abbr],
             ['School Year', $applicant->school_year], ['Learning Mode', $applicant->learning_mode],
             ['Timezone', $applicant->timezone], ['LRN', $applicant->lrn],
             ['AMIS Student ID', $applicant->amis_student_id],
@@ -257,7 +257,7 @@
                         <h2 class="text-3xl font-bold tracking-tight">{{ $displayName }}</h2>
                         <p class="mt-2 text-sm text-emerald-50/90">{{ filled($studentAddress ?? null) ? Str::upper($studentAddress) : 'STUDENT ADDRESS NOT PROVIDED' }}</p>
                         <div class="applicant-pill-row">
-                            <span class="applicant-pill applicant-pill-grade">{{ Str::upper($applicant->grade_level ?: 'Grade pending') }}</span>
+                            <span class="applicant-pill applicant-pill-grade">{{ Str::upper($applicant->grade_abbr ?: 'Grade pending') }}</span>
                             <span class="applicant-pill applicant-pill-type">{{ Str::upper($applicant->student_type ?: 'Student') }}</span>
                             <span class="applicant-pill applicant-pill-mode">{{ Str::upper($applicant->learning_mode ?: 'Learning mode pending') }}</span>
                             <span class="applicant-pill applicant-pill-year">SY {{ $applicant->school_year ?? '-' }}</span>
@@ -317,7 +317,7 @@
                                 @foreach($siblings as $sibling)
                                 <tr>
                                     <td class="py-3 pr-4 font-bold text-slate-900">{{ Str::upper(html_entity_decode($sibling->full_name, ENT_QUOTES, 'UTF-8')) }}</td>
-                                    <td class="py-3 pr-4">{{ $sibling->grade_level ?: '-' }}</td>
+                                    <td class="py-3 pr-4">{{ $sibling->grade_abbr ?: '-' }}</td>
                                     <td class="py-3 pr-4">
                                         @if(in_array($sibling->status, ['draft', 'pending', 'ready_for_submission']))
                                             <span class="inline-flex items-center rounded-md bg-amber-50 px-2 py-1 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20">Missing Details / Incomplete</span>

@@ -36,6 +36,11 @@ class StudentAccount extends Model
         return $this->belongsTo(Student::class);
     }
 
+    public function getGradeAbbrAttribute(): string
+    {
+        return Student::abbreviateGrade($this->grade_level);
+    }
+
     public function applicant(): BelongsTo
     {
         return $this->belongsTo(EnrollmentApplicant::class, 'enrollment_applicant_id');

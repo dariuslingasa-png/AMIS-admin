@@ -46,11 +46,16 @@ class Section extends Model
         return ($this->name && $this->name !== 'A') ? $this->name : null;
     }
 
+    public function getGradeAbbrAttribute(): string
+    {
+        return Student::abbreviateGrade($this->grade_level);
+    }
+
     public function getSectionTitleAttribute(): string
     {
         $name = $this->official_name ?: ($this->name && $this->name !== 'A' ? $this->name : 'General');
 
-        return "{$this->grade_level} - {$name}";
+        return "{$this->grade_abbr} - {$name}";
     }
 
     public function getGradeAdvisorAttribute()

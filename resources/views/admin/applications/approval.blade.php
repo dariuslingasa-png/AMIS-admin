@@ -125,7 +125,7 @@
                                 <td class="px-5 py-4">
                                     <div class="font-extrabold text-slate-950">{{ $name }}</div>
                                     <div class="mt-1 flex flex-wrap items-center gap-2 text-xs font-medium text-slate-500">
-                                        <span>{{ $applicant->grade_level }}</span>
+                                        <span>{{ $applicant->grade_abbr }}</span>
                                         <span class="rounded-md px-2 py-0.5 text-[10px] font-extrabold {{ $typeClass($studentType) }}">{{ $studentType }}</span>
                                         <span>Applicant #{{ str_pad($applicant->id, 4, '0', STR_PAD_LEFT) }}</span>
                                     </div>

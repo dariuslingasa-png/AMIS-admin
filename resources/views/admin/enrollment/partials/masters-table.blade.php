@@ -40,7 +40,7 @@
                 <!-- Grade -->
                 <td class="px-4 py-4">
                     <span class="font-bold text-slate-700 text-xs">
-                        {{ $applicant->grade_level ?? '-' }}
+                        {{ $applicant->grade_abbr ?? '-' }}
                     </span>
                 </td>
 

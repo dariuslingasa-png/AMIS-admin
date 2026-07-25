@@ -99,7 +99,7 @@
                                 <td class="px-5 py-4">
                                     <span class="rounded-md px-2.5 py-1 text-xs font-extrabold {{ $typeClass($studentType) }}">{{ $studentType }}</span>
                                 </td>
-                                <td class="px-5 py-4 font-bold text-slate-700">{{ $applicant->grade_level }}</td>
+                                <td class="px-5 py-4 font-bold text-slate-700">{{ $applicant->grade_abbr }}</td>
                                 <td class="px-5 py-4"><x-badge :color="$statusColor[$applicant->status] ?? 'gray'">{{ $statusLabels[$applicant->status] ?? 'Under Review' }}</x-badge></td>
                                 <td class="px-5 py-4"><x-badge :color="$paymentColor($pay)">{{ $pay }}</x-badge></td>
                                 <td class="px-5 py-4 text-right">

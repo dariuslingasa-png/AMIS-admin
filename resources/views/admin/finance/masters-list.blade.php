@@ -382,7 +382,7 @@
                                     </td>
                                     <td class="px-5 py-4 align-top">
                                         <span class="rounded-full bg-slate-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-600 border border-slate-200/60 inline-block">
-                                            {{ $student->grade_level }}
+                                            {{ $student->grade_abbr }}
                                         </span>
                                     </td>
                                     <td class="px-5 py-4 align-top">

@@ -583,7 +583,7 @@
                     <!-- Academic Info Badges -->
                     <div class="mt-4 flex items-center gap-2 flex-wrap">
                         <span class="inline-flex items-center px-3 py-1 rounded-xl text-xs font-black bg-white/15 text-white border border-white/20 uppercase tracking-wider">
-                            {{ $student->grade_level ?: 'Grade pending' }}
+                            {{ $student->grade_abbr ?: 'Grade pending' }}
                         </span>
                         <span class="inline-flex items-center px-3 py-1 rounded-xl text-xs font-black bg-white/15 text-white border border-white/20 uppercase tracking-wider">
                             {{ $student->applicant->student_type ?: 'Student' }}

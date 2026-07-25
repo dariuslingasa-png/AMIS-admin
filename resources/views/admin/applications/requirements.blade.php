@@ -72,7 +72,7 @@
                                     <div class="font-extrabold text-slate-950">{{ $name }}</div>
                                     <div class="mt-0.5 text-xs font-medium text-slate-500">Applicant #{{ str_pad($applicant->id, 4, '0', STR_PAD_LEFT) }}</div>
                                 </td>
-                                <td class="px-5 py-4 font-bold text-slate-700">{{ $applicant->grade_level }}</td>
+                                <td class="px-5 py-4 font-bold text-slate-700">{{ $applicant->grade_abbr }}</td>
                                 <td class="px-5 py-4">
                                     <div class="flex flex-wrap gap-2">
                                         @foreach ($requirements as $key => $label)
