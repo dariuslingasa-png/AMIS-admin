@@ -5,6 +5,8 @@
         @include('admin.students.partials.index.print_info')
     @elseif (request()->filled('print_id'))
         @include('admin.students.partials.index.print_id')
+    @elseif (request()->filled('print_documents'))
+        @include('admin.students.partials.index.print_documents')
     @else
         @include('admin.students.partials.index.print_list')
     @endif
