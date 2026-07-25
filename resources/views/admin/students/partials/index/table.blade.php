@@ -133,7 +133,11 @@
 
                         <!-- Grade -->
                         <td class="px-5 py-4 font-extrabold text-slate-700">
-                            {{ $student->grade_level ?? '-' }}
+                            @php
+                                $gradeRaw = $student->grade_level ?? '-';
+                                $gradeAbbr = preg_replace('/^Grade\s*(\d+)$/i', 'G$1', $gradeRaw);
+                            @endphp
+                            {{ $gradeAbbr }}
                         </td>
 
                         <!-- Section / Class Occupancy -->
@@ -194,20 +198,9 @@
                                 <a href="{{ route('admin.students.print-enrolment-form', $student) }}" target="_blank" class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-emerald-200 bg-emerald-50 text-emerald-700 transition-colors duration-100 hover:bg-emerald-100" title="Print Enrollment Application Form">
                                     <i data-lucide="file-signature" class="h-4 w-4"></i>
                                 </a>
-                                <a href="{{ route('admin.students.index', ['search' => $student->student_number, 'print_info' => 1]) }}" target="_blank" class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 transition-colors duration-100 hover:bg-slate-50" title="Print Info Sheet">
-                                    <i data-lucide="printer" class="h-4 w-4"></i>
-                                </a>
                                 <a href="{{ route('admin.students.show', $student) }}" class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-emerald-100 bg-white text-emerald-700 transition-colors duration-100 hover:bg-emerald-50" title="{{ $isTeacherAdminViewer ? 'View' : 'Manage' }}">
                                     <i data-lucide="file-search" class="h-4 w-4"></i>
                                 </a>
-                                <form method="POST" action="{{ route('admin.students.destroy', $student) }}"
-                                      onsubmit="return confirm('Delete {{ $student->student_number }} ({{ $student->school_email }})?\n\nThis will permanently delete the student from the portal and Microsoft 365. This action cannot be undone.')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-rose-200 bg-white text-rose-500 transition-colors duration-100 hover:bg-rose-50" title="Delete Student">
-                                        <i data-lucide="trash-2" class="h-4 w-4"></i>
-                                    </button>
-                                </form>
                             </div>
                         </td>
                     </tr>

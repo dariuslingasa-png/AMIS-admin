@@ -138,13 +138,6 @@
                 <span>Print Enrollment Application Form</span>
             </a>
 
-            <!-- 1. Print Official Sheet -->
-            <a href="{{ route('admin.students.index', ['search' => $student->student_number, 'print_info' => 1]) }}" target="_blank"
-               class="w-full inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98] transition cursor-pointer">
-                <i data-lucide="printer" class="h-4 w-4 text-slate-500"></i>
-                <span>Print Official Sheet</span>
-            </a>
-
             <!-- 2. Print ID Card -->
             <button type="button" @click="showIdPreview = true"
                class="w-full inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98] transition cursor-pointer">

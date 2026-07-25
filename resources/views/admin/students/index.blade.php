@@ -58,10 +58,6 @@
                             <i data-lucide="file-archive" class="h-4 w-4 text-emerald-600"></i>
                             <span>Zip Enrollment Forms JPG ({{ request('grade') ?: 'All Grades' }})</span>
                         </button>
-                        <a href="{{ route('admin.students.index', array_merge(request()->all(), ['print_info' => 1])) }}" target="_blank" class="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition">
-                            <i data-lucide="file-text" class="h-4 w-4 text-slate-400"></i>
-                            <span>Print Official Info Sheets</span>
-                        </a>
                         <div class="flex items-center justify-between rounded-lg px-3 py-2 text-xs font-semibold text-slate-400 bg-slate-50 cursor-not-allowed select-none">
                             <div class="flex items-center gap-2">
                                 <i data-lucide="contact" class="h-4 w-4 text-slate-400"></i>
@@ -163,16 +159,11 @@
                 </div>
                 <div class="mb-6">
                     <label class="mb-1.5 block text-xs font-bold text-slate-700">Print Type</label>
-                    <div class="grid grid-cols-3 gap-2">
+                    <div class="grid grid-cols-2 gap-2">
                         <label class="flex cursor-pointer flex-col items-center gap-1.5 rounded-xl border border-violet-200 bg-violet-50 p-3 text-center transition has-[:checked]:border-violet-500 has-[:checked]:bg-violet-100 has-[:checked]:ring-2 has-[:checked]:ring-violet-300">
                             <input type="radio" name="print_type" value="print_id" class="sr-only" checked>
                             <i data-lucide="contact" class="h-5 w-5 text-violet-600"></i>
                             <span class="text-xs font-bold text-violet-700">ID Cards</span>
-                        </label>
-                        <label class="flex cursor-pointer flex-col items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 p-3 text-center transition has-[:checked]:border-violet-500 has-[:checked]:bg-violet-100 has-[:checked]:ring-2 has-[:checked]:ring-violet-300">
-                            <input type="radio" name="print_type" value="print_info" class="sr-only">
-                            <i data-lucide="file-text" class="h-5 w-5 text-slate-500"></i>
-                            <span class="text-xs font-bold text-slate-600">Info Sheets</span>
                         </label>
                         <label class="flex cursor-pointer flex-col items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 p-3 text-center transition has-[:checked]:border-violet-500 has-[:checked]:bg-violet-100 has-[:checked]:ring-2 has-[:checked]:ring-violet-300">
                             <input type="radio" name="print_type" value="print_credentials" class="sr-only">
