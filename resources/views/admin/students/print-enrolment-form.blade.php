@@ -623,7 +623,7 @@
                 padding: 0;
             }
 
-            .action-bar {
+            .action-bar, .action-bar-container, .toolbar, .page-number-badge {
                 display: none !important;
             }
 

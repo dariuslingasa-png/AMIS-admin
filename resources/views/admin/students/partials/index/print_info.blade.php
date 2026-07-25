@@ -349,7 +349,7 @@
         
         @media print {
             body { background: #fff; }
-            .toolbar { display: none; }
+            .toolbar, .action-bar-container, .page-number-badge { display: none !important; }
             .page { width: 100%; min-height: 100%; margin: 0; padding: 0; box-shadow: none; border-radius: 0; }
             .id-cards-workspace { padding-top: 25px; }
         }

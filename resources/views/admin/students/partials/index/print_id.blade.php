@@ -57,7 +57,7 @@
             background: #0369a1;
         }
         @media print {
-            .toolbar { display: none !important; }
+            .toolbar, .action-bar-container, .page-number-badge { display: none !important; }
             body { background: #fff; }
         }
         
@@ -428,7 +428,6 @@
                 </a>
             </div>
         </div>
-    @endif     </div>
     @else
         <div class="toolbar" style="display: flex; gap: 8px; align-items: center;">
             <div class="dropdown" style="position: relative; display: inline-block;">

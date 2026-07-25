@@ -48,7 +48,7 @@
         .cred-table tr:nth-child(even) { background: #f8fafc; }
         .font-mono { font-family: monospace; font-size: 11px; font-weight: bold; }
         @media print {
-            .toolbar { display: none; }
+            .toolbar, .action-bar-container, .page-number-badge { display: none !important; }
             body { background: #fff; }
             .page { width: auto; margin: 0; padding: 0; }
         }
