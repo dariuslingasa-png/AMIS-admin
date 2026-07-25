@@ -142,15 +142,25 @@
     </div>
 
     <script>
-        window.addEventListener('DOMContentLoaded', () => {
-            setTimeout(() => {
+        (function() {
+            function hideSkeleton() {
                 const el = document.getElementById('print-skeleton-overlay');
                 if (el) {
                     el.style.opacity = '0';
-                    setTimeout(() => el.remove(), 250);
+                    setTimeout(() => {
+                        if (el && el.parentNode) el.parentNode.removeChild(el);
+                    }, 250);
                 }
-            }, 100);
-        });
+            }
+            if (document.readyState === 'interactive' || document.readyState === 'complete') {
+                setTimeout(hideSkeleton, 50);
+            } else {
+                document.addEventListener('DOMContentLoaded', () => setTimeout(hideSkeleton, 50));
+            }
+            window.addEventListener('load', hideSkeleton);
+            window.addEventListener('pageshow', hideSkeleton);
+            setTimeout(hideSkeleton, 500);
+        })();
     </script>
 
     @if(isset($students) && count($students) === 1)

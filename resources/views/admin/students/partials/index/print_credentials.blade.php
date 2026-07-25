@@ -95,15 +95,25 @@
     </style>
 
     <script>
-        window.addEventListener('DOMContentLoaded', () => {
-            setTimeout(() => {
+        (function() {
+            function hideSkeleton() {
                 const el = document.getElementById('print-skeleton-overlay');
                 if (el) {
                     el.style.opacity = '0';
-                    setTimeout(() => el.remove(), 250);
+                    setTimeout(() => {
+                        if (el && el.parentNode) el.parentNode.removeChild(el);
+                    }, 250);
                 }
-            }, 100);
-        });
+            }
+            if (document.readyState === 'interactive' || document.readyState === 'complete') {
+                setTimeout(hideSkeleton, 50);
+            } else {
+                document.addEventListener('DOMContentLoaded', () => setTimeout(hideSkeleton, 50));
+            }
+            window.addEventListener('load', hideSkeleton);
+            window.addEventListener('pageshow', hideSkeleton);
+            setTimeout(hideSkeleton, 500);
+        })();
     </script>
         <!-- Top Action Bar & Student Form Switcher Navigation Bar -->
         <div class="action-bar-container" style="max-width: 1000px; margin: 0 auto 20px auto; background: #ffffff; padding: 14px 20px; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.03); font-family: 'Inter', system-ui, -apple-system, sans-serif; position: sticky; top: 12px; z-index: 1000; border: 1px solid #e2e8f0;">
