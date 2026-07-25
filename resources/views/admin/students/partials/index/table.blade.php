@@ -174,6 +174,23 @@
                                         </button>
                                     </form>
                                 @endif
+                                <button type="button" onclick="openStudentCredentialsModal({{ json_encode([
+                                    'id' => $student->id,
+                                    'student_number' => $student->student_number ?? '-',
+                                    'name' => $name,
+                                    'photo_url' => $photoUrl,
+                                    'grade' => $student->grade_level ?? '-',
+                                    'section' => $student->studentSection?->section?->name ?? 'Unassigned',
+                                    'email' => $student->school_email ?? 'No Email Set',
+                                    'temp_password' => $student->temp_password ?? 'N/A',
+                                    'password_changed' => !empty($student->password_changed_at),
+                                    'password_changed_at' => $student->password_changed_at ? $student->password_changed_at->format('M d, Y h:i A') : null,
+                                    'ms_user_id' => $student->ms_user_id,
+                                    'resend_url' => route('admin.students.resend', $student),
+                                    'print_url' => route('admin.students.index', ['search' => $student->student_number, 'print_credentials' => 1]),
+                                ]) }})" class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-amber-200 bg-amber-50 text-amber-700 transition-colors duration-100 hover:bg-amber-100 cursor-pointer shadow-sm" title="View Microsoft Account Credentials & Password">
+                                    <i data-lucide="key-round" class="h-4 w-4"></i>
+                                </button>
                                 <a href="{{ route('admin.students.print-enrolment-form', $student) }}" target="_blank" class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-emerald-200 bg-emerald-50 text-emerald-700 transition-colors duration-100 hover:bg-emerald-100" title="Print Enrollment Application Form">
                                     <i data-lucide="file-signature" class="h-4 w-4"></i>
                                 </a>

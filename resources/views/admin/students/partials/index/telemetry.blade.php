@@ -107,42 +107,42 @@
         </div>
 
         <!-- Changed Card -->
-        <div class="relative overflow-hidden rounded-lg border border-emerald-100 bg-white p-4 shadow-sm transition-shadow duration-150 hover:shadow-md">
+        <a href="{{ route('admin.students.index', array_merge(request()->except(['page', 'password_status']), ['password_status' => 'changed'])) }}" class="group relative overflow-hidden rounded-lg border border-emerald-100 bg-white p-4 shadow-sm transition-all duration-150 hover:shadow-md hover:border-emerald-300 hover:ring-2 hover:ring-emerald-100 cursor-pointer block" title="Click to filter students who changed their password">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-xs font-bold uppercase tracking-wider text-emerald-600">Changed Password</p>
+                    <p class="text-xs font-bold uppercase tracking-wider text-emerald-600 group-hover:text-emerald-700">Changed Password</p>
                     <h3 class="mt-2 text-2xl font-black text-slate-900">{{ number_format($changed) }}</h3>
                 </div>
-                <div class="rounded-full bg-emerald-50 p-2.5 text-emerald-600">
+                <div class="rounded-full bg-emerald-50 p-2.5 text-emerald-600 group-hover:bg-emerald-100 group-hover:scale-105 transition-transform">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield-check"><path d="M20 13c0 5-3.5 7.5-7.66 9.7a1 1 0 0 1-.68 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.8 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>
                 </div>
             </div>
             <div class="mt-3 flex items-center justify-between text-xs text-slate-500">
-                <span>{{ $changedPct }}% of student list</span>
-                <div class="h-1.5 w-24 rounded-full bg-slate-100 overflow-hidden">
+                <span class="font-bold text-emerald-700 group-hover:underline">Filter {{ $changedPct }}% changed</span>
+                <div class="h-1.5 w-20 rounded-full bg-slate-100 overflow-hidden">
                     <div class="h-full bg-emerald-500" style="width: {{ $changedPct }}%"></div>
                 </div>
             </div>
-        </div>
+        </a>
 
         <!-- Temporary Card -->
-        <div class="relative overflow-hidden rounded-lg border border-amber-100 bg-white p-4 shadow-sm transition-shadow duration-150 hover:shadow-md">
+        <a href="{{ route('admin.students.index', array_merge(request()->except(['page', 'password_status']), ['password_status' => 'temp'])) }}" class="group relative overflow-hidden rounded-lg border border-amber-100 bg-white p-4 shadow-sm transition-all duration-150 hover:shadow-md hover:border-amber-300 hover:ring-2 hover:ring-amber-100 cursor-pointer block" title="Click to filter students with active temporary passwords">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-xs font-bold uppercase tracking-wider text-amber-600">Temporary Password</p>
+                    <p class="text-xs font-bold uppercase tracking-wider text-amber-600 group-hover:text-amber-700">Temporary Password</p>
                     <h3 class="mt-2 text-2xl font-black text-slate-900">{{ number_format($temp) }}</h3>
                 </div>
-                <div class="rounded-full bg-amber-50 p-2.5 text-amber-600">
+                <div class="rounded-full bg-amber-50 p-2.5 text-amber-600 group-hover:bg-amber-100 group-hover:scale-105 transition-transform">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-key-round"><path d="M2 18v3c0 .6.4 1 1 1h4v-3h3v-3h2l1.4-1.4a6.5 6.5 0 1 0-4-4Z"/><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/></svg>
                 </div>
             </div>
             <div class="mt-3 flex items-center justify-between text-xs text-slate-500">
-                <span>{{ $tempPct }}% of student list</span>
-                <div class="h-1.5 w-24 rounded-full bg-slate-100 overflow-hidden">
+                <span class="font-bold text-amber-700 group-hover:underline">Filter {{ $tempPct }}% temp</span>
+                <div class="h-1.5 w-20 rounded-full bg-slate-100 overflow-hidden">
                     <div class="h-full bg-amber-500" style="width: {{ $tempPct }}%"></div>
                 </div>
             </div>
-        </div>
+        </a>
 
         <!-- No Account Card -->
         <div class="relative overflow-hidden rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition-shadow duration-150 hover:shadow-md">

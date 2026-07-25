@@ -408,5 +408,207 @@
             </div>
         </div>
     </div>
+
+    <!-- Microsoft Credentials & Password Quick Modal Pop-up -->
+    <div id="credentials-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-sm transition-opacity duration-200" onclick="if(event.target === this) closeStudentCredentialsModal()">
+        <div class="relative w-full max-w-md scale-95 transform rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl transition-all duration-200 dark:border-slate-800 dark:bg-slate-900">
+            <!-- Modal Header -->
+            <div class="flex items-start justify-between border-b border-slate-100 dark:border-slate-800 pb-4 mb-4">
+                <div class="flex items-center gap-3">
+                    <div id="cred-modal-avatar" class="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-amber-700 font-extrabold text-sm ring-1 ring-amber-200 overflow-hidden">
+                        ST
+                    </div>
+                    <div>
+                        <h3 id="cred-modal-name" class="text-base font-black text-slate-950 dark:text-white leading-tight">STUDENT NAME</h3>
+                        <p class="text-xs font-bold text-slate-500 mt-0.5">
+                            <span id="cred-modal-id" class="text-emerald-700 font-extrabold">#261125</span> • 
+                            <span id="cred-modal-grade">Grade 6</span> (<span id="cred-modal-section">Section</span>)
+                        </p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeStudentCredentialsModal()" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition cursor-pointer">
+                    <i data-lucide="x" class="h-5 w-5"></i>
+                </button>
+            </div>
+
+            <!-- Microsoft Account Credentials Card -->
+            <div class="space-y-4">
+                <!-- Email Field -->
+                <div class="rounded-xl border border-slate-200 bg-slate-50/70 p-3.5 dark:border-slate-800 dark:bg-slate-800/50">
+                    <div class="flex items-center justify-between text-[11px] font-extrabold uppercase tracking-wider text-slate-500 mb-1.5">
+                        <span class="flex items-center gap-1.5">
+                            <i data-lucide="mail" class="h-3.5 w-3.5 text-emerald-600"></i>
+                            Microsoft School Email
+                        </span>
+                        <span id="cred-modal-status-badge" class="rounded px-1.5 py-0.5 text-[9px] font-extrabold uppercase bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200">
+                            Active Account
+                        </span>
+                    </div>
+                    <div class="flex items-center justify-between gap-2">
+                        <input type="text" id="cred-modal-email" readonly class="w-full bg-transparent font-mono text-xs font-bold text-slate-900 dark:text-white focus:outline-none selection:bg-emerald-100 selection:text-emerald-900" value="s.261125@amis.edu.ph">
+                        <button type="button" onclick="copyCredText('cred-modal-email', 'Email')" class="inline-flex h-8 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 transition cursor-pointer shadow-sm shrink-0">
+                            <i data-lucide="copy" class="h-3.5 w-3.5"></i>
+                            <span>Copy</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Password Field -->
+                <div class="rounded-xl border border-slate-200 bg-slate-50/70 p-3.5 dark:border-slate-800 dark:bg-slate-800/50">
+                    <div class="flex items-center justify-between text-[11px] font-extrabold uppercase tracking-wider text-slate-500 mb-1.5">
+                        <span class="flex items-center gap-1.5">
+                            <i data-lucide="key-round" class="h-3.5 w-3.5 text-amber-600"></i>
+                            Account Password
+                        </span>
+                        <span id="cred-modal-pass-state" class="rounded px-1.5 py-0.5 text-[9px] font-extrabold uppercase bg-amber-50 text-amber-700 ring-1 ring-amber-200">
+                            Temporary Active
+                        </span>
+                    </div>
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="relative w-full">
+                            <input type="password" id="cred-modal-password" readonly class="w-full bg-transparent font-mono text-xs font-bold text-slate-900 dark:text-white focus:outline-none selection:bg-amber-100 selection:text-amber-900" value="Amis@98213">
+                            <input type="text" id="cred-modal-password-text" readonly class="hidden w-full bg-transparent font-mono text-xs font-bold text-slate-900 dark:text-white focus:outline-none selection:bg-amber-100 selection:text-amber-900" value="Amis@98213">
+                        </div>
+                        <button type="button" onclick="togglePasswordVisibility()" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-200 hover:text-slate-700 transition shrink-0" title="Toggle Show/Hide Password">
+                            <i id="cred-modal-eye-icon" data-lucide="eye" class="h-4 w-4"></i>
+                        </button>
+                        <button type="button" onclick="copyCredText('cred-modal-password-text', 'Password')" class="inline-flex h-8 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-bold text-slate-700 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-200 transition cursor-pointer shadow-sm shrink-0">
+                            <i data-lucide="copy" class="h-3.5 w-3.5"></i>
+                            <span>Copy</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Toast Feedback Notification -->
+            <div id="cred-copy-toast" class="hidden mt-3 rounded-lg bg-emerald-900 px-3 py-2 text-center text-xs font-bold text-emerald-100 transition">
+                <span id="cred-copy-toast-msg">Copied to clipboard!</span>
+            </div>
+
+            <!-- Modal Footer Actions -->
+            <div class="mt-5 flex items-center justify-between gap-2 border-t border-slate-100 dark:border-slate-800 pt-4">
+                <button type="button" onclick="copyCombinedCredentials()" class="inline-flex h-9 items-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 px-3 text-xs font-bold text-emerald-800 hover:bg-emerald-100 transition cursor-pointer shadow-sm">
+                    <i data-lucide="copy-check" class="h-4 w-4 text-emerald-600"></i>
+                    <span>Copy Both</span>
+                </button>
+                <div class="flex items-center gap-1.5">
+                    <a id="cred-modal-print-btn" href="#" target="_blank" class="inline-flex h-9 items-center gap-1 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 hover:bg-slate-50 transition" title="Print Credential Slip">
+                        <i data-lucide="printer" class="h-4 w-4 text-slate-500"></i>
+                        <span>Print Slip</span>
+                    </a>
+                    <button type="button" onclick="closeStudentCredentialsModal()" class="inline-flex h-9 items-center justify-center rounded-xl bg-slate-900 px-4 text-xs font-bold text-white hover:bg-slate-800 transition cursor-pointer">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentModalStudent = null;
+
+        function openStudentCredentialsModal(student) {
+            currentModalStudent = student;
+            document.getElementById('cred-modal-name').innerText = student.name || 'STUDENT PROFILE';
+            document.getElementById('cred-modal-id').innerText = '#' + (student.student_number || '-');
+            document.getElementById('cred-modal-grade').innerText = student.grade || '-';
+            document.getElementById('cred-modal-section').innerText = student.section || 'Unassigned';
+            
+            document.getElementById('cred-modal-email').value = student.email || 'No Email Set';
+            
+            const passVal = student.temp_password || 'N/A';
+            document.getElementById('cred-modal-password').value = passVal;
+            document.getElementById('cred-modal-password-text').value = passVal;
+            
+            const passState = document.getElementById('cred-modal-pass-state');
+            if (student.password_changed) {
+                passState.innerText = 'User Changed Password';
+                passState.className = 'rounded px-1.5 py-0.5 text-[9px] font-extrabold uppercase bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200';
+            } else {
+                passState.innerText = 'Temporary Initial Active';
+                passState.className = 'rounded px-1.5 py-0.5 text-[9px] font-extrabold uppercase bg-amber-50 text-amber-700 ring-1 ring-amber-200';
+            }
+
+            const statusBadge = document.getElementById('cred-modal-status-badge');
+            if (student.ms_user_id) {
+                statusBadge.innerText = 'Active Account';
+                statusBadge.className = 'rounded px-1.5 py-0.5 text-[9px] font-extrabold uppercase bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200';
+            } else {
+                statusBadge.innerText = 'Pending Setup';
+                statusBadge.className = 'rounded px-1.5 py-0.5 text-[9px] font-extrabold uppercase bg-slate-100 text-slate-600 ring-1 ring-slate-200';
+            }
+
+            const avatarEl = document.getElementById('cred-modal-avatar');
+            if (student.photo_url) {
+                avatarEl.innerHTML = `<img src="${student.photo_url}" class="h-full w-full rounded-xl object-cover">`;
+            } else {
+                const initials = (student.name || 'ST').split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase();
+                avatarEl.innerText = initials;
+            }
+
+            const printBtn = document.getElementById('cred-modal-print-btn');
+            if (printBtn && student.print_url) {
+                printBtn.href = student.print_url;
+            }
+
+            const modal = document.getElementById('credentials-modal');
+            modal.classList.remove('hidden');
+            if (window.lucide) window.lucide.createIcons();
+        }
+
+        function closeStudentCredentialsModal() {
+            document.getElementById('credentials-modal').classList.add('hidden');
+        }
+
+        function togglePasswordVisibility() {
+            const passInput = document.getElementById('cred-modal-password');
+            const textInput = document.getElementById('cred-modal-password-text');
+            const eyeIcon = document.getElementById('cred-modal-eye-icon');
+            
+            if (passInput.classList.contains('hidden')) {
+                passInput.classList.remove('hidden');
+                textInput.classList.add('hidden');
+                if (eyeIcon) eyeIcon.setAttribute('data-lucide', 'eye');
+            } else {
+                passInput.classList.add('hidden');
+                textInput.classList.remove('hidden');
+                if (eyeIcon) eyeIcon.setAttribute('data-lucide', 'eye-off');
+            }
+            if (window.lucide) window.lucide.createIcons();
+        }
+
+        function copyCredText(elementId, label) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            navigator.clipboard.writeText(el.value).then(() => {
+                showCredToast(`${label} copied to clipboard!`);
+            });
+        }
+
+        function copyCombinedCredentials() {
+            if (!currentModalStudent) return;
+            const email = document.getElementById('cred-modal-email').value;
+            const pass = document.getElementById('cred-modal-password-text').value;
+            const text = `Student: ${currentModalStudent.name}\nAMIS ID: #${currentModalStudent.student_number}\nEmail: ${email}\nPassword: ${pass}`;
+            navigator.clipboard.writeText(text).then(() => {
+                showCredToast('Student Email & Password copied to clipboard!');
+            });
+        }
+
+        function showCredToast(msg) {
+            const toast = document.getElementById('cred-copy-toast');
+            const msgEl = document.getElementById('cred-copy-toast-msg');
+            if (!toast || !msgEl) return;
+            msgEl.innerText = msg;
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 2500);
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeStudentCredentialsModal();
+        });
+    </script>
 </x-admin-layout>
 @endif
