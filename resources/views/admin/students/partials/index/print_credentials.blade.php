@@ -304,18 +304,16 @@
             }
         }
         
-        let hasPrinted = false;
-        function doPrint() {
-            if (hasPrinted) return;
-            hasPrinted = true;
+        function triggerPrintPDF() {
             window.print();
         }
-        window.addEventListener('load', () => {
-            setTimeout(doPrint, 1000);
-        });
-        window.addEventListener('focus', () => {
-            setTimeout(doPrint, 200);
-        });
+
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('auto_print') === '1' || params.has('print_credentials')) {
+            window.addEventListener('DOMContentLoaded', () => {
+                setTimeout(() => window.print(), 500);
+            });
+        }
     </script>
 </body>
 </html>

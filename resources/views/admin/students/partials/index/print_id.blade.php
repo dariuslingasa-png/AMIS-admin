@@ -478,7 +478,6 @@
                 </a>
             </div>
         </div>
-    @endif       </div>
     @else
         <div class="toolbar" style="display: flex; gap: 8px; align-items: center;">
             <div class="dropdown" style="position: relative; display: inline-block;">
@@ -736,18 +735,15 @@
             // Font sizes are calculated server-side in PHP matching Student Records (show.blade.php)
         }
 
-        let hasPrinted = false;
         function doPrint() {
             adjustLastNameFontSizes();
-            if (hasPrinted) return;
-            hasPrinted = true;
             window.print();
         }
         window.addEventListener('load', () => {
             runAdjustAfterFonts();
             const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('autoprint') === '1') {
-                document.fonts.ready.then(() => setTimeout(doPrint, 500));
+            if (urlParams.get('autoprint') === '1' || urlParams.get('auto_print') === '1' || urlParams.has('print_id')) {
+                document.fonts.ready.then(() => setTimeout(() => window.print(), 500));
             }
         });
 
