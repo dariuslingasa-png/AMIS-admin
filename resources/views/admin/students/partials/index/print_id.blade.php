@@ -336,6 +336,49 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
+    <!-- Page Skeleton Loading Overlay (Fades out when fully loaded) -->
+    <div id="print-skeleton-overlay" style="position: fixed; inset: 0; background: #f8fafc; z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.25s ease;">
+        <div style="background: white; padding: 28px 36px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; display: flex; flex-direction: column; align-items: center; gap: 16px; max-width: 420px; width: 90%; text-align: center;">
+            <div style="width: 52px; height: 52px; border-radius: 14px; background: #ecfdf5; border: 1px solid #a7f3d0; display: flex; align-items: center; justify-content: center; color: #059669;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="animate-spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+            </div>
+            <div style="width: 100%;">
+                <div class="skeleton-shimmer" style="height: 18px; width: 75%; background: #e2e8f0; border-radius: 6px; margin: 0 auto 10px auto;"></div>
+                <div class="skeleton-shimmer" style="height: 12px; width: 90%; background: #f1f5f9; border-radius: 6px; margin: 0 auto 6px auto;"></div>
+                <div class="skeleton-shimmer" style="height: 12px; width: 60%; background: #f1f5f9; border-radius: 6px; margin: 0 auto;"></div>
+            </div>
+            <span style="font-family: 'Inter', sans-serif; font-size: 0.8rem; font-weight: 700; color: #64748b; margin-top: 4px;">Loading Student ID Card Sheet...</span>
+        </div>
+    </div>
+
+    <style>
+        .animate-spin { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .skeleton-shimmer {
+            background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+            background-size: 200% 100%;
+            animation: shimmerAnimation 1.5s infinite;
+        }
+        @keyframes shimmerAnimation {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        @media print {
+            #print-skeleton-overlay { display: none !important; }
+        }
+    </style>
+
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                const el = document.getElementById('print-skeleton-overlay');
+                if (el) {
+                    el.style.opacity = '0';
+                    setTimeout(() => el.remove(), 250);
+                }
+            }, 100);
+        });
+    </script>
     @if(isset($students) && count($students) === 1)
         @php $singleStudent = $students->first(); @endphp
         <div class="toolbar" style="display: flex; flex-direction: column; align-items: stretch; gap: 10px; padding: 14px 20px; background: #ffffff; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 1000; font-family: 'Inter', system-ui, -apple-system, sans-serif; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">

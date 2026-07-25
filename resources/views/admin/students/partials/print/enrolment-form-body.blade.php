@@ -172,9 +172,18 @@
             </div>
         </div>
 
-        <div class="photo-box">
+        <div class="photo-box" id="student-photo-container">
             @if($photoSrc)
-                <img src="{{ $photoSrc }}" alt="Student 2x2 Photo">
+                <img src="{{ $photoSrc }}" alt="Student 2x2 Photo" onerror="this.style.display='none'; document.getElementById('photo-fallback-box').style.display='flex';">
+                <div id="photo-fallback-box" style="display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; background: #fafafa; color: #94a3b8;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 4px;"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                    <span style="font-family: 'Inter', sans-serif; font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;">2x2 PHOTO</span>
+                </div>
+            @else
+                <div style="display: flex; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; background: #fafafa; color: #94a3b8;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 4px;"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                    <span style="font-family: 'Inter', sans-serif; font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;">2x2 PHOTO</span>
+                </div>
             @endif
         </div>
     </div>
