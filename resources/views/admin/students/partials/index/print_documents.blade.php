@@ -247,7 +247,7 @@
                     'url' => $photoUrl,
                     'is_photo' => true,
                     'mandatory' => true,
-                    'icon' => '📷',
+                    'svg' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #0284c7;"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>',
                 ],
                 [
                     'key' => 'birth_cert',
@@ -255,7 +255,7 @@
                     'url' => $birthCertUrl,
                     'is_photo' => false,
                     'mandatory' => true,
-                    'icon' => '📄',
+                    'svg' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #059669;"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>',
                 ],
                 [
                     'key' => 'report_card',
@@ -263,7 +263,7 @@
                     'url' => $reportCardUrl,
                     'is_photo' => false,
                     'mandatory' => ($appl?->student_type !== 'Old'),
-                    'icon' => '📊',
+                    'svg' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #7c3aed;"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
                 ],
                 [
                     'key' => 'marriage_contract',
@@ -271,7 +271,7 @@
                     'url' => $marriageUrl,
                     'is_photo' => false,
                     'mandatory' => false,
-                    'icon' => '📜',
+                    'svg' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #d97706;"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>',
                 ],
                 [
                     'key' => 'medical_record',
@@ -279,7 +279,7 @@
                     'url' => $medicalUrl,
                     'is_photo' => false,
                     'mandatory' => false,
-                    'icon' => '🏥',
+                    'svg' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #dc2626;"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>',
                 ],
                 [
                     'key' => 'affidavit',
@@ -287,7 +287,7 @@
                     'url' => $affidavitUrl,
                     'is_photo' => false,
                     'mandatory' => false,
-                    'icon' => '⚖️',
+                    'svg' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #475569;"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h18"/></svg>',
                 ],
             ];
 
@@ -363,8 +363,8 @@
             <!-- Documents Grid -->
             <div style="margin-bottom: 12px;">
                 <h3 style="margin: 0 0 14px 0; font-size: 0.95rem; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
-                    <span>📁</span>
-                    <span>Attached Document Files</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: #059669;"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L8.6 3.3A2 2 0 0 0 6.9 2.5H4a2 2 0 0 0-2 2v13.5a2 2 0 0 0 2 2z"/></svg>
+                    <span>Attached Document Files (HD High Resolution)</span>
                 </h3>
 
                 <div class="doc-grid">
@@ -377,8 +377,10 @@
                         <div class="doc-item-card {{ !$hasFile ? ($doc['mandatory'] ? 'missing-mandatory' : 'missing') : '' }}">
                             <!-- Top: Header & Badge -->
                             <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
-                                <div style="display: flex; align-items: center; gap: 8px;">
-                                    <span style="font-size: 1.2rem;">{{ $doc['icon'] }}</span>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div style="width: 36px; height: 36px; border-radius: 10px; background: #f8fafc; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; shrink-0;">
+                                        {!! $doc['svg'] !!}
+                                    </div>
                                     <div>
                                         <h4 style="margin: 0; font-size: 0.85rem; font-weight: 800; color: #0f172a; line-height: 1.3;">
                                             {{ $doc['label'] }}
@@ -408,16 +410,20 @@
                             </div>
 
                             <!-- Middle: Preview Box -->
-                            <div style="height: 140px; background: #f8fafc; border: 1px border-style: dashed; border-color: #cbd5e1; border-radius: 10px; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative;">
+                            <div style="height: 150px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 10px; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative;">
                                 @if($hasFile && $doc['is_photo'])
-                                    <img src="{{ $doc['url'] }}" alt="{{ $doc['label'] }}" style="width: 100%; height: 100%; object-fit: contain; padding: 6px;">
+                                    <a href="{{ $doc['url'] }}" target="_blank" title="Click to view full HD image" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+                                        <img src="{{ $doc['url'] }}" alt="{{ $doc['label'] }}" style="max-width: 100%; max-height: 100%; object-fit: contain; padding: 6px; image-rendering: -webkit-optimize-contrast;">
+                                    </a>
                                 @elseif($hasFile && !$isPdf)
-                                    <img src="{{ $doc['url'] }}" alt="{{ $doc['label'] }}" style="width: 100%; height: 100%; object-fit: contain; padding: 6px;">
+                                    <a href="{{ $doc['url'] }}" target="_blank" title="Click to view full HD image" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+                                        <img src="{{ $doc['url'] }}" alt="{{ $doc['label'] }}" style="max-width: 100%; max-height: 100%; object-fit: contain; padding: 6px; image-rendering: -webkit-optimize-contrast;">
+                                    </a>
                                 @elseif($hasFile && $isPdf)
-                                    <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; color: #dc2626;">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                    <a href="{{ $doc['url'] }}" target="_blank" title="Click to open PDF" style="display: flex; flex-direction: column; align-items: center; gap: 6px; color: #dc2626; text-decoration: none;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
                                         <span style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; color: #991b1b;">PDF Document Attached</span>
-                                    </div>
+                                    </a>
                                 @else
                                     <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; color: #94a3b8; text-align: center; padding: 10px;">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
@@ -426,19 +432,20 @@
                                 @endif
                             </div>
 
-                            <!-- Bottom: Action Button -->
+                            <!-- Bottom: Action Buttons (View HD & Download) -->
                             <div>
                                 @if($hasFile)
-                                    <a href="{{ $doc['url'] }}" download target="_blank" class="btn-download {{ $doc['is_photo'] ? 'btn-download-photo' : '' }}">
-                                        @if($doc['is_photo'])
-                                            <!-- 2x2 Photo Download Icon -->
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-                                            <span>Download 2x2 Photo</span>
-                                        @else
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-                                            <span>Download Document</span>
-                                        @endif
-                                    </a>
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                                        <a href="{{ $doc['url'] }}" target="_blank" style="display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 12px; border-radius: 9px; font-size: 0.75rem; font-weight: 700; text-decoration: none; background: #f1f5f9; color: #0f172a; border: 1px solid #cbd5e1; transition: background 0.15s ease;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                                            <span>View HD</span>
+                                        </a>
+
+                                        <a href="{{ $doc['url'] }}" download target="_blank" class="btn-download {{ $doc['is_photo'] ? 'btn-download-photo' : '' }}" style="padding: 8px 12px; font-size: 0.75rem;">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                                            <span>{{ $doc['is_photo'] ? '2x2 Photo' : 'Download' }}</span>
+                                        </a>
+                                    </div>
                                 @else
                                     <button type="button" disabled style="display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 16px; border-radius: 10px; font-size: 0.78rem; font-weight: 700; background: #f1f5f9; color: #94a3b8; border: 1px solid #e2e8f0; width: 100%; cursor: not-allowed;">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" x2="9" y1="9" y2="15"/></svg>

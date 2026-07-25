@@ -410,23 +410,23 @@
                         </button>
                         <div id="png-dropdown-menu" class="dropdown-content" style="display: none; position: absolute; right: 0; top: 100%; margin-top: 5px; background-color: #ffffff; min-width: 250px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.15); border-radius: 12px; border: 1px solid #e2e8f0; padding: 6px; z-index: 9999; flex-direction: column; gap: 4px;">
                             <button type="button" onclick="triggerDownload('front-color-back-mono')" class="dropdown-item" style="text-align: left; background: none; color: #1e293b; padding: 10px 12px; border: none; font-size: 12px; font-weight: 700; width: 100%; cursor: pointer; border-radius: 8px; display: flex; align-items: center; gap: 8px; transition: background 0.15s;">
-                                <span style="font-size: 14px;">🖨️</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #059669;"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
                                 <div style="display: flex; flex-direction: column;">
                                     <span>Front Color + Back Black/White</span>
                                     <span style="font-size: 9px; font-weight: 500; color: #059669; margin-top: 2px;">★ Recommended for Smart Printers</span>
                                 </div>
                             </button>
                             <button type="button" onclick="triggerDownload('full-color')" class="dropdown-item" style="text-align: left; background: none; color: #1e293b; padding: 10px 12px; border: none; font-size: 12px; font-weight: 700; width: 100%; cursor: pointer; border-radius: 8px; display: flex; align-items: center; gap: 8px; transition: background 0.15s;">
-                                <span style="font-size: 14px;">🎨</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #0284c7;"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.92 0 1.7-.75 1.7-1.67 0-.42-.16-.81-.44-1.11-.28-.3-.43-.7-.43-1.14 0-.92.75-1.67 1.67-1.67H16c3.31 0 6-2.69 6-6 0-4.96-4.49-9-10-9z"/></svg>
                                 <span>Both Sides Full Color</span>
                             </button>
                             <div style="border-top: 1px solid #f1f5f9; margin: 4px 0;"></div>
                             <button type="button" onclick="triggerDownload('front-only')" class="dropdown-item" style="text-align: left; background: none; color: #475569; padding: 8px 12px; border: none; font-size: 12px; font-weight: 600; width: 100%; cursor: pointer; border-radius: 8px; display: flex; align-items: center; gap: 8px; transition: background 0.15s;">
-                                <span style="font-size: 14px;">🖼️</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #64748b;"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
                                 <span>Front Side Only (Color)</span>
                             </button>
                             <button type="button" onclick="triggerDownload('back-only-mono')" class="dropdown-item" style="text-align: left; background: none; color: #475569; padding: 8px 12px; border: none; font-size: 12px; font-weight: 600; width: 100%; cursor: pointer; border-radius: 8px; display: flex; align-items: center; gap: 8px; transition: background 0.15s;">
-                                <span style="font-size: 14px;">🖤</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #475569;"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 7h10v10H7z"/></svg>
                                 <span>Back Side Only (Black/White)</span>
                             </button>
                         </div>
