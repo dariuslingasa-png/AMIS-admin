@@ -13,14 +13,14 @@
                     <span class="inline-flex rounded-full bg-white/10 px-3 py-1 text-xs font-black uppercase tracking-[0.22em] text-slate-200">Students Workspace</span>
                     <h1 class="mt-4 text-3xl font-black tracking-tight">Print & Export Center</h1>
                     <p class="mt-2 max-w-2xl text-sm font-medium leading-6 text-emerald-100">
-                        Select filter options below to print batch forms, generate printable ID sheets, or download requirements ZIP archives.
+                        Select filter options below to print batch forms, generate printable ID sheets, or download report archives.
                     </p>
                 </div>
             </div>
         </section>
 
         <!-- Main Card -->
-        <x-card title="Export Student Registry" subtitle="Download and print enrollment forms, ID cards sheet, and student documents">
+        <x-card title="Export Student Registry" subtitle="Download and print enrollment forms, school forms, and administrative reports">
             <!-- FILTER OPTIONS -->
             <div class="rounded-2xl border border-slate-100 bg-emerald-50/40 p-5 mb-6">
                 <div class="flex items-center justify-between mb-4">
@@ -70,23 +70,33 @@
 
             <!-- THREE COLUMNS LAYOUT -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Column 1: Download Individual Documents -->
+                <!-- Column 1: Student Documents -->
                 <div class="flex flex-col justify-between rounded-2xl border border-slate-100 bg-emerald-50/20 p-5 shadow-xs transition hover:shadow-md">
                     <div>
                         <div class="flex items-center gap-2.5 mb-4 border-b border-emerald-100 pb-2.5">
                             <div class="p-2.5 rounded-xl bg-emerald-100 text-emerald-700">
                                 <i data-lucide="file-text" class="h-5 w-5"></i>
                             </div>
-                            <h4 class="text-xs font-black uppercase tracking-wider text-slate-900">Individual Documents</h4>
+                            <h4 class="text-xs font-black uppercase tracking-wider text-slate-900">Student Documents</h4>
                         </div>
                         <ul class="space-y-2.5 text-xs text-slate-600 font-semibold">
+                            <!-- Enrollment Form (ACTIVE) -->
                             <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
                                 <span class="flex items-center gap-2">
                                     <i data-lucide="file-text" class="w-3.5 h-3.5 text-emerald-600/70"></i>
-                                    <span>Enrollment Form (PDF)</span>
+                                    <span>Enrollment Form</span>
                                 </span>
                                 <button type="button" onclick="runPrintRecordAction('forms_batch')" class="text-emerald-700 hover:text-emerald-900 font-extrabold hover:underline cursor-pointer">Download</button>
                             </li>
+                            <!-- Learner's Profile -->
+                            <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
+                                <span class="flex items-center gap-2">
+                                    <i data-lucide="user" class="w-3.5 h-3.5 text-slate-400"></i>
+                                    <span class="text-slate-500">Learner's Profile</span>
+                                </span>
+                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
+                            </li>
+                            <!-- Student ID Card -->
                             <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
                                 <span class="flex items-center gap-2">
                                     <i data-lucide="credit-card" class="w-3.5 h-3.5 text-slate-400"></i>
@@ -94,27 +104,7 @@
                                 </span>
                                 <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
                             </li>
-                            <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="user" class="w-3.5 h-3.5 text-slate-400"></i>
-                                    <span class="text-slate-500">Student Profile</span>
-                                </span>
-                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
-                            </li>
-                            <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="clipboard-list" class="w-3.5 h-3.5 text-slate-400"></i>
-                                    <span class="text-slate-500">Registration Form</span>
-                                </span>
-                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
-                            </li>
-                            <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="file-check" class="w-3.5 h-3.5 text-slate-400"></i>
-                                    <span class="text-slate-500">Assessment Form</span>
-                                </span>
-                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
-                            </li>
+                            <!-- Class Schedule -->
                             <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
                                 <span class="flex items-center gap-2">
                                     <i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-400"></i>
@@ -122,52 +112,75 @@
                                 </span>
                                 <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
                             </li>
+                            <!-- Report Card (SF9) -->
                             <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
                                 <span class="flex items-center gap-2">
                                     <i data-lucide="award" class="w-3.5 h-3.5 text-slate-400"></i>
-                                    <span class="text-slate-500">Report Card</span>
+                                    <span class="text-slate-500">Report Card (SF9)</span>
                                 </span>
                                 <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
                             </li>
+                            <!-- Permanent Record (SF10) -->
                             <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
                                 <span class="flex items-center gap-2">
                                     <i data-lucide="book-open" class="w-3.5 h-3.5 text-slate-400"></i>
-                                    <span class="text-slate-500">Permanent Record</span>
+                                    <span class="text-slate-500">Permanent Record (SF10)</span>
                                 </span>
                                 <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
                             </li>
-                            <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="shield" class="w-3.5 h-3.5 text-slate-400"></i>
-                                    <span class="text-slate-500">Good Moral Cert.</span>
-                                </span>
-                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
-                            </li>
+                            <!-- Certificate of Enrollment -->
                             <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
                                 <span class="flex items-center gap-2">
                                     <i data-lucide="graduation-cap" class="w-3.5 h-3.5 text-slate-400"></i>
-                                    <span class="text-slate-500">Cert. of Enrollment</span>
+                                    <span class="text-slate-500">Certificate of Enrollment</span>
                                 </span>
                                 <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
                             </li>
+                            <!-- Good Moral Certificate -->
                             <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
                                 <span class="flex items-center gap-2">
-                                    <i data-lucide="file-signature" class="w-3.5 h-3.5 text-slate-400"></i>
-                                    <span class="text-slate-500">Cert. of Reg. (COR)</span>
+                                    <i data-lucide="shield" class="w-3.5 h-3.5 text-slate-400"></i>
+                                    <span class="text-slate-500">Good Moral Certificate</span>
                                 </span>
                                 <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
                             </li>
+                            <!-- Certificate of Completion (Grade 10) -->
                             <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
                                 <span class="flex items-center gap-2">
                                     <i data-lucide="check-circle" class="w-3.5 h-3.5 text-slate-400"></i>
-                                    <span class="text-slate-500">Cert. of Completion</span>
+                                    <span class="text-slate-500">Certificate of Completion (Grade 10)</span>
                                 </span>
                                 <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
                             </li>
+                            <!-- Certificate of Graduation (Grade 12) -->
+                            <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
+                                <span class="flex items-center gap-2">
+                                    <i data-lucide="check-square" class="w-3.5 h-3.5 text-slate-400"></i>
+                                    <span class="text-slate-500">Certificate of Graduation (Grade 12)</span>
+                                </span>
+                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
+                            </li>
+                            <!-- Certificate of Recognition / Awards -->
+                            <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
+                                <span class="flex items-center gap-2">
+                                    <i data-lucide="sparkles" class="w-3.5 h-3.5 text-slate-400"></i>
+                                    <span class="text-slate-500">Certificate of Recognition / Awards</span>
+                                </span>
+                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
+                            </li>
+                            <!-- Certificate of Attendance -->
+                            <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
+                                <span class="flex items-center gap-2">
+                                    <i data-lucide="user-check" class="w-3.5 h-3.5 text-slate-400"></i>
+                                    <span class="text-slate-500">Certificate of Attendance</span>
+                                </span>
+                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
+                            </li>
+                            <!-- Certificate of Transfer -->
                             <li class="flex items-center justify-between py-1 hover:bg-slate-50/50 rounded px-1.5 transition">
                                 <span class="flex items-center gap-2">
-                                    <i data-lucide="list-todo" class="w-3.5 h-3.5 text-slate-400"></i>
-                                    <span class="text-slate-500">Requirements Checklist</span>
+                                    <i data-lucide="file-input" class="w-3.5 h-3.5 text-slate-400"></i>
+                                    <span class="text-slate-500">Certificate of Transfer (if applicable)</span>
                                 </span>
                                 <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
                             </li>
@@ -175,176 +188,199 @@
                     </div>
                 </div>
 
-                <!-- Column 2: Download Student Requirements -->
+                <!-- Column 2: 📚 DepEd School Forms -->
+                <div class="flex flex-col justify-between rounded-2xl border border-slate-100 bg-amber-50/20 p-5 shadow-xs transition hover:shadow-md">
+                    <div>
+                        <div class="flex items-center gap-2.5 mb-4 border-b border-amber-100 pb-2.5">
+                            <div class="p-2.5 rounded-xl bg-amber-100 text-amber-700">
+                                <i data-lucide="library" class="h-5 w-5"></i>
+                            </div>
+                            <h4 class="text-xs font-black uppercase tracking-wider text-slate-900">📚 DepEd School Forms</h4>
+                        </div>
+                        <ul class="space-y-2.5 text-xs text-slate-600 font-semibold">
+                            <!-- SF1 – School Register -->
+                            <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
+                                <span class="flex items-center gap-2">
+                                    <i data-lucide="archive" class="w-3.5 h-3.5 text-slate-400"></i>
+                                    <span class="text-slate-500">SF1 – School Register</span>
+                                </span>
+                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
+                            </li>
+                            <!-- SF2 – Daily Attendance Report -->
+                            <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
+                                <span class="flex items-center gap-2">
+                                    <i data-lucide="calendar-days" class="w-3.5 h-3.5 text-slate-400"></i>
+                                    <span class="text-slate-500">SF2 – Daily Attendance Report</span>
+                                </span>
+                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
+                            </li>
+                            <!-- SF3 – Books Issued and Returned -->
+                            <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
+                                <span class="flex items-center gap-2">
+                                    <i data-lucide="book-marked" class="w-3.5 h-3.5 text-slate-400"></i>
+                                    <span class="text-slate-500">SF3 – Books Issued and Returned</span>
+                                </span>
+                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
+                            </li>
+                            <!-- SF4 – Monthly Learner's Movement & Attendance -->
+                            <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
+                                <span class="flex items-center gap-2">
+                                    <i data-lucide="trending-up" class="w-3.5 h-3.5 text-slate-400"></i>
+                                    <span class="text-slate-500">SF4 – Monthly Learner's Movement & Attendance</span>
+                                </span>
+                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
+                            </li>
+                            <!-- SF5 – Report on Promotion & Learning Progress -->
+                            <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
+                                <span class="flex items-center gap-2">
+                                    <i data-lucide="line-chart" class="w-3.5 h-3.5 text-slate-400"></i>
+                                    <span class="text-slate-500">SF5 – Report on Promotion & Learning Progress</span>
+                                </span>
+                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
+                            </li>
+                            <!-- SF6 – Summarized Report on Promotion -->
+                            <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
+                                <span class="flex items-center gap-2">
+                                    <i data-lucide="pie-chart" class="w-3.5 h-3.5 text-slate-400"></i>
+                                    <span class="text-slate-500">SF6 – Summarized Report on Promotion</span>
+                                </span>
+                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
+                            </li>
+                            <!-- SF9 – Report Card -->
+                            <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
+                                <span class="flex items-center gap-2">
+                                    <i data-lucide="file-signature" class="w-3.5 h-3.5 text-slate-400"></i>
+                                    <span class="text-slate-500">SF9 – Report Card</span>
+                                </span>
+                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
+                            </li>
+                            <!-- SF10 – Permanent Record -->
+                            <li class="flex items-center justify-between py-1 hover:bg-slate-50/50 rounded px-1.5 transition">
+                                <span class="flex items-center gap-2">
+                                    <i data-lucide="folder-git" class="w-3.5 h-3.5 text-slate-400"></i>
+                                    <span class="text-slate-500">SF10 – Permanent Record</span>
+                                </span>
+                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Column 3: 📋 Reports -->
                 <div class="flex flex-col justify-between rounded-2xl border border-slate-100 bg-sky-50/20 p-5 shadow-xs transition hover:shadow-md">
                     <div>
                         <div class="flex items-center gap-2.5 mb-4 border-b border-sky-100 pb-2.5">
                             <div class="p-2.5 rounded-xl bg-sky-100 text-sky-700">
-                                <i data-lucide="check-square" class="h-5 w-5"></i>
+                                <i data-lucide="file-bar-chart" class="h-5 w-5"></i>
                             </div>
-                            <h4 class="text-xs font-black uppercase tracking-wider text-slate-900">Student Requirements</h4>
+                            <h4 class="text-xs font-black uppercase tracking-wider text-slate-900">📋 Reports</h4>
                         </div>
                         <ul class="space-y-2.5 text-xs text-slate-600 font-semibold">
+                            <!-- Master List (ACTIVE) -->
                             <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
                                 <span class="flex items-center gap-2">
-                                    <i data-lucide="image" class="w-3.5 h-3.5 text-sky-600/70"></i>
-                                    <span>2x2 / ID Photo</span>
+                                    <i data-lucide="list" class="w-3.5 h-3.5 text-sky-650"></i>
+                                    <span class="font-extrabold text-slate-900">Master List</span>
                                 </span>
-                                <button type="button" onclick="runPrintRecordAction('docs_zip')" class="text-sky-700 hover:text-sky-900 font-extrabold hover:underline cursor-pointer">Download</button>
+                                <button type="button" onclick="runPrintRecordAction('masters_list')" class="text-sky-700 hover:text-sky-900 font-extrabold hover:underline cursor-pointer">Download</button>
                             </li>
+                            <!-- Class List -->
                             <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
                                 <span class="flex items-center gap-2">
-                                    <i data-lucide="file-text" class="w-3.5 h-3.5 text-sky-600/70"></i>
-                                    <span>PSA Birth Certificate</span>
+                                    <i data-lucide="users" class="w-3.5 h-3.5 text-slate-400"></i>
+                                    <span class="text-slate-500">Class List</span>
                                 </span>
-                                <button type="button" onclick="runPrintRecordAction('docs_zip')" class="text-sky-700 hover:text-sky-900 font-extrabold hover:underline cursor-pointer">Download</button>
+                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
                             </li>
+                            <!-- Enrollment Summary -->
                             <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
                                 <span class="flex items-center gap-2">
-                                    <i data-lucide="activity" class="w-3.5 h-3.5 text-sky-600/70"></i>
-                                    <span>Vaccination Record</span>
+                                    <i data-lucide="bar-chart-3" class="w-3.5 h-3.5 text-slate-400"></i>
+                                    <span class="text-slate-500">Enrollment Summary</span>
                                 </span>
-                                <button type="button" onclick="runPrintRecordAction('docs_zip')" class="text-sky-700 hover:text-sky-900 font-extrabold hover:underline cursor-pointer">Download</button>
+                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
                             </li>
+                            <!-- Attendance Report -->
                             <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
                                 <span class="flex items-center gap-2">
-                                    <i data-lucide="heart-pulse" class="w-3.5 h-3.5 text-sky-600/70"></i>
-                                    <span>Medical Certificate</span>
+                                    <i data-lucide="clock" class="w-3.5 h-3.5 text-slate-400"></i>
+                                    <span class="text-slate-500">Attendance Report</span>
                                 </span>
-                                <button type="button" onclick="runPrintRecordAction('docs_zip')" class="text-sky-700 hover:text-sky-900 font-extrabold hover:underline cursor-pointer">Download</button>
+                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
                             </li>
+                            <!-- Grade Sheet -->
                             <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
                                 <span class="flex items-center gap-2">
-                                    <i data-lucide="file-digit" class="w-3.5 h-3.5 text-sky-600/70"></i>
-                                    <span>Form 137 / SF10</span>
+                                    <i data-lucide="sheet" class="w-3.5 h-3.5 text-slate-400"></i>
+                                    <span class="text-slate-500">Grade Sheet</span>
                                 </span>
-                                <button type="button" onclick="runPrintRecordAction('docs_zip')" class="text-sky-700 hover:text-sky-900 font-extrabold hover:underline cursor-pointer">Download</button>
+                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
                             </li>
+                            <!-- Honors List -->
                             <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
                                 <span class="flex items-center gap-2">
-                                    <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-sky-600/70"></i>
-                                    <span>Form 138 / Report Card</span>
+                                    <i data-lucide="crown" class="w-3.5 h-3.5 text-slate-400"></i>
+                                    <span class="text-slate-500">Honors List</span>
                                 </span>
-                                <button type="button" onclick="runPrintRecordAction('docs_zip')" class="text-sky-700 hover:text-sky-900 font-extrabold hover:underline cursor-pointer">Download</button>
+                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
                             </li>
+                            <!-- Promotion List -->
                             <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
                                 <span class="flex items-center gap-2">
-                                    <i data-lucide="shield-check" class="w-3.5 h-3.5 text-sky-600/70"></i>
-                                    <span>Good Moral</span>
+                                    <i data-lucide="rocket" class="w-3.5 h-3.5 text-slate-400"></i>
+                                    <span class="text-slate-500">Promotion List</span>
                                 </span>
-                                <button type="button" onclick="runPrintRecordAction('docs_zip')" class="text-sky-700 hover:text-sky-900 font-extrabold hover:underline cursor-pointer">Download</button>
+                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
                             </li>
+                            <!-- Graduating Students List -->
                             <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
                                 <span class="flex items-center gap-2">
-                                    <i data-lucide="home" class="w-3.5 h-3.5 text-sky-600/70"></i>
-                                    <span>Proof of Address</span>
+                                    <i data-lucide="user-plus" class="w-3.5 h-3.5 text-slate-400"></i>
+                                    <span class="text-slate-500">Graduating Students List</span>
                                 </span>
-                                <button type="button" onclick="runPrintRecordAction('docs_zip')" class="text-sky-700 hover:text-sky-900 font-extrabold hover:underline cursor-pointer">Download</button>
+                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
                             </li>
-                            <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="users" class="w-3.5 h-3.5 text-sky-600/70"></i>
-                                    <span>Parent/Guardian ID</span>
-                                </span>
-                                <button type="button" onclick="runPrintRecordAction('docs_zip')" class="text-sky-700 hover:text-sky-900 font-extrabold hover:underline cursor-pointer">Download</button>
-                            </li>
+                            <!-- Student Directory -->
                             <li class="flex items-center justify-between py-1 hover:bg-slate-50/50 rounded px-1.5 transition">
                                 <span class="flex items-center gap-2">
-                                    <i data-lucide="pencil-line" class="w-3.5 h-3.5 text-sky-600/70"></i>
-                                    <span>Signed Consent Forms</span>
+                                    <i data-lucide="contact" class="w-3.5 h-3.5 text-slate-400"></i>
+                                    <span class="text-slate-500">Student Directory</span>
                                 </span>
-                                <button type="button" onclick="runPrintRecordAction('docs_zip')" class="text-sky-700 hover:text-sky-900 font-extrabold hover:underline cursor-pointer">Download</button>
+                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
                             </li>
                         </ul>
                     </div>
                 </div>
-
-                <!-- Column 3: Bulk Download -->
-                <div class="flex flex-col justify-between rounded-2xl border border-slate-100 bg-rose-50/20 p-5 shadow-xs transition hover:shadow-md">
-                    <div>
-                        <div class="flex items-center gap-2.5 mb-4 border-b border-rose-100 pb-2.5">
-                            <div class="p-2.5 rounded-xl bg-rose-100 text-rose-700">
-                                <i data-lucide="archive" class="h-5 w-5"></i>
-                            </div>
-                            <h4 class="text-xs font-black uppercase tracking-wider text-slate-900">Bulk Download</h4>
-                        </div>
-                        
-                        <!-- Master Action Button -->
-                        <button type="button" onclick="runPrintRecordAction('docs_zip')" class="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-rose-600 hover:bg-rose-700 py-4.5 px-4 text-xs font-black text-white shadow-md transition active:scale-[0.98] cursor-pointer mb-6">
-                            <i data-lucide="download-cloud" class="h-5 w-5"></i>
-                            <span class="uppercase tracking-wider">Download All Documents ZIP</span>
-                        </button>
-
-                        <div class="space-y-2.5">
-                            <span class="text-[10px] font-black uppercase tracking-widest text-rose-700/60 block mb-1">Additional ZIP Archives:</span>
-                            
-                            <button type="button" onclick="runPrintRecordAction('docs_zip')" class="w-full flex items-center justify-between rounded-xl border border-slate-100 bg-white p-2.5 text-xs font-extrabold text-slate-700 hover:bg-rose-50/50 hover:text-rose-900 hover:border-rose-200 transition cursor-pointer text-left shadow-xs">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="folder-archive" class="w-3.5 h-3.5 text-rose-600/70"></i>
-                                    <span>Requirements ZIP</span>
-                                </span>
-                                <i data-lucide="download" class="h-3.5 w-3.5 text-slate-400"></i>
-                            </button>
-
-                            <button type="button" onclick="runPrintRecordAction('forms_jpg')" class="w-full flex items-center justify-between rounded-xl border border-slate-100 bg-white p-2.5 text-xs font-extrabold text-slate-700 hover:bg-rose-50/50 hover:text-rose-900 hover:border-rose-200 transition cursor-pointer text-left shadow-xs">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="folder-archive" class="w-3.5 h-3.5 text-rose-600/70"></i>
-                                    <span>Enrollment Forms ZIP</span>
-                                </span>
-                                <i data-lucide="download" class="h-3.5 w-3.5 text-slate-400"></i>
-                            </button>
-
-                            <button type="button" onclick="runPrintRecordAction('id_cards')" class="w-full flex items-center justify-between rounded-xl border border-slate-100 bg-white p-2.5 text-xs font-extrabold text-slate-700 hover:bg-rose-50/50 hover:text-rose-900 hover:border-rose-200 transition cursor-pointer text-left shadow-xs">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="folder-archive" class="w-3.5 h-3.5 text-rose-600/70"></i>
-                                    <span>ID Cards ZIP</span>
-                                </span>
-                                <i data-lucide="download" class="h-3.5 w-3.5 text-slate-400"></i>
-                            </button>
-
-                            <button type="button" onclick="runPrintRecordAction('docs_zip')" class="w-full flex items-center justify-between rounded-xl border border-slate-100 bg-white p-2.5 text-xs font-extrabold text-slate-700 hover:bg-rose-50/50 hover:text-rose-900 hover:border-rose-200 transition cursor-pointer text-left shadow-xs">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="folder-archive" class="w-3.5 h-3.5 text-rose-600/70"></i>
-                                    <span>Student Photos ZIP</span>
-                                </span>
-                                <i data-lucide="download" class="h-3.5 w-3.5 text-slate-400"></i>
-                            </button>
-
-                            <button type="button" onclick="runPrintRecordAction('docs_zip')" class="w-full flex items-center justify-between rounded-xl border border-slate-100 bg-white p-2.5 text-xs font-extrabold text-slate-700 hover:bg-rose-50/50 hover:text-rose-900 hover:border-rose-200 transition cursor-pointer text-left shadow-xs">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="folder-archive" class="w-3.5 h-3.5 text-rose-600/70"></i>
-                                    <span>Report Cards ZIP</span>
-                                </span>
-                                <i data-lucide="download" class="h-3.5 w-3.5 text-slate-400"></i>
-                            </button>
-
-                            <button type="button" onclick="runPrintRecordAction('docs_zip')" class="w-full flex items-center justify-between rounded-xl border border-slate-100 bg-white p-2.5 text-xs font-extrabold text-slate-700 hover:bg-rose-50/50 hover:text-rose-900 hover:border-rose-200 transition cursor-pointer text-left shadow-xs">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="folder-archive" class="w-3.5 h-3.5 text-rose-600/70"></i>
-                                    <span>Certificates ZIP</span>
-                                </span>
-                                <i data-lucide="download" class="h-3.5 w-3.5 text-slate-400"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
             </div>
 
-            <!-- ADDITIONAL REPORTS & UTILITIES -->
-            <div class="rounded-2xl border border-slate-100 bg-slate-50/60 p-4 mt-6">
+            <!-- ZIP ARCHIVES & BULK UTILITIES -->
+            <div class="rounded-2xl border border-slate-100 bg-slate-50/60 p-5 mt-6">
                 <span class="text-xs font-black uppercase tracking-wider text-slate-700 block mb-3">
-                    Additional Reports & Utilities
+                    Bulk Downloads & Utilities
                 </span>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                    <button type="button" onclick="runPrintRecordAction('credentials')" class="flex items-center gap-2 rounded-xl border border-slate-100 bg-white p-2.5 text-xs font-extrabold text-slate-700 hover:bg-slate-100 transition cursor-pointer text-left">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                    <button type="button" onclick="runPrintRecordAction('forms_jpg')" class="flex items-center justify-between rounded-xl border border-slate-100 bg-white p-3 text-xs font-extrabold text-slate-750 hover:bg-emerald-50 hover:text-emerald-950 transition cursor-pointer text-left shadow-xs">
+                        <span class="flex items-center gap-2">
+                            <i data-lucide="folder-archive" class="w-4 h-4 text-emerald-600"></i>
+                            <span>Enrollment Forms ZIP</span>
+                        </span>
+                        <i data-lucide="download" class="h-3.5 w-3.5 text-slate-400"></i>
+                    </button>
+
+                    <button type="button" onclick="runPrintRecordAction('id_cards')" class="flex items-center justify-between rounded-xl border border-slate-100 bg-white p-3 text-xs font-extrabold text-slate-750 hover:bg-emerald-50 hover:text-emerald-950 transition cursor-pointer text-left shadow-xs">
+                        <span class="flex items-center gap-2">
+                            <i data-lucide="folder-archive" class="w-4 h-4 text-emerald-600"></i>
+                            <span>ID Cards ZIP</span>
+                        </span>
+                        <i data-lucide="download" class="h-3.5 w-3.5 text-slate-400"></i>
+                    </button>
+
+                    <button type="button" onclick="runPrintRecordAction('credentials')" class="flex items-center gap-2 rounded-xl border border-slate-100 bg-white p-3 text-xs font-extrabold text-slate-750 hover:bg-slate-100 transition cursor-pointer text-left">
                         <i data-lucide="key" class="h-4 w-4 text-amber-600"></i>
                         <span>Microsoft Credentials</span>
                     </button>
-                    <button type="button" onclick="runPrintRecordAction('masters_list')" class="flex items-center gap-2 rounded-xl border border-slate-100 bg-white p-2.5 text-xs font-extrabold text-slate-700 hover:bg-slate-100 transition cursor-pointer text-left">
-                        <i data-lucide="list" class="h-4 w-4 text-blue-600"></i>
-                        <span>Masters List PDF</span>
-                    </button>
-                    <button type="button" onclick="runPrintRecordAction('canva')" class="flex items-center gap-2 rounded-xl border border-slate-100 bg-white p-2.5 text-xs font-extrabold text-emerald-800 hover:bg-emerald-50 transition cursor-pointer text-left">
+
+                    <button type="button" onclick="runPrintRecordAction('canva')" class="flex items-center gap-2 rounded-xl border border-slate-100 bg-white p-3 text-xs font-extrabold text-emerald-800 hover:bg-emerald-50 transition cursor-pointer text-left">
                         <i data-lucide="sparkles" class="h-4 w-4 text-emerald-600"></i>
                         <span>Canva Bulk Create</span>
                     </button>
