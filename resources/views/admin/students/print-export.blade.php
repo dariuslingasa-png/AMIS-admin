@@ -89,87 +89,87 @@
                             </li>
                             <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
                                 <span class="flex items-center gap-2">
-                                    <i data-lucide="credit-card" class="w-3.5 h-3.5 text-emerald-600/70"></i>
-                                    <span>Student ID Card</span>
+                                    <i data-lucide="credit-card" class="w-3.5 h-3.5 text-slate-400"></i>
+                                    <span class="text-slate-500">Student ID Card</span>
                                 </span>
-                                <button type="button" onclick="runPrintRecordAction('id_cards')" class="text-emerald-700 hover:text-emerald-900 font-extrabold hover:underline cursor-pointer">Download</button>
+                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
                             </li>
                             <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
                                 <span class="flex items-center gap-2">
-                                    <i data-lucide="user" class="w-3.5 h-3.5 text-emerald-600/70"></i>
-                                    <span>Student Profile</span>
+                                    <i data-lucide="user" class="w-3.5 h-3.5 text-slate-400"></i>
+                                    <span class="text-slate-500">Student Profile</span>
                                 </span>
-                                <button type="button" onclick="runPrintRecordAction('masters_list')" class="text-emerald-700 hover:text-emerald-900 font-extrabold hover:underline cursor-pointer">Download</button>
+                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
                             </li>
                             <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
                                 <span class="flex items-center gap-2">
-                                    <i data-lucide="clipboard-list" class="w-3.5 h-3.5 text-emerald-600/70"></i>
-                                    <span>Registration Form</span>
+                                    <i data-lucide="clipboard-list" class="w-3.5 h-3.5 text-slate-400"></i>
+                                    <span class="text-slate-500">Registration Form</span>
                                 </span>
-                                <button type="button" onclick="runPrintRecordAction('forms_batch')" class="text-emerald-700 hover:text-emerald-900 font-extrabold hover:underline cursor-pointer">Download</button>
+                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
                             </li>
                             <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
                                 <span class="flex items-center gap-2">
-                                    <i data-lucide="file-check" class="w-3.5 h-3.5 text-emerald-600/70"></i>
-                                    <span>Assessment Form</span>
+                                    <i data-lucide="file-check" class="w-3.5 h-3.5 text-slate-400"></i>
+                                    <span class="text-slate-500">Assessment Form</span>
                                 </span>
-                                <button type="button" onclick="runPrintRecordAction('forms_batch')" class="text-emerald-700 hover:text-emerald-900 font-extrabold hover:underline cursor-pointer">Download</button>
+                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
                             </li>
                             <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
                                 <span class="flex items-center gap-2">
-                                    <i data-lucide="calendar" class="w-3.5 h-3.5 text-emerald-600/70"></i>
-                                    <span>Class Schedule</span>
+                                    <i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-400"></i>
+                                    <span class="text-slate-500">Class Schedule</span>
                                 </span>
-                                <button type="button" onclick="runPrintRecordAction('forms_batch')" class="text-emerald-700 hover:text-emerald-900 font-extrabold hover:underline cursor-pointer">Download</button>
+                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
                             </li>
                             <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
                                 <span class="flex items-center gap-2">
-                                    <i data-lucide="award" class="w-3.5 h-3.5 text-emerald-600/70"></i>
-                                    <span>Report Card</span>
+                                    <i data-lucide="award" class="w-3.5 h-3.5 text-slate-400"></i>
+                                    <span class="text-slate-500">Report Card</span>
                                 </span>
-                                <button type="button" onclick="runPrintRecordAction('forms_batch')" class="text-emerald-700 hover:text-emerald-900 font-extrabold hover:underline cursor-pointer">Download</button>
+                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
                             </li>
                             <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
                                 <span class="flex items-center gap-2">
-                                    <i data-lucide="book-open" class="w-3.5 h-3.5 text-emerald-600/70"></i>
-                                    <span>Permanent Record</span>
+                                    <i data-lucide="book-open" class="w-3.5 h-3.5 text-slate-400"></i>
+                                    <span class="text-slate-500">Permanent Record</span>
                                 </span>
-                                <button type="button" onclick="runPrintRecordAction('forms_batch')" class="text-emerald-700 hover:text-emerald-900 font-extrabold hover:underline cursor-pointer">Download</button>
+                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
                             </li>
                             <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
                                 <span class="flex items-center gap-2">
-                                    <i data-lucide="shield" class="w-3.5 h-3.5 text-emerald-600/70"></i>
-                                    <span>Good Moral Cert.</span>
+                                    <i data-lucide="shield" class="w-3.5 h-3.5 text-slate-400"></i>
+                                    <span class="text-slate-500">Good Moral Cert.</span>
                                 </span>
-                                <button type="button" onclick="runPrintRecordAction('forms_batch')" class="text-emerald-700 hover:text-emerald-900 font-extrabold hover:underline cursor-pointer">Download</button>
+                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
                             </li>
                             <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
                                 <span class="flex items-center gap-2">
-                                    <i data-lucide="graduation-cap" class="w-3.5 h-3.5 text-emerald-600/70"></i>
-                                    <span>Cert. of Enrollment</span>
+                                    <i data-lucide="graduation-cap" class="w-3.5 h-3.5 text-slate-400"></i>
+                                    <span class="text-slate-500">Cert. of Enrollment</span>
                                 </span>
-                                <button type="button" onclick="runPrintRecordAction('forms_batch')" class="text-emerald-700 hover:text-emerald-900 font-extrabold hover:underline cursor-pointer">Download</button>
+                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
                             </li>
                             <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
                                 <span class="flex items-center gap-2">
-                                    <i data-lucide="file-signature" class="w-3.5 h-3.5 text-emerald-600/70"></i>
-                                    <span>Cert. of Reg. (COR)</span>
+                                    <i data-lucide="file-signature" class="w-3.5 h-3.5 text-slate-400"></i>
+                                    <span class="text-slate-500">Cert. of Reg. (COR)</span>
                                 </span>
-                                <button type="button" onclick="runPrintRecordAction('forms_batch')" class="text-emerald-700 hover:text-emerald-900 font-extrabold hover:underline cursor-pointer">Download</button>
+                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
                             </li>
                             <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
                                 <span class="flex items-center gap-2">
-                                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-emerald-600/70"></i>
-                                    <span>Cert. of Completion</span>
+                                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-slate-400"></i>
+                                    <span class="text-slate-500">Cert. of Completion</span>
                                 </span>
-                                <button type="button" onclick="runPrintRecordAction('forms_batch')" class="text-emerald-700 hover:text-emerald-900 font-extrabold hover:underline cursor-pointer">Download</button>
+                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
                             </li>
                             <li class="flex items-center justify-between py-1 hover:bg-slate-50/50 rounded px-1.5 transition">
                                 <span class="flex items-center gap-2">
-                                    <i data-lucide="list-todo" class="w-3.5 h-3.5 text-emerald-600/70"></i>
-                                    <span>Requirements Checklist</span>
+                                    <i data-lucide="list-todo" class="w-3.5 h-3.5 text-slate-400"></i>
+                                    <span class="text-slate-500">Requirements Checklist</span>
                                 </span>
-                                <button type="button" onclick="runPrintRecordAction('forms_batch')" class="text-emerald-700 hover:text-emerald-900 font-extrabold hover:underline cursor-pointer">Download</button>
+                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
                             </li>
                         </ul>
                     </div>
