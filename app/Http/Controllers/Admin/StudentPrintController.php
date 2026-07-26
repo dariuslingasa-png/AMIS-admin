@@ -140,6 +140,61 @@ class StudentPrintController extends Controller
 
     public function printExport(Request $request)
     {
-        return view('admin.students.print-export');
+        $isTeacherAdminViewer = $request->user()?->isTeacherAdminViewer() ?? false;
+        $visibleGrades = $isTeacherAdminViewer ? $request->user()->adminVisibleGradeLevels() : [];
+        $teacherGradeScope = null;
+        if ($isTeacherAdminViewer && ! empty($visibleGrades)) {
+            $teacherGradeScope = $visibleGrades[0];
+            if ($request->filled('grade') && in_array((string) $request->input('grade'), $visibleGrades, true)) {
+                $teacherGradeScope = (string) $request->input('grade');
+            } elseif ($request->filled('grade')) {
+                $teacherGradeScope = null;
+            }
+        }
+
+        $query = Student::query();
+
+        if ($isTeacherAdminViewer) {
+            $teacherGradeScope === null
+                ? $query->whereRaw('1 = 0')
+                : $query->where('students.grade_level', $teacherGradeScope);
+        }
+
+        if ($request->filled('search')) {
+            $s = trim($request->search);
+            $terms = array_filter(explode(' ', $s));
+            $query->where(function ($q) use ($terms) {
+                foreach ($terms as $term) {
+                    $q->where(function ($sub) use ($term) {
+                        $sub->where('students.student_number', 'like', "%{$term}%")
+                            ->orWhere('students.school_email', 'like', "%{$term}%")
+                            ->orWhereHas('applicant', function ($a) use ($term) {
+                                $a->where('first_name', 'like', "%{$term}%")
+                                    ->orWhere('middle_name', 'like', "%{$term}%")
+                                    ->orWhere('last_name', 'like', "%{$term}%");
+                            });
+                    });
+                }
+            });
+        }
+
+        if ($request->filled('grade')) {
+            $query->where('students.grade_level', $request->grade);
+        }
+
+        if ($request->filled('mode')) {
+            $mode = trim($request->mode);
+            $query->whereHas('applicant', fn ($q) => $q->where('learning_mode', 'like', "%{$mode}%"));
+        }
+
+        if ($request->filled('gender')) {
+            $gender = strtolower((string) $request->gender);
+            if (in_array($gender, ['male', 'female'], true)) {
+                $query->whereHas('applicant', fn ($q) => $q->whereRaw('LOWER(gender) = ?', [$gender]));
+            }
+        }
+
+        $totalStudents = $query->count();
+        return view('admin.students.print-export', compact('totalStudents'));
     }
 }

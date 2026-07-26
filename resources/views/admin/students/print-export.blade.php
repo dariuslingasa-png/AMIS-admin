@@ -390,7 +390,7 @@
     </div>
 
     <!-- Background Batch Export Modal -->
-    <div id="batch-export-modal" class="fixed inset-0 z-[100000] hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-md transition-all duration-300">
+    <div id="batch-export-modal" class="fixed inset-0 hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-md transition-all duration-300" style="z-index: 9999999 !important;">
         <div class="relative w-full max-w-lg scale-95 transform rounded-2xl border border-slate-200/80 bg-white p-6 shadow-2xl transition-all duration-300 dark:border-slate-800 dark:bg-slate-900">
             
             <!-- CLOSE BUTTON (Top-Right) -->
@@ -533,7 +533,7 @@
     </div>
 
     <!-- Background Export Floating Indicator -->
-    <div id="export-floating-indicator" class="fixed bottom-6 right-6 z-[99999] hidden items-center gap-3 rounded-2xl border border-emerald-200 bg-white p-4 shadow-xl dark:border-slate-800 dark:bg-slate-900 animate-slide-up cursor-pointer hover:border-emerald-300 transition" onclick="showExportModalFromIndicator()">
+    <div id="export-floating-indicator" class="fixed bottom-6 right-6 hidden items-center gap-3 rounded-2xl border border-emerald-200 bg-white p-4 shadow-xl dark:border-slate-800 dark:bg-slate-900 animate-slide-up cursor-pointer hover:border-emerald-300 transition" style="z-index: 9999999 !important;" onclick="showExportModalFromIndicator()">
         <div class="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
             <svg class="h-5 w-5 animate-spin text-emerald-600" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -573,7 +573,36 @@
             const el = document.getElementById('p-filter-gender');
             if (el) el.value = urlParams.get('gender');
         }
+
+        // Bind auto-reload on filter changes
+        const filters = ['p-filter-mode', 'p-filter-grade', 'p-filter-gender'];
+        filters.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('change', function() {
+                    applyFiltersAndReload();
+                });
+            }
+        });
     });
+
+    function applyFiltersAndReload() {
+        const mode = document.getElementById('p-filter-mode')?.value || '';
+        const grade = document.getElementById('p-filter-grade')?.value || '';
+        const gender = document.getElementById('p-filter-gender')?.value || '';
+        const search = '{{ request('search', '') }}';
+
+        const params = new URLSearchParams();
+        if (mode) params.append('mode', mode);
+        if (grade) params.append('grade', grade);
+        if (gender) params.append('gender', gender);
+        if (search) params.append('search', search);
+
+        if (window.startLoadingTransition) {
+            window.startLoadingTransition();
+        }
+        window.location.href = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+    }
 
     // Background Export State Variables
     let exportInterval = null;
@@ -582,12 +611,15 @@
     let isExportRunning = false;
 
     function openBatchExportModal(type) {
+        const modal = document.getElementById('batch-export-modal');
+        if (modal) {
+            document.body.appendChild(modal);
+        }
         if (isExportRunning) {
             // Re-open directly to progress screen
             showExportModal();
             return;
         }
-        const modal = document.getElementById('batch-export-modal');
         if (modal) {
             modal.classList.remove('hidden');
             document.getElementById('export-state-config').classList.remove('hidden');
@@ -607,6 +639,7 @@
     function showExportModal() {
         const modal = document.getElementById('batch-export-modal');
         if (modal) {
+            document.body.appendChild(modal);
             modal.classList.remove('hidden');
         }
     }
@@ -616,7 +649,10 @@
         // Show floating indicator if running
         if (isExportRunning) {
             const indicator = document.getElementById('export-floating-indicator');
-            if (indicator) indicator.classList.remove('hidden');
+            if (indicator) {
+                document.body.appendChild(indicator);
+                indicator.classList.remove('hidden');
+            }
         }
     }
 
