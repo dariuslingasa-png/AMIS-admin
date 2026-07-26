@@ -805,6 +805,17 @@
         }, 150);
     }
 
+    function triggerBackgroundDownload(url) {
+        let iframe = document.getElementById('hidden-download-iframe');
+        if (!iframe) {
+            iframe = document.createElement('iframe');
+            iframe.id = 'hidden-download-iframe';
+            iframe.style.display = 'none';
+            document.body.appendChild(iframe);
+        }
+        iframe.src = url;
+    }
+
     function triggerActualZipDownload() {
         const mode = document.getElementById('p-filter-mode')?.value || '';
         const grade = document.getElementById('p-filter-grade')?.value || '';
@@ -820,7 +831,7 @@
 
         const queryString = params.toString() ? '?' + params.toString() : '';
 
-        window.location.href = '{{ route('admin.students.download-enrolment-forms-zip') }}' + queryString;
+        triggerBackgroundDownload('{{ route('admin.students.download-enrolment-forms-zip') }}' + queryString);
         closeBatchExportModal();
     }
 
@@ -848,7 +859,7 @@
             idParams.append('is_print', '1');
             window.open('{{ route('admin.students.index') }}?' + idParams.toString(), '_blank');
         } else if (actionType === 'docs_zip') {
-            window.location.href = '{{ route('admin.students.download-docs-zip') }}' + queryString;
+            triggerBackgroundDownload('{{ route('admin.students.download-docs-zip') }}' + queryString);
         } else if (actionType === 'credentials') {
             const credParams = new URLSearchParams(params);
             credParams.append('print_credentials', '1');
@@ -860,7 +871,7 @@
             listParams.append('is_print', '1');
             window.open('{{ route('admin.students.index') }}?' + listParams.toString(), '_blank');
         } else if (actionType === 'canva') {
-            window.location.href = '{{ route('admin.students.export-canva') }}' + queryString;
+            triggerBackgroundDownload('{{ route('admin.students.export-canva') }}' + queryString);
         }
     }
     </script>
