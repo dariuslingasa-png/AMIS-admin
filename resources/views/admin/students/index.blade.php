@@ -89,7 +89,7 @@
             <!-- Header -->
             <div class="flex items-center justify-between border-b border-slate-100 bg-slate-50/80 px-6 py-4">
                 <div class="flex items-center gap-3">
-                    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 shadow-xs">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 shadow-sm">
                         <i data-lucide="printer" class="h-5 w-5"></i>
                     </div>
                     <div>
@@ -119,7 +119,7 @@
                         <!-- Learning Mode Filter -->
                         <div>
                             <label class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-600 mb-1">Mode</label>
-                            <select id="p-filter-mode" class="w-full h-10 rounded-xl border border-slate-250 bg-white px-3 text-xs font-bold text-slate-800 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition">
+                            <select id="p-filter-mode" class="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-800 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition cursor-pointer">
                                 <option value="" {{ request('mode') == '' ? 'selected' : '' }}>All Modes (F2F & ODL)</option>
                                 <option value="F2F" {{ request('mode') == 'F2F' ? 'selected' : '' }}>Face to Face (F2F)</option>
                                 <option value="ODL" {{ request('mode') == 'ODL' ? 'selected' : '' }}>Online Distance Learning (ODL)</option>
@@ -129,7 +129,7 @@
                         <!-- Grade Level Filter -->
                         <div>
                             <label class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-600 mb-1">Grade</label>
-                            <select id="p-filter-grade" class="w-full h-10 rounded-xl border border-slate-250 bg-white px-3 text-xs font-bold text-slate-800 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition">
+                            <select id="p-filter-grade" class="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-800 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition cursor-pointer">
                                 <option value="" {{ request('grade') == '' ? 'selected' : '' }}>All Grade Levels</option>
                                 <option value="Kinder 1" {{ request('grade') == 'Kinder 1' ? 'selected' : '' }}>K1 (Kinder 1)</option>
                                 <option value="Kinder 2" {{ request('grade') == 'Kinder 2' ? 'selected' : '' }}>K2 (Kinder 2)</option>
@@ -142,7 +142,7 @@
                         <!-- Gender Filter (Optional) -->
                         <div>
                             <label class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-600 mb-1">Gender (Optional)</label>
-                            <select id="p-filter-gender" class="w-full h-10 rounded-xl border border-slate-250 bg-white px-3 text-xs font-bold text-slate-800 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition">
+                            <select id="p-filter-gender" class="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-800 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition cursor-pointer">
                                 <option value="" {{ request('gender') == '' ? 'selected' : '' }}>All Genders</option>
                                 <option value="male" {{ request('gender') == 'male' ? 'selected' : '' }}>Male Only</option>
                                 <option value="female" {{ request('gender') == 'female' ? 'selected' : '' }}>Female Only</option>
@@ -167,11 +167,11 @@
                             </p>
                         </div>
                         <div class="space-y-2 pt-2 border-t border-emerald-100">
-                            <button type="button" onclick="runPrintRecordAction('forms_batch')" class="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-700 px-3 py-2 text-xs font-extrabold text-white shadow-xs transition hover:bg-emerald-800 cursor-pointer">
+                            <button type="button" onclick="runPrintRecordAction('forms_batch')" class="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-700 px-3 py-2.5 text-xs font-extrabold text-white shadow-sm transition hover:bg-emerald-800 cursor-pointer">
                                 <i data-lucide="printer" class="h-3.5 w-3.5"></i>
                                 <span>Print Forms Batch</span>
                             </button>
-                            <button type="button" onclick="runPrintRecordAction('forms_jpg')" class="w-full inline-flex items-center justify-center gap-1.5 rounded-xl border border-emerald-300 bg-white px-3 py-2 text-xs font-extrabold text-emerald-800 shadow-xs transition hover:bg-emerald-50 cursor-pointer">
+                            <button type="button" onclick="runPrintRecordAction('forms_jpg')" class="w-full inline-flex items-center justify-center gap-1.5 rounded-xl border border-emerald-300 bg-white px-3 py-2.5 text-xs font-extrabold text-emerald-800 shadow-sm transition hover:bg-emerald-50 cursor-pointer">
                                 <i data-lucide="file-archive" class="h-3.5 w-3.5 text-emerald-600"></i>
                                 <span>Zip Forms JPG</span>
                             </button>
@@ -192,7 +192,7 @@
                             </p>
                         </div>
                         <div class="pt-2 border-t border-sky-100">
-                            <button type="button" onclick="runPrintRecordAction('id_cards')" class="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-sky-700 px-3 py-2 text-xs font-extrabold text-white shadow-xs transition hover:bg-sky-800 cursor-pointer">
+                            <button type="button" onclick="runPrintRecordAction('id_cards')" class="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-sky-600 px-3 py-2.5 text-xs font-extrabold text-white shadow-sm transition hover:bg-sky-700 cursor-pointer">
                                 <i data-lucide="credit-card" class="h-3.5 w-3.5"></i>
                                 <span>Print ID Cards Sheet</span>
                             </button>
@@ -213,7 +213,7 @@
                             </p>
                         </div>
                         <div class="pt-2 border-t border-rose-100">
-                            <button type="button" onclick="runPrintRecordAction('docs_zip')" class="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-rose-700 px-3 py-2 text-xs font-extrabold text-white shadow-xs transition hover:bg-rose-800 cursor-pointer">
+                            <button type="button" onclick="runPrintRecordAction('docs_zip')" class="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-rose-700 px-3 py-2.5 text-xs font-extrabold text-white shadow-sm transition hover:bg-rose-800 cursor-pointer">
                                 <i data-lucide="download" class="h-3.5 w-3.5"></i>
                                 <span>Download ZIP Archive</span>
                             </button>
