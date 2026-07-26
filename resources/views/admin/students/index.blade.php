@@ -21,6 +21,49 @@
         ['label' => 'Student Records', 'href' => null],
     ]"
 >
+    <div x-data="{
+            showPrintModal: false,
+            pMode: '{{ request('mode', '') }}',
+            pGrade: '{{ request('grade', '') }}',
+            pGender: '{{ request('gender', '') }}',
+            pSearch: '{{ request('search', '') }}',
+            getPrintUrl(baseUrl, extraParams = {}) {
+                const url = new URL(baseUrl, window.location.origin);
+                if (this.pMode) url.searchParams.set('mode', this.pMode);
+                if (this.pGrade) url.searchParams.set('grade', this.pGrade);
+                if (this.pGender) url.searchParams.set('gender', this.pGender);
+                if (this.pSearch) url.searchParams.set('search', this.pSearch);
+                for (const [k, v] of Object.entries(extraParams)) {
+                    url.searchParams.set(k, v);
+                }
+                return url.toString();
+            },
+            openFormsBatch() {
+                window.open(this.getPrintUrl('{{ route('admin.students.print-enrolment-forms-batch') }}'), '_blank');
+            },
+            zipFormsJpg() {
+                downloadEnrolmentPngZip(this.getPrintUrl('{{ route('admin.students.print-enrolment-forms-batch') }}'));
+            },
+            printIdCards() {
+                window.open(this.getPrintUrl('{{ route('admin.students.index') }}', { print_id: 1, is_print: 1 }), '_blank');
+            },
+            downloadDocsZip() {
+                window.location.href = this.getPrintUrl('{{ route('admin.students.download-docs-zip') }}');
+            },
+            printCredentials() {
+                window.open(this.getPrintUrl('{{ route('admin.students.index') }}', { print_credentials: 1, is_print: 1 }), '_blank');
+            },
+            printMastersList() {
+                window.open(this.getPrintUrl('{{ route('admin.students.index') }}', { print: 1, is_print: 1 }), '_blank');
+            },
+            exportCanva() {
+                window.location.href = this.getPrintUrl('{{ route('admin.students.export-canva') }}');
+            }
+        }"
+        @open-print-records-modal.window="showPrintModal = true; $nextTick(() => window.lucide && window.lucide.createIcons())"
+        @keydown.escape.window="showPrintModal = false"
+        id="print-records-wrapper"
+    >
     <section class="rounded-lg border border-slate-200 bg-white shadow-sm">
         <!-- Section Header -->
         <div class="flex items-start justify-between gap-4 border-b border-slate-100 px-6 py-5">
@@ -43,7 +86,7 @@
                     </button>
                 </form>
                 <!-- Print Records Modal Trigger Button -->
-                <button type="button" onclick="document.dispatchEvent(new CustomEvent('open-print-records-modal'))" class="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-bold text-slate-700 transition hover:bg-slate-50 cursor-pointer whitespace-nowrap shadow-sm">
+                <button type="button" @click="showPrintModal = true; $nextTick(() => window.lucide && window.lucide.createIcons())" class="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-bold text-slate-700 transition hover:bg-slate-50 cursor-pointer whitespace-nowrap shadow-sm">
                     <i data-lucide="printer" class="h-4 w-4 text-emerald-600"></i>
                     <span>Print Records</span>
                     <i data-lucide="chevron-down" class="h-3 w-3 text-slate-400"></i>
@@ -813,5 +856,6 @@
             if (e.key === 'Escape') closeStudentCredentialsModal();
         });
     </script>
+    </div>
 </x-admin-layout>
 @endif
