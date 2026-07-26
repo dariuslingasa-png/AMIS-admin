@@ -9,6 +9,8 @@ use App\Support\EnrollmentStorage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use ZipArchive;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 
 class StudentExportController extends Controller
 {
@@ -553,7 +555,29 @@ class StudentExportController extends Controller
                     'siblings' => $siblings,
                 ])->render();
 
-                $zip->addFromString("{$basePath}/Enrollment Application Form - {$studentFolderName}.html", $enrolmentHtml);
+                $format = strtolower($request->input('format', 'pdf'));
+
+                if ($format === 'pdf') {
+                    $options = new Options();
+                    $options->set('isHtml5ParserEnabled', true);
+                    $options->set('isRemoteEnabled', true);
+                    $dompdf = new Dompdf($options);
+                    $dompdf->loadHtml($enrolmentHtml);
+                    $dompdf->setPaper('A4', 'portrait');
+                    $dompdf->render();
+                    $pdfContent = $dompdf->output();
+
+                    $zip->addFromString("{$basePath}/Enrollment Application Form - {$studentFolderName}.pdf", $pdfContent);
+                } elseif ($format === 'docx') {
+                    $wordHtml = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">';
+                    $wordHtml .= '<head><meta charset="utf-8"><title>Enrollment Form</title>';
+                    $wordHtml .= '<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>90</w:Zoom></w:WordDocument></xml><![endif]--></head>';
+                    $wordHtml .= '<body>' . $enrolmentHtml . '</body></html>';
+
+                    $zip->addFromString("{$basePath}/Enrollment Application Form - {$studentFolderName}.docx", $wordHtml);
+                } else {
+                    $zip->addFromString("{$basePath}/Enrollment Application Form - {$studentFolderName}.html", $enrolmentHtml);
+                }
                 $filesAdded++;
             } catch (\Exception $e) {
                 Log::warning("Failed to render enrolment form for student {$student->id}: ".$e->getMessage());

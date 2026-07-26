@@ -773,15 +773,15 @@
                 const downloadBtnSpan = document.querySelector('#export-state-complete button span');
 
                 if (selectedFormat === 'pdf') {
-                    if (sizeLabel) sizeLabel.textContent = 'File Size:';
-                    if (sizeVal) sizeVal.textContent = '14 MB';
-                    if (filenameVal) filenameVal.textContent = 'enrollment_forms_2026.pdf';
-                    if (downloadBtnSpan) downloadBtnSpan.textContent = 'Print / Save PDF';
+                    if (sizeLabel) sizeLabel.textContent = 'ZIP Size:';
+                    if (sizeVal) sizeVal.textContent = '186 MB';
+                    if (filenameVal) filenameVal.textContent = 'enrollment_forms_2026_pdf.zip';
+                    if (downloadBtnSpan) downloadBtnSpan.textContent = 'Download PDF ZIP';
                 } else {
-                    if (sizeLabel) sizeLabel.textContent = 'File Size:';
-                    if (sizeVal) sizeVal.textContent = '28 MB';
-                    if (filenameVal) filenameVal.textContent = 'enrollment_forms_2026.docx';
-                    if (downloadBtnSpan) downloadBtnSpan.textContent = 'Download DOCX';
+                    if (sizeLabel) sizeLabel.textContent = 'ZIP Size:';
+                    if (sizeVal) sizeVal.textContent = '186 MB';
+                    if (filenameVal) filenameVal.textContent = 'enrollment_forms_2026_docx.zip';
+                    if (downloadBtnSpan) downloadBtnSpan.textContent = 'Download DOCX ZIP';
                 }
 
                 // Transition to success screen
@@ -816,14 +816,11 @@
         if (grade) params.append('grade', grade);
         if (gender) params.append('gender', gender);
         if (search) params.append('search', search);
+        if (selectedFormat) params.append('format', selectedFormat);
 
         const queryString = params.toString() ? '?' + params.toString() : '';
 
-        if (selectedFormat === 'pdf') {
-            window.open('{{ route('admin.students.print-enrolment-forms-batch') }}' + queryString, '_blank');
-        } else {
-            window.location.href = '{{ route('admin.students.download-enrolment-forms-zip') }}' + queryString;
-        }
+        window.location.href = '{{ route('admin.students.download-enrolment-forms-zip') }}' + queryString;
         closeBatchExportModal();
     }
 
