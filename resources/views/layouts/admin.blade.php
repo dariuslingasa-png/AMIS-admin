@@ -43,50 +43,62 @@
                         </div>
 
                         <!-- Global Skeleton Loader (hidden by default) -->
-                        <div id="globalSkeleton" class="space-y-6 w-full" style="display: none;">
-                        <!-- Banner Header Skeleton -->
-                        <div class="animate-pulse rounded-3xl bg-slate-200 p-6 h-28">
-                            <div class="h-4 w-32 bg-slate-350 rounded mb-3"></div>
-                            <div class="h-6 w-64 bg-slate-350 rounded mb-2"></div>
-                            <div class="h-3.5 w-full max-w-lg bg-slate-300 rounded"></div>
-                        </div>
-
-                        <!-- Stats/Telemetry Grid Skeleton -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-pulse">
-                            @for ($i = 0; $i < 4; $i++)
-                                <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs h-28 space-y-3">
-                                    <div class="flex items-center justify-between">
-                                        <div class="h-3 w-20 bg-slate-200 rounded"></div>
-                                        <div class="h-6 w-6 bg-slate-100 rounded-lg"></div>
+                        <div id="globalSkeleton" class="space-y-6 w-full transition-all duration-200 ease-in-out" style="display: none;">
+                            <!-- Banner Header Skeleton -->
+                            <div class="relative overflow-hidden rounded-3xl bg-slate-200/90 dark:bg-slate-800/90 p-6 md:p-8 border border-slate-200 dark:border-slate-700/80 animate-pulse">
+                                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                    <div class="space-y-3 flex-1">
+                                        <div class="h-4 w-32 bg-emerald-500/30 dark:bg-emerald-500/40 rounded-full"></div>
+                                        <div class="h-7 w-64 md:w-80 bg-slate-300 dark:bg-slate-700 rounded-xl"></div>
+                                        <div class="h-3.5 w-full max-w-lg bg-slate-250 dark:bg-slate-750 rounded-lg"></div>
                                     </div>
-                                    <div class="h-6 w-24 bg-slate-200 rounded"></div>
-                                    <div class="h-3 w-16 bg-slate-100 rounded"></div>
+                                    <div class="h-10 w-36 bg-slate-300 dark:bg-slate-700 rounded-xl"></div>
                                 </div>
-                            @endfor
-                        </div>
-
-                        <!-- Table/Main Container Skeleton -->
-                        <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-xs animate-pulse space-y-5">
-                            <div class="flex items-center justify-between">
-                                <div class="h-8 w-48 bg-slate-200 rounded-xl"></div>
-                                <div class="h-8 w-32 bg-slate-200 rounded-xl"></div>
                             </div>
-                            <div class="h-px bg-slate-100"></div>
-                            <div class="space-y-4">
-                                @for ($i = 0; $i < 5; $i++)
-                                    <div class="flex items-center justify-between py-3 border-b border-slate-100">
-                                        <div class="flex items-center gap-3">
-                                            <div class="h-10 w-10 rounded-xl bg-slate-200"></div>
-                                            <div class="space-y-2">
-                                                <div class="h-4 w-36 bg-slate-200 rounded"></div>
-                                                <div class="h-3 w-24 bg-slate-150 rounded"></div>
-                                            </div>
+
+                            <!-- Telemetry KPI Grid Skeleton -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-pulse">
+                                @for ($i = 0; $i < 4; $i++)
+                                    <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-xs h-28 flex flex-col justify-between">
+                                        <div class="flex items-center justify-between">
+                                            <div class="h-3.5 w-24 bg-slate-200 dark:bg-slate-800 rounded"></div>
+                                            <div class="h-8 w-8 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl"></div>
                                         </div>
-                                        <div class="h-4 w-28 bg-slate-200 rounded"></div>
-                                        <div class="h-4 w-20 bg-slate-150 rounded"></div>
-                                        <div class="h-8 w-20 bg-slate-100 rounded-xl"></div>
+                                        <div class="h-7 w-28 bg-slate-300 dark:bg-slate-700 rounded-lg"></div>
+                                        <div class="h-3 w-20 bg-slate-150 dark:bg-slate-800 rounded"></div>
                                     </div>
                                 @endfor
+                            </div>
+
+                            <!-- Table & Content Card Skeleton -->
+                            <div class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-xs animate-pulse space-y-6">
+                                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                    <div class="space-y-2">
+                                        <div class="h-6 w-48 bg-slate-300 dark:bg-slate-700 rounded-xl"></div>
+                                        <div class="h-3.5 w-72 bg-slate-200 dark:bg-slate-800 rounded-lg"></div>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <div class="h-10 w-36 bg-slate-200 dark:bg-slate-800 rounded-xl"></div>
+                                        <div class="h-10 w-24 bg-slate-200 dark:bg-slate-800 rounded-xl"></div>
+                                    </div>
+                                </div>
+                                <div class="h-px bg-slate-100 dark:bg-slate-800"></div>
+                                <div class="space-y-4">
+                                    @for ($i = 0; $i < 5; $i++)
+                                        <div class="flex items-center justify-between py-3 border-b border-slate-100 dark:border-slate-800/60">
+                                            <div class="flex items-center gap-3 flex-1">
+                                                <div class="h-10 w-10 rounded-xl bg-slate-200 dark:bg-slate-800"></div>
+                                                <div class="space-y-2">
+                                                    <div class="h-4 w-40 bg-slate-300 dark:bg-slate-700 rounded"></div>
+                                                    <div class="h-3 w-28 bg-slate-200 dark:bg-slate-800 rounded"></div>
+                                                </div>
+                                            </div>
+                                            <div class="h-4 w-24 bg-slate-200 dark:bg-slate-800 rounded"></div>
+                                            <div class="h-6 w-20 bg-slate-200 dark:bg-slate-800 rounded-full"></div>
+                                            <div class="h-8 w-20 bg-slate-200 dark:bg-slate-800 rounded-xl"></div>
+                                        </div>
+                                    @endfor
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -110,37 +122,28 @@
             if (topBar) {
                 topBar.style.display = 'block';
                 topBar.style.width = '0%';
-                topBar.style.transition = 'width 0.2s ease-out';
-                // Immediate tiny jump
-                setTimeout(() => { topBar.style.width = '15%'; }, 10);
+                topBar.style.transition = 'width 0.15s ease-out';
+                setTimeout(() => { topBar.style.width = '30%'; }, 10);
 
-                // Asymptotically progress the top loading bar up to 90%
-                let width = 15;
+                let width = 30;
                 topLoadingTimer = setInterval(() => {
-                    if (width < 90) {
-                        width += (90 - width) * 0.1;
+                    if (width < 94) {
+                        width += (94 - width) * 0.15;
                         topBar.style.width = width + '%';
                     }
-                }, 150);
+                }, 80);
             }
 
-            // Delay the main content skeleton loader by 250ms to prevent flickering on fast loads
+            // Immediately switch to skeleton loader for instant visual feedback on module navigation
             skeletonTimer = setTimeout(() => {
                 const slotContent = document.getElementById('adminSlotContent');
                 const globalSkeleton = document.getElementById('globalSkeleton');
                 if (slotContent && globalSkeleton) {
-                    slotContent.style.opacity = '0.3';
-                    slotContent.style.transition = 'opacity 0.2s ease';
-                    
+                    slotContent.style.display = 'none';
                     globalSkeleton.style.display = 'block';
-                    globalSkeleton.style.opacity = '0';
-                    globalSkeleton.style.transition = 'opacity 0.2s ease';
-                    setTimeout(() => {
-                        slotContent.style.display = 'none';
-                        globalSkeleton.style.opacity = '1';
-                    }, 50);
+                    globalSkeleton.style.opacity = '1';
                 }
-            }, 250);
+            }, 30);
         }
 
         function stopLoadingTransition() {
@@ -153,7 +156,7 @@
                 setTimeout(() => {
                     topBar.style.display = 'none';
                     topBar.style.width = '0%';
-                }, 200);
+                }, 150);
             }
 
             const slotContent = document.getElementById('adminSlotContent');
