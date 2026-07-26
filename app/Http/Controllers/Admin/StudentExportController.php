@@ -675,13 +675,14 @@ class StudentExportController extends Controller
             'status' => 'pending',
         ]);
 
-        // Dispatch background processing job (or sync fallback on shared hosting)
-        if (config('queue.default') !== 'sync') {
-            ProcessBatchDocumentExportJob::dispatch($export);
-        } else {
-            // Synchronous inline execution for local dev / synchronous cPanel worker
+        // Dispatch processing job synchronously for instant completion on shared hosting
+        try {
             ProcessBatchDocumentExportJob::dispatchSync($export);
+        } catch (\Throwable $e) {
+            Log::error('Batch export error: ' . $e->getMessage());
         }
+
+        $export->refresh();
 
         return response()->json([
             'success' => true,
