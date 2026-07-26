@@ -574,8 +574,9 @@
             }
         }
     </style>
-    <!-- html2canvas and JSZip CDN -->
+    <!-- html2canvas, jsPDF, and JSZip CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body>
@@ -600,15 +601,19 @@
                 <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
                 Close
             </button>
-            <a href="{{ route('admin.students.download-enrolment-forms-zip', request()->query()) }}" class="btn btn-zip">
+            <button class="btn btn-primary" onclick="generateBatchPdfDownload()">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/></svg>
+                Download PDF
+            </button>
+            <button class="btn btn-zip" onclick="generatePdfZip()" style="background-color: #eff6ff; color: #1e40af; border-color: #bfdbfe;">
                 <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                ZIP (HTML)
-            </a>
+                ZIP (PDFs)
+            </button>
             <button class="btn btn-zip" id="btn-download-png-zip" onclick="generatePngZip()" style="background-color: #f5f3ff; color: #5b21b6; border-color: #ddd6fe;">
                 <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                ZIP (PNG)
+                ZIP (JPGs)
             </button>
-            <button class="btn btn-primary" onclick="window.print()">
+            <button class="btn btn-secondary" onclick="window.print()">
                 <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
                 Print / Save PDF
             </button>
@@ -827,9 +832,189 @@
             }
         }
 
+        async function generateBatchPdfDownload() {
+            const { jsPDF } = window.jspdf;
+            const overlay = document.getElementById('loadingOverlay');
+            const fill = document.getElementById('loadingProgressBar');
+            const text = document.getElementById('loadingProgressCount');
+            const title = overlay ? overlay.querySelector('.loading-title') : null;
+            
+            if (overlay) overlay.classList.remove('hidden-overlay');
+            if (title) title.innerText = 'Generating Pixel-Perfect PDF...';
+            if (fill) fill.style.width = '0%';
+            
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const wrappers = document.querySelectorAll('.student-print-wrapper');
+            const totalStudents = wrappers.length;
+            
+            if (totalStudents === 0) {
+                alert('No student records found to export.');
+                if (overlay) overlay.classList.add('hidden-overlay');
+                return;
+            }
+            
+            let pdfPageCount = 0;
+            const totalPages = totalStudents * 2;
+            
+            for (let i = 0; i < totalStudents; i++) {
+                const wrapper = wrappers[i];
+                const studentName = wrapper.getAttribute('data-student-name') || 'STUDENT_' + i;
+                const pages = wrapper.querySelectorAll('.paper-container');
+                
+                for (let pageIdx = 0; pageIdx < pages.length; pageIdx++) {
+                    const pageEl = pages[pageIdx];
+                    const pageNum = pageIdx + 1;
+                    
+                    const pct = Math.round((pdfPageCount / totalPages) * 100);
+                    if (fill) fill.style.width = pct + '%';
+                    if (text) text.innerText = `Rendering Student ${i + 1} of ${totalStudents} (Page ${pageNum}/2)...`;
+                    
+                    try {
+                        const canvas = await html2canvas(pageEl, {
+                            scale: 2,
+                            useCORS: true,
+                            logging: false,
+                            allowTaint: true,
+                            backgroundColor: '#ffffff',
+                            imageTimeout: 0,
+                            removeContainer: true
+                        });
+                        
+                        const imgData = canvas.toDataURL('image/jpeg', 0.92);
+                        
+                        if (pdfPageCount > 0) {
+                            pdf.addPage('a4', 'p');
+                        }
+                        
+                        pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297);
+                        
+                    } catch (err) {
+                        console.error(`Failed to render ${studentName} page ${pageNum}:`, err);
+                    }
+                    
+                    pdfPageCount++;
+                }
+            }
+            
+            if (fill) fill.style.width = '100%';
+            if (text) text.innerText = 'Saving PDF File... Please wait.';
+            
+            setTimeout(() => {
+                const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+                const gradeClean = "{{ str_replace(' ', '_', $gradeTitle ?? 'Batch') }}";
+                pdf.save(`Enrollment_Forms_SY_2026-2027_${gradeClean}_${dateStr}.pdf`);
+                if (title) title.innerText = 'Loading Enrollment Forms';
+                if (overlay) overlay.classList.add('hidden-overlay');
+            }, 400);
+        }
+
+        async function generatePdfZip() {
+            const { jsPDF } = window.jspdf;
+            const overlay = document.getElementById('loadingOverlay');
+            const fill = document.getElementById('loadingProgressBar');
+            const text = document.getElementById('loadingProgressCount');
+            const title = overlay ? overlay.querySelector('.loading-title') : null;
+            
+            if (overlay) overlay.classList.remove('hidden-overlay');
+            if (title) title.innerText = 'Generating Individual PDFs ZIP...';
+            if (fill) fill.style.width = '0%';
+            
+            const zip = new JSZip();
+            const wrappers = document.querySelectorAll('.student-print-wrapper');
+            const totalStudents = wrappers.length;
+            
+            if (totalStudents === 0) {
+                alert('No student records found to export.');
+                if (overlay) overlay.classList.add('hidden-overlay');
+                return;
+            }
+            
+            let processedPages = 0;
+            const totalPages = totalStudents * 2;
+            
+            for (let i = 0; i < totalStudents; i++) {
+                const wrapper = wrappers[i];
+                const studentName = wrapper.getAttribute('data-student-name') || 'STUDENT_' + i;
+                const grade = wrapper.getAttribute('data-grade') || 'Grade_1';
+                const mode = wrapper.getAttribute('data-mode') || 'F2F';
+                const pages = wrapper.querySelectorAll('.paper-container');
+                const basePath = `${grade}/${mode}`;
+                
+                const studentPdf = new jsPDF('p', 'mm', 'a4');
+                
+                for (let pageIdx = 0; pageIdx < pages.length; pageIdx++) {
+                    const pageEl = pages[pageIdx];
+                    const pageNum = pageIdx + 1;
+                    
+                    const pct = Math.round((processedPages / totalPages) * 100);
+                    if (fill) fill.style.width = pct + '%';
+                    if (text) text.innerText = `Rendering Student ${i + 1} of ${totalStudents} (Page ${pageNum}/2)...`;
+                    
+                    try {
+                        const canvas = await html2canvas(pageEl, {
+                            scale: 2,
+                            useCORS: true,
+                            logging: false,
+                            allowTaint: true,
+                            backgroundColor: '#ffffff',
+                            imageTimeout: 0,
+                            removeContainer: true
+                        });
+                        
+                        const imgData = canvas.toDataURL('image/jpeg', 0.92);
+                        if (pageIdx > 0) studentPdf.addPage('a4', 'p');
+                        studentPdf.addImage(imgData, 'JPEG', 0, 0, 210, 297);
+                        
+                    } catch (err) {
+                        console.error(`Failed to render ${studentName} page ${pageNum}:`, err);
+                    }
+                    
+                    processedPages++;
+                }
+                
+                const pdfBlob = studentPdf.output('blob');
+                zip.file(`${basePath}/Enrollment Application Form - ${studentName.replace(/_/g, ' ')}.pdf`, pdfBlob);
+            }
+            
+            if (fill) fill.style.width = '100%';
+            if (text) text.innerText = 'Creating ZIP archive... Please wait.';
+            
+            try {
+                const content = await zip.generateAsync({ type: 'blob', compression: 'STORE' });
+                const url = URL.createObjectURL(content);
+                const link = document.createElement('a');
+                const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+                const gradeClean = "{{ str_replace(' ', '_', $gradeTitle ?? 'Batch') }}";
+                link.href = url;
+                link.download = `Enrollment_Forms_SY_2026-2027_${gradeClean}_${dateStr}_PDF.zip`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                setTimeout(() => URL.revokeObjectURL(url), 100);
+            } catch (zipErr) {
+                console.error('Error generating ZIP:', zipErr);
+                alert('Failed to generate ZIP file.');
+            }
+            
+            if (title) title.innerText = 'Loading Enrollment Forms';
+            if (overlay) overlay.classList.add('hidden-overlay');
+        }
+
         if (new URLSearchParams(window.location.search).get('auto_print') === '1') {
             window.addEventListener('DOMContentLoaded', () => {
                 setTimeout(() => window.print(), 500);
+            });
+        }
+
+        if (new URLSearchParams(window.location.search).get('auto_pdf') === '1') {
+            window.addEventListener('DOMContentLoaded', () => {
+                const checkReadyInterval = setInterval(async () => {
+                    const overlay = document.getElementById('loadingOverlay');
+                    if (!overlay || overlay.classList.contains('hidden-overlay')) {
+                        clearInterval(checkReadyInterval);
+                        await generateBatchPdfDownload();
+                    }
+                }, 200);
             });
         }
 
