@@ -395,6 +395,7 @@ class StudentExportController extends Controller
                     'student' => $student,
                     'applicant' => $appl,
                     'siblings' => $siblings,
+                    'isPdf' => true,
                 ])->render();
                 $zip->addFromString("{$basePath}/Enrollment Application Form - {$studentFolderName}.html", $enrolmentHtml);
                 $filesAdded++;
@@ -559,6 +560,7 @@ class StudentExportController extends Controller
                     'student' => $student,
                     'applicant' => $appl,
                     'siblings' => $siblings,
+                    'isPdf' => true,
                 ])->render();
 
                 if ($format === 'pdf') {

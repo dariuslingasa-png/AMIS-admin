@@ -172,6 +172,7 @@ class ProcessBatchDocumentExportJob implements ShouldQueue
                     'student' => $student,
                     'applicant' => $appl,
                     'siblings' => $siblings,
+                    'isPdf' => true,
                 ])->render();
 
                 if ($format === 'pdf') {
