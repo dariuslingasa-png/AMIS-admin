@@ -164,55 +164,94 @@
                             </div>
                             <ul class="space-y-2.5 text-xs text-slate-600 font-semibold">
                                 <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                    <span class="flex items-center gap-2">📄 <span>Enrollment Form (PDF)</span></span>
+                                    <span class="flex items-center gap-2">
+                                        <i data-lucide="file-text" class="w-3.5 h-3.5 text-emerald-600/70"></i>
+                                        <span>Enrollment Form (PDF)</span>
+                                    </span>
                                     <button type="button" onclick="runPrintRecordAction('forms_batch')" class="text-emerald-700 hover:text-emerald-900 font-extrabold hover:underline cursor-pointer">Download</button>
                                 </li>
                                 <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                    <span class="flex items-center gap-2">🪪 <span>Student ID Card</span></span>
+                                    <span class="flex items-center gap-2">
+                                        <i data-lucide="credit-card" class="w-3.5 h-3.5 text-emerald-600/70"></i>
+                                        <span>Student ID Card</span>
+                                    </span>
                                     <button type="button" onclick="runPrintRecordAction('id_cards')" class="text-emerald-700 hover:text-emerald-900 font-extrabold hover:underline cursor-pointer">Download</button>
                                 </li>
                                 <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                    <span class="flex items-center gap-2">📋 <span>Student Profile</span></span>
+                                    <span class="flex items-center gap-2">
+                                        <i data-lucide="user" class="w-3.5 h-3.5 text-emerald-600/70"></i>
+                                        <span>Student Profile</span>
+                                    </span>
                                     <button type="button" onclick="runPrintRecordAction('masters_list')" class="text-emerald-700 hover:text-emerald-900 font-extrabold hover:underline cursor-pointer">Download</button>
                                 </li>
                                 <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                    <span class="flex items-center gap-2">🧾 <span>Registration Form</span></span>
+                                    <span class="flex items-center gap-2">
+                                        <i data-lucide="clipboard-list" class="w-3.5 h-3.5 text-emerald-600/70"></i>
+                                        <span>Registration Form</span>
+                                    </span>
                                     <button type="button" onclick="runPrintRecordAction('forms_batch')" class="text-emerald-700 hover:text-emerald-900 font-extrabold hover:underline cursor-pointer">Download</button>
                                 </li>
                                 <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                    <span class="flex items-center gap-2">📑 <span>Assessment Form</span></span>
+                                    <span class="flex items-center gap-2">
+                                        <i data-lucide="file-check" class="w-3.5 h-3.5 text-emerald-600/70"></i>
+                                        <span>Assessment Form</span>
+                                    </span>
                                     <button type="button" onclick="runPrintRecordAction('forms_batch')" class="text-emerald-700 hover:text-emerald-900 font-extrabold hover:underline cursor-pointer">Download</button>
                                 </li>
                                 <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                    <span class="flex items-center gap-2">📚 <span>Class Schedule</span></span>
+                                    <span class="flex items-center gap-2">
+                                        <i data-lucide="calendar" class="w-3.5 h-3.5 text-emerald-600/70"></i>
+                                        <span>Class Schedule</span>
+                                    </span>
                                     <button type="button" onclick="runPrintRecordAction('forms_batch')" class="text-emerald-700 hover:text-emerald-900 font-extrabold hover:underline cursor-pointer">Download</button>
                                 </li>
                                 <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                    <span class="flex items-center gap-2">📊 <span>Report Card</span></span>
+                                    <span class="flex items-center gap-2">
+                                        <i data-lucide="award" class="w-3.5 h-3.5 text-emerald-600/70"></i>
+                                        <span>Report Card</span>
+                                    </span>
                                     <button type="button" onclick="runPrintRecordAction('forms_batch')" class="text-emerald-700 hover:text-emerald-900 font-extrabold hover:underline cursor-pointer">Download</button>
                                 </li>
                                 <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                    <span class="flex items-center gap-2">📖 <span>Permanent Record</span></span>
+                                    <span class="flex items-center gap-2">
+                                        <i data-lucide="book-open" class="w-3.5 h-3.5 text-emerald-600/70"></i>
+                                        <span>Permanent Record</span>
+                                    </span>
                                     <button type="button" onclick="runPrintRecordAction('forms_batch')" class="text-emerald-700 hover:text-emerald-900 font-extrabold hover:underline cursor-pointer">Download</button>
                                 </li>
                                 <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                    <span class="flex items-center gap-2">📄 <span>Good Moral Cert.</span></span>
+                                    <span class="flex items-center gap-2">
+                                        <i data-lucide="shield" class="w-3.5 h-3.5 text-emerald-600/70"></i>
+                                        <span>Good Moral Cert.</span>
+                                    </span>
                                     <button type="button" onclick="runPrintRecordAction('forms_batch')" class="text-emerald-700 hover:text-emerald-900 font-extrabold hover:underline cursor-pointer">Download</button>
                                 </li>
                                 <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                    <span class="flex items-center gap-2">🎓 <span>Cert. of Enrollment</span></span>
+                                    <span class="flex items-center gap-2">
+                                        <i data-lucide="graduation-cap" class="w-3.5 h-3.5 text-emerald-600/70"></i>
+                                        <span>Cert. of Enrollment</span>
+                                    </span>
                                     <button type="button" onclick="runPrintRecordAction('forms_batch')" class="text-emerald-700 hover:text-emerald-900 font-extrabold hover:underline cursor-pointer">Download</button>
                                 </li>
                                 <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                    <span class="flex items-center gap-2">🎓 <span>Cert. of Reg. (COR)</span></span>
+                                    <span class="flex items-center gap-2">
+                                        <i data-lucide="file-signature" class="w-3.5 h-3.5 text-emerald-600/70"></i>
+                                        <span>Cert. of Reg. (COR)</span>
+                                    </span>
                                     <button type="button" onclick="runPrintRecordAction('forms_batch')" class="text-emerald-700 hover:text-emerald-900 font-extrabold hover:underline cursor-pointer">Download</button>
                                 </li>
                                 <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                    <span class="flex items-center gap-2">📝 <span>Cert. of Completion</span></span>
+                                    <span class="flex items-center gap-2">
+                                        <i data-lucide="check-circle" class="w-3.5 h-3.5 text-emerald-600/70"></i>
+                                        <span>Cert. of Completion</span>
+                                    </span>
                                     <button type="button" onclick="runPrintRecordAction('forms_batch')" class="text-emerald-700 hover:text-emerald-900 font-extrabold hover:underline cursor-pointer">Download</button>
                                 </li>
                                 <li class="flex items-center justify-between py-1 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                    <span class="flex items-center gap-2">📂 <span>Requirements Checklist</span></span>
+                                    <span class="flex items-center gap-2">
+                                        <i data-lucide="list-todo" class="w-3.5 h-3.5 text-emerald-600/70"></i>
+                                        <span>Requirements Checklist</span>
+                                    </span>
                                     <button type="button" onclick="runPrintRecordAction('forms_batch')" class="text-emerald-700 hover:text-emerald-900 font-extrabold hover:underline cursor-pointer">Download</button>
                                 </li>
                             </ul>
@@ -230,43 +269,73 @@
                             </div>
                             <ul class="space-y-2.5 text-xs text-slate-600 font-semibold">
                                 <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                    <span class="flex items-center gap-2">📷 <span>2x2 / ID Photo</span></span>
+                                    <span class="flex items-center gap-2">
+                                        <i data-lucide="image" class="w-3.5 h-3.5 text-sky-600/70"></i>
+                                        <span>2x2 / ID Photo</span>
+                                    </span>
                                     <button type="button" onclick="runPrintRecordAction('docs_zip')" class="text-sky-700 hover:text-sky-900 font-extrabold hover:underline cursor-pointer">Download</button>
                                 </li>
                                 <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                    <span class="flex items-center gap-2">🪪 <span>PSA Birth Certificate</span></span>
+                                    <span class="flex items-center gap-2">
+                                        <i data-lucide="file-text" class="w-3.5 h-3.5 text-sky-600/70"></i>
+                                        <span>PSA Birth Certificate</span>
+                                    </span>
                                     <button type="button" onclick="runPrintRecordAction('docs_zip')" class="text-sky-700 hover:text-sky-900 font-extrabold hover:underline cursor-pointer">Download</button>
                                 </li>
                                 <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                    <span class="flex items-center gap-2">💉 <span>Vaccination Record</span></span>
+                                    <span class="flex items-center gap-2">
+                                        <i data-lucide="activity" class="w-3.5 h-3.5 text-sky-600/70"></i>
+                                        <span>Vaccination Record</span>
+                                    </span>
                                     <button type="button" onclick="runPrintRecordAction('docs_zip')" class="text-sky-700 hover:text-sky-900 font-extrabold hover:underline cursor-pointer">Download</button>
                                 </li>
                                 <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                    <span class="flex items-center gap-2">🏥 <span>Medical Certificate</span></span>
+                                    <span class="flex items-center gap-2">
+                                        <i data-lucide="heart-pulse" class="w-3.5 h-3.5 text-sky-600/70"></i>
+                                        <span>Medical Certificate</span>
+                                    </span>
                                     <button type="button" onclick="runPrintRecordAction('docs_zip')" class="text-sky-700 hover:text-sky-900 font-extrabold hover:underline cursor-pointer">Download</button>
                                 </li>
                                 <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                    <span class="flex items-center gap-2">📄 <span>Form 137 / SF10</span></span>
+                                    <span class="flex items-center gap-2">
+                                        <i data-lucide="file-digit" class="w-3.5 h-3.5 text-sky-600/70"></i>
+                                        <span>Form 137 / SF10</span>
+                                    </span>
                                     <button type="button" onclick="runPrintRecordAction('docs_zip')" class="text-sky-700 hover:text-sky-900 font-extrabold hover:underline cursor-pointer">Download</button>
                                 </li>
                                 <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                    <span class="flex items-center gap-2">📄 <span>Form 138 / Report Card</span></span>
+                                    <span class="flex items-center gap-2">
+                                        <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-sky-600/70"></i>
+                                        <span>Form 138 / Report Card</span>
+                                    </span>
                                     <button type="button" onclick="runPrintRecordAction('docs_zip')" class="text-sky-700 hover:text-sky-900 font-extrabold hover:underline cursor-pointer">Download</button>
                                 </li>
                                 <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                    <span class="flex items-center gap-2">📄 <span>Good Moral</span></span>
+                                    <span class="flex items-center gap-2">
+                                        <i data-lucide="shield-check" class="w-3.5 h-3.5 text-sky-600/70"></i>
+                                        <span>Good Moral</span>
+                                    </span>
                                     <button type="button" onclick="runPrintRecordAction('docs_zip')" class="text-sky-700 hover:text-sky-900 font-extrabold hover:underline cursor-pointer">Download</button>
                                 </li>
                                 <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                    <span class="flex items-center gap-2">🏠 <span>Proof of Address</span></span>
+                                    <span class="flex items-center gap-2">
+                                        <i data-lucide="home" class="w-3.5 h-3.5 text-sky-600/70"></i>
+                                        <span>Proof of Address</span>
+                                    </span>
                                     <button type="button" onclick="runPrintRecordAction('docs_zip')" class="text-sky-700 hover:text-sky-900 font-extrabold hover:underline cursor-pointer">Download</button>
                                 </li>
                                 <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                    <span class="flex items-center gap-2">👨‍👩‍👧 <span>Parent/Guardian ID</span></span>
+                                    <span class="flex items-center gap-2">
+                                        <i data-lucide="users" class="w-3.5 h-3.5 text-sky-600/70"></i>
+                                        <span>Parent/Guardian ID</span>
+                                    </span>
                                     <button type="button" onclick="runPrintRecordAction('docs_zip')" class="text-sky-700 hover:text-sky-900 font-extrabold hover:underline cursor-pointer">Download</button>
                                 </li>
                                 <li class="flex items-center justify-between py-1 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                    <span class="flex items-center gap-2">✍️ <span>Signed Consent Forms</span></span>
+                                    <span class="flex items-center gap-2">
+                                        <i data-lucide="pencil-line" class="w-3.5 h-3.5 text-sky-600/70"></i>
+                                        <span>Signed Consent Forms</span>
+                                    </span>
                                     <button type="button" onclick="runPrintRecordAction('docs_zip')" class="text-sky-700 hover:text-sky-900 font-extrabold hover:underline cursor-pointer">Download</button>
                                 </li>
                             </ul>
@@ -292,33 +361,51 @@
                             <div class="space-y-2.5">
                                 <span class="text-[10px] font-black uppercase tracking-widest text-rose-700/60 block mb-1">Additional ZIP Archives:</span>
                                 
-                                <button type="button" onclick="runPrintRecordAction('docs_zip')" class="w-full flex items-center justify-between rounded-xl border border-slate-100 bg-white p-2.5 text-xs font-extrabold text-slate-700 hover:bg-rose-50 hover:text-rose-900 hover:border-rose-200 transition cursor-pointer text-left shadow-xs">
-                                    <span class="flex items-center gap-2">📦 Requirements ZIP</span>
+                                <button type="button" onclick="runPrintRecordAction('docs_zip')" class="w-full flex items-center justify-between rounded-xl border border-slate-100 bg-white p-2.5 text-xs font-extrabold text-slate-700 hover:bg-rose-50/50 hover:text-rose-900 hover:border-rose-200 transition cursor-pointer text-left shadow-xs">
+                                    <span class="flex items-center gap-2">
+                                        <i data-lucide="folder-archive" class="w-3.5 h-3.5 text-rose-600/70"></i>
+                                        <span>Requirements ZIP</span>
+                                    </span>
                                     <i data-lucide="download" class="h-3.5 w-3.5 text-slate-400"></i>
                                 </button>
 
-                                <button type="button" onclick="runPrintRecordAction('forms_jpg')" class="w-full flex items-center justify-between rounded-xl border border-slate-100 bg-white p-2.5 text-xs font-extrabold text-slate-700 hover:bg-rose-50 hover:text-rose-900 hover:border-rose-200 transition cursor-pointer text-left shadow-xs">
-                                    <span class="flex items-center gap-2">📦 Enrollment Forms ZIP</span>
+                                <button type="button" onclick="runPrintRecordAction('forms_jpg')" class="w-full flex items-center justify-between rounded-xl border border-slate-100 bg-white p-2.5 text-xs font-extrabold text-slate-700 hover:bg-rose-50/50 hover:text-rose-900 hover:border-rose-200 transition cursor-pointer text-left shadow-xs">
+                                    <span class="flex items-center gap-2">
+                                        <i data-lucide="folder-archive" class="w-3.5 h-3.5 text-rose-600/70"></i>
+                                        <span>Enrollment Forms ZIP</span>
+                                    </span>
                                     <i data-lucide="download" class="h-3.5 w-3.5 text-slate-400"></i>
                                 </button>
 
-                                <button type="button" onclick="runPrintRecordAction('id_cards')" class="w-full flex items-center justify-between rounded-xl border border-slate-100 bg-white p-2.5 text-xs font-extrabold text-slate-700 hover:bg-rose-50 hover:text-rose-900 hover:border-rose-200 transition cursor-pointer text-left shadow-xs">
-                                    <span class="flex items-center gap-2">📦 ID Cards ZIP</span>
+                                <button type="button" onclick="runPrintRecordAction('id_cards')" class="w-full flex items-center justify-between rounded-xl border border-slate-100 bg-white p-2.5 text-xs font-extrabold text-slate-700 hover:bg-rose-50/50 hover:text-rose-900 hover:border-rose-200 transition cursor-pointer text-left shadow-xs">
+                                    <span class="flex items-center gap-2">
+                                        <i data-lucide="folder-archive" class="w-3.5 h-3.5 text-rose-600/70"></i>
+                                        <span>ID Cards ZIP</span>
+                                    </span>
                                     <i data-lucide="download" class="h-3.5 w-3.5 text-slate-400"></i>
                                 </button>
 
-                                <button type="button" onclick="runPrintRecordAction('docs_zip')" class="w-full flex items-center justify-between rounded-xl border border-slate-100 bg-white p-2.5 text-xs font-extrabold text-slate-700 hover:bg-rose-50 hover:text-rose-900 hover:border-rose-200 transition cursor-pointer text-left shadow-xs">
-                                    <span class="flex items-center gap-2">📦 Student Photos ZIP</span>
+                                <button type="button" onclick="runPrintRecordAction('docs_zip')" class="w-full flex items-center justify-between rounded-xl border border-slate-100 bg-white p-2.5 text-xs font-extrabold text-slate-700 hover:bg-rose-50/50 hover:text-rose-900 hover:border-rose-200 transition cursor-pointer text-left shadow-xs">
+                                    <span class="flex items-center gap-2">
+                                        <i data-lucide="folder-archive" class="w-3.5 h-3.5 text-rose-600/70"></i>
+                                        <span>Student Photos ZIP</span>
+                                    </span>
                                     <i data-lucide="download" class="h-3.5 w-3.5 text-slate-400"></i>
                                 </button>
 
-                                <button type="button" onclick="runPrintRecordAction('docs_zip')" class="w-full flex items-center justify-between rounded-xl border border-slate-100 bg-white p-2.5 text-xs font-extrabold text-slate-700 hover:bg-rose-50 hover:text-rose-900 hover:border-rose-200 transition cursor-pointer text-left shadow-xs">
-                                    <span class="flex items-center gap-2">📦 Report Cards ZIP</span>
+                                <button type="button" onclick="runPrintRecordAction('docs_zip')" class="w-full flex items-center justify-between rounded-xl border border-slate-100 bg-white p-2.5 text-xs font-extrabold text-slate-700 hover:bg-rose-50/50 hover:text-rose-900 hover:border-rose-200 transition cursor-pointer text-left shadow-xs">
+                                    <span class="flex items-center gap-2">
+                                        <i data-lucide="folder-archive" class="w-3.5 h-3.5 text-rose-600/70"></i>
+                                        <span>Report Cards ZIP</span>
+                                    </span>
                                     <i data-lucide="download" class="h-3.5 w-3.5 text-slate-400"></i>
                                 </button>
 
-                                <button type="button" onclick="runPrintRecordAction('docs_zip')" class="w-full flex items-center justify-between rounded-xl border border-slate-100 bg-white p-2.5 text-xs font-extrabold text-slate-700 hover:bg-rose-50 hover:text-rose-900 hover:border-rose-200 transition cursor-pointer text-left shadow-xs">
-                                    <span class="flex items-center gap-2">📦 Certificates ZIP</span>
+                                <button type="button" onclick="runPrintRecordAction('docs_zip')" class="w-full flex items-center justify-between rounded-xl border border-slate-100 bg-white p-2.5 text-xs font-extrabold text-slate-700 hover:bg-rose-50/50 hover:text-rose-900 hover:border-rose-200 transition cursor-pointer text-left shadow-xs">
+                                    <span class="flex items-center gap-2">
+                                        <i data-lucide="folder-archive" class="w-3.5 h-3.5 text-rose-600/70"></i>
+                                        <span>Certificates ZIP</span>
+                                    </span>
                                     <i data-lucide="download" class="h-3.5 w-3.5 text-slate-400"></i>
                                 </button>
                             </div>
