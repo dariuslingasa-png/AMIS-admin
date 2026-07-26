@@ -85,7 +85,7 @@
 
     <!-- Print Records Master Modal -->
     <div id="print-records-modal" class="hidden fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-md" onclick="closePrintRecordsModal()">
-        <div onclick="event.stopPropagation()" class="relative w-full max-w-3xl overflow-hidden rounded-3xl bg-white shadow-2xl border border-slate-200">
+        <div onclick="event.stopPropagation()" class="relative w-full max-w-3xl overflow-hidden rounded-3xl bg-white shadow-2xl border border-slate-100">
             <!-- Header -->
             <div class="flex items-center justify-between border-b border-slate-100 bg-slate-50/80 px-6 py-4">
                 <div class="flex items-center gap-3">
@@ -105,7 +105,7 @@
             <!-- Body -->
             <div class="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
                 <!-- FILTER SECTION -->
-                <div class="rounded-2xl border border-emerald-200/80 bg-emerald-50/40 p-4">
+                <div class="rounded-2xl border border-slate-100 bg-emerald-50/40 p-4">
                     <div class="flex items-center justify-between mb-3">
                         <span class="text-xs font-black uppercase tracking-wider text-emerald-800 flex items-center gap-1.5">
                             <i data-lucide="filter" class="h-3.5 w-3.5 text-emerald-600"></i>
@@ -154,7 +154,7 @@
                 <!-- 3 MAIN ACTION CARDS -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <!-- Action Card 1: Print Enrollment Forms JPG -->
-                    <div class="flex flex-col justify-between rounded-2xl border border-emerald-200 bg-emerald-50/20 p-4 transition hover:border-emerald-400 hover:shadow-md">
+                    <div class="flex flex-col justify-between rounded-2xl border border-slate-100 bg-emerald-50/20 p-4 transition hover:border-emerald-400 hover:shadow-md">
                         <div>
                             <div class="flex items-center gap-2 mb-2">
                                 <div class="p-2 rounded-xl bg-emerald-100 text-emerald-700">
@@ -179,7 +179,7 @@
                     </div>
 
                     <!-- Action Card 2: Print ID Cards -->
-                    <div class="flex flex-col justify-between rounded-2xl border border-sky-200 bg-sky-50/20 p-4 transition hover:border-sky-400 hover:shadow-md">
+                    <div class="flex flex-col justify-between rounded-2xl border border-slate-100 bg-sky-50/20 p-4 transition hover:border-sky-400 hover:shadow-md">
                         <div>
                             <div class="flex items-center gap-2 mb-2">
                                 <div class="p-2 rounded-xl bg-sky-100 text-sky-700">
@@ -200,7 +200,7 @@
                     </div>
 
                     <!-- Action Card 3: Download ZIP (Student Documents) -->
-                    <div class="flex flex-col justify-between rounded-2xl border border-rose-200 bg-rose-50/20 p-4 transition hover:border-rose-400 hover:shadow-md">
+                    <div class="flex flex-col justify-between rounded-2xl border border-slate-100 bg-rose-50/20 p-4 transition hover:border-rose-400 hover:shadow-md">
                         <div>
                             <div class="flex items-center gap-2 mb-2">
                                 <div class="p-2 rounded-xl bg-rose-100 text-rose-700">
@@ -222,24 +222,24 @@
                 </div>
 
                 <!-- ADDITIONAL REPORTS & UTILITIES -->
-                <div class="rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
+                <div class="rounded-2xl border border-slate-100 bg-slate-50/60 p-4">
                     <span class="text-xs font-black uppercase tracking-wider text-slate-700 block mb-3">
                         Additional Reports & Utilities
                     </span>
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
-                        <button type="button" onclick="runPrintRecordAction('credentials')" class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-extrabold text-slate-700 hover:bg-slate-100 transition cursor-pointer text-left">
+                        <button type="button" onclick="runPrintRecordAction('credentials')" class="flex items-center gap-2 rounded-xl border border-slate-100 bg-white p-2.5 text-xs font-extrabold text-slate-700 hover:bg-slate-100 transition cursor-pointer text-left">
                             <i data-lucide="key" class="h-4 w-4 text-amber-600"></i>
                             <span>Microsoft Credentials</span>
                         </button>
-                        <button type="button" onclick="runPrintRecordAction('masters_list')" class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-extrabold text-slate-700 hover:bg-slate-100 transition cursor-pointer text-left">
+                        <button type="button" onclick="runPrintRecordAction('masters_list')" class="flex items-center gap-2 rounded-xl border border-slate-100 bg-white p-2.5 text-xs font-extrabold text-slate-700 hover:bg-slate-100 transition cursor-pointer text-left">
                             <i data-lucide="list" class="h-4 w-4 text-blue-600"></i>
                             <span>Masters List PDF</span>
                         </button>
-                        <button type="button" onclick="closePrintRecordsModal(); document.getElementById('bulk-print-modal').classList.remove('hidden')" class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-extrabold text-violet-800 hover:bg-violet-50 transition cursor-pointer text-left">
+                        <button type="button" onclick="closePrintRecordsModal(); document.getElementById('bulk-print-modal').classList.remove('hidden')" class="flex items-center gap-2 rounded-xl border border-slate-100 bg-white p-2.5 text-xs font-extrabold text-violet-800 hover:bg-violet-50 transition cursor-pointer text-left">
                             <i data-lucide="list-checks" class="h-4 w-4 text-violet-600"></i>
                             <span>Bulk Print List</span>
                         </button>
-                        <button type="button" onclick="runPrintRecordAction('canva')" class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-extrabold text-emerald-800 hover:bg-emerald-50 transition cursor-pointer text-left">
+                        <button type="button" onclick="runPrintRecordAction('canva')" class="flex items-center gap-2 rounded-xl border border-slate-100 bg-white p-2.5 text-xs font-extrabold text-emerald-800 hover:bg-emerald-50 transition cursor-pointer text-left">
                             <i data-lucide="sparkles" class="h-4 w-4 text-emerald-600"></i>
                             <span>Canva Bulk Create</span>
                         </button>
@@ -249,7 +249,7 @@
 
             <!-- Footer -->
             <div class="flex justify-end border-t border-slate-100 bg-slate-50/80 px-6 py-3">
-                <button type="button" onclick="closePrintRecordsModal()" class="rounded-xl border border-slate-200 bg-white px-5 py-2 text-xs font-extrabold text-slate-600 hover:bg-slate-100 transition cursor-pointer">
+                <button type="button" onclick="closePrintRecordsModal()" class="rounded-xl border border-slate-100 bg-white px-5 py-2 text-xs font-extrabold text-slate-600 hover:bg-slate-100 transition cursor-pointer">
                     Close
                 </button>
             </div>
