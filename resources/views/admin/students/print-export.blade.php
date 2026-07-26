@@ -412,16 +412,37 @@
 
                 <!-- Format Selection -->
                 <div>
-                    <label class="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Format</label>
-                    <div class="flex gap-4">
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="radio" name="export-format" value="pdf" checked class="h-4 w-4 border-slate-300 text-emerald-600 focus:ring-emerald-500">
-                            <span class="text-xs font-bold text-slate-700">PDF</span>
-                        </label>
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="radio" name="export-format" value="docx" class="h-4 w-4 border-slate-300 text-emerald-600 focus:ring-emerald-500">
-                            <span class="text-xs font-bold text-slate-700">DOCX</span>
-                        </label>
+                    <label class="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2.5">Format</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="export-format-selector">
+                        <!-- PDF Card -->
+                        <div onclick="selectExportFormat('pdf')" id="format-card-pdf" class="flex items-center justify-between p-3 rounded-xl border-2 border-emerald-600 bg-emerald-50/20 text-slate-800 cursor-pointer transition hover:border-emerald-600 hover:bg-emerald-50/10">
+                            <div class="flex items-center gap-2.5">
+                                <span class="p-2 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center">
+                                    <i data-lucide="file-text" class="h-4 w-4"></i>
+                                </span>
+                                <div class="flex flex-col text-left">
+                                    <span class="text-xs font-black uppercase tracking-wide">PDF</span>
+                                    <span class="text-[9px] text-slate-500">Standard document layout</span>
+                                </div>
+                            </div>
+                            <div class="w-4 h-4 rounded-full border-4 border-emerald-600 flex items-center justify-center bg-white" id="format-radio-pdf">
+                                <div class="w-1.5 h-1.5 rounded-full bg-emerald-600"></div>
+                            </div>
+                        </div>
+
+                        <!-- DOCX Card -->
+                        <div onclick="selectExportFormat('docx')" id="format-card-docx" class="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-white text-slate-800 cursor-pointer transition hover:border-emerald-600 hover:bg-emerald-50/10">
+                            <div class="flex items-center gap-2.5">
+                                <span class="p-2 rounded-lg bg-indigo-50 text-indigo-700 flex items-center justify-center">
+                                    <i data-lucide="file-edit" class="h-4 w-4"></i>
+                                </span>
+                                <div class="flex flex-col text-left">
+                                    <span class="text-xs font-black uppercase tracking-wide">DOCX</span>
+                                    <span class="text-[9px] text-slate-500">Editable Microsoft Word</span>
+                                </div>
+                            </div>
+                            <div class="w-4 h-4 rounded-full border border-slate-300 flex items-center justify-center bg-white" id="format-radio-docx"></div>
+                        </div>
                     </div>
                 </div>
 
@@ -441,7 +462,7 @@
                     </div>
                     <div class="flex justify-between">
                         <span>Output File:</span>
-                        <span class="text-slate-850 font-black">enrollment_forms_2026.zip</span>
+                        <span id="export-output-file-label" class="text-slate-850 font-black">enrollment_forms_2026.pdf</span>
                     </div>
                 </div>
 
@@ -504,12 +525,12 @@
                         <span class="text-slate-850 font-black">{{ number_format($totalStudents) }} Enrollment Forms</span>
                     </div>
                     <div class="flex justify-between">
-                        <span>ZIP Size:</span>
-                        <span class="text-slate-850 font-black">186 MB</span>
+                        <span id="export-complete-size-label">ZIP Size:</span>
+                        <span id="export-complete-size-val" class="text-slate-850 font-black">186 MB</span>
                     </div>
                     <div class="flex justify-between">
                         <span>Filename:</span>
-                        <span class="text-slate-850 font-mono font-bold">enrollment_forms_2026.zip</span>
+                        <span id="export-complete-filename-val" class="text-slate-850 font-mono font-bold">enrollment_forms_2026.zip</span>
                     </div>
                     <div class="flex justify-between">
                         <span>Completion Time:</span>
@@ -609,6 +630,35 @@
     let exportPercent = 0;
     const totalStudents = {{ $totalStudents }};
     let isExportRunning = false;
+    let selectedFormat = 'pdf'; // Default format
+
+    function selectExportFormat(format) {
+        selectedFormat = format;
+        const formats = ['pdf', 'docx'];
+        
+        formats.forEach(f => {
+            const card = document.getElementById('format-card-' + f);
+            const radio = document.getElementById('format-radio-' + f);
+            
+            if (f === format) {
+                // Active State styling matching tailwind rules
+                card.className = "flex items-center justify-between p-3 rounded-xl border-2 border-emerald-600 bg-emerald-50/20 text-slate-800 cursor-pointer transition hover:border-emerald-600 hover:bg-emerald-50/10";
+                radio.className = "w-4 h-4 rounded-full border-4 border-emerald-600 flex items-center justify-center bg-white";
+                radio.innerHTML = '<div class="w-1.5 h-1.5 rounded-full bg-emerald-600"></div>';
+            } else {
+                // Inactive State styling
+                card.className = "flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-white text-slate-800 cursor-pointer transition hover:border-emerald-600 hover:bg-emerald-50/10";
+                radio.className = "w-4 h-4 rounded-full border border-slate-300 flex items-center justify-center bg-white";
+                radio.innerHTML = '';
+            }
+        });
+
+        // Update output file label extension dynamically
+        const label = document.getElementById('export-output-file-label');
+        if (label) {
+            label.textContent = 'enrollment_forms_2026.' + format;
+        }
+    }
 
     function openBatchExportModal(type) {
         const modal = document.getElementById('batch-export-modal');
@@ -716,6 +766,24 @@
                 clearInterval(exportInterval);
                 isExportRunning = false;
 
+                // Update completed state stats dynamically
+                const sizeLabel = document.getElementById('export-complete-size-label');
+                const sizeVal = document.getElementById('export-complete-size-val');
+                const filenameVal = document.getElementById('export-complete-filename-val');
+                const downloadBtnSpan = document.querySelector('#export-state-complete button span');
+
+                if (selectedFormat === 'pdf') {
+                    if (sizeLabel) sizeLabel.textContent = 'File Size:';
+                    if (sizeVal) sizeVal.textContent = '14 MB';
+                    if (filenameVal) filenameVal.textContent = 'enrollment_forms_2026.pdf';
+                    if (downloadBtnSpan) downloadBtnSpan.textContent = 'Print / Save PDF';
+                } else {
+                    if (sizeLabel) sizeLabel.textContent = 'File Size:';
+                    if (sizeVal) sizeVal.textContent = '28 MB';
+                    if (filenameVal) filenameVal.textContent = 'enrollment_forms_2026.docx';
+                    if (downloadBtnSpan) downloadBtnSpan.textContent = 'Download DOCX';
+                }
+
                 // Transition to success screen
                 document.getElementById('export-state-progress').classList.add('hidden');
                 document.getElementById('export-state-complete').classList.remove('hidden');
@@ -727,7 +795,7 @@
                 // Trigger audio or browser notification
                 if (Notification.permission === "granted") {
                     new Notification("Export Complete!", {
-                        body: `1,247 Enrollment Forms ZIP has been compiled successfully.`,
+                        body: `Enrollment Forms ${selectedFormat.toUpperCase()} has been compiled successfully.`,
                         icon: '/favicon.ico'
                     });
                 } else if (Notification.permission !== "denied") {
@@ -749,7 +817,13 @@
         if (gender) params.append('gender', gender);
         if (search) params.append('search', search);
 
-        window.location.href = '{{ route('admin.students.download-enrolment-forms-zip') }}' + (params.toString() ? '?' + params.toString() : '');
+        const queryString = params.toString() ? '?' + params.toString() : '';
+
+        if (selectedFormat === 'pdf') {
+            window.open('{{ route('admin.students.print-enrolment-forms-batch') }}' + queryString, '_blank');
+        } else {
+            window.location.href = '{{ route('admin.students.download-enrolment-forms-zip') }}' + queryString;
+        }
         closeBatchExportModal();
     }
 
