@@ -558,16 +558,44 @@ class StudentExportController extends Controller
                 $format = strtolower($request->input('format', 'pdf'));
 
                 if ($format === 'pdf') {
+                    // Convert images to base64 inline to avoid Dompdf remote HTTP hangs
+                    $processedHtml = preg_replace_callback('/<img[^>]+src=["\']([^"\']+)["\']/i', function($m) {
+                        $url = $m[1];
+                        $absolutePath = null;
+                        
+                        if (str_contains($url, 'storage/')) {
+                            $relativePath = explode('storage/', $url)[1];
+                            $absolutePath = storage_path('app/public/' . $relativePath);
+                        } elseif (str_contains($url, 'images/')) {
+                            $relativePath = explode('images/', $url)[1];
+                            $absolutePath = public_path('images/' . $relativePath);
+                        }
+                        
+                        if ($absolutePath && file_exists($absolutePath)) {
+                            $type = pathinfo($absolutePath, PATHINFO_EXTENSION);
+                            $data = @file_get_contents($absolutePath);
+                            if ($data) {
+                                $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+                                return str_replace($url, $base64, $m[0]);
+                            }
+                        }
+                        return $m[0];
+                    }, $enrolmentHtml);
+
                     $options = new Options();
                     $options->set('isHtml5ParserEnabled', true);
-                    $options->set('isRemoteEnabled', true);
+                    $options->set('isRemoteEnabled', false); // Disable remote calls to prevent server timeout hangs
                     $dompdf = new Dompdf($options);
-                    $dompdf->loadHtml($enrolmentHtml);
+                    $dompdf->loadHtml($processedHtml);
                     $dompdf->setPaper('A4', 'portrait');
                     $dompdf->render();
                     $pdfContent = $dompdf->output();
 
                     $zip->addFromString("{$basePath}/Enrollment Application Form - {$studentFolderName}.pdf", $pdfContent);
+                    
+                    // Free memory
+                    unset($dompdf);
+                    gc_collect_cycles();
                 } elseif ($format === 'docx') {
                     $wordHtml = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">';
                     $wordHtml .= '<head><meta charset="utf-8"><title>Enrollment Form</title>';
