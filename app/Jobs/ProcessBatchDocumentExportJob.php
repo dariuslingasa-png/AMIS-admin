@@ -215,7 +215,7 @@ class ProcessBatchDocumentExportJob implements ShouldQueue
             $fileSizeBytes = filesize($tempZipFile);
 
             $stream = fopen($tempZipFile, 'r');
-            Storage::disk('public')->putStream($storagePath, $stream);
+            Storage::disk('public')->writeStream($storagePath, $stream);
             if (is_resource($stream)) {
                 fclose($stream);
             }
