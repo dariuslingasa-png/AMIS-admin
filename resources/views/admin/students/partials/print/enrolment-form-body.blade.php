@@ -104,6 +104,36 @@
     };
 @endphp
 
+@if($isPdf ?? false)
+<style>
+    .top-header-row { display: table !important; width: 100% !important; margin-bottom: 12px !important; }
+    .header-left-group { display: table-cell !important; vertical-align: middle !important; width: 70% !important; }
+    .header-right-group { display: table-cell !important; vertical-align: middle !important; width: 30% !important; text-align: right !important; }
+    .form-middle-grid { display: table !important; width: 100% !important; margin-bottom: 12px !important; }
+    .form-title-area { display: table-cell !important; vertical-align: top !important; width: 55% !important; }
+    .checkbox-stack { display: table-cell !important; vertical-align: top !important; width: 22% !important; text-align: left !important; padding-top: 15px !important; }
+    .photo-box { display: table-cell !important; vertical-align: top !important; width: 23% !important; text-align: right !important; }
+    .grid-5-col { display: table !important; width: 100% !important; table-layout: fixed !important; }
+    .grid-5-col > div { display: table-cell !important; vertical-align: bottom !important; padding-right: 6px !important; }
+    .grid-4-col-birth { display: table !important; width: 100% !important; table-layout: fixed !important; }
+    .grid-4-col-birth > div { display: table-cell !important; vertical-align: bottom !important; padding-right: 6px !important; }
+    .grid-2-col-school { display: table !important; width: 100% !important; table-layout: fixed !important; }
+    .grid-2-col-school > div { display: table-cell !important; vertical-align: bottom !important; padding-right: 6px !important; }
+    .grid-parent-row { display: table !important; width: 100% !important; table-layout: fixed !important; }
+    .grid-parent-row > div { display: table-cell !important; vertical-align: bottom !important; padding-right: 6px !important; }
+    .grid-children-row { display: table !important; width: 100% !important; table-layout: fixed !important; }
+    .grid-children-row > div { display: table-cell !important; vertical-align: bottom !important; padding-right: 6px !important; }
+    .grid-physician-row { display: table !important; width: 100% !important; table-layout: fixed !important; }
+    .grid-physician-row > div { display: table-cell !important; vertical-align: bottom !important; padding-right: 6px !important; }
+    .p2-emergency-grid { display: table !important; width: 100% !important; table-layout: fixed !important; }
+    .p2-emergency-grid > div { display: table-cell !important; vertical-align: bottom !important; padding-right: 6px !important; }
+    .signature-grid { display: table !important; width: 100% !important; table-layout: fixed !important; }
+    .signature-grid > div { display: table-cell !important; vertical-align: bottom !important; padding-right: 15px !important; }
+    .grid-office-row { display: table !important; width: 100% !important; table-layout: fixed !important; }
+    .grid-office-row > div { display: table-cell !important; vertical-align: bottom !important; padding-right: 6px !important; }
+</style>
+@endif
+
 <!-- PAGE 1: ENROLMENT APPLICATION FORM -->
 <div class="paper-container paper-page-break">
     @if(isset($pageNumber))

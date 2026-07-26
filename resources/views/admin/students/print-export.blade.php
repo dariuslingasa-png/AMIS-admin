@@ -83,10 +83,13 @@
                             <!-- Enrollment Form (ACTIVE) -->
                             <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
                                 <span class="flex items-center gap-2">
-                                    <i data-lucide="file-text" class="w-3.5 h-3.5 text-emerald-600/70"></i>
-                                    <span>Enrollment Form</span>
+                                    <i data-lucide="file-text" class="w-3.5 h-3.5 text-emerald-600 font-bold"></i>
+                                    <span class="font-extrabold text-slate-900">Enrollment Form</span>
                                 </span>
-                                <button type="button" onclick="openBatchExportModal('enrollment_forms')" class="text-emerald-700 hover:text-emerald-900 font-extrabold hover:underline cursor-pointer">Download</button>
+                                <div class="flex items-center gap-2">
+                                    <button type="button" onclick="runPrintRecordAction('forms_batch')" class="text-emerald-700 hover:text-emerald-900 font-black hover:underline cursor-pointer bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Print PDF</button>
+                                    <button type="button" onclick="openBatchExportModal('enrollment_forms')" class="text-slate-600 hover:text-slate-900 font-extrabold hover:underline cursor-pointer">ZIP Archive</button>
+                                </div>
                             </li>
                             <!-- Learner's Profile -->
                             <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
@@ -480,11 +483,18 @@
                     </div>
                 </div>
 
-                <!-- Action Button -->
-                <button type="button" onclick="startBackgroundExport()" class="w-full h-11 inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 px-4 text-xs font-black text-white shadow-sm transition active:scale-[0.99] cursor-pointer">
-                    <i data-lucide="play" class="h-4 w-4"></i>
-                    <span>Start Export</span>
-                </button>
+                <!-- Action Buttons -->
+                <div class="space-y-2">
+                    <button type="button" onclick="runPrintRecordAction('forms_batch')" class="w-full h-11 inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 px-4 text-xs font-black text-white shadow-md transition active:scale-[0.99] cursor-pointer">
+                        <i data-lucide="printer" class="h-4 w-4"></i>
+                        <span>Print / Save PDF (Pixel-Perfect Batch View)</span>
+                    </button>
+
+                    <button type="button" onclick="startBackgroundExport()" class="w-full h-11 inline-flex items-center justify-center gap-2 rounded-xl bg-slate-100 hover:bg-slate-200 px-4 text-xs font-bold text-slate-700 transition active:scale-[0.99] cursor-pointer">
+                        <i data-lucide="folder-archive" class="h-4 w-4 text-emerald-600"></i>
+                        <span>Generate & Download ZIP Archive</span>
+                    </button>
+                </div>
             </div>
 
             <!-- STATE 2: EXPORT IN PROGRESS -->
