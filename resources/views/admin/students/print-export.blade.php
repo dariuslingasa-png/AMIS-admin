@@ -188,14 +188,14 @@
                     </div>
                 </div>
 
-                <!-- Column 2: 📚 DepEd School Forms -->
+                <!-- Column 2: DepEd School Forms -->
                 <div class="flex flex-col justify-between rounded-2xl border border-slate-100 bg-amber-50/20 p-5 shadow-xs transition hover:shadow-md">
                     <div>
                         <div class="flex items-center gap-2.5 mb-4 border-b border-amber-100 pb-2.5">
                             <div class="p-2.5 rounded-xl bg-amber-100 text-amber-700">
                                 <i data-lucide="library" class="h-5 w-5"></i>
                             </div>
-                            <h4 class="text-xs font-black uppercase tracking-wider text-slate-900">📚 DepEd School Forms</h4>
+                            <h4 class="text-xs font-black uppercase tracking-wider text-slate-900">DepEd School Forms</h4>
                         </div>
                         <ul class="space-y-2.5 text-xs text-slate-600 font-semibold">
                             <!-- SF1 – School Register -->
@@ -266,14 +266,14 @@
                     </div>
                 </div>
 
-                <!-- Column 3: 📋 Reports -->
+                <!-- Column 3: Reports -->
                 <div class="flex flex-col justify-between rounded-2xl border border-slate-100 bg-sky-50/20 p-5 shadow-xs transition hover:shadow-md">
                     <div>
                         <div class="flex items-center gap-2.5 mb-4 border-b border-sky-100 pb-2.5">
                             <div class="p-2.5 rounded-xl bg-sky-100 text-sky-700">
                                 <i data-lucide="file-bar-chart" class="h-5 w-5"></i>
                             </div>
-                            <h4 class="text-xs font-black uppercase tracking-wider text-slate-900">📋 Reports</h4>
+                            <h4 class="text-xs font-black uppercase tracking-wider text-slate-900">Reports</h4>
                         </div>
                         <ul class="space-y-2.5 text-xs text-slate-600 font-semibold">
                             <!-- Master List (ACTIVE) -->
