@@ -42,59 +42,12 @@
                         <span>{{ request()->hasAny(['search', 'grade', 'type', 'gender', 'mode', 'ms_status']) ? 'Sync Filtered Licenses' : 'Sync Pending Licenses' }}</span>
                     </button>
                 </form>
-                <!-- Print Dropdown -->
-                <div class="relative inline-block text-left" x-data="{ open: false }" @click.outside="open = false" @keydown.escape.window="open = false">
-                    <button type="button" @click="open = !open; $nextTick(() => window.lucide && window.lucide.createIcons())" class="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-bold text-slate-700 transition hover:bg-slate-50 cursor-pointer whitespace-nowrap shadow-sm">
-                        <i data-lucide="printer" class="h-4 w-4 text-slate-500"></i>
-                        <span>Print Records</span>
-                        <i data-lucide="chevron-down" class="h-3 w-3 text-slate-400"></i>
-                    </button>
-                    <div x-cloak x-show="open" x-transition.origin.top.right.duration.150ms class="absolute right-0 mt-2 w-64 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl z-50">
-                        <a href="{{ route('admin.students.print-enrolment-forms-batch', request()->all()) }}" target="_blank" class="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold text-emerald-800 hover:bg-emerald-50 transition">
-                            <i data-lucide="file-signature" class="h-4 w-4 text-emerald-600"></i>
-                            <span>Print Enrollment Application Forms ({{ request('grade') ?: 'All Grades' }})</span>
-                        </a>
-                        <button type="button" @click="open = false; downloadEnrolmentPngZip('{{ route('admin.students.print-enrolment-forms-batch', request()->all()) }}')" class="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 transition text-left cursor-pointer">
-                            <i data-lucide="file-archive" class="h-4 w-4 text-emerald-600"></i>
-                            <span>Zip Enrollment Forms JPG ({{ request('grade') ?: 'All Grades' }})</span>
-                        </button>
-                        <div class="flex items-center justify-between rounded-lg px-3 py-2 text-xs font-semibold text-slate-400 bg-slate-50 cursor-not-allowed select-none">
-                            <div class="flex items-center gap-2">
-                                <i data-lucide="contact" class="h-4 w-4 text-slate-400"></i>
-                                <span>Print ID Cards</span>
-                            </div>
-                            <span class="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">Coming Soon</span>
-                        </div>
-                        <a href="{{ route('admin.students.index', array_merge(request()->all(), ['print_credentials' => 1])) }}" target="_blank" class="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition">
-                            <i data-lucide="key" class="h-4 w-4 text-slate-400"></i>
-                            <span>Print Microsoft Credentials</span>
-                        </a>
-                        <a href="{{ route('admin.students.index', array_merge(request()->all(), ['print' => 1])) }}" target="_blank" class="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition">
-                            <i data-lucide="list" class="h-4 w-4 text-slate-400"></i>
-                            <span>Print Masters List</span>
-                        </a>
-                        <div class="my-1 border-t border-slate-100"></div>
-                        <button type="button" onclick="document.getElementById('bulk-print-modal').classList.remove('hidden')" class="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-violet-700 hover:bg-violet-50 transition">
-                            <i data-lucide="list-checks" class="h-4 w-4 text-violet-500"></i>
-                            <span>Bulk Print from Pasted List</span>
-                        </button>
-                        <div class="my-1 border-t border-slate-100"></div>
-                        <a href="{{ route('admin.students.export-canva', request()->all()) }}" class="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 transition">
-                            <i data-lucide="download" class="h-4 w-4 text-emerald-600"></i>
-                            <span>Export for Canva Bulk Create</span>
-                        </a>
-                        <div class="my-1 border-t border-slate-100"></div>
-                        <a href="{{ route('admin.students.export-verification-db') }}" class="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-50 transition">
-                            <i data-lucide="table" class="h-4 w-4 text-indigo-500"></i>
-                            <span>Export Verification Database</span>
-                        </a>
-                        <div class="my-1 border-t border-slate-100"></div>
-                        <a href="{{ route('admin.students.download-docs-zip', request()->all()) }}" download class="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-50 transition">
-                            <i data-lucide="file-archive" class="h-4 w-4 text-rose-500"></i>
-                            <span>Download Student Documents (ZIP)</span>
-                        </a>
-                    </div>
-                </div>
+                <!-- Print Records Modal Trigger Button -->
+                <button type="button" onclick="document.dispatchEvent(new CustomEvent('open-print-records-modal'))" class="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-bold text-slate-700 transition hover:bg-slate-50 cursor-pointer whitespace-nowrap shadow-sm">
+                    <i data-lucide="printer" class="h-4 w-4 text-emerald-600"></i>
+                    <span>Print Records</span>
+                    <i data-lucide="chevron-down" class="h-3 w-3 text-slate-400"></i>
+                </button>
             </div>
         </div>
 
@@ -130,6 +83,222 @@
             @include('admin.students.partials.index.table')
         </div>
     </section>
+
+    <!-- Print Records Master Modal -->
+    <div x-data="{
+            showPrintModal: false,
+            pMode: '{{ request('mode', '') }}',
+            pGrade: '{{ request('grade', '') }}',
+            pGender: '{{ request('gender', '') }}',
+            pSearch: '{{ request('search', '') }}',
+            getPrintUrl(baseUrl, extraParams = {}) {
+                const url = new URL(baseUrl, window.location.origin);
+                if (this.pMode) url.searchParams.set('mode', this.pMode);
+                if (this.pGrade) url.searchParams.set('grade', this.pGrade);
+                if (this.pGender) url.searchParams.set('gender', this.pGender);
+                if (this.pSearch) url.searchParams.set('search', this.pSearch);
+                for (const [k, v] of Object.entries(extraParams)) {
+                    url.searchParams.set(k, v);
+                }
+                return url.toString();
+            },
+            openFormsBatch() {
+                window.open(this.getPrintUrl('{{ route('admin.students.print-enrolment-forms-batch') }}'), '_blank');
+            },
+            zipFormsJpg() {
+                downloadEnrolmentPngZip(this.getPrintUrl('{{ route('admin.students.print-enrolment-forms-batch') }}'));
+            },
+            printIdCards() {
+                window.open(this.getPrintUrl('{{ route('admin.students.index') }}', { print_id: 1, is_print: 1 }), '_blank');
+            },
+            downloadDocsZip() {
+                window.location.href = this.getPrintUrl('{{ route('admin.students.download-docs-zip') }}');
+            },
+            printCredentials() {
+                window.open(this.getPrintUrl('{{ route('admin.students.index') }}', { print_credentials: 1, is_print: 1 }), '_blank');
+            },
+            printMastersList() {
+                window.open(this.getPrintUrl('{{ route('admin.students.index') }}', { print: 1, is_print: 1 }), '_blank');
+            },
+            exportCanva() {
+                window.location.href = this.getPrintUrl('{{ route('admin.students.export-canva') }}');
+            }
+        }"
+        @open-print-records-modal.window="showPrintModal = true; $nextTick(() => window.lucide && window.lucide.createIcons())"
+        @keydown.escape.window="showPrintModal = false"
+    >
+        <div x-show="showPrintModal" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-md">
+            <div @click.away="showPrintModal = false" class="relative w-full max-w-3xl overflow-hidden rounded-3xl bg-white shadow-2xl border border-slate-200">
+                <!-- Header -->
+                <div class="flex items-center justify-between border-b border-slate-100 bg-slate-50/80 px-6 py-4">
+                    <div class="flex items-center gap-3">
+                        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 shadow-xs">
+                            <i data-lucide="printer" class="h-5 w-5"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-black text-slate-950 uppercase tracking-wide">Print & Export Student Records</h3>
+                            <p class="text-xs text-slate-500 font-medium">Select target filters below to print forms, ID cards, or download ZIP archives.</p>
+                        </div>
+                    </div>
+                    <button type="button" @click="showPrintModal = false" class="rounded-full bg-slate-200/60 p-2 text-slate-500 hover:bg-slate-200 hover:text-slate-700 transition cursor-pointer">
+                        <i data-lucide="x" class="h-4 w-4"></i>
+                    </button>
+                </div>
+
+                <!-- Body -->
+                <div class="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
+                    <!-- FILTER SECTION -->
+                    <div class="rounded-2xl border border-emerald-200/80 bg-emerald-50/40 p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-black uppercase tracking-wider text-emerald-800 flex items-center gap-1.5">
+                                <i data-lucide="filter" class="h-3.5 w-3.5 text-emerald-600"></i>
+                                Filter Options
+                            </span>
+                            <span class="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                                Live Selection
+                            </span>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <!-- Learning Mode Filter -->
+                            <div>
+                                <label class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-600 mb-1">Mode</label>
+                                <select x-model="pMode" class="w-full h-10 rounded-xl border border-slate-250 bg-white px-3 text-xs font-bold text-slate-800 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition">
+                                    <option value="">All Modes (F2F & ODL)</option>
+                                    <option value="F2F">Face to Face (F2F)</option>
+                                    <option value="ODL">Online Distance Learning (ODL)</option>
+                                </select>
+                            </div>
+
+                            <!-- Grade Level Filter -->
+                            <div>
+                                <label class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-600 mb-1">Grade</label>
+                                <select x-model="pGrade" class="w-full h-10 rounded-xl border border-slate-250 bg-white px-3 text-xs font-bold text-slate-800 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition">
+                                    <option value="">All Grade Levels</option>
+                                    <option value="Kinder 1">K1 (Kinder 1)</option>
+                                    <option value="Kinder 2">K2 (Kinder 2)</option>
+                                    @foreach (['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'] as $g)
+                                        <option value="{{ $g }}">{{ \App\Models\Student::abbreviateGrade($g) }} ({{ $g }})</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <!-- Gender Filter (Optional) -->
+                            <div>
+                                <label class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-600 mb-1">Gender (Optional)</label>
+                                <select x-model="pGender" class="w-full h-10 rounded-xl border border-slate-250 bg-white px-3 text-xs font-bold text-slate-800 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition">
+                                    <option value="">All Genders</option>
+                                    <option value="male">Male Only</option>
+                                    <option value="female">Female Only</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3 MAIN ACTION CARDS -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- Action Card 1: Print Enrollment Forms JPG -->
+                        <div class="flex flex-col justify-between rounded-2xl border border-emerald-200 bg-emerald-50/20 p-4 transition hover:border-emerald-400 hover:shadow-md">
+                            <div>
+                                <div class="flex items-center gap-2 mb-2">
+                                    <div class="p-2 rounded-xl bg-emerald-100 text-emerald-700">
+                                        <i data-lucide="file-signature" class="h-5 w-5"></i>
+                                    </div>
+                                    <h4 class="text-xs font-black uppercase tracking-wider text-slate-900">Print Enrollment Forms JPG</h4>
+                                </div>
+                                <p class="text-[11.5px] text-slate-500 font-semibold leading-relaxed mb-4">
+                                    Print official enrollment forms in batch or export high-resolution JPG images.
+                                </p>
+                            </div>
+                            <div class="space-y-2 pt-2 border-t border-emerald-100">
+                                <button type="button" @click="openFormsBatch()" class="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-700 px-3 py-2 text-xs font-extrabold text-white shadow-xs transition hover:bg-emerald-800 cursor-pointer">
+                                    <i data-lucide="printer" class="h-3.5 w-3.5"></i>
+                                    <span>Print Forms Batch</span>
+                                </button>
+                                <button type="button" @click="zipFormsJpg()" class="w-full inline-flex items-center justify-center gap-1.5 rounded-xl border border-emerald-300 bg-white px-3 py-2 text-xs font-extrabold text-emerald-800 shadow-xs transition hover:bg-emerald-50 cursor-pointer">
+                                    <i data-lucide="file-archive" class="h-3.5 w-3.5 text-emerald-600"></i>
+                                    <span>Zip Forms JPG</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Action Card 2: Print ID Cards -->
+                        <div class="flex flex-col justify-between rounded-2xl border border-sky-200 bg-sky-50/20 p-4 transition hover:border-sky-400 hover:shadow-md">
+                            <div>
+                                <div class="flex items-center gap-2 mb-2">
+                                    <div class="p-2 rounded-xl bg-sky-100 text-sky-700">
+                                        <i data-lucide="contact" class="h-5 w-5"></i>
+                                    </div>
+                                    <h4 class="text-xs font-black uppercase tracking-wider text-slate-900">Print ID Cards</h4>
+                                </div>
+                                <p class="text-[11.5px] text-slate-500 font-semibold leading-relaxed mb-4">
+                                    Generate printable student ID cards sheet formatted front & back for PVC card printing.
+                                </p>
+                            </div>
+                            <div class="pt-2 border-t border-sky-100">
+                                <button type="button" @click="printIdCards()" class="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-sky-700 px-3 py-2 text-xs font-extrabold text-white shadow-xs transition hover:bg-sky-800 cursor-pointer">
+                                    <i data-lucide="credit-card" class="h-3.5 w-3.5"></i>
+                                    <span>Print ID Cards Sheet</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Action Card 3: Download ZIP (Student Documents) -->
+                        <div class="flex flex-col justify-between rounded-2xl border border-rose-200 bg-rose-50/20 p-4 transition hover:border-rose-400 hover:shadow-md">
+                            <div>
+                                <div class="flex items-center gap-2 mb-2">
+                                    <div class="p-2 rounded-xl bg-rose-100 text-rose-700">
+                                        <i data-lucide="folder-archive" class="h-5 w-5"></i>
+                                    </div>
+                                    <h4 class="text-xs font-black uppercase tracking-wider text-slate-900">Download Documents ZIP</h4>
+                                </div>
+                                <p class="text-[11.5px] text-slate-500 font-semibold leading-relaxed mb-4">
+                                    Download all requirement files (PSA Birth Cert, Report Cards, Photos) with clean student filenames.
+                                </p>
+                            </div>
+                            <div class="pt-2 border-t border-rose-100">
+                                <button type="button" @click="downloadDocsZip()" class="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-rose-700 px-3 py-2 text-xs font-extrabold text-white shadow-xs transition hover:bg-rose-800 cursor-pointer">
+                                    <i data-lucide="download" class="h-3.5 w-3.5"></i>
+                                    <span>Download ZIP Archive</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ADDITIONAL REPORTS & UTILITIES -->
+                    <div class="rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
+                        <span class="text-xs font-black uppercase tracking-wider text-slate-700 block mb-3">
+                            Additional Reports & Utilities
+                        </span>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+                            <button type="button" @click="printCredentials()" class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-extrabold text-slate-700 hover:bg-slate-100 transition cursor-pointer text-left">
+                                <i data-lucide="key" class="h-4 w-4 text-amber-600"></i>
+                                <span>Microsoft Credentials</span>
+                            </button>
+                            <button type="button" @click="printMastersList()" class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-extrabold text-slate-700 hover:bg-slate-100 transition cursor-pointer text-left">
+                                <i data-lucide="list" class="h-4 w-4 text-blue-600"></i>
+                                <span>Masters List PDF</span>
+                            </button>
+                            <button type="button" @click="showPrintModal = false; document.getElementById('bulk-print-modal').classList.remove('hidden')" class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-extrabold text-violet-800 hover:bg-violet-50 transition cursor-pointer text-left">
+                                <i data-lucide="list-checks" class="h-4 w-4 text-violet-600"></i>
+                                <span>Bulk Print List</span>
+                            </button>
+                            <button type="button" @click="exportCanva()" class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-extrabold text-emerald-800 hover:bg-emerald-50 transition cursor-pointer text-left">
+                                <i data-lucide="sparkles" class="h-4 w-4 text-emerald-600"></i>
+                                <span>Canva Bulk Create</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="flex justify-end border-t border-slate-100 bg-slate-50/80 px-6 py-3">
+                    <button type="button" @click="showPrintModal = false" class="rounded-xl border border-slate-200 bg-white px-5 py-2 text-xs font-extrabold text-slate-600 hover:bg-slate-100 transition cursor-pointer">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Bulk Print from List Modal -->
     <div id="bulk-print-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md">

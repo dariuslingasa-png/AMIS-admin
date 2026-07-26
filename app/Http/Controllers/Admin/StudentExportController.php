@@ -318,6 +318,18 @@ class StudentExportController extends Controller
                 $query->where('students.grade_level', $request->grade);
             }
 
+            if ($request->filled('mode')) {
+                $mode = trim($request->mode);
+                $query->whereHas('applicant', fn ($q) => $q->where('learning_mode', 'like', "%{$mode}%"));
+            }
+
+            if ($request->filled('gender')) {
+                $gender = strtolower((string) $request->gender);
+                if (in_array($gender, ['male', 'female'], true)) {
+                    $query->whereHas('applicant', fn ($q) => $q->whereRaw('LOWER(gender) = ?', [$gender]));
+                }
+            }
+
             return $query;
         };
 
@@ -402,7 +414,7 @@ class StudentExportController extends Controller
                 $absolutePath = EnrollmentStorage::getAbsolutePath($relativeUrl);
                 if ($absolutePath && file_exists($absolutePath)) {
                     $ext = pathinfo($absolutePath, PATHINFO_EXTENSION);
-                    $zipPath = $basePath.'/'.$label.($ext ? '.'.$ext : '');
+                    $zipPath = $basePath.'/'.$studentFolderName.' - '.$label.($ext ? '.'.$ext : '');
                     $zip->addFile($absolutePath, $zipPath);
                     $filesAdded++;
                 }
@@ -464,6 +476,18 @@ class StudentExportController extends Controller
 
             if ($request->filled('grade')) {
                 $query->where('students.grade_level', $request->grade);
+            }
+
+            if ($request->filled('mode')) {
+                $mode = trim($request->mode);
+                $query->whereHas('applicant', fn ($q) => $q->where('learning_mode', 'like', "%{$mode}%"));
+            }
+
+            if ($request->filled('gender')) {
+                $gender = strtolower((string) $request->gender);
+                if (in_array($gender, ['male', 'female'], true)) {
+                    $query->whereHas('applicant', fn ($q) => $q->whereRaw('LOWER(gender) = ?', [$gender]));
+                }
             }
 
             return $query;
