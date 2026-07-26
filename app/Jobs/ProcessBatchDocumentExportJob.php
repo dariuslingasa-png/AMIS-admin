@@ -28,6 +28,9 @@ class ProcessBatchDocumentExportJob implements ShouldQueue
 
     public function handle(): void
     {
+        ini_set('memory_limit', '1024M');
+        ini_set('max_execution_time', 600);
+
         $export = $this->export;
         $export->update([
             'status' => 'processing',
@@ -187,10 +190,15 @@ class ProcessBatchDocumentExportJob implements ShouldQueue
 
             $zip->close();
 
-            // Move completed ZIP to public/export storage
+            // Move completed ZIP to public/export storage using memory-efficient streams
             $storagePath = "exports/{$fileName}";
-            Storage::disk('public')->put($storagePath, file_get_contents($tempZipFile));
             $fileSizeBytes = filesize($tempZipFile);
+
+            $stream = fopen($tempZipFile, 'r');
+            Storage::disk('public')->putStream($storagePath, $stream);
+            if (is_resource($stream)) {
+                fclose($stream);
+            }
             @unlink($tempZipFile);
 
             $export->update([
