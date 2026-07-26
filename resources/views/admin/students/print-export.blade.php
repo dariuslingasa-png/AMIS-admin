@@ -413,7 +413,7 @@
                 <!-- Format Selection -->
                 <div>
                     <label class="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2.5">Format</label>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="export-format-selector">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" id="export-format-selector">
                         <!-- HTML Card -->
                         <div onclick="selectExportFormat('html')" id="format-card-html" class="flex items-center justify-between p-3 rounded-xl border-2 border-emerald-600 bg-emerald-50/20 text-slate-800 cursor-pointer transition hover:border-emerald-600 hover:bg-emerald-50/10">
                             <div class="flex items-center gap-2.5">
@@ -428,6 +428,20 @@
                             <div class="w-4 h-4 rounded-full border-4 border-emerald-600 flex items-center justify-center bg-white" id="format-radio-html">
                                 <div class="w-1.5 h-1.5 rounded-full bg-emerald-600"></div>
                             </div>
+                        </div>
+
+                        <!-- PDF Card -->
+                        <div onclick="selectExportFormat('pdf')" id="format-card-pdf" class="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-white text-slate-800 cursor-pointer transition hover:border-emerald-600 hover:bg-emerald-50/10">
+                            <div class="flex items-center gap-2.5">
+                                <span class="p-2 rounded-lg bg-rose-50 text-rose-700 flex items-center justify-center">
+                                    <i data-lucide="file-text" class="h-4 w-4"></i>
+                                </span>
+                                <div class="flex flex-col text-left">
+                                    <span class="text-xs font-black uppercase tracking-wide">PDF</span>
+                                    <span class="text-[9px] text-slate-500">High Quality PDF (Dompdf)</span>
+                                </div>
+                            </div>
+                            <div class="w-4 h-4 rounded-full border border-slate-300 flex items-center justify-center bg-white" id="format-radio-pdf"></div>
                         </div>
 
                         <!-- DOCX Card -->
@@ -634,11 +648,12 @@
 
     function selectExportFormat(format) {
         selectedFormat = format;
-        const formats = ['html', 'docx'];
+        const formats = ['html', 'pdf', 'docx'];
         
         formats.forEach(f => {
             const card = document.getElementById('format-card-' + f);
             const radio = document.getElementById('format-radio-' + f);
+            if (!card || !radio) return;
             
             if (f === format) {
                 // Active State styling matching tailwind rules
@@ -656,7 +671,7 @@
         // Update output file label extension dynamically
         const label = document.getElementById('export-output-file-label');
         if (label) {
-            label.textContent = 'enrollment_forms_2026.' + format;
+            label.textContent = 'enrollment_forms_2026.' + (format === 'html' ? 'zip' : (format === 'pdf' ? 'pdf.zip' : 'docx.zip'));
         }
     }
 

@@ -156,7 +156,19 @@ class ProcessBatchDocumentExportJob implements ShouldQueue
                     'siblings' => $siblings,
                 ])->render();
 
-                if ($format === 'docx') {
+                if ($format === 'pdf') {
+                    $options = new Options();
+                    $options->set('isHtml5ParserEnabled', true);
+                    $options->set('isRemoteEnabled', true);
+                    $options->set('defaultFont', 'sans-serif');
+                    $dompdf = new Dompdf($options);
+                    $dompdf->loadHtml($enrolmentHtml);
+                    $dompdf->setPaper('A4', 'portrait');
+                    $dompdf->render();
+                    $pdfContent = $dompdf->output();
+
+                    $zip->addFromString("{$basePath}/Enrollment Application Form - {$studentFolderName}.pdf", $pdfContent);
+                } elseif ($format === 'docx') {
                     $wordHtml = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">';
                     $wordHtml .= '<head><meta charset="utf-8"><title>Enrollment Form</title>';
                     $wordHtml .= '<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>90</w:Zoom></w:WordDocument></xml><![endif]--></head>';
