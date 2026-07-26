@@ -76,19 +76,24 @@
         $studentAge = \Carbon\Carbon::parse($app->date_of_birth)->age;
     }
 
-    // Robust Student 2x2 Photo URL resolver using official EnrollmentStorage helper
+    // Robust Student 2x2 Photo URL resolver with Base64 embedding for Dompdf & Word compatibility
     $photoSrc = null;
-    if ($app && !empty($app->photo_2x2_url)) {
+    $photoRelative = $app->photo_2x2_url ?? $student->photo_url ?? null;
+    if ($photoRelative) {
+        $absPath = \App\Support\EnrollmentStorage::getAbsolutePath($photoRelative);
+        if ($absPath && file_exists($absPath)) {
+            $ext = pathinfo($absPath, PATHINFO_EXTENSION);
+            $imgData = @file_get_contents($absPath);
+            if ($imgData) {
+                $photoSrc = 'data:image/' . $ext . ';base64,' . base64_encode($imgData);
+            }
+        }
+    }
+    if (!$photoSrc && $app && !empty($app->photo_2x2_url)) {
         $photoSrc = \App\Support\EnrollmentStorage::url($app->photo_2x2_url);
     }
-    if (!$photoSrc && $student && !empty($student->photo_url)) {
-        $photoSrc = \App\Support\EnrollmentStorage::url($student->photo_url);
-    }
-    if (!$photoSrc && $student && !empty($student->obfuscated_id)) {
-        $photoSrc = 'https://amis.edu.ph/student-photo/' . $student->obfuscated_id . '.jpg';
-    }
 
-    // Multi-tier Helper function for dynamic font-size calculation on long text (keeps normal text large)
+    // Multi-tier Helper function for dynamic font-size calculation on long text
     $getDynamicStyle = function($text, $baseSize = '0.96rem', $mediumSize = '0.84rem', $smallSize = '0.72rem', $xsmallSize = '0.60rem', $t1 = 26, $t2 = 36, $t3 = 48) {
         $len = mb_strlen(trim($text ?? ''));
         if ($len > $t3) {
@@ -111,199 +116,207 @@
             PAGE {{ $pageNumber }}{{ isset($totalPages) && $totalPages > 1 ? ' OF ' . $totalPages : '' }}
         </div>
     @endif
-    <div class="top-header-row">
-        <div class="header-left-group">
-            <img src="{{ $amisLogoSrc }}" alt="AMIS Logo" class="header-logo-amis">
-            <div class="header-school-text">
-                <h1 class="school-name">AL MUNAWWARA ISLAMIC SCHOOL</h1>
-                <p class="school-address">Bugac Ma-a Road, Davao City Philippines</p>
-            </div>
-        </div>
 
-        <div class="header-right-group">
-            <img src="{{ $depedLogoSrc }}" alt="DepEd Logo" class="header-logo-deped">
-            <div class="refund-notice-box">
-                NO REFUND OF<br>ENROLLMENT FEE
-            </div>
-        </div>
-    </div>
-
-    <div class="form-middle-grid">
-        <div class="form-title-area">
-            <h2 class="form-title">ENROLMENT APPLICATION FORM</h2>
-            <p class="sy-title">SY {{ $app->school_year ?? '2026-2027' }}</p>
-            
-            <div class="student-info-bar">
-                <span class="section-title">STUDENT INFORMATION</span>
-                <div class="lrn-container">
-                    <span>LRN:</span>
-                    <input type="text" class="lrn-input" value="{{ mb_strtoupper($app->lrn ?? $student->student_number) }}" style="{{ $getDynamicStyle($app->lrn ?? $student->student_number, '1rem', '0.88rem', '0.78rem', '0.68rem', 12, 18, 24) }}">
+    <!-- Table-based Header Row for Dompdf/Word/Browser Compatibility -->
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px;">
+        <tr>
+            <td style="width: 75px; vertical-align: middle;">
+                <img src="{{ $amisLogoSrc }}" alt="AMIS Logo" style="width: 70px; height: 70px; object-fit: contain;">
+            </td>
+            <td style="text-align: center; vertical-align: middle;">
+                <h1 class="school-name" style="margin: 0; font-size: 1.15rem; font-weight: 900; letter-spacing: 0.3px; color: #0f172a; text-transform: uppercase;">AL MUNAWWARA ISLAMIC SCHOOL</h1>
+                <p class="school-address" style="margin: 2px 0 0 0; font-size: 0.85rem; color: #334155;">Bugac Ma-a Road, Davao City Philippines</p>
+            </td>
+            <td style="width: 70px; text-align: right; vertical-align: middle;">
+                <img src="{{ $depedLogoSrc }}" alt="DepEd Logo" style="width: 65px; height: 65px; object-fit: contain;">
+            </td>
+            <td style="width: 140px; text-align: right; vertical-align: middle; padding-left: 8px;">
+                <div class="refund-notice-box" style="border: 2px solid #dc2626; padding: 4px 8px; text-align: center; font-family: 'Inter', sans-serif; font-weight: 800; font-size: 0.80rem; color: #dc2626; text-transform: uppercase; border-radius: 4px;">
+                    NO REFUND OF<br>ENROLLMENT FEE
                 </div>
-            </div>
-        </div>
+            </td>
+        </tr>
+    </table>
 
-        <div class="checkbox-stack">
-            <div class="checkbox-item">
-                <span class="custom-checkbox">{{ $isOld ? '✓' : '' }}</span>
-                <span>OLD</span>
-            </div>
-            <div class="checkbox-item">
-                <span class="custom-checkbox">{{ $isNew ? '✓' : '' }}</span>
-                <span>NEW</span>
-            </div>
-        </div>
-
-        <div class="photo-box" id="student-photo-container">
-            @if($photoSrc)
-                <img src="{{ $photoSrc }}" alt="Student 2x2 Photo" onerror="this.style.display='none'; document.getElementById('photo-fallback-box').style.display='flex';">
-                <div id="photo-fallback-box" style="display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; background: #fafafa; color: #94a3b8;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 4px;"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
-                    <span style="font-family: 'Inter', sans-serif; font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;">2x2 PHOTO</span>
+    <!-- Table-based Middle Grid (Title, Checkboxes, 2x2 Photo) -->
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
+        <tr>
+            <td style="vertical-align: top;">
+                <h2 class="form-title" style="font-size: 1.3rem; font-weight: 900; text-transform: uppercase; margin: 0; color: #0f172a;">ENROLMENT APPLICATION FORM</h2>
+                <p class="sy-title" style="font-size: 1.1rem; font-weight: 700; margin: 3px 0 10px 0; color: #1e293b;">SY {{ $app->school_year ?? '2026-2027' }}</p>
+                
+                <table style="border-collapse: collapse;">
+                    <tr>
+                        <td style="font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 800; text-transform: uppercase; padding-right: 10px; white-space: nowrap; color: #0f172a;">STUDENT INFORMATION</td>
+                        <td style="font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 700; white-space: nowrap; color: #0f172a;">LRN:</td>
+                        <td style="padding-left: 5px;">
+                            <input type="text" class="lrn-input" value="{{ mb_strtoupper($app->lrn ?? $student->student_number) }}" style="border: none; border-bottom: 1.5px solid #0f172a; font-family: 'Inter', sans-serif; font-size: 1rem; font-weight: 700; color: #0f172a; width: 180px; outline: none; text-transform: uppercase; {{ $getDynamicStyle($app->lrn ?? $student->student_number, '1rem', '0.88rem', '0.78rem', '0.68rem', 12, 18, 24) }}">
+                        </td>
+                    </tr>
+                </table>
+            </td>
+            <td style="width: 90px; vertical-align: top; padding-top: 15px;">
+                <div style="font-family: 'Inter', sans-serif; font-weight: 800; font-size: 0.88rem; color: #0f172a; margin-bottom: 8px;">
+                    <span style="display: inline-block; width: 16px; height: 16px; border: 1.5px solid #0f172a; text-align: center; line-height: 14px; font-size: 12px; font-weight: 900; margin-right: 4px; border-radius: 2px;">{{ $isOld ? 'X' : '' }}</span> OLD
                 </div>
-            @else
-                <div style="display: flex; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; background: #fafafa; color: #94a3b8;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 4px;"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
-                    <span style="font-family: 'Inter', sans-serif; font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;">2x2 PHOTO</span>
+                <div style="font-family: 'Inter', sans-serif; font-weight: 800; font-size: 0.88rem; color: #0f172a;">
+                    <span style="display: inline-block; width: 16px; height: 16px; border: 1.5px solid #0f172a; text-align: center; line-height: 14px; font-size: 12px; font-weight: 900; margin-right: 4px; border-radius: 2px;">{{ $isNew ? 'X' : '' }}</span> NEW
                 </div>
-            @endif
-        </div>
-    </div>
+            </td>
+            <td style="width: 120px; text-align: right; vertical-align: top;">
+                <div style="width: 115px; height: 115px; border: 1.5px solid #0f172a; display: inline-block; overflow: hidden; background: #fafafa; text-align: center; border-radius: 3px;">
+                    @if($photoSrc)
+                        <img src="{{ $photoSrc }}" alt="Student Photo" style="width: 115px; height: 115px; object-fit: cover;">
+                    @else
+                        <div style="padding-top: 45px; font-family: 'Inter', sans-serif; font-size: 8px; font-weight: 800; text-transform: uppercase; color: #64748b;">2x2 PHOTO</div>
+                    @endif
+                </div>
+            </td>
+        </tr>
+    </table>
 
+    <!-- 5-Column Student Name & Grade Row -->
     <div class="field-container">
-        <div class="grid-5-col">
-            <div>
-                <input type="text" class="input-line" value="{{ mb_strtoupper($app->last_name ?? '') }}" style="{{ $getDynamicStyle($app->last_name ?? '', '0.96rem', '0.84rem', '0.72rem', '0.60rem', 22, 32, 42) }}">
-                <span class="label-text">Last</span>
-            </div>
-            <div>
-                <input type="text" class="input-line" value="{{ mb_strtoupper($app->first_name ?? '') }}" style="{{ $getDynamicStyle($app->first_name ?? '', '0.96rem', '0.84rem', '0.72rem', '0.60rem', 22, 32, 42) }}">
-                <span class="label-text">First</span>
-            </div>
-            <div>
-                @php
-                    $rawMiddle = trim($app->middle_name ?? '');
-                    $mDisplay = '';
-                    if ($rawMiddle !== '') {
-                        $fChar = mb_substr($rawMiddle, 0, 1, 'UTF-8');
-                        $mDisplay = ($fChar === '.') ? '.' : mb_strtoupper($fChar, 'UTF-8') . '.';
-                    }
-                @endphp
-                <input type="text" class="input-line" value="{{ $mDisplay }}" style="{{ $getDynamicStyle($mDisplay, '0.96rem', '0.84rem', '0.72rem', '0.60rem', 22, 32, 42) }}">
-                <span class="label-text">Middle</span>
-            </div>
-            <div>
-                @php
-                    $g = strtoupper(trim($app->gender ?? ''));
-                    $sexChar = str_starts_with($g, 'F') ? 'F' : (str_starts_with($g, 'M') ? 'M' : $g);
-                @endphp
-                <input type="text" class="input-line" value="{{ $sexChar }}" style="text-align: center;">
-                <span class="label-text" style="text-align: center;">Sex</span>
-            </div>
-            <div>
-                <input type="text" class="input-line" value="{{ mb_strtoupper($student->grade_level ?? $app->grade_level ?? '') }}" style="{{ $getDynamicStyle($student->grade_level ?? $app->grade_level ?? '', '0.82rem', '0.72rem', '0.62rem', '0.52rem', 8, 14, 20) }}">
-                <span class="label-text">Grade Level</span>
-            </div>
-        </div>
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+                <td style="width: 28%; padding-right: 8px; vertical-align: top;">
+                    <input type="text" class="input-line" value="{{ mb_strtoupper($app->last_name ?? '') }}" style="{{ $getDynamicStyle($app->last_name ?? '', '0.96rem', '0.84rem', '0.72rem', '0.60rem', 22, 32, 42) }}">
+                    <span class="label-text">Last</span>
+                </td>
+                <td style="width: 28%; padding-right: 8px; vertical-align: top;">
+                    <input type="text" class="input-line" value="{{ mb_strtoupper($app->first_name ?? '') }}" style="{{ $getDynamicStyle($app->first_name ?? '', '0.96rem', '0.84rem', '0.72rem', '0.60rem', 22, 32, 42) }}">
+                    <span class="label-text">First</span>
+                </td>
+                <td style="width: 24%; padding-right: 8px; vertical-align: top;">
+                    @php
+                        $rawMiddle = trim($app->middle_name ?? '');
+                        $mDisplay = '';
+                        if ($rawMiddle !== '') {
+                            $fChar = mb_substr($rawMiddle, 0, 1, 'UTF-8');
+                            $mDisplay = ($fChar === '.') ? '.' : mb_strtoupper($fChar, 'UTF-8') . '.';
+                        }
+                    @endphp
+                    <input type="text" class="input-line" value="{{ $mDisplay }}" style="{{ $getDynamicStyle($mDisplay, '0.96rem', '0.84rem', '0.72rem', '0.60rem', 22, 32, 42) }}">
+                    <span class="label-text">Middle</span>
+                </td>
+                <td style="width: 8%; padding-right: 8px; text-align: center; vertical-align: top;">
+                    @php
+                        $g = strtoupper(trim($app->gender ?? ''));
+                        $sexChar = str_starts_with($g, 'F') ? 'F' : (str_starts_with($g, 'M') ? 'M' : $g);
+                    @endphp
+                    <input type="text" class="input-line" value="{{ $sexChar }}" style="text-align: center;">
+                    <span class="label-text" style="text-align: center;">Sex</span>
+                </td>
+                <td style="width: 12%; vertical-align: top;">
+                    <input type="text" class="input-line" value="{{ mb_strtoupper($student->grade_level ?? $app->grade_level ?? '') }}" style="{{ $getDynamicStyle($student->grade_level ?? $app->grade_level ?? '', '0.82rem', '0.72rem', '0.62rem', '0.52rem', 8, 14, 20) }}">
+                    <span class="label-text">Grade Level</span>
+                </td>
+            </tr>
+        </table>
     </div>
 
+    <!-- Student Address -->
     <div class="field-container" style="margin-top: 14px;">
         <input type="text" class="input-line" value="{{ $fullAddress }}" style="{{ $getDynamicStyle($fullAddress, '0.92rem', '0.78rem', '0.66rem', '0.54rem', 35, 55, 75) }}">
         <span class="label-text">Address</span>
     </div>
 
+    <!-- 4-Column Birth Info -->
     <div class="field-container" style="margin-top: 14px;">
-        <div class="grid-4-col-birth">
-            <div>
-                <input type="text" class="input-line" value="{{ $studentAge }}">
-                <span class="label-text">Age</span>
-            </div>
-            <div>
-                <input type="text" class="input-line" value="{{ $app?->date_of_birth ? mb_strtoupper($app->date_of_birth->format('M d, Y')) : '' }}">
-                <span class="label-text">Date of Birth</span>
-            </div>
-            <div>
-                <input type="text" class="input-line" value="{{ mb_strtoupper($app->place_of_birth ?? '') }}" style="{{ $getDynamicStyle($app->place_of_birth ?? '', '0.92rem', '0.78rem', '0.66rem', '0.54rem', 18, 30, 42) }}">
-                <span class="label-text">Place of Birth</span>
-            </div>
-            <div>
-                <input type="text" class="input-line" value="{{ mb_strtoupper($app->religion ?? 'Islam') }}">
-                <span class="label-text">Religion</span>
-            </div>
-        </div>
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+                <td style="width: 12%; padding-right: 10px; vertical-align: top;">
+                    <input type="text" class="input-line" value="{{ $studentAge }}">
+                    <span class="label-text">Age</span>
+                </td>
+                <td style="width: 25%; padding-right: 10px; vertical-align: top;">
+                    <input type="text" class="input-line" value="{{ $app?->date_of_birth ? mb_strtoupper($app->date_of_birth->format('M d, Y')) : '' }}">
+                    <span class="label-text">Date of Birth</span>
+                </td>
+                <td style="width: 43%; padding-right: 10px; vertical-align: top;">
+                    <input type="text" class="input-line" value="{{ mb_strtoupper($app->place_of_birth ?? '') }}" style="{{ $getDynamicStyle($app->place_of_birth ?? '', '0.92rem', '0.78rem', '0.66rem', '0.54rem', 18, 30, 42) }}">
+                    <span class="label-text">Place of Birth</span>
+                </td>
+                <td style="width: 20%; vertical-align: top;">
+                    <input type="text" class="input-line" value="{{ mb_strtoupper($app->religion ?? 'Islam') }}">
+                    <span class="label-text">Religion</span>
+                </td>
+            </tr>
+        </table>
     </div>
 
+    <!-- Previous School Name -->
     <div class="field-container" style="margin-top: 14px;">
         <input type="text" class="input-line" value="{{ mb_strtoupper($app->previous_school_name ?? '') }}" style="{{ $getDynamicStyle($app->previous_school_name ?? '', '0.92rem', '0.78rem', '0.66rem', '0.54rem', 30, 50, 70) }}">
         <span class="label-text">Previous Attended School Name</span>
     </div>
 
+    <!-- Previous School Address & Phone -->
     <div class="field-container" style="margin-top: 14px;">
-        <div class="grid-2-col-school">
-            <div>
-                <input type="text" class="input-line" value="{{ mb_strtoupper($app->previous_school_address ?? '') }}" style="{{ $getDynamicStyle($app->previous_school_address ?? '', '0.92rem', '0.78rem', '0.66rem', '0.54rem', 30, 50, 70) }}">
-                <span class="label-text">Previous School Address</span>
-            </div>
-            <div>
-                <input type="text" class="input-line" value="{{ mb_strtoupper($app->mobile_number ?? $app->parent_mobile ?? '') }}">
-                <span class="label-text">Telephone No.</span>
-            </div>
-        </div>
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+                <td style="width: 70%; padding-right: 15px; vertical-align: top;">
+                    <input type="text" class="input-line" value="{{ mb_strtoupper($app->previous_school_address ?? '') }}" style="{{ $getDynamicStyle($app->previous_school_address ?? '', '0.92rem', '0.78rem', '0.66rem', '0.54rem', 30, 50, 70) }}">
+                    <span class="label-text">Previous School Address</span>
+                </td>
+                <td style="width: 30%; vertical-align: top;">
+                    <input type="text" class="input-line" value="{{ mb_strtoupper($app->mobile_number ?? $app->parent_mobile ?? '') }}">
+                    <span class="label-text">Telephone No.</span>
+                </td>
+            </tr>
+        </table>
     </div>
 
     <div class="section-header-row" style="margin-top: 22px;">
         PARENT INFORMATION
     </div>
 
+    <!-- Father's Info -->
     <div class="field-container" style="margin-top: 10px;">
-        <div class="grid-parent-row">
-            <div>
-                <input type="text" class="input-line" value="{{ $fatherFull }}" style="{{ $getDynamicStyle($fatherFull, '0.96rem', '0.84rem', '0.72rem', '0.60rem', 25, 35, 45) }}">
-                <span class="label-text">Father's Full Name</span>
-            </div>
-            <div>
-                <input type="text" class="input-line" value="{{ mb_strtoupper($app->father_occupation ?? '') }}" style="{{ $getDynamicStyle($app->father_occupation ?? '', '0.94rem', '0.82rem', '0.70rem', '0.60rem', 22, 32, 42) }}">
-                <span class="label-text">Occupation</span>
-            </div>
-            <div>
-                <div style="border-bottom: 1.5px solid #0f172a; padding: 1px 3px; min-height: 34px; display: flex; flex-direction: column; justify-content: flex-end;">
-                    <div style="font-family: 'Inter', sans-serif; font-size: 0.88rem; font-weight: 750; color: #0f172a; line-height: 1.2;">
-                        {{ $parentPhone }}
-                    </div>
-                    @if(!empty($parentEmail))
-                        <div style="font-family: 'Inter', sans-serif; font-size: 0.78rem; font-weight: 600; color: #0f172a; line-height: 1.2; text-transform: lowercase;">
-                            {{ $parentEmail }}
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+                <td style="width: 42%; padding-right: 12px; vertical-align: top;">
+                    <input type="text" class="input-line" value="{{ $fatherFull }}" style="{{ $getDynamicStyle($fatherFull, '0.96rem', '0.84rem', '0.72rem', '0.60rem', 25, 35, 45) }}">
+                    <span class="label-text">Father's Full Name</span>
+                </td>
+                <td style="width: 26%; padding-right: 12px; vertical-align: top;">
+                    <input type="text" class="input-line" value="{{ mb_strtoupper($app->father_occupation ?? '') }}" style="{{ $getDynamicStyle($app->father_occupation ?? '', '0.94rem', '0.82rem', '0.70rem', '0.60rem', 22, 32, 42) }}">
+                    <span class="label-text">Occupation</span>
+                </td>
+                <td style="width: 32%; vertical-align: top;">
+                    <div style="border-bottom: 1.5px solid #0f172a; padding: 1px 3px; min-height: 24px;">
+                        <div style="font-family: 'Inter', sans-serif; font-size: 0.88rem; font-weight: 750; color: #0f172a; line-height: 1.2;">
+                            {{ $parentPhone }}
                         </div>
-                    @endif
-                </div>
-                <span class="label-text">Tel./Email address</span>
-            </div>
-        </div>
+                    </div>
+                    <span class="label-text">Tel./Email address</span>
+                </td>
+            </tr>
+        </table>
     </div>
 
+    <!-- Mother's Info -->
     <div class="field-container" style="margin-top: 14px;">
-        <div class="grid-parent-row">
-            <div>
-                <input type="text" class="input-line" value="{{ $motherFull }}" style="{{ $getDynamicStyle($motherFull, '0.96rem', '0.84rem', '0.72rem', '0.60rem', 25, 35, 45) }}">
-                <span class="label-text">Mother's Full Name</span>
-            </div>
-            <div>
-                <input type="text" class="input-line" value="{{ mb_strtoupper($app->mother_occupation ?? '') }}" style="{{ $getDynamicStyle($app->mother_occupation ?? '', '0.94rem', '0.82rem', '0.70rem', '0.60rem', 22, 32, 42) }}">
-                <span class="label-text">Occupation</span>
-            </div>
-            <div>
-                <div style="border-bottom: 1.5px solid #0f172a; padding: 1px 3px; min-height: 34px; display: flex; flex-direction: column; justify-content: flex-end;">
-                    <div style="font-family: 'Inter', sans-serif; font-size: 0.88rem; font-weight: 750; color: #0f172a; line-height: 1.2;">
-                        {{ $parentPhone }}
-                    </div>
-                    @if(!empty($parentEmail))
-                        <div style="font-family: 'Inter', sans-serif; font-size: 0.78rem; font-weight: 600; color: #0f172a; line-height: 1.2; text-transform: lowercase;">
-                            {{ $parentEmail }}
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+                <td style="width: 42%; padding-right: 12px; vertical-align: top;">
+                    <input type="text" class="input-line" value="{{ $motherFull }}" style="{{ $getDynamicStyle($motherFull, '0.96rem', '0.84rem', '0.72rem', '0.60rem', 25, 35, 45) }}">
+                    <span class="label-text">Mother's Full Name</span>
+                </td>
+                <td style="width: 26%; padding-right: 12px; vertical-align: top;">
+                    <input type="text" class="input-line" value="{{ mb_strtoupper($app->mother_occupation ?? '') }}" style="{{ $getDynamicStyle($app->mother_occupation ?? '', '0.94rem', '0.82rem', '0.70rem', '0.60rem', 22, 32, 42) }}">
+                    <span class="label-text">Occupation</span>
+                </td>
+                <td style="width: 32%; vertical-align: top;">
+                    <div style="border-bottom: 1.5px solid #0f172a; padding: 1px 3px; min-height: 24px;">
+                        <div style="font-family: 'Inter', sans-serif; font-size: 0.88rem; font-weight: 750; color: #0f172a; line-height: 1.2;">
+                            {{ $parentPhone }}
                         </div>
-                    @endif
-                </div>
-                <span class="label-text">Tel./Email address</span>
-            </div>
-        </div>
+                    </div>
+                    <span class="label-text">Tel./Email address</span>
+                </td>
+            </tr>
+        </table>
     </div>
 
     @php
@@ -331,41 +344,40 @@
             $sibAge = ($sib && !empty($sib->date_of_birth)) ? \Carbon\Carbon::parse($sib->date_of_birth)->age : '';
         @endphp
         <div class="field-container" style="{{ $i === 0 ? 'margin-top: 10px;' : '' }}">
-            <div class="grid-children-row">
-                <div>
-                    <input type="text" class="input-line" value="{{ $sibName }}" style="{{ $getDynamicStyle($sibName, '0.98rem', '0.82rem', '0.68rem', '0.58rem', 22, 32, 40) }}">
-                    <span class="label-text">Name</span>
-                </div>
-                <div>
-                    <input type="text" class="input-line" value="{{ $sibAge }}">
-                    <span class="label-text">Age</span>
-                </div>
-                <div>
-                    <input type="text" class="input-line" value="{{ $sibGrade }}">
-                    <span class="label-text">Grade Level</span>
-                </div>
-            </div>
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                    <td style="width: 55%; padding-right: 10px; vertical-align: top;">
+                        <input type="text" class="input-line" value="{{ $sibName }}" style="{{ $getDynamicStyle($sibName, '0.98rem', '0.82rem', '0.68rem', '0.58rem', 22, 32, 40) }}">
+                        <span class="label-text">Name</span>
+                    </td>
+                    <td style="width: 15%; padding-right: 10px; vertical-align: top;">
+                        <input type="text" class="input-line" value="{{ $sibAge }}">
+                        <span class="label-text">Age</span>
+                    </td>
+                    <td style="width: 30%; vertical-align: top;">
+                        <input type="text" class="input-line" value="{{ $sibGrade }}">
+                        <span class="label-text">Grade Level</span>
+                    </td>
+                </tr>
+            </table>
         </div>
     @endfor
 
-    <div class="lives-with-row">
-        <span>Applicant lives with:</span>
-        
-        <div class="radio-option">
-            <span class="radio-line">{{ $bothParents ? '✓' : '' }}</span>
-            <span>Both Parents</span>
-        </div>
-
-        <div class="radio-option">
-            <span class="radio-line">{{ $singleParent ? '✓' : '' }}</span>
-            <span>Mother/Father</span>
-        </div>
-
-        <div class="radio-option">
-            <span class="radio-line">{{ $guardianPresent ? '✓' : '' }}</span>
-            <span>Guardian</span>
-        </div>
-    </div>
+    <!-- Lives With Row -->
+    <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 600;">
+        <tr>
+            <td style="width: 160px;">Applicant lives with:</td>
+            <td style="width: 130px;">
+                <span style="display: inline-block; width: 30px; border-bottom: 1.5px solid #000; text-align: center; font-weight: 800; margin-right: 4px;">{{ $bothParents ? 'X' : '' }}</span> Both Parents
+            </td>
+            <td style="width: 140px;">
+                <span style="display: inline-block; width: 30px; border-bottom: 1.5px solid #000; text-align: center; font-weight: 800; margin-right: 4px;">{{ $singleParent ? 'X' : '' }}</span> Mother/Father
+            </td>
+            <td>
+                <span style="display: inline-block; width: 30px; border-bottom: 1.5px solid #000; text-align: center; font-weight: 800; margin-right: 4px;">{{ $guardianPresent ? 'X' : '' }}</span> Guardian
+            </td>
+        </tr>
+    </table>
 </div>
 
 <!-- PAGE 2: MEDICAL INFORMATION, EMERGENCY CONTACTS, REFERRAL & POLICIES -->
@@ -381,8 +393,8 @@
 
     <div class="p2-question-row">
         Has the student ever had psychological testing or been screened for academic difficulties or learning disabilities? 
-        &nbsp; YES <span class="p2-inline-line">{{ $hasPsych ? '✓' : '' }}</span> 
-        &nbsp;&nbsp; NO <span class="p2-inline-line">{{ !$hasPsych ? '✓' : '' }}</span>
+        &nbsp; YES <span class="p2-inline-line">{{ $hasPsych ? 'X' : '' }}</span> 
+        &nbsp;&nbsp; NO <span class="p2-inline-line">{{ !$hasPsych ? 'X' : '' }}</span>
     </div>
 
     <div class="p2-explain-block">
@@ -392,8 +404,8 @@
 
     <div class="p2-question-row" style="margin-top: 20px;">
         Prescription Medication: 
-        &nbsp; YES <span class="p2-inline-line">{{ $hasMed ? '✓' : '' }}</span> 
-        &nbsp;&nbsp; NO <span class="p2-inline-line">{{ !$hasMed ? '✓' : '' }}</span>
+        &nbsp; YES <span class="p2-inline-line">{{ $hasMed ? 'X' : '' }}</span> 
+        &nbsp;&nbsp; NO <span class="p2-inline-line">{{ !$hasMed ? 'X' : '' }}</span>
     </div>
 
     <div class="p2-explain-block">
@@ -401,35 +413,39 @@
         <input type="text" class="p2-full-line" value="{{ mb_strtoupper($app->current_medications ?? '') }}">
     </div>
 
-    <div class="grid-physician-row">
-        <div>
-            <input type="text" class="input-line" value="{{ mb_strtoupper($app->family_physician ?? '') }}">
-            <span class="label-text">Family Physician:</span>
-        </div>
-        <div>
-            <input type="text" class="input-line" value="{{ mb_strtoupper($app->physician_phone ?? '') }}">
-            <span class="label-text">Phone:</span>
-        </div>
-    </div>
+    <table style="width: 100%; border-collapse: collapse; margin-top: 12px;">
+        <tr>
+            <td style="width: 60%; padding-right: 15px; vertical-align: top;">
+                <input type="text" class="input-line" value="{{ mb_strtoupper($app->family_physician ?? '') }}">
+                <span class="label-text">Family Physician:</span>
+            </td>
+            <td style="width: 40%; vertical-align: top;">
+                <input type="text" class="input-line" value="{{ mb_strtoupper($app->physician_phone ?? '') }}">
+                <span class="label-text">Phone:</span>
+            </td>
+        </tr>
+    </table>
 
     <div class="section-header-row" style="margin-top: 25px;">
         EMERGENCY CONTACTS <span style="font-size: 0.9rem; font-weight: normal; text-transform: none; color: #475569;">(Other than above names)</span>
     </div>
 
-    <div class="p2-emergency-grid">
-        <div>
-            <input type="text" class="input-line" value="{{ mb_strtoupper($app->emergency_name ?? '') }}" style="{{ $getDynamicStyle($app->emergency_name ?? '', '0.98rem', '0.80rem', '0.68rem', '0.58rem', 20, 28, 35) }}">
-            <span class="label-text">Name</span>
-        </div>
-        <div>
-            <input type="text" class="input-line" value="{{ mb_strtoupper($app->emergency_relationship ?? '') }}">
-            <span class="label-text">Relationship</span>
-        </div>
-        <div>
-            <input type="text" class="input-line" value="{{ mb_strtoupper($app->emergency_phone ?? '') }}">
-            <span class="label-text">Phone</span>
-        </div>
-    </div>
+    <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+        <tr>
+            <td style="width: 45%; padding-right: 12px; vertical-align: top;">
+                <input type="text" class="input-line" value="{{ mb_strtoupper($app->emergency_name ?? '') }}" style="{{ $getDynamicStyle($app->emergency_name ?? '', '0.98rem', '0.80rem', '0.68rem', '0.58rem', 20, 28, 35) }}">
+                <span class="label-text">Name</span>
+            </td>
+            <td style="width: 30%; padding-right: 12px; vertical-align: top;">
+                <input type="text" class="input-line" value="{{ mb_strtoupper($app->emergency_relationship ?? '') }}">
+                <span class="label-text">Relationship</span>
+            </td>
+            <td style="width: 25%; vertical-align: top;">
+                <input type="text" class="input-line" value="{{ mb_strtoupper($app->emergency_phone ?? '') }}">
+                <span class="label-text">Phone</span>
+            </td>
+        </tr>
+    </table>
 
     <div class="section-header-row" style="margin-top: 25px;">
         REFERRAL
@@ -452,16 +468,18 @@
         SIGNATURE
     </div>
 
-    <div class="signature-grid">
-        <div>
-            <input type="text" class="input-line" value="{{ $fatherFull ?: $motherFull }}" style="{{ $getDynamicStyle($fatherFull ?: $motherFull, '0.98rem', '0.80rem', '0.68rem', '0.58rem', 22, 32, 40) }}">
-            <span class="label-text">Parent/Guardian</span>
-        </div>
-        <div>
-            <input type="text" class="input-line" value="{{ mb_strtoupper($student->created_at->format('M d, Y')) }}">
-            <span class="label-text">Date</span>
-        </div>
-    </div>
+    <table style="width: 100%; border-collapse: collapse; margin-top: 25px;">
+        <tr>
+            <td style="width: 70%; padding-right: 25px; vertical-align: top;">
+                <input type="text" class="input-line" value="{{ $fatherFull ?: $motherFull }}" style="{{ $getDynamicStyle($fatherFull ?: $motherFull, '0.98rem', '0.80rem', '0.68rem', '0.58rem', 22, 32, 40) }}">
+                <span class="label-text">Parent/Guardian</span>
+            </td>
+            <td style="width: 30%; vertical-align: top;">
+                <input type="text" class="input-line" value="{{ mb_strtoupper($student->created_at->format('M d, Y')) }}">
+                <span class="label-text">Date</span>
+            </td>
+        </tr>
+    </table>
 
     <p class="signature-disclaimer">
         *Only completed application will be accepted. Submission of an application does not guarantee admission
@@ -469,24 +487,22 @@
 
     <hr class="office-perforated-line">
 
-    <div class="grid-office-row">
-        <div>
-            <span>Application submitted on:</span>
-            <div class="date-slash-inputs">
-                <input type="text" class="date-slash-input" value="{{ $student->created_at->format('m') }}"> /
-                <input type="text" class="date-slash-input" value="{{ $student->created_at->format('d') }}"> /
-                <input type="text" class="date-slash-input" value="{{ $student->created_at->format('Y') }}">
-            </div>
-        </div>
-        <div>
-            <span>Paid:</span>
-            <input type="text" class="input-line" style="width: 110px; display: inline-block;" value="{{ $app?->payment?->amount_paid ? '₱' . number_format($app->payment->amount_paid, 2) : '' }}">
-        </div>
-        <div>
-            <span>OR No.:</span>
-            <input type="text" class="input-line" style="width: 110px; display: inline-block;" value="{{ mb_strtoupper($app?->payment?->reference_number ?? '') }}">
-        </div>
-    </div>
+    <table style="width: 100%; border-collapse: collapse; margin-top: 12px; font-family: 'Inter', sans-serif; font-size: 0.92rem; font-weight: 600;">
+        <tr>
+            <td style="width: 45%; vertical-align: top;">
+                <span>Application submitted on:</span>
+                <span style="font-weight: 800; border-bottom: 1.5px solid #0f172a; padding: 0 4px;">{{ $student->created_at->format('m / d / Y') }}</span>
+            </td>
+            <td style="width: 30%; vertical-align: top;">
+                <span>Paid:</span>
+                <input type="text" class="input-line" style="width: 100px; display: inline-block;" value="{{ $app?->payment?->amount_paid ? '₱' . number_format($app->payment->amount_paid, 2) : '' }}">
+            </td>
+            <td style="width: 25%; vertical-align: top;">
+                <span>OR No.:</span>
+                <input type="text" class="input-line" style="width: 100px; display: inline-block;" value="{{ mb_strtoupper($app?->payment?->reference_number ?? '') }}">
+            </td>
+        </tr>
+    </table>
 
     <div class="attachments-title">To be attached:</div>
     <ol class="attachments-list">
