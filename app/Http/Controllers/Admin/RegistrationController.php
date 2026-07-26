@@ -359,4 +359,94 @@ class RegistrationController extends Controller
             'level' => $request->input('level'),
         ])->with('status', 'Registration deleted successfully.');
     }
+
+    public function halaqahParents(Request $request)
+    {
+        $tab = $request->input('tab', 'submissions');
+        $search = $request->input('search');
+        $status = $request->input('status');
+        $levelFilter = $request->input('level');
+
+        $query = DB::table('contact_submissions')
+            ->select(
+                'id',
+                'name',
+                'email',
+                'phone',
+                'subject',
+                'message',
+                'status',
+                'created_at',
+                'responded_at',
+                DB::raw("'contact_submissions' as source")
+            )
+            ->where('subject', 'Halaqah Parents Registration');
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhere('message', 'like', "%{$search}%");
+            });
+        }
+
+        if ($levelFilter && $levelFilter !== 'all') {
+            $query->where('message', 'like', "%{$levelFilter}%");
+        }
+
+        $qStats = DB::table('contact_submissions')
+            ->where('subject', 'Halaqah Parents Registration');
+
+        if ($search) {
+            $qStats->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhere('message', 'like', "%{$search}%");
+            });
+        }
+
+        if ($levelFilter && $levelFilter !== 'all') {
+            $qStats->where('message', 'like', "%{$levelFilter}%");
+        }
+
+        $totalCount = $qStats->count();
+        $newCount = (clone $qStats)->where('status', 'new')->count();
+        $approvedCount = (clone $qStats)->where('status', 'approved')->count();
+
+        $cannotReadCount = (clone $qStats)->where('message', 'like', '%BEGINNER%')->count();
+        $canReadCount = (clone $qStats)->where('message', 'like', '%ADVANCE%')->count();
+
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        if ($request->has('print')) {
+            $registrations = $query->orderBy('created_at', 'desc')->get();
+            return view('admin.registrations.print_halaqah', compact('registrations', 'tab'));
+        }
+
+        $registrations = $query->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
+
+        $isParents = true;
+        $pageTitle = 'Halaqah Parents Registrations';
+        $pageDesc = 'Manage public registration submissions for the Halaqah Parents Islamic education program.';
+
+        return view('admin.registrations.halaqah_parents', compact(
+            'tab',
+            'registrations',
+            'search',
+            'status',
+            'levelFilter',
+            'totalCount',
+            'newCount',
+            'approvedCount',
+            'cannotReadCount',
+            'canReadCount',
+            'isParents',
+            'pageTitle',
+            'pageDesc'
+        ));
+    }
 }

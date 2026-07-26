@@ -123,6 +123,7 @@
             'icon' => 'user-plus', 'iconClass' => 'text-emerald-600', 'headerClass' => 'text-emerald-700', 'activeClass' => 'sidebar-link-active-emerald', 'title' => 'Registrations',
             'links' => [
                 ['Halaqah Online', 'check-square', route('admin.registrations.halaqah'), request()->routeIs('admin.registrations.halaqah')],
+                ['Halaqah Parents', 'users', route('admin.registrations.halaqah-parents'), request()->routeIs('admin.registrations.halaqah-parents')],
             ],
         ],
         [

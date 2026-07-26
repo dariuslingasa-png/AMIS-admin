@@ -480,6 +480,7 @@ Route::name('admin.')->group(function () {
         Route::prefix('registrations')->name('registrations.')->group(function () {
             Route::redirect('/halaqah/approved', '/admin/registrations/halaqah?tab=students')->name('halaqah.approved');
             Route::get('/halaqah', [RegistrationController::class, 'halaqah'])->name('halaqah');
+            Route::get('/halaqah-parents', [RegistrationController::class, 'halaqahParents'])->name('halaqah-parents');
             Route::patch('/halaqah/{id}/toggle', [RegistrationController::class, 'toggleStatus'])->name('halaqah.toggle');
             Route::delete('/halaqah/{id}', [RegistrationController::class, 'destroy'])->name('halaqah.destroy');
         });
