@@ -514,6 +514,23 @@
                     </div>
                 </div>
 
+                <!-- Live Terminal Log Console -->
+                <div class="rounded-xl border border-slate-800 bg-slate-950 p-3 text-left shadow-inner">
+                    <div class="flex items-center justify-between border-b border-slate-800/80 pb-2 mb-2">
+                        <span class="text-[10px] font-black uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+                            <span class="relative flex h-2 w-2">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                            </span>
+                            Live Processing Console
+                        </span>
+                        <span class="text-[9px] font-mono text-slate-500">Real-time log output</span>
+                    </div>
+                    <div id="export-log-lines" class="h-32 overflow-y-auto space-y-1 font-mono text-[11px] text-slate-300 pr-1">
+                        <div class="text-slate-500">[System] Export task initiated...</div>
+                    </div>
+                </div>
+
                 <p class="text-[10px] text-slate-400 font-medium">Please keep using the system. You'll be notified when the download is ready.</p>
 
                 <!-- Action Button -->
@@ -729,6 +746,30 @@
 
     let currentExportId = null;
     let currentDownloadUrl = null;
+    let lastLogMessage = '';
+
+    function appendConsoleLog(message, isError = false) {
+        const logBox = document.getElementById('export-log-lines');
+        if (!logBox || !message || message === lastLogMessage) return;
+        lastLogMessage = message;
+        
+        const now = new Date();
+        const timeStr = now.toTimeString().split(' ')[0];
+        const line = document.createElement('div');
+        line.className = isError ? 'text-rose-400 font-medium' : 'text-emerald-400 font-medium';
+        
+        const spanTime = document.createElement('span');
+        spanTime.className = 'text-slate-500 mr-1.5';
+        spanTime.textContent = `[${timeStr}]`;
+        
+        const spanMsg = document.createElement('span');
+        spanMsg.textContent = message;
+        
+        line.appendChild(spanTime);
+        line.appendChild(spanMsg);
+        logBox.appendChild(line);
+        logBox.scrollTop = logBox.scrollHeight;
+    }
 
     async function startBackgroundExport() {
         const mode = document.getElementById('p-filter-mode')?.value || '';
@@ -739,6 +780,12 @@
         isExportRunning = true;
         exportPercent = 0;
         currentDownloadUrl = null;
+        lastLogMessage = '';
+
+        const logBox = document.getElementById('export-log-lines');
+        if (logBox) {
+            logBox.innerHTML = '<div class="text-slate-500">[System] Export task initiated...</div>';
+        }
 
         // Transition views inside modal to Progress State
         document.getElementById('export-state-config').classList.add('hidden');
@@ -753,6 +800,7 @@
         const floatPercentage = document.getElementById('export-floating-percentage');
 
         if (statusLabel) statusLabel.innerText = 'Initiating export job...';
+        appendConsoleLog(`Starting export for ${totalStudents} students (Format: ${selectedFormat.toUpperCase()})...`);
 
         try {
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
@@ -775,16 +823,18 @@
             const result = await response.json();
 
             if (!response.ok || !result.success) {
+                appendConsoleLog(result.message || 'Failed to start document export.', true);
                 alert(result.message || 'Failed to start document export.');
                 closeBatchExportModal();
                 return;
             }
 
             currentExportId = result.export_id;
+            appendConsoleLog(`Background job #${currentExportId} dispatched successfully.`);
 
             if (exportInterval) clearInterval(exportInterval);
 
-            // Poll progress every 1.5 seconds
+            // Poll progress every 1 second
             exportInterval = setInterval(async () => {
                 try {
                     const statusRes = await fetch(`/students/export-status/${currentExportId}`);
@@ -801,14 +851,21 @@
                         counterText.innerText = `${(data.processed_count || 0).toLocaleString()} / ${(data.total_count || 0).toLocaleString()} Students`;
                     }
 
+                    if (data.log_message) {
+                        appendConsoleLog(data.log_message);
+                    }
+
                     if (data.status === 'processing' || data.status === 'pending') {
                         if (statusLabel) statusLabel.innerText = data.status === 'pending' ? 'Preparing Queue...' : 'Generating Documents...';
-                        const remainingSecs = Math.max(1, Math.round(((data.total_count - data.processed_count) / Math.max(1, data.processed_count)) * 5));
+                        const processed = data.processed_count || 0;
+                        const remainingSecs = processed > 0 ? Math.max(1, Math.round(((data.total_count - processed) / processed) * 3)) : Math.round(data.total_count * 1.5);
                         if (remainingTimeText) remainingTimeText.innerText = `~${remainingSecs} seconds`;
                     } else if (data.status === 'completed') {
                         clearInterval(exportInterval);
                         isExportRunning = false;
                         currentDownloadUrl = data.download_url;
+
+                        appendConsoleLog(`Export job completed! Output ZIP ready for download.`);
 
                         const sizeLabel = document.getElementById('export-complete-size-label');
                         const sizeVal = document.getElementById('export-complete-size-val');
@@ -828,13 +885,14 @@
                     } else if (data.status === 'failed') {
                         clearInterval(exportInterval);
                         isExportRunning = false;
+                        appendConsoleLog('Export failed: ' + (data.error_message || 'Unknown error occurred.'), true);
                         alert('Export failed: ' + (data.error_message || 'Unknown error occurred.'));
                         closeBatchExportModal();
                     }
                 } catch (err) {
                     console.error('Polling error:', err);
                 }
-            }, 1500);
+            }, 1000);
 
         } catch (err) {
             console.error('Failed to start export job:', err);

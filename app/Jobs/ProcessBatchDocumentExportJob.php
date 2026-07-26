@@ -113,21 +113,36 @@ class ProcessBatchDocumentExportJob implements ShouldQueue
 
             $processed = 0;
             $format = strtolower($export->format);
+            $upperFormat = strtoupper($format);
+
+            $export->update([
+                'status' => 'processing',
+                'error_message' => "Starting {$upperFormat} generation for {$total} students...",
+            ]);
 
             foreach ($students as $student) {
                 $appl = $student->applicant;
                 if (!$appl) {
                     $processed++;
-                    $export->update(['processed_count' => $processed]);
+                    $export->update([
+                        'processed_count' => $processed,
+                        'error_message' => "Skipped #{$student->student_number} (No application record)"
+                    ]);
                     continue;
                 }
 
                 $lastName = mb_strtoupper(trim($appl->last_name ?? $student->last_name ?? 'STUDENT'));
                 $firstName = mb_strtoupper(trim($appl->first_name ?? $student->first_name ?? 'PROFILE'));
+                $studentName = trim("{$lastName}, {$firstName}");
                 $studentFolderName = trim("{$lastName} {$firstName}");
                 if (empty($studentFolderName)) {
                     $studentFolderName = 'STUDENT '.$student->student_number;
                 }
+
+                $export->update([
+                    'processed_count' => $processed,
+                    'error_message' => "Generating {$upperFormat} [{$processed}/{$total}]: {$studentName}...",
+                ]);
 
                 $gradeFolder = trim($student->grade_level ?: 'Grade 1');
                 if (preg_match('/^Grade\s*(\d+)$/i', $gradeFolder, $m)) {
@@ -183,10 +198,15 @@ class ProcessBatchDocumentExportJob implements ShouldQueue
                 }
 
                 $processed++;
-                if ($processed % 5 === 0 || $processed === $total) {
-                    $export->update(['processed_count' => $processed]);
-                }
+                $export->update([
+                    'processed_count' => $processed,
+                    'error_message' => "Completed [{$processed}/{$total}]: {$studentName}",
+                ]);
             }
+
+            $export->update([
+                'error_message' => "Compiling final ZIP archive...",
+            ]);
 
             $zip->close();
 

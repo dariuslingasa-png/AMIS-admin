@@ -675,14 +675,14 @@ class StudentExportController extends Controller
             'status' => 'pending',
         ]);
 
-        // Dispatch processing job synchronously for instant completion on shared hosting
-        try {
-            ProcessBatchDocumentExportJob::dispatchSync($export);
-        } catch (\Throwable $e) {
-            Log::error('Batch export error: ' . $e->getMessage());
+        // Dispatch background CLI runner so AJAX POST returns instantly
+        $artisanPath = base_path('artisan');
+        $phpBinary = PHP_BINARY ?: 'php';
+        if (str_contains(PHP_OS_FAMILY, 'Windows')) {
+            pclose(popen("start /B {$phpBinary} {$artisanPath} export:process {$export->id}", "r"));
+        } else {
+            exec("{$phpBinary} {$artisanPath} export:process {$export->id} > /dev/null 2>&1 &");
         }
-
-        $export->refresh();
 
         return response()->json([
             'success' => true,
@@ -707,7 +707,8 @@ class StudentExportController extends Controller
             'progress_percentage' => $export->progress_percentage,
             'file_name' => $export->file_name,
             'file_size_formatted' => $export->formatted_file_size,
-            'error_message' => $export->error_message,
+            'log_message' => $export->status === 'processing' ? $export->error_message : null,
+            'error_message' => $export->status === 'failed' ? $export->error_message : null,
             'download_url' => $export->status === 'completed' ? route('admin.students.download-batch-export', ['id' => $export->id]) : null,
         ]);
     }
