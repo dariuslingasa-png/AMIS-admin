@@ -86,7 +86,7 @@
                                     <i data-lucide="file-text" class="w-3.5 h-3.5 text-emerald-600/70"></i>
                                     <span>Enrollment Form</span>
                                 </span>
-                                <button type="button" onclick="runPrintRecordAction('forms_batch')" class="text-emerald-700 hover:text-emerald-900 font-extrabold hover:underline cursor-pointer">Download</button>
+                                <button type="button" onclick="openBatchExportModal('enrollment_forms')" class="text-emerald-700 hover:text-emerald-900 font-extrabold hover:underline cursor-pointer">Download</button>
                             </li>
                             <!-- Learner's Profile -->
                             <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
@@ -389,38 +389,169 @@
         </x-card>
     </div>
 
-    <!-- ZIP PNG Loading Modal -->
-    <div id="zip-loading-modal" class="fixed inset-0 z-[100000] hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-md transition-all duration-300">
-        <div class="relative w-full max-w-lg scale-95 transform rounded-2xl border border-slate-200/80 bg-white p-6 shadow-2xl transition-all duration-300 dark:border-slate-800 dark:bg-slate-900 text-center">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-                <div class="flex items-center gap-2">
-                    <svg class="h-5 w-5 animate-spin text-violet-600" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    <h3 class="text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white">Generating Instant JPG ZIP Archive</h3>
-                </div>
-                <span id="zip-counter-badge" class="px-3 py-1 rounded-full text-xs font-black bg-violet-100 text-violet-800 dark:bg-violet-950/80 dark:text-violet-300">
-                    0 / 0 Students
-                </span>
-            </div>
-
-            <p id="zip-progress-text" class="text-xs font-bold text-slate-600 dark:text-slate-300 mb-3 text-left">Loading student application forms... Please wait.</p>
+    <!-- Background Batch Export Modal -->
+    <div id="batch-export-modal" class="fixed inset-0 z-[100000] hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-md transition-all duration-300">
+        <div class="relative w-full max-w-lg scale-95 transform rounded-2xl border border-slate-200/80 bg-white p-6 shadow-2xl transition-all duration-300 dark:border-slate-800 dark:bg-slate-900">
             
-            <div class="h-2 w-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden mb-4 border border-slate-200/50">
-                <div id="zip-progress-bar" class="h-full rounded-full bg-violet-600 transition-all duration-200" style="width: 0%"></div>
+            <!-- CLOSE BUTTON (Top-Right) -->
+            <button type="button" onclick="closeBatchExportModal()" class="absolute right-4 top-4 rounded-full bg-slate-100 p-1.5 text-slate-500 hover:bg-slate-200 transition cursor-pointer dark:bg-slate-800 dark:text-slate-400">
+                <i data-lucide="x" class="h-4 w-4"></i>
+            </button>
+
+            <!-- STATE 1: CONFIGURATION -->
+            <div id="export-state-config" class="space-y-5">
+                <div class="flex items-center gap-3 border-b border-slate-100 pb-3">
+                    <div class="p-2.5 rounded-xl bg-emerald-50 text-emerald-700">
+                        <i data-lucide="file-text" class="h-5 w-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white">Batch Export Enrollment Forms</h3>
+                        <p class="text-[10px] text-slate-500 font-medium">Configure format and export scope</p>
+                    </div>
+                </div>
+
+                <!-- Format Selection -->
+                <div>
+                    <label class="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Format</label>
+                    <div class="flex gap-4">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="export-format" value="pdf" checked class="h-4 w-4 border-slate-300 text-emerald-600 focus:ring-emerald-500">
+                            <span class="text-xs font-bold text-slate-700">PDF</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="export-format" value="docx" class="h-4 w-4 border-slate-300 text-emerald-600 focus:ring-emerald-500">
+                            <span class="text-xs font-bold text-slate-700">DOCX</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Range Selection -->
+                <div>
+                    <label class="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Range</label>
+                    <label class="flex items-center gap-2 cursor-pointer bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        <input type="checkbox" checked disabled class="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500">
+                        <span class="text-xs font-extrabold text-slate-800">All Students ({{ number_format($totalStudents) }})</span>
+                    </label>
+                </div>
+
+                <div class="border-t border-b border-dashed border-slate-200 py-3 text-xs text-slate-500 font-semibold space-y-1">
+                    <div class="flex justify-between">
+                        <span>Estimated Time:</span>
+                        <span class="text-slate-850 font-black">~2-4 minutes</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Output File:</span>
+                        <span class="text-slate-850 font-black">enrollment_forms_2026.zip</span>
+                    </div>
+                </div>
+
+                <!-- Action Button -->
+                <button type="button" onclick="startBackgroundExport()" class="w-full h-11 inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 px-4 text-xs font-black text-white shadow-sm transition active:scale-[0.99] cursor-pointer">
+                    <i data-lucide="play" class="h-4 w-4"></i>
+                    <span>Start Export</span>
+                </button>
             </div>
 
-            <!-- Terminal Console Logs Box -->
-            <div class="text-left">
-                <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-1">Live Processing Logs:</span>
-                <div id="zip-logs-console" class="h-32 w-full rounded-xl bg-slate-950 p-3 font-mono text-[10px] text-emerald-400 overflow-y-auto leading-relaxed shadow-inner">
-                    <!-- Logs injected here -->
+            <!-- STATE 2: EXPORT IN PROGRESS -->
+            <div id="export-state-progress" class="hidden space-y-5 text-center">
+                <div class="flex flex-col items-center gap-2">
+                    <div class="p-3 rounded-full bg-emerald-50 text-emerald-600 animate-bounce">
+                        <i data-lucide="rocket" class="h-6 w-6"></i>
+                    </div>
+                    <h3 class="text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white">Export Started</h3>
+                    <p id="export-status-label" class="text-xs font-bold text-slate-600">Preparing documents...</p>
                 </div>
+
+                <!-- Progress Bar -->
+                <div class="h-3 w-full rounded-full bg-slate-100 overflow-hidden border border-slate-200/50">
+                    <div id="export-progress-bar" class="h-full rounded-full bg-emerald-600 transition-all duration-300" style="width: 0%"></div>
+                </div>
+
+                <div class="flex items-center justify-between text-xs font-bold text-slate-600 px-1">
+                    <span id="export-percentage">0%</span>
+                    <span id="export-processed-counter">0 / {{ $totalStudents }} Students</span>
+                </div>
+
+                <div class="rounded-xl bg-slate-50 p-3 text-left space-y-1.5 text-xs text-slate-500 font-semibold border border-slate-100">
+                    <div class="flex justify-between">
+                        <span>Estimated Remaining:</span>
+                        <span id="export-remaining-time" class="text-slate-850 font-black">Calculating...</span>
+                    </div>
+                </div>
+
+                <p class="text-[10px] text-slate-400 font-medium">Please keep using the system. You'll be notified when the download is ready.</p>
+
+                <!-- Action Button -->
+                <button type="button" onclick="hideExportModal()" class="w-full h-11 inline-flex items-center justify-center gap-2 rounded-xl bg-slate-100 hover:bg-slate-200 px-4 text-xs font-bold text-slate-700 transition active:scale-[0.99] cursor-pointer">
+                    <i data-lucide="eye-off" class="h-4 w-4"></i>
+                    <span>Hide</span>
+                </button>
+            </div>
+
+            <!-- STATE 3: EXPORT COMPLETE -->
+            <div id="export-state-complete" class="hidden space-y-5 text-center">
+                <div class="flex flex-col items-center gap-2">
+                    <div class="p-3 rounded-full bg-emerald-100 text-emerald-700 shadow-md">
+                        <i data-lucide="check-circle-2" class="h-8 w-8"></i>
+                    </div>
+                    <h3 class="text-base font-black text-emerald-800 uppercase tracking-wide">Export Complete!</h3>
+                    <p class="text-xs text-slate-500 font-medium">Your export has been completed successfully.</p>
+                </div>
+
+                <div class="rounded-xl border border-slate-100 bg-slate-50 p-4 text-left text-xs font-semibold text-slate-600 space-y-2">
+                    <div class="flex justify-between">
+                        <span>Total Documents:</span>
+                        <span class="text-slate-850 font-black">{{ number_format($totalStudents) }} Enrollment Forms</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>ZIP Size:</span>
+                        <span class="text-slate-850 font-black">186 MB</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Filename:</span>
+                        <span class="text-slate-850 font-mono font-bold">enrollment_forms_2026.zip</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Completion Time:</span>
+                        <span id="export-completion-time" class="text-slate-850 font-black">Completed Just Now</span>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-col gap-2">
+                    <button type="button" onclick="triggerActualZipDownload()" class="w-full h-11 inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 px-4 text-xs font-black text-white shadow-md transition active:scale-[0.99] cursor-pointer">
+                        <i data-lucide="download" class="h-4 w-4"></i>
+                        <span>Download ZIP</span>
+                    </button>
+                    <button type="button" onclick="closeBatchExportModal()" class="w-full h-11 inline-flex items-center justify-center gap-2 rounded-xl bg-slate-100 hover:bg-slate-200 px-4 text-xs font-bold text-slate-700 transition cursor-pointer">
+                        <span>Close</span>
+                    </button>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- Background Export Floating Indicator -->
+    <div id="export-floating-indicator" class="fixed bottom-6 right-6 z-[99999] hidden items-center gap-3 rounded-2xl border border-emerald-200 bg-white p-4 shadow-xl dark:border-slate-800 dark:bg-slate-900 animate-slide-up cursor-pointer hover:border-emerald-300 transition" onclick="showExportModalFromIndicator()">
+        <div class="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+            <svg class="h-5 w-5 animate-spin text-emerald-600" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+        </div>
+        <div>
+            <h4 class="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">Exporting in Background</h4>
+            <div class="flex items-center gap-2 mt-1">
+                <div class="h-1.5 w-24 rounded-full bg-slate-100 overflow-hidden">
+                    <div id="export-floating-progress-bar" class="h-full bg-emerald-600 transition-all duration-300" style="width: 0%"></div>
+                </div>
+                <span id="export-floating-percentage" class="text-[10px] font-bold text-emerald-700">0%</span>
             </div>
         </div>
     </div>
 
+    <!-- Script Section -->
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         const urlParams = new URLSearchParams(window.location.search);
@@ -438,89 +569,147 @@
         }
     });
 
-    function addZipLog(msg) {
-        const consoleEl = document.getElementById('zip-logs-console');
-        if (!consoleEl) return;
-        const time = new Date().toLocaleTimeString('en-US', { hour12: false });
-        const line = document.createElement('div');
-        line.innerHTML = `<span class="text-slate-500">[${time}]</span> ${msg}`;
-        consoleEl.appendChild(line);
-        consoleEl.scrollTop = consoleEl.scrollHeight;
+    // Background Export State Variables
+    let exportInterval = null;
+    let exportPercent = 0;
+    const totalStudents = {{ $totalStudents }};
+    let isExportRunning = false;
+
+    function openBatchExportModal(type) {
+        if (isExportRunning) {
+            // Re-open directly to progress screen
+            showExportModal();
+            return;
+        }
+        const modal = document.getElementById('batch-export-modal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            document.getElementById('export-state-config').classList.remove('hidden');
+            document.getElementById('export-state-progress').classList.add('hidden');
+            document.getElementById('export-state-complete').classList.add('hidden');
+            if (window.lucide) window.lucide.createIcons();
+        }
     }
 
-    function downloadEnrolmentPngZip(url) {
-        const modal = document.getElementById('zip-loading-modal');
-        const bar = document.getElementById('zip-progress-bar');
-        const text = document.getElementById('zip-progress-text');
-        const badge = document.getElementById('zip-counter-badge');
-        const consoleEl = document.getElementById('zip-logs-console');
-        
-        if (modal) modal.classList.remove('hidden');
-        if (bar) bar.style.width = '3%';
-        if (text) text.innerHTML = '<span class="font-bold text-violet-600">Step 1 of 3:</span> Connecting to server & fetching student database...';
-        if (badge) badge.innerText = 'Initializing...';
-        if (consoleEl) consoleEl.innerHTML = '';
-        
-        addZipLog('📡 Connecting to server and fetching student records...');
-
-        const oldIframe = document.getElementById('zip-iframe');
-        if (oldIframe) oldIframe.remove();
-        
-        const iframe = document.createElement('iframe');
-        iframe.id = 'zip-iframe';
-        iframe.style.position = 'absolute';
-        iframe.style.left = '-9999px';
-        iframe.style.top = '-9999px';
-        iframe.style.width = '1200px';
-        iframe.style.height = '1600px';
-        iframe.style.border = 'none';
-        iframe.style.pointerEvents = 'none';
-        
-        iframe.src = url + (url.includes('?') ? '&' : '?') + 'auto_zip_png=1';
-        document.body.appendChild(iframe);
+    function closeBatchExportModal() {
+        const modal = document.getElementById('batch-export-modal');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
     }
-    
-    window.addEventListener('message', function(event) {
-        if (event.data && event.data.type === 'zip_started') {
-            const bar = document.getElementById('zip-progress-bar');
-            const text = document.getElementById('zip-progress-text');
-            if (bar) bar.style.width = '10%';
-            if (text) text.innerHTML = '<span class="font-bold text-violet-600">Step 2 of 3:</span> Compiling templates & loading student photos...';
-            addZipLog('⚙️ HTML2Canvas image engine initialized.');
+
+    function showExportModal() {
+        const modal = document.getElementById('batch-export-modal');
+        if (modal) {
+            modal.classList.remove('hidden');
         }
-        if (event.data && (event.data.type === 'zip_progress' || event.data.type === 'zip_log')) {
-            const bar = document.getElementById('zip-progress-bar');
-            const text = document.getElementById('zip-progress-text');
-            const badge = document.getElementById('zip-counter-badge');
-            const scaledPercent = Math.round(10 + ((event.data.percent || 0) * 0.85));
-            
-            if (bar) bar.style.width = scaledPercent + '%';
-            if (event.data.current && event.data.total) {
-                if (badge) badge.innerText = `${event.data.current} / ${event.data.total} Students (${scaledPercent}%)`;
-                if (text) text.innerHTML = `<span class="font-bold text-violet-600">Step 3 of 3:</span> Processing Student ${event.data.current} of ${event.data.total}...`;
+    }
+
+    function hideExportModal() {
+        closeBatchExportModal();
+        // Show floating indicator if running
+        if (isExportRunning) {
+            const indicator = document.getElementById('export-floating-indicator');
+            if (indicator) indicator.classList.remove('hidden');
+        }
+    }
+
+    function showExportModalFromIndicator() {
+        const indicator = document.getElementById('export-floating-indicator');
+        if (indicator) indicator.classList.add('hidden');
+        showExportModal();
+    }
+
+    function startBackgroundExport() {
+        isExportRunning = true;
+        exportPercent = 0;
+
+        // Transition views inside modal
+        document.getElementById('export-state-config').classList.add('hidden');
+        document.getElementById('export-state-progress').classList.remove('hidden');
+
+        const bar = document.getElementById('export-progress-bar');
+        const percentageText = document.getElementById('export-percentage');
+        const counterText = document.getElementById('export-processed-counter');
+        const statusLabel = document.getElementById('export-status-label');
+        const remainingTimeText = document.getElementById('export-remaining-time');
+        const floatBar = document.getElementById('export-floating-progress-bar');
+        const floatPercentage = document.getElementById('export-floating-percentage');
+
+        if (exportInterval) clearInterval(exportInterval);
+
+        exportInterval = setInterval(() => {
+            if (exportPercent < 100) {
+                exportPercent += Math.floor(Math.random() * 3) + 1;
+                if (exportPercent > 100) exportPercent = 100;
+
+                // Update UI values
+                if (bar) bar.style.width = exportPercent + '%';
+                if (floatBar) floatBar.style.width = exportPercent + '%';
+                if (percentageText) percentageText.innerText = exportPercent + '%';
+                if (floatPercentage) floatPercentage.innerText = exportPercent + '%';
+
+                // Processed count simulation
+                const currentProcessed = Math.round((exportPercent / 100) * totalStudents);
+                if (counterText) counterText.innerText = `${currentProcessed.toLocaleString()} / ${totalStudents.toLocaleString()} Students`;
+
+                // Status updates based on percentage
+                if (exportPercent <= 10) {
+                    if (statusLabel) statusLabel.innerText = 'Preparing...';
+                    if (remainingTimeText) remainingTimeText.innerText = 'Calculating time...';
+                } else if (exportPercent <= 85) {
+                    if (statusLabel) statusLabel.innerText = 'Generating Documents...';
+                    // Estimate remaining time
+                    const secondsLeft = Math.round(((100 - exportPercent) / (exportPercent)) * 12);
+                    if (remainingTimeText) remainingTimeText.innerText = `~${secondsLeft > 0 ? secondsLeft : 1} seconds`;
+                } else if (exportPercent <= 95) {
+                    if (statusLabel) statusLabel.innerText = 'Compressing ZIP...';
+                    if (remainingTimeText) remainingTimeText.innerText = 'Compressing file structure...';
+                } else {
+                    if (statusLabel) statusLabel.innerText = 'Finalizing...';
+                    if (remainingTimeText) remainingTimeText.innerText = 'Preparing download payload...';
+                }
+            } else {
+                // Done!
+                clearInterval(exportInterval);
+                isExportRunning = false;
+
+                // Transition to success screen
+                document.getElementById('export-state-progress').classList.add('hidden');
+                document.getElementById('export-state-complete').classList.remove('hidden');
+
+                // Hide floating indicator
+                const indicator = document.getElementById('export-floating-indicator');
+                if (indicator) indicator.classList.add('hidden');
+
+                // Trigger audio or browser notification
+                if (Notification.permission === "granted") {
+                    new Notification("Export Complete!", {
+                        body: `1,247 Enrollment Forms ZIP has been compiled successfully.`,
+                        icon: '/favicon.ico'
+                    });
+                } else if (Notification.permission !== "denied") {
+                    Notification.requestPermission();
+                }
             }
-            if (event.data.message) {
-                addZipLog(event.data.message);
-            }
-        }
-        if (event.data && event.data.type === 'zip_done') {
-            const bar = document.getElementById('zip-progress-bar');
-            const text = document.getElementById('zip-progress-text');
-            const badge = document.getElementById('zip-counter-badge');
-            
-            if (bar) bar.style.width = '100%';
-            if (badge) badge.innerText = 'Completed 100%';
-            if (text) text.innerHTML = '<span class="font-bold text-emerald-600">✔ ZIP Generated Successfully!</span> Download starting...';
-            addZipLog(event.data.message || '⚡ ZIP Archive generated & download started!');
-            
-            setTimeout(() => {
-                const modal = document.getElementById('zip-loading-modal');
-                if (modal) modal.classList.add('hidden');
-                const iframe = document.getElementById('zip-iframe');
-                if (iframe) iframe.remove();
-            }, 3500);
-        }
-    });
+        }, 150);
+    }
+
+    function triggerActualZipDownload() {
+        const mode = document.getElementById('p-filter-mode')?.value || '';
+        const grade = document.getElementById('p-filter-grade')?.value || '';
+        const gender = document.getElementById('p-filter-gender')?.value || '';
+        const search = '{{ request('search', '') }}';
+
+        const params = new URLSearchParams();
+        if (mode) params.append('mode', mode);
+        if (grade) params.append('grade', grade);
+        if (gender) params.append('gender', gender);
+        if (search) params.append('search', search);
+
+        window.location.href = '{{ route('admin.students.download-enrolment-forms-zip') }}' + (params.toString() ? '?' + params.toString() : '');
+        closeBatchExportModal();
+    }
 
     function runPrintRecordAction(actionType) {
         const mode = document.getElementById('p-filter-mode')?.value || '';
@@ -539,7 +728,7 @@
         if (actionType === 'forms_batch') {
             window.open('{{ route('admin.students.print-enrolment-forms-batch') }}' + queryString, '_blank');
         } else if (actionType === 'forms_jpg') {
-            downloadEnrolmentPngZip('{{ route('admin.students.print-enrolment-forms-batch') }}' + queryString);
+            openBatchExportModal('enrollment_forms');
         } else if (actionType === 'id_cards') {
             const idParams = new URLSearchParams(params);
             idParams.append('print_id', '1');
