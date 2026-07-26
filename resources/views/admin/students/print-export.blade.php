@@ -554,6 +554,12 @@
     <!-- Script Section -->
     <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Teleport modal and floating indicator to document body to overlay sidebar/navbar
+        const modal = document.getElementById('batch-export-modal');
+        const indicator = document.getElementById('export-floating-indicator');
+        if (modal) document.body.appendChild(modal);
+        if (indicator) document.body.appendChild(indicator);
+
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.has('mode')) {
             const el = document.getElementById('p-filter-mode');
