@@ -202,6 +202,7 @@ Route::name('admin.')->group(function () {
         Route::post('/students/comparison/update-field', [StudentController::class, 'updateField'])->name('students.comparison.update-field');
         Route::post('/students/bulk-print-list', [StudentPrintController::class, 'bulkPrintList'])->name('students.bulk-print-list');
         Route::get('/students/print-enrolment-forms-batch', [StudentPrintController::class, 'printEnrolmentFormsBatch'])->name('students.print-enrolment-forms-batch');
+        Route::get('/students/print-export', [StudentPrintController::class, 'printExport'])->name('students.print-export');
         Route::get('/students/{student}', [StudentController::class, 'show'])->name('students.show');
         Route::get('/students/{student}/id-editor', [StudentIdController::class, 'idEditor'])->name('students.id-editor');
         Route::get('/students/{student}/print-enrolment-form', [StudentPrintController::class, 'printEnrolmentForm'])->name('students.print-enrolment-form');

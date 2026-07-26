@@ -137,4 +137,9 @@ class StudentPrintController extends Controller
             $printType => true,
         ]);
     }
+
+    public function printExport(Request $request)
+    {
+        return view('admin.students.print-export');
+    }
 }
