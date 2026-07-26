@@ -86,10 +86,9 @@
                     </button>
                 </form>
                 <!-- Print Records Modal Trigger Button -->
-                <button type="button" @click="showPrintModal = true; $nextTick(() => window.lucide && window.lucide.createIcons())" class="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-bold text-slate-700 transition hover:bg-slate-50 cursor-pointer whitespace-nowrap shadow-sm">
-                    <i data-lucide="printer" class="h-4 w-4 text-emerald-600"></i>
+                <button type="button" @click="showPrintModal = true; $nextTick(() => window.lucide && window.lucide.createIcons())" class="inline-flex h-10 items-center gap-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 px-4 text-xs font-black text-white shadow-sm transition cursor-pointer whitespace-nowrap">
+                    <i data-lucide="printer" class="h-4 w-4"></i>
                     <span>Print Records</span>
-                    <i data-lucide="chevron-down" class="h-3 w-3 text-slate-400"></i>
                 </button>
             </div>
         </div>
