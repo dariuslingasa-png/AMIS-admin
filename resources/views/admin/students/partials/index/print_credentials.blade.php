@@ -63,17 +63,36 @@
 </head>
 <body class="layout-slips">
     <!-- Page Skeleton Loading Overlay (Fades out when fully loaded) -->
-    <div id="print-skeleton-overlay" style="position: fixed; inset: 0; background: #f8fafc; z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.25s ease;">
-        <div style="background: white; padding: 28px 36px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; display: flex; flex-direction: column; align-items: center; gap: 16px; max-width: 420px; width: 90%; text-align: center;">
-            <div style="width: 52px; height: 52px; border-radius: 14px; background: #eff6ff; border: 1px solid #bfdbfe; display: flex; align-items: center; justify-content: center; color: #2563eb;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="animate-spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+    <div id="print-skeleton-overlay" style="position: fixed; inset: 0; background: #f8fafc; z-index: 99999; overflow: hidden; padding: 20px; transition: opacity 0.25s ease;">
+        <div style="max-width: 1000px; margin: 0 auto;">
+            <!-- Action Bar Skeleton -->
+            <div style="background: white; border-radius: 16px; border: 1px solid #e2e8f0; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center;" class="animate-pulse">
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <div style="width: 36px; height: 36px; border-radius: 10px; background: #ecfdf5; display: flex; align-items: center; justify-content: center; color: #059669;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="animate-spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                    </div>
+                    <div style="width: 180px; height: 16px; border-radius: 6px; background: #cbd5e1;"></div>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <div style="width: 80px; height: 32px; border-radius: 8px; background: #e2e8f0;"></div>
+                    <div style="width: 100px; height: 32px; border-radius: 8px; background: #ecfdf5;"></div>
+                </div>
             </div>
-            <div style="width: 100%;">
-                <div class="skeleton-shimmer" style="height: 18px; width: 75%; background: #e2e8f0; border-radius: 6px; margin: 0 auto 10px auto;"></div>
-                <div class="skeleton-shimmer" style="height: 12px; width: 90%; background: #f1f5f9; border-radius: 6px; margin: 0 auto 6px auto;"></div>
-                <div class="skeleton-shimmer" style="height: 12px; width: 60%; background: #f1f5f9; border-radius: 6px; margin: 0 auto;"></div>
+
+            <!-- Main Document Container Skeleton -->
+            <div style="background: white; border-radius: 20px; border: 1px solid #e2e8f0; padding: 32px; margin-top: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.04);" class="animate-pulse">
+                <div style="display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 28px; padding-bottom: 20px; border-bottom: 1px solid #f1f5f9;">
+                    <div style="width: 60px; height: 60px; border-radius: 50%; background: #e2e8f0; margin-bottom: 12px;" class="skeleton-shimmer"></div>
+                    <div style="width: 320px; height: 20px; border-radius: 6px; background: #e2e8f0; margin-bottom: 8px;" class="skeleton-shimmer"></div>
+                    <div style="width: 220px; height: 14px; border-radius: 6px; background: #f1f5f9;" class="skeleton-shimmer"></div>
+                </div>
+
+                <div style="border: 1px dashed #cbd5e1; border-radius: 16px; padding: 24px; background: #f8fafc; margin-bottom: 20px;">
+                    <div style="width: 140px; height: 14px; background: #cbd5e1; border-radius: 4px; margin-bottom: 12px;"></div>
+                    <div style="width: 240px; height: 24px; background: #e2e8f0; border-radius: 6px; margin-bottom: 8px;"></div>
+                    <div style="width: 180px; height: 18px; background: #e2e8f0; border-radius: 6px;"></div>
+                </div>
             </div>
-            <span style="font-family: 'Inter', sans-serif; font-size: 0.8rem; font-weight: 700; color: #64748b; margin-top: 4px;">Loading Credentials Slip...</span>
         </div>
     </div>
 
