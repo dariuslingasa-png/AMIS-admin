@@ -419,6 +419,7 @@
     }
 
     function downloadEnrolmentPngZip(url) {
+        closePrintRecordsModal();
         const modal = document.getElementById('zip-loading-modal');
         const bar = document.getElementById('zip-progress-bar');
         const text = document.getElementById('zip-progress-text');
@@ -494,7 +495,7 @@
     </script>
 
     <!-- ZIP PNG Loading Modal -->
-    <div id="zip-loading-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-md transition-all duration-300">
+    <div id="zip-loading-modal" class="fixed inset-0 z-[100000] hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-md transition-all duration-300">
         <div class="relative w-full max-w-lg scale-95 transform rounded-2xl border border-slate-200/80 bg-white p-6 shadow-2xl transition-all duration-300 dark:border-slate-800 dark:bg-slate-900 text-center">
             <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
                 <div class="flex items-center gap-2">
