@@ -806,14 +806,12 @@
     }
 
     function triggerBackgroundDownload(url) {
-        let iframe = document.getElementById('hidden-download-iframe');
-        if (!iframe) {
-            iframe = document.createElement('iframe');
-            iframe.id = 'hidden-download-iframe';
-            iframe.style.display = 'none';
-            document.body.appendChild(iframe);
-        }
-        iframe.src = url;
+        const link = document.createElement('a');
+        link.href = url;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 
     function triggerActualZipDownload() {

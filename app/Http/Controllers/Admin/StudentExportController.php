@@ -431,7 +431,7 @@ class StudentExportController extends Controller
             return back()->with('error', 'No document files or data could be compiled for the matched students.');
         }
 
-        return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
+        return response()->download($tempFile, $fileName);
     }
 
     public function downloadEnrolmentFormsZip(Request $request)
@@ -620,6 +620,6 @@ class StudentExportController extends Controller
             return back()->with('error', 'No files could be added to the ZIP archive.');
         }
 
-        return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
+        return response()->download($tempFile, $fileName);
     }
 }
