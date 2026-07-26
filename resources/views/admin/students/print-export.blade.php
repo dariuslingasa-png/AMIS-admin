@@ -712,11 +712,20 @@
         showExportModal();
     }
 
-    function startBackgroundExport() {
+    let currentExportId = null;
+    let currentDownloadUrl = null;
+
+    async function startBackgroundExport() {
+        const mode = document.getElementById('p-filter-mode')?.value || '';
+        const grade = document.getElementById('p-filter-grade')?.value || '';
+        const gender = document.getElementById('p-filter-gender')?.value || '';
+        const search = '{{ request('search', '') }}';
+
         isExportRunning = true;
         exportPercent = 0;
+        currentDownloadUrl = null;
 
-        // Transition views inside modal
+        // Transition views inside modal to Progress State
         document.getElementById('export-state-config').classList.add('hidden');
         document.getElementById('export-state-progress').classList.remove('hidden');
 
@@ -728,108 +737,116 @@
         const floatBar = document.getElementById('export-floating-progress-bar');
         const floatPercentage = document.getElementById('export-floating-percentage');
 
-        if (exportInterval) clearInterval(exportInterval);
+        if (statusLabel) statusLabel.innerText = 'Initiating export job...';
 
-        exportInterval = setInterval(() => {
-            if (exportPercent < 100) {
-                exportPercent += Math.floor(Math.random() * 3) + 1;
-                if (exportPercent > 100) exportPercent = 100;
+        try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+            const response = await fetch('{{ route('admin.students.start-batch-export') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({
+                    format: selectedFormat,
+                    grade: grade,
+                    mode: mode,
+                    gender: gender,
+                    search: search,
+                }),
+            });
 
-                // Update UI values
-                if (bar) bar.style.width = exportPercent + '%';
-                if (floatBar) floatBar.style.width = exportPercent + '%';
-                if (percentageText) percentageText.innerText = exportPercent + '%';
-                if (floatPercentage) floatPercentage.innerText = exportPercent + '%';
+            const result = await response.json();
 
-                // Processed count simulation
-                const currentProcessed = Math.round((exportPercent / 100) * totalStudents);
-                if (counterText) counterText.innerText = `${currentProcessed.toLocaleString()} / ${totalStudents.toLocaleString()} Students`;
-
-                // Status updates based on percentage
-                if (exportPercent <= 10) {
-                    if (statusLabel) statusLabel.innerText = 'Preparing...';
-                    if (remainingTimeText) remainingTimeText.innerText = 'Calculating time...';
-                } else if (exportPercent <= 85) {
-                    if (statusLabel) statusLabel.innerText = 'Generating Documents...';
-                    // Estimate remaining time
-                    const secondsLeft = Math.round(((100 - exportPercent) / (exportPercent)) * 12);
-                    if (remainingTimeText) remainingTimeText.innerText = `~${secondsLeft > 0 ? secondsLeft : 1} seconds`;
-                } else if (exportPercent <= 95) {
-                    if (statusLabel) statusLabel.innerText = 'Compressing ZIP...';
-                    if (remainingTimeText) remainingTimeText.innerText = 'Compressing file structure...';
-                } else {
-                    if (statusLabel) statusLabel.innerText = 'Finalizing...';
-                    if (remainingTimeText) remainingTimeText.innerText = 'Preparing download payload...';
-                }
-            } else {
-                // Done!
-                clearInterval(exportInterval);
-                isExportRunning = false;
-
-                // Update completed state stats dynamically
-                const sizeLabel = document.getElementById('export-complete-size-label');
-                const sizeVal = document.getElementById('export-complete-size-val');
-                const filenameVal = document.getElementById('export-complete-filename-val');
-                const downloadBtnSpan = document.querySelector('#export-state-complete button span');
-
-                if (selectedFormat === 'pdf') {
-                    if (sizeLabel) sizeLabel.textContent = 'ZIP Size:';
-                    if (sizeVal) sizeVal.textContent = '186 MB';
-                    if (filenameVal) filenameVal.textContent = 'enrollment_forms_2026_pdf.zip';
-                    if (downloadBtnSpan) downloadBtnSpan.textContent = 'Download PDF ZIP';
-                } else {
-                    if (sizeLabel) sizeLabel.textContent = 'ZIP Size:';
-                    if (sizeVal) sizeVal.textContent = '186 MB';
-                    if (filenameVal) filenameVal.textContent = 'enrollment_forms_2026_docx.zip';
-                    if (downloadBtnSpan) downloadBtnSpan.textContent = 'Download DOCX ZIP';
-                }
-
-                // Transition to success screen
-                document.getElementById('export-state-progress').classList.add('hidden');
-                document.getElementById('export-state-complete').classList.remove('hidden');
-
-                // Hide floating indicator
-                const indicator = document.getElementById('export-floating-indicator');
-                if (indicator) indicator.classList.add('hidden');
-
-                // Trigger audio or browser notification
-                if (Notification.permission === "granted") {
-                    new Notification("Export Complete!", {
-                        body: `Enrollment Forms ${selectedFormat.toUpperCase()} has been compiled successfully.`,
-                        icon: '/favicon.ico'
-                    });
-                } else if (Notification.permission !== "denied") {
-                    Notification.requestPermission();
-                }
+            if (!response.ok || !result.success) {
+                alert(result.message || 'Failed to start document export.');
+                closeBatchExportModal();
+                return;
             }
-        }, 150);
-    }
 
-    function triggerBackgroundDownload(url) {
-        const link = document.createElement('a');
-        link.href = url;
-        link.target = '_blank';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+            currentExportId = result.export_id;
+
+            if (exportInterval) clearInterval(exportInterval);
+
+            // Poll progress every 1.5 seconds
+            exportInterval = setInterval(async () => {
+                try {
+                    const statusRes = await fetch(`/students/export-status/${currentExportId}`);
+                    const data = await statusRes.json();
+
+                    exportPercent = data.progress_percentage || 0;
+
+                    if (bar) bar.style.width = exportPercent + '%';
+                    if (floatBar) floatBar.style.width = exportPercent + '%';
+                    if (percentageText) percentageText.innerText = exportPercent + '%';
+                    if (floatPercentage) floatPercentage.innerText = exportPercent + '%';
+
+                    if (counterText) {
+                        counterText.innerText = `${(data.processed_count || 0).toLocaleString()} / ${(data.total_count || 0).toLocaleString()} Students`;
+                    }
+
+                    if (data.status === 'processing' || data.status === 'pending') {
+                        if (statusLabel) statusLabel.innerText = data.status === 'pending' ? 'Preparing Queue...' : 'Generating Documents...';
+                        const remainingSecs = Math.max(1, Math.round(((data.total_count - data.processed_count) / Math.max(1, data.processed_count)) * 5));
+                        if (remainingTimeText) remainingTimeText.innerText = `~${remainingSecs} seconds`;
+                    } else if (data.status === 'completed') {
+                        clearInterval(exportInterval);
+                        isExportRunning = false;
+                        currentDownloadUrl = data.download_url;
+
+                        const sizeLabel = document.getElementById('export-complete-size-label');
+                        const sizeVal = document.getElementById('export-complete-size-val');
+                        const filenameVal = document.getElementById('export-complete-filename-val');
+                        const downloadBtnSpan = document.querySelector('#export-state-complete button span');
+
+                        if (sizeLabel) sizeLabel.textContent = 'File Size:';
+                        if (sizeVal) sizeVal.textContent = data.file_size_formatted || '0 B';
+                        if (filenameVal) filenameVal.textContent = data.file_name || 'export_archive.zip';
+                        if (downloadBtnSpan) downloadBtnSpan.textContent = `Download ${selectedFormat.toUpperCase()} ZIP`;
+
+                        document.getElementById('export-state-progress').classList.add('hidden');
+                        document.getElementById('export-state-complete').classList.remove('hidden');
+
+                        const indicator = document.getElementById('export-floating-indicator');
+                        if (indicator) indicator.classList.add('hidden');
+                    } else if (data.status === 'failed') {
+                        clearInterval(exportInterval);
+                        isExportRunning = false;
+                        alert('Export failed: ' + (data.error_message || 'Unknown error occurred.'));
+                        closeBatchExportModal();
+                    }
+                } catch (err) {
+                    console.error('Polling error:', err);
+                }
+            }, 1500);
+
+        } catch (err) {
+            console.error('Failed to start export job:', err);
+            alert('Failed to connect to export server.');
+            closeBatchExportModal();
+        }
     }
 
     function triggerActualZipDownload() {
-        const mode = document.getElementById('p-filter-mode')?.value || '';
-        const grade = document.getElementById('p-filter-grade')?.value || '';
-        const gender = document.getElementById('p-filter-gender')?.value || '';
-        const search = '{{ request('search', '') }}';
+        if (currentDownloadUrl) {
+            window.location.href = currentDownloadUrl;
+        } else {
+            const mode = document.getElementById('p-filter-mode')?.value || '';
+            const grade = document.getElementById('p-filter-grade')?.value || '';
+            const gender = document.getElementById('p-filter-gender')?.value || '';
+            const search = '{{ request('search', '') }}';
 
-        const params = new URLSearchParams();
-        if (mode) params.append('mode', mode);
-        if (grade) params.append('grade', grade);
-        if (gender) params.append('gender', gender);
-        if (search) params.append('search', search);
-        if (selectedFormat) params.append('format', selectedFormat);
+            const params = new URLSearchParams();
+            if (mode) params.append('mode', mode);
+            if (grade) params.append('grade', grade);
+            if (gender) params.append('gender', gender);
+            if (search) params.append('search', search);
+            if (selectedFormat) params.append('format', selectedFormat);
 
-        const queryString = params.toString() ? '?' + params.toString() : '';
-
-        window.location.href = '{{ route('admin.students.download-enrolment-forms-zip') }}' + queryString;
+            const queryString = params.toString() ? '?' + params.toString() : '';
+            window.location.href = '{{ route('admin.students.download-enrolment-forms-zip') }}' + queryString;
+        }
         closeBatchExportModal();
     }
 

@@ -197,6 +197,9 @@ Route::name('admin.')->group(function () {
         Route::get('/students/export-verification-db', [StudentExportController::class, 'exportVerificationDatabase'])->name('students.export-verification-db');
         Route::get('/students/download-docs-zip', [StudentExportController::class, 'downloadDocumentsZip'])->name('students.download-docs-zip');
         Route::get('/students/download-enrolment-forms-zip', [StudentExportController::class, 'downloadEnrolmentFormsZip'])->name('students.download-enrolment-forms-zip');
+        Route::post('/students/start-batch-export', [StudentExportController::class, 'startBatchExport'])->name('students.start-batch-export');
+        Route::get('/students/export-status/{id}', [StudentExportController::class, 'getBatchExportStatus'])->name('students.export-status');
+        Route::get('/students/download-batch-export/{id}', [StudentExportController::class, 'downloadBatchExportFile'])->name('students.download-batch-export');
         Route::get('/students/comparison', [StudentComparisonController::class, 'comparison'])->name('students.comparison');
         Route::post('/students/comparison/sync', [StudentComparisonController::class, 'syncComparisonCsv'])->name('students.comparison.sync');
         Route::post('/students/comparison/update-field', [StudentController::class, 'updateField'])->name('students.comparison.update-field');

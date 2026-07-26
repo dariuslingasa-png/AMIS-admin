@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\DocumentExport;
 use App\Models\EnrollmentApplicant;
 use App\Models\Student;
+use App\Jobs\ProcessBatchDocumentExportJob;
 use App\Support\EnrollmentStorage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use ZipArchive;
 use Dompdf\Dompdf;
 use Dompdf\Options;
@@ -583,5 +586,134 @@ class StudentExportController extends Controller
         }
 
         return response()->download($tempFile, $fileName);
+    }
+
+    /**
+     * Start an asynchronous background document export job with database progress tracking.
+     */
+    public function startBatchExport(Request $request)
+    {
+        $request->validate([
+            'format' => 'nullable|string|in:html,docx,pdf',
+            'grade' => 'nullable|string',
+            'mode' => 'nullable|string',
+            'gender' => 'nullable|string',
+            'search' => 'nullable|string',
+        ]);
+
+        $query = Student::query();
+
+        if ($request->filled('grade')) {
+            $query->where('grade_level', $request->grade);
+        }
+
+        if ($request->filled('gender')) {
+            $gender = strtolower($request->gender);
+            $query->whereHas('applicant', function ($q) use ($gender) {
+                if ($gender === 'male' || $gender === 'm') {
+                    $q->whereRaw('LOWER(gender) LIKE ?', ['m%']);
+                } elseif ($gender === 'female' || $gender === 'f') {
+                    $q->whereRaw('LOWER(gender) LIKE ?', ['f%']);
+                }
+            });
+        }
+
+        if ($request->filled('mode')) {
+            $mode = strtolower($request->mode);
+            $query->whereHas('applicant', function ($q) use ($mode) {
+                if (str_contains($mode, 'face') || str_contains($mode, 'f2f')) {
+                    $q->whereRaw('LOWER(learning_mode) LIKE ?', ['%face%'])
+                      ->orWhereRaw('LOWER(learning_mode) LIKE ?', ['%f2f%']);
+                } elseif (str_contains($mode, 'online') || str_contains($mode, 'odl')) {
+                    $q->whereRaw('LOWER(learning_mode) LIKE ?', ['%online%'])
+                      ->orWhereRaw('LOWER(learning_mode) LIKE ?', ['%odl%'])
+                      ->orWhereRaw('LOWER(learning_mode) LIKE ?', ['%flexible%']);
+                }
+            });
+        }
+
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            $query->where(function ($q) use ($search) {
+                $q->where('student_number', 'like', "%{$search}%")
+                  ->orWhere('last_name', 'like', "%{$search}%")
+                  ->orWhere('first_name', 'like', "%{$search}%");
+            });
+        }
+
+        $totalCount = $query->count();
+
+        if ($totalCount === 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No student records match the selected filters.',
+            ], 422);
+        }
+
+        $export = DocumentExport::create([
+            'user_id' => $request->user()?->id,
+            'document_type' => 'enrolment_form',
+            'format' => strtolower($request->input('format', 'html')),
+            'filter_grade' => $request->grade,
+            'filter_mode' => $request->mode,
+            'filter_gender' => $request->gender,
+            'filter_search' => $request->search,
+            'total_count' => $totalCount,
+            'processed_count' => 0,
+            'status' => 'pending',
+        ]);
+
+        // Dispatch background processing job (or sync fallback on shared hosting)
+        if (config('queue.default') !== 'sync') {
+            ProcessBatchDocumentExportJob::dispatch($export);
+        } else {
+            // Synchronous inline execution for local dev / synchronous cPanel worker
+            ProcessBatchDocumentExportJob::dispatchSync($export);
+        }
+
+        return response()->json([
+            'success' => true,
+            'export_id' => $export->id,
+            'total_count' => $totalCount,
+            'status' => $export->status,
+        ]);
+    }
+
+    /**
+     * Poll AJAX export status and progress percentage.
+     */
+    public function getBatchExportStatus($id)
+    {
+        $export = DocumentExport::findOrFail($id);
+
+        return response()->json([
+            'id' => $export->id,
+            'status' => $export->status,
+            'total_count' => $export->total_count,
+            'processed_count' => $export->processed_count,
+            'progress_percentage' => $export->progress_percentage,
+            'file_name' => $export->file_name,
+            'file_size_formatted' => $export->formatted_file_size,
+            'error_message' => $export->error_message,
+            'download_url' => $export->status === 'completed' ? route('admin.students.download-batch-export', ['id' => $export->id]) : null,
+        ]);
+    }
+
+    /**
+     * Download completed export file from public/exports storage.
+     */
+    public function downloadBatchExportFile($id)
+    {
+        $export = DocumentExport::findOrFail($id);
+
+        if ($export->status !== 'completed' || empty($export->file_path)) {
+            return back()->with('error', 'The document export has not finished or failed.');
+        }
+
+        if (!Storage::disk('public')->exists($export->file_path)) {
+            return back()->with('error', 'The generated export file could not be found on the server.');
+        }
+
+        return Storage::disk('public')->download($export->file_path, $export->file_name);
     }
 }
