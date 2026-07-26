@@ -501,75 +501,10 @@ class StudentExportController extends Controller
             return back()->with('error', 'No student records found matching the selected filters.');
         }
 
-        $format = strtolower($request->input('format', 'pdf'));
+        $format = strtolower($request->input('format', 'html'));
 
-        // High-Speed Single-Pass PDF Download (20s vs 198s loop timeout)
-        if ($format === 'pdf') {
-            $combinedHtml = '';
-            foreach ($students as $index => $student) {
-                $appl = $student->applicant;
-                if (! $appl) {
-                    continue;
-                }
-
-                $siblings = $appl->user_id ? ($allSiblings[$appl->user_id] ?? collect())->reject(fn ($a) => $a->id === $appl->id) : collect();
-                $singleHtml = view('admin.students.print-enrolment-form', [
-                    'student' => $student,
-                    'applicant' => $appl,
-                    'siblings' => $siblings,
-                    'isPdf' => true,
-                ])->render();
-
-                if ($index > 0) {
-                    $combinedHtml .= '<div style="page-break-before: always; break-before: page;"></div>';
-                }
-                $combinedHtml .= $singleHtml;
-            }
-
-            // Inline images as base64 to avoid Dompdf outbound HTTP hangs
-            $processedHtml = preg_replace_callback('/<img[^>]+src=["\']([^"\']+)["\']/i', function($m) {
-                $url = $m[1];
-                $absolutePath = null;
-                
-                if (str_contains($url, 'storage/')) {
-                    $relativePath = explode('storage/', $url)[1];
-                    $absolutePath = storage_path('app/public/' . $relativePath);
-                } elseif (str_contains($url, 'images/')) {
-                    $relativePath = explode('images/', $url)[1];
-                    $absolutePath = public_path('images/' . $relativePath);
-                }
-                
-                if ($absolutePath && file_exists($absolutePath)) {
-                    $type = pathinfo($absolutePath, PATHINFO_EXTENSION);
-                    $data = @file_get_contents($absolutePath);
-                    if ($data) {
-                        $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
-                        return str_replace($url, $base64, $m[0]);
-                    }
-                }
-                return $m[0];
-            }, $combinedHtml);
-
-            $options = new Options();
-            $options->set('isHtml5ParserEnabled', true);
-            $options->set('isRemoteEnabled', false);
-            $dompdf = new Dompdf($options);
-            $dompdf->loadHtml($processedHtml);
-            $dompdf->setPaper('A4', 'portrait');
-            $dompdf->render();
-            $pdfContent = $dompdf->output();
-
-            $pdfFileName = 'Enrollment_Forms_SY_2026-2027_'.($request->filled('grade') ? str_replace(' ', '_', $request->grade) : 'All_Grades').'_'.date('Ymd_His').'.pdf';
-            $tempPdfFile = tempnam(sys_get_temp_dir(), 'pdf');
-            file_put_contents($tempPdfFile, $pdfContent);
-
-            return response()->download($tempPdfFile, $pdfFileName, [
-                'Content-Type' => 'application/pdf',
-            ]);
-        }
-
-        // DOCX ZIP Archive Download (6.6s)
         $zip = new ZipArchive;
+        $extName = ($format === 'docx') ? 'docx' : 'html';
         $fileName = 'Enrollment_Forms_SY_2026-2027_'.($request->filled('grade') ? str_replace(' ', '_', $request->grade) : 'All_Grades').'_'.date('Ymd_His').'.zip';
         $tempFile = tempnam(sys_get_temp_dir(), 'zip');
 
@@ -578,6 +513,7 @@ class StudentExportController extends Controller
         }
 
         $filesAdded = 0;
+        $allSiblings = EnrollmentApplicant::whereIn('user_id', $students->pluck('applicant.user_id')->filter()->unique())->get()->groupBy('user_id');
 
         foreach ($students as $student) {
             $appl = $student->applicant;
@@ -620,15 +556,18 @@ class StudentExportController extends Controller
                     'student' => $student,
                     'applicant' => $appl,
                     'siblings' => $siblings,
-                    'isPdf' => true,
                 ])->render();
 
-                $wordHtml = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">';
-                $wordHtml .= '<head><meta charset="utf-8"><title>Enrollment Form</title>';
-                $wordHtml .= '<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>90</w:Zoom></w:WordDocument></xml><![endif]--></head>';
-                $wordHtml .= '<body>' . $enrolmentHtml . '</body></html>';
+                if ($format === 'docx') {
+                    $wordHtml = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">';
+                    $wordHtml .= '<head><meta charset="utf-8"><title>Enrollment Form</title>';
+                    $wordHtml .= '<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>90</w:Zoom></w:WordDocument></xml><![endif]--></head>';
+                    $wordHtml .= '<body>' . $enrolmentHtml . '</body></html>';
 
-                $zip->addFromString("{$basePath}/Enrollment Application Form - {$studentFolderName}.docx", $wordHtml);
+                    $zip->addFromString("{$basePath}/Enrollment Application Form - {$studentFolderName}.docx", $wordHtml);
+                } else {
+                    $zip->addFromString("{$basePath}/Enrollment Application Form - {$studentFolderName}.html", $enrolmentHtml);
+                }
                 $filesAdded++;
             } catch (\Exception $e) {
                 Log::warning("Failed to render enrolment form for student {$student->id}: ".$e->getMessage());
