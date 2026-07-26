@@ -829,7 +829,7 @@
 
         const queryString = params.toString() ? '?' + params.toString() : '';
 
-        triggerBackgroundDownload('{{ route('admin.students.download-enrolment-forms-zip') }}' + queryString);
+        window.location.href = '{{ route('admin.students.download-enrolment-forms-zip') }}' + queryString;
         closeBatchExportModal();
     }
 

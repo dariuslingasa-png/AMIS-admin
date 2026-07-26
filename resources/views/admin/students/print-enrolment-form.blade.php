@@ -655,6 +655,7 @@
 </head>
 <body>
 
+    @if(!($isPdf ?? false))
     <!-- Page Skeleton Loading Overlay (Fades out when fully loaded) -->
     <div id="print-skeleton-overlay" style="position: fixed; inset: 0; background: #f8fafc; z-index: 99999; overflow: hidden; padding: 20px; transition: opacity 0.25s ease;">
         <div style="max-width: 1000px; margin: 0 auto;">
@@ -816,8 +817,7 @@
             </a>
         </div>
     </div>
-
-    @include('admin.students.partials.print.enrolment-form-body', [
+    @endif @include('admin.students.partials.print.enrolment-form-body', [
         'student'    => $student,
         'applicant'  => $applicant,
         'siblings'   => $siblings,
