@@ -531,13 +531,15 @@
                     </div>
                 </div>
 
-                <!-- Range Selection -->
+                <!-- Grade Level & Target Range -->
                 <div>
-                    <label class="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Range</label>
-                    <label class="flex items-center gap-2 cursor-pointer bg-slate-50 p-3 rounded-xl border border-slate-100">
-                        <input type="checkbox" checked disabled class="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500">
-                        <span class="text-xs font-extrabold text-slate-800">All Students ({{ number_format($totalStudents) }})</span>
-                    </label>
+                    <label class="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Grade Level Target</label>
+                    <select id="modal-grade-select" onchange="syncModalGradeWithFilter()" class="w-full h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-extrabold text-slate-800 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 cursor-pointer">
+                        <option value="">All Grade Levels ({{ number_format($totalStudents) }} Students)</option>
+                        @foreach (['Kinder 1', 'Kinder 2', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'] as $g)
+                            <option value="{{ $g }}">{{ $g }} (Export {{ $g }} Only)</option>
+                        @endforeach
+                    </select>
                 </div>
 
                 <div class="border-t border-b border-dashed border-slate-200 py-3 text-xs text-slate-500 font-semibold space-y-1">
@@ -851,7 +853,7 @@
 
     async function startBackgroundExport() {
         const mode = document.getElementById('p-filter-mode')?.value || '';
-        const grade = document.getElementById('p-filter-grade')?.value || '';
+        const grade = document.getElementById('modal-grade-select')?.value || document.getElementById('p-filter-grade')?.value || '';
         const gender = document.getElementById('p-filter-gender')?.value || '';
         const search = '{{ request('search', '') }}';
 
@@ -1064,6 +1066,14 @@
         const grade = document.getElementById('batch-grade-select')?.value || 'Grade 1';
         const format = document.getElementById('batch-format-select')?.value || 'pdf';
         quickExportGradeZip(grade, format);
+    }
+
+    function syncModalGradeWithFilter() {
+        const modalGradeSelect = document.getElementById('modal-grade-select');
+        const filterGrade = document.getElementById('p-filter-grade');
+        if (modalGradeSelect && filterGrade) {
+            filterGrade.value = modalGradeSelect.value;
+        }
     }
     </script>
 </x-admin-layout>
