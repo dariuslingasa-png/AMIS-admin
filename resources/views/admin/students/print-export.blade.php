@@ -390,72 +390,6 @@
                 </div>
             </div>
 
-            <!-- BATCH DOWNLOAD BY GRADE LEVEL -->
-            <div class="mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
-                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-100 pb-4 mb-5">
-                    <div class="flex items-center gap-3">
-                        <div class="p-2.5 rounded-xl bg-emerald-100 text-emerald-800">
-                            <i data-lucide="layers" class="h-5 w-5"></i>
-                        </div>
-                        <div>
-                            <h3 class="text-sm font-black text-slate-900 uppercase tracking-wide">Batch Download by Grade Level</h3>
-                            <p class="text-xs text-slate-500 font-medium">Export enrollment forms grouped into ZIP archives for each specific grade level.</p>
-                        </div>
-                    </div>
-
-                    <!-- Filter Controls -->
-                    <div class="flex flex-wrap items-center gap-3">
-                        <div class="flex items-center gap-2">
-                            <label class="text-xs font-black uppercase text-slate-600">Grade:</label>
-                            <select id="batch-grade-select" class="h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-800 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 cursor-pointer">
-                                @foreach (['Kinder 1', 'Kinder 2', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'] as $grade)
-                                    <option value="{{ $grade }}">{{ $grade }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div class="flex items-center gap-2">
-                            <label class="text-xs font-black uppercase text-slate-600">Format:</label>
-                            <select id="batch-format-select" class="h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-800 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 cursor-pointer">
-                                <option value="pdf">PDF (Pixel-Perfect)</option>
-                                <option value="jpg">JPG (Image Zip)</option>
-                                <option value="docx">DOCX (Word Document)</option>
-                                <option value="html">HTML</option>
-                            </select>
-                        </div>
-
-                        <button type="button" onclick="exportSelectedGradeBatch()" class="h-10 inline-flex items-center gap-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 px-4 text-xs font-black text-white shadow-md transition cursor-pointer">
-                            <i data-lucide="download" class="h-4 w-4"></i>
-                            <span>Export Selected Grade ZIP</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- GRADE CARDS GRID -->
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3">
-                    @foreach (['Kinder 1', 'Kinder 2', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'] as $gLevel)
-                        @php
-                            $gShort = \App\Models\Student::abbreviateGrade($gLevel);
-                        @endphp
-                        <div class="group relative flex flex-col justify-between rounded-xl border border-slate-200 bg-slate-50/50 p-3 transition hover:border-emerald-500 hover:bg-emerald-50/30 hover:shadow-md">
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="text-xs font-black text-slate-900 uppercase tracking-wider">{{ $gShort }}</span>
-                                <span class="text-[9px] font-bold text-slate-500 bg-slate-200/60 px-1.5 py-0.5 rounded-md">{{ $gLevel }}</span>
-                            </div>
-
-                            <div class="space-y-1.5 mt-2">
-                                <button type="button" onclick="quickExportGradeZip('{{ $gLevel }}', 'pdf')" class="w-full h-7.5 flex items-center justify-center gap-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-[10px] font-black text-white transition cursor-pointer shadow-2xs">
-                                    <i data-lucide="file-text" class="h-3 w-3"></i>
-                                    <span>ZIP (PDF)</span>
-                                </button>
-                                <button type="button" onclick="quickExportGradeZip('{{ $gLevel }}', 'jpg')" class="w-full h-7.5 flex items-center justify-center gap-1 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-[10px] font-extrabold text-slate-700 transition cursor-pointer">
-                                    <i data-lucide="image" class="h-3 w-3 text-emerald-600"></i>
-                                    <span>ZIP (JPG)</span>
-                                </button>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
             </div>
         </x-card>
     </div>
@@ -531,15 +465,15 @@
                     </div>
                 </div>
 
-                <!-- Grade Level & Target Range -->
-                <div>
-                    <label class="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Grade Level Target</label>
-                    <select id="modal-grade-select" onchange="syncModalGradeWithFilter()" class="w-full h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-extrabold text-slate-800 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 cursor-pointer">
-                        <option value="">All Grade Levels ({{ number_format($totalStudents) }} Students)</option>
-                        @foreach (['Kinder 1', 'Kinder 2', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'] as $g)
-                            <option value="{{ $g }}">{{ $g }} (Export {{ $g }} Only)</option>
-                        @endforeach
-                    </select>
+                <!-- Active Target Scope Indicator -->
+                <div class="rounded-xl bg-slate-50 p-3.5 border border-slate-100 flex items-center justify-between">
+                    <span class="text-xs font-extrabold text-slate-700 flex items-center gap-2">
+                        <i data-lucide="filter" class="w-4 h-4 text-emerald-600"></i>
+                        <span>Target Scope:</span>
+                    </span>
+                    <span id="modal-active-scope-badge" class="text-xs font-black text-emerald-800 bg-emerald-100/80 px-2.5 py-1 rounded-lg">
+                        All Grade Levels
+                    </span>
                 </div>
 
                 <div class="border-t border-b border-dashed border-slate-200 py-3 text-xs text-slate-500 font-semibold space-y-1">
@@ -787,6 +721,16 @@
             document.getElementById('export-state-config').classList.remove('hidden');
             document.getElementById('export-state-progress').classList.add('hidden');
             document.getElementById('export-state-complete').classList.add('hidden');
+
+            const gradeVal = document.getElementById('p-filter-grade')?.value || '';
+            const modeVal = document.getElementById('p-filter-mode')?.value || '';
+            const scopeBadge = document.getElementById('modal-active-scope-badge');
+            if (scopeBadge) {
+                let label = gradeVal ? gradeVal : 'All Grade Levels';
+                if (modeVal) label += ` (${modeVal})`;
+                scopeBadge.innerText = label;
+            }
+
             if (window.lucide) window.lucide.createIcons();
         }
     }
