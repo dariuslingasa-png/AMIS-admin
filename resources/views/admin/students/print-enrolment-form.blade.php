@@ -402,7 +402,7 @@
 
         .grid-5-col {
             display: grid;
-            grid-template-columns: 2.6fr 2.6fr 2.4fr 0.6fr 1.8fr;
+            grid-template-columns: 2.9fr 2.9fr 2.6fr 0.6fr 1.0fr;
             gap: 12px;
         }
 
@@ -836,26 +836,28 @@
             window.print();
         }
 
-        function fitAddressFontSizes() {
-            document.querySelectorAll('.address-auto-fit').forEach(el => {
+        function fitAllFormFontSizes() {
+            document.querySelectorAll('.input-line, .lrn-input, .p2-full-line, .auto-fit-field, .address-auto-fit').forEach(el => {
                 const text = (el.value || el.innerText || '').trim();
                 if (!text) return;
                 
-                let size = 14;
-                el.style.fontSize = size + 'px';
-                el.style.fontWeight = '700';
                 el.style.whiteSpace = 'nowrap';
+                const style = window.getComputedStyle(el);
+                let size = parseFloat(style.fontSize) || 14;
+                const minSize = 8.5;
 
                 const containerWidth = el.clientWidth || el.getBoundingClientRect().width;
                 if (containerWidth <= 0) return;
 
                 const dummyCanvas = document.createElement('canvas');
                 const ctx = dummyCanvas.getContext('2d');
+                const fontWeight = style.fontWeight || '700';
+                const fontFamily = style.fontFamily || 'Inter, sans-serif';
 
-                while (size > 9) {
-                    ctx.font = `700 ${size}px Inter, sans-serif`;
+                while (size > minSize) {
+                    ctx.font = `${fontWeight} ${size}px ${fontFamily}`;
                     const textWidth = ctx.measureText(text).width;
-                    if (textWidth <= containerWidth - 8) {
+                    if (textWidth <= containerWidth - 4) {
                         break;
                     }
                     size -= 0.5;
@@ -863,12 +865,12 @@
                 el.style.fontSize = size + 'px';
             });
         }
-        document.addEventListener('DOMContentLoaded', fitAddressFontSizes);
-        window.addEventListener('load', fitAddressFontSizes);
-        setTimeout(fitAddressFontSizes, 100);
+        document.addEventListener('DOMContentLoaded', fitAllFormFontSizes);
+        window.addEventListener('load', fitAllFormFontSizes);
+        setTimeout(fitAllFormFontSizes, 100);
 
         async function downloadSingleFormDocx() {
-            fitAddressFontSizes();
+            fitAllFormFontSizes();
             const pages = document.querySelectorAll('.paper-container');
             if (!pages || pages.length === 0) return;
 

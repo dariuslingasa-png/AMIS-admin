@@ -120,6 +120,24 @@
         }
         return "font-size: 14px; font-weight: 700; white-space: nowrap;";
     };
+
+    // Grade Level Shortener Helper (e.g., "GRADE 1" -> "G1", "KINDER 1" -> "K1")
+    $formatGradeLevelShort = function($gradeStr) {
+        $g = mb_strtoupper(trim($gradeStr ?? ''));
+        if (preg_match('/GRADE\s*(\d+)/i', $g, $m)) {
+            return 'G' . $m[1];
+        }
+        if (preg_match('/KINDER\s*(\d+)/i', $g, $m)) {
+            return 'K' . $m[1];
+        }
+        if (str_contains($g, 'NURSERY')) {
+            return 'N1';
+        }
+        if (str_contains($g, 'KINDER')) {
+            return 'K1';
+        }
+        return $g;
+    };
 @endphp
 
 @if($isPdf ?? false)
@@ -249,8 +267,12 @@
                 <span class="label-text" style="text-align: center;">Sex</span>
             </div>
             <div>
-                <input type="text" class="input-line" value="{{ mb_strtoupper($student->grade_level ?? $app->grade_level ?? '') }}" style="{{ $getDynamicStyle($student->grade_level ?? $app->grade_level ?? '', '0.82rem', '0.72rem', '0.62rem', '0.52rem', 8, 14, 20) }}">
-                <span class="label-text">Grade Level</span>
+                @php
+                    $rawGrade = $student->grade_level ?? $app->grade_level ?? '';
+                    $shortGrade = $formatGradeLevelShort($rawGrade);
+                @endphp
+                <input type="text" class="input-line auto-fit-field" value="{{ $shortGrade }}" style="text-align: center;">
+                <span class="label-text" style="text-align: center; line-height: 1.05;">GRADE<br>LEVEL</span>
             </div>
         </div>
     </div>
