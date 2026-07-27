@@ -279,8 +279,8 @@ class StudentExportController extends Controller
 
     public function downloadDocumentsZip(Request $request)
     {
-        ini_set('max_execution_time', 300);
-        ini_set('memory_limit', '1024M');
+        ini_set('max_execution_time', 600);
+        ini_set('memory_limit', '2048M');
 
         $isTeacherAdminViewer = $request->user()?->isTeacherAdminViewer() ?? false;
         $visibleGrades = $isTeacherAdminViewer ? $request->user()->adminVisibleGradeLevels() : [];
@@ -338,9 +338,8 @@ class StudentExportController extends Controller
             return $query;
         };
 
-        $students = $applyFilters(Student::with(['applicant', 'studentSection.section.subjects']))->get();
-
-        if ($students->isEmpty()) {
+        $baseCount = $applyFilters(Student::query())->count();
+        if ($baseCount === 0) {
             return back()->with('error', 'No student records found matching the selected filters.');
         }
 
@@ -354,78 +353,83 @@ class StudentExportController extends Controller
 
         $filesAdded = 0;
 
-        foreach ($students as $student) {
-            $appl = $student->applicant;
-            if (! $appl) {
-                continue;
-            }
+        $applyFilters(Student::with(['applicant', 'studentSection.section.subjects']))
+            ->chunk(50, function ($students) use (&$zip, &$filesAdded) {
+                foreach ($students as $student) {
+                    $appl = $student->applicant;
+                    if (! $appl) {
+                        continue;
+                    }
 
-            $gradeFolder = trim($student->grade_level ?: 'Grade 1');
-            if (preg_match('/^Grade\s*(\d+)$/i', $gradeFolder, $m)) {
-                $gShort = 'G'.$m[1];
-            } elseif (preg_match('/^Kinder\s*(\d+)$/i', $gradeFolder, $m)) {
-                $gShort = 'K'.$m[1];
-            } else {
-                $gShort = $gradeFolder;
-            }
+                    $gradeFolder = trim($student->grade_level ?: 'Grade 1');
+                    if (preg_match('/^Grade\s*(\d+)$/i', $gradeFolder, $m)) {
+                        $gShort = 'G'.$m[1];
+                    } elseif (preg_match('/^Kinder\s*(\d+)$/i', $gradeFolder, $m)) {
+                        $gShort = 'K'.$m[1];
+                    } else {
+                        $gShort = $gradeFolder;
+                    }
 
-            $learningMode = strtolower($appl->learning_mode ?? '');
-            $isF2f = str_contains($learningMode, 'face') || str_contains($learningMode, 'f2f');
+                    $learningMode = strtolower($appl->learning_mode ?? '');
+                    $isF2f = str_contains($learningMode, 'face') || str_contains($learningMode, 'f2f');
 
-            $lastName = mb_strtoupper(trim($appl->last_name ?? $student->last_name ?? 'STUDENT'));
-            $firstName = mb_strtoupper(trim($appl->first_name ?? $student->first_name ?? 'PROFILE'));
-            $studentFolderName = trim("{$lastName} {$firstName}");
-            if (empty($studentFolderName)) {
-                $studentFolderName = 'STUDENT '.$student->student_number;
-            }
+                    $lastName = mb_strtoupper(trim($appl->last_name ?? $student->last_name ?? 'STUDENT'));
+                    $firstName = mb_strtoupper(trim($appl->first_name ?? $student->first_name ?? 'PROFILE'));
+                    $studentFolderName = trim("{$lastName} {$firstName}");
+                    if (empty($studentFolderName)) {
+                        $studentFolderName = 'STUDENT '.$student->student_number;
+                    }
 
-            if ($isF2f) {
-                $basePath = "{$gShort}/F2F/{$studentFolderName}";
-            } else {
-                $shiftFolder = '1ST SHIFT';
-                if (str_contains($learningMode, '2nd') || str_contains($learningMode, 'second') || str_contains($learningMode, 'shift 2')) {
-                    $shiftFolder = '2ND SHIFT';
+                    if ($isF2f) {
+                        $basePath = "{$gShort}/F2F/{$studentFolderName}";
+                    } else {
+                        $shiftFolder = '1ST SHIFT';
+                        if (str_contains($learningMode, '2nd') || str_contains($learningMode, 'second') || str_contains($learningMode, 'shift 2')) {
+                            $shiftFolder = '2ND SHIFT';
+                        }
+                        $basePath = "{$gShort}/ODL/{$shiftFolder}/{$studentFolderName}";
+                    }
+
+                    try {
+                        $siblings = $appl->user_id ? EnrollmentApplicant::where('user_id', $appl->user_id)->where('id', '!=', $appl->id)->get() : [];
+                        $enrolmentHtml = view('admin.students.print-enrolment-form', [
+                            'student' => $student,
+                            'applicant' => $appl,
+                            'siblings' => $siblings,
+                            'isPdf' => true,
+                        ])->render();
+                        $zip->addFromString("{$basePath}/Enrollment Application Form - {$studentFolderName}.html", $enrolmentHtml);
+                        $filesAdded++;
+                        unset($enrolmentHtml, $siblings);
+                    } catch (\Exception $e) {
+                        Log::warning("Failed to render enrolment form for student {$student->id}: ".$e->getMessage());
+                    }
+
+                    $docTypes = [
+                        '2x2_Photo' => $appl->photo_2x2_url,
+                        'Birth_Certificate' => $appl->birth_cert_url,
+                        'Report_Card' => $appl->report_card_url,
+                        'Marriage_Contract' => $appl->marriage_contract_url,
+                        'Medical_Record' => $appl->medical_record_url,
+                        'Affidavit' => $appl->affidavit_url,
+                    ];
+
+                    foreach ($docTypes as $label => $relativeUrl) {
+                        if (empty($relativeUrl)) {
+                            continue;
+                        }
+
+                        $absolutePath = EnrollmentStorage::getAbsolutePath($relativeUrl);
+                        if ($absolutePath && file_exists($absolutePath)) {
+                            $ext = pathinfo($absolutePath, PATHINFO_EXTENSION);
+                            $zipPath = $basePath.'/'.$studentFolderName.' - '.$label.($ext ? '.'.$ext : '');
+                            $zip->addFile($absolutePath, $zipPath);
+                            $filesAdded++;
+                        }
+                    }
                 }
-                $basePath = "{$gShort}/ODL/{$shiftFolder}/{$studentFolderName}";
-            }
-
-            try {
-                $siblings = $appl->user_id ? EnrollmentApplicant::where('user_id', $appl->user_id)->where('id', '!=', $appl->id)->get() : [];
-                $enrolmentHtml = view('admin.students.print-enrolment-form', [
-                    'student' => $student,
-                    'applicant' => $appl,
-                    'siblings' => $siblings,
-                    'isPdf' => true,
-                ])->render();
-                $zip->addFromString("{$basePath}/Enrollment Application Form - {$studentFolderName}.html", $enrolmentHtml);
-                $filesAdded++;
-            } catch (\Exception $e) {
-                Log::warning("Failed to render enrolment form for student {$student->id}: ".$e->getMessage());
-            }
-
-            $docTypes = [
-                '2x2_Photo' => $appl->photo_2x2_url,
-                'Birth_Certificate' => $appl->birth_cert_url,
-                'Report_Card' => $appl->report_card_url,
-                'Marriage_Contract' => $appl->marriage_contract_url,
-                'Medical_Record' => $appl->medical_record_url,
-                'Affidavit' => $appl->affidavit_url,
-            ];
-
-            foreach ($docTypes as $label => $relativeUrl) {
-                if (empty($relativeUrl)) {
-                    continue;
-                }
-
-                $absolutePath = EnrollmentStorage::getAbsolutePath($relativeUrl);
-                if ($absolutePath && file_exists($absolutePath)) {
-                    $ext = pathinfo($absolutePath, PATHINFO_EXTENSION);
-                    $zipPath = $basePath.'/'.$studentFolderName.' - '.$label.($ext ? '.'.$ext : '');
-                    $zip->addFile($absolutePath, $zipPath);
-                    $filesAdded++;
-                }
-            }
-        }
+                gc_collect_cycles();
+            });
 
         $zip->close();
 
@@ -440,8 +444,8 @@ class StudentExportController extends Controller
 
     public function downloadEnrolmentFormsZip(Request $request)
     {
-        ini_set('max_execution_time', 300);
-        ini_set('memory_limit', '1024M');
+        ini_set('max_execution_time', 600);
+        ini_set('memory_limit', '2048M');
 
         $isTeacherAdminViewer = $request->user()?->isTeacherAdminViewer() ?? false;
         $visibleGrades = $isTeacherAdminViewer ? $request->user()->adminVisibleGradeLevels() : [];
@@ -499,9 +503,8 @@ class StudentExportController extends Controller
             return $query;
         };
 
-        $students = $applyFilters(Student::with(['applicant', 'studentSection.section']))->get();
-
-        if ($students->isEmpty()) {
+        $baseCount = $applyFilters(Student::query())->count();
+        if ($baseCount === 0) {
             return back()->with('error', 'No student records found matching the selected filters.');
         }
 
@@ -517,79 +520,88 @@ class StudentExportController extends Controller
         }
 
         $filesAdded = 0;
-        $allSiblings = EnrollmentApplicant::whereIn('user_id', $students->pluck('applicant.user_id')->filter()->unique())->get()->groupBy('user_id');
 
-        foreach ($students as $student) {
-            $appl = $student->applicant;
-            if (! $appl) {
-                continue;
-            }
+        $applyFilters(Student::with(['applicant', 'studentSection.section']))
+            ->chunk(50, function ($students) use (&$zip, &$filesAdded, $format) {
+                $userCache = $students->pluck('applicant.user_id')->filter()->unique();
+                $allSiblings = EnrollmentApplicant::whereIn('user_id', $userCache)->get()->groupBy('user_id');
 
-            $lastName = mb_strtoupper(trim($appl->last_name ?? $student->last_name ?? 'STUDENT'));
-            $firstName = mb_strtoupper(trim($appl->first_name ?? $student->first_name ?? 'PROFILE'));
-            $studentFolderName = trim("{$lastName} {$firstName}");
-            if (empty($studentFolderName)) {
-                $studentFolderName = 'STUDENT '.$student->student_number;
-            }
+                foreach ($students as $student) {
+                    $appl = $student->applicant;
+                    if (! $appl) {
+                        continue;
+                    }
 
-            $gradeFolder = trim($student->grade_level ?: 'Grade 1');
-            if (preg_match('/^Grade\s*(\d+)$/i', $gradeFolder, $m)) {
-                $gShort = 'G'.$m[1];
-            } elseif (preg_match('/^Kinder\s*(\d+)$/i', $gradeFolder, $m)) {
-                $gShort = 'K'.$m[1];
-            } else {
-                $gShort = $gradeFolder;
-            }
+                    $lastName = mb_strtoupper(trim($appl->last_name ?? $student->last_name ?? 'STUDENT'));
+                    $firstName = mb_strtoupper(trim($appl->first_name ?? $student->first_name ?? 'PROFILE'));
+                    $studentFolderName = trim("{$lastName} {$firstName}");
+                    if (empty($studentFolderName)) {
+                        $studentFolderName = 'STUDENT '.$student->student_number;
+                    }
 
-            $learningMode = strtolower($appl->learning_mode ?? '');
-            $isF2f = str_contains($learningMode, 'face') || str_contains($learningMode, 'f2f');
+                    $gradeFolder = trim($student->grade_level ?: 'Grade 1');
+                    if (preg_match('/^Grade\s*(\d+)$/i', $gradeFolder, $m)) {
+                        $gShort = 'G'.$m[1];
+                    } elseif (preg_match('/^Kinder\s*(\d+)$/i', $gradeFolder, $m)) {
+                        $gShort = 'K'.$m[1];
+                    } else {
+                        $gShort = $gradeFolder;
+                    }
 
-            if ($isF2f) {
-                $basePath = "{$gShort}/F2F";
-            } else {
-                $shiftFolder = '1ST SHIFT';
-                if (str_contains($learningMode, '2nd') || str_contains($learningMode, 'second') || str_contains($learningMode, 'shift 2')) {
-                    $shiftFolder = '2ND SHIFT';
+                    $learningMode = strtolower($appl->learning_mode ?? '');
+                    $isF2f = str_contains($learningMode, 'face') || str_contains($learningMode, 'f2f');
+
+                    if ($isF2f) {
+                        $basePath = "{$gShort}/F2F";
+                    } else {
+                        $shiftFolder = '1ST SHIFT';
+                        if (str_contains($learningMode, '2nd') || str_contains($learningMode, 'second') || str_contains($learningMode, 'shift 2')) {
+                            $shiftFolder = '2ND SHIFT';
+                        }
+                        $basePath = "{$gShort}/ODL/{$shiftFolder}";
+                    }
+
+                    try {
+                        $siblings = $appl->user_id ? ($allSiblings[$appl->user_id] ?? collect())->reject(fn ($a) => $a->id === $appl->id) : collect();
+                        $enrolmentHtml = view('admin.students.print-enrolment-form', [
+                            'student' => $student,
+                            'applicant' => $appl,
+                            'siblings' => $siblings,
+                            'isPdf' => true,
+                        ])->render();
+
+                        if ($format === 'pdf') {
+                            $options = new Options();
+                            $options->set('isHtml5ParserEnabled', true);
+                            $options->set('isRemoteEnabled', true);
+                            $options->set('defaultFont', 'sans-serif');
+                            $dompdf = new Dompdf($options);
+                            $dompdf->loadHtml($enrolmentHtml);
+                            $dompdf->setPaper('A4', 'portrait');
+                            $dompdf->render();
+                            $pdfContent = $dompdf->output();
+
+                            $zip->addFromString("{$basePath}/Enrollment Application Form - {$studentFolderName}.pdf", $pdfContent);
+                            unset($dompdf, $pdfContent);
+                        } elseif ($format === 'docx') {
+                            $wordHtml = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">';
+                            $wordHtml .= '<head><meta charset="utf-8"><title>Enrollment Form</title>';
+                            $wordHtml .= '<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>90</w:Zoom></w:WordDocument></xml><![endif]--></head>';
+                            $wordHtml .= '<body>' . $enrolmentHtml . '</body></html>';
+
+                            $zip->addFromString("{$basePath}/Enrollment Application Form - {$studentFolderName}.docx", $wordHtml);
+                            unset($wordHtml);
+                        } else {
+                            $zip->addFromString("{$basePath}/Enrollment Application Form - {$studentFolderName}.html", $enrolmentHtml);
+                        }
+                        $filesAdded++;
+                        unset($enrolmentHtml, $siblings);
+                    } catch (\Exception $e) {
+                        Log::warning("Failed to render enrolment form for student {$student->id}: ".$e->getMessage());
+                    }
                 }
-                $basePath = "{$gShort}/ODL/{$shiftFolder}";
-            }
-
-            try {
-                $siblings = $appl->user_id ? ($allSiblings[$appl->user_id] ?? collect())->reject(fn ($a) => $a->id === $appl->id) : collect();
-                $enrolmentHtml = view('admin.students.print-enrolment-form', [
-                    'student' => $student,
-                    'applicant' => $appl,
-                    'siblings' => $siblings,
-                    'isPdf' => true,
-                ])->render();
-
-                if ($format === 'pdf') {
-                    $options = new Options();
-                    $options->set('isHtml5ParserEnabled', true);
-                    $options->set('isRemoteEnabled', true);
-                    $options->set('defaultFont', 'sans-serif');
-                    $dompdf = new Dompdf($options);
-                    $dompdf->loadHtml($enrolmentHtml);
-                    $dompdf->setPaper('A4', 'portrait');
-                    $dompdf->render();
-                    $pdfContent = $dompdf->output();
-
-                    $zip->addFromString("{$basePath}/Enrollment Application Form - {$studentFolderName}.pdf", $pdfContent);
-                } elseif ($format === 'docx') {
-                    $wordHtml = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">';
-                    $wordHtml .= '<head><meta charset="utf-8"><title>Enrollment Form</title>';
-                    $wordHtml .= '<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>90</w:Zoom></w:WordDocument></xml><![endif]--></head>';
-                    $wordHtml .= '<body>' . $enrolmentHtml . '</body></html>';
-
-                    $zip->addFromString("{$basePath}/Enrollment Application Form - {$studentFolderName}.docx", $wordHtml);
-                } else {
-                    $zip->addFromString("{$basePath}/Enrollment Application Form - {$studentFolderName}.html", $enrolmentHtml);
-                }
-                $filesAdded++;
-            } catch (\Exception $e) {
-                Log::warning("Failed to render enrolment form for student {$student->id}: ".$e->getMessage());
-            }
-        }
+                gc_collect_cycles();
+            });
 
         $zip->close();
 
