@@ -102,6 +102,24 @@
         }
         return "font-size: {$baseSize}; font-weight: 750;";
     };
+
+    // Specialized Auto Font-Size Helper for Address & Home Address (14px default down to 9px min)
+    $getAddressStyle = function($text) {
+        $len = mb_strlen(trim($text ?? ''));
+        if ($len > 85) {
+            return "font-size: 9px; font-weight: 700; white-space: nowrap;";
+        }
+        if ($len > 70) {
+            return "font-size: 9.5px; font-weight: 700; white-space: nowrap;";
+        }
+        if ($len > 55) {
+            return "font-size: 10.5px; font-weight: 700; white-space: nowrap;";
+        }
+        if ($len > 40) {
+            return "font-size: 12px; font-weight: 700; white-space: nowrap;";
+        }
+        return "font-size: 14px; font-weight: 700; white-space: nowrap;";
+    };
 @endphp
 
 @if($isPdf ?? false)
@@ -237,7 +255,7 @@
     </div>
 
     <div class="field-container" style="margin-top: 14px;">
-        <input type="text" class="input-line" value="{{ $fullAddress }}" spellcheck="false" style="{{ $getDynamicStyle($fullAddress, '0.92rem', '0.80rem', '0.70rem', '0.60rem', 32, 50, 68) }}">
+        <input type="text" class="input-line address-auto-fit" value="{{ $fullAddress }}" spellcheck="false" style="{{ $getAddressStyle($fullAddress) }}">
         <span class="label-text">Address</span>
     </div>
 
@@ -341,7 +359,7 @@
     @endphp
 
     <div class="field-container" style="margin-top: 14px;">
-        <input type="text" class="input-line" value="{{ $formattedHomeAddress }}" spellcheck="false" style="{{ $getDynamicStyle($formattedHomeAddress, '0.92rem', '0.80rem', '0.70rem', '0.60rem', 32, 50, 68) }}">
+        <input type="text" class="input-line address-auto-fit" value="{{ $formattedHomeAddress }}" spellcheck="false" style="{{ $getAddressStyle($formattedHomeAddress) }}">
         <span class="label-text">Home Address</span>
     </div>
 

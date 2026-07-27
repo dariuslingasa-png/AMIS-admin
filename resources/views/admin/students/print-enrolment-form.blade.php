@@ -825,12 +825,44 @@
             window.print();
         }
 
+        function fitAddressFontSizes() {
+            document.querySelectorAll('.address-auto-fit').forEach(el => {
+                const text = (el.value || el.innerText || '').trim();
+                if (!text) return;
+                
+                let size = 14;
+                el.style.fontSize = size + 'px';
+                el.style.fontWeight = '700';
+                el.style.whiteSpace = 'nowrap';
+
+                const containerWidth = el.clientWidth || el.getBoundingClientRect().width;
+                if (containerWidth <= 0) return;
+
+                const dummyCanvas = document.createElement('canvas');
+                const ctx = dummyCanvas.getContext('2d');
+
+                while (size > 9) {
+                    ctx.font = `700 ${size}px Inter, sans-serif`;
+                    const textWidth = ctx.measureText(text).width;
+                    if (textWidth <= containerWidth - 8) {
+                        break;
+                    }
+                    size -= 0.5;
+                }
+                el.style.fontSize = size + 'px';
+            });
+        }
+        document.addEventListener('DOMContentLoaded', fitAddressFontSizes);
+        window.addEventListener('load', fitAddressFontSizes);
+        setTimeout(fitAddressFontSizes, 100);
+
         async function downloadSingleFormDocx() {
+            fitAddressFontSizes();
             const pages = document.querySelectorAll('.paper-container');
             if (!pages || pages.length === 0) return;
 
             const btn = document.getElementById('btn-download-docx');
-            if (btn) btn.innerHTML = '<span>Generating DOCX...</span>';
+            if (btn) btn.disabled = true;
 
             if (typeof html2canvas === 'undefined') {
                 const script = document.createElement('script');
