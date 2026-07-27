@@ -1,6 +1,13 @@
 <div x-show="activeTab === 'documents'" class="space-y-6" x-cloak>
     <!-- Mandatory Registration Requirements -->
     <x-card title="Registration Requirements" subtitle="Verify mandatory certificates and documents submitted during enrollment">
+        <div class="mb-4 flex items-center justify-between gap-3">
+            <span class="text-xs font-bold text-slate-500">Verified & Uploaded Documents:</span>
+            <a href="{{ route('admin.students.download-docs-zip', ['search' => $student->student_number]) }}" download class="inline-flex h-9 items-center gap-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white px-3.5 text-xs font-extrabold shadow-sm transition">
+                <i data-lucide="archive" class="h-4 w-4"></i>
+                <span>Download Documents ZIP (2x2, Birth Cert, Form 138, etc.)</span>
+            </a>
+        </div>
         @if(isset($isRequirementsComplete) && $isRequirementsComplete)
             <div class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 dark:bg-emerald-950/30 p-3.5 flex items-center justify-between gap-3 text-emerald-900 dark:text-emerald-200">
                 <div class="flex items-center gap-2 text-xs font-bold">

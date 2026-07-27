@@ -342,10 +342,16 @@
 
             <!-- Modal Footer Actions (Clean soft colors, NO black blocks) -->
             <div class="mt-4 flex items-center justify-between gap-2 border-t border-slate-100 dark:border-slate-800 pt-4">
-                <button type="button" onclick="copyCombinedCredentials()" class="inline-flex h-9 items-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 px-3.5 text-xs font-bold text-emerald-800 hover:bg-emerald-100 transition cursor-pointer shadow-sm">
-                    <i data-lucide="copy-check" class="h-4 w-4 text-emerald-600"></i>
-                    <span>Copy Both</span>
-                </button>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="copyCombinedCredentials()" class="inline-flex h-9 items-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 px-3.5 text-xs font-bold text-emerald-800 hover:bg-emerald-100 transition cursor-pointer shadow-sm">
+                        <i data-lucide="copy-check" class="h-4 w-4 text-emerald-600"></i>
+                        <span>Copy Both</span>
+                    </button>
+                    <a id="cred-modal-zip-btn" href="#" download class="inline-flex h-9 items-center gap-1.5 rounded-xl border border-sky-300 bg-sky-50 px-3.5 text-xs font-bold text-sky-800 hover:bg-sky-100 transition cursor-pointer shadow-sm" title="Download Documents ZIP (2x2 Photo, Birth Cert, Report Card, etc.)">
+                        <i data-lucide="archive" class="h-4 w-4 text-sky-600"></i>
+                        <span>Download ZIP Docs</span>
+                    </a>
+                </div>
                 <div class="flex items-center gap-2">
                     <a id="cred-modal-print-btn" href="#" target="_blank" class="inline-flex h-9 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition shadow-sm" title="Print Credential Slip">
                         <i data-lucide="printer" class="h-4 w-4 text-slate-500"></i>
@@ -368,6 +374,11 @@
             document.getElementById('cred-modal-id').innerText = '#' + (student.student_number || '-');
             document.getElementById('cred-modal-grade').innerText = student.grade || '-';
             document.getElementById('cred-modal-section').innerText = student.section || 'Unassigned';
+
+            const zipBtn = document.getElementById('cred-modal-zip-btn');
+            if (zipBtn && student.student_number) {
+                zipBtn.href = '{{ route('admin.students.download-docs-zip') }}?search=' + encodeURIComponent(student.student_number);
+            }
             
             document.getElementById('cred-modal-email').value = student.email || 'No Email Set';
             
