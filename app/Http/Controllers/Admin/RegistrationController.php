@@ -22,9 +22,13 @@ class RegistrationController extends Controller
 
         $search = $request->input('search');
         $levelFilter = $request->input('level');
+        $category = $request->input('category', 'all');
 
         if ($tab === 'students') {
             $status = 'approved';
+            if ($category === 'all') {
+                $category = 'student';
+            }
         } else {
             $status = $request->input('status');
         }
@@ -42,7 +46,7 @@ class RegistrationController extends Controller
                 'responded_at',
                 DB::raw("'contact_submissions' as source")
             )
-            ->whereIn('subject', ['Halaqah Online Registration', 'Halaqah Qur’an']);
+            ->whereIn('subject', ['Halaqah Online Registration', 'Halaqah Qur’an', 'Halaqah Parents Registration']);
 
         $query2 = DB::table('halaqah_registrations')
             ->select(
@@ -50,12 +54,17 @@ class RegistrationController extends Controller
                 'name',
                 'email',
                 'phone',
-                DB::raw("'Halaqah Online Registration' as subject"),
+                DB::raw("CASE 
+                    WHEN grade_level LIKE '%PARENTS%' OR type = 'parents' OR type LIKE '%Parents%' OR message LIKE '%Halaqah Parents%' THEN 'Halaqah Parents Registration'
+                    ELSE 'Halaqah Online Registration' 
+                END as subject"),
                 DB::raw("CONCAT(
                     COALESCE(message, ''),
                     '\n--- Halaqah Registration Details ---\n',
                     'Address: ', COALESCE(address, ''),
                     '\nMS Teams Account: ', COALESCE(ms_teams, ''),
+                    '\nFB Account Link: ', COALESCE(fb_account, COALESCE(ms_teams, '')),
+                    '\nMobile Number: ', COALESCE(mobile, COALESCE(phone, '')),
                     '\nLearning Level: ', COALESCE(level, ''),
                     '\nGrade Level: ', COALESCE(grade_level, '')
                 ) as message"),
@@ -63,19 +72,48 @@ class RegistrationController extends Controller
                 'created_at',
                 'responded_at',
                 DB::raw("'halaqah_registrations' as source")
-            )
-            ->where(function ($q) {
+            );
+
+        if ($category === 'student') {
+            $query1->where(function ($q) {
+                $q->where('subject', 'Halaqah Qur’an')
+                  ->orWhere(function ($sub) {
+                      $sub->where('subject', 'Halaqah Online Registration')
+                          ->where('message', 'NOT LIKE', '%Registration Type:%');
+                  });
+            });
+            $query2->where(function ($q) {
                 $q->whereNull('grade_level')
-                  ->orWhere('grade_level', 'NOT LIKE', '%PARENTS%');
+                  ->orWhere(function ($sub) {
+                      $sub->where('grade_level', 'NOT LIKE', '%REGISTRATION%')
+                          ->where('grade_level', 'NOT LIKE', '%PARENTS%');
+                  });
             })
             ->where(function ($q) {
                 $q->whereNull('type')
                   ->orWhere('type', '!=', 'parents');
+            });
+        } elseif ($category === 'online') {
+            $query1->where('subject', 'Halaqah Online Registration')
+                   ->where('message', 'LIKE', '%Registration Type:%');
+            $query2->where(function ($q) {
+                $q->where('grade_level', 'LIKE', '%ONLINE REGISTRATION%')
+                  ->orWhere('type', 'LIKE', '%Online%')
+                  ->orWhere('message', 'LIKE', '%Halaqah Online Registration%');
             })
             ->where(function ($q) {
-                $q->whereNull('message')
-                  ->orWhere('message', 'NOT LIKE', '%Halaqah Parents%');
+                $q->whereNull('grade_level')
+                  ->orWhere('grade_level', 'NOT LIKE', '%PARENTS%');
             });
+        } elseif ($category === 'parents') {
+            $query1->where('subject', 'Halaqah Parents Registration');
+            $query2->where(function ($q) {
+                $q->where('grade_level', 'LIKE', '%PARENTS%')
+                  ->orWhere('type', 'parents')
+                  ->orWhere('type', 'LIKE', '%Parents%')
+                  ->orWhere('message', 'LIKE', '%Halaqah Parents%');
+            });
+        }
 
         if ($search) {
             $query1->where(function ($q) use ($search) {
@@ -118,31 +156,19 @@ class RegistrationController extends Controller
             }
         }
 
-        // Direct query calculations for union counts (excluding parents)
-        $q1Stats = DB::table('contact_submissions')
-            ->whereIn('subject', ['Halaqah Online Registration', 'Halaqah Qur’an']);
-        $q2Stats = DB::table('halaqah_registrations')
-            ->where(function ($q) {
-                $q->whereNull('grade_level')
-                  ->orWhere('grade_level', 'NOT LIKE', '%PARENTS%');
-            })
-            ->where(function ($q) {
-                $q->whereNull('type')
-                  ->orWhere('type', '!=', 'parents');
-            })
-            ->where(function ($q) {
-                $q->whereNull('message')
-                  ->orWhere('message', 'NOT LIKE', '%Halaqah Parents%');
-            });
+        // Direct query calculations for category & stats counts
+        $q1Base = DB::table('contact_submissions')
+            ->whereIn('subject', ['Halaqah Online Registration', 'Halaqah Qur’an', 'Halaqah Parents Registration']);
+        $q2Base = DB::table('halaqah_registrations');
 
         if ($search) {
-            $q1Stats->where(function ($q) use ($search) {
+            $q1Base->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%")
                     ->orWhere('phone', 'like', "%{$search}%")
                     ->orWhere('message', 'like', "%{$search}%");
             });
-            $q2Stats->where(function ($q) use ($search) {
+            $q2Base->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%")
                     ->orWhere('phone', 'like', "%{$search}%")
@@ -156,26 +182,70 @@ class RegistrationController extends Controller
 
         if ($levelFilter && $levelFilter !== 'all') {
             if (strtolower($levelFilter) === 'beginner') {
-                $q1Stats->where(function ($q) {
+                $q1Base->where(function ($q) {
                     $q->where('message', 'like', '%beginner%')
                         ->orWhere('message', 'like', '%cannot%');
                 });
-                $q2Stats->where(function ($q) {
+                $q2Base->where(function ($q) {
                     $q->where('level', 'like', '%beginner%')
                         ->orWhere('level', 'like', '%cannot%')
                         ->orWhere('message', 'like', '%beginner%')
                         ->orWhere('message', 'like', '%cannot%');
                 });
             } else {
-                $q1Stats->where('message', 'like', "%{$levelFilter}%");
-                $q2Stats->where(function ($q) use ($levelFilter) {
+                $q1Base->where('message', 'like', "%{$levelFilter}%");
+                $q2Base->where(function ($q) use ($levelFilter) {
                     $q->where('level', 'like', "%{$levelFilter}%")
                         ->orWhere('message', 'like', "%{$levelFilter}%");
                 });
             }
         }
 
-        $totalCount = $q1Stats->count() + $q2Stats->count();
+        // Category-specific counts
+        $q1Student = (clone $q1Base)->where(function ($q) {
+            $q->where('subject', 'Halaqah Qur’an')
+              ->orWhere(function ($sub) {
+                  $sub->where('subject', 'Halaqah Online Registration')
+                      ->where('message', 'NOT LIKE', '%Registration Type:%');
+              });
+        });
+        $q2Student = (clone $q2Base)->where(function ($q) {
+            $q->whereNull('grade_level')
+              ->orWhere(function ($sub) {
+                  $sub->where('grade_level', 'NOT LIKE', '%REGISTRATION%')
+                      ->where('grade_level', 'NOT LIKE', '%PARENTS%');
+              });
+        })->where(function ($q) {
+            $q->whereNull('type')->orWhere('type', '!=', 'parents');
+        });
+        $studentCount = $q1Student->count() + $q2Student->count();
+
+        $q1Online = (clone $q1Base)->where('subject', 'Halaqah Online Registration')->where('message', 'LIKE', '%Registration Type:%');
+        $q2Online = (clone $q2Base)->where(function ($q) {
+            $q->where('grade_level', 'LIKE', '%ONLINE REGISTRATION%')
+              ->orWhere('type', 'LIKE', '%Online%')
+              ->orWhere('message', 'LIKE', '%Halaqah Online Registration%');
+        })->where(function ($q) {
+            $q->whereNull('grade_level')->orWhere('grade_level', 'NOT LIKE', '%PARENTS%');
+        });
+        $onlinePublicCount = $q1Online->count() + $q2Online->count();
+
+        $q1Parents = (clone $q1Base)->where('subject', 'Halaqah Parents Registration');
+        $q2Parents = (clone $q2Base)->where(function ($q) {
+            $q->where('grade_level', 'LIKE', '%PARENTS%')
+              ->orWhere('type', 'parents')
+              ->orWhere('type', 'LIKE', '%Parents%')
+              ->orWhere('message', 'LIKE', '%Halaqah Parents%');
+        });
+        $parentsCount = $q1Parents->count() + $q2Parents->count();
+
+        $totalAllCount = $q1Base->count() + $q2Base->count();
+
+        // Stats calculation matching current active query filters
+        $q1Stats = clone $query1;
+        $q2Stats = clone $query2;
+
+        $totalCount = (clone $q1Stats)->count() + (clone $q2Stats)->count();
         $newCount = (clone $q1Stats)->where('status', 'new')->count() + (clone $q2Stats)->where('status', 'new')->count();
         $approvedCount = (clone $q1Stats)->where('status', 'approved')->count() + (clone $q2Stats)->where('status', 'approved')->count();
 
@@ -259,6 +329,11 @@ class RegistrationController extends Controller
             'search',
             'status',
             'levelFilter',
+            'category',
+            'totalAllCount',
+            'studentCount',
+            'onlinePublicCount',
+            'parentsCount',
             'totalCount',
             'newCount',
             'approvedCount',

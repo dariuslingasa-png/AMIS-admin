@@ -327,20 +327,28 @@
         <!-- Toolbar Filters -->
         <div class="bg-white dark:bg-gray-800 rounded-2xl border border-slate-200/70 dark:border-gray-700/50 p-5 shadow-sm mt-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 print-hide">
             <div class="flex flex-col sm:flex-row sm:items-center gap-4 w-full lg:w-auto">
-                <!-- Program Category Filter: Student | Parents -->
-                <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl shrink-0">
-                    <a href="{{ route('admin.registrations.halaqah', ['tab' => $tab]) }}" class="px-3.5 py-2 text-xs font-extrabold rounded-lg transition bg-white dark:bg-gray-700 text-emerald-700 dark:text-emerald-400 shadow-xs flex items-center gap-1.5">
-                        <i data-lucide="graduation-cap" class="w-3.5 h-3.5"></i>
-                        <span>Students</span>
+                <!-- Program Category Filter: All | Students | Public Online | Parents -->
+                <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl shrink-0 overflow-x-auto">
+                    <a href="{{ route('admin.registrations.halaqah', ['tab' => $tab, 'category' => 'all', 'search' => $search, 'status' => $status, 'level' => request('level')]) }}" class="px-3.5 py-2 text-xs font-extrabold rounded-lg transition {{ !$category || $category === 'all' ? 'bg-white dark:bg-gray-700 text-slate-900 dark:text-white shadow-xs' : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-300' }}">
+                        All ({{ $totalAllCount }})
                     </a>
-                    <a href="{{ route('admin.registrations.halaqah-parents') }}" class="px-3.5 py-2 text-xs font-extrabold rounded-lg transition text-slate-500 hover:text-slate-900 dark:hover:text-slate-300 flex items-center gap-1.5">
+                    <a href="{{ route('admin.registrations.halaqah', ['tab' => $tab, 'category' => 'student', 'search' => $search, 'status' => $status, 'level' => request('level')]) }}" class="px-3.5 py-2 text-xs font-extrabold rounded-lg transition {{ $category === 'student' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-300' }} flex items-center gap-1.5">
+                        <i data-lucide="graduation-cap" class="w-3.5 h-3.5"></i>
+                        <span>Students ({{ $studentCount }})</span>
+                    </a>
+                    <a href="{{ route('admin.registrations.halaqah', ['tab' => $tab, 'category' => 'online', 'search' => $search, 'status' => $status, 'level' => request('level')]) }}" class="px-3.5 py-2 text-xs font-extrabold rounded-lg transition {{ $category === 'online' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-300' }} flex items-center gap-1.5">
+                        <i data-lucide="globe" class="w-3.5 h-3.5"></i>
+                        <span>Public Online ({{ $onlinePublicCount }})</span>
+                    </a>
+                    <a href="{{ route('admin.registrations.halaqah', ['tab' => $tab, 'category' => 'parents', 'search' => $search, 'status' => $status, 'level' => request('level')]) }}" class="px-3.5 py-2 text-xs font-extrabold rounded-lg transition {{ $category === 'parents' ? 'bg-purple-600 text-white shadow-xs' : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-300' }} flex items-center gap-1.5">
                         <i data-lucide="users" class="w-3.5 h-3.5"></i>
-                        <span>Parents</span>
+                        <span>Parents ({{ $parentsCount }})</span>
                     </a>
                 </div>
 
                 <form method="GET" action="{{ route('admin.registrations.halaqah') }}" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
                     <input type="hidden" name="tab" value="{{ $tab }}">
+                    <input type="hidden" name="category" value="{{ $category }}">
                     @if(request('level'))
                         <input type="hidden" name="level" value="{{ request('level') }}">
                     @endif
@@ -538,15 +546,34 @@
                                             </div>
                                         @endif
                                         @if($gradeLevel)
-                                            <div class="text-xs text-slate-655 font-semibold flex items-center gap-1.5 mb-1.5">
-                                                <span class="text-[10px] font-bold uppercase text-slate-400">Grade:</span>
-                                                <span class="text-slate-800 font-extrabold text-[11px] uppercase tracking-wide">{{ $gradeLevel }}</span>
-                                            </div>
+                                            @if(str_contains(strtoupper($gradeLevel), 'REGISTRATION') || str_contains(strtoupper($gradeLevel), 'PARENTS'))
+                                                <div class="mb-1.5">
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-extrabold uppercase {{ str_contains(strtoupper($gradeLevel), 'PARENTS') ? 'bg-purple-50 text-purple-700 border border-purple-100' : 'bg-blue-50 text-blue-700 border border-blue-100' }}">
+                                                        {{ $gradeLevel }}
+                                                    </span>
+                                                </div>
+                                            @else
+                                                <div class="text-xs text-slate-655 font-semibold flex items-center gap-1.5 mb-1.5">
+                                                    <span class="text-[10px] font-bold uppercase text-slate-400">Grade:</span>
+                                                    <span class="text-slate-800 font-extrabold text-[11px] uppercase tracking-wide">{{ $gradeLevel }}</span>
+                                                </div>
+                                            @endif
                                         @endif
                                         @if($msTeams)
                                             <div class="text-xs text-slate-500 font-medium flex items-center gap-1.5">
-                                                <span class="text-[10px] font-bold uppercase text-slate-400">Teams:</span>
-                                                <code class="px-1.5 py-0.5 bg-slate-100 rounded-md text-slate-800 text-[10px] font-semibold tracking-wide">{{ $msTeams }}</code>
+                                                @if(str_contains($msTeams, 'facebook.com') || str_starts_with($msTeams, 'http'))
+                                                    <span class="text-[10px] font-bold uppercase text-slate-400">FB:</span>
+                                                    @php
+                                                        $fbLink = str_starts_with($msTeams, 'http') ? $msTeams : 'https://' . $msTeams;
+                                                    @endphp
+                                                    <a href="{{ $fbLink }}" target="_blank" class="inline-flex items-center gap-1 text-blue-600 font-bold hover:underline text-[11px] break-all">
+                                                        <i data-lucide="external-link" class="w-3 h-3"></i>
+                                                        FB Profile
+                                                    </a>
+                                                @else
+                                                    <span class="text-[10px] font-bold uppercase text-slate-400">Teams:</span>
+                                                    <code class="px-1.5 py-0.5 bg-slate-100 rounded-md text-slate-800 text-[10px] font-semibold tracking-wide">{{ $msTeams }}</code>
+                                                @endif
                                             </div>
                                         @endif
                                     </td>
