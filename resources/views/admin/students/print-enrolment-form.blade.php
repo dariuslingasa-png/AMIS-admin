@@ -941,7 +941,6 @@
         ${docBody}
     </w:body>
 </w:document>`;
-</w:document>`;
 
             zip.file('word/document.xml', docXml);
 
