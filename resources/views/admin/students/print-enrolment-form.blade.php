@@ -596,20 +596,7 @@
         }
 
         .page-number-badge {
-            position: absolute;
-            top: 5mm;
-            right: 8mm;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.78rem;
-            font-weight: 800;
-            color: #1e293b;
-            background-color: #f1f5f9;
-            border: 1.5px solid #cbd5e1;
-            border-radius: 4px;
-            padding: 2px 10px;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-            z-index: 10;
+            display: none !important;
         }
 
         /* Print Media Styles for Perfect PDF Save */
@@ -901,7 +888,7 @@
     <w:r>
         <w:drawing>
             <wp:inline distT="0" distB="0" distL="0" distR="0">
-                <wp:extent cx="6800000" cy="9600000"/>
+                <wp:extent cx="7560000" cy="10692000"/>
                 <wp:docPr id="${i + 1}" name="Page ${i + 1}"/>
                 <a:graphic>
                     <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
@@ -917,7 +904,7 @@
                             <pic:spPr>
                                 <a:xfrm>
                                     <a:off x="0" y="0"/>
-                                    <a:ext cx="6800000" cy="9600000"/>
+                                    <a:ext cx="7560000" cy="10692000"/>
                                 </a:xfrm>
                                 <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
                             </pic:spPr>
@@ -946,7 +933,7 @@
         ${docBody}
         <w:sectPr>
             <w:pgSz w:w="11906" w:h="16838"/>
-            <w:pgMar w:top="360" w:right="360" w:bottom="360" w:left="360" w:header="0" w:footer="0" w:gutter="0"/>
+            <w:pgMar w:top="0" w:right="0" w:bottom="0" w:left="0" w:header="0" w:footer="0" w:gutter="0"/>
         </w:sectPr>
     </w:body>
 </w:document>`;
