@@ -792,6 +792,21 @@
         const gender = document.getElementById('p-filter-gender')?.value || '';
         const search = '{{ request('search', '') }}';
 
+        // For PDF and DOCX: use the pixel-perfect batch page renderer (html2canvas-based)
+        // This produces the same quality output as the individual form download
+        if (selectedFormat === 'pdf' || selectedFormat === 'docx') {
+            closeBatchExportModal();
+            const autoParam = selectedFormat === 'pdf' ? 'auto_zip_pdf=1' : 'auto_zip_docx=1';
+            const params = new URLSearchParams();
+            if (grade) params.append('grade', grade);
+            if (mode) params.append('mode', mode);
+            if (gender) params.append('gender', gender);
+            if (search) params.append('search', search);
+            params.append(selectedFormat === 'pdf' ? 'auto_zip_pdf' : 'auto_zip_docx', '1');
+            window.open('{{ route('admin.students.print-enrolment-forms-batch') }}?' + params.toString(), '_blank');
+            return;
+        }
+
         isExportRunning = true;
         exportPercent = 0;
         currentDownloadUrl = null;
@@ -987,6 +1002,9 @@
             window.open(url, '_blank');
         } else if (formatType === 'jpg') {
             const url = `{{ route('admin.students.print-enrolment-forms-batch') }}?grade=${encodeURIComponent(gradeName)}&mode=${encodeURIComponent(mode)}&gender=${encodeURIComponent(gender)}&auto_zip_jpg=1`;
+            window.open(url, '_blank');
+        } else if (formatType === 'docx') {
+            const url = `{{ route('admin.students.print-enrolment-forms-batch') }}?grade=${encodeURIComponent(gradeName)}&mode=${encodeURIComponent(mode)}&gender=${encodeURIComponent(gender)}&auto_zip_docx=1`;
             window.open(url, '_blank');
         } else {
             openBatchExportModal('enrollment_forms');

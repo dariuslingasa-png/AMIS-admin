@@ -1080,6 +1080,182 @@
             });
         }
 
+        async function generateDocxZip() {
+            const overlay = document.getElementById('loadingOverlay');
+            const fill = document.getElementById('loadingProgressBar');
+            const text = document.getElementById('loadingProgressCount');
+            const title = overlay ? overlay.querySelector('.loading-title') : null;
+
+            if (overlay) overlay.classList.remove('hidden-overlay');
+            if (title) title.innerText = 'Generating DOCX ZIP Archive...';
+            if (fill) fill.style.width = '0%';
+
+            const JSZipLib = (typeof JSZip !== 'undefined') ? JSZip : null;
+            if (!JSZipLib) {
+                alert('JSZip library not loaded. Cannot generate DOCX ZIP.');
+                if (overlay) overlay.classList.add('hidden-overlay');
+                return;
+            }
+
+            const outerZip = new JSZipLib();
+            const wrappers = document.querySelectorAll('.student-print-wrapper');
+            const totalStudents = wrappers.length;
+
+            if (totalStudents === 0) {
+                alert('No student records found to export.');
+                if (overlay) overlay.classList.add('hidden-overlay');
+                return;
+            }
+
+            let processedStudents = 0;
+
+            for (let i = 0; i < totalStudents; i++) {
+                const wrapper = wrappers[i];
+                const studentName = wrapper.getAttribute('data-student-name') || 'STUDENT_' + i;
+                const grade = wrapper.getAttribute('data-grade') || 'Grade_1';
+                const mode = wrapper.getAttribute('data-mode') || 'F2F';
+                const pages = wrapper.querySelectorAll('.paper-container');
+                const basePath = `${grade}/${mode}`;
+
+                const pct = Math.round((i / totalStudents) * 95);
+                if (fill) fill.style.width = pct + '%';
+                if (text) text.innerText = `Generating DOCX ${i + 1} of ${totalStudents}: ${studentName.replace(/_/g, ' ')}`;
+
+                try {
+                    // Build a real DOCX (OpenXML ZIP) for this student
+                    const docZip = new JSZipLib();
+                    const xmlHeader = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+
+                    docZip.file('[Content_Types].xml', `${xmlHeader}
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+    <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+    <Default Extension="xml" ContentType="application/xml"/>
+    <Default Extension="png" ContentType="image/png"/>
+    <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+</Types>`);
+
+                    docZip.file('_rels/.rels', `${xmlHeader}
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+    <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+</Relationships>`);
+
+                    let docRels = `${xmlHeader}\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">`;
+                    let docBody = '';
+
+                    for (let pageIdx = 0; pageIdx < pages.length; pageIdx++) {
+                        const pageEl = pages[pageIdx];
+                        const canvas = await html2canvas(pageEl, {
+                            scale: 2.5,
+                            useCORS: true,
+                            logging: false,
+                            allowTaint: true,
+                            backgroundColor: '#ffffff',
+                            imageTimeout: 0,
+                            removeContainer: true
+                        });
+                        const imgDataUrl = canvas.toDataURL('image/png');
+                        const base64Data = imgDataUrl.replace(/^data:image\/png;base64,/, '');
+                        const imgId = `rId${pageIdx + 2}`;
+                        const imgFileName = `image${pageIdx + 1}.png`;
+
+                        docZip.file(`word/media/${imgFileName}`, base64Data, { base64: true });
+                        docRels += `\n    <Relationship Id="${imgId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/${imgFileName}"/>`;
+
+                        docBody += `
+<w:p>
+    <w:pPr>
+        <w:jc w:val="center"/>
+        <w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/>
+    </w:pPr>
+    <w:r>
+        <w:drawing>
+            <wp:inline distT="0" distB="0" distL="0" distR="0">
+                <wp:extent cx="7560000" cy="10440000"/>
+                <wp:docPr id="${pageIdx + 1}" name="Page ${pageIdx + 1}"/>
+                <a:graphic>
+                    <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                        <pic:pic>
+                            <pic:nvPicPr>
+                                <pic:cNvPr id="0" name="Picture"/>
+                                <pic:cNvPicPr/>
+                            </pic:nvPicPr>
+                            <pic:blipFill>
+                                <a:blip r:embed="${imgId}"/>
+                                <a:stretch><a:fillRect/></a:stretch>
+                            </pic:blipFill>
+                            <pic:spPr>
+                                <a:xfrm>
+                                    <a:off x="0" y="0"/>
+                                    <a:ext cx="7560000" cy="10440000"/>
+                                </a:xfrm>
+                                <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
+                            </pic:spPr>
+                        </pic:pic>
+                    </a:graphicData>
+                </a:graphic>
+            </wp:inline>
+        </w:drawing>
+    </w:r>
+</w:p>`;
+                        if (pageIdx < pages.length - 1) {
+                            docBody += '<w:p><w:pPr><w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/></w:pPr><w:r><w:br w:type="page"/></w:r></w:p>';
+                        }
+                    }
+
+                    docRels += '\n</Relationships>';
+                    docZip.file('word/_rels/document.xml.rels', docRels);
+
+                    const docXml = `${xmlHeader}
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+            xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+            xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
+            xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
+            xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
+    <w:body>
+        ${docBody}
+        <w:sectPr>
+            <w:pgSz w:w="11906" w:h="16838"/>
+            <w:pgMar w:top="0" w:right="0" w:bottom="0" w:left="0" w:header="0" w:footer="0" w:gutter="0"/>
+        </w:sectPr>
+    </w:body>
+</w:document>`;
+                    docZip.file('word/document.xml', docXml);
+
+                    const docBlob = await docZip.generateAsync({ type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+                    outerZip.file(`${basePath}/Enrollment Application Form - ${studentName.replace(/_/g, ' ')}.docx`, docBlob);
+
+                } catch (err) {
+                    console.error(`Failed to generate DOCX for ${studentName}:`, err);
+                }
+
+                processedStudents++;
+            }
+
+            if (fill) fill.style.width = '98%';
+            if (text) text.innerText = 'Compiling DOCX files into ZIP archive...';
+
+            try {
+                const content = await outerZip.generateAsync({ type: 'blob', compression: 'STORE' });
+                const url = URL.createObjectURL(content);
+                const link = document.createElement('a');
+                const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+                const gradeClean = "{{ str_replace(' ', '_', $gradeTitle ?? 'Batch') }}";
+                link.href = url;
+                link.download = `Enrollment_Forms_SY_2026-2027_${gradeClean}_${dateStr}_DOCX.zip`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                setTimeout(() => URL.revokeObjectURL(url), 100);
+            } catch (zipErr) {
+                console.error('Error generating DOCX ZIP:', zipErr);
+                alert('Failed to generate DOCX ZIP file.');
+            }
+
+            if (fill) fill.style.width = '100%';
+            if (title) title.innerText = 'Loading Enrollment Forms';
+            if (overlay) overlay.classList.add('hidden-overlay');
+        }
+
         if (new URLSearchParams(window.location.search).get('auto_zip_docx') === '1') {
             window.addEventListener('DOMContentLoaded', () => {
                 const checkReadyInterval = setInterval(async () => {
