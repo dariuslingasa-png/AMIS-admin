@@ -234,8 +234,7 @@
             });
         }
     });
-
-
+    </script>
 
     <!-- Microsoft Credentials & Password Quick Modal Pop-up -->
     <div id="credentials-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/40 backdrop-blur-sm transition-opacity duration-200" onclick="if(event.target === this) closeStudentCredentialsModal()">
