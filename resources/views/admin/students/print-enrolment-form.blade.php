@@ -858,7 +858,9 @@
 
             const zip = new JSZip();
             
-            zip.file('[Content_Types].xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+            const xmlHeader = '<' + '?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+            
+            zip.file('[Content_Types].xml', `${xmlHeader}
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
     <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
     <Default Extension="xml" ContentType="application/xml"/>
@@ -866,12 +868,12 @@
     <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
 </Types>`);
 
-            zip.file('_rels/.rels', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+            zip.file('_rels/.rels', `${xmlHeader}
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
     <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
 </Relationships>`);
 
-            let docRels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+            let docRels = `${xmlHeader}
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">`;
 
             let docBody = '';
@@ -929,7 +931,7 @@
             docRels += '\n</Relationships>';
             zip.file('word/_rels/document.xml.rels', docRels);
 
-            const docXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+            const docXml = `${xmlHeader}
 <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
             xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
             xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
@@ -938,6 +940,7 @@
     <w:body>
         ${docBody}
     </w:body>
+</w:document>`;
 </w:document>`;
 
             zip.file('word/document.xml', docXml);
