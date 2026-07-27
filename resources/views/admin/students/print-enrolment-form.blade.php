@@ -888,7 +888,7 @@
     <w:r>
         <w:drawing>
             <wp:inline distT="0" distB="0" distL="0" distR="0">
-                <wp:extent cx="7560000" cy="10250000"/>
+                <wp:extent cx="7560000" cy="10680000"/>
                 <wp:docPr id="${i + 1}" name="Page ${i + 1}"/>
                 <a:graphic>
                     <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
@@ -904,7 +904,7 @@
                             <pic:spPr>
                                 <a:xfrm>
                                     <a:off x="0" y="0"/>
-                                    <a:ext cx="7560000" cy="10250000"/>
+                                    <a:ext cx="7560000" cy="10680000"/>
                                 </a:xfrm>
                                 <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
                             </pic:spPr>
