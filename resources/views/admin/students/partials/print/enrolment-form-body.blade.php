@@ -239,11 +239,11 @@
     <div class="field-container">
         <div class="grid-5-col">
             <div>
-                <input type="text" class="input-line" value="{{ mb_strtoupper($app->last_name ?? '') }}" style="{{ $getDynamicStyle($app->last_name ?? '', '0.96rem', '0.84rem', '0.72rem', '0.60rem', 22, 32, 42) }}">
+                <input type="text" class="input-line" value="{{ mb_strtoupper($app->last_name ?? '') }}" style="{{ $getDynamicStyle($app->last_name ?? '', '0.96rem', '0.84rem', '0.70rem', '0.58rem', 14, 20, 26) }}">
                 <span class="label-text">Last</span>
             </div>
             <div>
-                <input type="text" class="input-line" value="{{ mb_strtoupper($app->first_name ?? '') }}" style="{{ $getDynamicStyle($app->first_name ?? '', '0.96rem', '0.84rem', '0.72rem', '0.60rem', 22, 32, 42) }}">
+                <input type="text" class="input-line" value="{{ mb_strtoupper($app->first_name ?? '') }}" style="{{ $getDynamicStyle($app->first_name ?? '', '0.96rem', '0.84rem', '0.70rem', '0.58rem', 14, 20, 26) }}">
                 <span class="label-text">First</span>
             </div>
             <div>
@@ -328,11 +328,11 @@
     <div class="field-container" style="margin-top: 10px;">
         <div class="grid-parent-row">
             <div>
-                <input type="text" class="input-line" value="{{ $fatherFull }}" style="{{ $getDynamicStyle($fatherFull, '0.96rem', '0.84rem', '0.72rem', '0.60rem', 25, 35, 45) }}">
+                <input type="text" class="input-line" value="{{ $fatherFull }}" style="{{ $getDynamicStyle($fatherFull, '0.96rem', '0.84rem', '0.70rem', '0.58rem', 18, 25, 32) }}">
                 <span class="label-text">Father's Full Name</span>
             </div>
             <div>
-                <input type="text" class="input-line" value="{{ mb_strtoupper($app->father_occupation ?? '') }}" style="{{ $getDynamicStyle($app->father_occupation ?? '', '0.94rem', '0.82rem', '0.70rem', '0.60rem', 22, 32, 42) }}">
+                <input type="text" class="input-line" value="{{ mb_strtoupper($app->father_occupation ?? '') }}" style="{{ $getDynamicStyle($app->father_occupation ?? '', '0.92rem', '0.78rem', '0.64rem', '0.54rem', 11, 15, 20) }}">
                 <span class="label-text">Occupation</span>
             </div>
             <div>
@@ -354,11 +354,11 @@
     <div class="field-container" style="margin-top: 14px;">
         <div class="grid-parent-row">
             <div>
-                <input type="text" class="input-line" value="{{ $motherFull }}" style="{{ $getDynamicStyle($motherFull, '0.96rem', '0.84rem', '0.72rem', '0.60rem', 25, 35, 45) }}">
+                <input type="text" class="input-line" value="{{ $motherFull }}" style="{{ $getDynamicStyle($motherFull, '0.96rem', '0.84rem', '0.70rem', '0.58rem', 18, 25, 32) }}">
                 <span class="label-text">Mother's Full Name</span>
             </div>
             <div>
-                <input type="text" class="input-line" value="{{ mb_strtoupper($app->mother_occupation ?? '') }}" style="{{ $getDynamicStyle($app->mother_occupation ?? '', '0.94rem', '0.82rem', '0.70rem', '0.60rem', 22, 32, 42) }}">
+                <input type="text" class="input-line" value="{{ mb_strtoupper($app->mother_occupation ?? '') }}" style="{{ $getDynamicStyle($app->mother_occupation ?? '', '0.92rem', '0.78rem', '0.64rem', '0.54rem', 11, 15, 20) }}">
                 <span class="label-text">Occupation</span>
             </div>
             <div>

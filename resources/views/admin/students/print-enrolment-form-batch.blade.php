@@ -937,15 +937,20 @@
                 const fontWeight = style.fontWeight || '700';
                 const fontFamily = style.fontFamily || 'Inter, sans-serif';
 
-                while (size > minSize) {
-                    ctx.font = `${fontWeight} ${size}px ${fontFamily}`;
-                    const textWidth = ctx.measureText(text).width;
-                    if (textWidth <= containerWidth - 4) {
-                        break;
+                ctx.font = `${fontWeight} ${size}px ${fontFamily}`;
+                let textWidth = ctx.measureText(text).width;
+
+                if (textWidth > containerWidth - 4) {
+                    while (size > minSize) {
+                        ctx.font = `${fontWeight} ${size}px ${fontFamily}`;
+                        textWidth = ctx.measureText(text).width;
+                        if (textWidth <= containerWidth - 4) {
+                            break;
+                        }
+                        size -= 0.5;
                     }
-                    size -= 0.5;
+                    el.style.fontSize = size + 'px';
                 }
-                el.style.fontSize = size + 'px';
             });
         }
         document.addEventListener('DOMContentLoaded', fitAllFormFontSizes);
