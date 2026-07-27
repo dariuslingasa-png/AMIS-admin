@@ -892,11 +892,14 @@
 
                 docBody += `
 <w:p>
-    <w:pPr><w:jc w:val="center"/></w:pPr>
+    <w:pPr>
+        <w:jc w:val="center"/>
+        <w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/>
+    </w:pPr>
     <w:r>
         <w:drawing>
             <wp:inline distT="0" distB="0" distL="0" distR="0">
-                <wp:extent cx="5760000" cy="8150000"/>
+                <wp:extent cx="6840000" cy="9972000"/>
                 <wp:docPr id="${i + 1}" name="Page ${i + 1}"/>
                 <a:graphic>
                     <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
@@ -912,7 +915,7 @@
                             <pic:spPr>
                                 <a:xfrm>
                                     <a:off x="0" y="0"/>
-                                    <a:ext cx="5760000" cy="8150000"/>
+                                    <a:ext cx="6840000" cy="9972000"/>
                                 </a:xfrm>
                                 <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
                             </pic:spPr>
@@ -939,6 +942,10 @@
             xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
     <w:body>
         ${docBody}
+        <w:sectPr>
+            <w:pgSz w:w="11906" w:h="16838"/>
+            <w:pgMar w:top="567" w:right="567" w:bottom="567" w:left="567" w:header="0" w:footer="0" w:gutter="0"/>
+        </w:sectPr>
     </w:body>
 </w:document>`;
 
