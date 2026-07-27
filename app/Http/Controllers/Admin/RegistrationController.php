@@ -63,7 +63,19 @@ class RegistrationController extends Controller
                 'created_at',
                 'responded_at',
                 DB::raw("'halaqah_registrations' as source")
-            );
+            )
+            ->where(function ($q) {
+                $q->whereNull('grade_level')
+                  ->orWhere('grade_level', 'NOT LIKE', '%PARENTS%');
+            })
+            ->where(function ($q) {
+                $q->whereNull('type')
+                  ->orWhere('type', '!=', 'parents');
+            })
+            ->where(function ($q) {
+                $q->whereNull('message')
+                  ->orWhere('message', 'NOT LIKE', '%Halaqah Parents%');
+            });
 
         if ($search) {
             $query1->where(function ($q) use ($search) {
@@ -106,88 +118,22 @@ class RegistrationController extends Controller
             }
         }
 
-        // Build stats query matching search/level criteria but independent of status filter
-        $statsQuery1 = DB::table('contact_submissions')
-            ->select(
-                'id',
-                'name',
-                'email',
-                'phone',
-                'subject',
-                'message',
-                'status',
-                'created_at',
-                'responded_at',
-                DB::raw("'contact_submissions' as source")
-            )
-            ->whereIn('subject', ['Halaqah Online Registration', 'Halaqah Qur’an']);
-
-        $statsQuery2 = DB::table('halaqah_registrations')
-            ->select(
-                'id',
-                'name',
-                'email',
-                'phone',
-                DB::raw("'Halaqah Online Registration' as subject"),
-                DB::raw("CONCAT(
-                    COALESCE(message, ''),
-                    '\n--- Halaqah Registration Details ---\n',
-                    'Address: ', COALESCE(address, ''),
-                    '\nMS Teams Account: ', COALESCE(ms_teams, ''),
-                    '\nLearning Level: ', COALESCE(level, ''),
-                    '\nGrade Level: ', COALESCE(grade_level, '')
-                ) as message"),
-                'status',
-                'created_at',
-                'responded_at',
-                DB::raw("'halaqah_registrations' as source")
-            );
-
-        if ($search) {
-            $statsQuery1->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%")
-                    ->orWhere('phone', 'like', "%{$search}%")
-                    ->orWhere('message', 'like', "%{$search}%");
-            });
-
-            $statsQuery2->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%")
-                    ->orWhere('phone', 'like', "%{$search}%")
-                    ->orWhere('message', 'like', "%{$search}%")
-                    ->orWhere('address', 'like', "%{$search}%")
-                    ->orWhere('level', 'like', "%{$search}%")
-                    ->orWhere('grade_level', 'like', "%{$search}%")
-                    ->orWhere('ms_teams', 'like', "%{$search}%");
-            });
-        }
-
-        if ($levelFilter && $levelFilter !== 'all') {
-            if (strtolower($levelFilter) === 'beginner') {
-                $statsQuery1->where(function ($q) {
-                    $q->where('message', 'like', '%beginner%')
-                        ->orWhere('message', 'like', '%cannot%');
-                });
-                $statsQuery2->where(function ($q) {
-                    $q->where('level', 'like', '%beginner%')
-                        ->orWhere('level', 'like', '%cannot%')
-                        ->orWhere('message', 'like', '%beginner%')
-                        ->orWhere('message', 'like', '%cannot%');
-                });
-            } else {
-                $statsQuery1->where('message', 'like', "%{$levelFilter}%");
-                $statsQuery2->where(function ($q) use ($levelFilter) {
-                    $q->where('level', 'like', "%{$levelFilter}%")
-                        ->orWhere('message', 'like', "%{$levelFilter}%");
-                });
-            }
-        }
-
-        // Direct, bug-free query calculations for union counts
+        // Direct query calculations for union counts (excluding parents)
         $q1Stats = DB::table('contact_submissions')
             ->whereIn('subject', ['Halaqah Online Registration', 'Halaqah Qur’an']);
-        $q2Stats = DB::table('halaqah_registrations');
+        $q2Stats = DB::table('halaqah_registrations')
+            ->where(function ($q) {
+                $q->whereNull('grade_level')
+                  ->orWhere('grade_level', 'NOT LIKE', '%PARENTS%');
+            })
+            ->where(function ($q) {
+                $q->whereNull('type')
+                  ->orWhere('type', '!=', 'parents');
+            })
+            ->where(function ($q) {
+                $q->whereNull('message')
+                  ->orWhere('message', 'NOT LIKE', '%Halaqah Parents%');
+            });
 
         if ($search) {
             $q1Stats->where(function ($q) use ($search) {
@@ -341,10 +287,7 @@ class RegistrationController extends Controller
             'responded_at' => $newStatus === 'approved' ? now() : null,
         ]);
 
-        return redirect()->route('admin.registrations.halaqah', [
-            'tab' => $request->input('tab', 'submissions'),
-            'level' => $request->input('level'),
-        ])->with('status', 'Registration status updated successfully.');
+        return back()->with('status', 'Registration status updated successfully.');
     }
 
     public function destroy(Request $request, $id)
@@ -354,10 +297,7 @@ class RegistrationController extends Controller
 
         DB::table($table)->where('id', $id)->delete();
 
-        return redirect()->route('admin.registrations.halaqah', [
-            'tab' => $request->input('tab', 'submissions'),
-            'level' => $request->input('level'),
-        ])->with('status', 'Registration deleted successfully.');
+        return back()->with('status', 'Registration deleted successfully.');
     }
 
     public function halaqahParents(Request $request)
@@ -367,7 +307,7 @@ class RegistrationController extends Controller
         $status = $request->input('status');
         $levelFilter = $request->input('level');
 
-        $query = DB::table('contact_submissions')
+        $query1 = DB::table('contact_submissions')
             ->select(
                 'id',
                 'name',
@@ -382,56 +322,139 @@ class RegistrationController extends Controller
             )
             ->where('subject', 'Halaqah Parents Registration');
 
+        $query2 = DB::table('halaqah_registrations')
+            ->select(
+                'id',
+                'name',
+                'email',
+                'phone',
+                DB::raw("'Halaqah Parents Registration' as subject"),
+                DB::raw("CONCAT(
+                    COALESCE(message, ''),
+                    '\n--- Halaqah Registration Details ---\n',
+                    'Address: ', COALESCE(address, ''),
+                    '\nFB Account Link: ', COALESCE(fb_account, COALESCE(ms_teams, '')),
+                    '\nMobile Number: ', COALESCE(mobile, COALESCE(phone, '')),
+                    '\nLearning Level: ', COALESCE(level, ''),
+                    '\nAge: ', COALESCE(CAST(age AS CHAR), ''),
+                    '\nSex: ', COALESCE(sex, ''),
+                    '\nCivil Status: ', COALESCE(status, '')
+                ) as message"),
+                'status',
+                'created_at',
+                'responded_at',
+                DB::raw("'halaqah_registrations' as source")
+            )
+            ->where(function ($q) {
+                $q->where('grade_level', 'LIKE', '%PARENTS%')
+                  ->orWhere('type', 'parents')
+                  ->orWhere('message', 'LIKE', '%Parents%');
+            });
+
         if ($search) {
-            $query->where(function ($q) use ($search) {
+            $query1->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%")
                     ->orWhere('phone', 'like', "%{$search}%")
                     ->orWhere('message', 'like', "%{$search}%");
             });
+
+            $query2->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhere('message', 'like', "%{$search}%")
+                    ->orWhere('address', 'like', "%{$search}%")
+                    ->orWhere('level', 'like', "%{$search}%")
+                    ->orWhere('grade_level', 'like', "%{$search}%")
+                    ->orWhere('fb_account', 'like', "%{$search}%");
+            });
         }
 
         if ($levelFilter && $levelFilter !== 'all') {
-            $query->where('message', 'like', "%{$levelFilter}%");
+            $query1->where('message', 'like', "%{$levelFilter}%");
+            $query2->where(function ($q) use ($levelFilter) {
+                $q->where('level', 'like', "%{$levelFilter}%")
+                    ->orWhere('message', 'like', "%{$levelFilter}%");
+            });
         }
 
-        $qStats = DB::table('contact_submissions')
+        // Stats calculation for union
+        $q1Stats = DB::table('contact_submissions')
             ->where('subject', 'Halaqah Parents Registration');
+        $q2Stats = DB::table('halaqah_registrations')
+            ->where(function ($q) {
+                $q->where('grade_level', 'LIKE', '%PARENTS%')
+                  ->orWhere('type', 'parents')
+                  ->orWhere('message', 'LIKE', '%Parents%');
+            });
 
         if ($search) {
-            $qStats->where(function ($q) use ($search) {
+            $q1Stats->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%")
                     ->orWhere('phone', 'like', "%{$search}%")
                     ->orWhere('message', 'like', "%{$search}%");
             });
+            $q2Stats->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhere('message', 'like', "%{$search}%")
+                    ->orWhere('address', 'like', "%{$search}%")
+                    ->orWhere('level', 'like', "%{$search}%")
+                    ->orWhere('grade_level', 'like', "%{$search}%")
+                    ->orWhere('fb_account', 'like', "%{$search}%");
+            });
         }
 
         if ($levelFilter && $levelFilter !== 'all') {
-            $qStats->where('message', 'like', "%{$levelFilter}%");
+            $q1Stats->where('message', 'like', "%{$levelFilter}%");
+            $q2Stats->where(function ($q) use ($levelFilter) {
+                $q->where('level', 'like', "%{$levelFilter}%")
+                    ->orWhere('message', 'like', "%{$levelFilter}%");
+            });
         }
 
-        $totalCount = $qStats->count();
-        $newCount = (clone $qStats)->where('status', 'new')->count();
-        $approvedCount = (clone $qStats)->where('status', 'approved')->count();
+        $totalCount = $q1Stats->count() + $q2Stats->count();
+        $newCount = (clone $q1Stats)->where('status', 'new')->count() + (clone $q2Stats)->where('status', 'new')->count();
+        $approvedCount = (clone $q1Stats)->where('status', 'approved')->count() + (clone $q2Stats)->where('status', 'approved')->count();
 
-        $cannotReadCount = (clone $qStats)->where('message', 'like', '%BEGINNER%')->count();
-        $canReadCount = (clone $qStats)->where('message', 'like', '%ADVANCE%')->count();
+        $q1Cannot = clone $q1Stats;
+        $q1Cannot->where('message', 'like', '%BEGINNER%');
+        $q2Cannot = clone $q2Stats;
+        $q2Cannot->where(function ($q) {
+            $q->where('level', 'like', '%BEGINNER%')->orWhere('message', 'like', '%BEGINNER%');
+        });
+        $cannotReadCount = $q1Cannot->count() + $q2Cannot->count();
+
+        $q1Can = clone $q1Stats;
+        $q1Can->where('message', 'like', '%ADVANCE%');
+        $q2Can = clone $q2Stats;
+        $q2Can->where(function ($q) {
+            $q->where('level', 'like', '%ADVANCE%')->orWhere('message', 'like', '%ADVANCE%');
+        });
+        $canReadCount = $q1Can->count() + $q2Can->count();
 
         if ($status) {
-            $query->where('status', $status);
+            $query1->where('status', $status);
+            $query2->where('status', $status);
         }
 
+        $combinedQuery = $query1->union($query2);
+        $finalQuery = DB::table(DB::raw("({$combinedQuery->toSql()}) as combined"))
+            ->mergeBindings($combinedQuery);
+
         if ($request->has('print')) {
-            $registrations = $query->orderBy('created_at', 'desc')->get();
+            $registrations = $finalQuery->orderBy('created_at', 'desc')->get();
             return view('admin.registrations.print_halaqah', compact('registrations', 'tab'));
         }
 
-        $registrations = $query->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
+        $registrations = $finalQuery->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
 
         $isParents = true;
         $pageTitle = 'Halaqah Parents Registrations';
-        $pageDesc = 'Manage public registration submissions for the Halaqah Parents Islamic education program.';
+        $pageDesc = 'Manage parent and guardian registration submissions for the AMIS Halaqah Parents Islamic education program.';
 
         return view('admin.registrations.halaqah_parents', compact(
             'tab',
