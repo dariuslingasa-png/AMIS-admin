@@ -785,6 +785,97 @@
         logBox.appendChild(line);
         logBox.scrollTop = logBox.scrollHeight;
     }
+    // ── Hidden Iframe Export (no new tab) ──────────────────────────────────
+    let iframeExportListener = null;
+
+    function startIframeExport(url, format) {
+        // Show modal in progress state
+        const modal = document.getElementById('batch-export-modal');
+        if (modal) { document.body.appendChild(modal); modal.classList.remove('hidden'); }
+        document.getElementById('export-state-config')?.classList.add('hidden');
+        document.getElementById('export-state-progress')?.classList.remove('hidden');
+        document.getElementById('export-state-complete')?.classList.add('hidden');
+
+        const bar         = document.getElementById('export-progress-bar');
+        const floatBar    = document.getElementById('export-floating-progress-bar');
+        const pctText     = document.getElementById('export-percentage');
+        const floatPct    = document.getElementById('export-floating-percentage');
+        const counterText = document.getElementById('export-processed-counter');
+        const statusLabel = document.getElementById('export-status-label');
+        const remainText  = document.getElementById('export-remaining-time');
+        const logBox      = document.getElementById('export-log-lines');
+
+        if (bar)         bar.style.width      = '0%';
+        if (floatBar)    floatBar.style.width  = '0%';
+        if (pctText)     pctText.innerText     = '0%';
+        if (floatPct)    floatPct.innerText    = '0%';
+        if (statusLabel) statusLabel.innerText = 'Loading student forms...';
+        if (remainText)  remainText.innerText  = 'Calculating...';
+        if (logBox) logBox.innerHTML = '<div class="text-slate-500">[System] Initializing background renderer...</div>';
+
+        appendConsoleLog(`Starting ${format.toUpperCase()} batch export in background...`);
+
+        // Remove old listener & iframe
+        if (iframeExportListener) window.removeEventListener('message', iframeExportListener);
+        const old = document.getElementById('batch-render-iframe');
+        if (old) old.remove();
+
+        // Create hidden iframe with proper dimensions for html2canvas rendering
+        const iframe = document.createElement('iframe');
+        iframe.id = 'batch-render-iframe';
+        iframe.style.cssText = 'position:fixed;left:-9999px;top:0;width:1240px;height:900px;border:none;opacity:0;pointer-events:none;z-index:-1;';
+        iframe.src = url;
+        document.body.appendChild(iframe);
+
+        // Listen for postMessage from iframe
+        iframeExportListener = function(event) {
+            const data = event.data;
+            if (!data || !data.type) return;
+
+            if (data.type === 'zip_start') {
+                appendConsoleLog(`Rendering ${data.total} student forms as ${(data.format || format).toUpperCase()}...`);
+                if (statusLabel) statusLabel.innerText = 'Rendering forms...';
+            } else if (data.type === 'zip_log') {
+                const pct = data.percent || 0;
+                if (bar)      bar.style.width     = pct + '%';
+                if (floatBar) floatBar.style.width = pct + '%';
+                if (pctText)  pctText.innerText    = pct + '%';
+                if (floatPct) floatPct.innerText   = pct + '%';
+                if (data.current && data.total) {
+                    if (counterText) counterText.innerText = `${data.current.toLocaleString()} / ${data.total.toLocaleString()} Students`;
+                    if (statusLabel) statusLabel.innerText = 'Generating Documents...';
+                    const rem = Math.max(1, Math.round(((data.total - data.current) / Math.max(data.current, 1)) * 3));
+                    if (remainText) remainText.innerText = `~${rem} seconds`;
+                }
+                if (data.message) appendConsoleLog(data.message);
+            } else if (data.type === 'zip_done') {
+                if (bar)      bar.style.width     = '100%';
+                if (floatBar) floatBar.style.width = '100%';
+                if (pctText)  pctText.innerText    = '100%';
+                if (floatPct) floatPct.innerText   = '100%';
+                if (data.message) appendConsoleLog(data.message);
+
+                setTimeout(() => {
+                    document.getElementById('export-state-progress')?.classList.add('hidden');
+                    document.getElementById('export-state-complete')?.classList.remove('hidden');
+                    const dlSpan = document.querySelector('#export-state-complete button span');
+                    if (dlSpan) dlSpan.textContent = `Download ${format.toUpperCase()} ZIP`;
+                    setTimeout(() => {
+                        const iframeEl = document.getElementById('batch-render-iframe');
+                        if (iframeEl) iframeEl.remove();
+                    }, 1500);
+                }, 500);
+
+                window.removeEventListener('message', iframeExportListener);
+                iframeExportListener = null;
+                if (window.lucide) window.lucide.createIcons();
+            }
+        };
+
+        window.addEventListener('message', iframeExportListener);
+        if (window.lucide) window.lucide.createIcons();
+    }
+    // ────────────────────────────────────────────────────────────────────────
 
     async function startBackgroundExport() {
         const mode = document.getElementById('p-filter-mode')?.value || '';
@@ -793,17 +884,15 @@
         const search = '{{ request('search', '') }}';
 
         // For PDF and DOCX: use the pixel-perfect batch page renderer (html2canvas-based)
-        // This produces the same quality output as the individual form download
+        // Run inside a hidden iframe — no new tab!
         if (selectedFormat === 'pdf' || selectedFormat === 'docx') {
-            closeBatchExportModal();
-            const autoParam = selectedFormat === 'pdf' ? 'auto_zip_pdf=1' : 'auto_zip_docx=1';
             const params = new URLSearchParams();
             if (grade) params.append('grade', grade);
             if (mode) params.append('mode', mode);
             if (gender) params.append('gender', gender);
             if (search) params.append('search', search);
             params.append(selectedFormat === 'pdf' ? 'auto_zip_pdf' : 'auto_zip_docx', '1');
-            window.open('{{ route('admin.students.print-enrolment-forms-batch') }}?' + params.toString(), '_blank');
+            startIframeExport('{{ route('admin.students.print-enrolment-forms-batch') }}?' + params.toString(), selectedFormat);
             return;
         }
 
@@ -997,15 +1086,20 @@
         const mode = document.getElementById('p-filter-mode')?.value || '';
         const gender = document.getElementById('p-filter-gender')?.value || '';
         
+        const params = new URLSearchParams();
+        params.append('grade', gradeName);
+        if (mode) params.append('mode', mode);
+        if (gender) params.append('gender', gender);
+
         if (formatType === 'pdf') {
-            const url = `{{ route('admin.students.print-enrolment-forms-batch') }}?grade=${encodeURIComponent(gradeName)}&mode=${encodeURIComponent(mode)}&gender=${encodeURIComponent(gender)}&auto_zip_pdf=1`;
-            window.open(url, '_blank');
+            params.append('auto_zip_pdf', '1');
+            startIframeExport('{{ route('admin.students.print-enrolment-forms-batch') }}?' + params.toString(), 'pdf');
         } else if (formatType === 'jpg') {
-            const url = `{{ route('admin.students.print-enrolment-forms-batch') }}?grade=${encodeURIComponent(gradeName)}&mode=${encodeURIComponent(mode)}&gender=${encodeURIComponent(gender)}&auto_zip_jpg=1`;
-            window.open(url, '_blank');
+            params.append('auto_zip_jpg', '1');
+            startIframeExport('{{ route('admin.students.print-enrolment-forms-batch') }}?' + params.toString(), 'jpg');
         } else if (formatType === 'docx') {
-            const url = `{{ route('admin.students.print-enrolment-forms-batch') }}?grade=${encodeURIComponent(gradeName)}&mode=${encodeURIComponent(mode)}&gender=${encodeURIComponent(gender)}&auto_zip_docx=1`;
-            window.open(url, '_blank');
+            params.append('auto_zip_docx', '1');
+            startIframeExport('{{ route('admin.students.print-enrolment-forms-batch') }}?' + params.toString(), 'docx');
         } else {
             openBatchExportModal('enrollment_forms');
             const gradeFilter = document.getElementById('p-filter-grade');

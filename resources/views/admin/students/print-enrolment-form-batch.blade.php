@@ -977,6 +977,11 @@
                 if (overlay) overlay.classList.add('hidden-overlay');
                 return;
             }
+
+            // Notify parent iframe of total count
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage({ type: 'zip_start', total: totalStudents, format: 'pdf' }, '*');
+            }
             
             let processedPages = 0;
             const totalPages = totalStudents * 2;
@@ -998,6 +1003,15 @@
                     const pct = Math.round((processedPages / totalPages) * 100);
                     if (fill) fill.style.width = pct + '%';
                     if (text) text.innerText = `Rendering Student ${i + 1} of ${totalStudents} (Page ${pageNum}/2)...`;
+                    if (window.parent && window.parent !== window) {
+                        window.parent.postMessage({
+                            type: 'zip_log',
+                            current: i + 1,
+                            total: totalStudents,
+                            percent: pct,
+                            message: `[${i + 1}/${totalStudents}] Rendering PDF: ${studentName.replace(/_/g, ' ')} (Page ${pageNum}/2)`
+                        }, '*');
+                    }
                     
                     try {
                         const canvas = await html2canvas(pageEl, {
@@ -1027,6 +1041,9 @@
             
             if (fill) fill.style.width = '100%';
             if (text) text.innerText = 'Creating ZIP archive... Please wait.';
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage({ type: 'zip_log', percent: 98, message: '📦 Compiling PDF files into ZIP archive...' }, '*');
+            }
             
             try {
                 const content = await zip.generateAsync({ type: 'blob', compression: 'STORE' });
@@ -1040,6 +1057,9 @@
                 link.click();
                 document.body.removeChild(link);
                 setTimeout(() => URL.revokeObjectURL(url), 100);
+                if (window.parent && window.parent !== window) {
+                    window.parent.postMessage({ type: 'zip_done', message: '⚡ PDF ZIP Archive generated & download started!' }, '*');
+                }
             } catch (zipErr) {
                 console.error('Error generating ZIP:', zipErr);
                 alert('Failed to generate ZIP file.');
@@ -1107,12 +1127,27 @@
                 return;
             }
 
+            // Notify parent iframe of total count
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage({ type: 'zip_start', total: totalStudents, format: 'docx' }, '*');
+            }
+
             let processedStudents = 0;
 
             for (let i = 0; i < totalStudents; i++) {
                 const wrapper = wrappers[i];
                 const studentName = wrapper.getAttribute('data-student-name') || 'STUDENT_' + i;
                 const grade = wrapper.getAttribute('data-grade') || 'Grade_1';
+                const pctStart = Math.round((i / totalStudents) * 95);
+                if (window.parent && window.parent !== window) {
+                    window.parent.postMessage({
+                        type: 'zip_log',
+                        current: i + 1,
+                        total: totalStudents,
+                        percent: pctStart,
+                        message: `[${i + 1}/${totalStudents}] Generating DOCX: ${studentName.replace(/_/g, ' ')}`
+                    }, '*');
+                }
                 const mode = wrapper.getAttribute('data-mode') || 'F2F';
                 const pages = wrapper.querySelectorAll('.paper-container');
                 const basePath = `${grade}/${mode}`;
@@ -1233,6 +1268,9 @@
 
             if (fill) fill.style.width = '98%';
             if (text) text.innerText = 'Compiling DOCX files into ZIP archive...';
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage({ type: 'zip_log', percent: 98, message: '📦 Compiling DOCX files into ZIP archive...' }, '*');
+            }
 
             try {
                 const content = await outerZip.generateAsync({ type: 'blob', compression: 'STORE' });
@@ -1246,6 +1284,9 @@
                 link.click();
                 document.body.removeChild(link);
                 setTimeout(() => URL.revokeObjectURL(url), 100);
+                if (window.parent && window.parent !== window) {
+                    window.parent.postMessage({ type: 'zip_done', message: '⚡ DOCX ZIP Archive generated & download started!' }, '*');
+                }
             } catch (zipErr) {
                 console.error('Error generating DOCX ZIP:', zipErr);
                 alert('Failed to generate DOCX ZIP file.');
