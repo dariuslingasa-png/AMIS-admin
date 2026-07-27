@@ -387,6 +387,11 @@
                         <i data-lucide="sparkles" class="h-4 w-4 text-emerald-600"></i>
                         <span>Canva Bulk Create</span>
                     </button>
+
+                    <a href="{{ route('admin.students.preview-docx-enrolment-form', \App\Models\Student::first()?->id ?? 1) }}" target="_blank" class="flex items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 p-3 text-xs font-black text-indigo-800 hover:bg-indigo-100 transition cursor-pointer text-left shadow-xs">
+                        <i data-lucide="file-edit" class="h-4 w-4 text-indigo-600"></i>
+                        <span>Preview Single DOCX (Tester)</span>
+                    </a>
                 </div>
             </div>
 

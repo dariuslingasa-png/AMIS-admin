@@ -209,6 +209,7 @@ Route::name('admin.')->group(function () {
         Route::get('/students/{student}', [StudentController::class, 'show'])->name('students.show');
         Route::get('/students/{student}/id-editor', [StudentIdController::class, 'idEditor'])->name('students.id-editor');
         Route::get('/students/{student}/print-enrolment-form', [StudentPrintController::class, 'printEnrolmentForm'])->name('students.print-enrolment-form');
+        Route::get('/students/{student}/preview-docx-enrolment-form', [StudentPrintController::class, 'previewDocxEnrolmentForm'])->name('students.preview-docx-enrolment-form');
         Route::post('/students/{student}/update-profile', [StudentController::class, 'updateProfile'])->name('students.update-profile');
         Route::post('/students/{student}/update-photo', [StudentPhotoController::class, 'updatePhoto'])->name('students.update-photo');
         Route::post('/students/{student}/update-section', [StudentRosterController::class, 'updateSection'])->name('students.update-section');

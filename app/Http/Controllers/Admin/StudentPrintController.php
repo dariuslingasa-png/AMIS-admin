@@ -197,4 +197,18 @@ class StudentPrintController extends Controller
         $totalStudents = $query->count();
         return view('admin.students.print-export', compact('totalStudents'));
     }
+
+    public function previewDocxEnrolmentForm(Student $student)
+    {
+        abort_unless(auth()->user()?->canViewAdminGrade($student->grade_level), 403);
+
+        $docxBinary = \App\Support\DocxBuilder::buildEnrolmentFormDocx($student);
+
+        $filename = "Enrollment Application Form - " . strtoupper($student->last_name . ' ' . $student->first_name) . ".docx";
+
+        return response($docxBinary, 200, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
 }
