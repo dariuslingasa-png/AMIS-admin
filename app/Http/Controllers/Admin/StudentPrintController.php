@@ -202,25 +202,13 @@ class StudentPrintController extends Controller
     {
         abort_unless(auth()->user()?->canViewAdminGrade($student->grade_level), 403);
 
-        $student->load([
-            'applicant.user',
-            'applicant.payment',
-            'studentSection.section',
-        ]);
+        $docxBinary = \App\Support\DocxBuilder::buildEnrolmentFormDocx($student);
 
-        $applicant = $student->applicant;
-        $siblings = [];
-        if ($applicant && $applicant->user_id) {
-            $siblings = EnrollmentApplicant::where('user_id', $applicant->user_id)
-                ->where('id', '!=', $applicant->id)
-                ->get();
-        }
+        $filename = "Enrollment Application Form - " . strtoupper($student->last_name . ' ' . $student->first_name) . ".docx";
 
-        return view('admin.students.print-enrolment-form', [
-            'student' => $student,
-            'applicant' => $applicant,
-            'siblings' => $siblings,
-            'autoDocx' => true,
+        return response($docxBinary, 200, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ]);
     }
 }
