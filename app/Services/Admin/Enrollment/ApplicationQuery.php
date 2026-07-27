@@ -153,6 +153,8 @@ class ApplicationQuery
             };
         }
 
+        $query->orderByRaw('CASE WHEN enrollment_applicants.created_at >= ? THEN 0 ELSE 1 END', [now()->subHours(24)]);
+
         $sort = (string) $request->query('sort', 'number');
         $direction = $request->query('dir') === 'asc' ? 'asc' : 'desc';
 
@@ -166,7 +168,8 @@ class ApplicationQuery
         } elseif (in_array($sort, ['grade_level', 'status'], true)) {
             $query->orderBy('enrollment_applicants.'.$sort, $direction);
         } else {
-            $query->orderBy('enrollment_applicants.id', $direction);
+            $query->orderBy('enrollment_applicants.created_at', 'desc')
+                ->orderBy('enrollment_applicants.id', 'desc');
         }
 
         return $query->paginate($perPage)->withQueryString();
@@ -180,16 +183,28 @@ class ApplicationQuery
             ->map(fn ($children) => $this->familyRow($children))
             ->values();
 
-        $sort = (string) $request->query('sort', 'number');
-        $desc = $request->query('dir', 'desc') !== 'asc';
-        $families = $families->sortBy(fn ($family) => match ($sort) {
-            'parent' => $family['family_label'],
-            'children' => $family['children_count'],
-            'progress' => $family['approved_count'],
-            'payment' => $family['payment_status'],
-            'status' => $family['overall_status'],
-            default => $family['family_no'],
-        }, SORT_REGULAR, $desc)->values();
+        $newFamilies = $families->filter(fn ($f) => $f['is_new'] ?? false)
+            ->sortByDesc(fn ($f) => $f['latest_created_timestamp'] ?? 0)
+            ->values();
+
+        $olderFamilies = $families->filter(fn ($f) => ! ($f['is_new'] ?? false));
+
+        if ($request->filled('sort') && $request->query('sort') !== 'number') {
+            $sort = (string) $request->query('sort');
+            $desc = $request->query('dir', 'desc') !== 'asc';
+            $olderFamilies = $olderFamilies->sortBy(fn ($family) => match ($sort) {
+                'parent' => $family['family_label'],
+                'children' => $family['children_count'],
+                'progress' => $family['approved_count'],
+                'payment' => $family['payment_status'],
+                'status' => $family['overall_status'],
+                default => $family['latest_created_timestamp'] ?? $family['family_no'],
+            }, SORT_REGULAR, $desc)->values();
+        } else {
+            $olderFamilies = $olderFamilies->sortByDesc(fn ($f) => $f['latest_created_timestamp'] ?? $f['family_no'])->values();
+        }
+
+        $families = $newFamilies->concat($olderFamilies)->values();
 
         $page = Paginator::resolveCurrentPage();
 
@@ -347,6 +362,11 @@ class ApplicationQuery
             }
         })->get();
 
+        $latestCreated = $children->max('created_at');
+        $regTime = $latestCreated ? \Illuminate\Support\Carbon::parse($latestCreated) : null;
+        $isNew = $regTime && ($regTime->greaterThanOrEqualTo(now()->subHours(24)) || $regTime->isYesterday() || $regTime->isToday());
+        $latestTimestamp = $regTime ? $regTime->timestamp : 0;
+
         return [
             'family_no' => $familyId,
             'family_label' => $this->familyLabel($representative),
@@ -359,6 +379,8 @@ class ApplicationQuery
             'payment_status' => $this->familyPaymentStatus($children, $familyPayments),
             'overall_status' => $rejected > 0 ? 'Rejected' : ($approved === $children->count() ? 'Approved' : 'Pending'),
             'email_sent_at' => $children->max('registry_email_sent_at'),
+            'is_new' => $isNew,
+            'latest_created_timestamp' => $latestTimestamp,
             'representative' => $representative,
             'children' => $children,
             'family_payments' => $familyPayments,

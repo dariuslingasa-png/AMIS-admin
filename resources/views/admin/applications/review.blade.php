@@ -98,7 +98,8 @@
                                                     $isNewRegistration = $regTime && ($regTime->greaterThanOrEqualTo(now()->subHours(24)) || $regTime->isYesterday() || $regTime->isToday());
                                                 @endphp
                                                 @if ($isNewRegistration)
-                                                    <span class="inline-flex items-center rounded-full bg-rose-600 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-white shadow-3xs" title="Registered {{ $regTime->diffForHumans() }}">
+                                                    <span class="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-white shadow-3xs" title="Registered {{ $regTime->diffForHumans() }}">
+                                                        <span class="h-1.5 w-1.5 rounded-full bg-white animate-pulse"></span>
                                                         NEW
                                                     </span>
                                                 @endif
