@@ -18,10 +18,10 @@
     @endphp
     <title>{{ $autoFileName }}</title>
     
-    <!-- Premium Google Fonts: Merriweather for Headers & Inter for Fillable Data -->
+    <!-- Premium Google Fonts: Merriweather for Headers, Inter for Data & Amiri for Arabic -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Merriweather:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,700;1,700&family=Inter:wght@400;500;600;700;800&family=Merriweather:wght@400;700;900&display=swap" rel="stylesheet">
     
     <style>
         * {
@@ -149,6 +149,17 @@
             text-align: center;
             flex-grow: 1;
             padding: 0 5px;
+        }
+
+        .school-arabic-name {
+            font-family: 'Amiri', 'Traditional Arabic', 'Scheherazade New', serif;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #047857;
+            text-align: center;
+            direction: rtl;
+            line-height: 1.1;
+            margin-bottom: 2px;
         }
 
         .school-name {

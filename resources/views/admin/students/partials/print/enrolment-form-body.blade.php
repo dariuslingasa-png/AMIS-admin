@@ -163,6 +163,7 @@
         <div class="header-left-group">
             <img src="{{ $amisLogoSrc }}" alt="AMIS Logo" class="header-logo-amis">
             <div class="header-school-text">
+                <div class="school-arabic-name">مَدْرَسَةُ الْمُنَوَّرَةِ الإِسْلَامِيَّةِ</div>
                 <h1 class="school-name">AL MUNAWWARA ISLAMIC SCHOOL</h1>
                 <p class="school-address">Bugac Ma-a Road, Davao City Philippines</p>
             </div>
