@@ -879,21 +879,16 @@
 
                 docRels += `\n    <Relationship Id="${imgId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/${imgFileName}"/>`;
 
-                const isLastPage = (i === pages.length - 1);
-                const pageBreakXml = isLastPage ? '' : '<w:br w:type="page"/>';
-
                 docBody += `
 <w:p>
     <w:pPr>
         <w:jc w:val="center"/>
-        <w:rPr><w:sz w:val="2"/><w:szCs w:val="2"/></w:rPr>
-        <w:spacing w:before="0" w:after="0" w:line="1" w:lineRule="exact"/>
+        <w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/>
     </w:pPr>
     <w:r>
-        <w:rPr><w:sz w:val="2"/><w:szCs w:val="2"/></w:rPr>
         <w:drawing>
             <wp:inline distT="0" distB="0" distL="0" distR="0">
-                <wp:extent cx="7560000" cy="10500000"/>
+                <wp:extent cx="7560000" cy="10692000"/>
                 <wp:docPr id="${i + 1}" name="Page ${i + 1}"/>
                 <a:graphic>
                     <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
@@ -909,7 +904,7 @@
                             <pic:spPr>
                                 <a:xfrm>
                                     <a:off x="0" y="0"/>
-                                    <a:ext cx="7560000" cy="10500000"/>
+                                    <a:ext cx="7560000" cy="10692000"/>
                                 </a:xfrm>
                                 <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
                             </pic:spPr>
@@ -918,9 +913,11 @@
                 </a:graphic>
             </wp:inline>
         </w:drawing>
-        ${pageBreakXml}
     </w:r>
 </w:p>`;
+                if (i < pages.length - 1) {
+                    docBody += '<w:p><w:pPr><w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/></w:pPr><w:r><w:br w:type="page"/></w:r></w:p>';
+                }
             }
 
             docRels += '\n</Relationships>';
