@@ -101,16 +101,12 @@ class DocxBuilder
         $middleName = e(strtoupper((string) ($applicant?->middle_name ?: $student->middle_name)));
         $sex = e(strtoupper((string) ($applicant?->gender ?: ($student->gender ?: 'N/A'))));
         $gradeLevel = e(strtoupper((string) $student->grade_level));
-        
-        $rawAddress = $applicant?->address ?: ($applicant?->street_address ?: 'N/A');
-        $address = e(strtoupper((string) $rawAddress));
-        
+        $address = e(strtoupper((string) ($applicant?->address ?: 'N/A')));
         $age = e((string) ($applicant?->age ?: 'N/A'));
         $dob = e($applicant?->date_of_birth ? date('M d, Y', strtotime($applicant->date_of_birth)) : 'N/A');
         $pob = e(strtoupper((string) ($applicant?->place_of_birth ?: 'N/A')));
         $religion = e(strtoupper((string) ($applicant?->religion ?: 'ISLAM')));
         $prevSchool = e(strtoupper((string) ($applicant?->previous_school ?: 'N/A')));
-        $prevSchoolAddr = e(strtoupper((string) ($applicant?->previous_school_address ?: 'N/A')));
         $phone = e((string) ($applicant?->contact_number ?: ($applicant?->user?->phone ?: 'N/A')));
 
         $fatherName = e(strtoupper((string) ($applicant?->father_name ?: 'N/A')));
@@ -121,20 +117,8 @@ class DocxBuilder
         $motherOcc = e(strtoupper((string) ($applicant?->mother_occupation ?: 'N/A')));
         $motherContact = e((string) ($applicant?->mother_contact ?: 'N/A'));
 
-        $homeAddress = e(strtoupper((string) ($applicant?->home_address ?: $rawAddress)));
-
         $isNew = ($applicant?->status === 'new') || ($student->created_at && $student->created_at->gt(now()->subDays(30)));
         $newBox = $isNew ? '[X] NEW   [  ] OLD' : '[  ] NEW   [X] OLD';
-
-        $medExplain = e(strtoupper((string) ($applicant?->med_explanation ?: 'NONE')));
-        $medMeds = e(strtoupper((string) ($applicant?->current_medications ?: 'NONE')));
-        $physician = e(strtoupper((string) ($applicant?->family_physician ?: 'N/A')));
-        $physicianPhone = e((string) ($applicant?->physician_phone ?: 'N/A'));
-        $emergName = e(strtoupper((string) ($applicant?->emergency_name ?: 'N/A')));
-        $emergRel = e(strtoupper((string) ($applicant?->emergency_relationship ?: 'N/A')));
-        $emergPhone = e((string) ($applicant?->emergency_phone ?: 'N/A'));
-        $referral = e(strtoupper((string) ($applicant?->referral_source ?: 'N/A')));
-        $regDate = e($student->created_at ? $student->created_at->format('M d, Y') : date('M d, Y'));
 
         return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
@@ -155,7 +139,7 @@ class DocxBuilder
             </w:r>
         </w:p>
 
-        <w:p/>
+        <w:p/><!-- Spacing -->
 
         <w:p>
             <w:pPr><w:jc w:val="center"/></w:pPr>
@@ -180,16 +164,17 @@ class DocxBuilder
             </w:r>
         </w:p>
 
-        <w:p/>
+        <w:p/><!-- Spacing -->
 
         <!-- Section 1: Student Information -->
         <w:p>
             <w:r>
-                <w:rPr><w:b/><w:sz w:val="22"/><w:color w:val="0F172A"/></w:rPr>
-                <w:t>PAGE 1: STUDENT INFORMATION</w:t>
+                <w:rPr><w:b/><w:sz w:val="20"/><w:color w:val="0F172A"/></w:rPr>
+                <w:t>STUDENT INFORMATION</w:t>
             </w:r>
         </w:p>
 
+        <!-- Table 1: Student Details -->
         <w:tbl>
             <w:tblPr>
                 <w:tblW w:w="5000" w:type="pct"/>
@@ -241,17 +226,17 @@ class DocxBuilder
             <w:tr>
                 <w:tc><w:p><w:r><w:rPr><w:b/></w:rPr><w:t>PREVIOUS SCHOOL:</w:t></w:r></w:p></w:tc>
                 <w:tc><w:p><w:r><w:t>' . $prevSchool . '</w:t></w:r></w:p></w:tc>
-                <w:tc><w:p><w:r><w:rPr><w:b/></w:rPr><w:t>PREVIOUS SCHOOL ADDRESS:</w:t></w:r></w:p></w:tc>
-                <w:tc><w:p><w:r><w:t>' . $prevSchoolAddr . '</w:t></w:r></w:p></w:tc>
+                <w:tc><w:p><w:r><w:rPr><w:b/></w:rPr><w:t>-</w:t></w:r></w:p></w:tc>
+                <w:tc><w:p><w:r><w:t>-</w:t></w:r></w:p></w:tc>
             </w:tr>
         </w:tbl>
 
-        <w:p/>
+        <w:p/><!-- Spacing -->
 
         <!-- Section 2: Parent Information -->
         <w:p>
             <w:r>
-                <w:rPr><w:b/><w:sz w:val="22"/><w:color w:val="0F172A"/></w:rPr>
+                <w:rPr><w:b/><w:sz w:val="20"/><w:color w:val="0F172A"/></w:rPr>
                 <w:t>PARENT INFORMATION</w:t>
             </w:r>
         </w:p>
@@ -289,62 +274,11 @@ class DocxBuilder
             <w:tr>
                 <w:tc><w:p><w:r><w:rPr><w:b/></w:rPr><w:t>MOTHER TEL / EMAIL:</w:t></w:r></w:p></w:tc>
                 <w:tc><w:p><w:r><w:t>' . $motherContact . '</w:t></w:r></w:p></w:tc>
-                <w:tc><w:p><w:r><w:rPr><w:b/></w:rPr><w:t>HOME ADDRESS:</w:t></w:r></w:p></w:tc>
-                <w:tc><w:p><w:r><w:t>' . $homeAddress . '</w:t></w:r></w:p></w:tc>
-            </w:tr>
-        </w:tbl>
-
-        <!-- Page 2 Break -->
-        <w:p><w:r><w:br w:type="page"/></w:r></w:p>
-
-        <!-- PAGE 2: Medical, Emergency Contacts, Referral & Signatures -->
-        <w:p>
-            <w:r>
-                <w:rPr><w:b/><w:sz w:val="22"/><w:color w:val="0F172A"/></w:rPr>
-                <w:t>PAGE 2: MEDICAL INFORMATION &amp; EMERGENCY CONTACTS</w:t>
-            </w:r>
-        </w:p>
-
-        <w:tbl>
-            <w:tblPr>
-                <w:tblW w:w="5000" w:type="pct"/>
-                <w:tblBorders>
-                    <w:top w:val="single" w:sz="6" w:space="0" w:color="CBD5E1"/>
-                    <w:left w:val="single" w:sz="6" w:space="0" w:color="CBD5E1"/>
-                    <w:bottom w:val="single" w:sz="6" w:space="0" w:color="CBD5E1"/>
-                    <w:right w:val="single" w:sz="6" w:space="0" w:color="CBD5E1"/>
-                    <w:insideH w:val="single" w:sz="4" w:space="0" w:color="E2E8F0"/>
-                    <w:insideV w:val="single" w:sz="4" w:space="0" w:color="E2E8F0"/>
-                </w:tblBorders>
-            </w:tblPr>
-            <w:tr>
-                <w:tc><w:p><w:r><w:rPr><w:b/></w:rPr><w:t>PSYCHOLOGICAL TESTING:</w:t></w:r></w:p></w:tc>
-                <w:tc><w:p><w:r><w:t>' . $medExplain . '</w:t></w:r></w:p></w:tc>
-            </w:tr>
-            <w:tr>
-                <w:tc><w:p><w:r><w:rPr><w:b/></w:rPr><w:t>PRESCRIPTION MEDICATION:</w:t></w:r></w:p></w:tc>
-                <w:tc><w:p><w:r><w:t>' . $medMeds . '</w:t></w:r></w:p></w:tc>
-            </w:tr>
-            <w:tr>
-                <w:tc><w:p><w:r><w:rPr><w:b/></w:rPr><w:t>FAMILY PHYSICIAN:</w:t></w:r></w:p></w:tc>
-                <w:tc><w:p><w:r><w:t>' . $physician . ' (' . $physicianPhone . ')</w:t></w:r></w:p></w:tc>
-            </w:tr>
-            <w:tr>
-                <w:tc><w:p><w:r><w:rPr><w:b/></w:rPr><w:t>EMERGENCY CONTACT:</w:t></w:r></w:p></w:tc>
-                <w:tc><w:p><w:r><w:t>' . $emergName . ' - ' . $emergRel . ' (' . $emergPhone . ')</w:t></w:r></w:p></w:tc>
-            </w:tr>
-            <w:tr>
-                <w:tc><w:p><w:r><w:rPr><w:b/></w:rPr><w:t>REFERRAL SOURCE:</w:t></w:r></w:p></w:tc>
-                <w:tc><w:p><w:r><w:t>' . $referral . '</w:t></w:r></w:p></w:tc>
-            </w:tr>
-            <w:tr>
-                <w:tc><w:p><w:r><w:rPr><w:b/></w:rPr><w:t>PARENT / GUARDIAN SIGNATURE:</w:t></w:r></w:p></w:tc>
-                <w:tc><w:p><w:r><w:t>' . $fatherName . ' / ' . $motherName . ' (Date: ' . $regDate . ')</w:t></w:r></w:p></w:tc>
+                <w:tc><w:p><w:r><w:rPr><w:b/></w:rPr><w:t>-</w:t></w:r></w:p></w:tc>
+                <w:tc><w:p><w:r><w:t>-</w:t></w:r></w:p></w:tc>
             </w:tr>
         </w:tbl>
     </w:body>
 </w:document>';
-    }
-}';
     }
 }
