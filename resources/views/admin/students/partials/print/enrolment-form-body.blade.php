@@ -237,7 +237,7 @@
     </div>
 
     <div class="field-container" style="margin-top: 14px;">
-        <input type="text" class="input-line" value="{{ $fullAddress }}" style="{{ $getDynamicStyle($fullAddress, '0.92rem', '0.78rem', '0.66rem', '0.54rem', 35, 55, 75) }}">
+        <input type="text" class="input-line" value="{{ $fullAddress }}" spellcheck="false" style="{{ $getDynamicStyle($fullAddress, '0.92rem', '0.80rem', '0.70rem', '0.60rem', 32, 50, 68) }}">
         <span class="label-text">Address</span>
     </div>
 
@@ -341,7 +341,7 @@
     @endphp
 
     <div class="field-container" style="margin-top: 14px;">
-        <input type="text" class="input-line" value="{{ $formattedHomeAddress }}" style="{{ $getDynamicStyle($formattedHomeAddress, '0.96rem', '0.82rem', '0.70rem', '0.60rem', 45, 65, 85) }}">
+        <input type="text" class="input-line" value="{{ $formattedHomeAddress }}" spellcheck="false" style="{{ $getDynamicStyle($formattedHomeAddress, '0.92rem', '0.80rem', '0.70rem', '0.60rem', 32, 50, 68) }}">
         <span class="label-text">Home Address</span>
     </div>
 
