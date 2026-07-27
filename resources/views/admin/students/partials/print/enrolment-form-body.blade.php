@@ -103,20 +103,20 @@
         return "font-size: {$baseSize}; font-weight: 750;";
     };
 
-    // Specialized Auto Font-Size Helper for Address & Home Address (14px default down to 9px min)
+    // Specialized Auto Font-Size Helper for Address & Home Address (14px default, scales only when overflowing full width)
     $getAddressStyle = function($text) {
         $len = mb_strlen(trim($text ?? ''));
-        if ($len > 85) {
-            return "font-size: 9px; font-weight: 700; white-space: nowrap;";
+        if ($len > 120) {
+            return "font-size: 8.5px; font-weight: 700; white-space: nowrap;";
         }
-        if ($len > 70) {
+        if ($len > 105) {
             return "font-size: 9.5px; font-weight: 700; white-space: nowrap;";
         }
-        if ($len > 55) {
-            return "font-size: 10.5px; font-weight: 700; white-space: nowrap;";
+        if ($len > 92) {
+            return "font-size: 11px; font-weight: 700; white-space: nowrap;";
         }
-        if ($len > 40) {
-            return "font-size: 12px; font-weight: 700; white-space: nowrap;";
+        if ($len > 82) {
+            return "font-size: 12.5px; font-weight: 700; white-space: nowrap;";
         }
         return "font-size: 14px; font-weight: 700; white-space: nowrap;";
     };
