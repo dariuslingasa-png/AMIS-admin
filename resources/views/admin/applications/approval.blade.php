@@ -123,7 +123,18 @@
                             @endphp
                             <tr class="transition hover:bg-slate-50">
                                 <td class="px-5 py-4">
-                                    <div class="font-extrabold text-slate-950">{{ $name }}</div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-extrabold text-slate-950">{{ $name }}</span>
+                                        @php
+                                            $regTime = $applicant->created_at ? \Illuminate\Support\Carbon::parse($applicant->created_at) : null;
+                                            $isNewRegistration = $regTime && ($regTime->greaterThanOrEqualTo(now()->subHours(24)) || $regTime->isYesterday() || $regTime->isToday());
+                                        @endphp
+                                        @if ($isNewRegistration)
+                                            <span class="inline-flex items-center rounded-full bg-rose-600 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-white shadow-3xs" title="Registered {{ $regTime->diffForHumans() }}">
+                                                NEW
+                                            </span>
+                                        @endif
+                                    </div>
                                     <div class="mt-1 flex flex-wrap items-center gap-2 text-xs font-medium text-slate-500">
                                         <span>{{ $applicant->grade_abbr }}</span>
                                         <span class="rounded-md px-2 py-0.5 text-[10px] font-extrabold {{ $typeClass($studentType) }}">{{ $studentType }}</span>

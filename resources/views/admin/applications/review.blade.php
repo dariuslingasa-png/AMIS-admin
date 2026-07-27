@@ -91,7 +91,18 @@
                                     <div class="flex items-center gap-3">
                                         <span class="inline-flex h-10 w-10 items-center justify-center rounded-md bg-emerald-50 text-xs font-extrabold text-emerald-700 ring-1 ring-emerald-100">{{ $initials ?: 'ST' }}</span>
                                         <div>
-                                            <div class="font-extrabold text-slate-950">{{ $name }}</div>
+                                            <div class="flex items-center gap-2">
+                                                <span class="font-extrabold text-slate-950">{{ $name }}</span>
+                                                @php
+                                                    $regTime = $applicant->created_at ? \Illuminate\Support\Carbon::parse($applicant->created_at) : null;
+                                                    $isNewRegistration = $regTime && ($regTime->greaterThanOrEqualTo(now()->subHours(24)) || $regTime->isYesterday() || $regTime->isToday());
+                                                @endphp
+                                                @if ($isNewRegistration)
+                                                    <span class="inline-flex items-center rounded-full bg-rose-600 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-white shadow-3xs" title="Registered {{ $regTime->diffForHumans() }}">
+                                                        NEW
+                                                    </span>
+                                                @endif
+                                            </div>
                                             <div class="mt-0.5 text-xs font-medium text-slate-500">{{ $applicant->user->email ?? $applicant->email }}</div>
                                         </div>
                                     </div>
