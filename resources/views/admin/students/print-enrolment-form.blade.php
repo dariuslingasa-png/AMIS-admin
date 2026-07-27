@@ -111,7 +111,7 @@
             min-height: 297mm;
             margin: 0 auto 30px auto;
             background: #ffffff;
-            padding: 14mm 16mm 14mm 16mm;
+            padding: 11mm 16mm 11mm 16mm;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
             position: relative;
             border-radius: 2px;
@@ -888,7 +888,7 @@
     <w:r>
         <w:drawing>
             <wp:inline distT="0" distB="0" distL="0" distR="0">
-                <wp:extent cx="7560000" cy="10595000"/>
+                <wp:extent cx="7560000" cy="10400000"/>
                 <wp:docPr id="${i + 1}" name="Page ${i + 1}"/>
                 <a:graphic>
                     <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
@@ -904,7 +904,7 @@
                             <pic:spPr>
                                 <a:xfrm>
                                     <a:off x="0" y="0"/>
-                                    <a:ext cx="7560000" cy="10595000"/>
+                                    <a:ext cx="7560000" cy="10400000"/>
                                 </a:xfrm>
                                 <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
                             </pic:spPr>
