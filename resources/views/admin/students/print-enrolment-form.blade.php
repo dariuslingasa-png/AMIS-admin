@@ -886,7 +886,7 @@
 
             for (let i = 0; i < pages.length; i++) {
                 const canvas = await html2canvas(pages[i], {
-                    scale: 2.5,
+                    scale: 2.2,
                     useCORS: true,
                     logging: false,
                     backgroundColor: '#ffffff'
@@ -910,7 +910,7 @@
     <w:r>
         <w:drawing>
             <wp:inline distT="0" distB="0" distL="0" distR="0">
-                <wp:extent cx="7200000" cy="10332000"/>
+                <wp:extent cx="6840000" cy="9720000"/>
                 <wp:docPr id="${i + 1}" name="Page ${i + 1}"/>
                 <a:graphic>
                     <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
@@ -926,7 +926,7 @@
                             <pic:spPr>
                                 <a:xfrm>
                                     <a:off x="0" y="0"/>
-                                    <a:ext cx="7200000" cy="10332000"/>
+                                    <a:ext cx="6840000" cy="9720000"/>
                                 </a:xfrm>
                                 <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
                             </pic:spPr>
@@ -935,9 +935,11 @@
                 </a:graphic>
             </wp:inline>
         </w:drawing>
-        ${i < pages.length - 1 ? '<w:br w:type="page"/>' : ''}
     </w:r>
 </w:p>`;
+                if (i < pages.length - 1) {
+                    docBody += '<w:p><w:pPr><w:spacing w:before="0" w:after="0"/></w:pPr><w:r><w:br w:type="page"/></w:r></w:p>';
+                }
             }
 
             docRels += '\n</Relationships>';
@@ -953,7 +955,7 @@
         ${docBody}
         <w:sectPr>
             <w:pgSz w:w="11906" w:h="16838"/>
-            <w:pgMar w:top="283" w:right="283" w:bottom="283" w:left="283" w:header="0" w:footer="0" w:gutter="0"/>
+            <w:pgMar w:top="567" w:right="567" w:bottom="567" w:left="567" w:header="0" w:footer="0" w:gutter="0"/>
         </w:sectPr>
     </w:body>
 </w:document>`;
