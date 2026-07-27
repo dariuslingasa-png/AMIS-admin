@@ -776,6 +776,12 @@
             </div>
             <div style="display: flex; gap: 8px; align-items: center;">
                 <button onclick="window.close()" style="font-family: inherit; font-size: 0.78rem; font-weight: 700; padding: 8px 14px; border-radius: 10px; border: 1px solid #cbd5e1; background: #f8fafc; color: #334155; cursor: pointer; transition: all 0.15s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f8fafc'">Close</button>
+
+                <button onclick="downloadSingleFormDocx()" id="btn-download-docx" style="font-family: inherit; font-size: 0.78rem; font-weight: 700; padding: 8px 16px; border-radius: 10px; border: 1px solid #6366f1; background: #eef2ff; color: #4338ca; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(99, 102, 241, 0.15); transition: all 0.15s;" onmouseover="this.style.background='#e0e7ff'" onmouseout="this.style.background='#eef2ff'">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    <span>Download DOCX</span>
+                </button>
+
                 <button onclick="triggerPrintPDF()" style="font-family: inherit; font-size: 0.78rem; font-weight: 700; padding: 8px 18px; border-radius: 10px; border: none; background: #059669; color: white; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(5, 150, 105, 0.2); transition: all 0.15s;" onmouseover="this.style.background='#047857'" onmouseout="this.style.background='#059669'">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
                     <span>Print / Save as PDF</span>
@@ -828,6 +834,124 @@
     <script>
         function triggerPrintPDF() {
             window.print();
+        }
+
+        async function downloadSingleFormDocx() {
+            const pages = document.querySelectorAll('.paper-container');
+            if (!pages || pages.length === 0) return;
+
+            const btn = document.getElementById('btn-download-docx');
+            if (btn) btn.innerHTML = '<span>Generating DOCX...</span>';
+
+            if (typeof html2canvas === 'undefined') {
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+                document.head.appendChild(script);
+                await new Promise(res => script.onload = res);
+            }
+            if (typeof JSZip === 'undefined') {
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+                document.head.appendChild(script);
+                await new Promise(res => script.onload = res);
+            }
+
+            const zip = new JSZip();
+            
+            zip.file('[Content_Types].xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+    <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+    <Default Extension="xml" ContentType="application/xml"/>
+    <Default Extension="png" ContentType="image/png"/>
+    <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+</Types>`);
+
+            zip.file('_rels/.rels', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+    <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+</Relationships>`);
+
+            let docRels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">`;
+
+            let docBody = '';
+
+            for (let i = 0; i < pages.length; i++) {
+                const canvas = await html2canvas(pages[i], { scale: 2.5, useCORS: true, logging: false });
+                const imgDataUrl = canvas.toDataURL('image/png');
+                const base64Data = imgDataUrl.replace(/^data:image\/png;base64,/, '');
+
+                const imgId = `rId${i + 2}`;
+                const imgFileName = `image${i + 1}.png`;
+
+                zip.file(`word/media/${imgFileName}`, base64Data, { base64: true });
+
+                docRels += `\n    <Relationship Id="${imgId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/${imgFileName}"/>`;
+
+                docBody += `
+<w:p>
+    <w:pPr><w:jc w:val="center"/></w:pPr>
+    <w:r>
+        <w:drawing>
+            <wp:inline distT="0" distB="0" distL="0" distR="0">
+                <wp:extent cx="5760000" cy="8150000"/>
+                <wp:docPr id="${i + 1}" name="Page ${i + 1}"/>
+                <a:graphic>
+                    <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                        <pic:pic>
+                            <pic:nvPicPr>
+                                <pic:cNvPr id="0" name="Picture"/>
+                                <pic:cNvPicPr/>
+                            </pic:nvPicPr>
+                            <pic:blipFill>
+                                <a:blip r:embed="${imgId}"/>
+                                <a:stretch><a:fillRect/></a:stretch>
+                            </pic:blipFill>
+                            <pic:spPr>
+                                <a:xfrm>
+                                    <a:off x="0" y="0"/>
+                                    <a:ext cx="5760000" cy="8150000"/>
+                                </a:xfrm>
+                                <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
+                            </pic:spPr>
+                        </pic:pic>
+                    </a:graphicData>
+                </a:graphic>
+            </wp:inline>
+        </w:drawing>
+    </w:r>
+</w:p>`;
+                if (i < pages.length - 1) {
+                    docBody += '<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
+                }
+            }
+
+            docRels += '\n</Relationships>';
+            zip.file('word/_rels/document.xml.rels', docRels);
+
+            const docXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+            xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+            xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
+            xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
+            xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
+    <w:body>
+        ${docBody}
+    </w:body>
+</w:document>`;
+
+            zip.file('word/document.xml', docXml);
+
+            const content = await zip.generateAsync({ type: 'blob' });
+            const url = URL.createObjectURL(content);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${document.title || 'Enrollment_Form'}.docx`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+
+            if (btn) btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg><span>Download DOCX</span>';
         }
 
         if (new URLSearchParams(window.location.search).get('auto_print') === '1') {

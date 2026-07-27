@@ -1031,6 +1031,19 @@
             });
         }
 
+        if (new URLSearchParams(window.location.search).get('auto_zip_docx') === '1') {
+            window.addEventListener('DOMContentLoaded', () => {
+                const checkReadyInterval = setInterval(async () => {
+                    const overlay = document.getElementById('loadingOverlay');
+                    if (!overlay || overlay.classList.contains('hidden-overlay')) {
+                        clearInterval(checkReadyInterval);
+                        await generateDocxZip();
+                        setTimeout(() => window.close(), 1500);
+                    }
+                }, 200);
+            });
+        }
+
         if (new URLSearchParams(window.location.search).get('auto_zip_png') === '1' || new URLSearchParams(window.location.search).get('auto_zip_jpg') === '1') {
             window.addEventListener('DOMContentLoaded', () => {
                 const checkReadyInterval = setInterval(async () => {
