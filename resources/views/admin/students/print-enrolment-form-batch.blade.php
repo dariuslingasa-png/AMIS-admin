@@ -1124,7 +1124,7 @@
                 try {
                     // Build a real DOCX (OpenXML ZIP) for this student
                     const docZip = new JSZipLib();
-                    const xmlHeader = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+                    const xmlHeader = '<' + '?xml version="1.0" encoding="UTF-8" standalone="yes"?' + '>';
 
                     docZip.file('[Content_Types].xml', `${xmlHeader}
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
