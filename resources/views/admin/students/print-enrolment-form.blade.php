@@ -277,7 +277,8 @@
             color: #0f172a;
             width: 200px;
             outline: none;
-            padding: 0 4px;
+            padding: 0 4px 6px 4px !important;
+            line-height: 1.5 !important;
             text-transform: uppercase;
         }
 
@@ -367,8 +368,8 @@
             font-weight: 700;
             color: #0f172a;
             outline: none;
-            padding: 1px 4px 5px 4px;
-            line-height: 1.35;
+            padding: 0 4px 6px 4px !important;
+            line-height: 1.5 !important;
             width: 100%;
             background: transparent;
             white-space: nowrap;
@@ -490,8 +491,8 @@
             font-weight: 700;
             color: #0f172a;
             outline: none;
-            padding: 1px 4px 5px 4px;
-            line-height: 1.35;
+            padding: 0 4px 6px 4px !important;
+            line-height: 1.5 !important;
             margin-bottom: 6px;
             background: transparent;
             white-space: nowrap;
@@ -894,12 +895,13 @@
 <w:p>
     <w:pPr>
         <w:jc w:val="center"/>
-        <w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/>
+        <w:spacing w:before="0" w:after="0" w:line="0" w:lineRule="exact"/>
+        <w:rPr><w:sz w:val="2"/><w:szCs w:val="2"/></w:rPr>
     </w:pPr>
     <w:r>
         <w:drawing>
             <wp:inline distT="0" distB="0" distL="0" distR="0">
-                <wp:extent cx="6645000" cy="9777000"/>
+                <wp:extent cx="6400000" cy="9400000"/>
                 <wp:docPr id="${i + 1}" name="Page ${i + 1}"/>
                 <a:graphic>
                     <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
@@ -915,7 +917,7 @@
                             <pic:spPr>
                                 <a:xfrm>
                                     <a:off x="0" y="0"/>
-                                    <a:ext cx="6645000" cy="9777000"/>
+                                    <a:ext cx="6400000" cy="9400000"/>
                                 </a:xfrm>
                                 <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
                             </pic:spPr>
@@ -927,7 +929,7 @@
     </w:r>
 </w:p>`;
                 if (i < pages.length - 1) {
-                    docBody += '<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
+                    docBody += '<w:p><w:pPr><w:spacing w:before="0" w:after="0" w:line="0" w:lineRule="exact"/></w:pPr><w:r><w:br w:type="page"/></w:r></w:p>';
                 }
             }
 
