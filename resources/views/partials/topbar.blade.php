@@ -156,7 +156,7 @@ function systemNotifications() {
         },
         fetchNotifications: function() {
             var self = this;
-            fetch('/admin/notifications')
+            fetch('{{ route('admin.notifications.index') }}')
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
                     if (data && data.success) {
@@ -173,7 +173,7 @@ function systemNotifications() {
             var csrfMeta = document.querySelector('meta[name="csrf-token"]');
             var csrf = csrfMeta ? csrfMeta.getAttribute('content') : '';
             if (!item.is_read) {
-                fetch('/admin/notifications/' + item.id + '/read', {
+                fetch('{{ route('admin.notifications.index') }}/' + item.id + '/read', {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',
@@ -191,7 +191,7 @@ function systemNotifications() {
             var csrfMeta = document.querySelector('meta[name="csrf-token"]');
             var csrf = csrfMeta ? csrfMeta.getAttribute('content') : '';
             var self = this;
-            fetch('/admin/notifications/mark-all-read', {
+            fetch('{{ route('admin.notifications.mark-all-read') }}', {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
@@ -207,7 +207,7 @@ function systemNotifications() {
             var csrf = csrfMeta ? csrfMeta.getAttribute('content') : '';
             var self = this;
             if (confirm('Clear all notifications?')) {
-                fetch('/admin/notifications/clear', {
+                fetch('{{ route('admin.notifications.clear') }}', {
                     method: 'DELETE',
                     headers: { 
                         'Content-Type': 'application/json',
