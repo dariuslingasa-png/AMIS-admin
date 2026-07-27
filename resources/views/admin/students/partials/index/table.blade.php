@@ -191,6 +191,9 @@
                                 ]) }})" class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-amber-200 bg-amber-50 text-amber-700 transition-colors duration-100 hover:bg-amber-100 cursor-pointer shadow-sm" title="View Microsoft Account Credentials & Password">
                                     <i data-lucide="key-round" class="h-4 w-4"></i>
                                 </button>
+                                <a href="{{ route('admin.students.download-docs-zip', ['search' => $student->student_number]) }}" download class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-sky-200 bg-sky-50 text-sky-700 transition-colors duration-100 hover:bg-sky-100 shadow-sm" title="Download Student Documents ZIP (2x2 Photo, Birth Cert, Report Card, etc.)">
+                                    <i data-lucide="archive" class="h-4 w-4"></i>
+                                </a>
                                 <a href="{{ route('admin.students.print-enrolment-form', $student) }}" target="_blank" class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-emerald-200 bg-emerald-50 text-emerald-700 transition-colors duration-100 hover:bg-emerald-100" title="Print Enrollment Application Form">
                                     <i data-lucide="file-signature" class="h-4 w-4"></i>
                                 </a>

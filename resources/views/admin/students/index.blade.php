@@ -42,6 +42,11 @@
                         <span>{{ request()->hasAny(['search', 'grade', 'type', 'gender', 'mode', 'ms_status']) ? 'Sync Filtered Licenses' : 'Sync Pending Licenses' }}</span>
                     </button>
                 </form>
+                <!-- Download Docs ZIP Button -->
+                <a href="{{ route('admin.students.download-docs-zip') }}" onclick="location.href='{{ route('admin.students.download-docs-zip') }}' + window.location.search; return false;" class="inline-flex h-10 items-center gap-2 rounded-xl bg-sky-700 hover:bg-sky-800 px-4 text-xs font-black text-white shadow-sm transition cursor-pointer whitespace-nowrap" title="Download ZIP archive of 2x2 Photos, Birth Certificates, Report Cards, and Enrollment Forms for filtered students">
+                    <i data-lucide="archive" class="h-4 w-4"></i>
+                    <span>Download Docs ZIP</span>
+                </a>
                 <!-- Print Records Page Link Button -->
                 <a href="{{ route('admin.students.print-export') }}" onclick="location.href='{{ route('admin.students.print-export') }}' + window.location.search; return false;" class="inline-flex h-10 items-center gap-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 px-4 text-xs font-black text-white shadow-sm transition cursor-pointer whitespace-nowrap">
                     <i data-lucide="printer" class="h-4 w-4"></i>
