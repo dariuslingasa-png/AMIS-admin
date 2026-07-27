@@ -363,19 +363,16 @@
             border: none;
             border-bottom: 1.5px solid #0f172a;
             font-family: 'Inter', sans-serif;
-            font-size: 0.98rem;
+            font-size: 0.92rem;
             font-weight: 700;
             color: #0f172a;
             outline: none;
-            padding: 0 4px 4px 4px;
-            height: 26px;
-            line-height: 1.2;
-            box-sizing: border-box;
+            padding: 1px 4px 5px 4px;
+            line-height: 1.35;
             width: 100%;
             background: transparent;
             white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            overflow: visible;
             display: block;
             text-transform: uppercase;
         }
@@ -489,19 +486,16 @@
             border-bottom: 1.5px solid #0f172a;
             width: 100%;
             font-family: 'Inter', sans-serif;
-            font-size: 0.98rem;
+            font-size: 0.92rem;
             font-weight: 700;
             color: #0f172a;
             outline: none;
-            padding: 0 4px 4px 4px;
-            height: 26px;
-            line-height: 1.2;
-            box-sizing: border-box;
+            padding: 1px 4px 5px 4px;
+            line-height: 1.35;
             margin-bottom: 6px;
             background: transparent;
             white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            overflow: visible;
             display: block;
             text-transform: uppercase;
         }
@@ -885,12 +879,7 @@
             let docBody = '';
 
             for (let i = 0; i < pages.length; i++) {
-                const canvas = await html2canvas(pages[i], {
-                    scale: 2.2,
-                    useCORS: true,
-                    logging: false,
-                    backgroundColor: '#ffffff'
-                });
+                const canvas = await html2canvas(pages[i], { scale: 2.5, useCORS: true, logging: false });
                 const imgDataUrl = canvas.toDataURL('image/png');
                 const base64Data = imgDataUrl.replace(/^data:image\/png;base64,/, '');
 
@@ -905,12 +894,12 @@
 <w:p>
     <w:pPr>
         <w:jc w:val="center"/>
-        <w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="exact"/>
+        <w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/>
     </w:pPr>
     <w:r>
         <w:drawing>
             <wp:inline distT="0" distB="0" distL="0" distR="0">
-                <wp:extent cx="6840000" cy="9720000"/>
+                <wp:extent cx="6645000" cy="9777000"/>
                 <wp:docPr id="${i + 1}" name="Page ${i + 1}"/>
                 <a:graphic>
                     <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
@@ -926,7 +915,7 @@
                             <pic:spPr>
                                 <a:xfrm>
                                     <a:off x="0" y="0"/>
-                                    <a:ext cx="6840000" cy="9720000"/>
+                                    <a:ext cx="6645000" cy="9777000"/>
                                 </a:xfrm>
                                 <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
                             </pic:spPr>
@@ -938,7 +927,7 @@
     </w:r>
 </w:p>`;
                 if (i < pages.length - 1) {
-                    docBody += '<w:p><w:pPr><w:spacing w:before="0" w:after="0"/></w:pPr><w:r><w:br w:type="page"/></w:r></w:p>';
+                    docBody += '<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
                 }
             }
 
@@ -955,7 +944,7 @@
         ${docBody}
         <w:sectPr>
             <w:pgSz w:w="11906" w:h="16838"/>
-            <w:pgMar w:top="567" w:right="567" w:bottom="567" w:left="567" w:header="0" w:footer="0" w:gutter="0"/>
+            <w:pgMar w:top="720" w:right="720" w:bottom="720" w:left="720" w:header="0" w:footer="0" w:gutter="0"/>
         </w:sectPr>
     </w:body>
 </w:document>`;
