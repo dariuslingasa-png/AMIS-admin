@@ -1085,7 +1085,7 @@
             idParams.append('is_print', '1');
             window.open('{{ route('admin.students.index') }}?' + idParams.toString(), '_blank');
         } else if (actionType === 'docs_zip') {
-            triggerBackgroundDownload('{{ route('admin.students.download-docs-zip') }}' + queryString);
+            window.location.href = '{{ route('admin.students.download-docs-zip') }}' + queryString;
         } else if (actionType === 'credentials') {
             const credParams = new URLSearchParams(params);
             credParams.append('print_credentials', '1');
@@ -1097,8 +1097,17 @@
             listParams.append('is_print', '1');
             window.open('{{ route('admin.students.index') }}?' + listParams.toString(), '_blank');
         } else if (actionType === 'canva') {
-            triggerBackgroundDownload('{{ route('admin.students.export-canva') }}' + queryString);
+            window.location.href = '{{ route('admin.students.export-canva') }}' + queryString;
         }
+    }
+
+    function triggerBackgroundDownload(url) {
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = '';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
     }
 
     function quickExportGradeZip(gradeName, formatType) {
