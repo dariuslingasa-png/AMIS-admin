@@ -98,11 +98,12 @@
 
                         <!-- Footer -->
                         <div class="p-2.5 bg-gray-50 dark:bg-gray-700/40 border-t border-gray-100 dark:border-gray-700 text-center flex items-center justify-between px-4">
-                            <button @click="clearAll()" x-show="notifications.length > 0" type="button" class="text-[11px] font-bold text-rose-600 hover:text-rose-700">
+                            <button @click="clearAll()" x-show="notifications.length > 0" type="button" class="text-[11px] font-bold text-rose-600 hover:text-rose-700 cursor-pointer">
                                 Clear All
                             </button>
-                            <a href="{{ route('admin.system-management.backups.index') }}" class="text-[11px] font-bold text-gray-500 hover:text-gray-700 dark:text-gray-300">
-                                View Backup Center &rarr;
+                            <a href="{{ route('admin.notifications.index') }}" class="text-[11px] font-bold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
+                                <span>See All Notifications</span>
+                                <i data-lucide="arrow-right" class="h-3 w-3 inline"></i>
                             </a>
                         </div>
                     </div>
@@ -118,18 +119,29 @@
                 </button>
                 <div id="dropdown-user" class="z-50 hidden list-none divide-y divide-gray-100 rounded-lg bg-white text-base shadow dark:divide-gray-600 dark:bg-gray-700">
                     <div class="px-4 py-3">
-                        <p class="text-sm text-gray-900 dark:text-white">{{ Auth::user()->name ?? 'AMIS Admin' }}</p>
-                        <p class="truncate text-sm font-medium text-gray-500 dark:text-gray-300">{{ Auth::user()->email ?? '' }}</p>
+                        <p class="text-sm text-gray-900 dark:text-white font-bold">{{ Auth::user()->name ?? 'Administrator' }}</p>
+                        <p class="truncate text-xs font-semibold text-gray-500 dark:text-gray-400">{{ Auth::user()->email }}</p>
                     </div>
-                    <ul class="py-1">
-                        <li><a href="{{ route(Auth::user()?->adminHomeRouteName() ?? 'admin.login') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600">Dashboard</a></li>
+                    <ul class="py-1 text-sm text-gray-700 dark:text-gray-200">
                         <li>
-                            <form method="POST" action="{{ route('admin.logout') }}">
-                                @csrf
-                                <button type="submit" class="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 dark:hover:bg-gray-600">Sign out</button>
-                            </form>
+                            <a href="{{ route('admin.dashboard') }}" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white font-medium">
+                                Dashboard
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('admin.settings.index') }}" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white font-medium">
+                                Settings
+                            </a>
                         </li>
                     </ul>
+                    <div class="py-1">
+                        <form method="POST" action="{{ route('admin.logout') }}">
+                            @csrf
+                            <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 dark:hover:bg-gray-600 font-bold">
+                                Sign out
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -156,7 +168,12 @@ function systemNotifications() {
         },
         fetchNotifications: function() {
             var self = this;
-            fetch('{{ route('admin.notifications.index') }}')
+            fetch('{{ route('admin.notifications.index') }}', {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
                     if (data && data.success) {
