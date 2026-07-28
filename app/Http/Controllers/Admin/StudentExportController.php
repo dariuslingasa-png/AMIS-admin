@@ -301,6 +301,14 @@ class StudentExportController extends Controller
                     : $query->where('students.grade_level', $teacherGradeScope);
             }
 
+            if ($request->filled('student_id')) {
+                $query->where('students.id', $request->student_id);
+            }
+
+            if ($request->filled('student_number')) {
+                $query->where('students.student_number', $request->student_number);
+            }
+
             if ($request->filled('search')) {
                 $s = trim($request->search);
                 $terms = array_filter(explode(' ', $s));
@@ -353,7 +361,7 @@ class StudentExportController extends Controller
 
         $filesAdded = 0;
 
-        $applyFilters(Student::with(['applicant', 'studentSection.section.subjects']))
+        $applyFilters(Student::with(['applicant.payment', 'studentSection.section.subjects']))
             ->chunk(50, function ($students) use (&$zip, &$filesAdded) {
                 foreach ($students as $student) {
                     $appl = $student->applicant;
@@ -375,9 +383,14 @@ class StudentExportController extends Controller
 
                     $lastName = mb_strtoupper(trim($appl->last_name ?? $student->last_name ?? 'STUDENT'));
                     $firstName = mb_strtoupper(trim($appl->first_name ?? $student->first_name ?? 'PROFILE'));
+                    $studentNum = trim($student->student_number ?? '');
+
                     $studentFolderName = trim("{$lastName} {$firstName}");
+                    if (! empty($studentNum)) {
+                        $studentFolderName .= " ({$studentNum})";
+                    }
                     if (empty($studentFolderName)) {
-                        $studentFolderName = 'STUDENT '.$student->student_number;
+                        $studentFolderName = 'STUDENT '.$student->id;
                     }
 
                     if ($isF2f) {
@@ -412,6 +425,8 @@ class StudentExportController extends Controller
                         'Marriage_Contract' => $appl->marriage_contract_url,
                         'Medical_Record' => $appl->medical_record_url,
                         'Affidavit' => $appl->affidavit_url,
+                        'Payment_Receipt' => $appl->payment?->receipt_url,
+                        'Student_ID_Card' => $student->student_id_url,
                     ];
 
                     foreach ($docTypes as $label => $relativeUrl) {

@@ -91,6 +91,17 @@
                                     <button type="button" onclick="openBatchExportModal('enrollment_forms')" class="text-slate-600 hover:text-slate-900 font-extrabold hover:underline cursor-pointer">ZIP Archive</button>
                                 </div>
                             </li>
+                            <!-- Student Uploaded Documents ZIP (per student folder) -->
+                            <li class="flex items-center justify-between py-1.5 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition bg-sky-50/50 my-1 p-2 rounded-xl border border-sky-100">
+                                <span class="flex items-center gap-2">
+                                    <i data-lucide="folder-archive" class="w-4 h-4 text-sky-600 font-black"></i>
+                                    <span class="font-black text-sky-950">Uploaded Docs ZIP</span>
+                                </span>
+                                <button type="button" onclick="runPrintRecordAction('docs_zip')" class="text-white bg-sky-600 hover:bg-sky-700 font-black text-[10px] uppercase tracking-wider px-2.5 py-1 rounded-lg transition shadow-xs cursor-pointer flex items-center gap-1">
+                                    <i data-lucide="download" class="w-3 h-3"></i>
+                                    <span>Download ZIP</span>
+                                </button>
+                            </li>
                             <!-- Learner's Profile -->
                             <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
                                 <span class="flex items-center gap-2">
@@ -361,7 +372,15 @@
                 <span class="text-xs font-black uppercase tracking-wider text-slate-700 block mb-3">
                     Bulk Downloads & Utilities
                 </span>
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
+                    <button type="button" onclick="runPrintRecordAction('docs_zip')" class="flex items-center justify-between rounded-xl border border-sky-200 bg-sky-50 p-3 text-xs font-black text-sky-900 hover:bg-sky-100 transition cursor-pointer text-left shadow-xs">
+                        <span class="flex items-center gap-2">
+                            <i data-lucide="folder-archive" class="w-4 h-4 text-sky-600"></i>
+                            <span>Student Docs ZIP</span>
+                        </span>
+                        <i data-lucide="download" class="h-3.5 w-3.5 text-sky-600"></i>
+                    </button>
+
                     <button type="button" onclick="runPrintRecordAction('forms_jpg')" class="flex items-center justify-between rounded-xl border border-slate-100 bg-white p-3 text-xs font-extrabold text-slate-750 hover:bg-emerald-50 hover:text-emerald-950 transition cursor-pointer text-left shadow-xs">
                         <span class="flex items-center gap-2">
                             <i data-lucide="folder-archive" class="w-4 h-4 text-emerald-600"></i>
