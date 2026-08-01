@@ -93,25 +93,22 @@ class RegistrationController extends Controller
                 $q->whereNull('type')
                   ->orWhere('type', '!=', 'parents');
             });
-        } elseif ($category === 'online') {
-            $query1->where('subject', 'Halaqah Online Registration')
-                   ->where('message', 'LIKE', '%Registration Type:%');
-            $query2->where(function ($q) {
-                $q->where('grade_level', 'LIKE', '%ONLINE REGISTRATION%')
-                  ->orWhere('type', 'LIKE', '%Online%')
-                  ->orWhere('message', 'LIKE', '%Halaqah Online Registration%');
-            })
-            ->where(function ($q) {
-                $q->whereNull('grade_level')
-                  ->orWhere('grade_level', 'NOT LIKE', '%PARENTS%');
-            });
         } elseif ($category === 'parents') {
-            $query1->where('subject', 'Halaqah Parents Registration');
+            $query1->where(function ($q) {
+                $q->where('subject', 'Halaqah Parents Registration')
+                  ->orWhere(function ($sub) {
+                      $sub->where('subject', 'Halaqah Online Registration')
+                          ->where('message', 'LIKE', '%Registration Type:%');
+                  });
+            });
             $query2->where(function ($q) {
                 $q->where('grade_level', 'LIKE', '%PARENTS%')
+                  ->orWhere('grade_level', 'LIKE', '%ONLINE REGISTRATION%')
                   ->orWhere('type', 'parents')
                   ->orWhere('type', 'LIKE', '%Parents%')
-                  ->orWhere('message', 'LIKE', '%Halaqah Parents%');
+                  ->orWhere('type', 'LIKE', '%Online%')
+                  ->orWhere('message', 'LIKE', '%Halaqah Parents%')
+                  ->orWhere('message', 'LIKE', '%Registration Type:%');
             });
         }
 
@@ -220,22 +217,21 @@ class RegistrationController extends Controller
         });
         $studentCount = $q1Student->count() + $q2Student->count();
 
-        $q1Online = (clone $q1Base)->where('subject', 'Halaqah Online Registration')->where('message', 'LIKE', '%Registration Type:%');
-        $q2Online = (clone $q2Base)->where(function ($q) {
-            $q->where('grade_level', 'LIKE', '%ONLINE REGISTRATION%')
-              ->orWhere('type', 'LIKE', '%Online%')
-              ->orWhere('message', 'LIKE', '%Halaqah Online Registration%');
-        })->where(function ($q) {
-            $q->whereNull('grade_level')->orWhere('grade_level', 'NOT LIKE', '%PARENTS%');
+        $q1Parents = (clone $q1Base)->where(function ($q) {
+            $q->where('subject', 'Halaqah Parents Registration')
+              ->orWhere(function ($sub) {
+                  $sub->where('subject', 'Halaqah Online Registration')
+                      ->where('message', 'LIKE', '%Registration Type:%');
+              });
         });
-        $onlinePublicCount = $q1Online->count() + $q2Online->count();
-
-        $q1Parents = (clone $q1Base)->where('subject', 'Halaqah Parents Registration');
         $q2Parents = (clone $q2Base)->where(function ($q) {
             $q->where('grade_level', 'LIKE', '%PARENTS%')
+              ->orWhere('grade_level', 'LIKE', '%ONLINE REGISTRATION%')
               ->orWhere('type', 'parents')
               ->orWhere('type', 'LIKE', '%Parents%')
-              ->orWhere('message', 'LIKE', '%Halaqah Parents%');
+              ->orWhere('type', 'LIKE', '%Online%')
+              ->orWhere('message', 'LIKE', '%Halaqah Parents%')
+              ->orWhere('message', 'LIKE', '%Registration Type:%');
         });
         $parentsCount = $q1Parents->count() + $q2Parents->count();
 

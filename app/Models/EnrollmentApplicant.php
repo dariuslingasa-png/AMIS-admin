@@ -77,6 +77,9 @@ class EnrollmentApplicant extends Model
         'parent_country_code',
         'parent_mobile',
         'parent_email',
+        'facebook',
+        'whatsapp',
+        'facebook_screenshot_url',
         'referral_source',
         // Medical & Emergency
         'psych_testing',

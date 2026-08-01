@@ -67,6 +67,9 @@
                                 <td class="px-4 py-4">
                                     <div class="font-bold text-slate-700 uppercase" style="font-size: 19.5px !important;">{{ $p->method_label }}</div>
                                     <div class="text-[13.5px] text-slate-500 font-semibold mt-1">Ref: {{ $p->reference_no ?: '-' }}</div>
+                                    @if ($p->remarks)
+                                        <div class="text-[12.5px] text-indigo-600 font-bold mt-1 max-w-[200px] whitespace-normal">Note: {{ $p->remarks }}</div>
+                                    @endif
                                 </td>
                                 <td class="px-4 py-4 text-right font-black text-black" style="font-size: 19.5px !important;">
                                     {{ number_format($p->amount, 2) }}

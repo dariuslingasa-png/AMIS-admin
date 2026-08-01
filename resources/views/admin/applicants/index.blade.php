@@ -532,6 +532,10 @@
                                                     report_card_url: '{{ $child->report_card_url ? \App\Support\EnrollmentStorage::url($child->report_card_url) : '' }}',
                                                     affidavit_url: '{{ $child->affidavit_url ? \App\Support\EnrollmentStorage::url($child->affidavit_url) : '' }}',
                                                     receipt_url: '{{ $receiptUrl ?: '' }}',
+                                                    facebook: '{{ e($child->facebook) }}',
+                                                    whatsapp: '{{ e($child->whatsapp) }}',
+                                                    facebook_screenshot_url: '{{ $child->facebook_screenshot_url ? \App\Support\EnrollmentStorage::url($child->facebook_screenshot_url) : '' }}',
+                                                    payment_remarks: '{{ e($paymentObj?->remarks ?? "") }}',
                                                     parent_name: '{{ e($family['parent_name']) }}',
                                                     parent_email: '{{ e($family['parent_email']) }}',
                                                     parent_mobile: '{{ e($family['parent_mobile']) }}',
@@ -703,14 +707,18 @@
                             <p><span class="font-bold text-slate-500">Parent:</span> <span class="font-black text-slate-900" x-text="reviewChild?.parent_name"></span></p>
                             <p><span class="font-bold text-slate-500">Email:</span> <span class="font-bold text-indigo-600" x-text="reviewChild?.parent_email || 'None'"></span></p>
                             <p><span class="font-bold text-slate-500">Mobile:</span> <span class="font-bold text-slate-900" x-text="reviewChild?.parent_mobile || 'None'"></span></p>
+                            <p><span class="font-bold text-slate-500">Facebook:</span> <span class="font-bold text-slate-900 normal-case" x-text="reviewChild?.facebook || 'None'"></span></p>
+                            <p><span class="font-bold text-slate-500">WhatsApp:</span> <span class="font-bold text-slate-900" x-text="reviewChild?.whatsapp || 'None'"></span></p>
                         </div>
                     </div>
 
                     <!-- Right: Application Status -->
-                    <div class="rounded-xl border border-slate-150 bg-slate-50/60 p-3.5 space-y-2">
-                        <h3 class="text-[10px] font-black uppercase tracking-wider text-slate-400">Application Status</h3>
+                    <div class="rounded-xl border border-slate-150 bg-slate-50/60 p-3.5 space-y-2 flex flex-col justify-between">
                         <div>
-                            <span class="inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-3 py-1 text-xs font-black text-blue-800" x-text="reviewChild?.status_label"></span>
+                            <h3 class="text-[10px] font-black uppercase tracking-wider text-slate-400">Application Status</h3>
+                            <div class="mt-1">
+                                <span class="inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-3 py-1 text-xs font-black text-blue-800" x-text="reviewChild?.status_label"></span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -741,7 +749,13 @@
                                         <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
                                     </a>
                                 </template>
-                                <template x-if="!reviewChild?.birth_cert_url && !reviewChild?.report_card_url && !reviewChild?.affidavit_url">
+                                <template x-if="reviewChild?.facebook_screenshot_url">
+                                    <a :href="reviewChild.facebook_screenshot_url" target="_blank" class="flex items-center justify-between rounded-lg border border-slate-150 p-2 hover:bg-slate-50 text-indigo-600 font-bold">
+                                        <span class="flex items-center gap-1.5"><i data-lucide="image" class="w-3.5 h-3.5"></i> Facebook Screenshot</span>
+                                        <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                                    </a>
+                                </template>
+                                <template x-if="!reviewChild?.birth_cert_url && !reviewChild?.report_card_url && !reviewChild?.affidavit_url && !reviewChild?.facebook_screenshot_url">
                                     <p class="text-slate-400 italic text-[11px] py-1">No student documents attached</p>
                                 </template>
                             </div>
@@ -761,6 +775,12 @@
                             <template x-if="!reviewChild?.receipt_url">
                                 <div class="rounded-lg border border-dashed border-slate-200 p-3 text-center text-xs text-slate-400 font-medium">
                                     No proof of payment uploaded yet
+                                </div>
+                            </template>
+                            <template x-if="reviewChild?.payment_remarks">
+                                <div class="mt-2 text-xs border-t border-slate-100 pt-2">
+                                    <span class="text-[10px] font-extrabold uppercase text-slate-400 block">Payment Remarks / Notes</span>
+                                    <p class="text-slate-800 normal-case font-medium mt-0.5" x-text="reviewChild.payment_remarks"></p>
                                 </div>
                             </template>
                         </div>

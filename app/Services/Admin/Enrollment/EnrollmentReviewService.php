@@ -49,7 +49,7 @@ class EnrollmentReviewService
         'report_card' => 'Report Card', 'affidavit' => 'Temporary Proof (Affidavit)',
     ];
 
-    public const REVIEWABLE_DOCUMENTS = ['photo_2x2', 'birth_cert', 'report_card', 'marriage_contract', 'medical_record', 'affidavit'];
+    public const REVIEWABLE_DOCUMENTS = ['photo_2x2', 'birth_cert', 'report_card', 'marriage_contract', 'medical_record', 'affidavit', 'facebook_screenshot'];
 
     public function getRequiredDocuments(EnrollmentApplicant $applicant): array
     {
@@ -319,6 +319,7 @@ class EnrollmentReviewService
             'marriage_contract' => ['label' => 'Marriage Contract', 'url' => $applicant->marriage_contract_url],
             'medical_record' => ['label' => 'Medical Record', 'url' => $applicant->medical_record_url],
             'affidavit' => ['label' => 'Affidavit', 'url' => $applicant->affidavit_url],
+            'facebook_screenshot' => ['label' => 'Facebook Screenshot', 'url' => $applicant->facebook_screenshot_url],
         ];
     }
 

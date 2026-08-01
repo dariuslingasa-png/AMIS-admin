@@ -58,7 +58,7 @@
     $guardianSections = [
         ['title' => "Father's Details", 'icon' => 'user', 'fields' => [["Father's Full Name", $fatherName], ['Occupation', $applicant->father_occupation]]],
         ['title' => "Mother's Details", 'icon' => 'user-round', 'fields' => [["Mother's Full Name", $motherName], ['Occupation', $applicant->mother_occupation]]],
-        ['title' => 'Parent Contact', 'icon' => 'phone', 'fields' => [['Parent Email', $applicant->parent_email], ['Parent Mobile', $parentMobile], ['Referral Source', $applicant->referral_source]]],
+        ['title' => 'Parent Contact', 'icon' => 'phone', 'fields' => [['Parent Email', $applicant->parent_email], ['Parent Mobile', $parentMobile], ['Facebook Name / Link', $applicant->facebook], ['WhatsApp Number', $applicant->whatsapp], ['Referral Source', $applicant->referral_source]]],
         ['title' => 'Home Address', 'icon' => 'map-pin', 'fields' => [['Full Home Address', $homeAddress], ['City', $applicant->home_city], ['State / Province', $applicant->home_state_province], ['Postal Code', $applicant->home_postal_code]]],
     ];
     $medicalSections = [
