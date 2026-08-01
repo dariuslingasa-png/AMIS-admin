@@ -64,10 +64,10 @@ class SystemDevOpsService
                 'badge' => 'Public Applicants',
             ],
             'teacher' => [
-                'name' => 'Teacher Portal',
-                'domain' => 'teacher.amis.edu.ph',
-                'is_down' => $this->isPortalDown('teacher'),
-                'secret' => $this->getPortalSecret('teacher'),
+                'name' => 'Faculty & Teacher Portal',
+                'domain' => 'faculty.amis.edu.ph',
+                'is_down' => $this->isPortalDown('faculty') || $this->isPortalDown('teacher'),
+                'secret' => $this->getPortalSecret('faculty') ?? $this->getPortalSecret('teacher'),
                 'badge' => 'Faculty & Staff',
             ],
             'student' => [
@@ -127,9 +127,12 @@ class SystemDevOpsService
 
         $candidates = [
             "/home2/amisdavc/{$key}.amis.edu.ph",
+            "/home2/amisdavc/faculty.amis.edu.ph",
             base_path("../AMIS-{$key}"),
             base_path("../{$key}.amis.edu.ph"),
             base_path("../{$key}"),
+            base_path('../amis_teacher'),
+            base_path('../amis_faculty'),
         ];
 
         foreach ($candidates as $path) {
