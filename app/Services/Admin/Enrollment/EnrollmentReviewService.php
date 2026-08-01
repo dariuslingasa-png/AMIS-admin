@@ -15,17 +15,27 @@ class EnrollmentReviewService
     public const MANUAL_REVIEW_STATUSES = ['for_correction', 'pending_verification', 'approved', 'rejected'];
 
     public const STATUS_LABELS = [
-        'draft' => 'Draft', 'ready_for_submission' => 'Ready for Submission', 'pending' => 'Pending',
-        'submitted' => 'Submitted', 'under_review' => 'Under Review',
-        'for_correction' => 'For Correction', 'pending_verification' => 'Pending Verification',
-        'approved' => 'Approved', 'rejected' => 'Rejected',
+        'draft' => 'Incomplete / Draft',
+        'ready_for_submission' => 'Submitted - Pending Review',
+        'pending' => 'Submitted - Pending Review',
+        'submitted' => 'Submitted - Pending Review',
+        'under_review' => 'Under Verification',
+        'for_correction' => 'For Correction',
+        'pending_verification' => 'Under Verification',
+        'approved' => 'Approved & Enrolled',
+        'rejected' => 'Rejected',
     ];
 
     public const STATUS_BADGES = [
-        'draft' => 'badge-gray', 'ready_for_submission' => 'badge-blue', 'pending' => 'badge-yellow',
-        'submitted' => 'badge-blue', 'under_review' => 'badge-purple',
-        'for_correction' => 'badge-red', 'pending_verification' => 'badge-yellow',
-        'approved' => 'badge-green', 'rejected' => 'badge-red',
+        'draft' => 'badge-gray',
+        'ready_for_submission' => 'badge-blue',
+        'pending' => 'badge-yellow',
+        'submitted' => 'badge-blue',
+        'under_review' => 'badge-purple',
+        'for_correction' => 'badge-red',
+        'pending_verification' => 'badge-purple',
+        'approved' => 'badge-green',
+        'rejected' => 'badge-red',
     ];
 
     public const VERIFY_SECTIONS = ['student_info', 'documents', 'photo_2x2', 'report_card_affidavit'];

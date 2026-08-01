@@ -10,7 +10,7 @@
         $currentDir = request('dir', 'desc');
         $isTeacherAdminViewer = auth()->user()?->isTeacherAdminViewer() ?? false;
         $inputClass = 'h-11 rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100';
-        $childStatusColor = ['approved' => 'green', 'rejected' => 'red', 'under_review' => 'blue', 'ready_for_submission' => 'yellow', 'pending' => 'yellow', 'submitted' => 'yellow'];
+        $childStatusColor = ['approved' => 'green', 'rejected' => 'red', 'under_review' => 'purple', 'ready_for_submission' => 'blue', 'pending' => 'blue', 'submitted' => 'blue', 'draft' => 'yellow', 'for_correction' => 'red'];
         $familyPaymentChip = fn ($label) => match ($label) {
             'Paid' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
             'Pending' => 'border-amber-200 bg-amber-50 text-amber-700',
@@ -44,6 +44,12 @@
     @endphp
 
     <div x-data="{
+        quickReviewModal: false,
+        reviewChild: null,
+        openQuickReview(data) {
+            this.reviewChild = data;
+            this.quickReviewModal = true;
+        },
         emailModalOpen: false,
         isSendingEmail: false,
         emailSuccess: null,
@@ -431,6 +437,16 @@
                                     $photoUrl = \App\Support\EnrollmentStorage::url($child->photo_2x2_url, 'medium');
                                     $statusLabel = $statusLabels[$child->status] ?? \Illuminate\Support\Str::headline($child->status ?? 'under_review');
                                     $studentType = $typeLabel($child->student_type);
+
+                                    $hasPhoto = filled($child->photo_2x2_url);
+                                    $hasBirthCert = filled($child->birth_cert_url);
+                                    $hasReportCard = filled($child->report_card_url) || filled($child->affidavit_url);
+                                    $docCount = ($hasPhoto ? 1 : 0) + ($hasBirthCert ? 1 : 0) + ($hasReportCard ? 1 : 0);
+
+                                    $familyPayments = $family['family_payments'] ?? collect();
+                                    $paymentObj = $familyPayments->first() ?? $child->payment;
+                                    $hasReceipt = ($paymentObj && filled($paymentObj->receipt_url)) || $familyPayments->contains(fn($p) => filled($p->receipt_url));
+                                    $receiptUrl = $paymentObj && filled($paymentObj->receipt_url) ? \App\Support\EnrollmentStorage::url($paymentObj->receipt_url) : null;
                                 @endphp
                                 <tr class="transition hover:bg-slate-50">
                                     <td class="px-5 py-4">
@@ -469,12 +485,68 @@
                                         <span class="rounded-md px-2.5 py-1 text-xs font-extrabold {{ $typeClass($studentType) }}">{{ $studentType }}</span>
                                     </td>
                                     <td class="px-5 py-4 font-bold text-slate-700">{{ $child->grade_abbr ?? 'Not provided' }}</td>
-                                    <td class="px-5 py-4"><x-badge :color="$childStatusColor[$child->status] ?? 'blue'">{{ $statusLabel }}</x-badge></td>
+                                    <td class="px-5 py-4">
+                                        <div class="flex flex-col gap-1.5 items-start">
+                                            <x-badge :color="$childStatusColor[$child->status] ?? 'blue'">{{ $statusLabel }}</x-badge>
+
+                                            <div class="flex flex-wrap items-center gap-1 text-[10px] font-black">
+                                                @if ($docCount >= 3)
+                                                    <span class="inline-flex items-center gap-1 rounded bg-emerald-50 px-2 py-0.5 text-emerald-700 border border-emerald-200" title="Photo, Birth Cert & Report Card/Affidavit uploaded">
+                                                        <i data-lucide="file-check-2" class="h-3 w-3"></i> Docs (3/3)
+                                                    </span>
+                                                @elseif ($docCount > 0)
+                                                    <span class="inline-flex items-center gap-1 rounded bg-amber-50 px-2 py-0.5 text-amber-700 border border-amber-200" title="{{ $docCount }}/3 documents uploaded">
+                                                        <i data-lucide="file-text" class="h-3 w-3"></i> Docs ({{ $docCount }}/3)
+                                                    </span>
+                                                @else
+                                                    <span class="inline-flex items-center gap-1 rounded bg-rose-50 px-2 py-0.5 text-rose-700 border border-rose-200">
+                                                        <i data-lucide="file-x" class="h-3 w-3"></i> No Docs
+                                                    </span>
+                                                @endif
+
+                                                @if ($hasReceipt)
+                                                    <span class="inline-flex items-center gap-1 rounded bg-blue-50 px-2 py-0.5 text-blue-700 border border-blue-200" title="Proof of Payment Attached">
+                                                        <i data-lucide="receipt" class="h-3 w-3"></i> Receipt Attached
+                                                    </span>
+                                                @else
+                                                    <span class="inline-flex items-center gap-1 rounded bg-slate-100 px-2 py-0.5 text-slate-500 border border-slate-200" title="No payment proof uploaded">
+                                                        <i data-lucide="alert-circle" class="h-3 w-3"></i> No Receipt
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </td>
                                     <td class="px-5 py-4 text-right">
-                                        <a href="{{ route('admin.applicants.show', $child) }}" title="View child application" class="inline-flex h-9 items-center gap-2 rounded-md border border-emerald-100 bg-white px-3 text-xs font-bold text-emerald-700 transition hover:border-emerald-200 hover:bg-emerald-50">
-                                            <i data-lucide="eye" class="h-4 w-4"></i>
-                                            View Child
-                                        </a>
+                                        <div class="flex items-center justify-end gap-2">
+                                            <button type="button" 
+                                                @click="openQuickReview({
+                                                    id: '{{ $child->id }}',
+                                                    formatted_id: '{{ str_pad($child->id, 4, '0', STR_PAD_LEFT) }}',
+                                                    name: '{{ e($childName) }}',
+                                                    grade: '{{ e($child->grade_abbr ?? 'N/A') }}',
+                                                    type: '{{ e($studentType) }}',
+                                                    status: '{{ e($child->status) }}',
+                                                    status_label: '{{ e($statusLabel) }}',
+                                                    photo_url: '{{ $photoUrl }}',
+                                                    birth_cert_url: '{{ $child->birth_cert_url ? \App\Support\EnrollmentStorage::url($child->birth_cert_url) : '' }}',
+                                                    report_card_url: '{{ $child->report_card_url ? \App\Support\EnrollmentStorage::url($child->report_card_url) : '' }}',
+                                                    affidavit_url: '{{ $child->affidavit_url ? \App\Support\EnrollmentStorage::url($child->affidavit_url) : '' }}',
+                                                    receipt_url: '{{ $receiptUrl ?: '' }}',
+                                                    parent_name: '{{ e($family['parent_name']) }}',
+                                                    parent_email: '{{ e($family['parent_email']) }}',
+                                                    parent_mobile: '{{ e($family['parent_mobile']) }}',
+                                                    show_url: '{{ route('admin.applicants.show', $child) }}'
+                                                })" 
+                                                class="inline-flex h-9 items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 shadow-3xs transition hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700 cursor-pointer">
+                                                <i data-lucide="scan-eye" class="h-4 w-4 text-indigo-600"></i>
+                                                Quick View
+                                            </button>
+
+                                            <a href="{{ route('admin.applicants.show', $child) }}" title="View full child application" class="inline-flex h-9 items-center gap-1.5 rounded-md border border-emerald-100 bg-emerald-50 px-3 text-xs font-bold text-emerald-700 transition hover:border-emerald-200 hover:bg-emerald-100">
+                                                <i data-lucide="eye" class="h-4 w-4"></i>
+                                                View Details
+                                            </a>
+                                        </div>
                                     </td>
                                 </tr>
                             @endforeach
@@ -598,6 +670,111 @@
                         <i data-lucide="send" class="h-4 w-4" x-show="!isSendingEmail"></i>
                         Send Registry Report
                     </button>
+                </div>
+            </div>
+        </div>
+        <!-- Quick Review Modal -->
+        <div class="admin-modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-xs"
+             x-show="quickReviewModal" x-cloak x-transition>
+            <div class="w-full max-w-2xl rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl space-y-5">
+                <!-- Header -->
+                <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                    <div class="flex items-center gap-3">
+                        <template x-if="reviewChild?.photo_url">
+                            <img :src="reviewChild.photo_url" class="h-12 w-12 rounded-xl object-cover ring-2 ring-emerald-400">
+                        </template>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h2 class="text-lg font-black text-slate-950" x-text="reviewChild?.name"></h2>
+                                <span class="rounded bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-600" x-text="'#' + reviewChild?.formatted_id"></span>
+                            </div>
+                            <p class="text-xs font-semibold text-slate-500" x-text="(reviewChild?.grade || 'N/A') + ' • ' + (reviewChild?.type || 'Student') + ' • Family of ' + (reviewChild?.parent_name || 'N/A')"></p>
+                        </div>
+                    </div>
+                    <button type="button" @click="quickReviewModal = false" class="text-2xl font-bold text-slate-400 hover:text-slate-600 cursor-pointer">&times;</button>
+                </div>
+
+                <!-- Quick Summary Grid -->
+                <div class="grid grid-cols-2 gap-4">
+                    <!-- Left: Contact & Parent Info -->
+                    <div class="rounded-xl border border-slate-150 bg-slate-50/60 p-3.5 space-y-2">
+                        <h3 class="text-[10px] font-black uppercase tracking-wider text-slate-400">Parent / Contact Info</h3>
+                        <div class="text-xs space-y-1">
+                            <p><span class="font-bold text-slate-500">Parent:</span> <span class="font-black text-slate-900" x-text="reviewChild?.parent_name"></span></p>
+                            <p><span class="font-bold text-slate-500">Email:</span> <span class="font-bold text-indigo-600" x-text="reviewChild?.parent_email || 'None'"></span></p>
+                            <p><span class="font-bold text-slate-500">Mobile:</span> <span class="font-bold text-slate-900" x-text="reviewChild?.parent_mobile || 'None'"></span></p>
+                        </div>
+                    </div>
+
+                    <!-- Right: Application Status -->
+                    <div class="rounded-xl border border-slate-150 bg-slate-50/60 p-3.5 space-y-2">
+                        <h3 class="text-[10px] font-black uppercase tracking-wider text-slate-400">Application Status</h3>
+                        <div>
+                            <span class="inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-3 py-1 text-xs font-black text-blue-800" x-text="reviewChild?.status_label"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Attached Files & Receipts Side-by-Side -->
+                <div class="space-y-2.5">
+                    <h3 class="text-[10px] font-black uppercase tracking-wider text-slate-400">Uploaded Requirements & Proof of Payment</h3>
+                    <div class="grid grid-cols-2 gap-3">
+                        <!-- Documents List -->
+                        <div class="rounded-xl border border-slate-200 bg-white p-3 space-y-2">
+                            <span class="text-[10px] font-extrabold uppercase text-slate-500 block">Student Documents</span>
+                            <div class="space-y-1.5 text-xs">
+                                <template x-if="reviewChild?.birth_cert_url">
+                                    <a :href="reviewChild.birth_cert_url" target="_blank" class="flex items-center justify-between rounded-lg border border-slate-150 p-2 hover:bg-slate-50 text-indigo-600 font-bold">
+                                        <span class="flex items-center gap-1.5"><i data-lucide="file-text" class="w-3.5 h-3.5"></i> Birth Certificate</span>
+                                        <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                                    </a>
+                                </template>
+                                <template x-if="reviewChild?.report_card_url">
+                                    <a :href="reviewChild.report_card_url" target="_blank" class="flex items-center justify-between rounded-lg border border-slate-150 p-2 hover:bg-slate-50 text-indigo-600 font-bold">
+                                        <span class="flex items-center gap-1.5"><i data-lucide="file-text" class="w-3.5 h-3.5"></i> Report Card</span>
+                                        <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                                    </a>
+                                </template>
+                                <template x-if="reviewChild?.affidavit_url">
+                                    <a :href="reviewChild.affidavit_url" target="_blank" class="flex items-center justify-between rounded-lg border border-slate-150 p-2 hover:bg-slate-50 text-indigo-600 font-bold">
+                                        <span class="flex items-center gap-1.5"><i data-lucide="file-text" class="w-3.5 h-3.5"></i> Affidavit (Temporary)</span>
+                                        <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                                    </a>
+                                </template>
+                                <template x-if="!reviewChild?.birth_cert_url && !reviewChild?.report_card_url && !reviewChild?.affidavit_url">
+                                    <p class="text-slate-400 italic text-[11px] py-1">No student documents attached</p>
+                                </template>
+                            </div>
+                        </div>
+
+                        <!-- Payment Receipt Preview -->
+                        <div class="rounded-xl border border-slate-200 bg-white p-3 space-y-2">
+                            <span class="text-[10px] font-extrabold uppercase text-slate-500 block">Proof of Payment</span>
+                            <template x-if="reviewChild?.receipt_url">
+                                <a :href="reviewChild.receipt_url" target="_blank" class="block group relative overflow-hidden rounded-lg border border-emerald-200 bg-emerald-50/50 p-2.5 hover:border-emerald-300">
+                                    <div class="flex items-center justify-between text-xs font-bold text-emerald-800">
+                                        <span class="flex items-center gap-1.5"><i data-lucide="receipt" class="w-3.5 h-3.5 text-emerald-600"></i> Receipt Attached</span>
+                                        <span class="text-[10px] text-emerald-600 underline">Open Receipt</span>
+                                    </div>
+                                </a>
+                            </template>
+                            <template x-if="!reviewChild?.receipt_url">
+                                <div class="rounded-lg border border-dashed border-slate-200 p-3 text-center text-xs text-slate-400 font-medium">
+                                    No proof of payment uploaded yet
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer Actions -->
+                <div class="flex items-center justify-between border-t border-slate-100 pt-4">
+                    <button type="button" @click="quickReviewModal = false" class="rounded-xl border border-slate-200 px-4 py-2 text-xs font-bold text-slate-500 hover:bg-slate-50 cursor-pointer">Close</button>
+
+                    <a :href="reviewChild?.show_url" class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-black text-white shadow-sm hover:bg-emerald-700 cursor-pointer">
+                        <i data-lucide="eye" class="h-4 w-4"></i>
+                        Open Full Review Page
+                    </a>
                 </div>
             </div>
         </div>
