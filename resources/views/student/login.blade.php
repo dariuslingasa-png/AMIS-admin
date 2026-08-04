@@ -46,25 +46,11 @@
                     </div>
                 @endif
 
-                <!-- Quick Testing Account Helper Box -->
-                <div class="rounded-2xl border border-emerald-200 bg-emerald-50/80 p-4 mb-4 text-xs shadow-2xs">
-                    <div class="flex items-center justify-between font-black text-emerald-900 uppercase tracking-wider mb-2">
-                        <span class="flex items-center gap-1.5"><i data-lucide="key" class="w-4 h-4 text-emerald-600"></i> Testing Credentials</span>
-                        <span class="px-2 py-0.5 rounded-full bg-emerald-200 text-emerald-950 font-extrabold text-[10px]">Grade 7</span>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2 text-slate-800 font-medium mb-3">
-                        <div class="bg-white p-2 rounded-xl border border-emerald-200/60">
-                            <span class="block text-[10px] uppercase font-bold text-slate-400">Username</span>
-                            <code class="font-bold text-emerald-700 text-sm">shammy</code>
-                        </div>
-                        <div class="bg-white p-2 rounded-xl border border-emerald-200/60">
-                            <span class="block text-[10px] uppercase font-bold text-slate-400">Password</span>
-                            <code class="font-bold text-emerald-700 text-sm">123sham</code>
-                        </div>
-                    </div>
-                    <button type="button" onclick="fillTestAccount()" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl transition text-xs flex items-center justify-center gap-1.5 shadow-sm cursor-pointer">
-                        <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
-                        <span>Auto-Fill Test Account</span>
+                <!-- Sleek Single Demo Account Badge -->
+                <div class="mb-4 text-center">
+                    <button type="button" onclick="fillTestAccount()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-300 text-emerald-800 text-[11px] font-bold hover:bg-emerald-100 transition cursor-pointer shadow-2xs">
+                        <i data-lucide="key" class="w-3.5 h-3.5 text-emerald-600"></i>
+                        <span>Testing Account: <strong class="font-mono text-emerald-950">shammy</strong> / <strong class="font-mono text-emerald-950">123sham</strong> (Grade 7)</span>
                     </button>
                 </div>
 
@@ -72,24 +58,24 @@
                 <form method="POST" action="{{ route('student.login.store') }}" class="space-y-4">
                     @csrf
                     <div>
-                        <label for="login_id" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Student ID / Username / Email</label>
+                        <label for="login_id" class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">Student ID / Username / Email</label>
                         <div class="relative">
                             <i data-lucide="user" class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
-                            <input type="text" id="login_id" name="login_id" value="{{ old('login_id') }}" required placeholder="e.g. shammy" class="w-full rounded-xl border border-slate-300 bg-slate-50 pl-10 pr-4 py-3 text-xs font-semibold text-slate-800 focus:border-emerald-600 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-600">
+                            <input type="text" id="login_id" name="login_id" value="{{ old('login_id', 'shammy') }}" required placeholder="e.g. shammy" class="w-full rounded-xl border border-slate-300 bg-slate-50 pl-10 pr-4 py-3 text-xs font-semibold text-slate-800 focus:border-emerald-600 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-600">
                         </div>
                     </div>
 
                     <div>
-                        <label for="password" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Password</label>
+                        <label for="password" class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">Password</label>
                         <div class="relative">
                             <i data-lucide="lock" class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
-                            <input type="password" id="password" name="password" required placeholder="Enter password..." class="w-full rounded-xl border border-slate-300 bg-slate-50 pl-10 pr-4 py-3 text-xs font-semibold text-slate-800 focus:border-emerald-600 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-600">
+                            <input type="password" id="password" name="password" value="123sham" required placeholder="Enter password..." class="w-full rounded-xl border border-slate-300 bg-slate-50 pl-10 pr-4 py-3 text-xs font-semibold text-slate-800 focus:border-emerald-600 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-600">
                         </div>
                     </div>
 
                     <div class="flex items-center justify-between text-xs">
                         <label class="flex items-center gap-2 cursor-pointer font-semibold text-slate-600">
-                            <input type="checkbox" name="remember" class="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500">
+                            <input type="checkbox" name="remember" checked class="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500">
                             <span>Remember Me</span>
                         </label>
                     </div>
