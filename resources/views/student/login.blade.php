@@ -56,12 +56,6 @@
                         <input type="password" name="password" value="123sham" required placeholder="Enter password">
                     </label>
 
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-top: -4px;">
-                        <label style="display: flex; align-items: center; gap: 8px; flex-direction: row; cursor: pointer;">
-                            <input type="checkbox" name="remember" class="student-remember-checkbox">
-                            <span style="font-size: 13px; font-weight: 500; text-transform: none; letter-spacing: 0;">Remember Me</span>
-                        </label>
-                    </div>
 
                     <button type="submit" class="student-primary-btn" style="width: 100%;">
                         Sign In To Student Portal
