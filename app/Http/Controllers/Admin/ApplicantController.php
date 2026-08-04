@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AdminAuditLog;
 use App\Models\EnrollmentApplicant;
 use App\Models\EnrollmentSetting;
 use App\Services\Admin\Enrollment\ApplicationQuery;
@@ -507,5 +508,107 @@ class ApplicantController extends Controller
         $this->reviewService->updateDiscount($request, $applicant);
 
         return back()->with('success', 'Sibling discount override saved.');
+    }
+
+    public function destroy(EnrollmentApplicant $applicant)
+    {
+        abort_unless(auth()->user()?->canReviewEnrollmentApplications(), 403);
+
+        $name = trim(($applicant->first_name ?? '').' '.($applicant->last_name ?? ''));
+        $id = $applicant->id;
+
+        $applicant->delete();
+
+        AdminAuditLog::record('applicant_archived', true, "Archived enrollment application #{$id} ({$name}). Retained for 7 days.", [
+            'applicant_id' => $id,
+            'name' => $name,
+        ]);
+
+        return back()->with('success', "Enrollment application #{$id} ({$name}) was moved to Archive. It will be automatically deleted in 7 days.");
+    }
+
+    public function archive(Request $request)
+    {
+        abort_unless(auth()->user()?->canReviewEnrollmentApplications(), 403);
+
+        // Auto-purge applications archived more than 7 days ago
+        EnrollmentApplicant::onlyTrashed()
+            ->where('deleted_at', '<=', now()->subDays(7))
+            ->get()
+            ->each(function ($old) {
+                if ($old->student) {
+                    if ($old->student->account) {
+                        $old->student->account->delete();
+                    }
+                    $old->student->delete();
+                }
+                if ($old->payment) {
+                    $old->payment->delete();
+                }
+                $old->forceDelete();
+            });
+
+        $query = EnrollmentApplicant::onlyTrashed()
+            ->with(['user', 'payment', 'student']);
+
+        if ($search = trim($request->input('search', ''))) {
+            $query->where(function ($q) use ($search) {
+                $q->where('first_name', 'like', "%{$search}%")
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('id', 'like', "%{$search}%")
+                    ->orWhere('parent_email', 'like', "%{$search}%");
+            });
+        }
+
+        $archivedApplicants = $query->orderBy('deleted_at', 'desc')->paginate(25);
+
+        return view('admin.applications.archive', [
+            'archivedApplicants' => $archivedApplicants,
+            'search' => $search,
+        ]);
+    }
+
+    public function restore($id)
+    {
+        abort_unless(auth()->user()?->canReviewEnrollmentApplications(), 403);
+
+        $applicant = EnrollmentApplicant::onlyTrashed()->findOrFail($id);
+        $name = trim(($applicant->first_name ?? '').' '.($applicant->last_name ?? ''));
+        $applicant->restore();
+
+        AdminAuditLog::record('applicant_restored', true, "Restored enrollment application #{$id} ({$name}) from archive.", [
+            'applicant_id' => $id,
+            'name' => $name,
+        ]);
+
+        return back()->with('success', "Enrollment application #{$id} ({$name}) has been restored successfully.");
+    }
+
+    public function forceDelete($id)
+    {
+        abort_unless(auth()->user()?->canReviewEnrollmentApplications(), 403);
+
+        $applicant = EnrollmentApplicant::onlyTrashed()->findOrFail($id);
+        $name = trim(($applicant->first_name ?? '').' '.($applicant->last_name ?? ''));
+
+        if ($applicant->student) {
+            if ($applicant->student->account) {
+                $applicant->student->account->delete();
+            }
+            $applicant->student->delete();
+        }
+
+        if ($applicant->payment) {
+            $applicant->payment->delete();
+        }
+
+        $applicant->forceDelete();
+
+        AdminAuditLog::record('applicant_permanently_deleted', true, "Permanently deleted archived application #{$id} ({$name}).", [
+            'applicant_id' => $id,
+            'name' => $name,
+        ]);
+
+        return back()->with('success', "Application #{$id} ({$name}) was permanently deleted.");
     }
 }

@@ -19,6 +19,7 @@
                 ['Requirements', 'list-checks', route('admin.applications.requirements'), request()->routeIs('admin.applications.requirements')],
                 ['Approval Workflow', 'shield-check', route('admin.applications.approval'), request()->routeIs('admin.applications.approval')],
                 ['Enrollee Masters List', 'list', route('admin.enrollment.masters-list'), request()->routeIs('admin.enrollment.masters-list') && request('workspace') !== 'reports'],
+                ['Archive / Trash (7d)', 'archive', route('admin.applications.archive'), request()->routeIs('admin.applications.archive')],
             ],
         ],
         [
