@@ -35,20 +35,80 @@
                 <div class="student-login-brand">
                     <div>
                         <h2>Sign in</h2>
-                        <p>Sign in with your official school Microsoft account to continue.</p>
+                        <p>Sign in with your Student ID / Username or Microsoft account to continue.</p>
                     </div>
                 </div>
 
                 @if ($errors->any())
-                    <div class="student-error" style="margin-bottom: 20px;">
+                    <div class="student-error" style="margin-bottom: 16px;">
                         <i data-lucide="alert-circle" style="width: 18px; height: 18px; flex-shrink: 0;"></i>
                         <span>{{ $errors->first() }}</span>
                     </div>
                 @endif
 
-                <div class="space-y-3" style="margin-top: 10px;">
+                <!-- Quick Testing Account Helper Box -->
+                <div class="rounded-2xl border border-emerald-200 bg-emerald-50/80 p-4 mb-4 text-xs shadow-2xs">
+                    <div class="flex items-center justify-between font-black text-emerald-900 uppercase tracking-wider mb-2">
+                        <span class="flex items-center gap-1.5"><i data-lucide="key" class="w-4 h-4 text-emerald-600"></i> Testing Credentials</span>
+                        <span class="px-2 py-0.5 rounded-full bg-emerald-200 text-emerald-950 font-extrabold text-[10px]">Grade 7</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-slate-800 font-medium mb-3">
+                        <div class="bg-white p-2 rounded-xl border border-emerald-200/60">
+                            <span class="block text-[10px] uppercase font-bold text-slate-400">Username</span>
+                            <code class="font-bold text-emerald-700 text-sm">shammy</code>
+                        </div>
+                        <div class="bg-white p-2 rounded-xl border border-emerald-200/60">
+                            <span class="block text-[10px] uppercase font-bold text-slate-400">Password</span>
+                            <code class="font-bold text-emerald-700 text-sm">123sham</code>
+                        </div>
+                    </div>
+                    <button type="button" onclick="fillTestAccount()" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl transition text-xs flex items-center justify-center gap-1.5 shadow-sm cursor-pointer">
+                        <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                        <span>Auto-Fill Test Account</span>
+                    </button>
+                </div>
+
+                <!-- Username / Password Login Form -->
+                <form method="POST" action="{{ route('student.login.store') }}" class="space-y-4">
+                    @csrf
+                    <div>
+                        <label for="login_id" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Student ID / Username / Email</label>
+                        <div class="relative">
+                            <i data-lucide="user" class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                            <input type="text" id="login_id" name="login_id" value="{{ old('login_id') }}" required placeholder="e.g. shammy" class="w-full rounded-xl border border-slate-300 bg-slate-50 pl-10 pr-4 py-3 text-xs font-semibold text-slate-800 focus:border-emerald-600 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-600">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="password" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Password</label>
+                        <div class="relative">
+                            <i data-lucide="lock" class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                            <input type="password" id="password" name="password" required placeholder="Enter password..." class="w-full rounded-xl border border-slate-300 bg-slate-50 pl-10 pr-4 py-3 text-xs font-semibold text-slate-800 focus:border-emerald-600 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-600">
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between text-xs">
+                        <label class="flex items-center gap-2 cursor-pointer font-semibold text-slate-600">
+                            <input type="checkbox" name="remember" class="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500">
+                            <span>Remember Me</span>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition active:scale-95 cursor-pointer">
+                        Sign In To Student Portal
+                    </button>
+                </form>
+
+                <!-- Divider -->
+                <div class="relative my-4 text-center">
+                    <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-200"></div></div>
+                    <span class="relative bg-white px-3 text-[11px] font-bold text-slate-400 uppercase">Or Continue With</span>
+                </div>
+
+                <!-- Microsoft Sign In Button -->
+                <div class="space-y-3">
                     @if($microsoftConfigured)
-                        <a href="{{ route('student.microsoft.redirect') }}" class="student-primary-btn w-full flex" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); color: #fff; gap: 10px; height: 50px; font-size: 15px; border-radius: 10px; border: none; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25); transition: all 0.2s;" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 16px rgba(5, 150, 105, 0.4)';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 4px 12px rgba(5, 150, 105, 0.25)';">
+                        <a href="{{ route('student.microsoft.redirect') }}" class="student-primary-btn w-full flex" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); color: #fff; gap: 10px; height: 46px; font-size: 14px; border-radius: 10px; border: none; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25); transition: all 0.2s;">
                             <svg width="18" height="18" viewBox="0 0 23 23" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M0 0h11v11H0z" fill="#f25022"/>
                                 <path d="M12 0h11v11H12z" fill="#7fba00"/>
@@ -58,7 +118,7 @@
                             <span style="font-weight: 700;">Sign in with Microsoft</span>
                         </a>
                     @else
-                        <button type="button" disabled class="student-outline-btn w-full flex opacity-50 cursor-not-allowed" style="height: 50px; border-radius: 10px;">
+                        <button type="button" disabled class="student-outline-btn w-full flex opacity-50 cursor-not-allowed" style="height: 46px; border-radius: 10px;">
                             <svg class="h-4 w-4 mr-2" viewBox="0 0 23 23" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M0 0h11v11H0z" fill="#888"/><path d="M12 0h11v11H12z" fill="#888"/>
                                 <path d="M0 12h11v11H0z" fill="#888"/><path d="M12 12h11v11H12z" fill="#888"/>
@@ -68,12 +128,19 @@
                     @endif
                 </div>
 
-                <p class="mt-6 border-t border-gray-100 pt-5 text-center text-xs font-semibold text-gray-400" style="margin-top: 2rem; border-top: 1px solid #f1f5f9; padding-top: 1.25rem;">
+                <p class="mt-5 border-t border-slate-100 pt-4 text-center text-xs font-semibold text-slate-400">
                     Need help logging in? Please contact the registrar or school support.
                 </p>
             </div>
         </section>
     </main>
-    <script>window.lucide?.createIcons();</script>
+
+    <script>
+        function fillTestAccount() {
+            document.getElementById('login_id').value = 'shammy';
+            document.getElementById('password').value = '123sham';
+        }
+        window.lucide?.createIcons();
+    </script>
 </body>
 </html>
