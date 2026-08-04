@@ -58,7 +58,7 @@
 
                     <div style="display: flex; align-items: center; justify-content: space-between; margin-top: -4px;">
                         <label style="display: flex; align-items: center; gap: 8px; flex-direction: row; cursor: pointer;">
-                            <input type="checkbox" name="remember" checked class="student-remember-checkbox">
+                            <input type="checkbox" name="remember" class="student-remember-checkbox">
                             <span style="font-size: 13px; font-weight: 500; text-transform: none; letter-spacing: 0;">Remember Me</span>
                         </label>
                     </div>

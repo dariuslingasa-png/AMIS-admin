@@ -41,11 +41,11 @@ $student->user_id = $user->id;
 $student->student_number = $username;
 $student->school_email = 'shammy@amis.edu.ph';
 $student->temp_password = $password;
-$student->grade_level = 'Grade 7';
+$student->grade_level = 'Grade 1';
 $student->school_year = '2026-2027';
-$student->section = 'G7-AL-MUNAWWARA';
+$student->section = 'G1-AL-MUNAWWARA';
 $student->save();
 
-echo "SUCCESS: Created student account '{$username}' (Grade 7) with password '{$password}'\n";
+echo "SUCCESS: Updated student account '{$username}' to Grade 1 with password '{$password}'\n";
 echo "User ID: {$user->id}\n";
 echo "Student ID: {$student->id}\n";
