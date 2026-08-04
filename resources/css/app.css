@@ -543,15 +543,15 @@ h1, h2, h3, h4, h5, h6,
 .student-form { display: flex; flex-direction: column; gap: 14px; }
 .student-form label { display: flex; flex-direction: column; gap: 4px; }
 .student-form label span { font-size: 11px; font-weight: 650; color: var(--t-tertiary); text-transform: uppercase; letter-spacing: 0.4px; }
-.student-form input, .student-form select, .student-form textarea {
+.student-form input:not([type="checkbox"]):not([type="radio"]), .student-form select, .student-form textarea {
   width: 100%; border: 1px solid var(--s-border); border-radius: var(--r-sm);
   background: var(--s-surface); color: var(--t-primary); padding: 9px 12px; outline: none;
   font-size: 13.5px; font-family: inherit; transition: border-color 140ms var(--ease), box-shadow 140ms var(--ease);
 }
-.student-form input:focus, .student-form select:focus, .student-form textarea:focus {
+.student-form input:not([type="checkbox"]):not([type="radio"]):focus, .student-form select:focus, .student-form textarea:focus {
   border-color: #10b981; box-shadow: 0 0 0 3px rgba(16,185,129,0.15);
 }
-.student-form input::placeholder, .student-form textarea::placeholder { color: var(--t-placeholder); }
+.student-form input:not([type="checkbox"]):not([type="radio"])::placeholder, .student-form textarea::placeholder { color: var(--t-placeholder); }
 .student-form textarea { min-height: 90px; resize: vertical; }
 .student-form select {
   appearance: none; background: var(--s-surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238b949e' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 10px center;
@@ -665,7 +665,7 @@ h1, h2, h3, h4, h5, h6,
 .student-login-panel .student-form { gap: 18px; }
 .student-login-panel .student-form label { gap: 8px; }
 .student-login-panel .student-form label span { font-size: 13px; font-weight: 800; letter-spacing: 0.6px; }
-.student-login-panel .student-form input {
+.student-login-panel .student-form input:not([type="checkbox"]):not([type="radio"]) {
   min-height: 54px; padding: 13px 15px; font-size: 16px; border-radius: 12px;
 }
 .student-login-panel .student-primary-btn,
@@ -678,24 +678,16 @@ h1, h2, h3, h4, h5, h6,
 }
 .student-divider::before, .student-divider::after { content: ""; flex: 1; height: 1px; background: var(--s-border); }
 .student-remember-checkbox {
-  appearance: none; -webkit-appearance: none;
-  display: inline-grid; place-content: center; flex: 0 0 18px;
-  width: 18px !important; height: 18px; margin: 0;
-  border: 1.5px solid #d1d5db; border-radius: 6px;
-  background: #fff; cursor: pointer;
-  transition: border-color 120ms var(--ease), background 120ms var(--ease), box-shadow 120ms var(--ease);
-}
-.student-remember-checkbox::before {
-  content: ""; width: 8px; height: 8px; border-radius: 3px;
-  background: #059669; transform: scale(0);
-  transition: transform 120ms var(--ease);
-}
-.student-remember-checkbox:checked {
-  border-color: #059669; background: #ecfdf5;
-}
-.student-remember-checkbox:checked::before { transform: scale(1); }
-.student-remember-checkbox:focus-visible {
-  outline: none; box-shadow: 0 0 0 3px rgba(16,185,129,0.18);
+  appearance: auto !important;
+  -webkit-appearance: auto !important;
+  width: 18px !important;
+  height: 18px !important;
+  min-height: 18px !important;
+  max-height: 18px !important;
+  accent-color: #059669 !important;
+  cursor: pointer;
+  margin: 0;
+  padding: 0 !important;
 }
 
 /* ID Card Component */
@@ -808,7 +800,7 @@ h1, h2, h3, h4, h5, h6,
   .student-assessment-form { grid-template-columns: 1fr; }
   .student-login-panel { padding: 30px 22px; border-radius: 20px; }
   .student-login-brand h1, .student-login-brand h2 { font-size: 26px; }
-  .student-login-panel .student-form input { min-height: 50px; font-size: 15px; }
+  .student-login-panel .student-form input:not([type="checkbox"]):not([type="radio"]) { min-height: 50px; font-size: 15px; }
   .student-login-lockup img { width: 96px; height: 96px; margin-bottom: 12px; }
   .student-login-identity h1 { font-size: 25px; line-height: 1.12; }
   .student-login-identity strong { margin-top: 9px; font-size: 22px; }
