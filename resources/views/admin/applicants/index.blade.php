@@ -518,6 +518,19 @@
                                     $paymentObj = $familyPayments->first() ?? $child->payment;
                                     $hasReceipt = ($paymentObj && filled($paymentObj->receipt_url)) || $familyPayments->contains(fn($p) => filled($p->receipt_url));
                                     $receiptUrl = $paymentObj && filled($paymentObj->receipt_url) ? \App\Support\EnrollmentStorage::url($paymentObj->receipt_url) : null;
+                                    $requirementsCompleted = $docCount + ($hasReceipt ? 1 : 0);
+                                    $requirementsPercentage = (int) round(($requirementsCompleted / 4) * 100);
+                                    $requirementsTextClass = match (true) {
+                                        $requirementsPercentage === 100 => 'text-emerald-700',
+                                        $requirementsPercentage >= 50 => 'text-amber-700',
+                                        default => 'text-rose-700',
+                                    };
+                                    $requirementsBarClass = match (true) {
+                                        $requirementsPercentage === 100 => 'bg-emerald-500',
+                                        $requirementsPercentage >= 50 => 'bg-amber-500',
+                                        default => 'bg-rose-500',
+                                    };
+                                    $requirementsSummary = $docCount.'/3 documents · '.($hasReceipt ? 'Receipt attached' : 'No receipt');
                                 @endphp
                                 <tr class="transition hover:bg-slate-50">
                                     <td class="px-5 py-4">
@@ -589,30 +602,17 @@
                                                 {{ $statusLabel }}
                                             </span>
 
-                                            <div class="flex items-center divide-x divide-slate-200 text-xs font-semibold">
-                                                @if ($docCount >= 3)
-                                                    <span class="inline-flex items-center gap-1.5 pr-3 text-emerald-700" title="Photo, Birth Certificate, and Report Card/Affidavit uploaded">
-                                                        <i data-lucide="files" class="h-3.5 w-3.5"></i> 3/3 documents
+                                            <div class="w-52" title="{{ $requirementsSummary }}">
+                                                <div class="mb-1.5 flex items-center justify-between gap-4 text-xs font-bold {{ $requirementsTextClass }}">
+                                                    <span class="inline-flex items-center gap-1.5">
+                                                        <i data-lucide="list-checks" class="h-3.5 w-3.5"></i>
+                                                        Requirements
                                                     </span>
-                                                @elseif ($docCount > 0)
-                                                    <span class="inline-flex items-center gap-1.5 pr-3 text-amber-700" title="{{ $docCount }}/3 documents uploaded">
-                                                        <i data-lucide="files" class="h-3.5 w-3.5"></i> {{ $docCount }}/3 documents
-                                                    </span>
-                                                @else
-                                                    <span class="inline-flex items-center gap-1.5 pr-3 text-rose-700">
-                                                        <i data-lucide="file-x" class="h-3.5 w-3.5"></i> No documents
-                                                    </span>
-                                                @endif
-
-                                                @if ($hasReceipt)
-                                                    <span class="inline-flex items-center gap-1.5 pl-3 text-blue-700" title="Proof of payment attached">
-                                                        <i data-lucide="receipt-text" class="h-3.5 w-3.5"></i> Receipt attached
-                                                    </span>
-                                                @else
-                                                    <span class="inline-flex items-center gap-1.5 pl-3 text-slate-500" title="No proof of payment uploaded">
-                                                        <i data-lucide="receipt" class="h-3.5 w-3.5"></i> No receipt
-                                                    </span>
-                                                @endif
+                                                    <span class="tabular-nums">{{ $requirementsPercentage }}%</span>
+                                                </div>
+                                                <div class="h-1.5 w-full overflow-hidden rounded-full bg-slate-200" role="progressbar" aria-label="Requirements completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ $requirementsPercentage }}">
+                                                    <div class="h-full rounded-full transition-all duration-500 {{ $requirementsBarClass }}" style="width: {{ $requirementsPercentage }}%"></div>
+                                                </div>
                                             </div>
                                         </div>
                                     </td>
