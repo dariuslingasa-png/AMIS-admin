@@ -11,10 +11,10 @@
         $isTeacherAdminViewer = auth()->user()?->isTeacherAdminViewer() ?? false;
         $inputClass = 'h-11 rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100';
         $childStatusColor = ['approved' => 'green', 'rejected' => 'red', 'under_review' => 'purple', 'ready_for_submission' => 'blue', 'pending' => 'blue', 'submitted' => 'blue', 'draft' => 'yellow', 'for_correction' => 'red'];
-        $familyPaymentChip = fn ($label) => match ($label) {
-            'Paid' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
-            'Pending' => 'border-amber-200 bg-amber-50 text-amber-700',
-            default => 'border-slate-200 bg-white/80 text-slate-600',
+        $familyPaymentText = fn ($label) => match ($label) {
+            'Paid' => 'text-emerald-700',
+            'Pending' => 'text-amber-700',
+            default => 'text-slate-600',
         };
         $familyStatusChip = fn ($status) => match ($status) {
             'Approved' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
@@ -362,69 +362,70 @@
                             @endphp
                             <tr>
                                 <td colspan="6" class="px-0 py-0">
-                                    <div class="border-l-4 px-5 py-3 {{ $accent['wrap'] }}">
-                                        <div class="flex items-center justify-between gap-4">
-                                            <div class="flex items-center gap-3">
-                                                <span class="inline-flex h-9 w-9 items-center justify-center rounded-md text-xs font-extrabold {{ $accent['icon'] }}">{{ $initials ?: 'FA' }}</span>
-                                                <div>
-                                                    <div class="flex flex-wrap items-center gap-2">
-                                                        <h3 class="text-sm font-extrabold tracking-wide {{ $accent['text'] }}">{{ $familyHeader }}</h3>
+                                    <div class="border-l-4 px-5 py-3.5 {{ $accent['wrap'] }}">
+                                        <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                                            <div class="flex min-w-0 items-center gap-3">
+                                                <span class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-xs font-extrabold {{ $accent['icon'] }}">{{ $initials ?: 'FA' }}</span>
+                                                <div class="min-w-0">
+                                                    <h3 class="truncate text-sm font-extrabold tracking-wide {{ $accent['text'] }}" title="{{ $familyHeader }}">{{ $familyHeader }}</h3>
+                                                    <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold text-slate-500">
+                                                        <span>Family application #{{ str_pad($family['family_no'], 4, '0', STR_PAD_LEFT) }}</span>
                                                         @if ($representative->user)
                                                             @if ($representative->user->isActive())
-                                                                <span class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-emerald-800 ring-1 ring-emerald-250" title="Active on Portal: {{ $representative->user->last_active_at ? $representative->user->last_active_at->diffForHumans() : 'now' }}">
-                                                                    <span class="relative flex h-1.5 w-1.5">
-                                                                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                                                        <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                                                                <span class="inline-flex items-center gap-1.5 text-emerald-700" title="Active on Portal: {{ $representative->user->last_active_at ? $representative->user->last_active_at->diffForHumans() : 'now' }}">
+                                                                    <span class="relative flex h-2 w-2">
+                                                                        <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                                                                        <span class="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
                                                                     </span>
-                                                                    Active
+                                                                    Active now
                                                                 </span>
                                                             @else
-                                                                <span class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-slate-600 ring-1 ring-slate-200" title="Inactive: {{ $representative->user->last_active_at ? $representative->user->last_active_at->diffForHumans() : 'never' }}">
-                                                                    <span class="h-1.5 w-1.5 rounded-full bg-slate-400"></span>
+                                                                <span class="inline-flex items-center gap-1.5 text-slate-500" title="Last active: {{ $representative->user->last_active_at ? $representative->user->last_active_at->diffForHumans() : 'never' }}">
+                                                                    <span class="h-2 w-2 rounded-full bg-slate-400"></span>
                                                                     Inactive
                                                                 </span>
                                                             @endif
                                                         @endif
                                                     </div>
-                                                    <p class="mt-1 text-xs font-bold uppercase tracking-wide text-slate-500">FAMILY APPLICATION #{{ str_pad($family['family_no'], 4, '0', STR_PAD_LEFT) }}</p>
                                                 </div>
                                             </div>
-                                            <div class="flex flex-wrap items-center justify-end gap-2">
+
+                                            <div class="flex flex-wrap items-center gap-x-4 gap-y-1.5 lg:justify-end">
                                                 @unless ($isTeacherAdminViewer)
-                                                @if ($family['children_count'] > 1)
-                                                    <span class="inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-white/80 px-3 py-1.5 text-xs font-black uppercase tracking-wide shadow-sm {{ $accent['text'] }}">
-                                                        <i data-lucide="check-circle-2" class="h-3.5 w-3.5"></i>
-                                                        {{ $family['approved_count'] }}/{{ $family['children_count'] }} Approved
+                                                    <span class="inline-flex w-fit items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-extrabold {{ $familyStatusChip($family['overall_status']) }}" title="Application review status">
+                                                        <i data-lucide="circle-dot" class="h-3.5 w-3.5"></i>
+                                                        Review {{ \Illuminate\Support\Str::lower($family['overall_status']) }}
                                                     </span>
-                                                    <span class="inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-sky-50 px-3 py-1.5 text-xs font-black uppercase tracking-wide text-sky-700 shadow-sm">
-                                                        <i data-lucide="percent" class="h-3.5 w-3.5"></i>
-                                                        {{ $discountLabel }}
-                                                    </span>
-                                                @else
-                                                    <span class="inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-white/80 px-3 py-1.5 text-xs font-black uppercase tracking-wide shadow-sm {{ $accent['text'] }}">
-                                                        <i data-lucide="check-circle-2" class="h-3.5 w-3.5"></i>
-                                                        {{ $family['approved_count'] }}/1 Approved
-                                                    </span>
-                                                @endif
-                                                <span class="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-black uppercase tracking-wide shadow-sm {{ $familyStatusChip($family['overall_status']) }}">
-                                                    <i data-lucide="info" class="h-3.5 w-3.5"></i>
-                                                    {{ $family['overall_status'] }}
-                                                </span>
-                                                <span class="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-black uppercase tracking-wide shadow-sm {{ $familyPaymentChip($family['payment_status']) }}">
-                                                    <i data-lucide="receipt" class="h-3.5 w-3.5"></i>
-                                                    {{ $family['payment_status'] }}
-                                                </span>
-                                                @if ($family['email_sent_at'])
-                                                    <span class="inline-flex items-center gap-1.5 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-black uppercase tracking-wide text-indigo-700 shadow-sm" title="Registry Emailed at: {{ $family['email_sent_at']->format('M d, Y h:i A') }}">
-                                                        <i data-lucide="mail" class="h-3.5 w-3.5"></i>
-                                                        Emailed
-                                                    </span>
-                                                @endif
                                                 @endunless
-                                                <span class="inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-white/80 px-3 py-1.5 text-xs font-black uppercase tracking-wide shadow-sm {{ $accent['text'] }}">
-                                                    <i data-lucide="users" class="h-3.5 w-3.5"></i>
-                                                    {{ $family['children_count'] }} {{ \Illuminate\Support\Str::plural('Child', $family['children_count']) }}
-                                                </span>
+
+                                                <div class="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs font-semibold text-slate-600">
+                                                    @unless ($isTeacherAdminViewer)
+                                                        <span class="inline-flex items-center gap-1.5" title="Approved applications">
+                                                            <i data-lucide="check-circle-2" class="h-3.5 w-3.5 {{ $accent['text'] }}"></i>
+                                                            {{ $family['approved_count'] }} of {{ $family['children_count'] }} approved
+                                                        </span>
+                                                        @if ($family['children_count'] > 1)
+                                                            <span class="inline-flex items-center gap-1.5 text-sky-700" title="Sibling discount">
+                                                                <i data-lucide="percent" class="h-3.5 w-3.5"></i>
+                                                                {{ \Illuminate\Support\Str::headline(\Illuminate\Support\Str::lower($discountLabel)) }}
+                                                            </span>
+                                                        @endif
+                                                        <span class="inline-flex items-center gap-1.5 {{ $familyPaymentText($family['payment_status']) }}" title="Payment status">
+                                                            <i data-lucide="receipt" class="h-3.5 w-3.5"></i>
+                                                            Payment {{ \Illuminate\Support\Str::lower($family['payment_status']) }}
+                                                        </span>
+                                                        @if ($family['email_sent_at'])
+                                                            <span class="inline-flex items-center gap-1.5 text-indigo-700" title="Registry emailed at {{ $family['email_sent_at']->format('M d, Y h:i A') }}">
+                                                                <i data-lucide="mail-check" class="h-3.5 w-3.5"></i>
+                                                                Registry emailed
+                                                            </span>
+                                                        @endif
+                                                    @endunless
+                                                    <span class="inline-flex items-center gap-1.5" title="Number of children">
+                                                        <i data-lucide="users" class="h-3.5 w-3.5 {{ $accent['text'] }}"></i>
+                                                        {{ $family['children_count'] }} {{ \Illuminate\Support\Str::plural('child', $family['children_count']) }}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
