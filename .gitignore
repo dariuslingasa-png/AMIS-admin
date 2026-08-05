@@ -15,9 +15,12 @@
 /node_modules
 /public/hot
 /public/storage
+/public/error_log
 /storage/*.key
+/storage/framework/*.pid
 /storage/pail
 /vendor
+error_log
 Homestead.json
 Homestead.yaml
 Thumbs.db
