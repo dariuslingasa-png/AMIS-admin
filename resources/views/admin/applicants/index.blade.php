@@ -16,6 +16,12 @@
             'Pending' => 'text-amber-700',
             default => 'text-slate-600',
         };
+        $familyPaymentLabel = fn ($label) => match ($label) {
+            'Paid' => 'Payment paid',
+            'Pending' => 'Payment pending',
+            'No Payment' => 'No payment submitted',
+            default => \Illuminate\Support\Str::headline((string) $label),
+        };
         $familyStatusChip = fn ($status) => match ($status) {
             'Approved' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
             'Rejected' => 'border-rose-200 bg-rose-50 text-rose-700',
@@ -29,10 +35,25 @@
             default => 'NOT SET',
         };
         $typeClass = fn ($label) => match ($label) {
-            'OLD STUDENT' => 'bg-green-100 text-green-800',
-            'TRANSFEREE STUDENT' => 'bg-amber-100 text-amber-800',
-            'NEW STUDENT' => 'bg-blue-100 text-blue-800',
-            default => 'bg-slate-100 text-slate-600',
+            'OLD STUDENT' => 'border-emerald-200 bg-emerald-50 text-emerald-800',
+            'TRANSFEREE STUDENT' => 'border-amber-200 bg-amber-50 text-amber-800',
+            'NEW STUDENT' => 'border-blue-200 bg-blue-50 text-blue-800',
+            default => 'border-slate-200 bg-slate-50 text-slate-600',
+        };
+        $childStatusChip = fn ($status) => match ($status) {
+            'approved' => 'border-emerald-200 bg-emerald-50 text-emerald-800',
+            'rejected', 'for_correction' => 'border-rose-200 bg-rose-50 text-rose-800',
+            'under_review' => 'border-violet-200 bg-violet-50 text-violet-800',
+            'draft' => 'border-amber-200 bg-amber-50 text-amber-800',
+            default => 'border-blue-200 bg-blue-50 text-blue-800',
+        };
+        $childStatusIcon = fn ($status) => match ($status) {
+            'approved' => 'badge-check',
+            'rejected' => 'circle-x',
+            'for_correction' => 'file-warning',
+            'under_review' => 'clock-3',
+            'draft' => 'file-pen-line',
+            default => 'send',
         };
         $familyAccents = [
             ['wrap' => 'border-l-green-600 border-green-100 bg-green-50', 'icon' => 'bg-green-100 text-green-700', 'text' => 'text-green-800', 'badge' => 'bg-white text-green-700 ring-1 ring-green-200'],
@@ -56,6 +77,44 @@
         },
         quickReviewModal: false,
         reviewChild: null,
+        hoverPhoto: null,
+        hoverPhotoStyle: '',
+        photoModalOpen: false,
+        photoModal: null,
+        showPhotoHover(event, url, name) {
+            if (!url || this.photoModalOpen) return;
+
+            const rect = event.currentTarget.getBoundingClientRect();
+            const previewWidth = 240;
+            const previewHeight = 292;
+            const viewportGap = 14;
+            let left = rect.right + 12;
+
+            if (left + previewWidth > window.innerWidth - viewportGap) {
+                left = Math.max(viewportGap, rect.left - previewWidth - 12);
+            }
+
+            const top = Math.min(
+                Math.max(viewportGap, rect.top + (rect.height / 2) - (previewHeight / 2)),
+                Math.max(viewportGap, window.innerHeight - previewHeight - viewportGap)
+            );
+
+            this.hoverPhoto = { url, name };
+            this.hoverPhotoStyle = `left:${Math.round(left)}px;top:${Math.round(top)}px`;
+        },
+        hidePhotoHover() {
+            this.hoverPhoto = null;
+        },
+        openPhotoModal(url, name) {
+            if (!url) return;
+            this.hoverPhoto = null;
+            this.photoModal = { url, name };
+            this.photoModalOpen = true;
+        },
+        closePhotoModal() {
+            this.photoModalOpen = false;
+            this.photoModal = null;
+        },
         openQuickReview(data) {
             this.reviewChild = data;
             this.quickReviewModal = true;
@@ -348,14 +407,14 @@
             </form>
 
             <div class="overflow-x-auto rounded-md border border-slate-200">
-                <table class="w-full min-w-[1180px] text-left text-sm">
+                <table class="w-full min-w-[1320px] text-left text-sm">
                     <thead class="sticky top-0 z-10 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                         <tr>
                             <th class="w-36 px-5 py-4 font-bold">Child</th>
                             <th class="px-5 py-4 font-bold">Student Name</th>
                             <th class="w-40 px-5 py-4 font-bold">Student Type</th>
                             <th class="w-36 px-5 py-4 font-bold">Grade</th>
-                            <th class="w-52 px-5 py-4 font-bold">Enrollment Status</th>
+                            <th class="w-72 px-5 py-4 font-bold">Enrollment Status</th>
                             <th class="w-32 px-5 py-4 text-right font-bold">Action</th>
                         </tr>
                     </thead>
@@ -408,30 +467,30 @@
                                                     </span>
                                                 @endunless
 
-                                                <div class="flex items-center gap-x-4 text-xs font-semibold text-slate-600">
+                                                <div class="flex items-center divide-x divide-slate-300/80 text-[13px] font-bold text-slate-600">
                                                     @unless ($isTeacherAdminViewer)
-                                                        <span class="inline-flex shrink-0 items-center gap-1.5" title="Approved applications">
+                                                        <span class="inline-flex shrink-0 items-center gap-1.5 px-4 first:pl-0" title="Approved applications">
                                                             <i data-lucide="check-circle-2" class="h-3.5 w-3.5 {{ $accent['text'] }}"></i>
                                                             {{ $family['approved_count'] }} of {{ $family['children_count'] }} approved
                                                         </span>
                                                         @if ($family['children_count'] > 1)
-                                                            <span class="inline-flex shrink-0 items-center gap-1.5 text-sky-700" title="Sibling discount">
+                                                            <span class="inline-flex shrink-0 items-center gap-1.5 px-4 text-sky-700" title="Sibling discount">
                                                                 <i data-lucide="percent" class="h-3.5 w-3.5"></i>
                                                                 {{ \Illuminate\Support\Str::headline(\Illuminate\Support\Str::lower($discountLabel)) }}
                                                             </span>
                                                         @endif
-                                                        <span class="inline-flex shrink-0 items-center gap-1.5 {{ $familyPaymentText($family['payment_status']) }}" title="Payment status">
+                                                        <span class="inline-flex shrink-0 items-center gap-1.5 px-4 {{ $familyPaymentText($family['payment_status']) }}" title="Payment status">
                                                             <i data-lucide="receipt" class="h-3.5 w-3.5"></i>
-                                                            Payment {{ \Illuminate\Support\Str::lower($family['payment_status']) }}
+                                                            {{ $familyPaymentLabel($family['payment_status']) }}
                                                         </span>
                                                         @if ($family['email_sent_at'])
-                                                            <span class="inline-flex shrink-0 items-center gap-1.5 text-indigo-700" title="Registry emailed at {{ $family['email_sent_at']->format('M d, Y h:i A') }}">
+                                                            <span class="inline-flex shrink-0 items-center gap-1.5 px-4 text-indigo-700" title="Registry emailed at {{ $family['email_sent_at']->format('M d, Y h:i A') }}">
                                                                 <i data-lucide="mail-check" class="h-3.5 w-3.5"></i>
                                                                 Registry emailed
                                                             </span>
                                                         @endif
                                                     @endunless
-                                                    <span class="inline-flex shrink-0 items-center gap-1.5" title="Number of children">
+                                                    <span class="inline-flex shrink-0 items-center gap-1.5 px-4 last:pr-0" title="Number of children">
                                                         <i data-lucide="users" class="h-3.5 w-3.5 {{ $accent['text'] }}"></i>
                                                         {{ $family['children_count'] }} {{ \Illuminate\Support\Str::plural('child', $family['children_count']) }}
                                                     </span>
@@ -466,15 +525,41 @@
                                     </td>
                                     <td class="px-5 py-4 align-middle">
                                         <div class="flex items-center gap-3">
-                                            <x-smart-image
-                                                :src="$photoUrl"
-                                                :alt="$childName"
-                                                :fallback-initials="$childInitials ?: 'ST'"
-                                                size="44"
-                                                rounded="rounded-none"
-                                                containerClass="bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100 font-extrabold"
-                                                :eager="false"
-                                            />
+                                            @if ($photoUrl)
+                                                <button
+                                                    type="button"
+                                                    class="group relative shrink-0 cursor-zoom-in outline-none ring-offset-2 transition hover:-translate-y-0.5 hover:shadow-md focus-visible:ring-2 focus-visible:ring-emerald-500"
+                                                    @mouseenter="showPhotoHover($event, @js($photoUrl), @js($childName))"
+                                                    @mouseleave="hidePhotoHover()"
+                                                    @focus="showPhotoHover($event, @js($photoUrl), @js($childName))"
+                                                    @blur="hidePhotoHover()"
+                                                    @click="openPhotoModal(@js($photoUrl), @js($childName))"
+                                                    aria-label="Preview photo of {{ $childName }}"
+                                                >
+                                                    <x-smart-image
+                                                        :src="$photoUrl"
+                                                        :alt="$childName"
+                                                        :fallback-initials="$childInitials ?: 'ST'"
+                                                        size="44"
+                                                        rounded="rounded-none"
+                                                        containerClass="bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200 font-extrabold"
+                                                        :eager="false"
+                                                    />
+                                                    <span class="pointer-events-none absolute inset-0 flex items-center justify-center bg-slate-950/45 text-white opacity-0 transition group-hover:opacity-100 group-focus-visible:opacity-100">
+                                                        <i data-lucide="zoom-in" class="h-4 w-4"></i>
+                                                    </span>
+                                                </button>
+                                            @else
+                                                <x-smart-image
+                                                    :src="null"
+                                                    :alt="$childName"
+                                                    :fallback-initials="$childInitials ?: 'ST'"
+                                                    size="44"
+                                                    rounded="rounded-none"
+                                                    containerClass="bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200 font-extrabold"
+                                                    :eager="false"
+                                                />
+                                            @endif
                                             <div>
                                                 <div class="flex items-center gap-2">
                                                     <span class="font-extrabold text-slate-950">{{ $childName }}</span>
@@ -494,35 +579,38 @@
                                         </div>
                                     </td>
                                     <td class="whitespace-nowrap px-5 py-4">
-                                        <span class="inline-flex whitespace-nowrap rounded-md px-2.5 py-1 text-xs font-extrabold {{ $typeClass($studentType) }}">{{ $studentTypeDisplay }}</span>
+                                        <span class="inline-flex h-7 items-center whitespace-nowrap rounded-lg border px-3 text-xs font-extrabold tracking-wide {{ $typeClass($studentType) }}">{{ $studentTypeDisplay }}</span>
                                     </td>
                                     <td class="px-5 py-4 font-bold text-slate-700">{{ $child->grade_abbr ?? 'Not provided' }}</td>
                                     <td class="whitespace-nowrap px-5 py-4">
-                                        <div class="flex flex-col items-start gap-1.5 whitespace-nowrap">
-                                            <x-badge :color="$childStatusColor[$child->status] ?? 'blue'">{{ $statusLabel }}</x-badge>
+                                        <div class="flex flex-col items-start gap-2 whitespace-nowrap">
+                                            <span class="inline-flex h-7 items-center gap-1.5 whitespace-nowrap rounded-lg border px-3 text-xs font-bold {{ $childStatusChip($child->status) }}">
+                                                <i data-lucide="{{ $childStatusIcon($child->status) }}" class="h-3.5 w-3.5"></i>
+                                                {{ $statusLabel }}
+                                            </span>
 
-                                            <div class="flex flex-wrap items-center gap-1 text-[10px] font-black">
+                                            <div class="flex items-center divide-x divide-slate-200 text-xs font-semibold">
                                                 @if ($docCount >= 3)
-                                                    <span class="inline-flex items-center gap-1 rounded bg-emerald-50 px-2 py-0.5 text-emerald-700 border border-emerald-200" title="Photo, Birth Cert & Report Card/Affidavit uploaded">
-                                                        <i data-lucide="file-check-2" class="h-3 w-3"></i> Docs (3/3)
+                                                    <span class="inline-flex items-center gap-1.5 pr-3 text-emerald-700" title="Photo, Birth Certificate, and Report Card/Affidavit uploaded">
+                                                        <i data-lucide="files" class="h-3.5 w-3.5"></i> 3/3 documents
                                                     </span>
                                                 @elseif ($docCount > 0)
-                                                    <span class="inline-flex items-center gap-1 rounded bg-amber-50 px-2 py-0.5 text-amber-700 border border-amber-200" title="{{ $docCount }}/3 documents uploaded">
-                                                        <i data-lucide="file-text" class="h-3 w-3"></i> Docs ({{ $docCount }}/3)
+                                                    <span class="inline-flex items-center gap-1.5 pr-3 text-amber-700" title="{{ $docCount }}/3 documents uploaded">
+                                                        <i data-lucide="files" class="h-3.5 w-3.5"></i> {{ $docCount }}/3 documents
                                                     </span>
                                                 @else
-                                                    <span class="inline-flex items-center gap-1 rounded bg-rose-50 px-2 py-0.5 text-rose-700 border border-rose-200">
-                                                        <i data-lucide="file-x" class="h-3 w-3"></i> No Docs
+                                                    <span class="inline-flex items-center gap-1.5 pr-3 text-rose-700">
+                                                        <i data-lucide="file-x" class="h-3.5 w-3.5"></i> No documents
                                                     </span>
                                                 @endif
 
                                                 @if ($hasReceipt)
-                                                    <span class="inline-flex items-center gap-1 rounded bg-blue-50 px-2 py-0.5 text-blue-700 border border-blue-200" title="Proof of Payment Attached">
-                                                        <i data-lucide="receipt" class="h-3 w-3"></i> Receipt Attached
+                                                    <span class="inline-flex items-center gap-1.5 pl-3 text-blue-700" title="Proof of payment attached">
+                                                        <i data-lucide="receipt-text" class="h-3.5 w-3.5"></i> Receipt attached
                                                     </span>
                                                 @else
-                                                    <span class="inline-flex items-center gap-1 rounded bg-slate-100 px-2 py-0.5 text-slate-500 border border-slate-200" title="No payment proof uploaded">
-                                                        <i data-lucide="alert-circle" class="h-3 w-3"></i> No Receipt
+                                                    <span class="inline-flex items-center gap-1.5 pl-3 text-slate-500" title="No proof of payment uploaded">
+                                                        <i data-lucide="receipt" class="h-3.5 w-3.5"></i> No receipt
                                                     </span>
                                                 @endif
                                             </div>
@@ -597,6 +685,76 @@
             </div>
         </div>
     </section>
+
+        <!-- Hover photo preview -->
+        <template x-if="hoverPhoto">
+            <div
+                class="pointer-events-none fixed z-[70] w-60 overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl shadow-slate-950/20"
+                :style="hoverPhotoStyle"
+                x-transition:enter="transition ease-out duration-150"
+                x-transition:enter-start="opacity-0 scale-95"
+                x-transition:enter-end="opacity-100 scale-100"
+                x-transition:leave="transition ease-in duration-100"
+                x-transition:leave-start="opacity-100 scale-100"
+                x-transition:leave-end="opacity-0 scale-95"
+            >
+                <div class="flex aspect-square items-center justify-center overflow-hidden rounded-xl bg-slate-100">
+                    <img :src="hoverPhoto.url" :alt="hoverPhoto.name" class="h-full w-full object-contain">
+                </div>
+                <div class="flex items-center gap-2 px-2 pb-1 pt-2.5">
+                    <span class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-3.5 w-3.5" aria-hidden="true">
+                            <circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35M11 8v6M8 11h6"></path>
+                        </svg>
+                    </span>
+                    <div class="min-w-0">
+                        <p class="truncate text-xs font-extrabold text-slate-900" x-text="hoverPhoto.name"></p>
+                        <p class="text-[11px] font-medium text-slate-500">Click for full-size preview</p>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <!-- Full-size student photo modal -->
+        <template x-if="photoModalOpen && photoModal">
+            <div
+                class="admin-modal-overlay fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/75 p-4 backdrop-blur-sm"
+                role="dialog"
+                aria-modal="true"
+                aria-label="Student photo preview"
+                @click.self="closePhotoModal()"
+                @keydown.escape.window="closePhotoModal()"
+                x-transition.opacity
+            >
+                <div class="w-full max-w-3xl overflow-hidden rounded-2xl border border-white/15 bg-white shadow-2xl" x-transition.scale.origin.center>
+                    <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+                        <div class="min-w-0">
+                            <p class="text-[11px] font-extrabold uppercase tracking-[0.16em] text-emerald-700">Student photo</p>
+                            <h2 class="truncate text-base font-extrabold text-slate-950" x-text="photoModal.name"></h2>
+                        </div>
+                        <button type="button" @click="closePhotoModal()" class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-500 transition hover:border-slate-300 hover:bg-slate-100 hover:text-slate-900" aria-label="Close photo preview">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="h-5 w-5" aria-hidden="true">
+                                <path d="M18 6 6 18M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="flex min-h-72 items-center justify-center bg-slate-950 p-4 sm:p-6">
+                        <img :src="photoModal.url" :alt="photoModal.name" class="max-h-[72vh] max-w-full object-contain shadow-2xl">
+                    </div>
+
+                    <div class="flex items-center justify-between gap-4 bg-white px-5 py-3.5">
+                        <p class="text-xs font-medium text-slate-500">Press Esc or click outside the photo to close.</p>
+                        <a :href="photoModal.url" target="_blank" rel="noopener" class="inline-flex shrink-0 items-center gap-2 rounded-lg bg-emerald-700 px-3.5 py-2 text-xs font-bold text-white transition hover:bg-emerald-800">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5" aria-hidden="true">
+                                <path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                            </svg>
+                            Open original
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </template>
 
         @unless ($isTeacherAdminViewer)
         <!-- Email Families Registry Modal -->
