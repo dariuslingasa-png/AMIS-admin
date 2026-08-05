@@ -11,6 +11,6 @@
     ][$color] ?? 'bg-gray-100 text-gray-800';
 @endphp
 
-<span {{ $attributes->merge(['class' => "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium $classes"]) }}>
+<span {{ $attributes->merge(['class' => "inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium $classes"]) }}>
     {{ $slot }}
 </span>

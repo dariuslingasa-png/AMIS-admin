@@ -347,15 +347,15 @@
                 </button>
             </form>
 
-            <div class="overflow-hidden rounded-md border border-slate-200">
-                <table class="w-full text-left text-sm">
+            <div class="overflow-x-auto rounded-md border border-slate-200">
+                <table class="w-full min-w-[1180px] text-left text-sm">
                     <thead class="sticky top-0 z-10 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                         <tr>
                             <th class="w-36 px-5 py-4 font-bold">Child</th>
                             <th class="px-5 py-4 font-bold">Student Name</th>
-                            <th class="w-36 px-5 py-4 font-bold">Student Type</th>
+                            <th class="w-40 px-5 py-4 font-bold">Student Type</th>
                             <th class="w-36 px-5 py-4 font-bold">Grade</th>
-                            <th class="w-44 px-5 py-4 font-bold">Enrollment Status</th>
+                            <th class="w-52 px-5 py-4 font-bold">Enrollment Status</th>
                             <th class="w-32 px-5 py-4 text-right font-bold">Action</th>
                         </tr>
                     </thead>
@@ -373,8 +373,8 @@
                             <tr>
                                 <td colspan="6" class="px-0 py-0">
                                     <div class="border-l-4 px-5 py-3.5 {{ $accent['wrap'] }}">
-                                        <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                                            <div class="flex min-w-0 items-center gap-3">
+                                        <div class="flex items-center justify-between gap-6">
+                                            <div class="flex min-w-0 flex-1 items-center gap-3">
                                                 <span class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-xs font-extrabold {{ $accent['icon'] }}">{{ $initials ?: 'FA' }}</span>
                                                 <div class="min-w-0">
                                                     <h3 class="truncate text-sm font-extrabold tracking-wide {{ $accent['text'] }}" title="{{ $familyHeader }}">{{ $familyHeader }}</h3>
@@ -400,38 +400,38 @@
                                                 </div>
                                             </div>
 
-                                            <div class="flex flex-wrap items-center gap-x-4 gap-y-1.5 lg:justify-end">
+                                            <div class="flex shrink-0 items-center justify-end gap-x-4 whitespace-nowrap">
                                                 @unless ($isTeacherAdminViewer)
-                                                    <span class="inline-flex w-fit items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-extrabold {{ $familyStatusChip($family['overall_status']) }}" title="Application review status">
+                                                    <span class="inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-extrabold {{ $familyStatusChip($family['overall_status']) }}" title="Application review status">
                                                         <i data-lucide="circle-dot" class="h-3.5 w-3.5"></i>
                                                         Review {{ \Illuminate\Support\Str::lower($family['overall_status']) }}
                                                     </span>
                                                 @endunless
 
-                                                <div class="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs font-semibold text-slate-600">
+                                                <div class="flex items-center gap-x-4 text-xs font-semibold text-slate-600">
                                                     @unless ($isTeacherAdminViewer)
-                                                        <span class="inline-flex items-center gap-1.5" title="Approved applications">
+                                                        <span class="inline-flex shrink-0 items-center gap-1.5" title="Approved applications">
                                                             <i data-lucide="check-circle-2" class="h-3.5 w-3.5 {{ $accent['text'] }}"></i>
                                                             {{ $family['approved_count'] }} of {{ $family['children_count'] }} approved
                                                         </span>
                                                         @if ($family['children_count'] > 1)
-                                                            <span class="inline-flex items-center gap-1.5 text-sky-700" title="Sibling discount">
+                                                            <span class="inline-flex shrink-0 items-center gap-1.5 text-sky-700" title="Sibling discount">
                                                                 <i data-lucide="percent" class="h-3.5 w-3.5"></i>
                                                                 {{ \Illuminate\Support\Str::headline(\Illuminate\Support\Str::lower($discountLabel)) }}
                                                             </span>
                                                         @endif
-                                                        <span class="inline-flex items-center gap-1.5 {{ $familyPaymentText($family['payment_status']) }}" title="Payment status">
+                                                        <span class="inline-flex shrink-0 items-center gap-1.5 {{ $familyPaymentText($family['payment_status']) }}" title="Payment status">
                                                             <i data-lucide="receipt" class="h-3.5 w-3.5"></i>
                                                             Payment {{ \Illuminate\Support\Str::lower($family['payment_status']) }}
                                                         </span>
                                                         @if ($family['email_sent_at'])
-                                                            <span class="inline-flex items-center gap-1.5 text-indigo-700" title="Registry emailed at {{ $family['email_sent_at']->format('M d, Y h:i A') }}">
+                                                            <span class="inline-flex shrink-0 items-center gap-1.5 text-indigo-700" title="Registry emailed at {{ $family['email_sent_at']->format('M d, Y h:i A') }}">
                                                                 <i data-lucide="mail-check" class="h-3.5 w-3.5"></i>
                                                                 Registry emailed
                                                             </span>
                                                         @endif
                                                     @endunless
-                                                    <span class="inline-flex items-center gap-1.5" title="Number of children">
+                                                    <span class="inline-flex shrink-0 items-center gap-1.5" title="Number of children">
                                                         <i data-lucide="users" class="h-3.5 w-3.5 {{ $accent['text'] }}"></i>
                                                         {{ $family['children_count'] }} {{ \Illuminate\Support\Str::plural('child', $family['children_count']) }}
                                                     </span>
@@ -448,6 +448,7 @@
                                     $photoUrl = \App\Support\EnrollmentStorage::url($child->photo_2x2_url, 'medium');
                                     $statusLabel = $statusLabels[$child->status] ?? \Illuminate\Support\Str::headline($child->status ?? 'under_review');
                                     $studentType = $typeLabel($child->student_type);
+                                    $studentTypeDisplay = str_replace(' ', "\u{00A0}", $studentType);
 
                                     $hasPhoto = filled($child->photo_2x2_url);
                                     $hasBirthCert = filled($child->birth_cert_url);
@@ -461,7 +462,7 @@
                                 @endphp
                                 <tr class="transition hover:bg-slate-50">
                                     <td class="px-5 py-4">
-                                        <span class="font-extrabold uppercase tracking-wide {{ $accent['text'] }}">Child {{ $index + 1 }}</span>
+                                        <span class="font-extrabold tabular-nums {{ $accent['text'] }}">{{ $index + 1 }}</span>
                                     </td>
                                     <td class="px-5 py-4 align-middle">
                                         <div class="flex items-center gap-3">
@@ -469,8 +470,8 @@
                                                 :src="$photoUrl"
                                                 :alt="$childName"
                                                 :fallback-initials="$childInitials ?: 'ST'"
-                                                size="40"
-                                                rounded="rounded-lg"
+                                                size="44"
+                                                rounded="rounded-none"
                                                 containerClass="bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100 font-extrabold"
                                                 :eager="false"
                                             />
@@ -492,12 +493,12 @@
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="px-5 py-4">
-                                        <span class="rounded-md px-2.5 py-1 text-xs font-extrabold {{ $typeClass($studentType) }}">{{ $studentType }}</span>
+                                    <td class="whitespace-nowrap px-5 py-4">
+                                        <span class="inline-flex whitespace-nowrap rounded-md px-2.5 py-1 text-xs font-extrabold {{ $typeClass($studentType) }}">{{ $studentTypeDisplay }}</span>
                                     </td>
                                     <td class="px-5 py-4 font-bold text-slate-700">{{ $child->grade_abbr ?? 'Not provided' }}</td>
-                                    <td class="px-5 py-4">
-                                        <div class="flex flex-col gap-1.5 items-start">
+                                    <td class="whitespace-nowrap px-5 py-4">
+                                        <div class="flex flex-col items-start gap-1.5 whitespace-nowrap">
                                             <x-badge :color="$childStatusColor[$child->status] ?? 'blue'">{{ $statusLabel }}</x-badge>
 
                                             <div class="flex flex-wrap items-center gap-1 text-[10px] font-black">
