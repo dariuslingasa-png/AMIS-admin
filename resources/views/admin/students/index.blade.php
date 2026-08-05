@@ -23,13 +23,13 @@
 >
     <section class="rounded-lg border border-slate-200 bg-white shadow-sm">
         <!-- Section Header -->
-        <div class="flex items-start justify-between gap-4 border-b border-slate-100 px-6 py-5">
+        <div class="flex flex-col gap-4 border-b border-slate-100 px-6 py-5 lg:flex-row lg:items-start lg:justify-between">
             <div>
                 <p class="text-xs font-extrabold uppercase tracking-wider text-emerald-700">Students Workspace</p>
                 <h1 class="mt-1 text-xl font-bold text-slate-950">Student Records</h1>
                 <p class="mt-1 text-sm text-slate-500">View enrolled student accounts, credentials, and synchronized teams channels. <span class="font-semibold text-slate-700">({{ number_format($analytics['filtered_total'] ?? $students->total()) }} of {{ number_format($stats['total_students'] ?? 0) }} total)</span></p>
             </div>
-            <div class="flex items-center gap-2 print:hidden">
+            <div class="flex flex-wrap items-center gap-2 print:hidden lg:justify-end">
                 <form method="POST" action="{{ route('admin.ms-sync.sync-all-licenses') }}" onsubmit="return confirm('Sync and assign licenses for the currently filtered student list? This may take a few minutes.')" class="inline-block">
                     @csrf
                     @foreach (request()->only(['search', 'grade', 'type', 'gender', 'mode', 'ms_status']) as $key => $value)
@@ -37,18 +37,18 @@
                             <input type="hidden" name="{{ $key }}" value="{{ $value }}">
                         @endif
                     @endforeach
-                    <button type="submit" class="inline-flex h-10 items-center gap-2 rounded-xl border border-emerald-300 bg-emerald-50 px-3.5 text-xs font-bold text-emerald-800 transition hover:bg-emerald-100 cursor-pointer whitespace-nowrap shadow-sm">
+                    <button type="submit" class="inline-flex h-10 items-center gap-2 whitespace-nowrap rounded-lg border border-slate-200 bg-white px-3.5 text-xs font-bold text-slate-700 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-800 cursor-pointer">
                         <i data-lucide="shield-check" class="h-4 w-4 text-emerald-600"></i>
                         <span>{{ request()->hasAny(['search', 'grade', 'type', 'gender', 'mode', 'ms_status']) ? 'Sync Filtered Licenses' : 'Sync Pending Licenses' }}</span>
                     </button>
                 </form>
                 <!-- Download Docs ZIP Button -->
-                <a href="{{ route('admin.students.download-docs-zip') }}" onclick="location.href='{{ route('admin.students.download-docs-zip') }}' + window.location.search; return false;" class="inline-flex h-10 items-center gap-2 rounded-xl bg-sky-700 hover:bg-sky-800 px-4 text-xs font-black text-white shadow-sm transition cursor-pointer whitespace-nowrap" title="Download ZIP archive of 2x2 Photos, Birth Certificates, Report Cards, and Enrollment Forms for filtered students">
-                    <i data-lucide="archive" class="h-4 w-4"></i>
+                <a href="{{ route('admin.students.download-docs-zip') }}" onclick="location.href='{{ route('admin.students.download-docs-zip') }}' + window.location.search; return false;" class="inline-flex h-10 items-center gap-2 whitespace-nowrap rounded-lg border border-slate-200 bg-white px-3.5 text-xs font-bold text-slate-700 shadow-sm transition hover:border-sky-300 hover:bg-sky-50 hover:text-sky-800" title="Download ZIP archive of 2x2 Photos, Birth Certificates, Report Cards, and Enrollment Forms for filtered students">
+                    <i data-lucide="archive" class="h-4 w-4 text-sky-600"></i>
                     <span>Download Docs ZIP</span>
                 </a>
                 <!-- Print Records Page Link Button -->
-                <a href="{{ route('admin.students.print-export') }}" onclick="location.href='{{ route('admin.students.print-export') }}' + window.location.search; return false;" class="inline-flex h-10 items-center gap-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 px-4 text-xs font-black text-white shadow-sm transition cursor-pointer whitespace-nowrap">
+                <a href="{{ route('admin.students.print-export') }}" onclick="location.href='{{ route('admin.students.print-export') }}' + window.location.search; return false;" class="inline-flex h-10 items-center gap-2 whitespace-nowrap rounded-lg bg-emerald-700 px-4 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-800">
                     <i data-lucide="printer" class="h-4 w-4"></i>
                     <span>Print Records</span>
                 </a>
@@ -241,130 +241,133 @@
     });
     </script>
 
-    <!-- Microsoft Credentials & Password Quick Modal Pop-up -->
-    <div id="credentials-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/40 backdrop-blur-sm transition-opacity duration-200" onclick="if(event.target === this) closeStudentCredentialsModal()">
-        <div class="relative w-full max-w-md scale-95 transform rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl transition-all duration-200 dark:border-slate-800 dark:bg-slate-900">
-            <!-- Modal Header -->
-            <div class="flex items-start justify-between border-b border-slate-100 dark:border-slate-800 pb-4 mb-4">
-                <div class="flex items-center gap-3">
-                    <div id="cred-modal-avatar" class="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 font-extrabold text-sm ring-1 ring-emerald-200 overflow-hidden shrink-0">
+    <!-- Microsoft Credentials & Password Quick Modal -->
+    <div id="credentials-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm" onclick="if(event.target === this) closeStudentCredentialsModal()">
+        <div class="w-full max-w-xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900">
+            <div class="flex items-start justify-between gap-4 border-b border-slate-200 px-6 py-5 dark:border-slate-800">
+                <div class="flex min-w-0 items-center gap-3.5">
+                    <div id="cred-modal-avatar" class="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-emerald-50 text-sm font-extrabold text-emerald-700 ring-1 ring-emerald-200">
                         ST
                     </div>
-                    <div>
-                        <h3 id="cred-modal-name" class="text-base font-black text-slate-900 dark:text-white leading-tight">STUDENT NAME</h3>
-                        <p class="text-xs font-bold text-slate-500 mt-0.5">
-                            <span id="cred-modal-id" class="text-emerald-700 font-extrabold">#261125</span> • 
-                            <span id="cred-modal-grade">Grade 6</span> (<span id="cred-modal-section">Section</span>)
+                    <div class="min-w-0">
+                        <p class="text-xs font-bold uppercase tracking-wider text-emerald-700">Microsoft account</p>
+                        <h3 id="cred-modal-name" class="mt-0.5 truncate text-base font-extrabold leading-tight text-slate-950 dark:text-white">STUDENT NAME</h3>
+                        <p class="mt-1 text-xs font-medium text-slate-500">
+                            <span id="cred-modal-id" class="font-bold text-slate-700 dark:text-slate-300">#261125</span>
+                            <span class="px-1 text-slate-300">·</span>
+                            <span id="cred-modal-grade">Grade 6</span>
+                            <span class="px-1 text-slate-300">·</span>
+                            <span id="cred-modal-section">Section</span>
                         </p>
                     </div>
                 </div>
-                <button type="button" onclick="closeStudentCredentialsModal()" class="rounded-xl p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition cursor-pointer">
-                    <i data-lucide="x" class="h-5 w-5"></i>
+                <button type="button" onclick="closeStudentCredentialsModal()" class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition hover:bg-slate-50 hover:text-slate-800" aria-label="Close credentials">
+                    <i data-lucide="x" class="h-4 w-4"></i>
                 </button>
             </div>
 
-            <!-- Microsoft Account Credentials Card -->
-            <div class="space-y-3.5">
-                <!-- Email Field -->
-                <div class="rounded-xl border border-slate-200/80 bg-slate-50/60 p-3.5 dark:border-slate-800 dark:bg-slate-800/40">
-                    <div class="flex items-center justify-between text-[11px] font-extrabold uppercase tracking-wider text-slate-500 mb-2">
-                        <span class="flex items-center gap-1.5">
-                            <i data-lucide="mail" class="h-3.5 w-3.5 text-emerald-600"></i>
-                            Microsoft School Email
-                        </span>
-                        <span id="cred-modal-status-badge" class="rounded px-1.5 py-0.5 text-[9px] font-extrabold uppercase bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200">
-                            Active Account
+            <div class="space-y-5 px-6 py-5">
+                <section>
+                    <div class="mb-2.5 flex items-center justify-between gap-3">
+                        <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-500">Sign-in credentials</h4>
+                        <span id="cred-modal-status-badge" class="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700">
+                            <span id="cred-modal-status-dot" class="h-2 w-2 rounded-full bg-emerald-500"></span>
+                            <span id="cred-modal-status-text">Account active</span>
                         </span>
                     </div>
-                    <div class="flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-2xs focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-900 transition-all">
-                        <input type="text" id="cred-modal-email" readonly class="w-full bg-transparent border-0 outline-none font-mono text-xs font-bold text-slate-900 dark:text-white p-0 m-0 focus:outline-none focus:ring-0 focus:border-0 selection:bg-emerald-100 selection:text-emerald-900" value="s.261125@amis.edu.ph" style="border: none !important; outline: none !important; box-shadow: none !important;">
-                        <button type="button" onclick="copyCredText('cred-modal-email', 'Email')" class="inline-flex h-7 items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-[11px] font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300 transition cursor-pointer shrink-0">
-                            <i data-lucide="copy" class="h-3 w-3"></i>
-                            <span>Copy</span>
-                        </button>
-                    </div>
-                </div>
 
-                <!-- Password Field -->
-                <div class="rounded-xl border border-slate-200/80 bg-slate-50/60 p-3.5 dark:border-slate-800 dark:bg-slate-800/40">
-                    <div class="flex items-center justify-between text-[11px] font-extrabold uppercase tracking-wider text-slate-500 mb-2">
-                        <span class="flex items-center gap-1.5">
-                            <i data-lucide="key-round" class="h-3.5 w-3.5 text-amber-600"></i>
-                            Account Password
-                        </span>
-                        <span id="cred-modal-pass-state" class="rounded px-1.5 py-0.5 text-[9px] font-extrabold uppercase bg-amber-50 text-amber-700 ring-1 ring-amber-200">
-                            Temporary Active
-                        </span>
-                    </div>
-                    <div class="flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-2xs focus-within:border-amber-500 focus-within:ring-2 focus-within:ring-amber-500/20 dark:border-slate-700 dark:bg-slate-900 transition-all">
-                        <div class="relative w-full">
-                            <input type="password" id="cred-modal-password" readonly class="w-full bg-transparent border-0 outline-none font-mono text-xs font-bold text-slate-900 dark:text-white p-0 m-0 focus:outline-none focus:ring-0 focus:border-0 selection:bg-amber-100 selection:text-amber-900" value="Amis@98213" style="border: none !important; outline: none !important; box-shadow: none !important;">
-                            <input type="text" id="cred-modal-password-text" readonly class="hidden w-full bg-transparent border-0 outline-none font-mono text-xs font-bold text-slate-900 dark:text-white p-0 m-0 focus:outline-none focus:ring-0 focus:border-0 selection:bg-amber-100 selection:text-amber-900" value="Amis@98213" style="border: none !important; outline: none !important; box-shadow: none !important;">
+                    <div class="divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-white dark:divide-slate-700 dark:border-slate-700 dark:bg-slate-900">
+                        <div class="p-4">
+                            <label for="cred-modal-email" class="mb-2 flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-300">
+                                <i data-lucide="mail" class="h-4 w-4 text-emerald-600"></i>
+                                School email
+                            </label>
+                            <div class="flex h-10 items-center gap-2 rounded-lg bg-slate-50 px-3 ring-1 ring-inset ring-slate-200 dark:bg-slate-800 dark:ring-slate-700">
+                                <input type="text" id="cred-modal-email" readonly class="m-0 w-full border-0 bg-transparent p-0 font-mono text-sm font-semibold text-slate-900 outline-none focus:border-0 focus:outline-none focus:ring-0 dark:text-white" value="s.261125@amis.edu.ph" style="border: none !important; outline: none !important; box-shadow: none !important;">
+                                <button type="button" onclick="copyCredText('cred-modal-email', 'Email')" class="inline-flex h-7 shrink-0 items-center gap-1.5 rounded-md px-2 text-xs font-bold text-slate-600 transition hover:bg-white hover:text-emerald-700 hover:shadow-sm dark:hover:bg-slate-700">
+                                    <i data-lucide="copy" class="h-3.5 w-3.5"></i>
+                                    Copy
+                                </button>
+                            </div>
                         </div>
-                        <button type="button" onclick="togglePasswordVisibility()" class="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition shrink-0" title="Toggle Show/Hide Password">
-                            <i id="cred-modal-eye-icon" data-lucide="eye" class="h-4 w-4"></i>
-                        </button>
-                        <button type="button" onclick="copyCredText('cred-modal-password-text', 'Password')" class="inline-flex h-7 items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-[11px] font-bold text-slate-700 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-300 transition cursor-pointer shrink-0">
-                            <i data-lucide="copy" class="h-3 w-3"></i>
-                            <span>Copy</span>
-                        </button>
+
+                        <div class="p-4">
+                            <div class="mb-2 flex items-center justify-between gap-3">
+                                <label for="cred-modal-password" class="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-300">
+                                    <i data-lucide="key-round" class="h-4 w-4 text-amber-600"></i>
+                                    Password
+                                </label>
+                                <span id="cred-modal-pass-state" class="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-700">
+                                    <span id="cred-modal-pass-dot" class="h-2 w-2 rounded-full bg-amber-500"></span>
+                                    <span id="cred-modal-pass-text">Temporary password</span>
+                                </span>
+                            </div>
+                            <div class="flex h-10 items-center gap-2 rounded-lg bg-slate-50 px-3 ring-1 ring-inset ring-slate-200 dark:bg-slate-800 dark:ring-slate-700">
+                                <div class="relative w-full">
+                                    <input type="password" id="cred-modal-password" readonly class="m-0 w-full border-0 bg-transparent p-0 font-mono text-sm font-semibold text-slate-900 outline-none focus:border-0 focus:outline-none focus:ring-0 dark:text-white" value="Amis@98213" style="border: none !important; outline: none !important; box-shadow: none !important;">
+                                    <input type="text" id="cred-modal-password-text" readonly class="m-0 hidden w-full border-0 bg-transparent p-0 font-mono text-sm font-semibold text-slate-900 outline-none focus:border-0 focus:outline-none focus:ring-0 dark:text-white" value="Amis@98213" style="border: none !important; outline: none !important; box-shadow: none !important;">
+                                </div>
+                                <button type="button" onclick="togglePasswordVisibility()" class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-400 transition hover:bg-white hover:text-slate-700 hover:shadow-sm dark:hover:bg-slate-700" title="Show or hide password">
+                                    <i id="cred-modal-eye-icon" data-lucide="eye" class="h-4 w-4"></i>
+                                </button>
+                                <button type="button" onclick="copyCredText('cred-modal-password-text', 'Password')" class="inline-flex h-7 shrink-0 items-center gap-1.5 rounded-md px-2 text-xs font-bold text-slate-600 transition hover:bg-white hover:text-amber-700 hover:shadow-sm dark:hover:bg-slate-700">
+                                    <i data-lucide="copy" class="h-3.5 w-3.5"></i>
+                                    Copy
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                </div>
+                </section>
 
-                <!-- Quick Action Buttons: Reset Password, Resend Email & Sync License -->
-                <div class="grid grid-cols-3 gap-2 pt-1">
-                    <form id="cred-modal-reset-form" method="POST" action="" onsubmit="return confirm('Reset Microsoft Office 365 password to default temporary password (Amis@12345)?')">
-                        @csrf
-                        <input type="hidden" name="reset_format" value="default">
-                        <button type="submit" class="w-full inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border border-amber-300 bg-amber-50/80 px-2 text-xs font-bold text-amber-800 hover:bg-amber-100 transition cursor-pointer shadow-sm" title="Reset Password">
-                            <i data-lucide="rotate-ccw" class="h-3.5 w-3.5 text-amber-600"></i>
-                            <span>Reset Pass</span>
-                        </button>
-                    </form>
+                <section>
+                    <h4 class="mb-2.5 text-xs font-extrabold uppercase tracking-wider text-slate-500">Account tools</h4>
+                    <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                        <form id="cred-modal-reset-form" method="POST" action="" onsubmit="return confirm('Reset Microsoft Office 365 password to default temporary password (Amis@12345)?')">
+                            @csrf
+                            <input type="hidden" name="reset_format" value="default">
+                            <button type="submit" class="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 transition hover:border-amber-300 hover:bg-amber-50 hover:text-amber-800">
+                                <i data-lucide="rotate-ccw" class="h-4 w-4 text-amber-600"></i>
+                                Reset password
+                            </button>
+                        </form>
 
-                    <form id="cred-modal-resend-form" method="POST" action="">
-                        @csrf
-                        <button type="submit" class="w-full inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border border-indigo-300 bg-indigo-50/80 px-2 text-xs font-bold text-indigo-800 hover:bg-indigo-100 transition cursor-pointer shadow-sm" title="Resend Email">
-                            <i data-lucide="send" class="h-3.5 w-3.5 text-indigo-600"></i>
-                            <span>Resend Email</span>
-                        </button>
-                    </form>
+                        <form id="cred-modal-resend-form" method="POST" action="">
+                            @csrf
+                            <button type="submit" class="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 transition hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-800">
+                                <i data-lucide="send" class="h-4 w-4 text-indigo-600"></i>
+                                Resend email
+                            </button>
+                        </form>
 
-                    <form id="cred-modal-sync-form" method="POST" action="">
-                        @csrf
-                        <button type="submit" class="w-full inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50/80 px-2 text-xs font-bold text-emerald-800 hover:bg-emerald-100 transition cursor-pointer shadow-sm" title="Sync Microsoft account status and license">
-                            <i data-lucide="refresh-cw" class="h-3.5 w-3.5 text-emerald-600"></i>
-                            <span>Sync License</span>
-                        </button>
-                    </form>
+                        <form id="cred-modal-sync-form" method="POST" action="">
+                            @csrf
+                            <button type="submit" class="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-800">
+                                <i data-lucide="refresh-cw" class="h-4 w-4 text-emerald-600"></i>
+                                Sync account
+                            </button>
+                        </form>
+                    </div>
+                </section>
+
+                <div id="cred-copy-toast" class="hidden rounded-lg bg-emerald-800 px-3 py-2.5 text-center text-xs font-bold text-white shadow-sm">
+                    <span id="cred-copy-toast-msg">Copied to clipboard!</span>
                 </div>
             </div>
 
-            <!-- Toast Feedback Notification -->
-            <div id="cred-copy-toast" class="hidden mt-3 rounded-lg bg-emerald-800 px-3 py-2 text-center text-xs font-bold text-emerald-50 transition shadow-sm">
-                <span id="cred-copy-toast-msg">Copied to clipboard!</span>
-            </div>
-
-            <!-- Modal Footer Actions (Clean soft colors, NO black blocks) -->
-            <div class="mt-4 flex items-center justify-between gap-2 border-t border-slate-100 dark:border-slate-800 pt-4">
+            <div class="flex flex-col gap-3 border-t border-slate-200 bg-slate-50 px-6 py-4 sm:flex-row sm:items-center sm:justify-between dark:border-slate-800 dark:bg-slate-800/50">
+                <button type="button" onclick="copyCombinedCredentials()" class="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-emerald-700 px-4 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-800">
+                    <i data-lucide="copy-check" class="h-4 w-4"></i>
+                    Copy credentials
+                </button>
                 <div class="flex items-center gap-2">
-                    <button type="button" onclick="copyCombinedCredentials()" class="inline-flex h-9 items-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 px-3.5 text-xs font-bold text-emerald-800 hover:bg-emerald-100 transition cursor-pointer shadow-sm">
-                        <i data-lucide="copy-check" class="h-4 w-4 text-emerald-600"></i>
-                        <span>Copy Both</span>
-                    </button>
-                    <a id="cred-modal-zip-btn" href="#" download class="inline-flex h-9 items-center gap-1.5 rounded-xl border border-sky-300 bg-sky-50 px-3.5 text-xs font-bold text-sky-800 hover:bg-sky-100 transition cursor-pointer shadow-sm" title="Download Documents ZIP (2x2 Photo, Birth Cert, Report Card, etc.)">
+                    <a id="cred-modal-zip-btn" href="#" download class="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 text-xs font-bold text-slate-700 transition hover:border-sky-300 hover:text-sky-800 sm:flex-none" title="Download student documents">
                         <i data-lucide="archive" class="h-4 w-4 text-sky-600"></i>
-                        <span>Download ZIP Docs</span>
+                        Documents
                     </a>
-                </div>
-                <div class="flex items-center gap-2">
-                    <a id="cred-modal-print-btn" href="#" target="_blank" class="inline-flex h-9 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition shadow-sm" title="Print Credential Slip">
+                    <a id="cred-modal-print-btn" href="#" target="_blank" class="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 text-xs font-bold text-slate-700 transition hover:border-slate-300 hover:text-slate-950 sm:flex-none" title="Print credential slip">
                         <i data-lucide="printer" class="h-4 w-4 text-slate-500"></i>
-                        <span>Print Slip</span>
+                        Print
                     </a>
-                    <button type="button" onclick="closeStudentCredentialsModal()" class="inline-flex h-9 items-center justify-center rounded-xl border border-slate-200 bg-slate-100 px-4 text-xs font-bold text-slate-700 hover:bg-slate-200 transition cursor-pointer">
-                        Close
-                    </button>
                 </div>
             </div>
         </div>
@@ -392,26 +395,34 @@
             document.getElementById('cred-modal-password-text').value = passVal;
             
             const passState = document.getElementById('cred-modal-pass-state');
+            const passStateText = document.getElementById('cred-modal-pass-text');
+            const passStateDot = document.getElementById('cred-modal-pass-dot');
             if (student.password_changed) {
-                passState.innerText = 'User Changed Password';
-                passState.className = 'rounded px-1.5 py-0.5 text-[9px] font-extrabold uppercase bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200';
+                passStateText.innerText = 'Password changed';
+                passState.className = 'inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700';
+                passStateDot.className = 'h-2 w-2 rounded-full bg-emerald-500';
             } else {
-                passState.innerText = 'Temporary Initial Active';
-                passState.className = 'rounded px-1.5 py-0.5 text-[9px] font-extrabold uppercase bg-amber-50 text-amber-700 ring-1 ring-amber-200';
+                passStateText.innerText = 'Temporary password';
+                passState.className = 'inline-flex items-center gap-1.5 text-xs font-semibold text-amber-700';
+                passStateDot.className = 'h-2 w-2 rounded-full bg-amber-500';
             }
 
             const statusBadge = document.getElementById('cred-modal-status-badge');
+            const statusText = document.getElementById('cred-modal-status-text');
+            const statusDot = document.getElementById('cred-modal-status-dot');
             if (student.ms_user_id) {
-                statusBadge.innerText = 'Active Account';
-                statusBadge.className = 'rounded px-1.5 py-0.5 text-[9px] font-extrabold uppercase bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200';
+                statusText.innerText = 'Account active';
+                statusBadge.className = 'inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700';
+                statusDot.className = 'h-2 w-2 rounded-full bg-emerald-500';
             } else {
-                statusBadge.innerText = 'Pending Setup';
-                statusBadge.className = 'rounded px-1.5 py-0.5 text-[9px] font-extrabold uppercase bg-slate-100 text-slate-600 ring-1 ring-slate-200';
+                statusText.innerText = 'Setup pending';
+                statusBadge.className = 'inline-flex items-center gap-1.5 text-xs font-bold text-slate-600';
+                statusDot.className = 'h-2 w-2 rounded-full bg-slate-400';
             }
 
             const avatarEl = document.getElementById('cred-modal-avatar');
             if (student.photo_url) {
-                avatarEl.innerHTML = `<img src="${student.photo_url}" class="h-full w-full rounded-xl object-cover">`;
+                avatarEl.innerHTML = `<img src="${student.photo_url}" class="h-full w-full object-cover">`;
             } else {
                 const initials = (student.name || 'ST').split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase();
                 avatarEl.innerText = initials;

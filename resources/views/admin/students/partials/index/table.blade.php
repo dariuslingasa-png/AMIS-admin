@@ -2,13 +2,14 @@
     $msSyncColor = ['enrolled' => 'green', 'failed' => 'red', 'pending' => 'yellow'];
     $msSyncLabel = ['enrolled' => 'Synced', 'failed' => 'Sync Failed', 'pending' => 'Pending Teams'];
     $isTeacherAdminViewer = auth()->user()?->isTeacherAdminViewer() ?? false;
+    $actionButtonClass = 'inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400';
 @endphp
 
 <!-- Main Table Container -->
 <div id="tableContainer">
-    <div class="overflow-x-auto">
-        <table class="w-full text-left text-sm">
-            <thead class="bg-slate-50 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+    <div class="overflow-x-auto rounded-lg border border-slate-200">
+        <table class="w-full min-w-[1180px] text-left text-sm">
+            <thead class="bg-slate-50 text-xs font-bold uppercase tracking-wide text-slate-500">
                 <tr class="border-b border-slate-100">
                     <th class="w-32 px-5 py-4 font-bold">
                         <a href="{{ $sortUrl('student_id') }}" class="flex items-center gap-1 hover:text-slate-600 transition print:hidden">
@@ -62,7 +63,6 @@
                         $msStatus = $student->studentSection->ms_status ?? ($student->ms_user_id && $student->ms_license_active ? 'enrolled' : 'pending');
                         $gender = strtolower((string) ($student->applicant->gender ?? ''));
                         $genderLabel = $gender === 'male' ? 'Male' : ($gender === 'female' ? 'Female' : 'Not Set');
-                        $genderClass = $gender === 'male' ? 'bg-blue-50 text-blue-700 ring-blue-100' : ($gender === 'female' ? 'bg-violet-50 text-violet-700 ring-violet-100' : 'bg-slate-50 text-slate-500 ring-slate-100');
                         
                         $studentType = $student->applicant ? $student->applicant->student_type : 'New';
                         $learningMode = $student->applicant ? $student->applicant->learning_mode : 'F2F';
@@ -73,18 +73,11 @@
                         }
                         $isHashed = str_starts_with($student->temp_password ?? '', '$');
 
-                        $typeLower = strtolower($studentType);
-                        $typeClass = $typeLower === 'new' 
-                            ? 'bg-emerald-50 text-emerald-700 ring-emerald-100' 
-                            : ($typeLower === 'old' ? 'bg-slate-100 text-slate-700 ring-slate-200' : 'bg-amber-50 text-amber-700 ring-amber-100');
-
-                        $modeClass = $modeAbbr === 'F2F' 
-                            ? 'bg-blue-50 text-blue-700 ring-blue-100' 
-                            : 'bg-rose-50 text-rose-700 ring-rose-100';
+                        $studentTypeLabel = \Illuminate\Support\Str::headline($studentType ?: 'Not set');
                     @endphp
                     <tr class="transition-colors duration-100 ease-in-out hover:bg-slate-50">
                         <!-- Student Number -->
-                        <td class="px-5 py-4 font-extrabold text-slate-600">
+                        <td class="whitespace-nowrap px-5 py-4 font-extrabold tabular-nums text-emerald-700">
                             {{ $student->student_number ?? '-' }}
                         </td>
 
@@ -101,15 +94,18 @@
                                     :eager="false"
                                 />
                                 <div>
-                                    <div class="font-extrabold text-slate-950 whitespace-nowrap">{{ $name }}</div>
-                                    <div class="mt-0.5 flex flex-wrap items-center gap-1.5 text-[10px] text-slate-400 font-extrabold print:hidden">
-                                         <span class="text-slate-400">SY {{ $student->school_year ?? '-' }}</span>
+                                    <div class="whitespace-nowrap font-extrabold text-slate-950">{{ $name }}</div>
+                                    <div class="mt-1 flex flex-wrap items-center gap-1.5 text-xs font-medium text-slate-500 print:hidden">
+                                         <span>SY {{ $student->school_year ?? '-' }}</span>
                                          @if (!$student->applicant || $student->applicant->completion_percentage < 100)
-                                             <span class="text-slate-355">•</span>
+                                             <span class="text-slate-300">•</span>
                                              @php
                                                  $missingList = $student->applicant ? implode(', ', $student->applicant->incomplete_fields) : 'No profile';
                                              @endphp
-                                             <span class="inline-flex items-center rounded bg-amber-50 px-1.5 py-0.5 font-bold text-amber-700 ring-1 ring-amber-100 uppercase cursor-help" title="Missing: {{ $missingList }}">Incomplete</span>
+                                             <span class="inline-flex cursor-help items-center gap-1 font-semibold text-amber-700" title="Missing: {{ $missingList }}">
+                                                 <i data-lucide="triangle-alert" class="h-3 w-3"></i>
+                                                 Profile incomplete
+                                             </span>
                                          @endif
                                      </div>
                                 </div>
@@ -117,22 +113,22 @@
                         </td>
 
                         <!-- Student Type -->
-                        <td class="px-5 py-4">
-                            <span class="inline-flex rounded-md px-2 py-0.5 text-xs font-bold ring-1 uppercase {{ $typeClass }}">{{ $studentType }}</span>
+                        <td class="whitespace-nowrap px-5 py-4 text-sm font-semibold text-slate-700">
+                            {{ $studentTypeLabel }}
                         </td>
 
                         <!-- Mode -->
-                        <td class="px-5 py-4">
-                            <span class="inline-flex rounded-md px-2 py-0.5 text-xs font-bold ring-1 uppercase {{ $modeClass }}">{{ $modeAbbr }}</span>
+                        <td class="whitespace-nowrap px-5 py-4 text-sm font-semibold text-slate-700">
+                            {{ $modeAbbr }}
                         </td>
 
                         <!-- Gender -->
-                        <td class="px-5 py-4">
-                            <span class="inline-flex rounded-md px-2.5 py-1 text-xs font-extrabold ring-1 {{ $genderClass }}">{{ $genderLabel }}</span>
+                        <td class="whitespace-nowrap px-5 py-4 text-sm font-semibold text-slate-700">
+                            {{ $genderLabel }}
                         </td>
 
                         <!-- Grade -->
-                        <td class="px-5 py-4 font-extrabold text-slate-700">
+                        <td class="whitespace-nowrap px-5 py-4 font-extrabold text-slate-700">
                             @php
                                 $gradeRaw = $student->grade_level ?? '-';
                                 $gradeAbbr = preg_replace(
@@ -145,13 +141,11 @@
                         </td>
 
                         <!-- Section / Class Occupancy -->
-                        <td class="px-5 py-4 font-extrabold text-slate-700">
+                        <td class="whitespace-nowrap px-5 py-4 font-semibold text-slate-700">
                             @if($student->studentSection && $student->studentSection->section)
-                                <span class="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-extrabold text-emerald-800 ring-1 ring-emerald-200/80">
-                                    {{ $student->studentSection->section->name }}
-                                </span>
+                                {{ $student->studentSection->section->name }}
                             @else
-                                <span class="text-slate-400 font-normal text-xs">-</span>
+                                <span class="text-sm font-normal text-slate-400">Unassigned</span>
                             @endif
                         </td>
 
@@ -171,7 +165,7 @@
                         </td>
 
                         <!-- Action -->
-                         <td class="px-5 py-4 text-right print:hidden">
+                         <td class="whitespace-nowrap px-5 py-4 text-right print:hidden">
                             <div class="flex items-center justify-end gap-1.5">
                                 <button type="button" onclick="openStudentCredentialsModal({{ json_encode([
                                     'id' => $student->id,
@@ -188,17 +182,17 @@
                                     'resend_url' => route('admin.students.resend', $student),
                                     'sync_url' => route('admin.ms-sync.student', $student),
                                     'print_url' => route('admin.students.index', ['search' => $student->student_number, 'print_credentials' => 1]),
-                                ]) }})" class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-amber-200 bg-amber-50 text-amber-700 transition-colors duration-100 hover:bg-amber-100 cursor-pointer shadow-sm" title="View Microsoft Account Credentials & Password">
-                                    <i data-lucide="key-round" class="h-4 w-4"></i>
+                                ]) }})" class="{{ $actionButtonClass }} cursor-pointer" title="View Microsoft Account Credentials & Password">
+                                    <i data-lucide="key-round" class="h-4 w-4 text-amber-600"></i>
                                 </button>
-                                <a href="{{ route('admin.students.download-docs-zip', ['search' => $student->student_number]) }}" download class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-sky-200 bg-sky-50 text-sky-700 transition-colors duration-100 hover:bg-sky-100 shadow-sm" title="Download Student Documents ZIP (2x2 Photo, Birth Cert, Report Card, etc.)">
-                                    <i data-lucide="archive" class="h-4 w-4"></i>
+                                <a href="{{ route('admin.students.download-docs-zip', ['search' => $student->student_number]) }}" download class="{{ $actionButtonClass }}" title="Download Student Documents ZIP (2x2 Photo, Birth Cert, Report Card, etc.)">
+                                    <i data-lucide="archive" class="h-4 w-4 text-sky-600"></i>
                                 </a>
-                                <a href="{{ route('admin.students.print-enrolment-form', $student) }}" target="_blank" class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-emerald-200 bg-emerald-50 text-emerald-700 transition-colors duration-100 hover:bg-emerald-100" title="Print Enrollment Application Form">
-                                    <i data-lucide="file-signature" class="h-4 w-4"></i>
+                                <a href="{{ route('admin.students.print-enrolment-form', $student) }}" target="_blank" class="{{ $actionButtonClass }}" title="Print Enrollment Application Form">
+                                    <i data-lucide="file-signature" class="h-4 w-4 text-emerald-600"></i>
                                 </a>
-                                <a href="{{ route('admin.students.show', $student) }}" class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-emerald-100 bg-white text-emerald-700 transition-colors duration-100 hover:bg-emerald-50" title="{{ $isTeacherAdminViewer ? 'View' : 'Manage' }}">
-                                    <i data-lucide="file-search" class="h-4 w-4"></i>
+                                <a href="{{ route('admin.students.show', $student) }}" class="{{ $actionButtonClass }}" title="{{ $isTeacherAdminViewer ? 'View' : 'Manage' }}">
+                                    <i data-lucide="file-search" class="h-4 w-4 text-indigo-600"></i>
                                 </a>
                             </div>
                         </td>
