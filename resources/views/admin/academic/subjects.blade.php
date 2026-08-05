@@ -74,7 +74,7 @@
                                 } elseif (str_contains($subjectLower, 'arabic')) {
                                     $cardClasses = 'bg-pink-50/20 border-pink-150 border-l-4 border-l-pink-500';
                                 } elseif (str_contains($subjectLower, 'recess')) {
-                                    $cardClasses = 'bg-rose-50/20 border-rose-150 border-l-4 border-l-rose-500';
+                                    $cardClasses = 'bg-rose-50/20 border-rose-200 border-l-4 border-l-rose-500';
                                 } elseif (str_contains($subjectLower, 'meeting') || str_contains($subjectLower, 'circle') || str_contains($subjectLower, 'wrap')) {
                                     $cardClasses = 'bg-violet-50/20 border-violet-150 border-l-4 border-l-violet-500';
                                 }
