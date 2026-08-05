@@ -44,15 +44,20 @@
 
         <div class="px-6 py-5">
             <form method="GET" class="mb-5 grid grid-cols-12 gap-3">
-                <label class="relative col-span-6">
+                <label class="relative col-span-4">
                     <i data-lucide="search" class="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-slate-400"></i>
                     <input name="search" value="{{ request('search') }}" placeholder="Search student or email" class="{{ $inputClass }} w-full pl-9">
                 </label>
                 <select name="status" class="{{ $inputClass }} col-span-2 w-full" onchange="this.form.submit()">
                     <option value="">All statuses</option>
-                    @foreach ($statusLabels as $value => $label)
+                    @foreach (\App\Services\Admin\Enrollment\EnrollmentReviewService::FILTER_STATUS_LABELS as $value => $label)
                         <option value="{{ $value }}" @selected(request('status') === $value)>{{ $label }}</option>
                     @endforeach
+                </select>
+                <select name="readiness" class="{{ $inputClass }} col-span-2 w-full" onchange="this.form.submit()">
+                    <option value="">All readiness states</option>
+                    <option value="ready" @selected(request('readiness') === 'ready')>Ready to Approve</option>
+                    <option value="not_ready" @selected(request('readiness') === 'not_ready')>Not Ready</option>
                 </select>
                 <select name="grade" class="{{ $inputClass }} col-span-2 w-full" onchange="this.form.submit()">
                     <option value="">All grades</option>

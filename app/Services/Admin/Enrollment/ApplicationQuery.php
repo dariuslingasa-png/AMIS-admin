@@ -117,7 +117,52 @@ class ApplicationQuery
         }
 
         if ($request->filled('status')) {
-            $query->where('enrollment_applicants.status', $request->status);
+            $status = (string) $request->status;
+            match ($status) {
+                'pending_review' => $query->whereIn('enrollment_applicants.status', ['ready_for_submission', 'pending', 'submitted']),
+                'under_verification' => $query->whereIn('enrollment_applicants.status', ['under_review', 'pending_verification']),
+                default => $query->where('enrollment_applicants.status', $status),
+            };
+        }
+
+        if ($request->filled('readiness')) {
+            $readiness = (string) $request->readiness;
+            if ($readiness === 'ready') {
+                $query->where('enrollment_applicants.document_statuses->photo_2x2', 'approved')
+                    ->where(function ($q) {
+                        $q->where('enrollment_applicants.student_type', 'Old')
+                            ->orWhere(function ($sub) {
+                                $sub->where('enrollment_applicants.student_type', '!=', 'Old')
+                                    ->where('enrollment_applicants.document_statuses->birth_cert', 'approved')
+                                    ->where(function ($sub2) {
+                                        $sub2->where('enrollment_applicants.document_statuses->report_card', 'approved')
+                                             ->orWhere('enrollment_applicants.document_statuses->affidavit', 'approved');
+                                    });
+                            });
+                    });
+            } elseif ($readiness === 'not_ready') {
+                $query->where(function ($q) {
+                    $q->where('enrollment_applicants.document_statuses->photo_2x2', '!=', 'approved')
+                        ->orWhereNull('enrollment_applicants.document_statuses->photo_2x2')
+                        ->orWhere(function ($sub) {
+                            $sub->where('enrollment_applicants.student_type', '!=', 'Old')
+                                ->where(function ($sub2) {
+                                    $sub2->where('enrollment_applicants.document_statuses->birth_cert', '!=', 'approved')
+                                         ->orWhereNull('enrollment_applicants.document_statuses->birth_cert')
+                                         ->orWhere(function ($sub3) {
+                                             $sub3->where(function ($sub4) {
+                                                 $sub4->where('enrollment_applicants.document_statuses->report_card', '!=', 'approved')
+                                                      ->orWhereNull('enrollment_applicants.document_statuses->report_card');
+                                             })
+                                             ->where(function ($sub5) {
+                                                 $sub5->where('enrollment_applicants.document_statuses->affidavit', '!=', 'approved')
+                                                      ->orWhereNull('enrollment_applicants.document_statuses->affidavit');
+                                             });
+                                         });
+                                });
+                        });
+                });
+            }
         }
 
         if ($request->filled('grade')) {
@@ -291,7 +336,12 @@ class ApplicationQuery
         }
 
         if ($request->filled('status')) {
-            $query->where('status', $request->status);
+            $status = (string) $request->status;
+            match ($status) {
+                'pending_review' => $query->whereIn('status', ['ready_for_submission', 'pending', 'submitted']),
+                'under_verification' => $query->whereIn('status', ['under_review', 'pending_verification']),
+                default => $query->where('status', $status),
+            };
         }
 
         if ($request->filled('grade')) {

@@ -26,6 +26,15 @@ class EnrollmentReviewService
         'rejected' => 'Rejected',
     ];
 
+    public const FILTER_STATUS_LABELS = [
+        'draft' => 'Incomplete / Draft',
+        'pending_review' => 'Submitted - Pending Review',
+        'under_verification' => 'Under Verification',
+        'for_correction' => 'For Correction',
+        'approved' => 'Approved & Enrolled',
+        'rejected' => 'Rejected',
+    ];
+
     public const STATUS_BADGES = [
         'draft' => 'badge-gray',
         'ready_for_submission' => 'badge-blue',

@@ -44,6 +44,16 @@
     @endphp
 
     <div x-data="{
+        deleteModalOpen: false,
+        deleteChildName: '',
+        deleteChildId: '',
+        deleteActionUrl: '',
+        confirmDelete(id, name, destroyUrl) {
+            this.deleteChildId = id;
+            this.deleteChildName = name;
+            this.deleteActionUrl = destroyUrl;
+            this.deleteModalOpen = true;
+        },
         quickReviewModal: false,
         reviewChild: null,
         openQuickReview(data) {
@@ -305,7 +315,7 @@
                 </label>
                 <select name="status" class="{{ $inputClass }} col-span-2 w-full" onchange="this.form.submit()">
                     <option value="">All statuses</option>
-                    @foreach ($statusLabels ?? [] as $value => $label)
+                    @foreach (\App\Services\Admin\Enrollment\EnrollmentReviewService::FILTER_STATUS_LABELS as $value => $label)
                         <option value="{{ $value }}" @selected(request('status') === $value)>{{ $label }}</option>
                     @endforeach
                 </select>
@@ -346,7 +356,7 @@
                             <th class="w-36 px-5 py-4 font-bold">Student Type</th>
                             <th class="w-36 px-5 py-4 font-bold">Grade</th>
                             <th class="w-44 px-5 py-4 font-bold">Enrollment Status</th>
-                            <th class="w-36 px-5 py-4 text-right font-bold">Action</th>
+                            <th class="w-32 px-5 py-4 text-right font-bold">Action</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 bg-white">
@@ -517,8 +527,9 @@
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="px-5 py-4 text-right">
-                                        <div class="flex items-center justify-end gap-2">
+                                    <td class="px-5 py-4 text-right align-middle whitespace-nowrap">
+                                        <div class="inline-flex items-center justify-end gap-2 whitespace-nowrap">
+                                            <!-- Quick View Icon Button -->
                                             <button type="button" 
                                                 @click="openQuickReview({
                                                     id: '{{ $child->id }}',
@@ -540,17 +551,32 @@
                                                     parent_name: '{{ e($family['parent_name']) }}',
                                                     parent_email: '{{ e($family['parent_email']) }}',
                                                     parent_mobile: '{{ e($family['parent_mobile']) }}',
-                                                    show_url: '{{ route('admin.applicants.show', $child) }}'
+                                                    show_url: '{{ route('admin.applicants.show', $child) }}',
+                                                    destroy_url: '{{ route('admin.applicants.destroy', $child) }}'
                                                 })" 
-                                                class="inline-flex h-9 items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 shadow-3xs transition hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700 cursor-pointer">
-                                                <i data-lucide="scan-eye" class="h-4 w-4 text-indigo-600"></i>
-                                                Quick View
+                                                class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-indigo-600 shadow-3xs transition hover:border-indigo-300 hover:bg-indigo-50 hover:scale-105 cursor-pointer"
+                                                title="Quick View Application">
+                                                <i data-lucide="scan-eye" class="h-4 w-4"></i>
                                             </button>
 
-                                            <a href="{{ route('admin.applicants.show', $child) }}" title="View full child application" class="inline-flex h-9 items-center gap-1.5 rounded-md border border-emerald-100 bg-emerald-50 px-3 text-xs font-bold text-emerald-700 transition hover:border-emerald-200 hover:bg-emerald-100">
+                                            <!-- View Full Details Icon Link -->
+                                            <a href="{{ route('admin.applicants.show', $child) }}"
+                                               title="View Details & Full Review"
+                                               class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 shadow-3xs transition hover:border-emerald-300 hover:bg-emerald-100 hover:scale-105">
                                                 <i data-lucide="eye" class="h-4 w-4"></i>
-                                                View Details
                                             </a>
+
+                                            @unless ($isTeacherAdminViewer)
+                                                @if ($child->status !== 'approved')
+                                                    <!-- Delete Icon Button (Only visible if not approved) -->
+                                                    <button type="button"
+                                                        @click="confirmDelete('{{ str_pad($child->id, 4, '0', STR_PAD_LEFT) }}', '{{ e($childName) }}', '{{ route('admin.applicants.destroy', $child) }}')"
+                                                        class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-rose-200 bg-rose-50 text-rose-600 shadow-3xs transition hover:bg-rose-600 hover:text-white hover:scale-105 cursor-pointer"
+                                                        title="Delete Application">
+                                                        <i data-lucide="trash-2" class="h-4 w-4"></i>
+                                                    </button>
+                                                @endif
+                                            @endunless
                                         </div>
                                     </td>
                                 </tr>
@@ -627,7 +653,7 @@
                                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                                         Sent
                                     </span>
-                                    <span x-show="item.status === 'failed'" class="inline-flex items-center gap-1 rounded-md bg-rose-50 px-1.5 py-0.5 font-bold text-rose-600 border border-rose-150">
+                                    <span x-show="item.status === 'failed'" class="inline-flex items-center gap-1 rounded-md bg-rose-50 px-1.5 py-0.5 font-bold text-rose-600 border border-rose-200">
                                         <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
                                         Failed
                                     </span>
@@ -797,6 +823,42 @@
                         Open Full Review Page
                     </a>
                 </div>
+            </div>
+        </div>
+
+        <!-- Delete Warning Modal Pop Up -->
+        <div class="admin-modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-xs"
+             x-show="deleteModalOpen" x-cloak x-transition>
+            <div class="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl space-y-4" @click.outside="deleteModalOpen = false">
+                <!-- Modal Header Icon -->
+                <div class="flex items-center gap-3">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-100 text-rose-600 ring-4 ring-rose-50">
+                        <i data-lucide="triangle-alert" class="h-6 w-6"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-base font-black text-slate-950 uppercase tracking-wider">Delete Application</h2>
+                        <p class="text-xs font-semibold text-rose-600">Warning: Permanent Action</p>
+                    </div>
+                </div>
+
+                <!-- Warning Description -->
+                <div class="rounded-xl border border-rose-200 bg-rose-50/70 p-4 text-xs font-medium text-slate-700 space-y-2">
+                    <p>Are you sure you want to delete the enrollment application for <strong class="font-black text-slate-950" x-text="deleteChildName"></strong> (<span class="font-bold text-rose-700" x-text="'Applicant #' + deleteChildId"></span>)?</p>
+                    <p class="text-slate-500 text-[11px] leading-relaxed">This will permanently remove the application record and associated data from the system.</p>
+                </div>
+
+                <!-- Action Form -->
+                <form method="POST" :action="deleteActionUrl" class="pt-3 flex items-center justify-end gap-2.5 border-t border-slate-100">
+                    @csrf
+                    @method('DELETE')
+                    <button type="button" @click="deleteModalOpen = false" class="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 transition cursor-pointer">
+                        Cancel
+                    </button>
+                    <button type="submit" class="inline-flex items-center justify-center gap-2 rounded-xl bg-rose-600 px-5 py-2.5 text-xs font-black uppercase tracking-wider text-white shadow-md transition hover:bg-rose-700 active:scale-95 cursor-pointer">
+                        <i data-lucide="trash-2" class="h-4 w-4"></i>
+                        Yes, Delete Application
+                    </button>
+                </form>
             </div>
         </div>
         @endunless

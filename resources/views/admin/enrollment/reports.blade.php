@@ -108,7 +108,7 @@
                     <span class="block text-xs font-bold text-slate-500 mb-1.5">Status</span>
                     <select name="status" class="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100" onchange="this.form.submit()">
                         <option value="">All statuses</option>
-                        @foreach ($statusLabels ?? [] as $value => $label)
+                        @foreach (\App\Services\Admin\Enrollment\EnrollmentReviewService::FILTER_STATUS_LABELS as $value => $label)
                             <option value="{{ $value }}" @selected(request('status') === $value)>{{ $label }}</option>
                         @endforeach
                     </select>

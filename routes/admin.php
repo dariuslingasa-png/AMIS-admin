@@ -138,6 +138,7 @@ Route::name('admin.')->group(function () {
             Route::get('/', fn () => redirect()->route('admin.applications.dashboard'))->name('index');
             Route::get('/dashboard', [ApplicantController::class, 'dashboard'])->name('dashboard');
             Route::get('/enrollment', [ApplicantController::class, 'enrollment'])->name('enrollment');
+            Route::get('/archive', [ApplicantController::class, 'archive'])->name('archive');
             Route::get('/review', [ApplicantController::class, 'review'])->name('review');
             Route::get('/requirements', [ApplicantController::class, 'requirements'])->name('requirements');
             Route::get('/approval-workflow', [ApplicantController::class, 'approval'])->name('approval');
@@ -157,6 +158,9 @@ Route::name('admin.')->group(function () {
             Route::post('/{applicant}/send-welcome', [ApprovalController::class, 'resendOnboardingInbox'])->name('send-welcome');
             Route::post('/{applicant}/resend-onboarding-inbox', [ApprovalController::class, 'resendOnboardingInbox'])->name('resend-onboarding-inbox');
             Route::post('/{applicant}/verify-section', [ApprovalController::class, 'verifySection'])->name('verify-section');
+            Route::post('/{id}/restore', [ApplicantController::class, 'restore'])->name('restore');
+            Route::delete('/{id}/force-delete', [ApplicantController::class, 'forceDelete'])->name('force-delete');
+            Route::delete('/{applicant}', [ApplicantController::class, 'destroy'])->name('destroy');
         });
 
         Route::get('/students', [StudentController::class, 'index'])->name('students.index');
