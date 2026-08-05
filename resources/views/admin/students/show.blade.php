@@ -491,7 +491,7 @@
                         ID #{{ $student->student_number ?? 'Pending' }}
                     </span>
                 </div>
-                
+
                 <div class="relative" style="width: 96px; height: 96px; z-index: 10; overflow: visible;">
                     <!-- Inner avatar block with overflow hidden for the photo clip -->
                     <div class="w-full h-full relative group flex items-center justify-center overflow-hidden rounded-2xl border-2 border-white/45 bg-white/12 text-emerald-100 cursor-pointer" 
@@ -2264,6 +2264,64 @@
             closePhotoOptionsModal();
             deleteStudentPhoto();
         }
+
+        async function triggerDownloadPhotoPng() {
+            closePhotoOptionsModal();
+            const photoUrl = '{{ $photoUrl }}';
+            if (!photoUrl) return;
+
+            const studentName = '{{ Str::slug(($student->applicant->last_name ?? "student")."_".($student->applicant->first_name ?? "photo")) }}';
+            const studentId = '{{ $student->student_number ?? "id" }}';
+            const fileName = `${studentId}_${studentName}_2x2.png`;
+
+            try {
+                const response = await fetch(photoUrl);
+                const blob = await response.blob();
+
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                const blobUrl = URL.createObjectURL(blob);
+
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.naturalWidth || img.width;
+                    canvas.height = img.naturalHeight || img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+
+                    canvas.toBlob(function(pngBlob) {
+                        const downloadUrl = URL.createObjectURL(pngBlob || blob);
+                        const link = document.createElement('a');
+                        link.href = downloadUrl;
+                        link.download = fileName;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        URL.revokeObjectURL(downloadUrl);
+                        URL.revokeObjectURL(blobUrl);
+                    }, 'image/png');
+                };
+                img.onerror = function() {
+                    const link = document.createElement('a');
+                    link.href = photoUrl;
+                    link.download = fileName;
+                    link.target = '_blank';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                };
+                img.src = blobUrl;
+            } catch (e) {
+                console.error(e);
+                const link = document.createElement('a');
+                link.href = photoUrl;
+                link.download = fileName;
+                link.target = '_blank';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
     </script>
 
     <!-- SVG Wavy Flag Filter -->
@@ -2320,6 +2378,13 @@
                     </button>
 
                     @if($photoUrl)
+                        <!-- Download PNG Photo -->
+                        <button type="button"
+                                onclick="triggerDownloadPhotoPng()"
+                                class="w-full py-2.5 px-4 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition active:scale-[0.98] shadow-sm cursor-pointer">
+                            <i data-lucide="download" class="w-4 h-4"></i> Download PNG Photo
+                        </button>
+
                         <!-- Crop & Adjust -->
                         <button type="button" 
                                 onclick="triggerCropAdjust()" 

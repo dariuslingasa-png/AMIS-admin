@@ -126,7 +126,7 @@
                 
                 <!-- Left Content: Previews (Front ID & Back ID Side-by-Side) -->
                 <div class="lg:col-span-2 flex flex-col md:flex-row items-center justify-center gap-4 w-full bg-slate-50/50 dark:bg-slate-950/10 border border-slate-150 dark:border-slate-850/50 rounded-3xl p-6 shadow-xs">
-                    
+
                     <!-- Front Side Card -->
                     <div class="flex flex-col items-center gap-3">
                         <div class="flex items-center gap-2">
@@ -431,6 +431,10 @@
                             </button>
                         @endif
                         @if($photoUrl)
+                            <button type="button" onclick="downloadPhotoPng()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition active:scale-[0.98] flex items-center justify-center gap-1.5">
+                                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                                <span>Download PNG (2x2)</span>
+                            </button>
                             <button type="button" onclick="deletePhoto()" class="w-full py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-950/30 dark:hover:bg-rose-900/40 rounded-xl text-xs font-bold transition active:scale-[0.98]">
                                 🗑️ Delete / Reset Photo
                             </button>
@@ -660,6 +664,64 @@
                     }
                 } catch (err) {
                     alert('Error resetting photo: ' + err);
+                }
+            }
+
+            async function downloadPhotoPng() {
+                closePhotoOptionsModal();
+                const photoUrl = '{{ $photoUrl }}';
+                if (!photoUrl) return;
+
+                const studentName = '{{ Str::slug(($student->applicant->last_name ?? "student")."_".($student->applicant->first_name ?? "photo")) }}';
+                const studentId = '{{ $student->student_number ?? "id" }}';
+                const fileName = `${studentId}_${studentName}_2x2.png`;
+
+                try {
+                    const response = await fetch(photoUrl);
+                    const blob = await response.blob();
+
+                    const img = new Image();
+                    img.crossOrigin = 'anonymous';
+                    const blobUrl = URL.createObjectURL(blob);
+
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = img.naturalWidth || img.width;
+                        canvas.height = img.naturalHeight || img.height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0);
+
+                        canvas.toBlob(function(pngBlob) {
+                            const downloadUrl = URL.createObjectURL(pngBlob || blob);
+                            const link = document.createElement('a');
+                            link.href = downloadUrl;
+                            link.download = fileName;
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                            URL.revokeObjectURL(downloadUrl);
+                            URL.revokeObjectURL(blobUrl);
+                        }, 'image/png');
+                    };
+                    img.onerror = function() {
+                        const link = document.createElement('a');
+                        link.href = photoUrl;
+                        link.download = fileName;
+                        link.target = '_blank';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    };
+                    img.src = blobUrl;
+                } catch (e) {
+                    console.error(e);
+                    const link = document.createElement('a');
+                    link.href = photoUrl;
+                    link.download = fileName;
+                    link.target = '_blank';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
                 }
             }
         </script>
