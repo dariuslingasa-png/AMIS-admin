@@ -9,6 +9,8 @@ use App\Models\FinanceMasterEntry;
 use App\Models\FinanceMasterEntryStudent;
 use App\Models\Invoice;
 use App\Models\Payment;
+use App\Models\PaymentAllocation;
+use App\Models\FamilyCredit;
 use App\Models\StudentAccount;
 use App\Models\StudentAccountPayment;
 use Carbon\Carbon;
@@ -336,6 +338,67 @@ class AdminPaymentController extends Controller
     /**
      * Verify and approve a parent's enrollment payment proof.
      */
+    
+    /**
+     * Securely serve payment proof and student document files to authenticated admin users.
+     */
+    public function getReceiptFile(Request $request)
+    {
+        $path = $request->query('path');
+        if (blank($path)) {
+            abort(404, 'File path parameter is required.');
+        }
+
+        // Prevent directory traversal
+        if (str_contains($path, '..')) {
+            abort(403, 'Access denied: Directory traversal detected.');
+        }
+
+        $absolutePath = \App\Support\EnrollmentStorage::getAbsolutePath($path);
+        if (!$absolutePath || !file_exists($absolutePath) || !is_file($absolutePath)) {
+            abort(404, 'Requested document or payment proof file was not found on the server.');
+        }
+
+        $mime = @mime_content_type($absolutePath) ?: 'application/octet-stream';
+        $disposition = $request->has('download') ? 'attachment' : 'inline';
+
+        return response()->file($absolutePath, [
+            'Content-Type' => $mime,
+            'Content-Disposition' => $disposition . '; filename="' . basename($absolutePath) . '"',
+            'Cache-Control' => 'public, max-age=86400',
+        ]);
+    }
+
+    
+    /**
+     * Upload and attach missing payment proof receipt directly from Admin Review Page.
+     */
+    public function uploadProof(Request $request, Payment $payment)
+    {
+        $request->validate([
+            'receipt' => 'required|file|mimes:jpg,jpeg,png,webp,pdf|max:10240',
+        ]);
+
+        $file = $request->file('receipt');
+        $ext = strtolower($file->getClientOriginalExtension() ?: 'jpg');
+        $filename = 'receipt_' . (string) \Illuminate\Support\Str::uuid() . '.' . $ext;
+        $path = $file->storeAs('receipts', $filename, 'public');
+
+        $payment->receipt_url = $path;
+        $payment->save();
+
+        if ($payment->applicant) {
+            $familyId = $payment->applicant->family_application_id ?: $payment->applicant->id;
+            \App\Models\EnrollmentApplicant::where(function ($query) use ($payment, $familyId) {
+                $query->where('user_id', $payment->applicant->user_id)
+                    ->orWhere('family_application_id', $familyId)
+                    ->orWhere('id', $familyId);
+            })->update(['enrollment_fee_receipt_url' => $path]);
+        }
+
+        return back()->with('success', 'Payment proof receipt uploaded and displayed successfully!');
+    }
+
     public function verify(Request $request, Payment $payment)
     {
         $this->ensurePaymentReviewer();
@@ -471,6 +534,39 @@ class AdminPaymentController extends Controller
             };
 
             // Delete any existing entries for this payment to prevent duplicates on re-verify
+                        // Apply Payment Allocations atomically to student balances
+            $allocations = PaymentAllocation::where('payment_id', $payment->id)->get();
+            $allocatedSum = 0;
+
+            foreach ($allocations as $alloc) {
+                $allocatedSum += (float) $alloc->amount;
+                if ($alloc->student_account_id) {
+                    $stAcc = StudentAccount::where('id', $alloc->student_account_id)->lockForUpdate()->first();
+                    if ($stAcc) {
+                        $stAcc->amount_paid = (float) $stAcc->amount_paid + (float) $alloc->amount;
+                        $stAcc->remaining_balance = max(0, (float) $stAcc->remaining_balance - (float) $alloc->amount);
+                        $stAcc->save();
+
+                        // Update allocation record balances
+                        $alloc->balance_after = (float) $stAcc->remaining_balance;
+                        $alloc->save();
+                    }
+                }
+            }
+
+            // Create Family Credit for excess payment if applicable
+            $excessAmount = round((float) $payment->amount - $allocatedSum, 2);
+            if ($excessAmount > 0.01) {
+                FamilyCredit::create([
+                    'user_id' => $payment->user_id,
+                    'family_application_id' => $applicant->family_application_id ?? null,
+                    'source_payment_id' => $payment->id,
+                    'original_amount' => $excessAmount,
+                    'remaining_amount' => $excessAmount,
+                    'status' => 'active',
+                ]);
+            }
+
             FinanceMasterEntry::where('payment_id', $payment->id)->delete();
 
             if ($amount > 0) {

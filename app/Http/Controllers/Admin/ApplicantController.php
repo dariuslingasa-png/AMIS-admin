@@ -233,25 +233,11 @@ class ApplicantController extends Controller
 
     public function reviewApplicant(EnrollmentApplicant $applicant)
     {
-        abort_unless(auth()->user()?->canViewAdminGrade($applicant->grade_level), 403);
-
         if (! auth()->user()?->isViewOnlyAccess() && $applicant->status === 'submitted') {
             $applicant->update(['status' => 'under_review']);
         }
 
-        $applicant->load('user', 'payment', 'student');
-
-        $siblings = $this->scopedSiblingQuery($applicant)
-            ->where('id', '!=', $applicant->id)
-            ->whereNotIn('status', ['draft'])
-            ->get();
-
-        return view('admin.applicants.review', [
-            'applicant' => $applicant,
-            'siblings' => $siblings,
-            'enrollmentSetting' => EnrollmentSetting::current(),
-            ...$this->reviewService->detailData($applicant),
-        ]);
+        return redirect()->route('admin.applicants.show', $applicant);
     }
 
     private function scopedSiblingQuery(EnrollmentApplicant $applicant)

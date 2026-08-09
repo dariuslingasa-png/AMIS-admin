@@ -82,6 +82,7 @@ class EnrollmentApplicant extends Model
         'facebook',
         'whatsapp',
         'facebook_screenshot_url',
+        'enrollment_fee_receipt_url',
         'referral_source',
         // Medical & Emergency
         'psych_testing',

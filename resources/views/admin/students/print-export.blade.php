@@ -110,13 +110,18 @@
                                 </span>
                                 <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
                             </li>
-                            <!-- Student ID Card -->
-                            <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
+                            <!-- Student ID Card (ACTIVE ID GENERATOR) -->
+                            <li class="flex items-center justify-between py-1.5 border-b border-slate-100/50 hover:bg-emerald-50/50 rounded px-1.5 transition bg-emerald-50/40 my-1 p-2 rounded-xl border border-emerald-200/60 shadow-xs">
                                 <span class="flex items-center gap-2">
-                                    <i data-lucide="credit-card" class="w-3.5 h-3.5 text-slate-400"></i>
-                                    <span class="text-slate-500">Student ID Card</span>
+                                    <i data-lucide="credit-card" class="w-4 h-4 text-emerald-600 font-black"></i>
+                                    <span class="font-black text-emerald-950">Student ID Card</span>
                                 </span>
-                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
+                                <div class="flex items-center gap-1.5">
+                                    <button type="button" onclick="runPrintRecordAction('id_cards_grade')" class="text-white bg-emerald-600 hover:bg-emerald-700 font-black text-[10px] uppercase tracking-wider px-2.5 py-1 rounded-lg transition shadow-xs cursor-pointer flex items-center gap-1">
+                                        <i data-lucide="printer" class="w-3 h-3"></i>
+                                        <span>Print IDs</span>
+                                    </button>
+                                </div>
                             </li>
                             <!-- Class Schedule -->
                             <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
@@ -1079,11 +1084,9 @@
             window.open('{{ route('admin.students.print-enrolment-forms-batch') }}' + queryString, '_blank');
         } else if (actionType === 'forms_jpg') {
             openBatchExportModal('enrollment_forms');
-        } else if (actionType === 'id_cards') {
-            const idParams = new URLSearchParams(params);
-            idParams.append('print_id', '1');
-            idParams.append('is_print', '1');
-            window.open('{{ route('admin.students.index') }}?' + idParams.toString(), '_blank');
+        } else if (actionType === 'id_cards' || actionType === 'id_cards_grade') {
+            const gradeVal = document.getElementById('p-filter-grade')?.value || 'Grade 1';
+            window.open('/students/occupancy/grade/' + encodeURIComponent(gradeVal) + '/id-print', '_blank');
         } else if (actionType === 'docs_zip') {
             window.location.href = '{{ route('admin.students.download-docs-zip') }}' + queryString;
         } else if (actionType === 'credentials') {

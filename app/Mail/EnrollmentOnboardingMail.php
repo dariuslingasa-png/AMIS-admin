@@ -25,8 +25,8 @@ class EnrollmentOnboardingMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            from: new Address('inquiries@amis.edu.ph', 'AMIS Admissions'),
-            subject: 'AMIS Enrollment Approved for '.$this->studentName(),
+            from: new Address('noreply@amis.edu.ph', 'AMIS Enrollment'),
+            subject: '🎉 Welcome to AMIS! Official Student Microsoft 365 Account Credentials',
         );
     }
 

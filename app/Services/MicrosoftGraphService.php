@@ -1369,4 +1369,78 @@ class MicrosoftGraphService
 
         return false;
     }
+
+    // ── Mail Operations (Reversible Cleanup) ─────────────────────────
+
+    /**
+     * Get inbox messages for a user mailbox.
+     * Uses GET /users/{userId}/mailFolders/inbox/messages
+     */
+    public function getUserInboxMessages(string $upnOrId, int $top = 50, ?string $filter = null): array
+    {
+        try {
+            $resolvedId = $this->resolveUserId($upnOrId);
+        } catch (\Exception $e) {
+            $resolvedId = $upnOrId;
+        }
+
+        $query = [
+            '$top' => min($top, 100),
+            '$select' => 'id,subject,sender,from,receivedDateTime,parentFolderId,isRead',
+            '$orderby' => 'receivedDateTime desc',
+        ];
+
+        if ($filter) {
+            $query['$filter'] = $filter;
+        }
+
+        $response = $this->graph()->get("/users/{$resolvedId}/mailFolders/inbox/messages", $query);
+
+        if (! $response->successful()) {
+            Log::error("getUserInboxMessages failed for {$upnOrId}", [
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+
+            return [];
+        }
+
+        return $response->json('value') ?? [];
+    }
+
+    /**
+     * Move a message to the "Deleted Items" folder.
+     * Uses POST /users/{userId}/messages/{messageId}/move with destinationId: "deleteditems"
+     * NOTE: This is a NON-DESTRUCTIVE operation matching Outlook Trash/Delete.
+     */
+    public function moveMessageToDeletedItems(string $upnOrId, string $messageId): array
+    {
+        try {
+            $resolvedId = $this->resolveUserId($upnOrId);
+        } catch (\Exception $e) {
+            $resolvedId = $upnOrId;
+        }
+
+        $response = $this->graph()->post("/users/{$resolvedId}/messages/{$messageId}/move", [
+            'destinationId' => 'deleteditems',
+        ]);
+
+        if (! $response->successful()) {
+            Log::error("moveMessageToDeletedItems failed for {$upnOrId} / {$messageId}", [
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+
+            return [
+                'success' => false,
+                'status' => $response->status(),
+                'error' => $response->json('error.message') ?? $response->body(),
+            ];
+        }
+
+        return [
+            'success' => true,
+            'data' => $response->json(),
+        ];
+    }
 }

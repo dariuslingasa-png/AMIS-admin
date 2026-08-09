@@ -107,7 +107,7 @@ class EnrollmentReviewService
             })
                 ->first();
         }
-        $hasPaymentProof = $payment && filled($payment->receipt_url);
+        $hasPaymentProof = ($payment && filled($payment->receipt_url)) || filled($applicant->proof_of_payment);
         $paymentOk = $hasPaymentProof && $payment->status === 'verified';
         $allDocsOk = $this->areAllDocumentsApproved($applicant);
         $enrollmentFee = (float) config('services.school.enrollment_fee', 4000);
@@ -148,6 +148,8 @@ class EnrollmentReviewService
             'parentMobile' => $this->mobileNumber($applicant->parent_country_code, $applicant->parent_mobile),
             'enrollmentFee' => $enrollmentFee,
             'familyChildren' => $familyChildren,
+            'allFamily' => $familyChildren,
+            'siblings' => $familyChildren->where('id', '!=', $applicant->id),
             'totalFamilyChildren' => $totalFamilyChildren,
             'expectedPayment' => $expectedPayment,
             'paymentInsufficient' => $paymentInsufficient,
@@ -321,6 +323,19 @@ class EnrollmentReviewService
 
     private function documentMap(EnrollmentApplicant $applicant): array
     {
+        $payment = $applicant->payment;
+        if (! $payment) {
+            $familyId = $applicant->family_application_id ?: $applicant->id;
+            $payment = Payment::whereHas('applicant', function ($query) use ($familyId) {
+                $query->where(function ($q) use ($familyId) {
+                    $q->where('family_application_id', $familyId)
+                        ->orWhere('id', $familyId);
+                });
+            })->first();
+        }
+
+        $paymentProofUrl = $applicant->enrollment_fee_receipt_url ?: ($payment?->receipt_url ?: $applicant->proof_of_payment);
+
         return [
             'photo_2x2' => ['label' => '2x2 Picture', 'url' => $applicant->photo_2x2_url],
             'birth_cert' => ['label' => 'Birth Certificate', 'url' => $applicant->birth_cert_url],
@@ -329,6 +344,7 @@ class EnrollmentReviewService
             'medical_record' => ['label' => 'Medical Record', 'url' => $applicant->medical_record_url],
             'affidavit' => ['label' => 'Affidavit', 'url' => $applicant->affidavit_url],
             'facebook_screenshot' => ['label' => 'Facebook Screenshot', 'url' => $applicant->facebook_screenshot_url],
+            'payment_proof' => ['label' => 'Payment Proof', 'url' => $paymentProofUrl],
         ];
     }
 

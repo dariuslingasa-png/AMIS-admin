@@ -72,8 +72,8 @@
 
         .section-header {
             text-align: center;
-            border-bottom: 2px solid #059669;
-            padding-bottom: 12px;
+            border-bottom: none !important;
+            padding-bottom: 8px;
             margin-bottom: 24px;
         }
         .section-title {
@@ -93,20 +93,22 @@
         }
 
         .student-card-item {
-            margin-bottom: 32px;
+            margin-bottom: 36px;
             page-break-inside: avoid;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 16px;
-            background: #fafafa;
+            border: none !important;
+            border-radius: 0 !important;
+            padding: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            outline: none !important;
         }
         .student-item-header {
-            font-size: 14px;
-            font-weight: 900;
-            color: #0f172a;
+            font-size: 13px;
+            font-weight: 800;
+            color: #1e293b;
             margin-bottom: 12px;
-            padding-bottom: 6px;
-            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 0;
+            border-bottom: none !important;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -115,23 +117,29 @@
         .cards-table {
             width: 100%;
             border-collapse: collapse;
+            border: none !important;
         }
         .cards-table td {
             width: 50%;
             text-align: center;
             vertical-align: top;
-            padding: 8px;
+            padding: 0 10px;
+            border: none !important;
+            outline: none !important;
         }
 
         /* Front & Back Card Scaling */
         .id-card-wrapper {
-            width: 70.2mm;
-            height: 111.28mm;
+            width: 265.2px;
+            height: 419.64px;
             position: relative;
             overflow: hidden;
             box-sizing: border-box;
             background: transparent;
             margin: 0 auto;
+            border: none !important;
+            box-shadow: none !important;
+            outline: none !important;
         }
         
         .id-card-scaler {
@@ -142,6 +150,8 @@
             left: 0;
             transform: scale(0.78);
             transform-origin: top left;
+            border: none !important;
+            outline: none !important;
         }
         
         .id-card {
@@ -161,8 +171,9 @@
             width: 198px;
             height: 192px;
             overflow: hidden;
-            background: transparent;
+            background: #f1f5f9;
             border-radius: 6px;
+            z-index: 5;
         }
         
         .photo-clip img {
@@ -173,7 +184,7 @@
             object-fit: cover;
             object-position: center center;
             display: block;
-            z-index: 1;
+            z-index: 6;
         }
         
         .photo-placeholder {
@@ -460,6 +471,8 @@
             --grade-font-size: 31px;
         }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/file-saver/2.0.5/FileSaver.min.js"></script>
 </head>
 <body>
 
@@ -468,11 +481,20 @@
             📋 Grade ID Cards Roster: {{ strtoupper($grade) }}
         </div>
         <div class="toolbar-actions">
+            <button type="button" class="btn-action" style="background: #0284c7;" onclick="downloadGradeIdCardsZip('front', this)" title="Download all FRONT ID cards as PNG ZIP archive">
+                📦 Download FRONT IDs (ZIP)
+            </button>
+            <button type="button" class="btn-action" style="background: #0891b2;" onclick="downloadGradeIdCardsZip('back', this)" title="Download all BACK ID cards as PNG ZIP archive">
+                📦 Download BACK IDs (ZIP)
+            </button>
+            <button type="button" class="btn-action" style="background: #7c3aed;" onclick="downloadGradeIdCardsZip('both', this)" title="Download ALL Front & Back IDs in structured folders inside one ZIP">
+                📁 Download ALL IDs (ZIP)
+            </button>
             <button type="button" class="btn-action btn-secondary" onclick="toggleEditor()" id="btn-toggle-editor">
-                ✏️ Edit Font Sizes
+                ✏️ Font Sizes
             </button>
             <button type="button" class="btn-action" style="background: #2563eb;" onclick="exportToGoogleDocs(this)">
-                📝 Export for Google Docs / Word
+                📝 Export Word / Docs
             </button>
             <button type="button" class="btn-action" style="background: #0284c7;" onclick="printBySection(this)" id="btn-print-section" title="Print one section at a time — recommended for large grades">
                 📄 Print by Section
@@ -615,7 +637,10 @@
                     } elseif ($applicant?->photo_url) {
                         $photoUrl = $applicant->photo_url;
                     } elseif ($applicant?->photo_2x2_url) {
-                        $photoUrl = \App\Support\EnrollmentStorage::url($applicant->photo_2x2_url);
+                        $photoUrl = asset('storage/' . ltrim($applicant->photo_2x2_url, '/'));
+                    }
+                    if (empty($photoUrl) && $applicant?->photo_2x2_url) {
+                        $photoUrl = 'https://aes.amis.edu.ph/storage/' . ltrim($applicant->photo_2x2_url, '/');
                     }
                     $hash = base64_encode((int)$studentNumber + 987654);
                     $qrCodeUrl = 'https://quickchart.io/qr?text=' . urlencode('https://amis.edu.ph/v/' . $hash) . '&dark=000000&light=ffffff&margin=1&format=png&size=100';
@@ -710,13 +735,18 @@
                                              @endif
                                              
                                              <!-- Student Photo Container (Middle Layer) -->
-                                             @if($photoUrl)
-                                                 <div class="photo-clip">
-                                                     <img src="{{ $photoUrl }}" alt="Student Photo">
-                                                 </div>
-                                             @else
-                                                 <div class="photo-placeholder">Photo Missing</div>
-                                             @endif
+                                             <div class="photo-clip">
+                                                 @if($photoUrl)
+                                                     <img src="{{ $photoUrl }}?sid={{ $student->id }}" crossorigin="anonymous" alt="Student Photo" style="z-index: 6; position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                     <div class="photo-placeholder-initials" style="display:none; position:absolute; inset:0; z-index:7; background:#e2e8f0; color:#064e3b; font-size:36px; font-weight:900; font-family:'Outfit', sans-serif; align-items:center; justify-content:center;">
+                                                         {{ strtoupper(substr($firstName, 0, 1) . substr($lastName, 0, 1)) }}
+                                                     </div>
+                                                 @else
+                                                     <div class="photo-placeholder-initials" style="display:flex; position:absolute; inset:0; z-index:7; background:#e2e8f0; color:#064e3b; font-size:36px; font-weight:900; font-family:'Outfit', sans-serif; align-items:center; justify-content:center;">
+                                                         {{ strtoupper(substr($firstName, 0, 1) . substr($lastName, 0, 1)) }}
+                                                     </div>
+                                                 @endif
+                                             </div>
 
                                              <!-- Student ID Badge text -->
                                              <div class="student-id" style="font-size: {{ $student->id_num_font_size ? ($student->id_num_font_size . 'px') : 'var(--id-font-size, ' . $idFontSize . ')' }};">{{ $studentNumber }}</div>
@@ -1233,6 +1263,173 @@
         function copyDocumentHtml() {
             exportToGoogleDocs(document.getElementById('btn-optimize-print') || document.body);
         }
+
+        async function downloadGradeIdCardsZip(mode, btn) {
+            adjustLastNameFontSizes();
+            const originalHtml = btn.innerHTML;
+            setButtonsDisabled(true);
+
+            const studentItems = Array.from(document.querySelectorAll('.student-card-item'));
+            const total = studentItems.length;
+            if (total === 0) {
+                alert('No student ID cards found to export.');
+                setButtonsDisabled(false);
+                return;
+            }
+
+            btn.innerHTML = '⏳ Initializing ZIP Engine...';
+            try {
+                await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
+                await loadScript('https://cdnjs.cloudflare.com/ajax/libs/file-saver/2.0.5/FileSaver.min.js');
+            } catch (err) {}
+            try {
+                await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+            } catch (err) {}
+
+            const zip = new JSZip();
+            const safeGrade = '{{ $grade }}'.replace(/[^a-zA-Z0-9_-]/g, '_');
+
+            // ALL files directly in ONE single ZIP folder (no subfolders)
+            const targetZipFolder = zip;
+
+            const pad = (num, size) => {
+                let s = num + "";
+                while (s.length < size) s = "0" + s;
+                return s;
+            };
+
+            const renderElementToBlob = async (el) => {
+                if (!el) return null;
+                
+                const timeoutGuard = new Promise(resolve => setTimeout(() => resolve(null), 5000));
+                
+                const renderAction = (async () => {
+                    let offscreenContainer = null;
+                    try {
+                        // Clone card element to unscale from any parent CSS scale transforms
+                        const clone = el.cloneNode(true);
+                        
+                        offscreenContainer = document.createElement('div');
+                        offscreenContainer.style.position = 'fixed';
+                        offscreenContainer.style.left = '-9999px';
+                        offscreenContainer.style.top = '-9999px';
+                        offscreenContainer.style.width = '340px';
+                        offscreenContainer.style.height = '538px';
+                        offscreenContainer.style.zIndex = '-99999';
+                        offscreenContainer.style.background = 'transparent';
+                        offscreenContainer.style.margin = '0';
+                        offscreenContainer.style.padding = '0';
+                        offscreenContainer.style.transform = 'none';
+
+                        clone.style.position = 'relative';
+                        clone.style.width = '340px';
+                        clone.style.height = '538px';
+                        clone.style.margin = '0';
+                        clone.style.transform = 'none';
+
+                        offscreenContainer.appendChild(clone);
+                        document.body.appendChild(offscreenContainer);
+
+                        await new Promise(r => setTimeout(r, 20));
+
+                        let blob = null;
+                        if (typeof html2canvas !== 'undefined') {
+                            const canvas = await html2canvas(clone, {
+                                width: 340,
+                                height: 538,
+                                scale: 2.5, // 2.5x Ultra HD resolution (850px x 1345px)
+                                useCORS: true,
+                                allowTaint: true,
+                                backgroundColor: null,
+                                logging: false,
+                                imageTimeout: 1500
+                            });
+                            blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png', 1.0));
+                        } else if (typeof htmlToImage !== 'undefined') {
+                            blob = await htmlToImage.toBlob(clone, { quality: 1.0, pixelRatio: 2.5, cacheBust: false });
+                        }
+
+                        if (offscreenContainer && offscreenContainer.parentNode) {
+                            offscreenContainer.parentNode.removeChild(offscreenContainer);
+                        }
+                        return blob;
+                    } catch (err) {
+                        console.warn('Render card warning:', err);
+                        if (offscreenContainer && offscreenContainer.parentNode) {
+                            offscreenContainer.parentNode.removeChild(offscreenContainer);
+                        }
+                    }
+                    return null;
+                })();
+
+                return await Promise.race([renderAction, timeoutGuard]);
+            };
+
+            for (let i = 0; i < total; i++) {
+                const item = studentItems[i];
+                btn.innerHTML = `⏳ Generating IDs: ${i + 1}/${total} (${Math.round(((i + 1) / total) * 100)}%)...`;
+
+                const header = item.querySelector('.student-item-header');
+                const headerSpan = header ? header.querySelector('span') : null;
+                const rawName = headerSpan ? headerSpan.innerText : `Student_${i + 1}`;
+                const cleanName = rawName.replace(/^\d+\.\s*/, '').trim().replace(/[^a-zA-Z0-9_-]/g, '_');
+                const fileSeq = pad(i + 1, 2);
+
+                const cards = Array.from(item.querySelectorAll('.id-card'));
+                const frontCard = cards[0] || null;
+                const backCard = cards[1] || null;
+
+                if ((mode === 'front' || mode === 'both') && frontCard) {
+                    const frontBlob = await renderElementToBlob(frontCard);
+                    if (frontBlob) {
+                        targetZipFolder.file(`${fileSeq}_${cleanName}_FRONT.png`, frontBlob);
+                    }
+                }
+
+                if ((mode === 'back' || mode === 'both') && backCard) {
+                    const backBlob = await renderElementToBlob(backCard);
+                    if (backBlob) {
+                        targetZipFolder.file(`${fileSeq}_${cleanName}_BACK.png`, backBlob);
+                    }
+                }
+
+                await new Promise(resolve => setTimeout(resolve, 20));
+            }
+
+            btn.innerHTML = '📦 Compressing ZIP Archive...';
+            try {
+                const contentBlob = await zip.generateAsync({ type: "blob" });
+                const modeLabel = mode === 'both' ? 'FRONT_and_BACK' : (mode === 'front' ? 'FRONT_IDs' : 'BACK_IDs');
+                const zipFileName = `Student_ID_Cards_${safeGrade}_${modeLabel}_${new Date().toISOString().slice(0,10)}.zip`;
+
+                if (typeof saveAs !== 'undefined') {
+                    saveAs(contentBlob, zipFileName);
+                } else {
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(contentBlob);
+                    link.download = zipFileName;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
+            } catch (err) {
+                alert('ZIP generation failed: ' + err);
+            }
+
+            setButtonsDisabled(false);
+            btn.innerHTML = originalHtml;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('auto_zip') === '1') {
+                const mode = urlParams.get('zip_mode') || 'both';
+                setTimeout(() => {
+                    const btn = document.querySelector('.toolbar-actions button');
+                    if (btn) downloadGradeIdCardsZip(mode, btn);
+                }, 800);
+            }
+        });
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script>

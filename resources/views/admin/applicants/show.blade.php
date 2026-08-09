@@ -370,6 +370,8 @@
                 @endunless
 
                 @unless ($isTeacherAdminViewer)
+
+
                 <x-card title="Uploaded Documents" subtitle="Review submitted files and mark each document status">
                     @if ($canReviewApplications)
                         <x-slot:actions>
@@ -389,7 +391,7 @@
                             </form>
                         </x-slot:actions>
                     @endif
-                    <div class="upload-grid">
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                         @foreach ($docMap as $docKey => $doc)
                             <x-applicant.document-card :applicant="$applicant" :doc-key="$docKey" :doc="$doc" :status="$docStatuses[$docKey] ?? 'pending'" />
                         @endforeach
@@ -457,9 +459,61 @@
                     </div>
                 </x-card>
                 @endif
+
+                {{-- FAMILY & SIBLINGS TABLE CARD --}}
+                @if ((isset($allFamily) && count($allFamily) > 0) || (isset($familyChildren) && count($familyChildren) > 0))
+                @php
+                    $siblingsList = $allFamily ?? $familyChildren;
+                @endphp
+                <x-card title="Family & Siblings" subtitle="Other children enrolled under the same parent account">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-slate-50 text-xs font-black uppercase text-slate-400 border-b border-slate-100">
+                                <tr>
+                                    <th class="px-5 py-3 font-extrabold">Name</th>
+                                    <th class="px-5 py-3 font-extrabold">Grade</th>
+                                    <th class="px-5 py-3 font-extrabold">Status / Completion</th>
+                                    <th class="px-5 py-3 font-extrabold text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 bg-white">
+                                @foreach ($siblingsList as $child)
+                                @php
+                                    $isCurrent = $child->id === $applicant->id;
+                                @endphp
+                                <tr class="transition hover:bg-slate-50/80 {{ $isCurrent ? 'bg-emerald-50/40' : '' }}">
+                                    <td class="px-5 py-3.5 font-black text-slate-950">
+                                        {{ Str::upper($child->full_name) }}
+                                        @if ($isCurrent)
+                                            <span class="ml-2 px-2 py-0.5 text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 rounded-md">Current</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-5 py-3.5 font-extrabold text-slate-700">{{ $child->grade_level ?: '-' }}</td>
+                                    <td class="px-5 py-3.5">
+                                        <span class="px-2.5 py-1 text-xs font-extrabold rounded-md border {{ $child->status === 'approved' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-emerald-50/60 border-emerald-100 text-emerald-700' }}">
+                                            {{ $statusLabels[$child->status] ?? Str::headline($child->status) }}
+                                        </span>
+                                    </td>
+                                    <td class="px-5 py-3.5 text-right">
+                                        @if (!$isCurrent)
+                                            <a href="{{ route('admin.applicants.show', $child) }}" class="inline-flex items-center gap-1 text-xs font-extrabold text-emerald-600 hover:text-emerald-700 hover:underline">
+                                                View Sibling &rarr;
+                                            </a>
+                                        @else
+                                            <span class="text-xs font-bold text-slate-400">Viewing</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </x-card>
+                @endif
             </main>
 
-            <aside class="review-panel space-y-4">
+                                    <aside class="review-panel space-y-4">
+                {{-- 1. APPLICANT CARD --}}
                 <x-card title="Applicant">
                     <div class="grid grid-cols-2 gap-3 text-sm">
                         <div>
@@ -479,21 +533,114 @@
                     </div>
                 </x-card>
 
+                {{-- 2. PAYMENT VERIFICATION GUARD BANNER --}}
+                @if (isset($payment) && $payment && $payment->status === 'pending' && ($canReviewPayments ?? true))
+                    <div class="p-3.5 rounded-xl border-2 border-amber-300 bg-amber-50 shadow-sm space-y-2.5">
+                        <div class="flex items-start gap-2.5">
+                            <div class="rounded-lg bg-amber-100 p-1.5 text-amber-700 shrink-0 mt-0.5">
+                                <i data-lucide="shield-alert" class="h-5 w-5"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-[11px] font-black uppercase tracking-wider text-amber-900">⚠️ PAYMENT VERIFICATION REQUIRED</h4>
+                                <p class="text-[10px] font-bold text-amber-800 mt-0.5 leading-snug">
+                                    PLS APPROVE PAYMENT VERIFICATION BEFORE YOU APPROVE & GENERATE STUDENT ACCOUNT.
+                                </p>
+                            </div>
+                        </div>
+                        <form method="POST" action="{{ route('admin.payments.verify', $payment) }}" class="w-full">
+                            @csrf
+                            @method('PATCH')
+                            <button type="submit" class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase rounded-lg shadow-sm transition-colors cursor-pointer" onclick="return confirm('Approve and verify payment proof of ₱{{ number_format((float) $payment->amount, 2) }}?')">
+                                <i data-lucide="check-circle" class="w-4 h-4"></i> APPROVE PAYMENT
+                            </button>
+                        </form>
+                    </div>
+                @endif
+
+                {{-- 3. PAYMENT DETAILS & PICTURE CARD --}}
                 @unless ($isTeacherAdminViewer)
-                <x-card title="Status">
-                    <div class="space-y-3 text-sm">
-                        <div class="review-readiness-row"><span>Documents</span><span class="readiness-pill {{ $allDocsOk ? 'readiness-emerald' : 'readiness-amber' }}">{{ $allDocsOk ? 'Approved' : 'Pending' }}</span></div>
-                        <div class="review-readiness-row"><span>Payment</span><span class="readiness-pill {{ $paymentOk ? 'readiness-emerald' : ($payment?->status === 'rejected' ? 'readiness-rose' : 'readiness-orange') }}">{{ $paymentOk ? 'Verified' : ($payment?->status === 'rejected' ? 'Rejected' : 'Pending') }}</span></div>
-                        <div class="review-readiness-row"><span>Approval</span><span class="readiness-pill {{ $applicant->status === 'approved' ? 'readiness-emerald' : 'readiness-amber' }}">{{ $statusLabels[$applicant->status] ?? Str::headline($applicant->status) }}</span></div>
+                @php
+                    $receiptPath = $applicant->enrollment_fee_receipt_url ?: ($payment?->receipt_url ?: $applicant->proof_of_payment);
+                    $receiptAssetUrl = \App\Support\EnrollmentStorage::url($receiptPath);
+                    $isReceiptPdf = $receiptPath && strtolower(pathinfo($receiptPath, PATHINFO_EXTENSION)) === 'pdf';
+                @endphp
+                <x-card title="PAYMENT DETAILS" subtitle="Proof of payment & summary">
+                    <div class="space-y-3 text-xs">
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-100">
+                                <span class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Amount</span>
+                                <span class="text-sm font-black text-slate-900">{{ $payment?->amount ? '₱'.number_format((float) $payment->amount, 2) : '₱4,000.00' }}</span>
+                            </div>
+                            <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-100">
+                                <span class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Method</span>
+                                <span class="text-xs font-black text-slate-900 uppercase">{{ $payment?->method ?: $payment?->payment_provider ?: 'GCash' }}</span>
+                            </div>
+                        </div>
+
+                        @if ($payment?->reference_no)
+                        <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-between">
+                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Ref No:</span>
+                            <span class="text-xs font-black text-emerald-700 font-mono">{{ $payment->reference_no }}</span>
+                        </div>
+                        @endif
+
+                        {{-- Picture Card --}}
+                        <div class="mt-3 pt-3 border-t border-slate-100">
+                            <span class="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Payment Receipt Picture</span>
+                            @if ($receiptAssetUrl)
+                                <div class="relative w-full h-36 rounded-xl border border-slate-200 bg-slate-100 overflow-hidden group shadow-sm">
+                                    @if ($isReceiptPdf)
+                                        <div class="w-full h-full flex flex-col items-center justify-center gap-1 cursor-pointer text-rose-500" @click="openPreview('{{ $receiptAssetUrl }}', 'Payment Proof', true)">
+                                            <i data-lucide="file-text" class="h-8 w-8"></i>
+                                            <span class="text-[10px] font-black uppercase text-slate-600">PDF Receipt</span>
+                                        </div>
+                                    @else
+                                        <img src="{{ $receiptAssetUrl }}" alt="Payment Proof" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 cursor-pointer" @click="openPreview('{{ $receiptAssetUrl }}', 'Payment Proof', false)">
+                                        <div class="absolute inset-0 bg-slate-900/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                                            <span class="px-2.5 py-1 bg-white/90 text-slate-900 text-[10px] font-black rounded-md shadow">Click to Expand ↗</span>
+                                        </div>
+                                    @endif
+                                </div>
+                            @else
+                                <div class="w-full h-24 rounded-xl border border-dashed border-slate-200 bg-slate-50 flex flex-col items-center justify-center text-slate-400">
+                                    <i data-lucide="image-off" class="h-6 w-6"></i>
+                                    <span class="text-[10px] font-bold mt-1">No Receipt Uploaded</span>
+                                </div>
+                            @endif
+                        </div>
                     </div>
                 </x-card>
                 @endunless
 
-                @if ($canReviewApplications)
-                <a href="{{ route('admin.applicants.review', $applicant) }}" class="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700 transition hover:bg-emerald-100">
-                    <i data-lucide="users" class="h-4 w-4"></i>
-                    Family Enrollment Review
-                </a>
+                {{-- 4. FAMILY & SIBLINGS CARD (AT THE BOTTOM OF SIDEBAR) --}}
+                @php
+                    $siblingsList = $allFamily ?? $familyChildren ?? collect([]);
+                @endphp
+                @if (count($siblingsList) > 0)
+                <x-card title="FAMILY & SIBLINGS" subtitle="List of children in family">
+                    <div class="space-y-2">
+                        @foreach ($siblingsList as $child)
+                            @php
+                                $childInitials = collect(explode(' ', trim($child->full_name)))->filter()->take(2)->map(fn ($p) => Str::substr($p, 0, 1))->join('');
+                                $isCurrent = $child->id === $applicant->id;
+                            @endphp
+                            <a href="{{ route('admin.applicants.show', $child) }}" class="flex items-center justify-between p-2.5 rounded-xl border transition-all shadow-sm {{ $isCurrent ? 'border-emerald-300 bg-emerald-50/60 font-bold' : 'border-slate-200 bg-white hover:bg-emerald-50/40 hover:border-emerald-300' }}">
+                                <div class="flex items-center gap-2.5 truncate">
+                                    <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-[10px] font-black text-emerald-800 shrink-0">
+                                        {{ $childInitials ?: 'ST' }}
+                                    </span>
+                                    <div class="truncate">
+                                        <p class="text-xs font-black text-slate-900 truncate">{{ Str::upper($child->full_name) }}</p>
+                                        <p class="text-[10px] font-bold text-slate-500">{{ $child->grade_level ?: 'Grade Pending' }}</p>
+                                    </div>
+                                </div>
+                                <span class="px-2 py-0.5 text-[9px] font-black uppercase rounded-md shrink-0 {{ $child->status === 'approved' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800' }}">
+                                    {{ $child->status }}
+                                </span>
+                            </a>
+                        @endforeach
+                    </div>
+                </x-card>
                 @endif
             </aside>
         </div>
@@ -520,19 +667,19 @@
                             <button type="button" class="text-2xl leading-none text-slate-500" @click="closePreview()">&times;</button>
                         </div>
                     </div>
-                    <div class="preview-body cursor-grab select-none overflow-auto"
+                    <div class="preview-body cursor-grab select-none overflow-auto flex items-center justify-center min-h-[60vh] max-h-[80vh] p-4 bg-slate-900/5 rounded-b-2xl"
                          @mousedown="startPan($event)"
                          @mousemove="movePan($event)"
                          @mouseleave="stopPan()"
                          @touchstart.passive="startPan($event)"
                          @touchmove="movePan($event)">
                         <template x-if="!pdf && photo">
-                            <img :src="src" :alt="label" class="preview-photo transition-all duration-150" :style="'transform: scale(' + zoom + ');'">
+                            <img :src="src" :alt="label" class="preview-photo transition-all duration-150 rounded-lg shadow-md max-h-[75vh] object-contain mx-auto" :style="'transform: scale(' + zoom + ');'">
                         </template>
                         <template x-if="!pdf && !photo">
-                            <img :src="src" :alt="label" class="transition-all duration-150" :style="'max-width: none; width: ' + (zoom * 100) + '%; height: auto;'">
+                            <img :src="src" :alt="label" class="transition-all duration-150 rounded-lg shadow-md max-h-[75vh] max-w-full object-contain mx-auto" :style="'transform: scale(' + zoom + '); transform-origin: center center;'">
                         </template>
-                        <template x-if="pdf"><iframe :src="src"></iframe></template>
+                        <template x-if="pdf"><iframe :src="src" class="w-full h-[75vh] rounded-lg border-0"></iframe></template>
                     </div>
                 </div>
             </div>

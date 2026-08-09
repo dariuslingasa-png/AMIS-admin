@@ -103,8 +103,11 @@
                 <section class="rounded-xl border border-slate-200 bg-white shadow-sm">
                     <div class="border-b border-slate-100 px-6 py-4 flex items-center justify-between">
                         <div>
-                            <h2 class="text-sm font-extrabold uppercase tracking-wider text-slate-700">Children</h2>
-                            <p class="text-xs text-slate-400 mt-0.5">All applicants under this family account</p>
+                            <h2 class="text-sm font-black uppercase tracking-wider text-emerald-950 flex items-center gap-2">
+                                <i data-lucide="users" class="h-4 w-4 text-emerald-600"></i>
+                                # FAMILY OF {{ Str::upper($applicant->last_name) }}
+                            </h2>
+                            <p class="text-xs font-bold text-slate-500 mt-0.5">List of children enrolled under this family account</p>
                         </div>
                         <span class="text-xs font-bold text-slate-500">{{ $childrenCount }} {{ Str::plural('child', $childrenCount) }}</span>
                     </div>
@@ -226,7 +229,12 @@
                             @endif
 
                             @php
-                                $receipts = $payment?->receipt_urls ?? [];
+                                $receipts = [];
+                                if ($payment && filled($payment->receipt_url)) {
+                                    $receipts = $payment->receipt_urls;
+                                } elseif (filled($applicant->proof_of_payment)) {
+                                    $receipts = [$applicant->proof_of_payment];
+                                }
                             @endphp
                             @if (count($receipts) > 0)
                                 <div class="space-y-4">
@@ -285,9 +293,44 @@
 
                 {{-- REVIEW DECISION --}}
                 <section class="rounded-xl border border-slate-200 bg-white shadow-sm">
-                    <div class="border-b border-slate-100 px-6 py-4">
+                    <div class="border-b border-slate-100 px-6 py-4 flex items-center justify-between">
                         <h2 class="text-sm font-extrabold uppercase tracking-wider text-slate-700">Review Decision</h2>
+                        @php
+                            $isPaymentVerified = $payment && $payment->status === 'verified';
+                        @endphp
+                        @if ($isPaymentVerified)
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-100 text-emerald-800 text-[10px] font-black uppercase rounded-md tracking-wider">
+                                <i data-lucide="check-circle-2" class="w-3 h-3 text-emerald-600"></i> Payment Verified
+                            </span>
+                        @else
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-100 text-amber-800 text-[10px] font-black uppercase rounded-md tracking-wider">
+                                <i data-lucide="alert-circle" class="w-3 h-3 text-amber-600"></i> Payment Verification Required
+                            </span>
+                        @endif
                     </div>
+                    
+                    @if (!($payment && $payment->status === 'verified'))
+                        <div class="mx-6 mt-5 p-4 rounded-xl border-2 border-amber-300 bg-amber-50 shadow-sm flex items-start gap-3">
+                            <div class="rounded-lg bg-amber-100 p-2 text-amber-700 shrink-0">
+                                <i data-lucide="shield-alert" class="h-6 w-6"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-xs font-black uppercase tracking-wider text-amber-900">⚠️ PAYMENT VERIFICATION REQUIRED</h4>
+                                <p class="text-xs font-bold text-amber-800 mt-1">
+                                    PLS APPROVE PAYMENT VERIFICATION BEFORE YOU APPROVE & GENERATE STUDENT ACCOUNT.
+                                </p>
+                                @if ($payment && $payment->status === 'pending' && $canReviewPayments)
+                                    <form method="POST" action="{{ route('admin.payments.verify', $payment) }}" class="mt-3">
+                                        @csrf
+                                        @method('PATCH')
+                                        <button type="submit" class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase rounded-lg shadow-sm transition-colors cursor-pointer" onclick="return confirm('Approve and verify payment proof of ₱{{ number_format((float) $payment->amount, 2) }}?')">
+                                            <i data-lucide="check-circle" class="w-4 h-4"></i> APPROVE PAYMENT VERIFICATION NOW
+                                        </button>
+                                    </form>
+                                @endif
+                            </div>
+                        </div>
+                    @endif
                     @if ($canReviewApplications)
                     <div class="border-b border-slate-100 bg-emerald-50/40 px-6 py-5">
                         <form method="POST" action="{{ route('admin.applicants.approve-family', $applicant) }}" @submit="approving = true">

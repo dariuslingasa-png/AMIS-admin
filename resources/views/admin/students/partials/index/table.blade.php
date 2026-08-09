@@ -94,7 +94,7 @@
                                     :eager="false"
                                 />
                                 <div>
-                                    <div class="whitespace-nowrap font-extrabold text-slate-950">{{ $name }}</div>
+                                    <div class="font-extrabold text-slate-950 break-words max-w-[240px] leading-tight">{{ $name }}</div>
                                     <div class="mt-1 flex flex-wrap items-center gap-1.5 text-xs font-medium text-slate-500 print:hidden">
                                          <span>SY {{ $student->school_year ?? '-' }}</span>
                                          @if (!$student->applicant || $student->applicant->completion_percentage < 100)
