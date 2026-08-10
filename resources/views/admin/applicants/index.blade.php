@@ -534,7 +534,9 @@
                                 @endphp
                                 <tr class="transition hover:bg-slate-50">
                                     <td class="px-5 py-4">
-                                        <span class="font-extrabold tabular-nums {{ $accent['text'] }}">{{ $index + 1 }}</span>
+                                        <a href="{{ route('admin.applicants.show', $child) }}" class="font-extrabold tabular-nums {{ $accent['text'] }} hover:underline hover:text-emerald-700 transition" title="View details of {{ $childName }}">
+                                            {{ $index + 1 }}
+                                        </a>
                                     </td>
                                     <td class="px-5 py-4 align-middle">
                                         <div class="flex items-center gap-3">
@@ -575,7 +577,9 @@
                                             @endif
                                             <div>
                                                 <div class="flex items-center gap-2">
-                                                    <span class="font-extrabold text-slate-950">{{ $childName }}</span>
+                                                    <a href="{{ route('admin.applicants.show', $child) }}" class="font-extrabold text-slate-950 hover:text-emerald-700 hover:underline transition" title="View details of {{ $childName }}">
+                                                        {{ $childName }}
+                                                    </a>
                                                     @php
                                                         $regTime = $child->created_at ? \Illuminate\Support\Carbon::parse($child->created_at) : null;
                                                         $isNewRegistration = $regTime && ($regTime->greaterThanOrEqualTo(now()->subHours(24)) || $regTime->isYesterday() || $regTime->isToday());
@@ -587,7 +591,9 @@
                                                         </span>
                                                     @endif
                                                 </div>
-                                                <div class="mt-0.5 text-xs font-medium text-slate-500">Applicant #{{ str_pad($child->id, 4, '0', STR_PAD_LEFT) }}</div>
+                                                <a href="{{ route('admin.applicants.show', $child) }}" class="mt-0.5 block text-xs font-medium text-slate-500 hover:text-emerald-700 hover:underline transition" title="View details of {{ $childName }}">
+                                                    Applicant #{{ str_pad($child->id, 4, '0', STR_PAD_LEFT) }}
+                                                </a>
                                             </div>
                                         </div>
                                     </td>

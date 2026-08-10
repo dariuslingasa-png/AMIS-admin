@@ -35,12 +35,12 @@
 
     <section class="mt-6 grid grid-cols-4 gap-4">
         @foreach ([
-            ['label' => 'Applications', 'value' => $totalApplications, 'icon' => 'files', 'meta' => 'Submitted records'],
-            ['label' => 'Families', 'value' => $familiesCount, 'icon' => 'users-round', 'meta' => 'Grouped applications'],
-            ['label' => 'Review Queue', 'value' => $reviewQueue, 'icon' => 'search-check', 'meta' => 'Needs admin action'],
-            ['label' => 'Seats Available', 'value' => $capacityStats['available'], 'icon' => 'armchair', 'meta' => $capacityStats['utilization'].'% capacity used'],
+            ['label' => 'Applications', 'value' => $totalApplications, 'icon' => 'files', 'meta' => 'Submitted records', 'href' => route('admin.applications.enrollment')],
+            ['label' => 'Families', 'value' => $familiesCount, 'icon' => 'users-round', 'meta' => 'Grouped applications', 'href' => route('admin.applications.enrollment')],
+            ['label' => 'Review Queue', 'value' => $reviewQueue, 'icon' => 'search-check', 'meta' => 'Needs admin action', 'href' => route('admin.applications.review')],
+            ['label' => 'Seats Available', 'value' => $capacityStats['available'], 'icon' => 'armchair', 'meta' => $capacityStats['utilization'].'% capacity used', 'href' => '#grade-capacity-watchlist'],
         ] as $stat)
-            <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-emerald-100 hover:bg-emerald-50/30">
+            <a href="{{ $stat['href'] }}" class="block rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:border-emerald-200 hover:bg-emerald-50/35 hover:-translate-y-0.5 hover:shadow-md">
                 <div class="flex items-center justify-between">
                     <span class="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
                         <i data-lucide="{{ $stat['icon'] }}" class="h-5 w-5"></i>
@@ -50,7 +50,7 @@
                 <p class="mt-5 text-sm font-semibold text-slate-500">{{ $stat['label'] }}</p>
                 <p class="mt-1 text-3xl font-extrabold text-slate-950">{{ number_format($stat['value']) }}</p>
                 <p class="mt-1 text-xs font-medium text-slate-500">{{ $stat['meta'] }}</p>
-            </div>
+            </a>
         @endforeach
     </section>
 
@@ -61,7 +61,7 @@
         <x-dashboard.chart-card class="lg:col-span-5" title="Student Type Mix" subtitle="New, old, returning, and transferee applicants" chart="applicationTypeChart" />
     </section>
 
-    <section class="mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+    <section id="grade-capacity-watchlist" class="mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div class="mb-5 flex items-end justify-between gap-4">
             <div>
                 <h2 class="text-base font-bold text-slate-950">Grade Capacity Watchlist</h2>
@@ -110,7 +110,15 @@
                     @forelse ($capacityRows as $row)
                         <tr class="transition hover:bg-slate-50">
                             <td class="px-5 py-4 font-extrabold text-slate-950">{{ $row['grade'] }}</td>
-                            <td class="px-5 py-4 font-semibold text-slate-700">{{ number_format($row['applicant_count'] ?? 0) }}</td>
+                            <td class="px-5 py-4">
+                                @if (($row['applicant_count'] ?? 0) > 0)
+                                    <a href="{{ route('admin.applications.enrollment', ['grade' => $row['grade']]) }}" class="font-bold text-emerald-600 hover:text-emerald-800 hover:underline transition">
+                                        {{ number_format($row['applicant_count']) }}
+                                    </a>
+                                @else
+                                    <span class="font-semibold text-slate-400">0</span>
+                                @endif
+                            </td>
                             @foreach ([
                                 'face_to_face' => 'Face to Face',
                                 'first_shift' => 'Flexible Learning - 1st Shift',
@@ -129,7 +137,21 @@
                                         </div>
                                         <div class="grid grid-cols-2 gap-2">
                                             <div>
-                                                <span class="block text-lg font-extrabold text-slate-950">{{ number_format($slot['applicants'] ?? 0) }}</span>
+                                                @php
+                                                    $modeParam = match ($slotKey) {
+                                                        'face_to_face' => 'f2f',
+                                                        'first_shift' => 'flexible_1st',
+                                                        'second_shift' => 'flexible_2nd',
+                                                        default => null,
+                                                    };
+                                                @endphp
+                                                @if (($slot['applicants'] ?? 0) > 0)
+                                                    <a href="{{ route('admin.applications.enrollment', ['grade' => $row['grade'], 'learning_mode' => $modeParam]) }}" class="block text-lg font-bold text-emerald-600 hover:text-emerald-800 hover:underline transition">
+                                                        {{ number_format($slot['applicants']) }}
+                                                    </a>
+                                                @else
+                                                    <span class="block text-lg font-extrabold text-slate-400">0</span>
+                                                @endif
                                                 <span class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Applicants</span>
                                             </div>
                                             <div class="text-right">

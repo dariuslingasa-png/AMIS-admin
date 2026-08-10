@@ -234,6 +234,13 @@
                     </button>
                 </form>
             @endif
+            @if ($canReviewApplications)
+                <a href="{{ route('admin.applicants.review', $applicant) }}"
+                   class="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-bold text-emerald-700 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-100">
+                    <i data-lucide="users" class="h-4 w-4"></i>
+                    Family Review / Final Action
+                </a>
+            @endif
             <a href="{{ route('admin.applications.enrollment') }}"
                class="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-white px-4 py-2 text-sm font-bold text-emerald-700 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50">
                 <i data-lucide="arrow-left" class="h-4 w-4"></i>
@@ -641,6 +648,12 @@
                         @endforeach
                     </div>
                 </x-card>
+                @endif
+                @if ($canReviewApplications)
+                <a href="{{ route('admin.applicants.review', $applicant) }}" class="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-black uppercase tracking-wider text-emerald-700 transition hover:bg-emerald-100 shadow-3xs">
+                    <i data-lucide="users" class="h-4 w-4"></i>
+                    Family Review / Final Action
+                </a>
                 @endif
             </aside>
         </div>

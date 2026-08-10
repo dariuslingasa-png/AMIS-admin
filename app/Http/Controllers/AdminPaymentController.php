@@ -408,6 +408,14 @@ class AdminPaymentController extends Controller
         }
 
         if (blank($payment->receipt_url)) {
+            $applicant = $payment->applicant;
+            $fallbackUrl = $applicant->enrollment_fee_receipt_url ?: $applicant->proof_of_payment;
+            if (filled($fallbackUrl)) {
+                $payment->update(['receipt_url' => $fallbackUrl]);
+            }
+        }
+
+        if (blank($payment->receipt_url)) {
             return back()->withErrors(['status' => 'Cannot verify: payment proof is missing.']);
         }
 
