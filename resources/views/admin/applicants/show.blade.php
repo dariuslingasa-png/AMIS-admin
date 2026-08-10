@@ -235,10 +235,17 @@
                 </form>
             @endif
             @if ($canReviewApplications)
+                <form method="POST" action="{{ route('admin.applicants.approve-family', $applicant) }}" class="inline-block" @submit="approving = true" onsubmit="return confirm('Approve all enrollees in this family and auto-generate Microsoft 365 accounts, student numbers & SOA?')">
+                    @csrf
+                    <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700 cursor-pointer shadow-sm">
+                        <i data-lucide="sparkles" class="h-4 w-4"></i>
+                        Approve & Generate Family (Microsoft M365 + SOA)
+                    </button>
+                </form>
                 <a href="{{ route('admin.applicants.review', $applicant) }}"
                    class="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-bold text-emerald-700 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-100">
                     <i data-lucide="users" class="h-4 w-4"></i>
-                    Family Review / Final Action
+                    Family Review / Full Details
                 </a>
             @endif
             <a href="{{ route('admin.applications.enrollment') }}"
