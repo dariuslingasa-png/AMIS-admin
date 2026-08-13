@@ -148,7 +148,7 @@
                                 Transaction / reference number <span x-show="method === 'cash'" class="font-normal text-slate-400">(not needed)</span>
                                 <input id="financeReferenceInput" name="reference_number" autocomplete="off" value="" :required="method !== 'cash'" :disabled="method === 'cash'" class="mt-1.5 block h-12 w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm leading-5 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 focus:border-emerald-600 focus:bg-white focus:ring-2 focus:ring-emerald-100" placeholder="Reference No. or Transaction ID">
                                 <span x-show="method !== 'cash'" class="mt-1 block text-[11px] font-normal text-slate-500">OCR uses the reference number first, then the transaction ID when no reference is shown.</span>
-                                @error('reference_number')<span class="mt-1.5 block text-xs font-bold text-rose-700">{{ $message }}</span>@enderror
+                                @if (isset($errors) && $errors->has('reference_number'))<span class="mt-1.5 block text-xs font-bold text-rose-700">{{ $errors->first('reference_number') }}</span>@endif
                             </label>
                             <label class="block text-sm font-bold text-slate-700">Receiving account / counter<input id="financeAccountReceivedInput" name="account_received" autocomplete="off" value="" class="mt-1.5 block h-12 w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm leading-5 focus:border-emerald-600 focus:bg-white focus:ring-2 focus:ring-emerald-100" placeholder="AMIS cashier or account"></label>
                         </div>
@@ -197,7 +197,7 @@
                                 </div>
                             </div>
                             <div id="financeDuplicateStatus" class="mt-2.5 hidden rounded-lg border px-3 py-2.5 text-xs font-bold" role="status" aria-live="polite"></div>
-                            @error('receipt')<p class="mt-2 text-xs font-bold text-rose-700">{{ $message }}</p>@enderror
+                            @if (isset($errors) && $errors->has('receipt'))<p class="mt-2 text-xs font-bold text-rose-700">{{ $errors->first('receipt') }}</p>@endif
                             <input id="financeOcrRaw" type="hidden" name="ocr_raw_text"><input id="financeOcrConfidence" type="hidden" name="ocr_confidence"><input id="financeOcrSender" type="hidden" name="ocr_sender"><input id="financeOcrReceiver" type="hidden" name="ocr_receiver"><input id="financeOcrType" type="hidden" name="ocr_document_type"><input id="financeOcrReference" type="hidden" name="ocr_reference"><input id="financeOcrAmount" type="hidden" name="ocr_amount">
                         </div>
 
