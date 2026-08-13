@@ -14,10 +14,10 @@
         .arabic-img { display: block; width: 210px; height: auto; margin-bottom: 1px; }
         .school { color: #047857; font-size: 10px; font-weight: bold; letter-spacing: .55px; }
         .title { margin-top: 4px; color: #0f172a; font-size: 22px; font-weight: bold; letter-spacing: .35px; }
-        .receipt-number { width: 205px; text-align: right; }
+        .receipt-number { width: 220px; text-align: right; }
         .receipt-number .label { display: block; color: #64748b; font-size: 8px; text-transform: uppercase; }
-        .receipt-number strong { display: block; margin-top: 3px; color: #065f46; font-size: 13px; }
-        .approved { display: inline-block; margin-top: 7px; padding: 4px 9px; border-radius: 12px; background: #d1fae5; color: #047857; font-size: 8px; font-weight: bold; }
+        .receipt-number strong { display: block; margin-top: 2px; color: #065f46; font-size: 13px; }
+        .receipt-number .month-tag { display: block; margin-top: 3px; color: #047857; font-size: 10px; font-weight: bold; }
         .details { width: 100%; margin-top: 15px; border: 1px solid #dbe5e1; border-collapse: collapse; }
         .details td { width: 50%; padding: 8px 10px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
         .details tr:last-child td { border-bottom: 0; }
@@ -44,11 +44,11 @@
         .allocation-list { width: 100%; border: 1px solid #dbe5e1; border-collapse: collapse; }
         .allocation-list td { padding: 7px 10px; border-top: 1px solid #e2e8f0; }
         .allocation-list tr:first-child td { border-top: 0; }
-        .allocation-list .status { width: 43%; text-align: right; font-weight: bold; }
+        .allocation-list .status { width: 50%; text-align: right; font-weight: bold; }
         .fully-paid { color: #047857; }
         .partially-paid { color: #b45309; }
         .unpaid { color: #be123c; }
-        .payment-status { margin-top: 13px; padding: 10px 12px; border-left: 4px solid #b45309; background: #fffbeb; font-size: 11px; font-weight: bold; }
+        .payment-status { margin-top: 13px; padding: 10px 12px; border-left: 4px solid #047857; background: #ecfdf5; font-size: 11px; font-weight: bold; color: #065f46; }
         .generated { margin-top: 8px; color: #64748b; font-size: 8.5px; }
         .notice { margin-top: 14px; padding: 10px 12px; border: 1px solid #dbe5e1; border-radius: 6px; background: #f8fafc; color: #475569; font-size: 8.5px; line-height: 1.55; }
         .notice strong { color: #0f172a; }
@@ -72,7 +72,10 @@
             <td class="receipt-number">
                 <span class="label">Receipt No.</span>
                 <strong>{{ $receiptData['receipt_number'] }}</strong>
-                <span class="approved">APPROVED</span>
+                @if(!empty($receiptData['billing_month']))
+                    <span class="label" style="margin-top: 4px;">Billing Month</span>
+                    <span class="month-tag">{{ $receiptData['billing_month'] }}</span>
+                @endif
             </td>
         </tr>
     </table>
@@ -88,7 +91,7 @@
         </tr>
     </table>
 
-    <h2>Student Payment Details</h2>
+    <h2>Student Payment Details ({{ $receiptData['billing_month'] ?? 'All' }})</h2>
     <table class="student-table">
         <thead>
             <tr>
@@ -114,7 +117,7 @@
                 <tr><td colspan="6">No open billing row was available. The approved amount was recorded as family advance credit.</td></tr>
             @endforelse
         </tbody>
-        @if($receiptData['rows']->isNotEmpty())
+        @if(collect($receiptData['rows'])->isNotEmpty())
             <tfoot>
                 <tr>
                     <td></td>
@@ -128,21 +131,19 @@
         @endif
     </table>
 
-    <h2>Family Payment Summary</h2>
+    <h2>Monthly Summary — {{ $receiptData['billing_month'] ?? 'Billing Month' }}</h2>
     <table class="summary">
-        <tr><td>Total Amount Due</td><td class="number">₱{{ number_format($receiptData['total_amount_due'], 2) }}</td></tr>
-        @if($receiptData['credit_applied'] > 0.01)
-            <tr><td>Previous Balance</td><td class="number">₱{{ number_format($receiptData['balance_before_credit'], 2) }}</td></tr>
-            <tr><td>Credit Applied</td><td class="number">−₱{{ number_format($receiptData['credit_applied'], 2) }}</td></tr>
-            <tr><td>Balance After Credit</td><td class="number">₱{{ number_format($receiptData['previous_remaining_balance'], 2) }}</td></tr>
+        @if(!empty($receiptData['previous_month_label']))
+            <tr><td>Previous Balance — {{ $receiptData['previous_month_label'] }}</td><td class="number">₱{{ number_format($receiptData['previous_balance'], 2) }}</td></tr>
         @else
-            <tr><td>Previous Balance</td><td class="number">₱{{ number_format($receiptData['previous_remaining_balance'], 2) }}</td></tr>
+            <tr><td>Previous Balance</td><td class="number">₱{{ number_format($receiptData['previous_balance'] ?? 0, 2) }}</td></tr>
         @endif
-        <tr><td>Current Payment Received</td><td class="number">₱{{ number_format($receiptData['amount_received'], 2) }}</td></tr>
-        <tr><td>Current Payment Applied</td><td class="number">₱{{ number_format($receiptData['amount_applied'], 2) }}</td></tr>
-        <tr class="remaining"><td>Remaining Family Balance</td><td class="number">₱{{ number_format($receiptData['remaining_balance'], 2) }}</td></tr>
-        @if($receiptData['credit_balance'] > 0.01)
-            <tr class="credit"><td>Credit Balance</td><td class="number">₱{{ number_format($receiptData['credit_balance'], 2) }}</td></tr>
+        <tr><td>Monthly Charge</td><td class="number">₱{{ number_format($receiptData['total_amount_due'], 2) }}</td></tr>
+        <tr><td>Payment Received (Transaction)</td><td class="number">₱{{ number_format($receiptData['amount_received'], 2) }}</td></tr>
+        <tr><td>Payment Applied ({{ $receiptData['billing_month'] ?? 'Month' }})</td><td class="number">₱{{ number_format($receiptData['amount_applied'], 2) }}</td></tr>
+        <tr class="remaining"><td>Remaining {{ $receiptData['billing_month'] ?? 'Month' }} Balance</td><td class="number">₱{{ number_format($receiptData['remaining_balance'], 2) }}</td></tr>
+        @if(($receiptData['credit_created'] ?? 0) > 0.01)
+            <tr class="credit"><td>Family Advance Credit Created</td><td class="number">₱{{ number_format($receiptData['credit_created'], 2) }}</td></tr>
         @endif
     </table>
 
@@ -170,7 +171,7 @@
         @endforelse
     </table>
 
-    <div class="payment-status">Payment Status: {{ $receiptData['payment_status'] }}</div>
+    <div class="payment-status">Status: {{ $receiptData['payment_status'] }}</div>
     <div class="generated">Date Generated: <strong>{{ $receiptData['generated_at'] }}</strong></div>
 
     <div class="notice">

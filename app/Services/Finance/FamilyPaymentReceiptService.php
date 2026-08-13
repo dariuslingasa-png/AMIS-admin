@@ -294,8 +294,81 @@ class FamilyPaymentReceiptService
         ];
     }
 
-    public function render(object $transaction): string
+    public function monthlyReceipts(object $transaction): array
     {
+        $allData = $this->data($transaction);
+        $allRows = collect($allData['rows'] ?? []);
+
+        if ($allRows->isEmpty()) {
+            return [$allData['billing_month'] ?? 'TOTAL' => $allData];
+        }
+
+        $groupedByMonth = $allRows->groupBy(fn ($r) => mb_strtoupper((string) ($r['billing_month'] ?? 'JULY 2026')));
+        $monthlyDataList = [];
+        $cumulativePreviousBalance = 0.0;
+        $previousMonthLabel = null;
+
+        foreach ($groupedByMonth as $monthLabel => $monthRows) {
+            $monthTotalDue = round((float) $monthRows->sum('amount_due'), 2);
+            $monthTotalPaid = round((float) $monthRows->sum('amount_paid'), 2);
+            $monthRemaining = round((float) $monthRows->sum('remaining'), 2);
+
+            $statusText = match (true) {
+                $monthRemaining <= 0.01 => 'FULLY PAID',
+                $monthTotalPaid > 0.01 => 'PARTIALLY PAID — ₱'.number_format($monthRemaining, 2).' remaining',
+                default => 'UNPAID — ₱'.number_format($monthRemaining, 2).' remaining',
+            };
+
+            $parts = explode(' ', trim($monthLabel));
+            $shortMonth = strtoupper(substr($parts[0] ?? $monthLabel, 0, 3));
+            $baseReceiptNumber = $allData['receipt_number'];
+            $monthReceiptNumber = (count($groupedByMonth) > 1) ? $baseReceiptNumber.'-'.$shortMonth : $baseReceiptNumber;
+
+            $formattedMonthRows = $monthRows->map(function ($row) {
+                $rem = round((float) ($row['remaining'] ?? 0), 2);
+                $paid = round((float) ($row['amount_paid'] ?? 0), 2);
+                $statusLabel = match (true) {
+                    $rem <= 0.01 => 'FULLY PAID',
+                    $paid > 0.01 => 'PARTIALLY PAID',
+                    default => 'UNPAID',
+                };
+
+                return array_merge($row, [
+                    'status' => $statusLabel,
+                ]);
+            })->values();
+
+            $mSnapshot = array_merge($allData, [
+                'receipt_number' => $monthReceiptNumber,
+                'billing_month' => $monthLabel,
+                'previous_month_label' => $previousMonthLabel,
+                'previous_balance' => $cumulativePreviousBalance,
+                'previous_remaining_balance' => $cumulativePreviousBalance,
+                'total_amount_due' => $monthTotalDue,
+                'total_paid_to_date' => $monthTotalPaid,
+                'amount_applied' => $monthTotalPaid,
+                'remaining_balance' => $monthRemaining,
+                'payment_status' => $statusText,
+                'status_label' => $statusText,
+                'rows' => $formattedMonthRows,
+            ]);
+
+            $monthlyDataList[$monthLabel] = $mSnapshot;
+
+            $cumulativePreviousBalance = $monthRemaining;
+            $previousMonthLabel = $monthLabel;
+        }
+
+        return $monthlyDataList;
+    }
+
+    public function render(object $transaction, ?string $month = null): string
+    {
+        $monthlyReceipts = $this->monthlyReceipts($transaction);
+        $receiptData = ($month && isset($monthlyReceipts[$month]))
+            ? $monthlyReceipts[$month]
+            : (reset($monthlyReceipts) ?: $this->data($transaction));
+
         $options = new Options;
         $options->set('defaultFont', 'DejaVu Sans');
         $options->set('isRemoteEnabled', false);
@@ -303,7 +376,7 @@ class FamilyPaymentReceiptService
 
         $dompdf = new Dompdf($options);
         $dompdf->loadHtml(view('admin.finance.receipts.pdf', [
-            'receiptData' => $this->data($transaction),
+            'receiptData' => $receiptData,
         ])->render());
         $dompdf->setPaper('A4', 'portrait');
         $dompdf->render();

@@ -789,17 +789,27 @@ class FinanceController extends Controller
     {
         $this->authorizeFinance($request);
         $receipt->load(['transaction.family', 'transaction.processor', 'transaction.allocations.monthlyBilling']);
-        $receiptData = $this->familyReceipts->data($receipt->transaction);
+        $monthlyReceipts = $this->familyReceipts->monthlyReceipts($receipt->transaction);
+        $month = $request->query('month');
+        $receiptData = ($month && isset($monthlyReceipts[$month]))
+            ? $monthlyReceipts[$month]
+            : (reset($monthlyReceipts) ?: $this->familyReceipts->data($receipt->transaction));
 
-        return view('admin.finance.receipts.show', compact('receipt', 'receiptData'));
+        return view('admin.finance.receipts.show', compact('receipt', 'receiptData', 'monthlyReceipts'));
     }
 
     public function receiptsPdf(Request $request, FinanceOfficialReceipt $receipt)
     {
         $this->authorizeFinance($request);
         $receipt->load(['transaction.family', 'transaction.processor', 'transaction.officialReceipt']);
-        $pdf = $this->familyReceipts->render($receipt->transaction);
-        $receiptNumber = FamilyPaymentReceiptService::numberFor($receipt->transaction, $receipt->official_receipt_number);
+        $month = $request->query('month');
+        $monthlyReceipts = $this->familyReceipts->monthlyReceipts($receipt->transaction);
+        $receiptData = ($month && isset($monthlyReceipts[$month]))
+            ? $monthlyReceipts[$month]
+            : (reset($monthlyReceipts) ?: $this->familyReceipts->data($receipt->transaction));
+
+        $pdf = $this->familyReceipts->render($receipt->transaction, $month);
+        $receiptNumber = $receiptData['receipt_number'] ?? FamilyPaymentReceiptService::numberFor($receipt->transaction, $receipt->official_receipt_number);
 
         return response($pdf, 200, [
             'Content-Type' => 'application/pdf',
