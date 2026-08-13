@@ -391,6 +391,18 @@ class FinanceController extends Controller
             : ($family && $request->filled('amount') ? $this->allocation->preview($family->id, $request->input('amount')) : null);
         $errors = session('errors') ?? new \Illuminate\Support\ViewErrorBag();
 
+        // Display ONLY payable months (OVERDUE / CURRENT / PARTIALLY PAID) on the Onsite Payment form
+        $billingSchedule = $billingSchedule->filter(function ($period) {
+            $status = strtoupper($period['status'] ?? '');
+            $remaining = (float) ($period['remaining'] ?? 0);
+
+            if ($status === 'UPCOMING' || $status === 'PAID') {
+                return false;
+            }
+
+            return $status === 'OVERDUE' || $status === 'CURRENT' || $status === 'PARTIALLY PAID' || $remaining > 0.01;
+        })->values();
+
         return view('admin.finance.onsite.create', compact(
             'families', 'family', 'balances', 'billingSchedule', 'previousBalance', 'currentCharges',
             'totalAmountDue', 'previousPeriodLabel', 'currentPeriodLabel', 'preview', 'errors'

@@ -334,7 +334,7 @@
                                 </div>
                             </details>
                         @empty
-                            <div class="rounded-xl border border-dashed border-slate-300 bg-white px-5 py-10 text-center text-sm text-slate-500">No family billing schedule is available.</div>
+                            <div class="rounded-xl border border-dashed border-emerald-300 bg-emerald-50/50 px-5 py-8 text-center text-sm font-bold text-emerald-800">No outstanding payment is currently due for this family.</div>
                         @endforelse
                     </div>
                 </section>
