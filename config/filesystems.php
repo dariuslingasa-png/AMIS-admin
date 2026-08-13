@@ -47,6 +47,32 @@ return [
             'report' => false,
         ],
 
+        /*
+         * Parent-uploaded payment proofs are created by the Family Payment
+         * application. Keep this disk read-only in practice: the Admin Portal
+         * only streams the original file for Finance review.
+         */
+        'family_payment_receipts' => [
+            'driver' => 'local',
+            'root' => env('FAMILY_PAYMENT_RECEIPTS_PATH')
+                ?: (is_dir('/home2/amisdavc/afps.amis.edu.ph/storage/app')
+                    ? '/home2/amisdavc/afps.amis.edu.ph/storage/app'
+                    : base_path('../amis_payment/storage/app')),
+            'serve' => false,
+            'throw' => false,
+            'report' => false,
+        ],
+
+        'afps_storage' => [
+            'driver' => 'local',
+            'root' => env('AFPS_STORAGE_PATH')
+                ?: (is_dir('/home2/amisdavc/afps.amis.edu.ph/storage/app')
+                    ? '/home2/amisdavc/afps.amis.edu.ph/storage/app'
+                    : base_path('../amis_payment/storage/app')),
+            'throw' => false,
+            'report' => false,
+        ],
+
         'ebook_private' => [
             'driver' => 'local',
             'root' => env(

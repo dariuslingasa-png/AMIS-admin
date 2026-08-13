@@ -263,13 +263,60 @@ class FinanceController extends Controller
     public function originalReceipt(Request $request, ReceiptSubmission $receipt)
     {
         $this->authorizeFinance($request);
-        $path = $receipt->original_receipt_path;
-        foreach (['local', 'public', 'family_payment_receipts'] as $disk) {
-            if ($path && Storage::disk($disk)->exists($path)) {
-                return Storage::disk($disk)->response($path, $receipt->original_filename, [
-                    'Content-Type' => $receipt->original_mime,
-                    'Content-Disposition' => 'inline; filename="'.basename($receipt->original_filename).'"',
-                ]);
+
+        $pathsToTry = array_values(array_filter(array_unique([
+            $receipt->original_receipt_path,
+            'private/'.$receipt->original_receipt_path,
+            'public/'.$receipt->original_receipt_path,
+            $receipt->paymentSubmission?->receipt_url,
+            'public/'.$receipt->paymentSubmission?->receipt_url,
+            'private/'.$receipt->paymentSubmission?->receipt_url,
+        ])));
+
+        $disksToTry = ['afps_storage', 'family_payment_receipts', 'public', 'local'];
+
+        foreach ($pathsToTry as $path) {
+            foreach ($disksToTry as $disk) {
+                try {
+                    if ($path && Storage::disk($disk)->exists($path)) {
+                        $fullPath = Storage::disk($disk)->path($path);
+                        $mimeType = (file_exists($fullPath) && is_file($fullPath))
+                            ? (mime_content_type($fullPath) ?: ($receipt->original_mime ?: 'image/jpeg'))
+                            : ($receipt->original_mime ?: 'image/jpeg');
+
+                        return Storage::disk($disk)->response($path, $receipt->original_filename ?: basename($path), [
+                            'Content-Type' => $mimeType,
+                            'Content-Disposition' => 'inline; filename="'.basename($receipt->original_filename ?: $path).'"',
+                        ]);
+                    }
+                } catch (\Throwable $e) {
+                    continue;
+                }
+            }
+
+            // Direct server filesystem check for Bluehost multi-app setup
+            $serverBases = [
+                '/home2/amisdavc/afps.amis.edu.ph/storage/app',
+                '/home2/amisdavc/afps.amis.edu.ph/storage/app/public',
+                '/home2/amisdavc/afps.amis.edu.ph/storage/app/private',
+                '/home2/amisdavc/payment.amis.edu.ph/storage/app',
+                '/home2/amisdavc/payment.amis.edu.ph/storage/app/public',
+                '/home2/amisdavc/payment.amis.edu.ph/storage/app/private',
+                storage_path('app'),
+                storage_path('app/public'),
+                storage_path('app/private'),
+            ];
+
+            foreach ($serverBases as $baseDir) {
+                $candidatePath = rtrim($baseDir, '/').'/'.ltrim($path, '/');
+                if (file_exists($candidatePath) && is_file($candidatePath)) {
+                    $mimeType = mime_content_type($candidatePath) ?: ($receipt->original_mime ?: 'image/jpeg');
+
+                    return response()->file($candidatePath, [
+                        'Content-Type' => $mimeType,
+                        'Content-Disposition' => 'inline; filename="'.basename($receipt->original_filename ?: $path).'"',
+                    ]);
+                }
             }
         }
 
