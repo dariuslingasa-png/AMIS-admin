@@ -106,6 +106,46 @@ class FamilyPaymentReceiptService
         $snapshot = (array) ($receipt?->snapshot ?? []);
         $rows = collect($snapshot['family_receipt_rows'] ?? []);
 
+        $demoData = app(FinanceDemoDataService::class);
+        $familyUserId = $transaction->user_id ?? ($snapshot['family_id'] ?? null);
+        $isDemo = $demoData->isDemoFamilyId($familyUserId) || ! empty($transaction->is_demo) || ! empty($snapshot['is_demo']);
+
+        if ($rows->isEmpty() && $isDemo && $familyUserId) {
+            $amount = (float) ($transaction->amount ?? ($snapshot['amount'] ?? ($snapshot['current_amount_received'] ?? 0)));
+            $preview = $demoData->previewAllocation($familyUserId, $amount);
+            $outstandingBefore = (float) collect($preview['allocations'])->sum('original_due');
+
+            $rows = collect($preview['allocations'])->map(function ($alloc) {
+                return [
+                    'student_name' => $alloc['student_name'],
+                    'student_id' => $alloc['student_id'],
+                    'grade_level' => $alloc['grade_level'],
+                    'billing_month' => $alloc['month'],
+                    'amount_due' => $alloc['original_due'],
+                    'total_paid' => $alloc['allocated'],
+                    'amount_paid' => $alloc['allocated'],
+                    'remaining' => $alloc['remaining_due'],
+                    'remaining_balance' => $alloc['remaining_due'],
+                    'status' => $alloc['status'] === 'FULLY_PAID' ? 'PAID' : 'PARTIAL',
+                ];
+            });
+
+            $snapshot = array_merge($snapshot, [
+                'current_amount_received' => $amount,
+                'current_amount_applied' => $preview['total_allocated'],
+                'credit_created' => $preview['advance_credit'],
+                'total_family_due' => $outstandingBefore,
+                'balance_before_credit' => $outstandingBefore,
+                'previous_total_paid' => 0.00,
+                'previous_remaining_balance' => $outstandingBefore,
+                'new_total_paid' => $preview['total_allocated'],
+                'new_remaining_balance' => max(0, round($outstandingBefore - $preview['total_allocated'], 2)),
+                'new_credit_balance' => $preview['advance_credit'],
+                'is_demo' => true,
+                'watermark' => 'TEST / DEMO — NOT AN OFFICIAL SCHOOL RECEIPT',
+            ]);
+        }
+
         if ($rows->isEmpty()) {
             $rows = $this->familyRows($transaction);
         }
