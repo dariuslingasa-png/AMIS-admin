@@ -217,7 +217,7 @@
 @endphp
 
 <aside id="default-sidebar"
-       class="admin-sidebar fixed left-0 z-40 w-64 -translate-x-full border-r border-gray-200 bg-white transition-transform dark:border-gray-700 dark:bg-gray-800 lg:translate-x-0"
+       class="admin-sidebar fixed left-0 z-40 w-64 translate-x-0 border-r border-gray-200 bg-white transition-transform dark:border-gray-700 dark:bg-gray-800"
        aria-label="Sidebar">
     <div class="flex h-full flex-col px-3 py-4">
         @unless ($isTeacherAdminViewer || request()->routeIs('admin.dashboard'))
