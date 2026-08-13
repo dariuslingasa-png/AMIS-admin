@@ -185,39 +185,55 @@ class FamilyPaymentReceiptService
             ?? $snapshot['amount']
             ?? $transaction->amount
             ?? 0), 2));
-        $amountApplied = max(0.0, round((float) ($snapshot['current_amount_applied']
-            ?? $snapshot['amount_applied']
-            ?? $currentAllocations->sum(
-                fn ($row) => (float) ($row['applied_amount'] ?? 0)
-            )), 2));
-        $creditCreated = max(0.0, round((float) ($snapshot['credit_created']
-            ?? $snapshot['advance_credit']
-            ?? $transaction->advance_credit
-            ?? 0), 2));
-        $creditApplied = max(0.0, round((float) ($snapshot['existing_credit_applied']
-            ?? $snapshot['credit_applied']
-            ?? 0), 2));
-        $creditBalance = max(0.0, round((float) ($snapshot['new_credit_balance']
-            ?? $snapshot['available_credit_balance']
-            ?? $snapshot['advance_credit']
-            ?? $transaction->advance_credit
-            ?? 0), 2));
-        $existingCreditRemaining = max(0.0, round((float) ($snapshot['existing_credit_remaining']
-            ?? ($creditBalance - $creditCreated)), 2));
-        $creditBalanceBefore = max(0.0, round((float) ($snapshot['existing_credit_balance_before']
-            ?? ($creditApplied + $existingCreditRemaining)), 2));
-        $totalAmountDue = max(0.0, round((float) ($snapshot['total_family_due'] ?? $rowTotalDue), 2));
-        $totalPaidToDate = max(0.0, round((float) ($snapshot['new_total_paid'] ?? $rowTotalPaid), 2));
-        $remainingBalance = max(0.0, round((float) ($snapshot['new_remaining_balance']
-            ?? $snapshot['remaining_family_balance']
-            ?? $rowRemainingBalance), 2));
-        $previousTotalPaid = max(0.0, round((float) ($snapshot['previous_total_paid']
-            ?? ($totalPaidToDate - $creditApplied - $amountApplied)), 2));
-        $balanceBeforeCredit = max(0.0, round((float) ($snapshot['balance_before_credit']
-            ?? ($totalAmountDue - $previousTotalPaid)), 2));
-        $previousRemainingBalance = max(0.0, round((float) ($snapshot['previous_remaining_balance']
-            ?? $snapshot['previous_balance']
-            ?? ($balanceBeforeCredit - $creditApplied)), 2));
+
+        if ($isDemo) {
+            $totalAmountDue = $rowTotalDue;
+            $totalPaidToDate = $rowTotalPaid;
+            $remainingBalance = $rowRemainingBalance;
+            $previousTotalPaid = 0.0;
+            $balanceBeforeCredit = $rowTotalDue;
+            $previousRemainingBalance = $rowTotalDue;
+            $creditApplied = 0.0;
+            $existingCreditRemaining = 0.0;
+            $creditBalanceBefore = 0.0;
+            $amountApplied = min($amountReceived, $rowTotalDue);
+            $creditCreated = max(0.0, round($amountReceived - $amountApplied, 2));
+            $creditBalance = $creditCreated;
+        } else {
+            $amountApplied = max(0.0, round((float) ($snapshot['current_amount_applied']
+                ?? $snapshot['amount_applied']
+                ?? $currentAllocations->sum(
+                    fn ($row) => (float) ($row['applied_amount'] ?? 0)
+                )), 2));
+            $creditCreated = max(0.0, round((float) ($snapshot['credit_created']
+                ?? $snapshot['advance_credit']
+                ?? $transaction->advance_credit
+                ?? 0), 2));
+            $creditApplied = max(0.0, round((float) ($snapshot['existing_credit_applied']
+                ?? $snapshot['credit_applied']
+                ?? 0), 2));
+            $creditBalance = max(0.0, round((float) ($snapshot['new_credit_balance']
+                ?? $snapshot['available_credit_balance']
+                ?? $snapshot['advance_credit']
+                ?? $transaction->advance_credit
+                ?? 0), 2));
+            $existingCreditRemaining = max(0.0, round((float) ($snapshot['existing_credit_remaining']
+                ?? ($creditBalance - $creditCreated)), 2));
+            $creditBalanceBefore = max(0.0, round((float) ($snapshot['existing_credit_balance_before']
+                ?? ($creditApplied + $existingCreditRemaining)), 2));
+            $totalAmountDue = max(0.0, round((float) ($snapshot['total_family_due'] ?? $rowTotalDue), 2));
+            $totalPaidToDate = max(0.0, round((float) ($snapshot['new_total_paid'] ?? $rowTotalPaid), 2));
+            $remainingBalance = max(0.0, round((float) ($snapshot['new_remaining_balance']
+                ?? $snapshot['remaining_family_balance']
+                ?? $rowRemainingBalance), 2));
+            $previousTotalPaid = max(0.0, round((float) ($snapshot['previous_total_paid']
+                ?? ($totalPaidToDate - $creditApplied - $amountApplied)), 2));
+            $balanceBeforeCredit = max(0.0, round((float) ($snapshot['balance_before_credit']
+                ?? ($totalAmountDue - $previousTotalPaid)), 2));
+            $previousRemainingBalance = max(0.0, round((float) ($snapshot['previous_remaining_balance']
+                ?? $snapshot['previous_balance']
+                ?? ($balanceBeforeCredit - $creditApplied)), 2));
+        }
 
         $this->validateConsistency([
             'rows_total_due' => $rowTotalDue,
