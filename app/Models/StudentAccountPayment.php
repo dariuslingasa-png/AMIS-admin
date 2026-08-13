@@ -8,8 +8,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class StudentAccountPayment extends Model
 {
     protected $fillable = [
+        'payment_submission_id', 'finance_transaction_id',
+        'allocation_sequence', 'allocation_source',
         'student_account_id', 'student_id', 'soa_monthly_billing_id',
         'method', 'reference_no', 'or_number', 'checked_by', 'account_received',
+        'payment_mode', 'transaction_date', 'transaction_at',
         'amount', 'receipt_url', 'status', 'remarks',
         'paid_at', 'verified_at',
     ];
@@ -18,6 +21,8 @@ class StudentAccountPayment extends Model
         'amount' => 'decimal:2',
         'paid_at' => 'datetime',
         'verified_at' => 'datetime',
+        'transaction_date' => 'date',
+        'transaction_at' => 'datetime',
     ];
 
     public function studentAccount(): BelongsTo
@@ -33,5 +38,15 @@ class StudentAccountPayment extends Model
     public function monthlyBilling(): BelongsTo
     {
         return $this->belongsTo(SoaMonthlyBilling::class, 'soa_monthly_billing_id');
+    }
+
+    public function paymentSubmission(): BelongsTo
+    {
+        return $this->belongsTo(PaymentSubmission::class);
+    }
+
+    public function financeTransaction(): BelongsTo
+    {
+        return $this->belongsTo(FinanceTransaction::class);
     }
 }

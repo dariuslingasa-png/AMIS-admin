@@ -98,6 +98,11 @@ class User extends Authenticatable
         return $this->hasMany(Student::class);
     }
 
+    public function financeTransactions(): HasMany
+    {
+        return $this->hasMany(FinanceTransaction::class);
+    }
+
     public function roles(): BelongsToMany
     {
         return $this->belongsToMany(Role::class, 'role_user');

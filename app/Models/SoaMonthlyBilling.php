@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SoaMonthlyBilling extends Model
 {
@@ -27,6 +28,11 @@ class SoaMonthlyBilling extends Model
     public function student(): BelongsTo
     {
         return $this->belongsTo(Student::class);
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(StudentAccountPayment::class);
     }
 
     /** Check if this billing is overdue */

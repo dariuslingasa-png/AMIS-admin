@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\EnrollmentAnalyticsController;
 use App\Http\Controllers\Admin\EnrollmentController;
 use App\Http\Controllers\Admin\EnrollmentReportController;
 use App\Http\Controllers\Admin\FacultyAttendanceController;
+use App\Http\Controllers\Admin\Finance\FinanceController;
 use App\Http\Controllers\Admin\GoogleDriveAuthController;
 use App\Http\Controllers\Admin\RegistrationController;
 use App\Http\Controllers\Admin\RequirementController;
@@ -43,13 +44,10 @@ use App\Http\Controllers\AdminBackupController;
 use App\Http\Controllers\AdminClassScheduleController;
 use App\Http\Controllers\AdminDiscountSettingsController;
 use App\Http\Controllers\AdminEbookController;
-use App\Http\Controllers\AdminFinanceController;
-use App\Http\Controllers\AdminFinanceMasterController;
 use App\Http\Controllers\AdminMicrosoftTeamsRosterController;
 use App\Http\Controllers\AdminMsSyncController;
 use App\Http\Controllers\AdminMsTeamsController;
 use App\Http\Controllers\AdminPaymentController;
-use App\Http\Controllers\AdminSoaController;
 use App\Http\Controllers\AdminStudentAccountController;
 use App\Http\Controllers\AdminStudentFamilyController;
 use App\Http\Controllers\AdminStudentProcessController;
@@ -65,6 +63,12 @@ Route::name('admin.')->group(function () {
         Route::post('/login', [AdminAuthController::class, 'login'])
             ->middleware('throttle:5,1')
             ->name('login.store');
+        Route::post('/login/send-otp', [AdminAuthController::class, 'sendOtp'])
+            ->middleware('throttle:10,1')
+            ->name('login.otp.send');
+        Route::post('/login/verify-otp', [AdminAuthController::class, 'verifyOtp'])
+            ->middleware('throttle:20,1')
+            ->name('login.otp.verify');
     });
 
     Route::post('/logout', [AdminAuthController::class, 'logout'])
@@ -226,33 +230,42 @@ Route::name('admin.')->group(function () {
         Route::post('/students/{student}/resend', [AdminStudentAccountController::class, 'resendCredentials'])->name('students.resend');
         Route::delete('/students/{student}', [StudentController::class, 'destroy'])->name('students.destroy');
 
-        Route::get('/soa', [AdminSoaController::class, 'index'])->name('soa.index');
-        Route::get('/soa/{account}', [AdminSoaController::class, 'show'])->name('soa.show');
-        Route::patch('/soa-payments/{payment}/verify', [AdminSoaController::class, 'verifyPayment'])->name('soa.payments.verify');
-        Route::patch('/soa-payments/{payment}/reject', [AdminSoaController::class, 'rejectPayment'])->name('soa.payments.reject');
-        Route::post('/soa/{account}/payments', [AdminSoaController::class, 'addPayment'])->name('soa.payments.add');
+        Route::prefix('finance')->name('finance.')->group(function () {
+            Route::get('/', [FinanceController::class, 'dashboard'])->name('dashboard');
 
-        Route::get('/payments', [AdminPaymentController::class, 'index'])->name('payments.index');
-        Route::get('/payments/print-report', [AdminPaymentController::class, 'printFamilyReport'])->name('payments.print-report');
-        Route::post('/payments/email-reports', [AdminPaymentController::class, 'emailReports'])->name('payments.email-reports');
-        Route::get('/finance', [AdminPaymentController::class, 'dashboard'])->name('finance.dashboard');
-        Route::get('/finance/fees', [AdminPaymentController::class, 'fees'])->name('finance.fees');
-        Route::get('/finance/masters-list', [AdminFinanceMasterController::class, 'index'])->name('finance.masters-list');
-        Route::patch('/finance/masters-list/{entry}', [AdminFinanceMasterController::class, 'update'])->name('finance.masters-list.update');
-        Route::get('/payments/receipt-file', [AdminPaymentController::class, 'viewReceiptFile'])->name('payments.receipt-file');
-        Route::get('/payments/{payment}', [AdminPaymentController::class, 'show'])->name('payments.show');
-        Route::patch('/payments/{payment}/verify', [AdminPaymentController::class, 'verify'])->name('payments.verify');
-        Route::patch('/payments/{payment}/reject', [AdminPaymentController::class, 'reject'])->name('payments.reject');
+            Route::get('/payment-verification', [FinanceController::class, 'verificationIndex'])->name('verification.index');
+            Route::get('/payment-verification/{receipt}', [FinanceController::class, 'verificationShow'])->name('verification.show');
+            Route::get('/payment-verification/{receipt}/original', [FinanceController::class, 'originalReceipt'])->name('verification.original');
+            Route::patch('/payment-verification/{receipt}', [FinanceController::class, 'verificationUpdate'])->name('verification.update');
+            Route::post('/payment-verification/{receipt}/action', [FinanceController::class, 'verificationAction'])->name('verification.action');
 
-        Route::get('/finance/fees-manage', [AdminFinanceController::class, 'feesIndex'])->name('finance.fees-manage');
-        Route::post('/finance/fees-manage', [AdminFinanceController::class, 'feesStore'])->name('finance.fees-manage.store');
-        Route::delete('/finance/fees-manage/{fee}', [AdminFinanceController::class, 'feesDestroy'])->name('finance.fees-manage.destroy');
-        Route::post('/finance/soa/{account}/adjust', [AdminFinanceController::class, 'adjustFee'])->name('finance.soa.adjust');
-        Route::get('/finance/export-soa', [AdminFinanceController::class, 'exportSoa'])->name('finance.export-soa');
-        Route::get('/finance/soa/{account}/export-family', [AdminFinanceController::class, 'exportFamilyPayments'])->name('finance.export-family');
-        Route::get('/finance/receipt/{payment}', [AdminFinanceController::class, 'printReceipt'])->name('finance.receipt');
-        Route::get('/finance/aging-report', [AdminFinanceController::class, 'agingReport'])->name('finance.aging-report');
-        Route::post('/finance/soa/{account}/reminder', [AdminFinanceController::class, 'sendReminder'])->name('finance.send-reminder');
+            Route::get('/record-onsite-payment', [FinanceController::class, 'onsiteCreate'])->name('onsite.create');
+            Route::post('/record-onsite-payment/check-duplicate', [FinanceController::class, 'onsiteDuplicateCheck'])->name('onsite.duplicate-check');
+            Route::post('/record-onsite-payment', [FinanceController::class, 'onsiteStore'])->name('onsite.store');
+
+            Route::get('/transactions', [FinanceController::class, 'transactionsIndex'])->name('transactions.index');
+            Route::get('/transactions/{transaction}', [FinanceController::class, 'transactionsShow'])->name('transactions.show');
+
+            Route::get('/family-accounts', [FinanceController::class, 'familiesIndex'])->name('families.index');
+            Route::get('/family-accounts/{family}', [FinanceController::class, 'familiesShow'])->name('families.show');
+
+            Route::get('/official-receipts', [FinanceController::class, 'receiptsIndex'])->name('receipts.index');
+            Route::get('/official-receipts/{receipt}', [FinanceController::class, 'receiptsShow'])->name('receipts.show');
+            Route::get('/official-receipts/{receipt}/pdf', [FinanceController::class, 'receiptsPdf'])->name('receipts.pdf');
+
+            Route::get('/reports', [FinanceController::class, 'reports'])->name('reports.index');
+            Route::get('/reports/export', [FinanceController::class, 'reportsExport'])->name('reports.export');
+        });
+
+        // Compatibility redirects for bookmarked legacy Finance URLs.
+        Route::redirect('/payments', '/finance/payment-verification')->name('payments.index');
+        Route::redirect('/soa', '/finance/family-accounts')->name('soa.index');
+
+        // Enrollment-fee proof actions remain under Enrollment; they are not part of the retired monthly Finance UI.
+        Route::get('/enrollment/payment-proofs/file', [AdminPaymentController::class, 'getReceiptFile'])->name('payments.receipt-file');
+        Route::get('/enrollment/payment-proofs/{payment}', [AdminPaymentController::class, 'show'])->name('payments.show');
+        Route::patch('/enrollment/payment-proofs/{payment}/verify', [AdminPaymentController::class, 'verify'])->name('payments.verify');
+        Route::patch('/enrollment/payment-proofs/{payment}/reject', [AdminPaymentController::class, 'reject'])->name('payments.reject');
 
         Route::get('/ms-sync', [AdminMsSyncController::class, 'index'])->name('ms-sync.index');
         Route::get('/ms-sync/data', [AdminMsSyncController::class, 'data'])->name('ms-sync.data');

@@ -9,6 +9,7 @@ use App\Models\SoaMonthlyBilling;
 use App\Models\Student;
 use App\Models\StudentAccount;
 use App\Models\StudentAccountPayment;
+use App\Services\Finance\FinanceAllocationService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
@@ -174,6 +175,13 @@ class SoaService
 
         // Recalculate again to distribute waterfall payments properly
         $account->recalculate();
+
+        // If this family already has excess payment credit, immediately apply
+        // it to any newly generated billing that is now payable.
+        if ($applicant->user_id) {
+            app(FinanceAllocationService::class)->applyAvailableCredit((int) $applicant->user_id);
+            $account->refresh()->recalculate();
+        }
 
         return $account;
     }
