@@ -68,8 +68,7 @@ class FinanceDemoDataService
             return null;
         }
 
-        $idStr = (string) $id;
-        $data = $this->allDemoFamilies()->first(fn ($f) => (string) $f['id'] === $idStr || (string) $f['demo_key'] === $idStr);
+        $data = $this->getRawFamily($id);
 
         return $data ? $this->toFamilyObject($data) : null;
     }
@@ -340,11 +339,126 @@ class FinanceDemoDataService
         return $transaction;
     }
 
+    public function postDemoPayment($familyUser, array $data, $actor, $submission = null): object
+    {
+        $familyId = is_object($familyUser) ? ($familyUser->id ?? $familyUser->user_id ?? 2) : ($familyUser ?? 2);
+        $familyObj = $this->getFamily($familyId);
+        $amount = (float) ($data['amount'] ?? 0);
+        $preview = $this->previewAllocation($familyId, $amount);
+        $outstandingBefore = (float) collect($preview['allocations'])->sum('original_due');
+
+        $receiptNumber = 'DEMO-OR-'.now()->format('Ymd').'-'.rand(1000, 9999);
+        $transactionNumber = 'DEMO-TX-'.now()->format('Ymd').'-'.rand(1000, 9999);
+
+        // Store demo payment in session so getBillingSchedule() updates balances immediately
+        $sessionKey = 'demo_onsite_payments_999001';
+        $payments = session($sessionKey, []);
+        $payments[] = [
+            'receipt_number' => $receiptNumber,
+            'amount' => $amount,
+            'payment_method' => strtoupper($data['payment_method'] ?? 'ONLINE'),
+            'reference_number' => $data['reference_number'] ?? 'N/A',
+            'created_at' => now()->toIso8601String(),
+        ];
+        session([$sessionKey => $payments]);
+
+        // If DB table payment_submissions exists for user 2, update status to approved
+        if (DB::getSchemaBuilder()->hasTable('payment_submissions')) {
+            try {
+                if ($submission) {
+                    DB::table('payment_submissions')
+                        ->where('id', $submission->id)
+                        ->update(['status' => 'approved', 'total_amount' => $amount]);
+                } else {
+                    DB::table('payment_submissions')
+                        ->where('user_id', 2)
+                        ->where('status', 'pending')
+                        ->update(['status' => 'approved']);
+                }
+            } catch (\Throwable $e) {}
+        }
+
+        $familyReceiptRows = collect($preview['allocations'])->map(function ($alloc) {
+            return [
+                'student_name' => $alloc['student_name'],
+                'student_id' => $alloc['student_id'],
+                'grade_level' => $alloc['grade_level'],
+                'billing_month' => $alloc['month'],
+                'amount_due' => $alloc['original_due'],
+                'total_paid' => $alloc['allocated'],
+                'amount_paid' => $alloc['allocated'],
+                'remaining' => $alloc['remaining_due'],
+                'remaining_balance' => $alloc['remaining_due'],
+                'status' => $alloc['status'] === 'FULLY_PAID' ? 'PAID' : 'PARTIAL',
+            ];
+        })->all();
+
+        $snapshot = [
+            'transaction_number' => $transactionNumber,
+            'family_id' => 999001,
+            'family_name' => $familyObj?->name ?? 'ZHAIREL LINGASA',
+            'amount' => $amount,
+            'payment_method' => strtoupper($data['payment_method'] ?? 'ONLINE'),
+            'reference_number' => $data['reference_number'] ?? 'N/A',
+            'transaction_at' => now()->toIso8601String(),
+            'allocation' => $preview['allocations'],
+            'advance_credit' => $preview['advance_credit'],
+            'available_credit_balance' => $preview['advance_credit'],
+            'existing_credit_balance_before' => 0.00,
+            'existing_credit_applied' => 0.00,
+            'existing_credit_remaining' => 0.00,
+            'balance_before_credit' => $outstandingBefore,
+            'total_family_due' => $outstandingBefore,
+            'previous_total_paid' => 0.00,
+            'previous_remaining_balance' => $outstandingBefore,
+            'current_amount_received' => $amount,
+            'current_amount_applied' => $preview['total_allocated'],
+            'credit_created' => $preview['advance_credit'],
+            'new_total_paid' => $preview['total_allocated'],
+            'new_remaining_balance' => max(0, round($outstandingBefore - $preview['total_allocated'], 2)),
+            'new_credit_balance' => $preview['advance_credit'],
+            'previous_balance' => $outstandingBefore,
+            'amount_applied' => $preview['total_allocated'],
+            'remaining_family_balance' => max(0, round($outstandingBefore - $preview['total_allocated'], 2)),
+            'family_receipt_number' => $receiptNumber,
+            'family_receipt_rows' => $familyReceiptRows,
+            'is_demo' => true,
+            'watermark' => 'TEST / DEMO — NOT AN OFFICIAL SCHOOL RECEIPT',
+        ];
+
+        $officialReceipt = (object) [
+            'id' => 99999,
+            'official_receipt_number' => $receiptNumber,
+            'status' => 'ISSUED',
+            'issued_at' => now(),
+            'snapshot' => $snapshot,
+            'is_demo' => true,
+        ];
+
+        $transaction = (object) [
+            'id' => 99999,
+            'transaction_number' => $transactionNumber,
+            'official_receipt_number' => $receiptNumber,
+            'officialReceipt' => $officialReceipt,
+            'family' => $familyObj,
+            'amount' => $amount,
+            'payment_method' => strtoupper($data['payment_method'] ?? 'ONLINE'),
+            'reference_number' => $data['reference_number'] ?? 'N/A',
+            'transaction_at' => now(),
+            'advance_credit' => $preview['advance_credit'],
+            'allocations' => $preview['allocations'],
+            'is_demo' => true,
+            'watermark' => 'TEST / DEMO — NOT AN OFFICIAL SCHOOL RECEIPT',
+        ];
+
+        return $transaction;
+    }
+
     private function getRawFamily(int|string $id): ?array
     {
         $idStr = (string) $id;
 
-        return $this->allDemoFamilies()->first(fn ($f) => (string) $f['id'] === $idStr || (string) $f['demo_key'] === $idStr);
+        return $this->allDemoFamilies()->first(fn ($f) => (string) $f['id'] === $idStr || (string) $f['demo_key'] === $idStr || (string) ($f['user_id'] ?? '') === $idStr);
     }
 
     private function toFamilyObject(array $data): object

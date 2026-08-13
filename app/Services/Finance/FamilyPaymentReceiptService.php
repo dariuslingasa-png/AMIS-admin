@@ -11,11 +11,11 @@ use LogicException;
 
 class FamilyPaymentReceiptService
 {
-    public static function numberFor(FinanceTransaction $transaction, ?string $officialReceiptNumber = null): string
+    public static function numberFor(object $transaction, ?string $officialReceiptNumber = null): string
     {
-        $relatedReceipt = $transaction->relationLoaded('officialReceipt')
+        $relatedReceipt = ($transaction instanceof \Illuminate\Database\Eloquent\Model && $transaction->relationLoaded('officialReceipt'))
             ? $transaction->getRelation('officialReceipt')
-            : null;
+            : ($transaction->officialReceipt ?? null);
         $officialNumber = $officialReceiptNumber
             ?: $relatedReceipt?->official_receipt_number
             ?: $transaction->official_receipt_number;
@@ -24,14 +24,14 @@ class FamilyPaymentReceiptService
             return 'FPR-'.substr($officialNumber, 3);
         }
 
-        $date = $transaction->transaction_at?->format('Ymd') ?: now()->format('Ymd');
-        $source = $transaction->transaction_number ?: (string) $transaction->getKey();
+        $date = is_string($transaction->transaction_at) ? Carbon::parse($transaction->transaction_at)->format('Ymd') : ($transaction->transaction_at?->format('Ymd') ?: now()->format('Ymd'));
+        $source = $transaction->transaction_number ?: (string) (method_exists($transaction, 'getKey') ? $transaction->getKey() : ($transaction->id ?? '1'));
         $suffix = strtoupper(substr(hash('crc32b', $source), 0, 6));
 
         return "FPR-{$date}-{$suffix}";
     }
 
-    public function familyRows(FinanceTransaction $transaction, ?Collection $scopeBillingIds = null): Collection
+    public function familyRows(object $transaction, ?Collection $scopeBillingIds = null): Collection
     {
         $allocations = collect($transaction->allocation_snapshot ?? []);
         $billingIds = ($scopeBillingIds ?: $allocations->pluck('billing_id'))
@@ -40,7 +40,7 @@ class FamilyPaymentReceiptService
             ->unique()
             ->values();
 
-        if (! $transaction->exists || $billingIds->isEmpty()) {
+        if (! ($transaction instanceof \Illuminate\Database\Eloquent\Model && $transaction->exists) || $billingIds->isEmpty()) {
             return $this->fallbackRows($allocations);
         }
 
@@ -95,14 +95,14 @@ class FamilyPaymentReceiptService
         })->values();
     }
 
-    public function data(FinanceTransaction $transaction): array
+    public function data(object $transaction): array
     {
-        if ($transaction->exists) {
+        if ($transaction instanceof \Illuminate\Database\Eloquent\Model && $transaction->exists) {
             $transaction->loadMissing(['family', 'processor', 'officialReceipt']);
         }
-        $receipt = $transaction->relationLoaded('officialReceipt')
+        $receipt = ($transaction instanceof \Illuminate\Database\Eloquent\Model && $transaction->relationLoaded('officialReceipt'))
             ? $transaction->getRelation('officialReceipt')
-            : null;
+            : ($transaction->officialReceipt ?? null);
         $snapshot = (array) ($receipt?->snapshot ?? []);
         $rows = collect($snapshot['family_receipt_rows'] ?? []);
 
@@ -208,7 +208,7 @@ class FamilyPaymentReceiptService
             'official_receipt_number' => $receipt?->official_receipt_number ?: $transaction->official_receipt_number,
             'date' => $transaction->transaction_at?->format('F d, Y'),
             'parent_name' => mb_strtoupper((string) ($transaction->family?->name ?: 'Parent / Guardian')),
-            'payment_method' => $transaction->payment_method_label,
+            'payment_method' => $transaction->payment_method_label ?? strtoupper((string) ($transaction->payment_method ?? 'ONLINE')),
             'reference_number' => $transaction->reference_number ?: 'Not recorded',
             'rows' => $rows,
             'total_amount_due' => $totalAmountDue,
@@ -235,7 +235,7 @@ class FamilyPaymentReceiptService
         ];
     }
 
-    public function render(FinanceTransaction $transaction): string
+    public function render(object $transaction): string
     {
         $options = new Options;
         $options->set('defaultFont', 'DejaVu Sans');

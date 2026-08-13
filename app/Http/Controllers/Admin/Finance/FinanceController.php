@@ -152,8 +152,35 @@ class FinanceController extends Controller
         $receipt->load(['user.enrollmentApplicants', 'user.students', 'paymentSubmission.financeTransaction.officialReceipt', 'ocrResults', 'auditLogs.user']);
         $this->resolveRetryDuplicateBadge($receipt);
         $amount = (float) ($receipt->amount ?? $receipt->paymentSubmission?->total_amount ?? 0);
-        $preview = $amount > 0 ? $this->allocation->preview($receipt->user_id, $amount) : null;
-        $totalOutstanding = $this->allocation->familyOutstandingTotal($receipt->user_id);
+
+        if ($this->demoData->isDemoFamilyId($receipt->user_id)) {
+            $preview = $amount > 0 ? $this->demoData->previewAllocation($receipt->user_id, $amount) : null;
+            if ($preview) {
+                $schedule = $this->demoData->getBillingSchedule($receipt->user_id);
+                $totalBefore = (float) $schedule->sum('remaining');
+                $preview['allocated_amount'] = $preview['total_allocated'];
+                $preview['family_balance_after'] = max(0, round($totalBefore - $amount, 2));
+                $preview['allocations'] = collect($preview['allocations'])->map(function ($alloc) {
+                    return [
+                        'billing' => (object) [
+                            'month_name' => $alloc['month'],
+                            'student' => (object) [
+                                'applicant' => (object) [
+                                    'full_name' => $alloc['student_name'],
+                                ],
+                            ],
+                        ],
+                        'balance_before' => $alloc['original_due'],
+                        'applied_amount' => $alloc['allocated'],
+                        'remaining_after' => $alloc['remaining_due'],
+                    ];
+                })->all();
+            }
+            $totalOutstanding = (float) $this->demoData->getBillingSchedule($receipt->user_id)->sum('remaining');
+        } else {
+            $preview = $amount > 0 ? $this->allocation->preview($receipt->user_id, $amount) : null;
+            $totalOutstanding = $this->allocation->familyOutstandingTotal($receipt->user_id);
+        }
 
         return view('admin.finance.verification.show', compact('receipt', 'preview', 'totalOutstanding'));
     }
@@ -176,7 +203,6 @@ class FinanceController extends Controller
         $receipt->update([
             'provider' => $validated['provider'],
             'reference_number' => $validated['reference_number'],
-            'normalized_reference' => Str::upper(preg_replace('/[^A-Za-z0-9]/', '', (string) $validated['reference_number'])),
             'amount' => $validated['amount'],
             'transaction_date' => $validated['transaction_date'],
             'review_reason' => $validated['correction_reason'],
@@ -214,6 +240,28 @@ class FinanceController extends Controller
 
             $amount = (float) ($receipt->amount ?? $submission->total_amount);
             abort_if($amount <= 0, 422, 'Enter and save a valid receipt amount before approval.');
+
+            if ($this->demoData->isDemoFamilyId($receipt->user_id)) {
+                $transaction = $this->demoData->postDemoPayment($receipt->user_id, [
+                    'source' => 'ONLINE',
+                    'payment_method' => $receipt->provider ?: $submission->method,
+                    'reference_number' => $receipt->reference_number ?: $submission->reference_no,
+                    'amount' => $amount,
+                    'transaction_at' => $receipt->transaction_date ?: $submission->transaction_at ?: $submission->submitted_at,
+                    'receipt_submission_id' => $receipt->id,
+                    'receipt_url' => $receipt->original_receipt_path,
+                ], $request->user(), $submission);
+
+                $receipt->update([
+                    'status' => ReceiptSubmission::APPROVED,
+                    'verified_by' => $request->user()->id,
+                    'verified_at' => now(),
+                    'review_reason' => null,
+                ]);
+
+                return redirect()->route('admin.finance.verification.index')
+                    ->with('success', 'DEMO Payment approved and allocated oldest-first for '.$transaction->family->name.'.');
+            }
 
             $transaction = $this->allocation->post($receipt->user, [
                 'source' => 'ONLINE',
