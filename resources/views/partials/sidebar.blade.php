@@ -68,13 +68,16 @@
             ],
         ],
         [
-            'active' => request()->routeIs('admin.finance.*') || request()->routeIs('admin.soa.*') || request()->routeIs('admin.payments.*'),
-            'icon' => 'wallet', 'iconClass' => 'text-amber-600', 'headerClass' => 'text-amber-700', 'activeClass' => 'sidebar-link-active-amber', 'title' => 'Finance Management',
+            'active' => request()->routeIs('admin.finance.*'),
+            'icon' => 'wallet', 'iconClass' => 'text-amber-600', 'headerClass' => 'text-amber-700', 'activeClass' => 'sidebar-link-active-amber', 'title' => 'Finance',
             'links' => [
                 ['Dashboard', 'layout-dashboard', route('admin.finance.dashboard'), request()->routeIs('admin.finance.dashboard')],
-                ['Enrollment Payment Approval', 'credit-card', route('admin.payments.index'), request()->routeIs('admin.payments.*')],
-                ['Finance Masters List', 'list-checks', route('admin.finance.masters-list'), request()->routeIs('admin.finance.masters-list')],
-                ['Fee & Discount', 'receipt', route('admin.finance.fees'), request()->routeIs('admin.finance.fees')],
+                ['Payment Verification', 'badge-check', route('admin.finance.verification.index'), request()->routeIs('admin.finance.verification.*')],
+                ['Record Onsite Payment', 'hand-coins', route('admin.finance.onsite.create'), request()->routeIs('admin.finance.onsite.*')],
+                ['Transactions', 'arrow-left-right', route('admin.finance.transactions.index'), request()->routeIs('admin.finance.transactions.*')],
+                ['Family Accounts / SOA', 'users', route('admin.finance.families.index'), request()->routeIs('admin.finance.families.*')],
+                ['Official Receipts', 'receipt-text', route('admin.finance.receipts.index'), request()->routeIs('admin.finance.receipts.*')],
+                ['Reports', 'chart-no-axes-combined', route('admin.finance.reports.index'), request()->routeIs('admin.finance.reports.*')],
             ],
         ],
         [
@@ -214,7 +217,7 @@
 @endphp
 
 <aside id="default-sidebar"
-       class="admin-sidebar fixed left-0 z-40 w-64 border-r border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
+       class="admin-sidebar fixed left-0 z-40 w-64 -translate-x-full border-r border-gray-200 bg-white transition-transform dark:border-gray-700 dark:bg-gray-800 lg:translate-x-0"
        aria-label="Sidebar">
     <div class="flex h-full flex-col px-3 py-4">
         @unless ($isTeacherAdminViewer || request()->routeIs('admin.dashboard'))
