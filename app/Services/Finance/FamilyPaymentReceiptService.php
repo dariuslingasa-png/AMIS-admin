@@ -141,6 +141,9 @@ class FamilyPaymentReceiptService
                 'new_total_paid' => $preview['total_allocated'],
                 'new_remaining_balance' => max(0, round($outstandingBefore - $preview['total_allocated'], 2)),
                 'new_credit_balance' => $preview['advance_credit'],
+                'existing_credit_applied' => 0.00,
+                'existing_credit_remaining' => 0.00,
+                'existing_credit_balance_before' => 0.00,
                 'is_demo' => true,
                 'watermark' => 'TEST / DEMO — NOT AN OFFICIAL SCHOOL RECEIPT',
             ]);
