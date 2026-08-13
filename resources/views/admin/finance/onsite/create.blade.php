@@ -299,13 +299,19 @@
                                     <div class="divide-y divide-slate-100">
                                         @foreach ($period['children'] as $child)
                                             @php
-                                                $studentName = $child['student']?->applicant?->full_name ?: 'Student';
+                                                $studentObj = $child['student'] ?? null;
+                                                $studentName = $studentObj?->full_name
+                                                    ?? (isset($studentObj->applicant) ? $studentObj->applicant?->full_name : null)
+                                                    ?? 'Student';
+                                                $studentId = $studentObj?->amis_student_id
+                                                    ?? $studentObj?->student_number
+                                                    ?? 'N/A';
                                             @endphp
                                             <div class="flex items-center justify-between gap-4 py-3">
                                                 <div class="min-w-0">
                                                     <p class="truncate text-sm font-bold text-slate-800">{{ mb_strtoupper($studentName) }}</p>
                                                     <p class="truncate text-xs text-slate-500">
-                                                        {{ $child['student']?->grade_level }} · ID {{ $child['student']?->student_number }}
+                                                        {{ $studentObj?->grade_level }} · ID {{ $studentId }}
                                                     </p>
                                                 </div>
                                                 <div class="shrink-0 text-right">
