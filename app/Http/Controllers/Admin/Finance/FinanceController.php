@@ -629,10 +629,19 @@ class FinanceController extends Controller
         return view('admin.finance.families.index', compact('families'));
     }
 
-    public function familiesShow(Request $request, User $family)
+    public function familiesShow(Request $request, string $familyId)
     {
         $this->authorizeFinance($request);
-        abort_unless($family->enrollmentApplicants()->whereHas('student.account')->exists(), 404);
+        if ($this->demoData->isDemoFamilyId($familyId)) {
+            $family = $this->demoData->getFamily($familyId);
+            $transactions = collect();
+            $outstanding = $this->demoData->getBalances($familyId);
+            $advanceCredit = 0.00;
+
+            return view('admin.finance.families.show', compact('family', 'transactions', 'outstanding', 'advanceCredit'));
+        }
+
+        $family = User::query()->findOrFail($familyId);
         $family->load(['enrollmentApplicants.student.account.monthlyBillings.payments']);
         $transactions = FinanceTransaction::query()
             ->with('officialReceipt')
