@@ -44,7 +44,7 @@
     @endif
 
     <!-- Error Toast -->
-    @if ($errors->any())
+    @if (isset($errors) && $errors->any())
         <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)"
              x-transition:enter="transition ease-out duration-300"
              x-transition:enter-start="opacity-0 translate-x-12 scale-95"
