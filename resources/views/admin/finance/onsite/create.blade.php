@@ -283,7 +283,7 @@
                                     <div class="min-w-0">
                                         <p class="truncate font-extrabold text-slate-800">{{ $period['label'] }}</p>
                                         <p class="mt-0.5 text-xs text-slate-500">
-                                            Due {{ $period['due_date']->format('F Y') }} · {{ $period['children']->count() }} student(s) · View fee breakdown
+                                            Due {{ $period['due_date']->format('F Y') }} · {{ is_array($period['children']) ? count($period['children']) : $period['children']->count() }} student(s) · View fee breakdown
                                         </p>
                                     </div>
                                     <div class="flex shrink-0 items-center gap-3">
