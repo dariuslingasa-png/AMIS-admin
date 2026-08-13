@@ -386,6 +386,9 @@ class FinanceController extends Controller
             ->first(fn ($period) => isset($period['due_date']) && $period['due_date']->betweenIncluded($monthStart, $monthEnd))['label']
             ?? $monthStart->format('F Y');
 
+        $preview = $isDemo && $family && $request->filled('amount')
+            ? $this->demoData->previewAllocation($rawFamily, (float) $request->input('amount'))
+            : ($family && $request->filled('amount') ? $this->allocation->preview($family->id, $request->input('amount')) : null);
         $errors = session('errors') ?? new \Illuminate\Support\ViewErrorBag();
 
         return view('admin.finance.onsite.create', compact(
