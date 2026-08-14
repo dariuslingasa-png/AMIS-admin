@@ -142,9 +142,22 @@ class FinanceManualSoaTest extends TestCase
             'active_admin_session_id' => null,
         ]);
 
-        $response = $this->actingAs($admin)->get(route('admin.finance.students.official-soa', ['studentIdentifier' => 'AFPS-DEMO-2026-001-2']));
-        $response->assertStatus(200);
-        $response->assertSee('STATEMENT OF ACCOUNT SY 2026-2027');
-        $response->assertSee('AHMAD Z. LINGASA');
+        // Ahmad
+        $respAhmad = $this->actingAs($admin)->get(route('admin.finance.students.official-soa', ['studentIdentifier' => 'AFPS-DEMO-2026-001-2']));
+        $respAhmad->assertStatus(200);
+        $respAhmad->assertSee('AHMAD Z. LINGASA');
+        $respAhmad->assertSee('Grade 1');
+
+        // Maryam
+        $respMaryam = $this->actingAs($admin)->get(route('admin.finance.students.official-soa', ['studentIdentifier' => 'AFPS-DEMO-2026-002-2']));
+        $respMaryam->assertStatus(200);
+        $respMaryam->assertSee('MARYAM Z. LINGASA');
+        $respMaryam->assertSee('Grade 3');
+
+        // Yusuf
+        $respYusuf = $this->actingAs($admin)->get(route('admin.finance.students.official-soa', ['studentIdentifier' => 'AFPS-DEMO-2026-003-2']));
+        $respYusuf->assertStatus(200);
+        $respYusuf->assertSee('YUSUF Z. LINGASA');
+        $respYusuf->assertSee('Grade 5');
     }
 }

@@ -967,24 +967,48 @@ class FinanceController extends Controller
             $allFamilies = $this->demoData->allDemoFamilies();
 
             $foundChild = null;
-            $foundFamily = null;
+            $cleanId = Str::upper(trim($studentIdentifier));
+            preg_match('/(?:^|[^0-9])0*(1|2|3|4|5|6|7|8|9)(?:[^0-9]|$)/', preg_replace('/202[0-9]/', '', $cleanId), $mId);
+            $targetSeq = $mId[1] ?? null;
+
             foreach ($allFamilies as $f) {
                 if (! $f) {
                     continue;
                 }
-                foreach ($f['children'] as $child) {
-                    $childIndex1 = preg_match('/(?:00|DEMO-|DEMO-2026-00)(\d)/i', $studentIdentifier, $m1) ? $m1[1] : null;
-                    $childIndex2 = preg_match('/(?:00|DEMO-|DEMO-2026-00)(\d)/i', $child['student_id'], $m2) ? $m2[1] : null;
 
+                // 1. Exact match on student_id, amis_student_id, or full name
+                foreach ($f['children'] as $child) {
                     if (
-                        $child['student_id'] === $studentIdentifier
-                        || ($child['amis_student_id'] ?? '') === $studentIdentifier
-                        || strcasecmp($child['name'], $studentIdentifier) === 0
-                        || Str::contains(Str::lower($child['name']), Str::lower($studentIdentifier))
-                        || Str::contains(Str::lower($studentIdentifier), Str::lower($child['name']))
-                        || Str::contains(Str::lower($child['student_id']), Str::lower($studentIdentifier))
-                        || Str::contains(Str::lower($studentIdentifier), Str::lower($child['student_id']))
-                        || ($childIndex1 !== null && $childIndex1 === $childIndex2)
+                        Str::upper($child['student_id']) === $cleanId
+                        || Str::upper($child['amis_student_id'] ?? '') === $cleanId
+                        || Str::upper($child['name']) === $cleanId
+                    ) {
+                        $foundChild = $child;
+                        $foundFamily = $f;
+                        break 2;
+                    }
+                }
+
+                // 2. Exact Sequence number match (e.g. 001 for Ahmad, 002 for Maryam, 003 for Yusuf)
+                if ($targetSeq !== null) {
+                    foreach ($f['children'] as $child) {
+                        preg_match('/(?:^|[^0-9])0*(1|2|3|4|5|6|7|8|9)(?:[^0-9]|$)/', preg_replace('/202[0-9]/', '', Str::upper($child['student_id'])), $mChild);
+                        if (($mChild[1] ?? null) === $targetSeq) {
+                            $foundChild = $child;
+                            $foundFamily = $f;
+                            break 2;
+                        }
+                    }
+                }
+
+                // 3. First name / full name contains
+                foreach ($f['children'] as $child) {
+                    $cName = Str::upper($child['name']);
+                    $cFirst = Str::upper($child['first_name'] ?? '');
+                    if (
+                        ($cFirst && Str::contains($cleanId, $cFirst))
+                        || Str::contains($cName, $cleanId)
+                        || Str::contains($cleanId, $cName)
                     ) {
                         $foundChild = $child;
                         $foundFamily = $f;
