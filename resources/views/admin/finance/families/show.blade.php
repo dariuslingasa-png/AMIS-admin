@@ -126,13 +126,13 @@
                         <div
                             @click="selectStudent('{{ $sId }}')"
                             class="cursor-pointer rounded-2xl border bg-white p-5 shadow-sm hover:shadow-md transition duration-200 flex flex-col justify-between"
-                            :class="selectedStudentId === '{{ $sId }}' ? 'border-slate-900 ring-2 ring-slate-900 shadow-md' : 'border-slate-200 hover:border-slate-300'"
+                            :class="selectedStudentId === '{{ $sId }}' ? 'border-emerald-600 ring-2 ring-emerald-500/20 bg-emerald-50/10' : 'border-slate-200 hover:border-slate-300'"
                         >
                             <div>
                                 {{-- CARD TOP ROW --}}
                                 <div class="flex items-start justify-between gap-3">
                                     <div class="flex items-center gap-3 min-w-0">
-                                        <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-slate-900 font-black text-white text-xs">
+                                        <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-slate-800 font-bold text-white text-xs shadow-2xs">
                                             {{ $initials ?: 'ST' }}
                                         </div>
                                         <div class="min-w-0">
@@ -144,7 +144,7 @@
                                         </div>
                                     </div>
                                     <div class="text-slate-400 pt-1">
-                                        <svg class="h-5 w-5 transform transition-transform duration-200" :class="selectedStudentId === '{{ $sId }}' ? 'rotate-180 text-slate-900' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg class="h-5 w-5 transform transition-transform duration-200" :class="selectedStudentId === '{{ $sId }}' ? 'rotate-180 text-emerald-700' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                                         </svg>
                                     </div>
@@ -166,7 +166,7 @@
                             </div>
 
                             {{-- CARD ACTION FOOTER --}}
-                            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold" :class="selectedStudentId === '{{ $sId }}' ? 'text-slate-900' : 'text-slate-600'">
+                            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold" :class="selectedStudentId === '{{ $sId }}' ? 'text-emerald-800' : 'text-slate-600'">
                                 <span class="flex items-center gap-1.5">
                                     <span class="flex h-2 w-2 rounded-full" :class="selectedStudentId === '{{ $sId }}' ? 'bg-emerald-500' : 'bg-slate-300'"></span>
                                     <span x-text="selectedStudentId === '{{ $sId }}' ? 'Details Active' : 'View Details & SOA'"></span>
@@ -201,13 +201,13 @@
                     <div
                         x-show="selectedStudentId === '{{ $sId }}'"
                         x-cloak
-                        class="mt-6 rounded-2xl border border-slate-900 bg-white p-6 shadow-xl transition"
+                        class="mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition"
                     >
                         {{-- STUDIO HEADER --}}
                         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-200 pb-4">
                             <div>
                                 <div class="flex items-center gap-2 flex-wrap">
-                                    <span class="inline-flex items-center rounded-full bg-slate-900 px-3 py-0.5 text-xs font-bold uppercase tracking-wider text-white">Student Account</span>
+                                    <span class="inline-flex items-center rounded-md bg-slate-100 border border-slate-200 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider text-slate-700">Student Account</span>
                                     <h3 class="text-xl font-black tracking-tight text-slate-900">{{ mb_strtoupper($sName) }}</h3>
                                     <span class="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-700">{{ $sGrade }}</span>
                                     <span class="font-mono text-xs text-slate-400">{{ $sId }}</span>
@@ -227,7 +227,7 @@
                             </div>
                         </div>
 
-                        {{-- STUDIO 2-COLUMN GRID (USING STANDARD TAILWIND 12-COLUMNS) --}}
+                        {{-- STUDIO 2-COLUMN GRID --}}
                         <div class="mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                             {{-- LEFT COLUMN (7 COLS): MONTHLY PAYMENT SCHEDULE TABLE --}}
                             <div class="lg:col-span-7 space-y-3">
@@ -239,7 +239,7 @@
                                     <span class="text-xs font-bold text-slate-400">FIFO Month Order</span>
                                 </div>
 
-                                <div class="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+                                <div class="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-2xs">
                                     <table class="min-w-full text-left text-sm border-collapse">
                                         <thead class="bg-slate-50 text-xs font-bold uppercase text-slate-500 border-b border-slate-200">
                                             <tr>
@@ -261,19 +261,19 @@
                                                     };
                                                 @endphp
                                                 <tr class="hover:bg-slate-50 transition">
-                                                    <td class="px-4 py-3.5 font-bold text-slate-800">
+                                                    <td class="px-4 py-3 font-bold text-slate-800">
                                                         {{ $m->month }}
                                                     </td>
-                                                    <td class="px-4 py-3.5 text-right font-medium text-slate-600">
+                                                    <td class="px-4 py-3 text-right font-medium text-slate-600">
                                                         ₱{{ number_format($m->fee ?? $m->original ?? 0, 2) }}
                                                     </td>
-                                                    <td class="px-4 py-3.5 text-right font-medium text-slate-600">
+                                                    <td class="px-4 py-3 text-right font-medium text-slate-600">
                                                         ₱{{ number_format($m->paid ?? $m->verified ?? 0, 2) }}
                                                     </td>
-                                                    <td class="px-4 py-3.5 text-right font-extrabold text-slate-900">
+                                                    <td class="px-4 py-3 text-right font-extrabold text-slate-900">
                                                         ₱{{ number_format($m->remaining, 2) }}
                                                     </td>
-                                                    <td class="px-4 py-3.5 text-center">
+                                                    <td class="px-4 py-3 text-center">
                                                         <span class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-bold uppercase {{ $stBadge }}">
                                                             {{ $m->status }}
                                                         </span>
@@ -292,20 +292,20 @@
                             {{-- RIGHT COLUMN (5 COLS): STATEMENT OF ACCOUNT MANAGEMENT --}}
                             <div class="lg:col-span-5 space-y-4">
                                 {{-- OPTION A: FINANCE-UPLOADED MANUAL SOA --}}
-                                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
+                                <div class="rounded-2xl border border-slate-200 bg-slate-50/70 p-5 shadow-2xs">
                                     <div class="flex items-center justify-between mb-3">
                                         <div>
-                                            <span class="inline-flex rounded-md bg-slate-900 px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-white">Option 1</span>
+                                            <span class="inline-flex rounded-md bg-slate-200 text-slate-700 px-2 py-0.5 text-xs font-bold uppercase tracking-wider">Option 1</span>
                                             <h5 class="mt-1 text-sm font-black text-slate-900">Finance-Uploaded Manual SOA</h5>
                                         </div>
-                                        <button type="button" @click="openUpload({{ Js::from($studentData) }})" class="inline-flex items-center gap-1 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 px-3 py-1.5 rounded-xl shadow-sm transition">
+                                        <button type="button" @click="openUpload({{ Js::from($studentData) }})" class="inline-flex items-center gap-1 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 px-3 py-1.5 rounded-xl shadow-2xs transition">
                                             <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4.5v15m7.5-7.5h-15"/></svg>
                                             {{ $latestManualSoa ? 'Upload Revision' : 'Upload SOA' }}
                                         </button>
                                     </div>
 
                                     @if ($latestManualSoa)
-                                        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                                        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-2xs">
                                             <div class="flex items-center justify-between gap-2">
                                                 <div class="flex items-center gap-2">
                                                     <span class="inline-flex rounded-md bg-emerald-100 text-emerald-800 px-2 py-0.5 text-xs font-bold uppercase">{{ $latestManualSoa->billing_month }}</span>
@@ -327,23 +327,23 @@
                                             @endif
 
                                             <div class="mt-3.5 flex items-center gap-2">
-                                                <button type="button" @click="openPreview('{{ route('admin.finance.manual-soa.view', $latestManualSoa) }}', '{{ $latestManualSoa->student_name }} · {{ $latestManualSoa->billing_month }} SOA', {{ $latestManualSoa->is_pdf ? 'true' : 'false' }})" class="flex-1 rounded-xl bg-slate-900 px-3 py-2 text-center text-xs font-bold text-white hover:bg-slate-800 shadow-sm transition">
+                                                <button type="button" @click="openPreview('{{ route('admin.finance.manual-soa.view', $latestManualSoa) }}', '{{ $latestManualSoa->student_name }} · {{ $latestManualSoa->billing_month }} SOA', {{ $latestManualSoa->is_pdf ? 'true' : 'false' }})" class="flex-1 rounded-xl bg-slate-900 px-3 py-2 text-center text-xs font-bold text-white hover:bg-slate-800 shadow-2xs transition">
                                                     View Document
                                                 </button>
-                                                <a href="{{ route('admin.finance.manual-soa.download', $latestManualSoa) }}" class="rounded-xl border border-slate-300 bg-white px-3 py-2 text-center text-xs font-bold text-slate-700 hover:bg-slate-50 shadow-sm transition" title="Download Document">
+                                                <a href="{{ route('admin.finance.manual-soa.download', $latestManualSoa) }}" class="rounded-xl border border-slate-300 bg-white px-3 py-2 text-center text-xs font-bold text-slate-700 hover:bg-slate-50 shadow-2xs transition" title="Download Document">
                                                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
                                                 </a>
                                                 @if ($studentSoaList->count() > 1)
-                                                    <button type="button" @click="openHistory({{ Js::from($studentData) }}, {{ Js::from($studentSoaList) }})" class="rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 shadow-sm transition">
+                                                    <button type="button" @click="openHistory({{ Js::from($studentData) }}, {{ Js::from($studentSoaList) }})" class="rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 shadow-2xs transition">
                                                         History ({{ $studentSoaList->count() }})
                                                     </button>
                                                 @endif
                                             </div>
                                         </div>
                                     @else
-                                        <div class="rounded-xl border-2 border-dashed border-slate-200 bg-white p-5 text-center">
+                                        <div class="rounded-xl border border-dashed border-slate-300 bg-white p-5 text-center">
                                             <p class="text-xs font-medium text-slate-500">No manual SOA uploaded yet for this student.</p>
-                                            <button type="button" @click="openUpload({{ Js::from($studentData) }})" class="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white hover:bg-slate-800 shadow-sm transition">
+                                            <button type="button" @click="openUpload({{ Js::from($studentData) }})" class="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white hover:bg-slate-800 shadow-2xs transition">
                                                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4.5v15m7.5-7.5h-15"/></svg>
                                                 Upload SOA (PDF/Image)
                                             </button>
@@ -352,9 +352,9 @@
                                 </div>
 
                                 {{-- OPTION 2: OFFICIAL SCHOOL STATEMENT OF ACCOUNT (TEMPLATE & PRINT) --}}
-                                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
+                                <div class="rounded-2xl border border-slate-200 bg-slate-50/70 p-5 shadow-2xs">
                                     <div class="mb-2">
-                                        <span class="inline-flex rounded-md bg-emerald-700 px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-white">Option 2</span>
+                                        <span class="inline-flex rounded-md bg-emerald-100 text-emerald-800 border border-emerald-200 px-2 py-0.5 text-xs font-bold uppercase tracking-wider">Option 2</span>
                                         <h5 class="mt-1 text-sm font-black text-slate-900">Official School Statement of Account</h5>
                                     </div>
                                     <p class="text-xs text-slate-500 mb-3.5">
@@ -363,7 +363,7 @@
                                     <a
                                         href="{{ route('admin.finance.students.official-soa', ['studentIdentifier' => $sId]) }}"
                                         target="_blank"
-                                        class="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 py-2.5 text-xs font-black text-white hover:bg-emerald-800 shadow-sm transition"
+                                        class="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 py-2.5 text-xs font-bold text-white hover:bg-emerald-800 shadow-sm transition"
                                     >
                                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                                         Open Official School SOA (Print / Save PDF)
@@ -380,17 +380,17 @@
         <div class="grid gap-6 lg:grid-cols-2 items-start">
             {{-- OUTSTANDING BILLING SCHEDULE --}}
             <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                     <div>
-                        <h2 class="font-extrabold text-slate-900 text-base tracking-tight">Outstanding Billing Schedule</h2>
-                        <p class="text-xs text-slate-500">Allocated in FIFO sequence (oldest unpaid month first).</p>
+                        <h2 class="font-extrabold text-slate-900 text-sm tracking-tight">Outstanding Billing Schedule</h2>
+                        <p class="text-[11px] text-slate-500">Allocated in FIFO sequence (oldest unpaid month first).</p>
                     </div>
                     <a href="{{ route('admin.finance.onsite.create', ['family' => $family->id]) }}" class="rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-800 hover:bg-emerald-100 transition">
                         + Pay Dues
                     </a>
                 </div>
 
-                <div class="mt-3 divide-y divide-slate-100 max-h-[520px] overflow-y-auto pr-1">
+                <div class="mt-2 divide-y divide-slate-100 max-h-[280px] overflow-y-auto pr-1">
                     @forelse ($outstanding as $row)
                         @php
                             $studentName = $row['student']?->full_name
@@ -402,63 +402,63 @@
                             $dueDateLabel = isset($row['billing']->due_date) ? $row['billing']->due_date->format('M d, Y') : 'N/A';
                             $isOverdue = isset($row['billing']->due_date) && $row['billing']->due_date->isPast();
                         @endphp
-                        <div class="flex items-center justify-between gap-3 py-3 hover:bg-slate-50 px-2 rounded-xl transition">
+                        <div class="flex items-center justify-between gap-3 py-2 hover:bg-slate-50 px-2 rounded-xl transition text-xs">
                             <div class="min-w-0">
-                                <div class="flex items-center gap-2">
-                                    <strong class="font-extrabold text-slate-900 text-xs">{{ $monthLabel }}</strong>
-                                    <span class="text-xs text-slate-400">·</span>
-                                    <span class="text-xs font-medium text-slate-700 truncate">{{ $studentName }}</span>
+                                <div class="flex items-center gap-1.5">
+                                    <strong class="font-bold text-slate-900 text-xs">{{ $monthLabel }}</strong>
+                                    <span class="text-slate-400">·</span>
+                                    <span class="font-medium text-slate-700 truncate">{{ $studentName }}</span>
                                 </div>
-                                <p class="mt-0.5 text-xs text-slate-400">
+                                <p class="text-[11px] text-slate-400 mt-0.5">
                                     Orig: ₱{{ number_format($row['original'] ?? $row['original_amount'] ?? 0, 2) }} · Paid: ₱{{ number_format($row['verified'] ?? $row['verified_paid'] ?? 0, 2) }} · Due {{ $dueDateLabel }}
                                 </p>
                             </div>
                             <div class="text-right flex-shrink-0">
-                                <p class="font-black text-slate-900 text-sm">₱{{ number_format($row['remaining'], 2) }}</p>
-                                <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-bold uppercase {{ $isOverdue ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-800' }}">
+                                <p class="font-black text-slate-900 text-xs">₱{{ number_format($row['remaining'], 2) }}</p>
+                                <span class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase {{ $isOverdue ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-800' }}">
                                     {{ $isOverdue ? 'OVERDUE' : 'OUTSTANDING' }}
                                 </span>
                             </div>
                         </div>
                     @empty
-                        <div class="p-8 text-center text-xs font-semibold text-emerald-700">All current family billings are fully paid.</div>
+                        <div class="p-6 text-center text-xs font-semibold text-emerald-700">All current family billings are fully paid.</div>
                     @endforelse
                 </div>
             </section>
 
             {{-- PAYMENT HISTORY & OFFICIAL RECEIPTS --}}
             <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div class="border-b border-slate-100 pb-4">
-                    <h2 class="font-extrabold text-slate-900 text-base tracking-tight">Payment &amp; Official Receipts</h2>
-                    <p class="text-xs text-slate-500">Verified transaction receipts and allocations.</p>
+                <div class="border-b border-slate-100 pb-3">
+                    <h2 class="font-extrabold text-slate-900 text-sm tracking-tight">Payment &amp; Official Receipts</h2>
+                    <p class="text-[11px] text-slate-500">Verified transaction receipts and allocations.</p>
                 </div>
-                <div class="mt-3 divide-y divide-slate-100 max-h-[520px] overflow-y-auto pr-1">
+                <div class="mt-2 divide-y divide-slate-100 max-h-[280px] overflow-y-auto pr-1">
                     @forelse ($transactions as $transaction)
-                        <a href="{{ route('admin.finance.transactions.show', $transaction) }}" class="flex items-center justify-between gap-3 py-3 hover:bg-slate-50 px-2 rounded-xl transition">
+                        <a href="{{ route('admin.finance.transactions.show', $transaction) }}" class="flex items-center justify-between gap-3 py-2 hover:bg-slate-50 px-2 rounded-xl transition text-xs">
                             <div class="min-w-0">
-                                <div class="flex items-center gap-2">
+                                <div class="flex items-center gap-1.5">
                                     <span class="font-mono font-bold text-xs text-slate-900">
                                         OR# {{ $transaction->officialReceipt?->official_receipt_number ?? $transaction->official_receipt_number ?? "TX-{$transaction->id}" }}
                                     </span>
-                                    <span class="inline-flex rounded-md bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-600 uppercase">{{ $transaction->payment_method ?? 'ONLINE' }}</span>
+                                    <span class="inline-flex rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600 uppercase">{{ $transaction->payment_method ?? 'ONLINE' }}</span>
                                 </div>
-                                <p class="mt-0.5 text-xs text-slate-400">
+                                <p class="text-[11px] text-slate-400 mt-0.5">
                                     {{ isset($transaction->transaction_at) ? $transaction->transaction_at->format('M d, Y · h:i A') : $transaction->created_at->format('M d, Y · h:i A') }}
                                 </p>
                             </div>
                             <div class="text-right flex-shrink-0">
-                                <p class="font-black text-slate-900 text-sm">₱{{ number_format((float)$transaction->amount, 2) }}</p>
-                                <span class="inline-flex rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold text-emerald-700 uppercase">
+                                <p class="font-black text-slate-900 text-xs">₱{{ number_format((float)$transaction->amount, 2) }}</p>
+                                <span class="inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700 uppercase">
                                     {{ $transaction->status ?? 'VERIFIED' }}
                                 </span>
                             </div>
                         </a>
                     @empty
-                        <div class="p-8 text-center text-xs text-slate-500">No posted Finance transactions yet.</div>
+                        <div class="p-6 text-center text-xs text-slate-500">No posted Finance transactions yet.</div>
                     @endforelse
                 </div>
                 @if (method_exists($transactions, 'links'))
-                    <div class="border-t border-slate-100 pt-3 mt-2">{{ $transactions->links() }}</div>
+                    <div class="border-t border-slate-100 pt-2 mt-2">{{ $transactions->links() }}</div>
                 @endif
             </section>
         </div>
