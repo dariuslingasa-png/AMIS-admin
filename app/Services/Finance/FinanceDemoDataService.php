@@ -907,7 +907,7 @@ class FinanceDemoDataService
         return $this->allDemoFamilies()->map(fn ($f) => $this->toFamilyObject($f))->values();
     }
 
-    private function getRawFamily(int|string|object $id): ?array
+    public function getRawFamily(int|string|object $id): ?array
     {
         $idStr = is_object($id) ? (string) ($id->id ?? $id->user_id ?? '') : (string) $id;
 

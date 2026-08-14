@@ -964,10 +964,7 @@ class FinanceController extends Controller
         $this->authorizeFinance($request);
 
         if ($this->demoData->isEnabled()) {
-            $allFamilies = [
-                $this->demoData->getRawFamily('999001'),
-                $this->demoData->getRawFamily('999002'),
-            ];
+            $allFamilies = $this->demoData->allDemoFamilies();
 
             $foundChild = null;
             $foundFamily = null;
@@ -976,10 +973,18 @@ class FinanceController extends Controller
                     continue;
                 }
                 foreach ($f['children'] as $child) {
+                    $childIndex1 = preg_match('/(?:00|DEMO-|DEMO-2026-00)(\d)/i', $studentIdentifier, $m1) ? $m1[1] : null;
+                    $childIndex2 = preg_match('/(?:00|DEMO-|DEMO-2026-00)(\d)/i', $child['student_id'], $m2) ? $m2[1] : null;
+
                     if (
                         $child['student_id'] === $studentIdentifier
                         || ($child['amis_student_id'] ?? '') === $studentIdentifier
                         || strcasecmp($child['name'], $studentIdentifier) === 0
+                        || Str::contains(Str::lower($child['name']), Str::lower($studentIdentifier))
+                        || Str::contains(Str::lower($studentIdentifier), Str::lower($child['name']))
+                        || Str::contains(Str::lower($child['student_id']), Str::lower($studentIdentifier))
+                        || Str::contains(Str::lower($studentIdentifier), Str::lower($child['student_id']))
+                        || ($childIndex1 !== null && $childIndex1 === $childIndex2)
                     ) {
                         $foundChild = $child;
                         $foundFamily = $f;

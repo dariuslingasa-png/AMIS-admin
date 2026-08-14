@@ -132,4 +132,19 @@ class FinanceManualSoaTest extends TestCase
         $paymentResponse->assertRedirect(route('admin.finance.families.show', ['family' => '999001']));
         $paymentResponse->assertSessionHas('success');
     }
+
+    public function test_official_school_soa_can_be_viewed(): void
+    {
+        $admin = User::factory()->create([
+            'username' => 'test_admin_' . uniqid(),
+            'role' => 'admin',
+            'account_status' => 'verified',
+            'active_admin_session_id' => null,
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('admin.finance.students.official-soa', ['studentIdentifier' => 'AFPS-DEMO-2026-001-2']));
+        $response->assertStatus(200);
+        $response->assertSee('STATEMENT OF ACCOUNT SY 2026-2027');
+        $response->assertSee('AHMAD Z. LINGASA');
+    }
 }
