@@ -949,6 +949,93 @@ class FinanceController extends Controller
         return back()->with('success', "Statement of Account record for {$studentName} ({$month}) deleted successfully.");
     }
 
+    public function officialStudentSoa(Request $request, string $studentIdentifier)
+    {
+        $this->authorizeFinance($request);
+
+        if ($this->demoData->isEnabled()) {
+            $allFamilies = [
+                $this->demoData->getRawFamily('999001'),
+                $this->demoData->getRawFamily('999002'),
+            ];
+
+            $foundChild = null;
+            $foundFamily = null;
+            foreach ($allFamilies as $f) {
+                if (! $f) {
+                    continue;
+                }
+                foreach ($f['children'] as $child) {
+                    if (
+                        $child['student_id'] === $studentIdentifier
+                        || ($child['amis_student_id'] ?? '') === $studentIdentifier
+                        || strcasecmp($child['name'], $studentIdentifier) === 0
+                    ) {
+                        $foundChild = $child;
+                        $foundFamily = $f;
+                        break 2;
+                    }
+                }
+            }
+
+            if ($foundChild && $foundFamily) {
+                $familyObj = $this->demoData->getFamily($foundFamily['id']);
+                $applicant = $familyObj->enrollmentApplicants->first(function ($a) use ($foundChild) {
+                    return ($a->amis_student_id ?? $a->id) === $foundChild['student_id']
+                        || strcasecmp($a->full_name ?? '', $foundChild['name']) === 0;
+                });
+
+                $tuition = 36500.00;
+                $misc = 1900.00;
+                $totalFees = $tuition + $misc;
+
+                $enrolleeCount = count($foundFamily['children']);
+                $discountPercent = $enrolleeCount >= 3 ? 15.0 : ($enrolleeCount === 2 ? 10.0 : 0.0);
+                $discountAmount = round($tuition * ($discountPercent / 100), 2);
+                $finalFees = $totalFees - $discountAmount;
+
+                $enrollmentPaid = 3000.00;
+                $booksFee = 5900.00;
+                $booksPaid = 1000.00;
+
+                $monthlySchedule = $applicant->student->account->monthly_schedule ?? collect();
+                $monthlyRate = (float) ($foundChild['monthly_due'] ?? ($monthlySchedule->first()?->fee ?? 4477.78));
+                $remainingBalance = (float) ($applicant->student->account->remaining_balance ?? 0);
+
+                $soaData = [
+                    'student_name' => $foundChild['name'],
+                    'address' => 'DAVAO CITY',
+                    'email' => $foundFamily['email'],
+                    'lrn' => '123456789012',
+                    'category' => (str_contains($foundChild['grade_level'], 'Grade 7') || str_contains($foundChild['grade_level'], 'Grade 8') || str_contains($foundChild['grade_level'], 'Grade 9') || str_contains($foundChild['grade_level'], 'Grade 10')) ? 'Junior High' : 'Elementary',
+                    'grade_level' => $foundChild['grade_level'],
+                    'discount_privilege' => $discountPercent > 0 ? "{$discountPercent}%" : '0%',
+                    'discount_status' => $discountPercent > 0 ? 'Active (Sibling Discount)' : 'N/A',
+                    'tuition_fee' => $tuition,
+                    'misc_fee' => $misc,
+                    'total_fees' => $totalFees,
+                    'discount_amount' => $discountAmount,
+                    'final_fees' => $finalFees,
+                    'enrollment_paid' => $enrollmentPaid,
+                    'enrollment_date' => '5-May-26',
+                    'enrollment_account' => '10539',
+                    'books_fee' => $booksFee,
+                    'books_paid' => $booksPaid,
+                    'books_date' => '5-May-26',
+                    'books_account' => '10539',
+                    'monthly_schedule' => $monthlySchedule,
+                    'monthly_rate' => $monthlyRate,
+                    'total_remaining' => $remainingBalance,
+                    'school_year' => '2026-2027',
+                ];
+
+                return view('admin.finance.students.official-soa', compact('soaData'));
+            }
+        }
+
+        abort(404, 'Student account not found.');
+    }
+
     public function resetDemoData(Request $request, string $familyId)
     {
         $this->authorizeFinance($request);

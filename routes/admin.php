@@ -256,6 +256,9 @@ Route::name('admin.')->group(function () {
             Route::get('/manual-soa/{soa}/download', [FinanceController::class, 'downloadManualSoa'])->name('manual-soa.download');
             Route::delete('/manual-soa/{soa}', [FinanceController::class, 'deleteManualSoa'])->name('manual-soa.delete');
 
+            // Official Generated Statement of Account
+            Route::get('/students/{studentIdentifier}/official-soa', [FinanceController::class, 'officialStudentSoa'])->name('students.official-soa');
+
             Route::get('/official-receipts', [FinanceController::class, 'receiptsIndex'])->name('receipts.index');
             Route::get('/official-receipts/{receipt}', [FinanceController::class, 'receiptsShow'])->name('receipts.show');
             Route::get('/official-receipts/{receipt}/pdf', [FinanceController::class, 'receiptsPdf'])->name('receipts.pdf');
