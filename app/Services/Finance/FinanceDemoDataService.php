@@ -21,8 +21,16 @@ class FinanceDemoDataService
         }
 
         $idStr = (string) $id;
+        if (in_array($idStr, ['2', 2, '61', 61, '63', 63, '999001', '999002', '999061', '999063', 'demo-1', 'demo-2', 'demo-61', 'demo-63'], true)) {
+            return true;
+        }
 
-        return in_array($idStr, ['2', 2, '999001', '999002', 'demo-1', 'demo-2'], true);
+        return $this->allDemoFamilies()->contains(function ($f) use ($idStr) {
+            return (string) $f['id'] === $idStr
+                || (string) ($f['user_id'] ?? '') === $idStr
+                || (string) ($f['demo_key'] ?? '') === $idStr
+                || (string) ($f['email'] ?? '') === $idStr;
+        });
     }
 
     public function searchFamilies(string $term): Collection
@@ -119,21 +127,19 @@ class FinanceDemoDataService
             return collect();
         }
 
-        // Fetch cumulative approved payments for this demo user
+        // Fetch cumulative approved payments for this demo user from shared database
         $userId = $family['user_id'] ?? null;
         $approvedPaymentsTotal = 0.0;
 
         if ($userId && DB::getSchemaBuilder()->hasTable('payment_submissions')) {
-            $approvedPaymentsTotal = (float) DB::table('payment_submissions')
-                ->where('user_id', $userId)
-                ->where('status', 'approved')
-                ->sum('total_amount');
-        }
-
-        // Include any session-stored demo payments for testing
-        $sessionPayments = session('demo_onsite_payments_'.$family['id'], []);
-        foreach ($sessionPayments as $p) {
-            $approvedPaymentsTotal += (float) ($p['amount'] ?? 0);
+            try {
+                $approvedPaymentsTotal = (float) DB::table('payment_submissions')
+                    ->where('user_id', $userId)
+                    ->whereIn('status', ['approved', 'verified'])
+                    ->sum('total_amount');
+            } catch (\Throwable $e) {
+                $approvedPaymentsTotal = 0.0;
+            }
         }
 
         $remainingPaymentPool = $approvedPaymentsTotal;
@@ -177,7 +183,7 @@ class FinanceDemoDataService
                     'original' => $originalDue,
                     'verified' => $applied,
                     'remaining' => $remainingDue,
-                    'status' => $remainingDue <= 0 ? 'PAID' : ($applied > 0 ? 'PARTIAL' : 'UNPAID'),
+                    'status' => $remainingDue <= 0 ? 'PAID' : ($applied > 0 ? 'PARTIALLY PAID' : 'UNPAID'),
                 ];
             }
 
@@ -231,20 +237,26 @@ class FinanceDemoDataService
                 continue;
             }
 
+            $monthAllocations = [];
+            $monthHasAllocation = false;
+
             foreach ($monthGroup['children'] as $child) {
-                if ($remainingAmount <= 0) {
-                    break;
+                $due = (float) $child['remaining'];
+                $allocated = 0.0;
+                if ($remainingAmount > 0 && $due > 0) {
+                    $allocated = min($remainingAmount, $due);
+                    $remainingAmount = max(0, round($remainingAmount - $allocated, 2));
+                    $monthHasAllocation = true;
                 }
 
-                $due = $child['remaining'];
-                if ($due <= 0) {
-                    continue;
-                }
+                $status = match (true) {
+                    $due <= 0.01 => 'FULLY_PAID',
+                    $allocated >= $due => 'FULLY_PAID',
+                    $allocated > 0.01 => 'PARTIALLY_PAID',
+                    default => 'UNPAID',
+                };
 
-                $allocated = min($remainingAmount, $due);
-                $remainingAmount = max(0, round($remainingAmount - $allocated, 2));
-
-                $allocations[] = [
+                $monthAllocations[] = [
                     'month' => $monthGroup['label'],
                     'student_name' => $child['student']->full_name,
                     'student_id' => $child['student']->amis_student_id,
@@ -252,8 +264,14 @@ class FinanceDemoDataService
                     'original_due' => $due,
                     'allocated' => $allocated,
                     'remaining_due' => max(0, round($due - $allocated, 2)),
-                    'status' => $allocated >= $due ? 'FULLY_PAID' : 'PARTIALLY_PAID',
+                    'status' => $status,
                 ];
+            }
+
+            if ($monthHasAllocation) {
+                foreach ($monthAllocations as $allocRow) {
+                    $allocations[] = $allocRow;
+                }
             }
         }
 
@@ -266,62 +284,164 @@ class FinanceDemoDataService
 
     public function storeOnsitePayment(array $validated): object
     {
-        $family = $this->getFamily($validated['user_id']);
+        $rawFamily = $this->getRawFamily($validated['user_id']);
+        $family = $this->toFamilyObject($rawFamily ?: ['id' => $validated['user_id'], 'demo_key' => 'demo', 'name' => 'DEMO FAMILY', 'email' => 'demo@example.com', 'children' => []]);
+        $userId = $rawFamily['user_id'] ?? (int) $validated['user_id'];
         $amount = (float) $validated['amount'];
         $preview = $this->previewAllocation($validated['user_id'], $amount);
+        $outstandingBefore = (float) collect($this->getBillingSchedule($validated['user_id']))->sum('remaining');
 
         $receiptNumber = 'DEMO-OR-'.now()->format('Ymd').'-'.rand(1000, 9999);
         $transactionNumber = 'DEMO-TX-'.now()->format('Ymd').'-'.rand(1000, 9999);
 
-        // Store in session demo store for instant refresh across Finance pages
-        $sessionKey = 'demo_onsite_payments_'.$validated['user_id'];
-        $payments = session($sessionKey, []);
-        $payments[] = [
-            'receipt_number' => $receiptNumber,
-            'amount' => $amount,
-            'payment_method' => strtoupper($validated['payment_method']),
-            'reference_number' => $validated['reference_number'] ?? 'N/A',
-            'created_at' => now()->toIso8601String(),
-        ];
-        session([$sessionKey => $payments]);
-
-        // If DB table payment_submissions exists and user_id is 2, insert approved record for AFPS sync
-        $rawFamily = $this->getRawFamily($validated['user_id']);
-        $userId = $rawFamily['user_id'] ?? null;
+        // 1. Insert into payment_submissions for shared AFPS sync
+        $submissionId = null;
         if ($userId && DB::getSchemaBuilder()->hasTable('payment_submissions')) {
             try {
-                DB::table('payment_submissions')->insert([
+                $submissionId = DB::table('payment_submissions')->insertGetId([
                     'submission_number' => 'SUB-DEMO-'.now()->format('YmdHi').'-'.rand(100, 999),
                     'user_id' => $userId,
+                    'client_token' => (string) Str::uuid(),
                     'method' => strtolower($validated['payment_method']),
                     'payment_mode' => 'onsite',
-                    'account_received' => 'AMIS Counter / Cashier',
+                    'account_received' => $validated['account_received'] ?? 'AMIS Counter / Cashier',
                     'reference_no' => $validated['reference_number'] ?? $receiptNumber,
                     'reference_normalized' => strtolower($validated['reference_number'] ?? $receiptNumber),
+                    'receipt_hash' => hash('sha256', (string) Str::uuid()),
+                    'receipt_url' => 'finance/onsite/counter',
                     'transaction_date' => now()->toDateString(),
                     'transaction_at' => now(),
                     'total_amount' => $amount,
                     'status' => 'approved',
-                    'remarks' => 'Recorded Onsite Payment (DEMO DATA)',
+                    'remarks' => $validated['remarks'] ?? 'Recorded Onsite Payment (DEMO DATA)',
                     'submitted_at' => now(),
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
             } catch (\Throwable $e) {
-                // Ignore DB constraint fallback
+                // Ignore DB fallback
             }
         }
 
+        $familyReceiptRows = collect($preview['allocations'])->map(function ($alloc) {
+            return [
+                'student_name' => $alloc['student_name'],
+                'student_id' => $alloc['student_id'],
+                'grade_level' => $alloc['grade_level'],
+                'billing_month' => $alloc['month'],
+                'amount_due' => $alloc['original_due'],
+                'applied_this_transaction' => $alloc['allocated'],
+                'amount_paid' => $alloc['allocated'],
+                'previous_paid' => 0.00,
+                'total_paid_to_date' => $alloc['allocated'],
+                'total_paid' => $alloc['allocated'],
+                'remaining' => $alloc['remaining_due'],
+                'remaining_balance' => $alloc['remaining_due'],
+                'status' => $alloc['status'] === 'FULLY_PAID' ? 'FULLY PAID' : 'PARTIALLY PAID',
+            ];
+        })->all();
+
+        $snapshot = [
+            'transaction_number' => $transactionNumber,
+            'family_id' => $rawFamily['id'] ?? $validated['user_id'],
+            'family_name' => $rawFamily['name'] ?? 'DEMO FAMILY',
+            'amount' => $amount,
+            'payment_method' => strtoupper($validated['payment_method']),
+            'reference_number' => $validated['reference_number'] ?? 'N/A',
+            'transaction_at' => now()->toIso8601String(),
+            'allocation' => $preview['allocations'],
+            'advance_credit' => $preview['advance_credit'],
+            'available_credit_balance' => $preview['advance_credit'],
+            'existing_credit_balance_before' => 0.00,
+            'existing_credit_applied' => 0.00,
+            'existing_credit_remaining' => 0.00,
+            'balance_before_credit' => $outstandingBefore,
+            'total_family_due' => $outstandingBefore,
+            'previous_total_paid' => 0.00,
+            'previous_remaining_balance' => $outstandingBefore,
+            'current_amount_received' => $amount,
+            'current_amount_applied' => $preview['total_allocated'],
+            'credit_created' => $preview['advance_credit'],
+            'new_total_paid' => $preview['total_allocated'],
+            'new_remaining_balance' => max(0, round($outstandingBefore - $preview['total_allocated'], 2)),
+            'new_credit_balance' => $preview['advance_credit'],
+            'previous_balance' => $outstandingBefore,
+            'amount_applied' => $preview['total_allocated'],
+            'remaining_family_balance' => max(0, round($outstandingBefore - $preview['total_allocated'], 2)),
+            'family_receipt_number' => $receiptNumber,
+            'family_receipt_rows' => $familyReceiptRows,
+            'is_demo' => true,
+            'watermark' => 'TEST / DEMO — NOT AN OFFICIAL SCHOOL RECEIPT',
+        ];
+
+        // 2. Insert into finance_transactions
+        $transactionRecord = null;
+        if (DB::getSchemaBuilder()->hasTable('finance_transactions')) {
+            try {
+                $transactionRecord = \App\Models\FinanceTransaction::query()->create([
+                    'transaction_number' => $transactionNumber,
+                    'official_receipt_number' => $receiptNumber,
+                    'user_id' => $userId,
+                    'payment_submission_id' => $submissionId,
+                    'source' => 'ONSITE',
+                    'payment_method' => strtoupper($validated['payment_method']),
+                    'reference_number' => $validated['reference_number'] ?? 'N/A',
+                    'amount' => $amount,
+                    'currency' => 'PHP',
+                    'transaction_at' => now(),
+                    'status' => 'APPROVED',
+                    'created_by' => auth()->id() ?: $userId,
+                    'approved_by' => auth()->id() ?: $userId,
+                    'received_by' => auth()->id() ?: $userId,
+                    'allocation_snapshot' => $preview['allocations'],
+                    'advance_credit' => $preview['advance_credit'],
+                    'family_balance_after' => max(0, round($outstandingBefore - $preview['total_allocated'], 2)),
+                    'remarks' => $validated['remarks'] ?? 'DEMO ONSITE PAYMENT',
+                ]);
+            } catch (\Throwable $e) {
+                // Fallback
+            }
+        }
+
+        // 3. Insert into finance_official_receipts
+        $officialReceiptRecord = null;
+        if ($transactionRecord && DB::getSchemaBuilder()->hasTable('finance_official_receipts')) {
+            try {
+                $officialReceiptRecord = \App\Models\FinanceOfficialReceipt::query()->create([
+                    'official_receipt_number' => $receiptNumber,
+                    'finance_transaction_id' => $transactionRecord->id,
+                    'issued_by' => auth()->id() ?: $userId,
+                    'status' => 'ISSUED',
+                    'snapshot' => $snapshot,
+                    'issued_at' => now(),
+                ]);
+            } catch (\Throwable $e) {}
+        }
+
+        // 4. Update advance credit if applicable
+        if ($preview['advance_credit'] > 0 && $userId && DB::getSchemaBuilder()->hasTable('family_advance_credits')) {
+            try {
+                \App\Models\FamilyAdvanceCredit::query()->create([
+                    'user_id' => $userId,
+                    'payment_submission_id' => $submissionId,
+                    'original_amount' => $preview['advance_credit'],
+                    'remaining_amount' => $preview['advance_credit'],
+                    'status' => 'active',
+                ]);
+            } catch (\Throwable $e) {}
+        }
+
         $officialReceipt = (object) [
-            'id' => 99999,
+            'id' => $officialReceiptRecord?->id ?? 99999,
             'official_receipt_number' => $receiptNumber,
             'status' => 'ISSUED',
             'issued_at' => now(),
+            'snapshot' => $snapshot,
             'is_demo' => true,
         ];
 
-        $transaction = (object) [
-            'id' => 99999,
+        return (object) [
+            'id' => $transactionRecord?->id ?? 99999,
             'transaction_number' => $transactionNumber,
             'official_receipt_number' => $receiptNumber,
             'officialReceipt' => $officialReceipt,
@@ -335,34 +455,23 @@ class FinanceDemoDataService
             'is_demo' => true,
             'watermark' => 'TEST / DEMO — NOT AN OFFICIAL SCHOOL RECEIPT',
         ];
-
-        return $transaction;
     }
 
     public function postDemoPayment($familyUser, array $data, $actor, $submission = null): object
     {
-        $familyId = is_object($familyUser) ? ($familyUser->id ?? $familyUser->user_id ?? 2) : ($familyUser ?? 2);
-        $familyObj = $this->getFamily($familyId);
+        $rawFamily = $this->getRawFamily($familyUser);
+        $familyId = $rawFamily['id'] ?? (is_object($familyUser) ? ($familyUser->id ?? 999001) : ($familyUser ?? 999001));
+        $userId = $rawFamily['user_id'] ?? (is_object($familyUser) ? ($familyUser->id ?? 61) : ($familyUser ?? 61));
+        $familyObj = $this->toFamilyObject($rawFamily ?: ['id' => $familyId, 'demo_key' => 'demo', 'name' => 'DEMO FAMILY', 'email' => 'demo@example.com', 'children' => []]);
+
         $amount = (float) ($data['amount'] ?? 0);
         $preview = $this->previewAllocation($familyId, $amount);
-        $outstandingBefore = (float) collect($preview['allocations'])->sum('original_due');
+        $outstandingBefore = (float) collect($this->getBillingSchedule($familyId))->sum('remaining');
 
         $receiptNumber = 'DEMO-OR-'.now()->format('Ymd').'-'.rand(1000, 9999);
         $transactionNumber = 'DEMO-TX-'.now()->format('Ymd').'-'.rand(1000, 9999);
 
-        // Store demo payment in session so getBillingSchedule() updates balances immediately
-        $sessionKey = 'demo_onsite_payments_999001';
-        $payments = session($sessionKey, []);
-        $payments[] = [
-            'receipt_number' => $receiptNumber,
-            'amount' => $amount,
-            'payment_method' => strtoupper($data['payment_method'] ?? 'ONLINE'),
-            'reference_number' => $data['reference_number'] ?? 'N/A',
-            'created_at' => now()->toIso8601String(),
-        ];
-        session([$sessionKey => $payments]);
-
-        // If DB table payment_submissions exists for user 2, update status to approved
+        // 1. Update or insert payment_submissions in shared DB
         if (DB::getSchemaBuilder()->hasTable('payment_submissions')) {
             try {
                 if ($submission) {
@@ -370,10 +479,26 @@ class FinanceDemoDataService
                         ->where('id', $submission->id)
                         ->update(['status' => 'approved', 'total_amount' => $amount]);
                 } else {
-                    DB::table('payment_submissions')
-                        ->where('user_id', 2)
-                        ->where('status', 'pending')
-                        ->update(['status' => 'approved']);
+                    DB::table('payment_submissions')->insert([
+                        'submission_number' => 'SUB-DEMO-'.now()->format('YmdHi').'-'.rand(100, 999),
+                        'user_id' => $userId,
+                        'client_token' => (string) Str::uuid(),
+                        'method' => strtolower($data['payment_method'] ?? 'online'),
+                        'payment_mode' => 'online',
+                        'account_received' => 'AMIS Online Gateway',
+                        'reference_no' => $data['reference_number'] ?? $receiptNumber,
+                        'reference_normalized' => strtolower($data['reference_number'] ?? $receiptNumber),
+                        'receipt_hash' => hash('sha256', (string) Str::uuid()),
+                        'receipt_url' => 'finance/online/portal',
+                        'transaction_date' => now()->toDateString(),
+                        'transaction_at' => now(),
+                        'total_amount' => $amount,
+                        'status' => 'approved',
+                        'remarks' => 'Approved Online Payment (DEMO DATA)',
+                        'submitted_at' => now(),
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
                 }
             } catch (\Throwable $e) {}
         }
@@ -385,17 +510,20 @@ class FinanceDemoDataService
                 'grade_level' => $alloc['grade_level'],
                 'billing_month' => $alloc['month'],
                 'amount_due' => $alloc['original_due'],
-                'total_paid' => $alloc['allocated'],
+                'applied_this_transaction' => $alloc['allocated'],
                 'amount_paid' => $alloc['allocated'],
+                'previous_paid' => 0.00,
+                'total_paid_to_date' => $alloc['allocated'],
+                'total_paid' => $alloc['allocated'],
                 'remaining' => $alloc['remaining_due'],
                 'remaining_balance' => $alloc['remaining_due'],
-                'status' => $alloc['status'] === 'FULLY_PAID' ? 'PAID' : 'PARTIAL',
+                'status' => $alloc['status'] === 'FULLY_PAID' ? 'FULLY PAID' : 'PARTIALLY PAID',
             ];
         })->all();
 
         $snapshot = [
             'transaction_number' => $transactionNumber,
-            'family_id' => 999001,
+            'family_id' => $familyId,
             'family_name' => $familyObj?->name ?? 'ZHAIREL LINGASA',
             'amount' => $amount,
             'payment_method' => strtoupper($data['payment_method'] ?? 'ONLINE'),
@@ -426,8 +554,63 @@ class FinanceDemoDataService
             'watermark' => 'TEST / DEMO — NOT AN OFFICIAL SCHOOL RECEIPT',
         ];
 
+        // 2. Insert into finance_transactions
+        $transactionRecord = null;
+        if (DB::getSchemaBuilder()->hasTable('finance_transactions')) {
+            try {
+                $transactionRecord = \App\Models\FinanceTransaction::query()->create([
+                    'transaction_number' => $transactionNumber,
+                    'official_receipt_number' => $receiptNumber,
+                    'user_id' => $userId,
+                    'payment_submission_id' => $submission?->id,
+                    'source' => 'ONLINE',
+                    'payment_method' => strtoupper($data['payment_method'] ?? 'ONLINE'),
+                    'reference_number' => $data['reference_number'] ?? 'N/A',
+                    'amount' => $amount,
+                    'currency' => 'PHP',
+                    'transaction_at' => now(),
+                    'status' => 'APPROVED',
+                    'created_by' => auth()->id() ?: ($actor?->id ?: $userId),
+                    'approved_by' => auth()->id() ?: ($actor?->id ?: $userId),
+                    'received_by' => auth()->id() ?: ($actor?->id ?: $userId),
+                    'allocation_snapshot' => $preview['allocations'],
+                    'advance_credit' => $preview['advance_credit'],
+                    'family_balance_after' => max(0, round($outstandingBefore - $preview['total_allocated'], 2)),
+                    'remarks' => 'DEMO ONLINE APPROVAL',
+                ]);
+            } catch (\Throwable $e) {}
+        }
+
+        // 3. Insert into finance_official_receipts
+        $officialReceiptRecord = null;
+        if ($transactionRecord && DB::getSchemaBuilder()->hasTable('finance_official_receipts')) {
+            try {
+                $officialReceiptRecord = \App\Models\FinanceOfficialReceipt::query()->create([
+                    'official_receipt_number' => $receiptNumber,
+                    'finance_transaction_id' => $transactionRecord->id,
+                    'issued_by' => auth()->id() ?: $userId,
+                    'status' => 'ISSUED',
+                    'snapshot' => $snapshot,
+                    'issued_at' => now(),
+                ]);
+            } catch (\Throwable $e) {}
+        }
+
+        // 4. Update advance credit if applicable
+        if ($preview['advance_credit'] > 0 && $userId && DB::getSchemaBuilder()->hasTable('family_advance_credits')) {
+            try {
+                \App\Models\FamilyAdvanceCredit::query()->create([
+                    'user_id' => $userId,
+                    'payment_submission_id' => $submission?->id,
+                    'original_amount' => $preview['advance_credit'],
+                    'remaining_amount' => $preview['advance_credit'],
+                    'status' => 'active',
+                ]);
+            } catch (\Throwable $e) {}
+        }
+
         $officialReceipt = (object) [
-            'id' => 99999,
+            'id' => $officialReceiptRecord?->id ?? 99999,
             'official_receipt_number' => $receiptNumber,
             'status' => 'ISSUED',
             'issued_at' => now(),
@@ -435,8 +618,8 @@ class FinanceDemoDataService
             'is_demo' => true,
         ];
 
-        $transaction = (object) [
-            'id' => 99999,
+        return (object) [
+            'id' => $transactionRecord?->id ?? 99999,
             'transaction_number' => $transactionNumber,
             'official_receipt_number' => $receiptNumber,
             'officialReceipt' => $officialReceipt,
@@ -450,20 +633,70 @@ class FinanceDemoDataService
             'is_demo' => true,
             'watermark' => 'TEST / DEMO — NOT AN OFFICIAL SCHOOL RECEIPT',
         ];
-
-        return $transaction;
     }
 
-    private function getRawFamily(int|string $id): ?array
+    public function resetDemoPayments(int|string $familyId): void
     {
-        $idStr = (string) $id;
+        $rawFamily = $this->getRawFamily($familyId);
+        if (! $rawFamily) {
+            return;
+        }
+        $userId = $rawFamily['user_id'] ?? null;
+        if (! $userId) {
+            return;
+        }
 
-        return $this->allDemoFamilies()->first(fn ($f) => (string) $f['id'] === $idStr || (string) $f['demo_key'] === $idStr || (string) ($f['user_id'] ?? '') === $idStr);
+        // Only delete DEMO / TEST records for this specific demo user
+        $txIds = collect();
+        $subIds = collect();
+        if (DB::getSchemaBuilder()->hasTable('finance_transactions')) {
+            $txIds = DB::table('finance_transactions')->where('user_id', $userId)->pluck('id');
+        }
+        if (DB::getSchemaBuilder()->hasTable('payment_submissions')) {
+            $subIds = DB::table('payment_submissions')->where('user_id', $userId)->pluck('id');
+        }
+
+        if (DB::getSchemaBuilder()->hasTable('finance_parent_notifications') && $txIds->isNotEmpty()) {
+            DB::table('finance_parent_notifications')->whereIn('finance_transaction_id', $txIds)->delete();
+        }
+        if (DB::getSchemaBuilder()->hasTable('student_account_payments')) {
+            if ($txIds->isNotEmpty()) {
+                DB::table('student_account_payments')->whereIn('finance_transaction_id', $txIds)->delete();
+            }
+            if ($subIds->isNotEmpty()) {
+                DB::table('student_account_payments')->whereIn('payment_submission_id', $subIds)->delete();
+            }
+        }
+        if (DB::getSchemaBuilder()->hasTable('finance_official_receipts') && $txIds->isNotEmpty()) {
+            DB::table('finance_official_receipts')->whereIn('finance_transaction_id', $txIds)->delete();
+        }
+        if (DB::getSchemaBuilder()->hasTable('finance_transactions')) {
+            DB::table('finance_transactions')->where('user_id', $userId)->delete();
+        }
+        if (DB::getSchemaBuilder()->hasTable('payment_submissions')) {
+            DB::table('payment_submissions')->where('user_id', $userId)->delete();
+        }
+        if (DB::getSchemaBuilder()->hasTable('family_advance_credits')) {
+            DB::table('family_advance_credits')->where('user_id', $userId)->delete();
+        }
+        if (DB::getSchemaBuilder()->hasTable('receipt_submissions')) {
+            DB::table('receipt_submissions')->where('user_id', $userId)->delete();
+        }
+        if (DB::getSchemaBuilder()->hasTable('receipt_submissions')) {
+            DB::table('receipt_submissions')->where('user_id', $userId)->delete();
+        }
+    }
+
+    private function getRawFamily(int|string|object $id): ?array
+    {
+        $idStr = is_object($id) ? (string) ($id->id ?? $id->user_id ?? '') : (string) $id;
+
+        return $this->allDemoFamilies()->first(fn ($f) => (string) $f['id'] === $idStr || (string) $f['demo_key'] === $idStr || (string) ($f['user_id'] ?? '') === $idStr || Str::lower($f['email']) === Str::lower($idStr));
     }
 
     private function toFamilyObject(array $data): object
     {
-        $childrenObj = collect($data['children'])->map(fn ($c) => (object) [
+        $childrenObj = collect($data['children'] ?? [])->map(fn ($c) => (object) [
             'id' => $c['student_id'],
             'first_name' => $c['first_name'],
             'last_name' => $c['last_name'],
@@ -476,12 +709,13 @@ class FinanceDemoDataService
         ]);
 
         return (object) [
-            'id' => $data['id'],
-            'demo_key' => $data['demo_key'],
-            'name' => $data['name'],
-            'email' => $data['email'],
+            'id' => $data['id'] ?? 999001,
+            'user_id' => $data['user_id'] ?? null,
+            'demo_key' => $data['demo_key'] ?? 'demo',
+            'name' => $data['name'] ?? 'DEMO FAMILY',
+            'email' => $data['email'] ?? 'demo@example.com',
             'is_demo' => true,
-            'enrollment_applicants_count' => count($data['children']),
+            'enrollment_applicants_count' => count($data['children'] ?? []),
             'enrollmentApplicants' => $childrenObj->map(fn ($c) => (object) [
                 'first_name' => $c->first_name,
                 'last_name' => $c->last_name,
@@ -497,53 +731,72 @@ class FinanceDemoDataService
     {
         $families = collect();
 
-        // 1. Fetch live AFPS Demo Family from payment_demo_children table for user_id = 2 (zhairel.lingasa@gmail.com)
+        // 1. Fetch live AFPS Demo Families from payment_demo_children table
         if (DB::getSchemaBuilder()->hasTable('payment_demo_children')) {
-            $dbChildren = DB::table('payment_demo_children')
-                ->where('user_id', 2)
-                ->get();
+            try {
+                $distinctUserIds = DB::table('payment_demo_children')
+                    ->select('user_id')
+                    ->distinct()
+                    ->pluck('user_id');
 
-            if ($dbChildren->isNotEmpty()) {
-                $user = DB::table('users')->where('id', 2)->first();
-                $userName = $user?->name ?: 'ZHAIREL LINGASA';
-                $userEmail = $user?->email ?: 'zhairel.lingasa@gmail.com';
+                foreach ($distinctUserIds as $uId) {
+                    $dbChildren = DB::table('payment_demo_children')
+                        ->where('user_id', $uId)
+                        ->get();
 
-                $childrenArray = $dbChildren->map(function ($c) {
-                    $nameParts = explode(' ', trim($c->display_name), 2);
-                    return [
-                        'student_id' => $c->demo_student_number ?: ('AFPS-DEMO-'.$c->id),
-                        'first_name' => $nameParts[0] ?? 'DEMO',
-                        'last_name' => $nameParts[1] ?? 'STUDENT',
-                        'name' => mb_strtoupper($c->display_name),
-                        'grade_level' => $c->grade_level ?: 'Grade 1',
-                        'monthly_due' => (float) ($c->monthly_tuition ?: 3800.00),
-                    ];
-                })->toArray();
+                    if ($dbChildren->isNotEmpty()) {
+                        $user = DB::table('users')->where('id', $uId)->first();
+                        $userName = $user?->name ?: 'ZHAIREL LINGASA';
+                        $userEmail = $user?->email ?: 'zhairel.lingasa@gmail.com';
 
-                $families->push([
-                    'id' => 999001,
-                    'user_id' => 2,
-                    'demo_key' => 'demo-1',
-                    'name' => mb_strtoupper($userName),
-                    'email' => $userEmail,
-                    'aliases' => ['zhairel.lingasa@gmail.com', 'zhairel', 'lingasa', 'ahmad', 'maryam', 'yusuf'],
-                    'children' => $childrenArray,
-                ]);
-            }
+                        $childrenArray = $dbChildren->map(function ($c) {
+                            $nameParts = explode(' ', trim($c->display_name), 2);
+                            return [
+                                'student_id' => $c->demo_student_number ?: ('AFPS-DEMO-'.$c->id),
+                                'first_name' => $nameParts[0] ?? 'DEMO',
+                                'last_name' => $nameParts[1] ?? 'STUDENT',
+                                'name' => mb_strtoupper($c->display_name),
+                                'grade_level' => $c->grade_level ?: 'Grade 1',
+                                'monthly_due' => (float) ($c->monthly_tuition ?: 3800.00),
+                            ];
+                        })->toArray();
+
+                        $demoId = ($uId == 61 || $uId == 2 || Str::contains(Str::lower($userEmail), 'lingasa')) ? 999001 : (999000 + (int) $uId);
+
+                        $families->push([
+                            'id' => $demoId,
+                            'user_id' => (int) $uId,
+                            'demo_key' => 'demo-'.$uId,
+                            'name' => mb_strtoupper($userName),
+                            'email' => $userEmail,
+                            'aliases' => array_values(array_unique(array_filter([
+                                $userEmail,
+                                Str::lower($userName),
+                                'lingasa',
+                                'wcamsar',
+                                'ahmad', 'maryam', 'yusuf',
+                                (string) $uId,
+                                (string) $demoId,
+                            ]))),
+                            'children' => $childrenArray,
+                        ]);
+                    }
+                }
+            } catch (\Throwable $e) {}
         }
 
-        // Fallback default fixture if DB record not found
+        // Fallback default fixture if DB records not found
         if ($families->isEmpty()) {
             $families->push([
                 'id' => 999001,
-                'user_id' => 2,
+                'user_id' => 61,
                 'demo_key' => 'demo-1',
                 'name' => 'ZHAIREL LINGASA',
                 'email' => 'zhairel.lingasa@gmail.com',
-                'aliases' => ['zhairel.lingasa@gmail.com', 'zhairel', 'lingasa', 'ahmad', 'maryam', 'yusuf'],
+                'aliases' => ['zhairel.lingasa@gmail.com', 'zhairel', 'lingasa', 'ahmad', 'maryam', 'yusuf', '999001', '61', '2'],
                 'children' => [
                     [
-                        'student_id' => 'AFPS-DEMO-2026-001-2',
+                        'student_id' => 'AFPS-DEMO-2026-001-61',
                         'first_name' => 'AHMAD Z.',
                         'last_name' => 'LINGASA',
                         'name' => 'AHMAD Z. LINGASA',
@@ -551,7 +804,7 @@ class FinanceDemoDataService
                         'monthly_due' => 3803.33,
                     ],
                     [
-                        'student_id' => 'AFPS-DEMO-2026-002-2',
+                        'student_id' => 'AFPS-DEMO-2026-002-61',
                         'first_name' => 'MARYAM Z.',
                         'last_name' => 'LINGASA',
                         'name' => 'MARYAM Z. LINGASA',
@@ -559,7 +812,7 @@ class FinanceDemoDataService
                         'monthly_due' => 3926.11,
                     ],
                     [
-                        'student_id' => 'AFPS-DEMO-2026-003-2',
+                        'student_id' => 'AFPS-DEMO-2026-003-61',
                         'first_name' => 'YUSUF Z.',
                         'last_name' => 'LINGASA',
                         'name' => 'YUSUF Z. LINGASA',
@@ -577,6 +830,7 @@ class FinanceDemoDataService
             'demo_key' => 'demo-2',
             'name' => 'DEMO PARENT 2',
             'email' => 'demo.parent2@example.test',
+            'aliases' => ['demo.parent2@example.test', 'demo-2', '999002'],
             'children' => [
                 [
                     'student_id' => 'DEMO-2026-003',

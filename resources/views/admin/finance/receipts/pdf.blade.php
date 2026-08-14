@@ -135,14 +135,25 @@
     <table class="summary">
         @if(!empty($receiptData['previous_month_label']))
             <tr><td>Previous Balance — {{ $receiptData['previous_month_label'] }}</td><td class="number">₱{{ number_format($receiptData['previous_balance'], 2) }}</td></tr>
+        @elseif(isset($receiptData['previous_balance']) && (float)$receiptData['previous_balance'] > 0.01)
+            <tr><td>Previous Balance</td><td class="number">₱{{ number_format($receiptData['previous_balance'], 2) }}</td></tr>
         @endif
-        <tr><td>Monthly Charge</td><td class="number">₱{{ number_format($receiptData['total_amount_due'], 2) }}</td></tr>
-        <tr><td>Previous Paid</td><td class="number">₱{{ number_format($receiptData['previous_paid'] ?? 0, 2) }}</td></tr>
-        <tr><td>Payment Applied This Transaction</td><td class="number">₱{{ number_format($receiptData['payment_applied_this_transaction'] ?? $receiptData['amount_applied'], 2) }}</td></tr>
-        <tr><td>Total Paid To Date</td><td class="number">₱{{ number_format($receiptData['total_paid_to_date'], 2) }}</td></tr>
+        @if(isset($receiptData['total_amount_due']) && (float)$receiptData['total_amount_due'] > 0.01)
+            <tr><td>Monthly Charge</td><td class="number">₱{{ number_format($receiptData['total_amount_due'], 2) }}</td></tr>
+        @endif
+        @if(isset($receiptData['credit_applied']) && (float)$receiptData['credit_applied'] > 0.001)
+            <tr><td>Credit Applied</td><td class="number">−₱{{ number_format($receiptData['credit_applied'], 2) }}</td></tr>
+            <tr><td>Balance After Credit</td><td class="number">₱{{ number_format($receiptData['previous_remaining_balance'] ?? $receiptData['previous_balance'], 2) }}</td></tr>
+            <tr><td>Current Payment Received</td><td class="number">₱{{ number_format($receiptData['amount_received'], 2) }}</td></tr>
+            <tr><td>Current Payment Applied</td><td class="number">₱{{ number_format($receiptData['amount_applied'], 2) }}</td></tr>
+        @else
+            <tr><td>Previous Paid</td><td class="number">₱{{ number_format($receiptData['previous_paid'] ?? 0, 2) }}</td></tr>
+            <tr><td>Payment Applied This Transaction</td><td class="number">₱{{ number_format($receiptData['payment_applied_this_transaction'] ?? $receiptData['amount_applied'], 2) }}</td></tr>
+        @endif
+        <tr><td>Total Paid to Date</td><td class="number">₱{{ number_format($receiptData['total_paid_to_date'], 2) }}</td></tr>
         <tr class="remaining"><td>Remaining Balance</td><td class="number">₱{{ number_format($receiptData['remaining_balance'], 2) }}</td></tr>
-        @if(($receiptData['credit_created'] ?? 0) > 0.01)
-            <tr class="credit"><td>Family Advance Credit Created</td><td class="number">₱{{ number_format($receiptData['credit_created'], 2) }}</td></tr>
+        @if(($receiptData['credit_balance'] ?? 0) > 0.01 || ($receiptData['credit_created'] ?? 0) > 0.01)
+            <tr class="credit"><td>Credit Balance</td><td class="number">₱{{ number_format($receiptData['credit_balance'] ?? $receiptData['credit_created'], 2) }}</td></tr>
         @endif
     </table>
 

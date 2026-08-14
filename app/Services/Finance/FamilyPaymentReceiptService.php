@@ -106,6 +106,24 @@ class FamilyPaymentReceiptService
         $snapshot = (array) ($receipt?->snapshot ?? []);
         $rows = collect($snapshot['family_receipt_rows'] ?? []);
 
+        if ($rows->isEmpty() && ! empty($transaction->allocation_snapshot)) {
+            $rows = collect($transaction->allocation_snapshot)->map(function ($alloc) {
+                return [
+                    'student_name' => $alloc['student_name'] ?? 'Student',
+                    'student_id' => $alloc['student_id'] ?? null,
+                    'grade_level' => $alloc['grade_level'] ?? '',
+                    'billing_month' => $alloc['month'] ?? $alloc['billing_month'] ?? 'JULY 2026',
+                    'amount_due' => (float) ($alloc['original_due'] ?? $alloc['amount_due'] ?? 0),
+                    'applied_this_transaction' => (float) ($alloc['allocated'] ?? $alloc['applied_this_transaction'] ?? $alloc['amount_paid'] ?? 0),
+                    'amount_paid' => (float) ($alloc['allocated'] ?? $alloc['amount_paid'] ?? 0),
+                    'total_paid_to_date' => (float) ($alloc['allocated'] ?? $alloc['total_paid_to_date'] ?? $alloc['amount_paid'] ?? 0),
+                    'remaining' => (float) ($alloc['remaining_due'] ?? $alloc['remaining'] ?? 0),
+                    'remaining_balance' => (float) ($alloc['remaining_due'] ?? $alloc['remaining'] ?? 0),
+                    'status' => in_array($alloc['status'] ?? '', ['FULLY_PAID', 'PAID', 'FULLY PAID'], true) ? 'FULLY PAID' : ((($alloc['allocated'] ?? 0) > 0) ? 'PARTIALLY PAID' : 'UNPAID'),
+                ];
+            });
+        }
+
         $demoData = app(FinanceDemoDataService::class);
         $familyUserId = $transaction->user_id ?? ($snapshot['family_id'] ?? null);
         $isDemo = $demoData->isDemoFamilyId($familyUserId) || ! empty($transaction->is_demo) || ! empty($snapshot['is_demo']);
@@ -122,11 +140,12 @@ class FamilyPaymentReceiptService
                     'grade_level' => $alloc['grade_level'],
                     'billing_month' => $alloc['month'],
                     'amount_due' => $alloc['original_due'],
-                    'total_paid' => $alloc['allocated'],
+                    'applied_this_transaction' => $alloc['allocated'],
                     'amount_paid' => $alloc['allocated'],
+                    'total_paid_to_date' => $alloc['allocated'],
                     'remaining' => $alloc['remaining_due'],
                     'remaining_balance' => $alloc['remaining_due'],
-                    'status' => $alloc['status'] === 'FULLY_PAID' ? 'PAID' : 'PARTIAL',
+                    'status' => $alloc['status'] === 'FULLY_PAID' ? 'FULLY PAID' : 'PARTIALLY PAID',
                 ];
             });
 
@@ -297,173 +316,62 @@ class FamilyPaymentReceiptService
     public function monthlyReceipts(object $transaction): array
     {
         $allData = $this->data($transaction);
-        $demoData = app(FinanceDemoDataService::class);
-        $familyUserId = $transaction->user_id ?? ($allData['family_id'] ?? 2);
-        $isDemo = $demoData->isDemoFamilyId($familyUserId) || ! empty($transaction->is_demo) || ! empty($allData['is_demo']);
-
-        $paymentReceived = round((float) ($allData['amount_received'] ?? $transaction->amount ?? 0), 2);
         $baseReceiptNumber = $allData['receipt_number'] ?? 'FPR-'.now()->format('Ymd');
 
-        $currentPool = $paymentReceived;
+        $allRows = collect($allData['rows'] ?? []);
+        if ($allRows->isEmpty()) {
+            return [$allData['billing_month'] ?? 'PAYMENT' => $allData];
+        }
+
         $monthlyDataList = [];
-        $previousRemainingBalance = 0.0;
+        $previousRemainingBalance = (float) ($allData['previous_remaining_balance'] ?? $allData['previous_balance'] ?? 0.0);
         $previousMonthLabel = null;
-        $totalAppliedAcrossMonths = 0.0;
 
-        if ($isDemo) {
-            $schedule = $demoData->getBillingSchedule($familyUserId);
-            foreach ($schedule as $monthGroup) {
-                if ($currentPool <= 0.001) {
-                    break;
-                }
+        $grouped = $allRows->groupBy(fn ($r) => mb_strtoupper((string) ($r['billing_month'] ?? $allData['billing_month'] ?? 'JULY 2026')));
 
-                $monthLabel = mb_strtoupper((string) $monthGroup['label']);
-                $monthAppliedThisTx = 0.0;
-                $monthTotalDue = 0.0;
-                $monthPreviousPaid = 0.0;
-                $monthTotalPaidToDate = 0.0;
-                $monthRemainingBalance = 0.0;
-                $monthFormattedRows = [];
+        foreach ($grouped as $mLabel => $mRows) {
+            $monthTotalDue = round((float) $mRows->sum('amount_due'), 2);
+            $monthAppliedThisTx = round((float) $mRows->sum(fn ($r) => (float) ($r['applied_this_transaction'] ?? $r['amount_paid'] ?? 0)), 2);
+            $monthTotalPaidToDate = round((float) $mRows->sum(fn ($r) => (float) ($r['total_paid_to_date'] ?? $r['amount_paid'] ?? 0)), 2);
+            $monthPreviousPaid = max(0.0, round($monthTotalPaidToDate - $monthAppliedThisTx, 2));
+            $monthRemainingBalance = round((float) $mRows->sum('remaining'), 2);
 
-                foreach ($monthGroup['children'] as $c) {
-                    $originalDue = round((float) ($c['original'] ?? $c['original_due'] ?? 0), 2);
-                    $prevPaid = round((float) ($c['allocated'] ?? $c['paid'] ?? 0), 2);
-                    $remBeforeTx = round((float) ($c['remaining'] ?? $c['remaining_due'] ?? 0), 2);
-
-                    $monthTotalDue += $originalDue;
-                    $monthPreviousPaid += $prevPaid;
-
-                    $appliedThisTx = 0.0;
-                    if ($currentPool > 0.001 && $remBeforeTx > 0) {
-                        $appliedThisTx = min($currentPool, $remBeforeTx);
-                        $currentPool = max(0.0, round($currentPool - $appliedThisTx, 2));
-                    }
-
-                    $totalPaidChild = round($prevPaid + $appliedThisTx, 2);
-                    $remChild = max(0.0, round($originalDue - $totalPaidChild, 2));
-
-                    $monthAppliedThisTx += $appliedThisTx;
-                    $monthTotalPaidToDate += $totalPaidChild;
-                    $monthRemainingBalance += $remChild;
-
-                    $childStatus = match (true) {
-                        $remChild <= 0.01 => 'FULLY PAID',
-                        $appliedThisTx > 0.01 => 'PARTIALLY PAID',
-                        $prevPaid > 0.01 => 'PARTIALLY PAID',
-                        default => 'UNPAID',
-                    };
-
-                    $monthFormattedRows[] = [
-                        'student_name' => mb_strtoupper((string) ($c['student']->full_name ?? 'Student')),
-                        'student_id' => $c['student']->amis_student_id ?? null,
-                        'grade_level' => (string) ($c['student']->grade_level ?? ''),
-                        'billing_month' => $monthLabel,
-                        'amount_due' => $originalDue,
-                        'amount_paid' => $totalPaidChild,
-                        'applied_this_transaction' => $appliedThisTx,
-                        'previous_paid' => $prevPaid,
-                        'total_paid_to_date' => $totalPaidChild,
-                        'remaining' => $remChild,
-                        'remaining_balance' => $remChild,
-                        'status' => $childStatus,
-                    ];
-                }
-
-                $monthTotalDue = round($monthTotalDue, 2);
-                $monthPreviousPaid = round($monthPreviousPaid, 2);
-                $monthAppliedThisTx = round($monthAppliedThisTx, 2);
-                $monthTotalPaidToDate = round($monthTotalPaidToDate, 2);
-                $monthRemainingBalance = round($monthRemainingBalance, 2);
-
-                if ($monthAppliedThisTx <= 0.001) {
-                    break;
-                }
-
-                $totalAppliedAcrossMonths += $monthAppliedThisTx;
-
-                $statusText = match (true) {
-                    $monthRemainingBalance <= 0.01 => 'FULLY PAID',
-                    $monthAppliedThisTx > 0.01 => 'PARTIALLY PAID — ₱'.number_format($monthRemainingBalance, 2).' remaining',
-                    default => 'UNPAID — ₱'.number_format($monthRemainingBalance, 2).' remaining',
-                };
-
-                $parts = explode(' ', trim($monthLabel));
-                $shortMonth = strtoupper(substr($parts[0] ?? $monthLabel, 0, 3));
-                $monthReceiptNumber = $baseReceiptNumber.'-'.$shortMonth;
-
-                $monthlyDataList[$monthLabel] = array_merge($allData, [
-                    'receipt_number' => $monthReceiptNumber,
-                    'billing_month' => $monthLabel,
-                    'previous_month_label' => $previousMonthLabel,
-                    'previous_balance' => $previousRemainingBalance,
-                    'previous_remaining_balance' => $previousRemainingBalance,
-                    'total_amount_due' => $monthTotalDue,
-                    'previous_paid' => $monthPreviousPaid,
-                    'payment_applied_this_transaction' => $monthAppliedThisTx,
-                    'amount_applied' => $monthAppliedThisTx,
-                    'total_paid_to_date' => $monthTotalPaidToDate,
-                    'remaining_balance' => $monthRemainingBalance,
-                    'payment_status' => $statusText,
-                    'status_label' => $statusText,
-                    'rows' => collect($monthFormattedRows),
-                ]);
-
-                $previousRemainingBalance = $monthRemainingBalance;
-                $previousMonthLabel = $monthLabel;
+            if ($monthAppliedThisTx <= 0.001 && $mRows->count() > 0 && count($grouped) > 1) {
+                continue;
             }
-        } else {
-            $allRows = collect($allData['rows'] ?? []);
-            foreach ($allRows->groupBy(fn ($r) => mb_strtoupper((string) ($r['billing_month'] ?? 'JULY 2026'))) as $mLabel => $mRows) {
-                $monthTotalDue = round((float) $mRows->sum('amount_due'), 2);
-                $monthTotalPaid = round((float) $mRows->sum('amount_paid'), 2);
-                $monthRemaining = round((float) $mRows->sum('remaining'), 2);
 
-                $statusText = match (true) {
-                    $monthRemaining <= 0.01 => 'FULLY PAID',
-                    $monthTotalPaid > 0.01 => 'PARTIALLY PAID — ₱'.number_format($monthRemaining, 2).' remaining',
-                    default => 'UNPAID — ₱'.number_format($monthRemaining, 2).' remaining',
-                };
+            $statusText = match (true) {
+                $monthRemainingBalance <= 0.01 => 'FULLY PAID',
+                $monthAppliedThisTx > 0.01 => 'PARTIALLY PAID — ₱'.number_format($monthRemainingBalance, 2).' remaining',
+                default => 'UNPAID — ₱'.number_format($monthRemainingBalance, 2).' remaining',
+            };
 
-                $parts = explode(' ', trim($mLabel));
-                $shortMonth = strtoupper(substr($parts[0] ?? $mLabel, 0, 3));
-                $monthReceiptNumber = $baseReceiptNumber.'-'.$shortMonth;
+            $parts = explode(' ', trim($mLabel));
+            $shortMonth = strtoupper(substr($parts[0] ?? $mLabel, 0, 3));
+            $monthReceiptNumber = $baseReceiptNumber.'-'.$shortMonth;
 
-                $monthlyDataList[$mLabel] = array_merge($allData, [
-                    'receipt_number' => $monthReceiptNumber,
-                    'billing_month' => $mLabel,
-                    'previous_month_label' => $previousMonthLabel,
-                    'previous_balance' => $previousRemainingBalance,
-                    'previous_remaining_balance' => $previousRemainingBalance,
-                    'total_amount_due' => $monthTotalDue,
-                    'previous_paid' => 0.00,
-                    'payment_applied_this_transaction' => $monthTotalPaid,
-                    'amount_applied' => $monthTotalPaid,
-                    'total_paid_to_date' => $monthTotalPaid,
-                    'remaining_balance' => $monthRemaining,
-                    'payment_status' => $statusText,
-                    'status_label' => $statusText,
-                    'rows' => $mRows->values(),
-                ]);
+            $monthlyDataList[$mLabel] = array_merge($allData, [
+                'receipt_number' => $monthReceiptNumber,
+                'billing_month' => $mLabel,
+                'previous_month_label' => $previousMonthLabel,
+                'previous_balance' => $previousRemainingBalance,
+                'previous_remaining_balance' => $previousRemainingBalance,
+                'total_amount_due' => $monthTotalDue,
+                'previous_paid' => $monthPreviousPaid,
+                'payment_applied_this_transaction' => $monthAppliedThisTx,
+                'amount_applied' => $monthAppliedThisTx,
+                'total_paid_to_date' => $monthTotalPaidToDate,
+                'remaining_balance' => $monthRemainingBalance,
+                'payment_status' => $statusText,
+                'status_label' => $statusText,
+                'rows' => $mRows->values(),
+            ]);
 
-                $totalAppliedAcrossMonths += $monthTotalPaid;
-                $previousRemainingBalance = $monthRemaining;
-                $previousMonthLabel = $mLabel;
-            }
+            $previousRemainingBalance = $monthRemainingBalance;
+            $previousMonthLabel = $mLabel;
         }
 
-        $creditCreated = max(0.0, round($paymentReceived - $totalAppliedAcrossMonths, 2));
-
-        foreach ($monthlyDataList as &$mSnap) {
-            $mSnap['credit_created'] = $creditCreated;
-            $mSnap['credit_balance'] = $creditCreated;
-        }
-        unset($mSnap);
-
-        if (empty($monthlyDataList)) {
-            return [$allData['billing_month'] ?? 'JULY 2026' => $allData];
-        }
-
-        return $monthlyDataList;
+        return ! empty($monthlyDataList) ? $monthlyDataList : [$allData['billing_month'] ?? 'PAYMENT' => $allData];
     }
 
     public function render(object $transaction, ?string $month = null): string
