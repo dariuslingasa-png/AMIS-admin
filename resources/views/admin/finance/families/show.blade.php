@@ -1,5 +1,12 @@
-<x-admin-layout title="Family SOA — {{ $family->name }}">
-    <div class="finance-page mx-auto max-w-[1440px] p-5 lg:p-8" x-data="{
+<x-admin-layout
+    title="Family SOA — {{ $family->name }}"
+    :breadcrumbs="[
+        ['label' => 'Finance', 'href' => route('admin.finance.dashboard')],
+        ['label' => 'Family Accounts', 'href' => route('admin.finance.families.index')],
+        ['label' => $family->name, 'href' => null],
+    ]"
+>
+    <div class="finance-page mx-auto max-w-[1440px] space-y-6" x-data="{
         showUploadModal: false,
         showHistoryModal: false,
         showPreviewModal: false,
@@ -60,28 +67,32 @@
             this.showAdjustModal = true;
         }
     }">
-        {{-- TOP NAVIGATION BREADCRUMB / HEADER --}}
-        <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-                <a href="{{ route('admin.students.families') }}" class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 transition mb-1">
-                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
-                    Back to Family Accounts
-                </a>
-                <div class="flex items-center gap-2.5">
-                    <h1 class="text-2xl font-black tracking-tight text-slate-900">
-                        {{ $family->name }}
-                    </h1>
-                    @if ($family->is_demo ?? false)
-                        <span class="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider text-amber-800 border border-amber-200">DEMO ACCOUNT</span>
-                    @endif
+        {{-- TOP BANNER HEADER --}}
+        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-800 via-emerald-900 to-teal-950 p-6 sm:p-8 text-white shadow-md">
+            <div class="absolute right-0 top-0 -mr-6 -mt-6 h-48 w-48 rounded-full bg-emerald-500/15 blur-3xl"></div>
+            <div class="absolute left-1/3 bottom-0 -mb-10 h-60 w-60 rounded-full bg-teal-500/15 blur-3xl"></div>
+            <div class="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <a href="{{ route('admin.finance.families.index') }}" class="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-200 hover:text-white transition mb-2">
+                        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
+                        Back to Family Accounts
+                    </a>
+                    <div class="flex items-center gap-2.5">
+                        <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-white">
+                            {{ $family->name }}
+                        </h1>
+                        @if ($family->is_demo ?? false)
+                            <span class="inline-flex items-center rounded-full bg-white/20 border border-white/30 px-2.5 py-0.5 text-xs font-black uppercase tracking-wider text-white">DEMO ACCOUNT</span>
+                        @endif
+                    </div>
+                    <p class="text-xs sm:text-sm text-emerald-100/90 mt-1 font-light">Consolidated Family Statement of Account and Student Document Management.</p>
                 </div>
-                <p class="text-xs text-slate-500 mt-0.5">Consolidated Family Statement of Account and Student Document Management.</p>
-            </div>
-            <div class="flex items-center gap-2.5">
-                <a href="{{ route('admin.finance.onsite.create', ['family' => $family->id]) }}" class="inline-flex items-center gap-1.5 rounded-xl bg-emerald-700 px-4 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-emerald-800 transition">
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6"/></svg>
-                    Record Onsite Payment
-                </a>
+                <div class="flex items-center gap-2.5 shrink-0">
+                    <a href="{{ route('admin.finance.onsite.create', ['family' => $family->id]) }}" class="inline-flex items-center gap-1.5 rounded-xl bg-white text-emerald-950 px-4 py-2.5 text-xs font-black shadow-sm hover:bg-emerald-50 transition">
+                        <svg class="h-4 w-4 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6v12m6-6H6"/></svg>
+                        Record Onsite Payment
+                    </a>
+                </div>
             </div>
         </div>
 
