@@ -13,6 +13,7 @@ use App\Models\ReceiptOcrResult;
 use App\Models\ReceiptSubmission;
 use App\Models\SoaMonthlyBilling;
 use App\Models\StudentAccount;
+use App\Models\StudentManualSoa;
 use App\Models\User;
 use App\Services\Finance\FamilyPaymentReceiptService;
 use App\Services\Finance\FinanceAllocationService;
@@ -775,7 +776,11 @@ class FinanceController extends Controller
             $outstanding = $this->demoData->getBalances($familyId);
             $advanceCredit = 0.00;
 
-            return view('admin.finance.families.show', compact('family', 'transactions', 'outstanding', 'advanceCredit'));
+            $manualSoas = Schema::hasTable('student_manual_soas')
+                ? StudentManualSoa::query()->where('family_email', $family->email)->latest('id')->get()->groupBy('student_identifier')
+                : collect();
+
+            return view('admin.finance.families.show', compact('family', 'transactions', 'outstanding', 'advanceCredit', 'manualSoas'));
         }
 
         if ($this->demoData->isEnabled()) {
@@ -797,7 +802,114 @@ class FinanceController extends Controller
             ? (float) FinanceAdvanceCredit::query()->where('user_id', $family->id)->where('status', 'ACTIVE')->sum('remaining_amount') : 0;
         $advanceCredit = $onlineCredit + $onsiteCredit;
 
-        return view('admin.finance.families.show', compact('family', 'transactions', 'outstanding', 'advanceCredit'));
+        $manualSoas = Schema::hasTable('student_manual_soas')
+            ? StudentManualSoa::query()->where('family_email', $family->email)->latest('id')->get()->groupBy('student_identifier')
+            : collect();
+
+        return view('admin.finance.families.show', compact('family', 'transactions', 'outstanding', 'advanceCredit', 'manualSoas'));
+    }
+
+    public function uploadManualSoa(Request $request, string $studentIdentifier)
+    {
+        $this->authorizeFinance($request);
+
+        $validated = $request->validate([
+            'soa_file' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:15360'],
+            'billing_month' => ['required', 'string', 'max:100'],
+            'school_year' => ['nullable', 'string', 'max:50'],
+            'student_name' => ['required', 'string', 'max:255'],
+            'family_email' => ['required', 'email', 'max:255'],
+            'grade_level' => ['nullable', 'string', 'max:100'],
+            'remarks' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $billingMonth = strtoupper(trim($validated['billing_month']));
+        $latestVersion = (int) StudentManualSoa::query()
+            ->where('student_identifier', $studentIdentifier)
+            ->where('billing_month', $billingMonth)
+            ->max('version');
+        $newVersion = $latestVersion + 1;
+
+        StudentManualSoa::query()
+            ->where('student_identifier', $studentIdentifier)
+            ->where('billing_month', $billingMonth)
+            ->update(['is_current' => false]);
+
+        $file = $request->file('soa_file');
+        $ext = strtolower($file->guessExtension() ?: $file->getClientOriginalExtension() ?: 'pdf');
+        $uuid = (string) Str::uuid();
+        $safeId = preg_replace('/[^a-zA-Z0-9_-]/', '_', $studentIdentifier);
+        $path = $file->storeAs("soa/manual/{$safeId}", "soa_{$safeId}_{$newVersion}_{$uuid}.{$ext}", 'local');
+
+        $soa = StudentManualSoa::create([
+            'student_identifier' => $studentIdentifier,
+            'student_name' => $validated['student_name'],
+            'family_email' => strtolower(trim($validated['family_email'])),
+            'grade_level' => $validated['grade_level'] ?? null,
+            'school_year' => $validated['school_year'] ?: '2026-2027',
+            'billing_month' => $billingMonth,
+            'version' => $newVersion,
+            'is_current' => true,
+            'file_path' => $path,
+            'original_filename' => $file->getClientOriginalName(),
+            'mime_type' => $file->getMimeType() ?: 'application/octet-stream',
+            'file_size' => $file->getSize(),
+            'uploaded_by' => $request->user()?->name ?: 'Finance Staff',
+            'remarks' => $validated['remarks'] ?? null,
+        ]);
+
+        return back()->with('success', "Statement of Account for {$soa->student_name} ({$billingMonth} Version {$newVersion}) uploaded successfully.");
+    }
+
+    public function viewManualSoa(Request $request, StudentManualSoa $soa)
+    {
+        $this->authorizeFinance($request);
+        abort_unless(Storage::disk('local')->exists($soa->file_path), 404, 'SOA document not found on storage.');
+
+        return Storage::disk('local')->response(
+            $soa->file_path,
+            $soa->original_filename,
+            [
+                'Content-Type' => $soa->mime_type,
+                'Content-Disposition' => 'inline; filename="'.str_replace('"', '', $soa->original_filename).'"',
+                'Cache-Control' => 'private, no-cache, no-store, must-revalidate',
+            ]
+        );
+    }
+
+    public function downloadManualSoa(Request $request, StudentManualSoa $soa)
+    {
+        $this->authorizeFinance($request);
+        abort_unless(Storage::disk('local')->exists($soa->file_path), 404, 'SOA document not found on storage.');
+
+        return Storage::disk('local')->download($soa->file_path, $soa->original_filename);
+    }
+
+    public function deleteManualSoa(Request $request, StudentManualSoa $soa)
+    {
+        $this->authorizeFinance($request);
+        if (Storage::disk('local')->exists($soa->file_path)) {
+            Storage::disk('local')->delete($soa->file_path);
+        }
+
+        $studentId = $soa->student_identifier;
+        $month = $soa->billing_month;
+        $wasCurrent = $soa->is_current;
+        $studentName = $soa->student_name;
+        $soa->delete();
+
+        if ($wasCurrent) {
+            $latestRemaining = StudentManualSoa::query()
+                ->where('student_identifier', $studentId)
+                ->where('billing_month', $month)
+                ->latest('version')
+                ->first();
+            if ($latestRemaining) {
+                $latestRemaining->update(['is_current' => true]);
+            }
+        }
+
+        return back()->with('success', "Statement of Account record for {$studentName} ({$month}) deleted successfully.");
     }
 
     public function resetDemoData(Request $request, string $familyId)

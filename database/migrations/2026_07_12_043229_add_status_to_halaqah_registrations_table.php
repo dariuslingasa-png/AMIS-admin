@@ -12,8 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('halaqah_registrations', function (Blueprint $table) {
-            $table->string('status')->default('new')->after('message');
-            $table->timestamp('responded_at')->nullable()->after('status');
+            if (! Schema::hasColumn('halaqah_registrations', 'status')) {
+                $table->string('status')->default('new')->after('message');
+            }
+            if (! Schema::hasColumn('halaqah_registrations', 'responded_at')) {
+                $table->timestamp('responded_at')->nullable()->after('status');
+            }
         });
     }
 

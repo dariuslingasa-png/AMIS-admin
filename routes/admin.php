@@ -250,6 +250,12 @@ Route::name('admin.')->group(function () {
             Route::get('/family-accounts/{family}', [FinanceController::class, 'familiesShow'])->name('families.show');
             Route::post('/family-accounts/{family}/reset-demo', [FinanceController::class, 'resetDemoData'])->name('families.reset-demo');
 
+            // Manual Statement of Account (Finance Uploaded)
+            Route::post('/students/{studentIdentifier}/manual-soa', [FinanceController::class, 'uploadManualSoa'])->name('manual-soa.upload');
+            Route::get('/manual-soa/{soa}/view', [FinanceController::class, 'viewManualSoa'])->name('manual-soa.view');
+            Route::get('/manual-soa/{soa}/download', [FinanceController::class, 'downloadManualSoa'])->name('manual-soa.download');
+            Route::delete('/manual-soa/{soa}', [FinanceController::class, 'deleteManualSoa'])->name('manual-soa.delete');
+
             Route::get('/official-receipts', [FinanceController::class, 'receiptsIndex'])->name('receipts.index');
             Route::get('/official-receipts/{receipt}', [FinanceController::class, 'receiptsShow'])->name('receipts.show');
             Route::get('/official-receipts/{receipt}/pdf', [FinanceController::class, 'receiptsPdf'])->name('receipts.pdf');
