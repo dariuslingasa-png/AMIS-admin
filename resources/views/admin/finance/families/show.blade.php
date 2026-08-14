@@ -379,7 +379,7 @@
         {{-- SECTION 2: LOWER SPLIT GRID (OUTSTANDING BILLING & PAYMENT HISTORY) --}}
         <div class="grid gap-6 lg:grid-cols-2 items-start">
             {{-- OUTSTANDING BILLING SCHEDULE --}}
-            <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm" x-data="{ showAllOutstanding: false }">
                 <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                     <div>
                         <h2 class="font-extrabold text-slate-900 text-sm tracking-tight">Outstanding Billing Schedule</h2>
@@ -390,8 +390,8 @@
                     </a>
                 </div>
 
-                <div class="mt-2 divide-y divide-slate-100 max-h-[280px] overflow-y-auto pr-1">
-                    @forelse ($outstanding as $row)
+                <div class="mt-2 divide-y divide-slate-100">
+                    @forelse ($outstanding as $index => $row)
                         @php
                             $studentName = $row['student']?->full_name
                                 ?? (isset($row['student']->applicant) ? $row['student']->applicant?->full_name : null)
@@ -402,7 +402,10 @@
                             $dueDateLabel = isset($row['billing']->due_date) ? $row['billing']->due_date->format('M d, Y') : 'N/A';
                             $isOverdue = isset($row['billing']->due_date) && $row['billing']->due_date->isPast();
                         @endphp
-                        <div class="flex items-center justify-between gap-3 py-2 hover:bg-slate-50 px-2 rounded-xl transition text-xs">
+                        <div
+                            x-show="showAllOutstanding || {{ $index }} < 3"
+                            class="flex items-center justify-between gap-3 py-2.5 hover:bg-slate-50 px-2 rounded-xl transition text-xs"
+                        >
                             <div class="min-w-0">
                                 <div class="flex items-center gap-1.5">
                                     <strong class="font-bold text-slate-900 text-xs">{{ $monthLabel }}</strong>
@@ -424,17 +427,30 @@
                         <div class="p-6 text-center text-xs font-semibold text-emerald-700">All current family billings are fully paid.</div>
                     @endforelse
                 </div>
+
+                @if ($outstanding->count() > 3)
+                    <div class="border-t border-slate-100 pt-2.5 mt-2 text-center">
+                        <button type="button" @click="showAllOutstanding = !showAllOutstanding" class="text-xs font-bold text-slate-600 hover:text-slate-900 transition inline-flex items-center gap-1">
+                            <span x-text="showAllOutstanding ? 'Show Fewer Dues (Top 3 Only)' : 'View All {{ $outstanding->count() }} Outstanding Schedule Items'"></span>
+                            <svg class="h-3.5 w-3.5 transform transition-transform" :class="showAllOutstanding ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </button>
+                    </div>
+                @endif
             </section>
 
             {{-- PAYMENT HISTORY & OFFICIAL RECEIPTS --}}
-            <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm" x-data="{ showAllTransactions: false }">
                 <div class="border-b border-slate-100 pb-3">
                     <h2 class="font-extrabold text-slate-900 text-sm tracking-tight">Payment &amp; Official Receipts</h2>
                     <p class="text-[11px] text-slate-500">Verified transaction receipts and allocations.</p>
                 </div>
-                <div class="mt-2 divide-y divide-slate-100 max-h-[280px] overflow-y-auto pr-1">
-                    @forelse ($transactions as $transaction)
-                        <a href="{{ route('admin.finance.transactions.show', $transaction) }}" class="flex items-center justify-between gap-3 py-2 hover:bg-slate-50 px-2 rounded-xl transition text-xs">
+                <div class="mt-2 divide-y divide-slate-100">
+                    @forelse ($transactions as $tIndex => $transaction)
+                        <a
+                            href="{{ route('admin.finance.transactions.show', $transaction) }}"
+                            x-show="showAllTransactions || {{ $tIndex }} < 3"
+                            class="flex items-center justify-between gap-3 py-2.5 hover:bg-slate-50 px-2 rounded-xl transition text-xs"
+                        >
                             <div class="min-w-0">
                                 <div class="flex items-center gap-1.5">
                                     <span class="font-mono font-bold text-xs text-slate-900">
@@ -457,8 +473,14 @@
                         <div class="p-6 text-center text-xs text-slate-500">No posted Finance transactions yet.</div>
                     @endforelse
                 </div>
-                @if (method_exists($transactions, 'links'))
-                    <div class="border-t border-slate-100 pt-2 mt-2">{{ $transactions->links() }}</div>
+
+                @if (count($transactions) > 3)
+                    <div class="border-t border-slate-100 pt-2.5 mt-2 text-center">
+                        <button type="button" @click="showAllTransactions = !showAllTransactions" class="text-xs font-bold text-slate-600 hover:text-slate-900 transition inline-flex items-center gap-1">
+                            <span x-text="showAllTransactions ? 'Show Recent Receipts Only' : 'View All ({{ count($transactions) }}) Receipts'"></span>
+                            <svg class="h-3.5 w-3.5 transform transition-transform" :class="showAllTransactions ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </button>
+                    </div>
                 @endif
             </section>
         </div>
