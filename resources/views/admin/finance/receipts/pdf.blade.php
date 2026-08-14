@@ -4,77 +4,66 @@
     <meta charset="utf-8">
     <title>Official Payment Receipt - {{ $receiptData['receipt_number'] }}</title>
     <style>
-        @page { margin: 18px 24px; }
+        @page { margin: 24px 30px; }
         * { box-sizing: border-box; }
-        body { margin: 0; color: #0f172a; font-family: DejaVu Sans, sans-serif; font-size: 8.5px; line-height: 1.4; }
+        body { margin: 0; color: #0f172a; font-family: DejaVu Sans, sans-serif; font-size: 8.5px; line-height: 1.45; }
         
-        .header-table { width: 100%; border-bottom: 2px solid #047857; padding-bottom: 10px; border-collapse: collapse; }
+        .header-table { width: 100%; border-collapse: collapse; }
         .header-table td { vertical-align: middle; }
-        .seal-cell { width: 65px; }
-        .seal-img { width: 56px; height: 56px; object-fit: contain; }
+        .seal-cell { width: 62px; }
+        .seal-img { width: 52px; height: 52px; object-fit: contain; }
         .brand-cell { padding-left: 6px; }
-        .arabic-wordmark { display: block; width: 185px; height: auto; margin-bottom: 2px; }
-        .school-name { color: #047857; font-size: 9.5px; font-weight: bold; letter-spacing: .5px; }
-        .receipt-title { margin-top: 2px; color: #0f172a; font-size: 15px; font-weight: bold; letter-spacing: .3px; }
-        .receipt-subtitle { color: #64748b; font-size: 7.5px; }
+        .arabic-wordmark { display: block; width: 175px; height: auto; margin-bottom: 2px; }
+        .arabic-text { font-family: DejaVu Sans, serif; font-size: 13px; color: #064e3b; margin-bottom: 2px; }
+        .school-name { color: #047857; font-size: 10px; font-weight: bold; letter-spacing: .5px; white-space: nowrap; }
+        .school-address { color: #64748b; font-size: 7.5px; margin-top: 1px; }
+        .receipt-title { margin-top: 3px; color: #0f172a; font-size: 13px; font-weight: bold; letter-spacing: .4px; }
         
-        .receipt-meta-cell { width: 220px; text-align: right; vertical-align: top; }
-        .meta-card { display: inline-block; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; padding: 6px 10px; text-align: right; }
-        .meta-label { color: #64748b; font-size: 7px; text-transform: uppercase; font-weight: bold; }
-        .meta-val-primary { color: #047857; font-size: 11px; font-weight: bold; }
-        .meta-val-secondary { color: #0f172a; font-size: 8px; font-weight: bold; }
-        .status-badge { display: inline-block; margin-top: 3px; padding: 2px 6px; border-radius: 3px; font-size: 7.5px; font-weight: bold; text-transform: uppercase; }
-        .badge-paid { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
-        .badge-partial { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
-
-        .info-grid { width: 100%; margin-top: 10px; border-collapse: collapse; }
-        .info-grid td { width: 50%; vertical-align: top; }
-        .info-card { border: 1px solid #cbd5e1; border-radius: 4px; background: #ffffff; padding: 6px 9px; margin-right: 4px; }
-        .info-card-right { border: 1px solid #cbd5e1; border-radius: 4px; background: #ffffff; padding: 6px 9px; margin-left: 4px; }
-        .card-header { color: #047857; font-size: 7.5px; font-weight: bold; text-transform: uppercase; letter-spacing: .4px; border-bottom: 1px solid #e2e8f0; padding-bottom: 3px; margin-bottom: 5px; }
-        .data-row { margin-bottom: 3px; }
-        .data-label { color: #64748b; font-size: 7px; display: inline-block; width: 75px; }
-        .data-value { color: #0f172a; font-size: 8px; font-weight: bold; }
-
-        .section-heading { margin: 12px 0 5px; color: #0f172a; font-size: 9.5px; font-weight: bold; text-transform: uppercase; letter-spacing: .3px; }
+        .receipt-meta-cell { width: 220px; text-align: right; vertical-align: top; padding-top: 2px; }
+        .meta-line { margin-bottom: 2px; font-size: 8px; }
+        .meta-label { color: #64748b; }
+        .meta-val-primary { color: #0f172a; font-weight: bold; }
         
-        .breakdown-table { width: 100%; border: 1px solid #cbd5e1; border-collapse: collapse; table-layout: fixed; }
-        .breakdown-table th { padding: 5px 4px; background: #0f172a; color: #ffffff; font-size: 7px; font-weight: bold; text-transform: uppercase; letter-spacing: .3px; }
-        .breakdown-table td { padding: 5px 4px; border-top: 1px solid #e2e8f0; font-size: 7.5px; vertical-align: middle; }
-        .breakdown-table tbody tr:nth-child(even) { background: #f8fafc; }
-        .breakdown-table tfoot td { padding: 6px 4px; border-top: 2px solid #047857; background: #f0fdf4; font-weight: bold; font-size: 8px; }
-        
-        .col-student { width: 25%; }
-        .col-grade { width: 11%; }
-        .col-month { width: 14%; }
-        .col-money { width: 10%; text-align: right; white-space: nowrap; }
-        .col-status { width: 10%; text-align: center; }
+        .header-divider { border-bottom: 1.5px solid #047857; margin-top: 8px; margin-bottom: 12px; }
 
-        .tag-settled { color: #15803d; font-weight: bold; font-size: 6.5px; background: #dcfce7; padding: 1px 4px; border-radius: 2px; }
-        .tag-partial { color: #b45309; font-weight: bold; font-size: 6.5px; background: #fef3c7; padding: 1px 4px; border-radius: 2px; }
-        .tag-unpaid { color: #be123c; font-weight: bold; font-size: 6.5px; background: #ffe4e6; padding: 1px 4px; border-radius: 2px; }
+        .info-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+        .info-table td { vertical-align: top; }
+        .kv-table { width: 100%; border-collapse: collapse; }
+        .kv-table td { padding: 2px 0; font-size: 8px; }
+        .kv-label { color: #64748b; width: 110px; }
+        .kv-value { color: #0f172a; font-weight: bold; }
 
-        .summary-grid { width: 100%; margin-top: 10px; border-collapse: collapse; }
-        .summary-grid td { width: 50%; vertical-align: top; }
-        .summary-box { border: 1px solid #cbd5e1; border-radius: 4px; background: #ffffff; padding: 7px 10px; margin-right: 4px; }
-        .summary-box-right { border: 1px solid #86efac; border-radius: 4px; background: #f0fdf4; padding: 7px 10px; margin-left: 4px; }
+        .section-divider { border-bottom: 1px solid #e2e8f0; margin: 8px 0 10px; }
+        .section-heading { margin: 10px 0 5px; color: #0f172a; font-size: 9px; font-weight: bold; text-transform: uppercase; letter-spacing: .4px; }
         
-        .sum-row { width: 100%; border-collapse: collapse; margin-bottom: 2px; }
-        .sum-row td { padding: 2px 0; }
-        .sum-label { color: #475569; font-size: 7.5px; }
-        .sum-val { text-align: right; color: #0f172a; font-size: 8px; font-weight: bold; }
-        .sum-total-row { border-top: 1px solid #cbd5e1; margin-top: 3px; padding-top: 3px; }
-        .sum-total-label { color: #047857; font-size: 8.5px; font-weight: bold; }
-        .sum-total-val { text-align: right; color: #047857; font-size: 10px; font-weight: bold; }
+        .breakdown-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        .breakdown-table th { padding: 5px 4px; background: #f8fafc; color: #0f172a; font-size: 7.5px; font-weight: bold; text-transform: uppercase; border-top: 1px solid #cbd5e1; border-bottom: 1px solid #cbd5e1; letter-spacing: .2px; }
+        .breakdown-table td { padding: 5px 4px; border-bottom: 1px solid #f1f5f9; font-size: 8px; vertical-align: middle; }
+        .breakdown-table tbody tr:nth-child(even) { background: #fafafa; }
+        .breakdown-table tfoot td { padding: 6px 4px; border-top: 1.5px solid #047857; border-bottom: 1px solid #cbd5e1; background: #ffffff; font-weight: bold; font-size: 8px; }
         
-        .rem-highlight-label { color: #0f172a; font-size: 8.5px; font-weight: bold; }
-        .rem-highlight-val { text-align: right; color: #b45309; font-size: 10px; font-weight: bold; }
+        .col-student { width: 28%; text-align: left; }
+        .col-grade { width: 10%; text-align: left; }
+        .col-money { width: 13%; text-align: right; white-space: nowrap; }
+        .col-applied { width: 14%; text-align: right; white-space: nowrap; }
+        .col-status { width: 9%; text-align: center; }
 
-        .footer-table { width: 100%; margin-top: 14px; border-top: 1px dashed #cbd5e1; padding-top: 8px; border-collapse: collapse; }
+        .student-id { color: #64748b; font-size: 7px; display: block; margin-top: 1px; }
+
+        .summary-wrap { width: 100%; margin-top: 10px; border-collapse: collapse; }
+        .summary-wrap td { vertical-align: top; }
+        .summary-table { width: 330px; border-collapse: collapse; }
+        .summary-table td { padding: 2.5px 0; font-size: 8px; }
+        .sum-lbl { color: #475569; width: 180px; }
+        .sum-val { text-align: right; color: #0f172a; font-weight: bold; }
+        .sum-status-row { border-top: 1px solid #e2e8f0; }
+
+        .footer-table { width: 100%; margin-top: 16px; border-top: 1px solid #e2e8f0; padding-top: 10px; border-collapse: collapse; }
         .footer-table td { vertical-align: top; }
         .notice-text { color: #64748b; font-size: 7px; line-height: 1.45; }
-        .sign-cell { width: 170px; text-align: center; }
-        .sign-line { border-bottom: 1px solid #0f172a; height: 28px; margin-bottom: 3px; }
+        .meta-footer { margin-top: 4px; color: #94a3b8; font-size: 6.5px; }
+        .sign-cell { width: 180px; text-align: center; }
+        .sign-line { border-bottom: 1px solid #0f172a; height: 26px; margin-bottom: 3px; }
         .sign-name { font-size: 7.5px; font-weight: bold; color: #0f172a; }
         .sign-title { font-size: 6.5px; color: #64748b; }
     </style>
@@ -92,64 +81,75 @@
             <td class="brand-cell">
                 @if(!empty($receiptData['arabic_data']))
                     <img class="arabic-wordmark" src="{{ $receiptData['arabic_data'] }}" alt="المدرسة المنورة الإسلامية">
+                @else
+                    <div class="arabic-text">المدرسة المنورة الإسلامية</div>
                 @endif
                 <div class="school-name">AL MUNAWWARA ISLAMIC SCHOOL</div>
+                <div class="school-address">Don Julian Rodriguez Avenue, Ma-a, Davao City</div>
                 <div class="receipt-title">FAMILY PAYMENT RECEIPT</div>
-                <div class="receipt-subtitle">Finance Department · Student Accounts & Family Billing</div>
             </td>
             <td class="receipt-meta-cell">
-                <div class="meta-card">
-                    <div class="meta-label">Receipt No.</div>
-                    <div class="meta-val-primary">{{ $receiptData['receipt_number'] }}</div>
-                    <div class="meta-label" style="margin-top: 3px;">Billing Period</div>
-                    <div class="meta-val-secondary">{{ $receiptData['billing_month'] ?? 'Current Billing' }}</div>
-                    <div>
-                        @if(($receiptData['remaining_balance'] ?? 0) <= 0.01)
-                            <span class="status-badge badge-paid">● FULLY PAID</span>
-                        @else
-                            <span class="status-badge badge-partial">● PARTIALLY PAID</span>
-                        @endif
-                    </div>
-                </div>
+                <div class="meta-line"><span class="meta-label">Receipt No.:</span> <span class="meta-val-primary">{{ $receiptData['receipt_number'] }}</span></div>
+                <div class="meta-line"><span class="meta-label">Billing Period:</span> <span class="meta-val-primary">{{ $receiptData['billing_month'] ?? 'Current Billing' }}</span></div>
+                <div class="meta-line"><span class="meta-label">Status:</span> <span class="meta-val-primary">{{ (($receiptData['remaining_balance'] ?? 0) <= 0.01) ? 'Fully Paid' : 'Partially Paid' }}</span></div>
             </td>
         </tr>
     </table>
+    <div class="header-divider"></div>
 
-    <!-- Payer & Transaction Information Grid -->
-    <table class="info-grid">
+    <!-- Payer & Payment Details -->
+    <table class="info-table">
         <tr>
-            <td>
-                <div class="info-card">
-                    <div class="card-header">Parent / Guardian Information</div>
-                    <div class="data-row"><span class="data-label">Parent / Guardian:</span><span class="data-value">{{ $receiptData['parent_name'] }}</span></div>
-                    <div class="data-row"><span class="data-label">Account / Email:</span><span class="data-value">{{ $receiptData['family_email'] ?? ($receiptData['email'] ?? 'Registered Family Account') }}</span></div>
-                    <div class="data-row"><span class="data-label">Enrolled Students:</span><span class="data-value">{{ count($receiptData['rows'] ?? []) }} Student(s) Included</span></div>
-                </div>
+            <td style="width: 50%; padding-right: 15px;">
+                <table class="kv-table">
+                    <tr>
+                        <td class="kv-label">Parent / Guardian:</td>
+                        <td class="kv-value">{{ $receiptData['parent_name'] }}</td>
+                    </tr>
+                    <tr>
+                        <td class="kv-label">Account / Email:</td>
+                        <td class="kv-value">{{ $receiptData['family_email'] ?? ($receiptData['email'] ?? 'Registered Family Account') }}</td>
+                    </tr>
+                    <tr>
+                        <td class="kv-label">Enrolled Students:</td>
+                        <td class="kv-value">{{ count($receiptData['rows'] ?? []) }} {{ count($receiptData['rows'] ?? []) === 1 ? 'Student' : 'Students' }}</td>
+                    </tr>
+                </table>
             </td>
-            <td>
-                <div class="info-card-right">
-                    <div class="card-header">Payment & Verification Details</div>
-                    <div class="data-row"><span class="data-label">Date:</span><span class="data-value">{{ $receiptData['date'] }}</span></div>
-                    <div class="data-row"><span class="data-label">Payment Method:</span><span class="data-value">{{ $receiptData['payment_method'] }}</span></div>
-                    <div class="data-row"><span class="data-label">Reference No.:</span><span class="data-value">{{ $receiptData['reference_number'] }}</span></div>
-                    <div class="data-row"><span class="data-label">Issued By:</span><span class="data-value">{{ $receiptData['cashier'] ?? 'AMIS Finance Cashier' }}</span></div>
-                </div>
+            <td style="width: 50%; padding-left: 15px;">
+                <table class="kv-table">
+                    <tr>
+                        <td class="kv-label">Date:</td>
+                        <td class="kv-value">{{ $receiptData['date'] }}</td>
+                    </tr>
+                    <tr>
+                        <td class="kv-label">Payment Method:</td>
+                        <td class="kv-value">{{ $receiptData['payment_method'] }}</td>
+                    </tr>
+                    <tr>
+                        <td class="kv-label">Reference No.:</td>
+                        <td class="kv-value">{{ $receiptData['reference_number'] ?: 'N/A' }}</td>
+                    </tr>
+                    <tr>
+                        <td class="kv-label">Issued By:</td>
+                        <td class="kv-value">{{ $receiptData['cashier'] ?? 'AMIS Finance Cashier' }}</td>
+                    </tr>
+                </table>
             </td>
         </tr>
     </table>
+    <div class="section-divider"></div>
 
-    <!-- Student Payment Breakdown Table -->
+    <!-- Student Payment Breakdown Table (7 Columns) -->
     <div class="section-heading">Student Payment Details ({{ $receiptData['billing_month'] ?? 'All' }})</div>
     <table class="breakdown-table">
         <thead>
             <tr>
                 <th class="col-student">Student</th>
-                <th class="col-grade">Grade Level</th>
-                <th class="col-month">Billing Month</th>
+                <th class="col-grade">Grade</th>
                 <th class="col-money">Amount Due</th>
-                <th class="col-money">Prior Payments</th>
-                <th class="col-money">Applied This Tx</th>
-                <th class="col-money">Total Paid To Date</th>
+                <th class="col-applied">Applied This Payment</th>
+                <th class="col-money">Total Paid</th>
                 <th class="col-money">Balance</th>
                 <th class="col-status">Status</th>
             </tr>
@@ -157,7 +157,6 @@
         <tbody>
             @php
                 $totalAssessment = 0;
-                $totalPrior = 0;
                 $totalApplied = 0;
                 $totalCumulative = 0;
                 $totalBalance = 0;
@@ -167,131 +166,135 @@
                     $due = (float)($row['amount_due'] ?? $row['monthly_due'] ?? 0);
                     $applied = (float)($row['applied_this_transaction'] ?? $row['applied_amount'] ?? $row['amount_paid'] ?? 0);
                     $cumPaid = (float)($row['total_paid_to_date'] ?? ($row['amount_paid'] ?? ($applied + ($row['previous_paid'] ?? 0))));
-                    $prior = max(0.0, round($cumPaid - $applied, 2));
                     $rem = max(0.0, round((float)($row['remaining'] ?? ($due - $cumPaid)), 2));
                     
                     $totalAssessment += $due;
-                    $totalPrior += $prior;
                     $totalApplied += $applied;
                     $totalCumulative += $cumPaid;
                     $totalBalance += $rem;
 
-                    $statusTag = match(true) {
-                        $rem <= 0.01 => 'SETTLED',
-                        $applied > 0.01 || $prior > 0.01 => 'PARTIAL',
+                    $statusText = match(true) {
+                        $rem <= 0.01 => 'PAID',
+                        $applied > 0.01 || $cumPaid > 0.01 => 'PARTIAL',
                         default => 'UNPAID',
                     };
                 @endphp
                 <tr>
-                    <td class="col-student"><strong>{{ $row['student_name'] }}</strong><br><span style="color:#64748b; font-size:6.5px;">{{ $row['student_id'] ?? '' }}</span></td>
+                    <td class="col-student">
+                        <strong>{{ $row['student_name'] }}</strong>
+                        @if(!empty($row['student_id']))
+                            <span class="student-id">{{ $row['student_id'] }}</span>
+                        @endif
+                    </td>
                     <td class="col-grade">{{ $row['grade_level'] }}</td>
-                    <td class="col-month">{{ $row['billing_month'] ?? ($receiptData['billing_month'] ?? '') }}</td>
                     <td class="col-money">₱{{ number_format($due, 2) }}</td>
-                    <td class="col-money">₱{{ number_format($prior, 2) }}</td>
-                    <td class="col-money" style="font-weight: bold; color: #047857;">₱{{ number_format($applied, 2) }}</td>
+                    <td class="col-applied" style="font-weight: bold; color: #047857;">₱{{ number_format($applied, 2) }}</td>
                     <td class="col-money">₱{{ number_format($cumPaid, 2) }}</td>
                     <td class="col-money" style="font-weight: bold;">₱{{ number_format($rem, 2) }}</td>
                     <td class="col-status">
-                        @if($statusTag === 'SETTLED')
-                            <span class="tag-settled">SETTLED</span>
-                        @elseif($statusTag === 'PARTIAL')
-                            <span class="tag-partial">PARTIAL</span>
-                        @else
-                            <span class="tag-unpaid">UNPAID</span>
-                        @endif
+                        <strong>{{ $statusText }}</strong>
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="9" style="text-align:center; padding: 12px; color: #64748b;">No active student assessment rows for this period. Payment recorded as advance credit.</td></tr>
+                <tr><td colspan="7" style="text-align:center; padding: 12px; color: #64748b;">No active student assessment rows for this period. Payment recorded as advance credit.</td></tr>
             @endforelse
         </tbody>
         @if(count($receiptData['rows'] ?? []) > 0)
+            @php
+                $monthlyAppliedTotal = $totalApplied > 0.001 ? $totalApplied : (float)($receiptData['payment_applied_this_transaction'] ?? $receiptData['amount_applied'] ?? 0);
+            @endphp
             <tfoot>
                 <tr>
-                    <td colspan="3"><strong>TOTAL</strong></td>
+                    <td colspan="2"><strong>TOTAL</strong></td>
                     <td class="col-money">₱{{ number_format((float)($receiptData['total_amount_due'] ?? $totalAssessment), 2) }}</td>
-                    <td class="col-money">₱{{ number_format($totalPrior, 2) }}</td>
-                    <td class="col-money" style="color: #047857;">₱{{ number_format((float)($receiptData['payment_applied_this_transaction'] ?? $receiptData['amount_applied'] ?? $totalApplied), 2) }}</td>
+                    <td class="col-applied" style="color: #047857;">₱{{ number_format($monthlyAppliedTotal, 2) }}</td>
                     <td class="col-money">₱{{ number_format((float)($receiptData['total_paid_to_date'] ?? $totalCumulative), 2) }}</td>
                     <td class="col-money">₱{{ number_format((float)($receiptData['remaining_balance'] ?? $totalBalance), 2) }}</td>
-                    <td class="col-status">
-                        @if(($receiptData['remaining_balance'] ?? $totalBalance) <= 0.01)
-                            <span class="tag-settled">SETTLED</span>
-                        @else
-                            <span class="tag-partial">PARTIAL</span>
-                        @endif
-                    </td>
+                    <td class="col-status"></td>
                 </tr>
             </tfoot>
         @endif
     </table>
 
-    <!-- Summary & Reconciliation Grid -->
+    <!-- Monthly Summary Section (Single Clean Section) -->
     <div class="section-heading">Monthly Summary — {{ $receiptData['billing_month'] ?? 'Billing Month' }}</div>
-    <table class="summary-grid">
+    <table class="summary-wrap">
         <tr>
-            <td>
-                <div class="summary-box">
-                    <div class="card-header">Payment Distribution</div>
-                    <table class="sum-row">
-                        @if(isset($receiptData['previous_balance']) && (float)$receiptData['previous_balance'] > 0.001)
-                            <tr><td class="sum-label">Previous Balance:</td><td class="sum-val">₱{{ number_format((float)$receiptData['previous_balance'], 2) }}</td></tr>
-                        @endif
-                        @if((float)($receiptData['credit_applied'] ?? 0) > 0.001)
-                            <tr><td class="sum-label">Credit Applied:</td><td class="sum-val" style="color:#b45309;">−₱{{ number_format((float)$receiptData['credit_applied'], 2) }}</td></tr>
-                            <tr><td class="sum-label">Balance After Credit:</td><td class="sum-val">₱{{ number_format((float)($receiptData['previous_remaining_balance'] ?? $receiptData['previous_balance']), 2) }}</td></tr>
-                            <tr><td class="sum-label">Current Payment Received:</td><td class="sum-val">₱{{ number_format((float)$receiptData['amount_received'], 2) }}</td></tr>
-                            <tr><td class="sum-label">Current Payment Applied:</td><td class="sum-val" style="color:#047857;">₱{{ number_format((float)$receiptData['amount_applied'], 2) }}</td></tr>
-                        @else
-                            <tr><td class="sum-label">Current Payment Received:</td><td class="sum-val">₱{{ number_format((float)($receiptData['amount_received'] ?? $receiptData['amount'] ?? $totalApplied), 2) }}</td></tr>
-                            <tr><td class="sum-label">Current Payment Applied:</td><td class="sum-val" style="color:#047857;">₱{{ number_format((float)($receiptData['payment_applied_this_transaction'] ?? $receiptData['amount_applied'] ?? $totalApplied), 2) }}</td></tr>
-                        @endif
-                        @if((float)($receiptData['credit_created'] ?? 0) > 0.001)
-                            <tr><td class="sum-label">Credit Balance:</td><td class="sum-val" style="color:#0284c7;">₱{{ number_format((float)$receiptData['credit_created'], 2) }}</td></tr>
-                        @elseif((float)($receiptData['credit_balance'] ?? 0) > 0.001)
-                            <tr><td class="sum-label">Credit Balance:</td><td class="sum-val" style="color:#0284c7;">₱{{ number_format((float)$receiptData['credit_balance'], 2) }}</td></tr>
-                        @endif
-                    </table>
-                    <div class="sum-total-row">
-                        <table style="width:100%;">
-                            <tr><td class="sum-total-label">Total Paid to Date:</td><td class="sum-total-val">₱{{ number_format((float)($receiptData['total_paid_to_date'] ?? $totalCumulative), 2) }}</td></tr>
-                        </table>
-                    </div>
-                </div>
-            </td>
-            <td>
-                <div class="summary-box-right">
-                    <div class="card-header" style="color:#047857;">Account Balance Status</div>
-                    <table class="sum-row">
+            <td style="width: 60%;">
+                <table class="summary-table">
+                    @if(isset($receiptData['previous_balance']) && (float)$receiptData['previous_balance'] > 0.001)
                         <tr>
-                            <td class="sum-label">Remaining Balance for {{ $receiptData['billing_month'] ?? 'Month' }}:</td>
-                            <td class="sum-val" style="{{ $totalBalance <= 0.01 ? 'color:#15803d;' : 'color:#b45309;' }}">
-                                ₱{{ number_format($totalBalance, 2) }} {{ $totalBalance <= 0.01 ? '(SETTLED)' : '' }}
-                            </td>
+                            <td class="sum-lbl">Previous Balance:</td>
+                            <td class="sum-val">₱{{ number_format((float)$receiptData['previous_balance'], 2) }}</td>
                         </tr>
-                        @if(!empty($receiptData['future_balance']) && (float)$receiptData['future_balance'] > 0.01)
-                            <tr><td class="sum-label">Future Scheduled Tuition:</td><td class="sum-val">₱{{ number_format((float)$receiptData['future_balance'], 2) }}</td></tr>
-                        @endif
-                    </table>
-                    <div class="sum-total-row" style="border-top: 1px solid #86efac;">
-                        <table style="width:100%;">
-                            <tr><td class="rem-highlight-label">Remaining Balance:</td><td class="rem-highlight-val">₱{{ number_format((float)($receiptData['remaining_balance'] ?? $totalBalance), 2) }}</td></tr>
-                        </table>
-                    </div>
-                </div>
+                    @endif
+                    @if((float)($receiptData['credit_applied'] ?? 0) > 0.001)
+                        <tr>
+                            <td class="sum-lbl">Credit Applied:</td>
+                            <td class="sum-val" style="color: #b45309;">−₱{{ number_format((float)$receiptData['credit_applied'], 2) }}</td>
+                        </tr>
+                        <tr>
+                            <td class="sum-lbl">Balance After Credit:</td>
+                            <td class="sum-val">₱{{ number_format((float)($receiptData['previous_remaining_balance'] ?? $receiptData['previous_balance']), 2) }}</td>
+                        </tr>
+                        <tr>
+                            <td class="sum-lbl">Current Payment Received:</td>
+                            <td class="sum-val">₱{{ number_format((float)($receiptData['amount_received'] ?? $receiptData['amount'] ?? $monthlyAppliedTotal), 2) }}</td>
+                        </tr>
+                        <tr>
+                            <td class="sum-lbl">Current Payment Applied:</td>
+                            <td class="sum-val" style="color: #047857;">₱{{ number_format($monthlyAppliedTotal, 2) }}</td>
+                        </tr>
+                    @else
+                        <tr>
+                            <td class="sum-lbl">Current Payment Received:</td>
+                            <td class="sum-val">₱{{ number_format((float)($receiptData['amount_received'] ?? $receiptData['amount'] ?? $monthlyAppliedTotal), 2) }}</td>
+                        </tr>
+                        <tr>
+                            <td class="sum-lbl">Applied to {{ $receiptData['billing_month'] ?? 'Billing Month' }}:</td>
+                            <td class="sum-val" style="color: #047857;">₱{{ number_format($monthlyAppliedTotal, 2) }}</td>
+                        </tr>
+                    @endif
+                    <tr>
+                        <td class="sum-lbl">Total Paid to Date:</td>
+                        <td class="sum-val">₱{{ number_format((float)($receiptData['total_paid_to_date'] ?? $totalCumulative), 2) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="sum-lbl">Remaining {{ $receiptData['billing_month'] ?? 'Month' }} Balance:</td>
+                        <td class="sum-val" style="font-weight: bold;">₱{{ number_format((float)($receiptData['remaining_balance'] ?? $totalBalance), 2) }}</td>
+                    </tr>
+                    @if((float)($receiptData['credit_created'] ?? 0) > 0.001)
+                        <tr>
+                            <td class="sum-lbl">Credit Balance:</td>
+                            <td class="sum-val" style="color: #047857; font-weight: bold;">₱{{ number_format((float)$receiptData['credit_created'], 2) }}</td>
+                        </tr>
+                    @elseif((float)($receiptData['credit_balance'] ?? 0) > 0.001)
+                        <tr>
+                            <td class="sum-lbl">Credit Balance:</td>
+                            <td class="sum-val" style="color: #047857; font-weight: bold;">₱{{ number_format((float)$receiptData['credit_balance'], 2) }}</td>
+                        </tr>
+                    @endif
+                    <tr class="sum-status-row">
+                        <td class="sum-lbl" style="font-weight: bold; padding-top: 5px;">Payment Status:</td>
+                        <td class="sum-val" style="font-weight: bold; padding-top: 5px; color: {{ ($receiptData['remaining_balance'] ?? $totalBalance) <= 0.01 ? '#047857' : '#b45309' }};">
+                            {{ ($receiptData['remaining_balance'] ?? $totalBalance) <= 0.01 ? 'FULLY PAID' : 'PARTIALLY PAID' }}
+                        </td>
+                    </tr>
+                </table>
             </td>
+            <td style="width: 40%;"></td>
         </tr>
     </table>
 
     <!-- Footer & Authentication -->
     <table class="footer-table">
         <tr>
-            <td>
+            <td style="width: 65%;">
                 <div class="notice-text">
-                    <strong>Notice:</strong> This is a system-generated Family Payment Receipt. No manual signature is required.<br>
-                    If you notice any incorrect payment details, student information, payment allocation, credit balance, or remaining balance on this receipt, please contact <strong>AMIS Support Staff</strong>.
+                    This is a system-generated Family Payment Receipt. No manual signature is required.<br>
+                    If you notice any incorrect payment details, student information, payment allocation, credit balance, or remaining balance on this receipt, please contact <strong>AMIS Finance Support</strong>.
                 </div>
-                <div style="margin-top: 4px; color: #94a3b8; font-size: 6.5px;">
+                <div class="meta-footer">
                     Date Generated: {{ $receiptData['generated_at'] ?? now()->format('F d, Y · h:i A') }} · Receipt ID: {{ $receiptData['receipt_number'] }}
                 </div>
             </td>

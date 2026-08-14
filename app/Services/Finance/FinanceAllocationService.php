@@ -466,21 +466,103 @@ class FinanceAllocationService
         $remainingPayment = $this->toCents($amount);
         $outstandingBefore = (int) $balances->sum('remaining_cents');
         $allocations = [];
+        $chunkCents = 10000; // ₱100.00
 
-        foreach ($balances as $row) {
+        // Level 1: Group by billing month (FIFO - oldest month first)
+        $monthGroups = $balances->groupBy(function ($row) {
+            return $row['billing']->due_date?->format('Y-m') ?? $row['billing']->month_name ?? 'current';
+        });
+
+        foreach ($monthGroups as $monthBalances) {
             if ($remainingPayment <= 0) {
                 break;
             }
 
-            $applied = min($remainingPayment, $row['remaining_cents']);
-            $remainingAfter = $row['remaining_cents'] - $applied;
-            $allocations[] = [
-                'billing' => $row['billing'],
-                'balance_before' => $this->fromCents($row['remaining_cents']),
-                'applied_amount' => $this->fromCents($applied),
-                'remaining_after' => $this->fromCents($remainingAfter),
-            ];
-            $remainingPayment -= $applied;
+            $monthTotalRemaining = (int) $monthBalances->sum('remaining_cents');
+            if ($monthTotalRemaining <= 0) {
+                continue;
+            }
+
+            $children = $monthBalances->values()->all();
+            $numChildren = count($children);
+            if ($numChildren === 0) {
+                continue;
+            }
+
+            if ($remainingPayment >= $monthTotalRemaining) {
+                foreach ($children as $row) {
+                    $applied = $row['remaining_cents'];
+                    $allocations[] = [
+                        'billing' => $row['billing'],
+                        'balance_before' => $this->fromCents($row['remaining_cents']),
+                        'applied_amount' => $this->fromCents($applied),
+                        'remaining_after' => 0.0,
+                    ];
+                    $remainingPayment -= $applied;
+                }
+            } else {
+                // Level 2: Clean ₱100 Round-robin loop
+                $monthAllocations = array_fill(0, $numChildren, 0);
+                $pointer = 0;
+                $safety = 50000;
+
+                while ($remainingPayment > 0 && $safety-- > 0) {
+                    $eligible = [];
+                    for ($i = 0; $i < $numChildren; $i++) {
+                        $remChild = $children[$i]['remaining_cents'] - $monthAllocations[$i];
+                        if ($remChild > 0) {
+                            $eligible[] = $i;
+                        }
+                    }
+
+                    if (empty($eligible)) {
+                        break;
+                    }
+
+                    $targetIndex = null;
+                    for ($step = 0; $step < $numChildren; $step++) {
+                        $check = ($pointer + $step) % $numChildren;
+                        if (in_array($check, $eligible, true)) {
+                            $targetIndex = $check;
+                            break;
+                        }
+                    }
+
+                    if ($targetIndex === null) {
+                        break;
+                    }
+
+                    $remChild = $children[$targetIndex]['remaining_cents'] - $monthAllocations[$targetIndex];
+                    if ($remChild < $chunkCents) {
+                        $unit = min($remChild, $remainingPayment);
+                    } elseif ($remainingPayment < $chunkCents) {
+                        $unit = min($remainingPayment, $remChild);
+                    } else {
+                        $unit = min($chunkCents, $remChild, $remainingPayment);
+                    }
+
+                    if ($unit <= 0) {
+                        break;
+                    }
+
+                    $monthAllocations[$targetIndex] += $unit;
+                    $remainingPayment -= $unit;
+                    $pointer = ($targetIndex + 1) % $numChildren;
+                }
+
+                foreach ($children as $i => $row) {
+                    $applied = $monthAllocations[$i] ?? 0;
+                    if ($applied > 0) {
+                        $remainingAfter = $row['remaining_cents'] - $applied;
+                        $allocations[] = [
+                            'billing' => $row['billing'],
+                            'balance_before' => $this->fromCents($row['remaining_cents']),
+                            'applied_amount' => $this->fromCents($applied),
+                            'remaining_after' => $this->fromCents($remainingAfter),
+                        ];
+                    }
+                }
+            }
         }
 
         return [
@@ -489,7 +571,7 @@ class FinanceAllocationService
             'allocations' => $allocations,
             'allocated_amount' => $this->fromCents($this->toCents($amount) - $remainingPayment),
             'advance_credit' => $this->fromCents(max(0, $remainingPayment)),
-            'family_balance_after' => $this->fromCents(max(0, $outstandingBefore - $this->toCents($amount))),
+            'family_balance_after' => $this->fromCents(max(0, $outstandingBefore - ($this->toCents($amount) - $remainingPayment))),
         ];
     }
 
