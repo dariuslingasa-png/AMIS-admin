@@ -175,6 +175,16 @@
                                         <p class="text-2xl font-black text-emerald-950 tracking-tight">₱{{ number_format($totalAmountDue, 2) }}</p>
                                     </div>
                                 </div>
+
+                                @if ($family->is_demo ?? false)
+                                    <form method="POST" action="{{ route('admin.finance.families.reset-demo', ['family' => $family->id]) }}" onsubmit="return confirm('Reset all demo payments for this family back to initial July 2026 state?');" class="pt-1">
+                                        @csrf
+                                        <button type="submit" class="w-full rounded-xl border border-amber-300 bg-amber-50 py-2.5 text-xs font-bold text-amber-900 hover:bg-amber-100 transition flex items-center justify-center gap-1.5">
+                                            <i data-lucide="rotate-ccw" class="h-3.5 w-3.5"></i>
+                                            Reset Demo Data for this Family
+                                        </button>
+                                    </form>
+                                @endif
                             </div>
                         </section>
                     </aside>

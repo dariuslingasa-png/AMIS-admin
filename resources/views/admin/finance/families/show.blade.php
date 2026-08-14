@@ -6,9 +6,17 @@
         ])
 
         @if ($family->is_demo ?? false)
-            <div class="mb-5 rounded-2xl border border-amber-300 bg-amber-50 p-4 text-xs font-bold text-amber-900 shadow-sm">
-                <span class="rounded-full bg-amber-200 px-2 py-0.5 text-[10px] font-black uppercase text-amber-900 mr-2">DEMO DATA</span>
-                TEST / DEMO FAMILY ACCOUNT — All billing dues, balances, and allocations shown below are isolated demo data for workflow testing.
+            <div class="mb-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-2xl border border-amber-300 bg-amber-50 p-4 text-xs font-bold text-amber-900 shadow-sm">
+                <div>
+                    <span class="rounded-full bg-amber-200 px-2 py-0.5 text-[10px] font-black uppercase text-amber-900 mr-2">DEMO DATA</span>
+                    TEST / DEMO FAMILY ACCOUNT — All billing dues, balances, and allocations shown below are isolated demo data for workflow testing.
+                </div>
+                <form method="POST" action="{{ route('admin.finance.families.reset-demo', ['family' => $family->id]) }}" onsubmit="return confirm('Reset all demo payments for this family back to initial July 2026 state?');">
+                    @csrf
+                    <button type="submit" class="rounded-xl border border-amber-400 bg-amber-200 px-3 py-1.5 text-xs font-bold text-amber-900 hover:bg-amber-300 whitespace-nowrap transition">
+                        Reset Demo Data
+                    </button>
+                </form>
             </div>
         @endif
 

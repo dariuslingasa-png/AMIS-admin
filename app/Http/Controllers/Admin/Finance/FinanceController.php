@@ -800,6 +800,19 @@ class FinanceController extends Controller
         return view('admin.finance.families.show', compact('family', 'transactions', 'outstanding', 'advanceCredit'));
     }
 
+    public function resetDemoData(Request $request, string $familyId)
+    {
+        $this->authorizeFinance($request);
+        if (! $this->demoData->isDemoFamilyId($familyId)) {
+            abort(403, 'Reset is only allowed for demo families.');
+        }
+
+        $this->demoData->resetDemoFamily($familyId);
+
+        return redirect()->route('admin.finance.families.show', ['family' => $familyId])
+            ->with('success', 'Demo data has been reset! All demo children are back to their initial July 2026 balances.');
+    }
+
     public function receiptsIndex(Request $request)
     {
         $this->authorizeFinance($request);

@@ -614,6 +614,60 @@ class FinanceDemoDataService
         ];
     }
 
+    public function resetDemoFamily(int|string $familyId): void
+    {
+        $rawFamily = $this->getRawFamily($familyId);
+        if (! $rawFamily) {
+            return;
+        }
+
+        $userId = $rawFamily['user_id'] ?? null;
+        $famId = $rawFamily['id'] ?? $familyId;
+
+        for ($m = 1; $m <= 12; $m++) {
+            $monthDate = Carbon::create(2026, 7, 15)->addMonthsNoOverflow($m - 1);
+            $monthLabel = strtoupper($monthDate->format('F Y'));
+            $monthKey = "demo_rr_ptr_{$famId}_".preg_replace('/[^a-zA-Z0-9]/', '_', strtolower($monthLabel));
+            Cache::forget($monthKey);
+        }
+
+        if ($userId) {
+            if (DB::getSchemaBuilder()->hasTable('finance_official_receipts') && DB::getSchemaBuilder()->hasTable('finance_transactions')) {
+                try {
+                    $txIds = \App\Models\FinanceTransaction::query()
+                        ->where('user_id', $userId)
+                        ->where(function ($q) {
+                            $q->where('transaction_number', 'like', 'DEMO-%')
+                                ->orWhere('remarks', 'like', '%DEMO%');
+                        })
+                        ->pluck('id');
+
+                    \App\Models\FinanceOfficialReceipt::query()->whereIn('finance_transaction_id', $txIds)->delete();
+                    \App\Models\FinanceTransaction::query()->whereIn('id', $txIds)->delete();
+                } catch (\Throwable $e) {}
+            }
+
+            if (DB::getSchemaBuilder()->hasTable('payment_submissions')) {
+                try {
+                    DB::table('payment_submissions')
+                        ->where('user_id', $userId)
+                        ->where(function ($q) {
+                            $q->where('submission_number', 'like', 'SUB-DEMO-%')
+                                ->orWhere('remarks', 'like', '%DEMO%')
+                                ->orWhere('reference_no', 'like', 'DEMO-%');
+                        })
+                        ->delete();
+                } catch (\Throwable $e) {}
+            }
+
+            if (DB::getSchemaBuilder()->hasTable('family_advance_credits')) {
+                try {
+                    \App\Models\FamilyAdvanceCredit::query()->where('user_id', $userId)->delete();
+                } catch (\Throwable $e) {}
+            }
+        }
+    }
+
     public function postDemoPayment($familyUser, array $data, $actor, $submission = null): object
     {
         $rawFamily = $this->getRawFamily($familyUser);

@@ -248,6 +248,7 @@ Route::name('admin.')->group(function () {
 
             Route::get('/family-accounts', [FinanceController::class, 'familiesIndex'])->name('families.index');
             Route::get('/family-accounts/{family}', [FinanceController::class, 'familiesShow'])->name('families.show');
+            Route::post('/family-accounts/{family}/reset-demo', [FinanceController::class, 'resetDemoData'])->name('families.reset-demo');
 
             Route::get('/official-receipts', [FinanceController::class, 'receiptsIndex'])->name('receipts.index');
             Route::get('/official-receipts/{receipt}', [FinanceController::class, 'receiptsShow'])->name('receipts.show');
