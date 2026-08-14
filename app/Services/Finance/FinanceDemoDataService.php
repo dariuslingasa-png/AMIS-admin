@@ -257,13 +257,18 @@ class FinanceDemoDataService
                 };
 
                 $monthAllocations[] = [
+                    'sequence' => count($allocations) + count($monthAllocations) + 1,
                     'month' => $monthGroup['label'],
+                    'billing_month' => $monthGroup['label'],
                     'student_name' => $child['student']->full_name,
                     'student_id' => $child['student']->amis_student_id,
                     'grade_level' => $child['student']->grade_level,
                     'original_due' => $due,
+                    'balance_before' => $due,
                     'allocated' => $allocated,
+                    'applied_amount' => $allocated,
                     'remaining_due' => max(0, round($due - $allocated, 2)),
+                    'remaining_after' => max(0, round($due - $allocated, 2)),
                     'status' => $status,
                 ];
             }
@@ -687,26 +692,70 @@ class FinanceDemoDataService
         }
     }
 
+    public function getDemoFamiliesList(): Collection
+    {
+        if (! $this->isEnabled()) {
+            return collect();
+        }
+
+        return $this->allDemoFamilies()->map(fn ($f) => $this->toFamilyObject($f))->values();
+    }
+
     private function getRawFamily(int|string|object $id): ?array
     {
         $idStr = is_object($id) ? (string) ($id->id ?? $id->user_id ?? '') : (string) $id;
 
-        return $this->allDemoFamilies()->first(fn ($f) => (string) $f['id'] === $idStr || (string) $f['demo_key'] === $idStr || (string) ($f['user_id'] ?? '') === $idStr || Str::lower($f['email']) === Str::lower($idStr));
+        return $this->allDemoFamilies()->first(fn ($f) => (string) $f['id'] === $idStr
+            || (string) $f['demo_key'] === $idStr
+            || (string) ($f['user_id'] ?? '') === $idStr
+            || Str::lower($f['email']) === Str::lower($idStr)
+            || in_array($idStr, $f['aliases'] ?? [], true));
     }
 
     private function toFamilyObject(array $data): object
     {
-        $childrenObj = collect($data['children'] ?? [])->map(fn ($c) => (object) [
-            'id' => $c['student_id'],
-            'first_name' => $c['first_name'],
-            'last_name' => $c['last_name'],
-            'full_name' => $c['name'],
-            'grade_level' => $c['grade_level'],
-            'amis_student_id' => $c['student_id'],
-            'account' => (object) [
-                'remaining_balance' => $c['monthly_due'],
-            ],
-        ]);
+        $userId = $data['user_id'] ?? ($data['id'] ?? 999001);
+        $schedule = $this->getBillingSchedule($userId);
+
+        $childrenObj = collect($data['children'] ?? [])->map(function ($c) use ($schedule) {
+            $childRemaining = (float) collect($schedule)
+                ->flatMap(fn ($g) => collect($g['children'] ?? []))
+                ->filter(fn ($childRow) => ($childRow['student']->amis_student_id ?? '') === $c['student_id'] || ($childRow['student']->id ?? '') === $c['student_id'])
+                ->sum('remaining');
+
+            if ($childRemaining <= 0.001 && $schedule->isNotEmpty()) {
+                $childRemaining = (float) collect($schedule)
+                    ->flatMap(fn ($g) => collect($g['children'] ?? []))
+                    ->filter(fn ($childRow) => Str::contains(Str::lower($childRow['student']->full_name ?? ''), Str::lower($c['name'] ?? '')))
+                    ->sum('remaining');
+            }
+
+            $studentAccount = (object) [
+                'remaining_balance' => $childRemaining,
+                'total_balance' => (float) ($c['monthly_due'] * 9),
+            ];
+
+            $student = (object) [
+                'id' => $c['student_id'],
+                'first_name' => $c['first_name'],
+                'last_name' => $c['last_name'],
+                'full_name' => $c['name'],
+                'grade_level' => $c['grade_level'],
+                'amis_student_id' => $c['student_id'],
+                'account' => $studentAccount,
+            ];
+
+            return (object) [
+                'id' => $c['student_id'],
+                'first_name' => $c['first_name'],
+                'last_name' => $c['last_name'],
+                'full_name' => $c['name'],
+                'grade_level' => $c['grade_level'],
+                'amis_student_id' => $c['student_id'],
+                'student' => $student,
+                'account' => $studentAccount,
+            ];
+        });
 
         return (object) [
             'id' => $data['id'] ?? 999001,
@@ -716,18 +765,11 @@ class FinanceDemoDataService
             'email' => $data['email'] ?? 'demo@example.com',
             'is_demo' => true,
             'enrollment_applicants_count' => count($data['children'] ?? []),
-            'enrollmentApplicants' => $childrenObj->map(fn ($c) => (object) [
-                'first_name' => $c->first_name,
-                'last_name' => $c->last_name,
-                'full_name' => $c->full_name,
-                'grade_level' => $c->grade_level,
-                'amis_student_id' => $c->amis_student_id,
-                'student' => $c,
-            ]),
+            'enrollmentApplicants' => $childrenObj,
         ];
     }
 
-    private function allDemoFamilies(): Collection
+    public function allDemoFamilies(): Collection
     {
         $families = collect();
 
@@ -737,20 +779,24 @@ class FinanceDemoDataService
                 $distinctUserIds = DB::table('payment_demo_children')
                     ->select('user_id')
                     ->distinct()
+                    ->orderBy('user_id')
                     ->pluck('user_id');
 
                 foreach ($distinctUserIds as $uId) {
                     $dbChildren = DB::table('payment_demo_children')
                         ->where('user_id', $uId)
+                        ->orderBy('id')
                         ->get();
 
                     if ($dbChildren->isNotEmpty()) {
                         $user = DB::table('users')->where('id', $uId)->first();
-                        $userName = $user?->name ?: 'ZHAIREL LINGASA';
-                        $userEmail = $user?->email ?: 'zhairel.lingasa@gmail.com';
+                        $isWcamsar = (int) $uId === 63 || Str::contains(Str::lower($user?->email ?? ''), 'wcamsar');
+                        $userName = $user?->name ?: ($isWcamsar ? 'WCAMSAR AMIS' : 'ZHAIREL LINGASA');
+                        $userEmail = $user?->email ?: ($isWcamsar ? 'wcamsar.amis@gmail.com' : 'zhairel.lingasa@gmail.com');
 
                         $childrenArray = $dbChildren->map(function ($c) {
                             $nameParts = explode(' ', trim($c->display_name), 2);
+
                             return [
                                 'student_id' => $c->demo_student_number ?: ('AFPS-DEMO-'.$c->id),
                                 'first_name' => $nameParts[0] ?? 'DEMO',
@@ -761,7 +807,10 @@ class FinanceDemoDataService
                             ];
                         })->toArray();
 
-                        $demoId = ($uId == 61 || $uId == 2 || Str::contains(Str::lower($userEmail), 'lingasa')) ? 999001 : (999000 + (int) $uId);
+                        $demoId = ($uId == 61 || $uId == 2 || Str::contains(Str::lower($userEmail), 'lingasa')) ? 999001 : (($uId == 63 || Str::contains(Str::lower($userEmail), 'wcamsar')) ? 999002 : (999000 + (int) $uId));
+                        $aliases = $isWcamsar
+                            ? [$userEmail, Str::lower($userName), 'wcamsar', 'camsar', 'fatima', 'omar', 'zaid', 'aisha', '999002', '999063', 'demo-2', 'demo-63', (string) $uId]
+                            : [$userEmail, Str::lower($userName), 'lingasa', 'zhairel', 'ahmad', 'maryam', 'yusuf', '999001', '999061', 'demo-1', 'demo-61', (string) $uId];
 
                         $families->push([
                             'id' => $demoId,
@@ -769,15 +818,7 @@ class FinanceDemoDataService
                             'demo_key' => 'demo-'.$uId,
                             'name' => mb_strtoupper($userName),
                             'email' => $userEmail,
-                            'aliases' => array_values(array_unique(array_filter([
-                                $userEmail,
-                                Str::lower($userName),
-                                'lingasa',
-                                'wcamsar',
-                                'ahmad', 'maryam', 'yusuf',
-                                (string) $uId,
-                                (string) $demoId,
-                            ]))),
+                            'aliases' => array_values(array_unique(array_filter($aliases))),
                             'children' => $childrenArray,
                         ]);
                     }
@@ -785,12 +826,12 @@ class FinanceDemoDataService
             } catch (\Throwable $e) {}
         }
 
-        // Fallback default fixture if DB records not found
+        // Fallback default fixtures if DB records not found
         if ($families->isEmpty()) {
             $families->push([
                 'id' => 999001,
                 'user_id' => 61,
-                'demo_key' => 'demo-1',
+                'demo_key' => 'demo-61',
                 'name' => 'ZHAIREL LINGASA',
                 'email' => 'zhairel.lingasa@gmail.com',
                 'aliases' => ['zhairel.lingasa@gmail.com', 'zhairel', 'lingasa', 'ahmad', 'maryam', 'yusuf', '999001', '61', '2'],
@@ -821,35 +862,50 @@ class FinanceDemoDataService
                     ],
                 ],
             ]);
-        }
 
-        // Demo Family 2
-        $families->push([
-            'id' => 999002,
-            'user_id' => 999002,
-            'demo_key' => 'demo-2',
-            'name' => 'DEMO PARENT 2',
-            'email' => 'demo.parent2@example.test',
-            'aliases' => ['demo.parent2@example.test', 'demo-2', '999002'],
-            'children' => [
-                [
-                    'student_id' => 'DEMO-2026-003',
-                    'first_name' => 'DEMO',
-                    'last_name' => 'CHILD 3',
-                    'name' => 'DEMO CHILD 3',
-                    'grade_level' => 'Grade 3',
-                    'monthly_due' => 4000.00,
+            $families->push([
+                'id' => 999002,
+                'user_id' => 63,
+                'demo_key' => 'demo-63',
+                'name' => 'WCAMSAR AMIS',
+                'email' => 'wcamsar.amis@gmail.com',
+                'aliases' => ['wcamsar.amis@gmail.com', 'wcamsar', 'camsar', 'fatima', 'omar', 'zaid', 'aisha', '999002', '63'],
+                'children' => [
+                    [
+                        'student_id' => 'AFPS-DEMO-2026-001-63',
+                        'first_name' => 'FATIMA W.',
+                        'last_name' => 'CAMSAR',
+                        'name' => 'FATIMA W. CAMSAR',
+                        'grade_level' => 'Grade 1',
+                        'monthly_due' => 3582.22,
+                    ],
+                    [
+                        'student_id' => 'AFPS-DEMO-2026-002-63',
+                        'first_name' => 'OMAR W.',
+                        'last_name' => 'CAMSAR',
+                        'name' => 'OMAR W. CAMSAR',
+                        'grade_level' => 'Grade 3',
+                        'monthly_due' => 3698.89,
+                    ],
+                    [
+                        'student_id' => 'AFPS-DEMO-2026-003-63',
+                        'first_name' => 'ZAID W.',
+                        'last_name' => 'CAMSAR',
+                        'name' => 'ZAID W. CAMSAR',
+                        'grade_level' => 'Grade 5',
+                        'monthly_due' => 3841.11,
+                    ],
+                    [
+                        'student_id' => 'AFPS-DEMO-2026-004-63',
+                        'first_name' => 'AISHA W.',
+                        'last_name' => 'CAMSAR',
+                        'name' => 'AISHA W. CAMSAR',
+                        'grade_level' => 'Grade 7',
+                        'monthly_due' => 4055.56,
+                    ],
                 ],
-                [
-                    'student_id' => 'DEMO-2026-004',
-                    'first_name' => 'DEMO',
-                    'last_name' => 'CHILD 4',
-                    'name' => 'DEMO CHILD 4',
-                    'grade_level' => 'Grade 7',
-                    'monthly_due' => 6000.00,
-                ],
-            ],
-        ]);
+            ]);
+        }
 
         return $families;
     }

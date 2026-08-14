@@ -375,26 +375,27 @@ class FinanceController extends Controller
     {
         $this->authorizeFinance($request);
         $families = collect();
-        if ($request->filled('q')) {
-            $term = '%'.$request->string('q').'%';
-            $families = User::query()
-                ->whereHas('enrollmentApplicants.student.account')
-                ->where(function ($q) use ($term) {
-                    $q->where('name', 'like', $term)
-                        ->orWhere('email', 'like', $term)
-                        ->orWhereHas('enrollmentApplicants', function ($students) use ($term) {
-                            $students->where('first_name', 'like', $term)
-                                ->orWhere('last_name', 'like', $term)
-                                ->orWhere('amis_student_id', 'like', $term);
-                        });
-                })
-                ->withCount('enrollmentApplicants')
-                ->limit(15)
-                ->get();
-
-            if ($this->demoData->isEnabled()) {
-                $demoFamilies = $this->demoData->searchFamilies($request->string('q'));
-                $families = $families->concat($demoFamilies);
+        if ($this->demoData->isEnabled()) {
+            if ($request->filled('q')) {
+                $families = $this->demoData->searchFamilies($request->string('q'));
+            }
+        } else {
+            if ($request->filled('q')) {
+                $term = '%'.$request->string('q').'%';
+                $families = User::query()
+                    ->whereHas('enrollmentApplicants.student.account')
+                    ->where(function ($q) use ($term) {
+                        $q->where('name', 'like', $term)
+                            ->orWhere('email', 'like', $term)
+                            ->orWhereHas('enrollmentApplicants', function ($students) use ($term) {
+                                $students->where('first_name', 'like', $term)
+                                    ->orWhere('last_name', 'like', $term)
+                                    ->orWhere('amis_student_id', 'like', $term);
+                            });
+                    })
+                    ->withCount('enrollmentApplicants')
+                    ->limit(15)
+                    ->get();
             }
         }
 
@@ -723,6 +724,26 @@ class FinanceController extends Controller
     public function familiesIndex(Request $request)
     {
         $this->authorizeFinance($request);
+
+        if ($this->demoData->isEnabled()) {
+            $term = $request->string('q')->trim()->value();
+            $demoFamilies = filled($term)
+                ? $this->demoData->searchFamilies($term)
+                : $this->demoData->getDemoFamiliesList();
+
+            $page = max(1, $request->integer('page', 1));
+            $perPage = 20;
+            $paginated = new \Illuminate\Pagination\LengthAwarePaginator(
+                $demoFamilies->forPage($page, $perPage)->values(),
+                $demoFamilies->count(),
+                $perPage,
+                $page,
+                ['path' => $request->url(), 'query' => $request->query()]
+            );
+
+            return view('admin.finance.families.index', ['families' => $paginated]);
+        }
+
         $families = User::query()
             ->whereHas('enrollmentApplicants.student.account')
             ->with(['enrollmentApplicants.student.account'])
@@ -744,11 +765,21 @@ class FinanceController extends Controller
         $this->authorizeFinance($request);
         if ($this->demoData->isDemoFamilyId($familyId)) {
             $family = $this->demoData->getFamily($familyId);
-            $transactions = collect();
+            $userId = $family->user_id ?? $familyId;
+            $transactions = FinanceTransaction::query()
+                ->with('officialReceipt')
+                ->where('user_id', $userId)
+                ->where('status', 'APPROVED')
+                ->latest('transaction_at')
+                ->paginate(15);
             $outstanding = $this->demoData->getBalances($familyId);
             $advanceCredit = 0.00;
 
             return view('admin.finance.families.show', compact('family', 'transactions', 'outstanding', 'advanceCredit'));
+        }
+
+        if ($this->demoData->isEnabled()) {
+            abort(404, 'Official family accounts are hidden while demo mode is active.');
         }
 
         $family = User::query()->findOrFail($familyId);

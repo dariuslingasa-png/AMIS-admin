@@ -59,13 +59,22 @@
                 </div>
 
                 <div class="mt-4 divide-y divide-slate-100 rounded-xl border border-slate-200">
-                    @forelse ($transaction->allocation_snapshot ?? [] as $allocation)
+                    @forelse ($transaction->allocation_snapshot ?? [] as $index => $allocation)
+                        @php
+                            $alloc = is_array($allocation) ? $allocation : (array) $allocation;
+                            $seq = $alloc['sequence'] ?? ($index + 1);
+                            $month = $alloc['billing_month'] ?? ($alloc['month'] ?? 'Monthly Billing');
+                            $studentName = $alloc['student_name'] ?? ($alloc['student'] ?? 'Demo Student');
+                            $before = (float) ($alloc['balance_before'] ?? ($alloc['original_due'] ?? 0));
+                            $applied = (float) ($alloc['applied_amount'] ?? ($alloc['allocated'] ?? ($alloc['amount_paid'] ?? 0)));
+                            $remaining = (float) ($alloc['remaining_after'] ?? ($alloc['remaining_due'] ?? 0));
+                        @endphp
                         <div class="grid gap-2 px-4 py-3 sm:grid-cols-[1fr_auto] sm:items-center">
                             <div>
-                                <p class="font-bold text-slate-800">#{{ $allocation['sequence'] }} · {{ $allocation['billing_month'] }} · {{ $allocation['student_name'] }}</p>
-                                <p class="text-xs text-slate-500">₱{{ number_format($allocation['balance_before'], 2) }} before · ₱{{ number_format($allocation['remaining_after'], 2) }} remaining</p>
+                                <p class="font-bold text-slate-800">#{{ $seq }} · {{ $month }} · {{ $studentName }}</p>
+                                <p class="text-xs text-slate-500">₱{{ number_format($before, 2) }} before · ₱{{ number_format($remaining, 2) }} remaining</p>
                             </div>
-                            <p class="font-extrabold text-emerald-800">₱{{ number_format($allocation['applied_amount'], 2) }}</p>
+                            <p class="font-extrabold text-emerald-800">₱{{ number_format($applied, 2) }}</p>
                         </div>
                     @empty
                         <div class="p-5 text-center text-sm text-slate-500">No open billing; payment stored as advance credit.</div>
