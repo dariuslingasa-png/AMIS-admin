@@ -202,12 +202,22 @@
                     </div>
                     @php
                         $amountReceived = (float)($receiptData['amount_received'] ?? $receiptData['amount'] ?? $monthlyAppliedTotal);
-                        $excessCarried = (float)($receiptData['credit_created'] ?? $receiptData['credit_balance'] ?? max(0, round($amountReceived - $monthlyAppliedTotal, 2)));
+                        $excessMonth = max(0, round($amountReceived - $monthlyAppliedTotal, 2));
                     @endphp
-                    @if($excessCarried > 0.001)
+                    @if($excessMonth > 0.001)
                         <div class="flex justify-between">
-                            <span class="text-slate-600">Credit / Carried Forward:</span>
-                            <strong class="text-emerald-700">₱{{ number_format($excessCarried, 2) }}</strong>
+                            <span class="text-slate-600">Carried Forward / Next Month:</span>
+                            <strong class="text-emerald-700">₱{{ number_format($excessMonth, 2) }}</strong>
+                        </div>
+                    @elseif((float)($receiptData['credit_created'] ?? 0) > 0.001)
+                        <div class="flex justify-between">
+                            <span class="text-slate-600">Credit Balance:</span>
+                            <strong class="text-emerald-700">₱{{ number_format((float)$receiptData['credit_created'], 2) }}</strong>
+                        </div>
+                    @elseif((float)($receiptData['credit_balance'] ?? 0) > 0.001)
+                        <div class="flex justify-between">
+                            <span class="text-slate-600">Credit Balance:</span>
+                            <strong class="text-emerald-700">₱{{ number_format((float)$receiptData['credit_balance'], 2) }}</strong>
                         </div>
                     @endif
                     <div class="flex justify-between border-t border-slate-200 pt-2 font-bold">

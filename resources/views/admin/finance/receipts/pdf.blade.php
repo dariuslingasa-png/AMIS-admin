@@ -264,15 +264,20 @@
                         <td class="sum-lbl">Remaining {{ $receiptData['billing_month'] ?? 'Month' }} Balance:</td>
                         <td class="sum-val" style="font-weight: bold;">₱{{ number_format((float)($receiptData['remaining_balance'] ?? $totalBalance), 2) }}</td>
                     </tr>
-                    @if((float)($receiptData['credit_created'] ?? 0) > 0.001)
+                    @php
+                        $amountReceived = (float)($receiptData['amount_received'] ?? $receiptData['amount'] ?? $monthlyAppliedTotal);
+                        $excessMonth = max(0, round($amountReceived - $monthlyAppliedTotal, 2));
+                        $creditVal = (float)($receiptData['credit_created'] ?? $receiptData['credit_balance'] ?? 0);
+                    @endphp
+                    @if($creditVal > 0.001)
                         <tr>
                             <td class="sum-lbl">Credit Balance:</td>
-                            <td class="sum-val" style="color: #047857; font-weight: bold;">₱{{ number_format((float)$receiptData['credit_created'], 2) }}</td>
+                            <td class="sum-val" style="color: #047857; font-weight: bold;">₱{{ number_format($creditVal, 2) }}</td>
                         </tr>
-                    @elseif((float)($receiptData['credit_balance'] ?? 0) > 0.001)
+                    @elseif($excessMonth > 0.001)
                         <tr>
-                            <td class="sum-lbl">Credit Balance:</td>
-                            <td class="sum-val" style="color: #047857; font-weight: bold;">₱{{ number_format((float)$receiptData['credit_balance'], 2) }}</td>
+                            <td class="sum-lbl">Carried to Next Month:</td>
+                            <td class="sum-val" style="color: #047857; font-weight: bold;">₱{{ number_format($excessMonth, 2) }}</td>
                         </tr>
                     @endif
                     <tr class="sum-status-row">
