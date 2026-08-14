@@ -160,4 +160,38 @@ class FinanceManualSoaTest extends TestCase
         $respYusuf->assertSee('YUSUF Z. LINGASA');
         $respYusuf->assertSee('Grade 5');
     }
+
+    public function test_monthly_schedule_can_be_adjusted_and_historical_receipt_encoded(): void
+    {
+        $admin = User::factory()->create([
+            'username' => 'test_admin_' . uniqid(),
+            'role' => 'admin',
+            'account_status' => 'verified',
+            'active_admin_session_id' => null,
+        ]);
+
+        $response = $this->actingAs($admin)->post(route('admin.finance.students.adjust-schedule', ['studentIdentifier' => 'AFPS-DEMO-2026-002-2']), [
+            'family_id' => '999001',
+            'student_name' => 'MARYAM Z. LINGASA',
+            'grade_level' => 'Grade 3',
+            'billing_month' => 'JULY 2026',
+            'monthly_fee' => 3926.11,
+            'amount_paid' => 2700.00,
+            'or_number' => 'OR-2026-0715',
+            'payment_date' => '2026-07-10',
+            'payment_method' => 'Cash at Counter',
+            'remarks' => 'Encoded historical receipt',
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        // Check that Maryam's official SOA or billing reflects this
+        $demoService = app(\App\Services\Finance\FinanceDemoDataService::class);
+        $adj = $demoService->findAdjustmentForChild('AFPS-DEMO-2026-002-2', 'MARYAM Z. LINGASA', 'JULY 2026');
+        $this->assertNotNull($adj);
+        $this->assertEquals(3926.11, $adj['fee']);
+        $this->assertEquals(2700.00, $adj['paid']);
+        $this->assertEquals('OR-2026-0715', $adj['receipt']['or_number']);
+    }
 }

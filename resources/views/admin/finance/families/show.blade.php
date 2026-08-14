@@ -3,13 +3,27 @@
         showUploadModal: false,
         showHistoryModal: false,
         showPreviewModal: false,
-        showPaymentModal: false,
+        showAdjustModal: false,
         selectedStudentId: '{{ $family->enrollmentApplicants->first()?->amis_student_id ?: ($family->enrollmentApplicants->first()?->student?->student_number ?: $family->enrollmentApplicants->first()?->id) }}',
         activeStudent: null,
         previewUrl: '',
         previewTitle: '',
         previewIsPdf: false,
         historyList: [],
+        adjustData: {
+            student_id: '',
+            student_name: '',
+            grade_level: '',
+            family_id: '',
+            month: '',
+            fee: 0,
+            paid: 0,
+            balance: 0,
+            or_number: '',
+            payment_date: '{{ now()->format('Y-m-d') }}',
+            payment_method: 'Cash at Counter',
+            remarks: ''
+        },
         selectStudent(id) {
             this.selectedStudentId = this.selectedStudentId === id ? null : id;
         },
@@ -28,9 +42,22 @@
             this.previewIsPdf = isPdf;
             this.showPreviewModal = true;
         },
-        openPayment(student) {
-            this.activeStudent = student;
-            this.showPaymentModal = true;
+        openAdjust(item) {
+            this.adjustData = {
+                student_id: item.student_id,
+                student_name: item.student_name,
+                grade_level: item.grade_level,
+                family_id: item.family_id,
+                month: item.month,
+                fee: item.fee,
+                paid: item.paid,
+                balance: item.balance,
+                or_number: '',
+                payment_date: '{{ now()->format('Y-m-d') }}',
+                payment_method: 'Cash at Counter',
+                remarks: ''
+            };
+            this.showAdjustModal = true;
         }
     }">
         {{-- TOP NAVIGATION BREADCRUMB / HEADER --}}
@@ -248,11 +275,12 @@
                                     <table class="min-w-full text-left text-sm border-collapse">
                                         <thead class="bg-slate-50 text-xs font-bold uppercase text-slate-500 border-b border-slate-200">
                                             <tr>
-                                                <th class="px-4 py-3">Billing Month</th>
-                                                <th class="px-4 py-3 text-right">Monthly Fee</th>
-                                                <th class="px-4 py-3 text-right">Paid</th>
-                                                <th class="px-4 py-3 text-right">Balance</th>
-                                                <th class="px-4 py-3 text-center">Status</th>
+                                                <th class="px-3.5 py-3">Billing Month</th>
+                                                <th class="px-3.5 py-3 text-right">Monthly Fee</th>
+                                                <th class="px-3.5 py-3 text-right">Paid</th>
+                                                <th class="px-3.5 py-3 text-right">Balance</th>
+                                                <th class="px-3.5 py-3 text-center">Status</th>
+                                                <th class="px-3.5 py-3 text-center">Action</th>
                                             </tr>
                                         </thead>
                                         <tbody class="divide-y divide-slate-100">
@@ -266,27 +294,48 @@
                                                     };
                                                 @endphp
                                                 <tr class="hover:bg-slate-50 transition">
-                                                    <td class="px-4 py-3 font-bold text-slate-800">
+                                                    <td class="px-3.5 py-3 font-bold text-slate-800">
                                                         {{ $m->month }}
                                                     </td>
-                                                    <td class="px-4 py-3 text-right font-medium text-slate-600">
+                                                    <td class="px-3.5 py-3 text-right font-medium text-slate-600">
                                                         ₱{{ number_format($m->fee ?? $m->original ?? 0, 2) }}
                                                     </td>
-                                                    <td class="px-4 py-3 text-right font-medium text-slate-600">
+                                                    <td class="px-3.5 py-3 text-right font-medium text-slate-600">
                                                         ₱{{ number_format($m->paid ?? $m->verified ?? 0, 2) }}
                                                     </td>
-                                                    <td class="px-4 py-3 text-right font-extrabold text-slate-900">
+                                                    <td class="px-3.5 py-3 text-right font-extrabold text-slate-900">
                                                         ₱{{ number_format($m->remaining, 2) }}
                                                     </td>
-                                                    <td class="px-4 py-3 text-center">
+                                                    <td class="px-3.5 py-3 text-center">
                                                         <span class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-bold uppercase {{ $stBadge }}">
                                                             {{ $m->status }}
                                                         </span>
                                                     </td>
+                                                    <td class="px-3.5 py-3 text-center">
+                                                        <button
+                                                            type="button"
+                                                            @click="openAdjust({
+                                                                student_id: '{{ $sId }}',
+                                                                student_name: '{{ addslashes($sName) }}',
+                                                                grade_level: '{{ $sGrade }}',
+                                                                family_id: '{{ $family->id }}',
+                                                                month: '{{ $m->month }}',
+                                                                fee: '{{ number_format($m->fee ?? $m->original ?? 0, 2, '.', '') }}',
+                                                                paid: '{{ number_format($m->paid ?? $m->verified ?? 0, 2, '.', '') }}',
+                                                                balance: '{{ number_format($m->remaining, 2, '.', '') }}',
+                                                                status: '{{ $m->status }}'
+                                                            })"
+                                                            class="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-bold text-slate-700 hover:border-emerald-500 hover:text-emerald-700 shadow-2xs transition"
+                                                            title="Edit Monthly Fee & Encode Old Receipt"
+                                                        >
+                                                            <svg class="h-3.5 w-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                                            <span>Edit / Old Receipt</span>
+                                                        </button>
+                                                    </td>
                                                 </tr>
                                             @empty
                                                 <tr>
-                                                    <td colspan="5" class="p-8 text-center text-xs text-slate-400">No monthly schedule generated.</td>
+                                                    <td colspan="6" class="p-8 text-center text-xs text-slate-400">No monthly schedule generated.</td>
                                                 </tr>
                                             @endforelse
                                         </tbody>
@@ -373,27 +422,6 @@
                                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                                         Open Official School SOA (Print / Save PDF)
                                     </a>
-                                </div>
-
-                                {{-- SEPARATE FINANCE ACTION: RECORD PAYMENT --}}
-                                <div class="rounded-2xl border border-blue-200 bg-blue-50/40 p-5 shadow-2xs">
-                                    <div class="mb-2 flex items-center justify-between">
-                                        <div>
-                                            <span class="inline-flex rounded-md bg-blue-100 text-blue-800 border border-blue-200 px-2 py-0.5 text-xs font-bold uppercase tracking-wider">Finance Payment</span>
-                                            <h5 class="mt-1 text-sm font-black text-slate-900">Record Family Payment</h5>
-                                        </div>
-                                    </div>
-                                    <p class="text-xs text-slate-500 mb-3.5">
-                                        Post verified cash, digital, or remittance payment. AMIS automatically allocates the amount to the family's oldest unpaid dues first.
-                                    </p>
-                                    <button
-                                        type="button"
-                                        @click="openPayment({{ Js::from($studentData) }})"
-                                        class="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-blue-700 shadow-sm transition"
-                                    >
-                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                                        Record Payment
-                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -641,145 +669,105 @@
             </div>
         </div>
 
-        {{-- RECORD FAMILY PAYMENT MODAL (REUSING ONSITE PAYMENT LOGIC) --}}
-        <div x-show="showPaymentModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4" @click.self="showPaymentModal = false">
-            <div class="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl transition" role="dialog" aria-modal="true" x-data="{
-                paymentMethod: 'cash',
-                paymentAmount: '{{ number_format((float) ($outstanding->first()['remaining'] ?? 0), 2, '.', '') }}',
-                setAmount(val) {
-                    this.paymentAmount = Number(val).toFixed(2);
-                }
-            }">
+        {{-- ADJUST MONTHLY SCHEDULE & RECORD HISTORICAL PAYMENT MODAL (OPTIONS A & B) --}}
+        <div x-show="showAdjustModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4" @click.self="showAdjustModal = false">
+            <div class="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl transition" role="dialog" aria-modal="true">
                 <div class="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
                     <div>
-                        <span class="inline-flex rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider text-blue-800 border border-blue-200">Record Family Payment</span>
-                        <h3 class="mt-1 text-lg font-black text-slate-900">Family: {{ $family->name }}</h3>
+                        <div class="flex items-center gap-2">
+                            <span class="inline-flex rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider text-emerald-800 border border-emerald-200">Schedule &amp; Historical Payment</span>
+                            <span class="inline-flex rounded-md bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-700" x-text="adjustData.grade_level"></span>
+                        </div>
+                        <h3 class="mt-1.5 text-lg font-black text-slate-900" x-text="adjustData.student_name"></h3>
                         <p class="text-xs text-slate-500 mt-0.5">
-                            Opened from: <strong class="text-slate-800" x-text="activeStudent?.name"></strong> (<span x-text="activeStudent?.grade"></span>)
-                            · Family Outstanding Balance: <strong class="text-rose-700 font-bold">₱{{ number_format($outstanding->sum('remaining'), 2) }}</strong>
+                            Month: <strong class="text-slate-900 uppercase" x-text="adjustData.month"></strong> · Student ID: <span class="font-mono text-slate-600" x-text="adjustData.student_id"></span>
                         </p>
                     </div>
-                    <button type="button" @click="showPaymentModal = false" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition">
+                    <button type="button" @click="showAdjustModal = false" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition">
                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
 
-                {{-- AUTOMATIC ALLOCATION NOTICE BANNER --}}
-                <div class="mt-4 rounded-xl border border-blue-200 bg-blue-50/80 p-3.5 text-xs text-blue-950 flex items-start gap-2.5">
-                    <svg class="h-5 w-5 text-blue-700 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    <div class="leading-relaxed">
-                        <strong class="font-bold text-blue-900">Payment applies to the family account.</strong>
-                        AMIS automatically allocates the verified amount to the oldest outstanding billing first across all siblings. No student or month selection is required.
-                    </div>
-                </div>
-
-                <form action="{{ route('admin.finance.onsite.store') }}" method="POST" enctype="multipart/form-data" class="mt-5 space-y-4">
+                <form :action="'/admin/finance/students/' + encodeURIComponent(adjustData.student_id) + '/adjust-schedule'" method="POST" enctype="multipart/form-data" class="mt-5 space-y-4">
                     @csrf
-                    <input type="hidden" name="user_id" value="{{ $family->id }}">
-                    <input type="hidden" name="return_to" value="family">
-                    <input type="hidden" name="from_family_page" value="1">
+                    <input type="hidden" name="family_id" :value="adjustData.family_id">
+                    <input type="hidden" name="student_name" :value="adjustData.student_name">
+                    <input type="hidden" name="grade_level" :value="adjustData.grade_level">
+                    <input type="hidden" name="billing_month" :value="adjustData.month">
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {{-- PAYMENT METHOD --}}
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700">Payment Method <span class="text-rose-600">*</span></label>
-                            <select name="payment_method" x-model="paymentMethod" required class="mt-1 block w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm font-semibold text-slate-800 shadow-sm focus:border-blue-600 focus:outline-hidden">
-                                <option value="cash">Cash (Onsite Counter)</option>
-                                <option value="gcash">GCash</option>
-                                <option value="maya">Maya</option>
-                                <option value="bdo">BDO Bank Transfer</option>
-                                <option value="bank_transfer">Other Bank Transfer</option>
-                                <option value="remittance">Remittance (TeleMoney/Enjaz/Western Union)</option>
-                                <option value="other">Other / Cheque</option>
-                            </select>
+                        {{-- OPTION A: MONTHLY FEE ADJUSTMENT --}}
+                        <div class="rounded-xl border border-slate-200 bg-slate-50 p-3.5">
+                            <label class="block text-xs font-bold text-slate-700">Monthly Fee Due (₱) <span class="text-rose-600">*</span></label>
+                            <p class="text-[11px] text-slate-500 mb-1.5">Original tuition or adjusted fee for this month.</p>
+                            <input type="number" step="0.01" min="0" max="999999.99" name="monthly_fee" x-model="adjustData.fee" required class="block w-full rounded-xl border border-slate-300 px-3 py-2 text-sm font-bold text-slate-900 shadow-sm focus:border-emerald-600 focus:outline-hidden" placeholder="0.00">
                         </div>
 
-                        {{-- AMOUNT RECEIVED --}}
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700">Amount Received (₱) <span class="text-rose-600">*</span></label>
-                            <input type="number" step="0.01" min="0.01" max="99999999.99" name="amount" x-model="paymentAmount" required class="mt-1 block w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm font-bold text-slate-900 shadow-sm focus:border-blue-600 focus:outline-hidden" placeholder="0.00">
+                        {{-- OPTION B: PAID AMOUNT (HISTORICAL / OLD PAYMENT) --}}
+                        <div class="rounded-xl border border-emerald-200 bg-emerald-50/50 p-3.5">
+                            <label class="block text-xs font-bold text-emerald-950">Amount Paid (₱) <span class="text-rose-600">*</span></label>
+                            <p class="text-[11px] text-emerald-700 mb-1.5">Paid amount to credit from old/counter receipt.</p>
+                            <input type="number" step="0.01" min="0" max="999999.99" name="amount_paid" x-model="adjustData.paid" required class="block w-full rounded-xl border border-emerald-300 px-3 py-2 text-sm font-bold text-emerald-950 shadow-sm focus:border-emerald-600 focus:outline-hidden" placeholder="0.00">
                         </div>
                     </div>
 
-                    {{-- QUICK AMOUNT PRESETS --}}
-                    <div class="flex flex-wrap items-center gap-1.5 pt-1">
-                        <span class="text-[11px] font-bold text-slate-500">Quick amount:</span>
-                        @if ($outstanding->isNotEmpty())
-                            @php
-                                $firstDue = (float) ($outstanding->first()['remaining'] ?? 0);
-                                $totalDue = (float) $outstanding->sum('remaining');
-                            @endphp
-                            <button type="button" @click="setAmount({{ $firstDue }})" class="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-100 transition">
-                                Pay Oldest (₱{{ number_format($firstDue, 2) }})
-                            </button>
-                            <button type="button" @click="setAmount({{ $totalDue }})" class="rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-800 hover:bg-emerald-100 transition">
-                                Pay Full Balance (₱{{ number_format($totalDue, 2) }})
-                            </button>
-                        @endif
-                        <button type="button" @click="setAmount(1000)" class="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-bold text-slate-600 hover:bg-slate-50 transition">₱1,000</button>
-                        <button type="button" @click="setAmount(3000)" class="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-bold text-slate-600 hover:bg-slate-50 transition">₱3,000</button>
-                        <button type="button" @click="setAmount(5000)" class="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-bold text-slate-600 hover:bg-slate-50 transition">₱5,000</button>
+                    {{-- COMPUTED REMAINING FOR THIS MONTH --}}
+                    <div class="rounded-xl border border-slate-200 bg-white p-3 flex items-center justify-between">
+                        <span class="text-xs font-bold text-slate-600">Calculated Remaining Month Balance:</span>
+                        <span class="text-sm font-black text-slate-900" x-text="'₱' + Math.max(0, (Number(adjustData.fee || 0) - Number(adjustData.paid || 0))).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></span>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {{-- REFERENCE NUMBER (REQUIRED FOR DIGITAL / REMITTANCE) --}}
-                        <div x-show="paymentMethod !== 'cash'">
-                            <label class="block text-xs font-bold text-slate-700">Transaction / Reference Number <span class="text-rose-600">*</span></label>
-                            <input type="text" name="reference_number" :required="paymentMethod !== 'cash'" class="mt-1 block w-full rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-800 shadow-sm focus:border-blue-600 focus:outline-hidden" placeholder="e.g. 400857439 / GCash Ref">
+                    <div class="border-t border-slate-100 pt-3">
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-600 mb-3">Historical / Old Receipt Details (Option B)</h4>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {{-- OFFICIAL RECEIPT NUMBER --}}
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700">Official Receipt (OR) Number</label>
+                                <input type="text" name="or_number" x-model="adjustData.or_number" class="mt-1 block w-full rounded-xl border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-800 shadow-sm focus:border-emerald-600 focus:outline-hidden" placeholder="e.g. OR-2026-0715 / Receipt 8839">
+                            </div>
+
+                            {{-- TRANSACTION DATE --}}
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700">Payment Date</label>
+                                <input type="date" name="payment_date" x-model="adjustData.payment_date" class="mt-1 block w-full rounded-xl border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-800 shadow-sm focus:border-emerald-600 focus:outline-hidden">
+                            </div>
                         </div>
 
-                        {{-- TRANSACTION DATE / TIME --}}
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700">Transaction Date &amp; Time</label>
-                            <input type="datetime-local" name="transaction_at" value="{{ now(config('finance.timezone', 'Asia/Manila'))->format('Y-m-d\TH:i') }}" class="mt-1 block w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-blue-600 focus:outline-hidden">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3">
+                            {{-- PAYMENT METHOD --}}
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700">Payment Method / Channel</label>
+                                <select name="payment_method" x-model="adjustData.payment_method" class="mt-1 block w-full rounded-xl border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-800 shadow-sm focus:border-emerald-600 focus:outline-hidden">
+                                    <option value="Cash at Counter">Cash at Counter</option>
+                                    <option value="Old Bank Deposit">Old Bank Deposit (BDO / Other)</option>
+                                    <option value="GCash">GCash</option>
+                                    <option value="Maya">Maya</option>
+                                    <option value="Remittance">Remittance</option>
+                                    <option value="Manual Adjustment">Manual Ledger Adjustment</option>
+                                </select>
+                            </div>
+
+                            {{-- ATTACH OLD RECEIPT FILE --}}
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700">Attach Old Receipt File (Optional)</label>
+                                <input type="file" name="receipt_file" accept=".pdf,.jpg,.jpeg,.png" class="mt-1 block w-full text-xs text-slate-500 file:mr-2.5 file:rounded-xl file:border-0 file:bg-slate-100 file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-slate-800 hover:file:bg-slate-200">
+                            </div>
                         </div>
-                    </div>
 
-                    {{-- RECEIVING ACCOUNT / COUNTER --}}
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700">Receiving Account / Cashier Counter</label>
-                        <input type="text" name="account_received" value="AMIS Finance Office / Cashier Counter 1" class="mt-1 block w-full rounded-xl border border-slate-300 px-3 py-2 text-xs text-slate-800 shadow-sm focus:border-blue-600 focus:outline-hidden" placeholder="e.g. AMIS Cashier Counter 1 / BDO Account">
-                    </div>
-
-                    {{-- PAYMENT PROOF (NON-CASH) --}}
-                    <div x-show="paymentMethod !== 'cash'">
-                        <label class="block text-xs font-bold text-slate-700">Proof of Payment / Screenshot (JPG, PNG)</label>
-                        <input type="file" name="receipt" accept=".jpg,.jpeg,.png,image/jpeg,image/png" class="mt-1 block w-full text-xs text-slate-500 file:mr-3 file:rounded-xl file:border-0 file:bg-slate-100 file:px-4 file:py-2 file:text-xs file:font-bold file:text-slate-800 hover:file:bg-slate-200">
-                    </div>
-
-                    {{-- REMARKS --}}
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700">Internal Finance Remarks</label>
-                        <textarea name="remarks" rows="2" placeholder="e.g. Onsite payment settled in cash at Finance Counter." class="mt-1 block w-full rounded-xl border border-slate-300 p-2.5 text-xs text-slate-800 shadow-sm focus:border-blue-600 focus:outline-hidden"></textarea>
-                    </div>
-
-                    {{-- CURRENT PAYABLE BILLING SCHEDULE PREVIEW --}}
-                    <div class="rounded-xl border border-slate-200 bg-slate-50 p-3.5">
-                        <span class="text-[11px] font-bold uppercase tracking-wider text-slate-600">Currently Payable Billing Schedule</span>
-                        <div class="mt-2 space-y-1.5 max-h-32 overflow-y-auto pr-1">
-                            @foreach ($outstanding->take(5) as $dueRow)
-                                @php
-                                    $sName = $dueRow['student']?->full_name
-                                        ?? (isset($dueRow['student']->applicant) ? $dueRow['student']->applicant?->full_name : null)
-                                        ?? 'Student';
-                                    $mName = isset($dueRow['billing']->month_name)
-                                        ? $dueRow['billing']->month_name
-                                        : (isset($dueRow['billing']->due_date) ? $dueRow['billing']->due_date->format('F Y') : 'Current Dues');
-                                @endphp
-                                <div class="flex items-center justify-between text-xs text-slate-700 py-0.5">
-                                    <span class="font-medium truncate">{{ $mName }} · {{ $sName }}</span>
-                                    <span class="font-bold text-slate-900 shrink-0">₱{{ number_format($dueRow['remaining'], 2) }}</span>
-                                </div>
-                            @endforeach
+                        {{-- REMARKS / NOTES --}}
+                        <div class="mt-3">
+                            <label class="block text-xs font-bold text-slate-700">Internal Remarks / Adjustment Reason</label>
+                            <textarea name="remarks" x-model="adjustData.remarks" rows="2" placeholder="e.g. Encoded historical cash receipt issued during enrollment." class="mt-1 block w-full rounded-xl border border-slate-300 p-2.5 text-xs text-slate-800 shadow-sm focus:border-emerald-600 focus:outline-hidden"></textarea>
                         </div>
                     </div>
 
                     <div class="mt-6 flex justify-end gap-2.5 border-t border-slate-100 pt-4">
-                        <button type="button" @click="showPaymentModal = false" class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition">
+                        <button type="button" @click="showAdjustModal = false" class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition">
                             Cancel
                         </button>
-                        <button type="submit" class="rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white hover:bg-blue-700 shadow-sm transition">
-                            Confirm &amp; Post Family Payment
+                        <button type="submit" class="rounded-xl bg-emerald-700 px-5 py-2.5 text-xs font-bold text-white hover:bg-emerald-800 shadow-sm transition">
+                            Save Schedule &amp; Receipt Adjustment
                         </button>
                     </div>
                 </form>

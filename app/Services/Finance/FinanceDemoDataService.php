@@ -6,6 +6,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class FinanceDemoDataService
@@ -152,10 +153,16 @@ class FinanceDemoDataService
 
             $childrenRows = [];
             $groupOriginalTotal = 0.0;
+            $groupManualPaid = 0.0;
 
             foreach ($family['children'] as $child) {
-                $originalDue = round((float) $child['monthly_due'], 2);
+                $adj = $this->findAdjustmentForChild($child['student_id'], $child['name'], $monthLabel);
+                $originalDue = $adj ? round((float) $adj['fee'], 2) : round((float) $child['monthly_due'], 2);
+                $manualPaid = $adj ? round((float) $adj['paid'], 2) : 0.0;
+                $rem = max(0.0, round($originalDue - $manualPaid, 2));
+
                 $groupOriginalTotal += $originalDue;
+                $groupManualPaid += $manualPaid;
 
                 $studentObj = (object) [
                     'id' => $child['student_id'],
@@ -170,10 +177,10 @@ class FinanceDemoDataService
                     'student' => $studentObj,
                     'original' => $originalDue,
                     'original_due' => $originalDue,
-                    'verified' => 0.0,
-                    'remaining' => $originalDue,
-                    'allocated' => 0.0,
-                    'status' => 'UNPAID',
+                    'verified' => $manualPaid,
+                    'remaining' => $rem,
+                    'allocated' => $manualPaid,
+                    'status' => $rem <= 0.01 ? 'PAID' : ($manualPaid > 0.01 ? 'PARTIALLY PAID' : 'UNPAID'),
                 ];
             }
 
@@ -182,8 +189,8 @@ class FinanceDemoDataService
                 'due_date' => $dueDate,
                 'children' => $childrenRows,
                 'total_due' => round($groupOriginalTotal, 2),
-                'total_paid' => 0.0,
-                'remaining' => round($groupOriginalTotal, 2),
+                'total_paid' => round($groupManualPaid, 2),
+                'remaining' => max(0.0, round($groupOriginalTotal - $groupManualPaid, 2)),
                 'status' => 'UPCOMING',
             ];
         }
@@ -1143,5 +1150,65 @@ class FinanceDemoDataService
         }
 
         return $families;
+    }
+
+    public function getAdjustments(): array
+    {
+        if (Storage::disk('local')->exists('demo_schedule_adjustments.json')) {
+            try {
+                return json_decode(Storage::disk('local')->get('demo_schedule_adjustments.json'), true) ?: [];
+            } catch (\Throwable $e) {
+                return [];
+            }
+        }
+
+        return [];
+    }
+
+    public function setAdjustment(int|string $familyId, string $studentIdentifier, string $month, float $fee, float $paid, array $receiptMeta = []): void
+    {
+        $adjustments = $this->getAdjustments();
+        $key = strtoupper(trim($studentIdentifier)).'_'.strtoupper(trim($month));
+        $adjustments[$key] = [
+            'family_id' => (string) $familyId,
+            'student_identifier' => $studentIdentifier,
+            'month' => strtoupper(trim($month)),
+            'fee' => $fee,
+            'paid' => $paid,
+            'receipt' => $receiptMeta,
+            'updated_at' => now()->toIso8601String(),
+        ];
+        Storage::disk('local')->put('demo_schedule_adjustments.json', json_encode($adjustments, JSON_PRETTY_PRINT));
+    }
+
+    public function findAdjustmentForChild(string $studentId, string $childName, string $month): ?array
+    {
+        $adjustments = $this->getAdjustments();
+        $monthClean = strtoupper(trim($month));
+
+        foreach ($adjustments as $key => $adj) {
+            if (strtoupper(trim($adj['month'] ?? '')) !== $monthClean) {
+                continue;
+            }
+            $adjId = strtoupper(trim($adj['student_identifier'] ?? ''));
+            $cleanStudentId = strtoupper(trim($studentId));
+            $cleanChildName = strtoupper(trim($childName));
+
+            if ($adjId === $cleanStudentId || $adjId === $cleanChildName) {
+                return $adj;
+            }
+
+            preg_match('/(?:^|[^0-9])0*(1|2|3|4|5|6|7|8|9)(?:[^0-9]|$)/', preg_replace('/202[0-9]/', '', $adjId), $m1);
+            preg_match('/(?:^|[^0-9])0*(1|2|3|4|5|6|7|8|9)(?:[^0-9]|$)/', preg_replace('/202[0-9]/', '', $cleanStudentId), $m2);
+            if (($m1[1] ?? null) !== null && ($m1[1] ?? null) === ($m2[1] ?? null)) {
+                return $adj;
+            }
+
+            if (Str::contains($cleanChildName, $adjId) || Str::contains($adjId, $cleanChildName)) {
+                return $adj;
+            }
+        }
+
+        return null;
     }
 }

@@ -1075,6 +1075,56 @@ class FinanceController extends Controller
         abort(404, 'Student account not found.');
     }
 
+    public function adjustSchedule(Request $request, string $studentIdentifier)
+    {
+        $this->authorizeFinance($request);
+
+        $validated = $request->validate([
+            'family_id' => 'required',
+            'student_name' => 'required|string|max:255',
+            'grade_level' => 'nullable|string|max:100',
+            'billing_month' => 'required|string|max:100',
+            'monthly_fee' => 'required|numeric|min:0|max:999999.99',
+            'amount_paid' => 'required|numeric|min:0|max:999999.99',
+            'or_number' => 'nullable|string|max:100',
+            'payment_date' => 'nullable|date',
+            'payment_method' => 'nullable|string|max:100',
+            'receipt_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:15360',
+            'remarks' => 'nullable|string|max:1000',
+        ]);
+
+        $filePath = null;
+        if ($request->hasFile('receipt_file')) {
+            $file = $request->file('receipt_file');
+            $ext = strtolower($file->guessExtension() ?: 'pdf');
+            $uuid = (string) Str::uuid();
+            $safeId = preg_replace('/[^a-zA-Z0-9_-]/', '_', $studentIdentifier);
+            $filePath = $file->storeAs("receipts/historical/{$safeId}", "receipt_{$safeId}_{$uuid}.{$ext}", 'local');
+        }
+
+        $receiptMeta = [
+            'or_number' => $validated['or_number'] ?? null,
+            'payment_date' => $validated['payment_date'] ?? now()->format('Y-m-d'),
+            'payment_method' => $validated['payment_method'] ?? 'Cash at Counter',
+            'receipt_file' => $filePath,
+            'remarks' => $validated['remarks'] ?? null,
+            'recorded_by' => $request->user()?->name ?: 'Finance Staff',
+        ];
+
+        if ($this->demoData->isEnabled()) {
+            $this->demoData->setAdjustment(
+                $validated['family_id'],
+                $studentIdentifier,
+                $validated['billing_month'],
+                (float) $validated['monthly_fee'],
+                (float) $validated['amount_paid'],
+                $receiptMeta
+            );
+        }
+
+        return back()->with('success', "Schedule and historical payment for {$validated['student_name']} ({$validated['billing_month']}) saved successfully.");
+    }
+
     public function resetDemoData(Request $request, string $familyId)
     {
         $this->authorizeFinance($request);
