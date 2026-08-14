@@ -221,8 +221,8 @@
             <div class="space-y-3">
                 <x-dashboard.quick-action :href="route('admin.applications.review')" icon="clipboard-check" label="Review Applications" meta="Approve, reject, or request updates" />
                 <x-dashboard.quick-action :href="route('admin.students.index')" icon="user-plus" label="Add Student" meta="Manage enrolled student records" />
-                <x-dashboard.quick-action :href="route('admin.payments.index')" icon="wallet" label="Enrollment Payment Review" meta="Approve or reject payment proofs" />
-                <x-dashboard.quick-action :href="route('admin.soa.index')" icon="scroll-text" label="SOA" meta="Open student accounts and billing" />
+                <x-dashboard.quick-action :href="route('admin.finance.verification.index')" icon="wallet" label="Payment Verification" meta="Review online family payment proofs" />
+                <x-dashboard.quick-action :href="route('admin.finance.families.index')" icon="scroll-text" label="Family Accounts / SOA" meta="Open consolidated family balances" />
                 <x-dashboard.quick-action :href="route('admin.ebook.create')" icon="upload-cloud" label="Upload eBook" meta="Add a PDF to the eBook library" />
                 {{-- Commented out for live production cleanup --}}
                 {{--

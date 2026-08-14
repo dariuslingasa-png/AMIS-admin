@@ -6,13 +6,13 @@
                         data-drawer-toggle="default-sidebar"
                         aria-controls="default-sidebar"
                         type="button"
-                        class="hidden items-center rounded-lg p-2 text-sm text-gray-500">
+                        class="inline-flex items-center rounded-lg p-2 text-sm text-gray-500 hover:bg-gray-100 lg:hidden">
                     <span class="sr-only">Open sidebar</span>
                     <i data-lucide="menu" class="h-6 w-6"></i>
                 </button>
                 <a href="{{ route(Auth::user()?->adminHomeRouteName() ?? 'admin.login') }}" class="ms-2 flex items-center md:me-24">
                     <img src="{{ asset('images/AMIS_Logo.svg') }}" class="me-3 h-8 w-8 object-contain" alt="AMIS Logo">
-                    <span class="self-center whitespace-nowrap text-xl font-semibold dark:text-white">AMIS Admin Portal</span>
+                    <span class="hidden self-center whitespace-nowrap text-xl font-semibold dark:text-white sm:inline">AMIS Admin Portal</span>
                 </a>
             </div>
 
@@ -36,7 +36,7 @@
                          x-transition:leave="transition ease-in duration-100"
                          x-transition:leave-start="opacity-100 scale-100"
                          x-transition:leave-end="opacity-0 scale-95"
-                         class="absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl bg-white dark:bg-gray-800 shadow-2xl border border-gray-100 dark:border-gray-700 z-50 overflow-hidden"
+                         class="absolute right-0 z-50 mt-2 w-[calc(100vw-1.5rem)] max-w-96 overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-800"
                          style="display: none;">
                         
                         <!-- Panel Header -->

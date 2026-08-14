@@ -376,7 +376,7 @@ class AdminPaymentController extends Controller
     public function uploadProof(Request $request, Payment $payment)
     {
         $request->validate([
-            'receipt' => 'required|file|mimes:jpg,jpeg,png,webp,pdf|max:10240',
+            'receipt' => 'required|file|mimes:jpg,jpeg,png|max:10240',
         ]);
 
         $file = $request->file('receipt');

@@ -53,6 +53,11 @@ return [
     'enrollment_storage_url' => env('ENROLLMENT_STORAGE_URL'),
     'student_portal_url' => env('STUDENT_PORTAL_URL', env('APP_URL')),
 
+    'finance_notifications' => [
+        'enabled' => env('FINANCE_PAYMENT_EMAILS_ENABLED', true),
+        'adviser_email' => env('FINANCE_ADVISER_EMAIL', 'darius.lingasa@gmail.com'),
+    ],
+
     'ebook' => [
         'url' => env('EBOOK_PORTAL_URL', 'http://127.0.0.1:8003'),
         'sso_secret' => env('SSO_SECRET'),

@@ -37,6 +37,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('amis:backup')
             ->twiceDaily(0, 12)
             ->timezone('Asia/Manila');
+
+        // Apply stored excess payments when the next billing month becomes due.
+        $schedule->command('finance:apply-family-credits')
+            ->dailyAt('00:10')
+            ->timezone('Asia/Manila')
+            ->withoutOverlapping();
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

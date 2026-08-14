@@ -33,7 +33,7 @@
         .student-table .student { width: 25%; }
         .student-table .grade { width: 13%; }
         .student-table .month { width: 18%; }
-        .student-table .money { width: 14.66%; text-align: right; white-space: nowrap; }
+        .student-table .money { width: 11%; text-align: right; white-space: nowrap; }
         .student-name { font-weight: bold; }
         .summary { width: 100%; margin-top: 7px; border: 1px solid #a7f3d0; background: #ecfdf5; border-collapse: collapse; }
         .summary td { padding: 7px 10px; border-bottom: 1px solid #d1fae5; }
@@ -97,9 +97,9 @@
             <tr>
                 <th class="student">Student</th>
                 <th class="grade">Grade Level</th>
-                <th class="month">Billing Month</th>
                 <th class="money">Amount Due</th>
-                <th class="money">Total Paid to Date</th>
+                <th class="money">Applied This Tx</th>
+                <th class="money">Total Paid To Date</th>
                 <th class="money">Balance</th>
             </tr>
         </thead>
@@ -108,9 +108,9 @@
                 <tr>
                     <td class="student"><span class="student-name">{{ $row['student_name'] }}</span></td>
                     <td class="grade">{{ $row['grade_level'] }}</td>
-                    <td class="month">{{ $row['billing_month'] }}</td>
                     <td class="money">₱{{ number_format($row['amount_due'], 2) }}</td>
-                    <td class="money">₱{{ number_format($row['amount_paid'], 2) }}</td>
+                    <td class="money">₱{{ number_format($row['applied_this_transaction'] ?? $row['amount_paid'], 2) }}</td>
+                    <td class="money">₱{{ number_format($row['total_paid_to_date'] ?? $row['amount_paid'], 2) }}</td>
                     <td class="money">₱{{ number_format($row['remaining'], 2) }}</td>
                 </tr>
             @empty
@@ -121,9 +121,9 @@
             <tfoot>
                 <tr>
                     <td></td>
-                    <td></td>
                     <td><strong>TOTAL</strong></td>
                     <td class="money">₱{{ number_format($receiptData['total_amount_due'], 2) }}</td>
+                    <td class="money">₱{{ number_format($receiptData['payment_applied_this_transaction'] ?? $receiptData['amount_applied'], 2) }}</td>
                     <td class="money">₱{{ number_format($receiptData['total_paid_to_date'], 2) }}</td>
                     <td class="money">₱{{ number_format($receiptData['remaining_balance'], 2) }}</td>
                 </tr>
@@ -135,13 +135,12 @@
     <table class="summary">
         @if(!empty($receiptData['previous_month_label']))
             <tr><td>Previous Balance — {{ $receiptData['previous_month_label'] }}</td><td class="number">₱{{ number_format($receiptData['previous_balance'], 2) }}</td></tr>
-        @else
-            <tr><td>Previous Balance</td><td class="number">₱{{ number_format($receiptData['previous_balance'] ?? 0, 2) }}</td></tr>
         @endif
         <tr><td>Monthly Charge</td><td class="number">₱{{ number_format($receiptData['total_amount_due'], 2) }}</td></tr>
-        <tr><td>Payment Received (Transaction)</td><td class="number">₱{{ number_format($receiptData['amount_received'], 2) }}</td></tr>
-        <tr><td>Payment Applied ({{ $receiptData['billing_month'] ?? 'Month' }})</td><td class="number">₱{{ number_format($receiptData['amount_applied'], 2) }}</td></tr>
-        <tr class="remaining"><td>Remaining {{ $receiptData['billing_month'] ?? 'Month' }} Balance</td><td class="number">₱{{ number_format($receiptData['remaining_balance'], 2) }}</td></tr>
+        <tr><td>Previous Paid</td><td class="number">₱{{ number_format($receiptData['previous_paid'] ?? 0, 2) }}</td></tr>
+        <tr><td>Payment Applied This Transaction</td><td class="number">₱{{ number_format($receiptData['payment_applied_this_transaction'] ?? $receiptData['amount_applied'], 2) }}</td></tr>
+        <tr><td>Total Paid To Date</td><td class="number">₱{{ number_format($receiptData['total_paid_to_date'], 2) }}</td></tr>
+        <tr class="remaining"><td>Remaining Balance</td><td class="number">₱{{ number_format($receiptData['remaining_balance'], 2) }}</td></tr>
         @if(($receiptData['credit_created'] ?? 0) > 0.01)
             <tr class="credit"><td>Family Advance Credit Created</td><td class="number">₱{{ number_format($receiptData['credit_created'], 2) }}</td></tr>
         @endif
@@ -151,19 +150,21 @@
     <table class="allocation-list">
         @forelse($receiptData['rows'] as $row)
             @php
-                $statusClass = match($row['status']) {
-                    'FULLY PAID' => 'fully-paid',
-                    'PARTIALLY PAID' => 'partially-paid',
+                $rem = round((float)($row['remaining'] ?? 0), 2);
+                $applied = round((float)($row['applied_this_transaction'] ?? $row['amount_paid'] ?? 0), 2);
+                $statusClass = match(true) {
+                    $rem <= 0.01 => 'fully-paid',
+                    $applied > 0.01 => 'partially-paid',
                     default => 'unpaid',
                 };
-                $statusText = match($row['status']) {
-                    'FULLY PAID' => 'Fully Paid',
-                    'PARTIALLY PAID' => 'Partially Paid, ₱'.number_format($row['remaining'], 2).' remaining',
-                    default => 'Unpaid, ₱'.number_format($row['remaining'], 2).' remaining',
+                $statusText = match(true) {
+                    $rem <= 0.01 => 'Fully Paid',
+                    $applied > 0.01 => 'Partially Paid, ₱'.number_format($rem, 2).' remaining',
+                    default => 'Unpaid, ₱'.number_format($rem, 2).' remaining',
                 };
             @endphp
             <tr>
-                <td>{{ $row['student_name'] }} — {{ $row['billing_month'] }}</td>
+                <td>{{ $row['student_name'] }} — {{ $receiptData['billing_month'] ?? '' }}</td>
                 <td class="status {{ $statusClass }}">{{ $statusText }}</td>
             </tr>
         @empty

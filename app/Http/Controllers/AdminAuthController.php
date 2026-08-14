@@ -4,10 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\AdminAuditLog;
 use App\Models\User;
+use App\Models\VerificationCode;
+use App\Notifications\SendAdminOtpCode;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
@@ -59,6 +63,110 @@ class AdminAuthController extends Controller
         $this->audit($request, 'login_failed', $userForAudit, false, 'Invalid login credentials.', ['email' => $email]);
 
         return back()->withErrors(['email' => 'Invalid credentials.']);
+    }
+
+    public function sendOtp(Request $request)
+    {
+        $validated = $request->validate([
+            'email' => ['required', 'email', 'max:255'],
+        ]);
+        $email = Str::lower(trim($validated['email']));
+        $limiterKey = 'admin-otp-send:'.sha1($email.'|'.$request->ip());
+
+        if (RateLimiter::tooManyAttempts($limiterKey, 3)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Too many code requests. Try again in '.RateLimiter::availableIn($limiterKey).' seconds.',
+            ], 429);
+        }
+        RateLimiter::hit($limiterKey, 60);
+
+        $user = User::query()->whereRaw('LOWER(email) = ?', [$email])->first();
+        if (! $user || ! $user->hasAdminPortalAccess() || ($user->account_status ?? 'verified') !== 'verified') {
+            $this->audit($request, 'admin_otp_denied', $user, false, 'OTP requested for an unavailable Admin account.', ['email' => $email]);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'No active AMIS Admin account was found for this email.',
+            ], 422);
+        }
+
+        $code = (string) random_int(1000, 9999);
+        VerificationCode::query()->where('email', $email)->where('used', false)->update(['used' => true]);
+        VerificationCode::query()->create([
+            'email' => $email,
+            'code' => $code,
+            'expires_at' => now()->addMinutes(10),
+            'used' => false,
+        ]);
+
+        try {
+            $user->notify(new SendAdminOtpCode($code));
+        } catch (\Throwable $exception) {
+            VerificationCode::query()->where('email', $email)->where('code', $code)->update(['used' => true]);
+            Log::error('Admin OTP email failed.', ['user_id' => $user->id, 'error' => $exception->getMessage()]);
+            $this->audit($request, 'admin_otp_send_failed', $user, false, 'Admin OTP email could not be sent.');
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'The verification email could not be sent. Please contact the system administrator.',
+            ], 500);
+        }
+
+        $this->audit($request, 'admin_otp_sent', $user, true, 'A 4-digit Admin OTP was sent.');
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'A 4-digit verification code was sent to your email.',
+        ]);
+    }
+
+    public function verifyOtp(Request $request)
+    {
+        $validated = $request->validate([
+            'email' => ['required', 'email', 'max:255'],
+            'code' => ['required', 'digits:4'],
+        ]);
+        $email = Str::lower(trim($validated['email']));
+        $limiterKey = 'admin-otp-verify:'.sha1($email.'|'.$request->ip());
+
+        if (RateLimiter::tooManyAttempts($limiterKey, 5)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Too many verification attempts. Try again in '.RateLimiter::availableIn($limiterKey).' seconds.',
+            ], 429);
+        }
+        RateLimiter::hit($limiterKey, 60);
+
+        $user = User::query()->whereRaw('LOWER(email) = ?', [$email])->first();
+        $verification = VerificationCode::query()
+            ->where('email', $email)
+            ->where('code', $validated['code'])
+            ->where('used', false)
+            ->where('expires_at', '>', now())
+            ->latest('id')
+            ->first();
+
+        if (! $user || ! $user->hasAdminPortalAccess() || ($user->account_status ?? 'verified') !== 'verified' || ! $verification) {
+            $this->audit($request, 'admin_otp_failed', $user, false, 'Invalid or expired Admin OTP.', ['email' => $email]);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Invalid or expired verification code.',
+            ], 422);
+        }
+
+        $verification->update(['used' => true]);
+        RateLimiter::clear($limiterKey);
+        Auth::login($user);
+        $request->session()->regenerate();
+        $this->activateSingleSession($request, $user);
+        $this->audit($request, 'admin_otp_verified', $user, true, 'Admin OTP verified and login completed.');
+
+        return response()->json([
+            'status' => 'success',
+            'redirectUrl' => route($user->adminHomeRouteName()),
+        ]);
     }
 
     public function microsoftRedirect()

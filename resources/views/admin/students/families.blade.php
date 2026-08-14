@@ -149,8 +149,8 @@
                                                             Admissions
                                                         </a>
                                                     @endif
-                                                    @if($child->account)
-                                                        <a href="{{ route('admin.soa.show', $child->account) }}" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-100 text-[10px] font-bold text-amber-700 transition" title="View Statement of Account (SOA)">
+                                                    @if($child->account && $child->applicant?->user_id)
+                                                        <a href="{{ route('admin.finance.families.show', $child->applicant->user_id) }}" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-100 text-[10px] font-bold text-amber-700 transition" title="View Family Statement of Account (SOA)">
                                                             <i data-lucide="receipt" class="h-3 w-3"></i>
                                                             SOA
                                                         </a>

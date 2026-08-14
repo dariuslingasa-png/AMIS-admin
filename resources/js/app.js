@@ -1,4 +1,5 @@
 import './bootstrap';
+import './finance-receipt-ocr';
 import 'flowbite';
 import Alpine from 'alpinejs';
 

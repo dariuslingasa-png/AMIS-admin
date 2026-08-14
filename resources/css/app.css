@@ -53,7 +53,8 @@
 
 body {
     font-family: var(--font-sans);
-    min-width: 1180px;
+    min-width: 0;
+    overflow-x: hidden;
 }
 
 /* Premium Academic Hero Banner */
@@ -212,6 +213,108 @@ body {
     margin-left: 16rem;
     min-height: calc(100vh - 4rem);
     padding-top: 4rem;
+}
+
+/* Shared responsive shell for every Admin workspace, including Finance. */
+@media (max-width: 1023px) {
+    .admin-content {
+        margin-left: 0;
+    }
+
+    .admin-sidebar {
+        box-shadow: 0 1.25rem 3rem rgba(15, 23, 42, .18);
+    }
+}
+
+@media (max-width: 639px) {
+    .admin-content > main {
+        padding: .75rem;
+    }
+
+    .finance-page {
+        min-width: 0;
+        padding: 0 !important;
+    }
+
+    .finance-page input,
+    .finance-page select,
+    .finance-page textarea {
+        font-size: 16px;
+    }
+
+    .finance-page :is(p, dd, a, span, strong) {
+        overflow-wrap: anywhere;
+    }
+
+    .finance-mobile-table,
+    .finance-mobile-table tbody,
+    .finance-mobile-table tr,
+    .finance-mobile-table td {
+        display: block;
+        width: 100%;
+    }
+
+    .finance-mobile-table thead {
+        display: none;
+    }
+
+    .finance-mobile-table tbody {
+        display: grid;
+        gap: .75rem;
+        padding: .75rem;
+        background: #f8fafc;
+    }
+
+    .finance-mobile-table tbody tr {
+        overflow: hidden;
+        border: 1px solid #e2e8f0;
+        border-radius: 1rem;
+        background: #fff;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+    }
+
+    .finance-mobile-table tbody td {
+        display: grid;
+        grid-template-columns: minmax(6.75rem, .42fr) minmax(0, 1fr);
+        gap: .75rem;
+        align-items: start;
+        padding: .7rem 1rem !important;
+        border-bottom: 1px solid #f1f5f9;
+        text-align: left !important;
+    }
+
+    .finance-mobile-table tbody td::before {
+        content: attr(data-label);
+        color: #64748b;
+        font-size: .68rem;
+        font-weight: 800;
+        letter-spacing: .04em;
+        line-height: 1.35;
+        text-transform: uppercase;
+    }
+
+    .finance-mobile-table tbody td:last-child {
+        border-bottom: 0;
+    }
+
+    .finance-mobile-table tbody td[data-label=""] {
+        display: block;
+    }
+
+    .finance-mobile-table tbody td[data-label=""]::before {
+        display: none;
+    }
+
+    .finance-mobile-table tbody td[data-label="Action"] a {
+        display: flex;
+        width: 100%;
+        min-height: 2.75rem;
+        align-items: center;
+        justify-content: center;
+        border-radius: .75rem;
+        background: #047857;
+        color: #fff;
+    }
 }
 
 .amis-card {
