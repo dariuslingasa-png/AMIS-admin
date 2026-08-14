@@ -42,11 +42,12 @@
         .breakdown-table tbody tr:nth-child(even) { background: #fafafa; }
         .breakdown-table tfoot td { padding: 6px 4px; border-top: 1.5px solid #047857; border-bottom: 1px solid #cbd5e1; background: #ffffff; font-weight: bold; font-size: 8px; }
         
-        .col-student { width: 28%; text-align: left; }
-        .col-grade { width: 10%; text-align: left; }
-        .col-money { width: 13%; text-align: right; white-space: nowrap; }
-        .col-applied { width: 14%; text-align: right; white-space: nowrap; }
-        .col-status { width: 9%; text-align: center; }
+        .col-student { width: 27%; text-align: left; }
+        .col-grade { width: 11%; text-align: left; }
+        .col-money { width: 13%; text-align: right; }
+        .col-applied { width: 13%; text-align: right; }
+        .col-status { width: 10%; text-align: center; }
+        .breakdown-table td.col-money, .breakdown-table td.col-applied, .breakdown-table tfoot td { white-space: nowrap; }
 
         .student-id { color: #64748b; font-size: 7px; display: block; margin-top: 1px; }
 
@@ -148,7 +149,7 @@
                 <th class="col-student">Student</th>
                 <th class="col-grade">Grade</th>
                 <th class="col-money">Amount Due</th>
-                <th class="col-applied">Applied This Payment</th>
+                <th class="col-applied">Applied</th>
                 <th class="col-money">Total Paid</th>
                 <th class="col-money">Balance</th>
                 <th class="col-status">Status</th>
