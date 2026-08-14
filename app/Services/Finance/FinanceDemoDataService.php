@@ -924,21 +924,48 @@ class FinanceDemoDataService
         $schedule = $this->getBillingSchedule($userId);
 
         $childrenObj = collect($data['children'] ?? [])->map(function ($c) use ($schedule) {
-            $childRemaining = (float) collect($schedule)
-                ->flatMap(fn ($g) => collect($g['children'] ?? []))
-                ->filter(fn ($childRow) => ($childRow['student']->amis_student_id ?? '') === $c['student_id'] || ($childRow['student']->id ?? '') === $c['student_id'])
-                ->sum('remaining');
+            $childRows = collect($schedule)->map(function ($g) use ($c) {
+                $childRow = collect($g['children'] ?? [])->first(function ($cr) use ($c) {
+                    return ($cr['student']->amis_student_id ?? '') === $c['student_id']
+                        || ($cr['student']->id ?? '') === $c['student_id']
+                        || Str::contains(Str::lower($cr['student']->full_name ?? ''), Str::lower($c['name'] ?? ''));
+                });
 
-            if ($childRemaining <= 0.001 && $schedule->isNotEmpty()) {
-                $childRemaining = (float) collect($schedule)
-                    ->flatMap(fn ($g) => collect($g['children'] ?? []))
-                    ->filter(fn ($childRow) => Str::contains(Str::lower($childRow['student']->full_name ?? ''), Str::lower($c['name'] ?? '')))
-                    ->sum('remaining');
-            }
+                $original = (float) ($childRow['original'] ?? ($c['monthly_due'] ?? 0));
+                $verified = (float) ($childRow['verified'] ?? 0);
+                $remaining = (float) ($childRow['remaining'] ?? $original);
+
+                $dueDate = $g['due_date'];
+                $status = 'UPCOMING';
+                if ($remaining <= 0.001) {
+                    $status = 'PAID';
+                } elseif ($dueDate->isPast() && $dueDate->month !== now()->month) {
+                    $status = 'OVERDUE';
+                } elseif ($dueDate->month === now()->month && $dueDate->year === now()->year) {
+                    $status = $verified > 0.001 ? 'CURRENT' : 'CURRENT';
+                }
+
+                return (object) [
+                    'month' => $g['label'],
+                    'due_date' => $dueDate,
+                    'original' => $original,
+                    'fee' => $original,
+                    'verified' => $verified,
+                    'paid' => $verified,
+                    'remaining' => $remaining,
+                    'status' => $status,
+                ];
+            });
+
+            $childRemaining = (float) $childRows->sum('remaining');
+            $childPaid = (float) $childRows->sum('paid');
+            $childTotal = (float) $childRows->sum('fee');
 
             $studentAccount = (object) [
                 'remaining_balance' => $childRemaining,
-                'total_balance' => (float) ($c['monthly_due'] * 9),
+                'paid_to_date' => $childPaid,
+                'total_balance' => $childTotal,
+                'monthly_schedule' => $childRows,
             ];
 
             $student = (object) [
@@ -949,6 +976,7 @@ class FinanceDemoDataService
                 'grade_level' => $c['grade_level'],
                 'amis_student_id' => $c['student_id'],
                 'account' => $studentAccount,
+                'monthly_schedule' => $childRows,
             ];
 
             return (object) [
@@ -960,6 +988,7 @@ class FinanceDemoDataService
                 'amis_student_id' => $c['student_id'],
                 'student' => $student,
                 'account' => $studentAccount,
+                'monthly_schedule' => $childRows,
             ];
         });
 

@@ -789,6 +789,43 @@ class FinanceController extends Controller
 
         $family = User::query()->findOrFail($familyId);
         $family->load(['enrollmentApplicants.student.account.monthlyBillings.payments']);
+
+        foreach ($family->enrollmentApplicants as $applicant) {
+            if ($applicant->student?->account) {
+                $billings = $applicant->student->account->monthlyBillings ?? collect();
+                $childRows = $billings->map(function ($b) {
+                    $orig = (float) ($b->original_amount ?? $b->amount_due ?? 0);
+                    $paid = (float) ($b->payments ? $b->payments->sum('amount') : 0);
+                    $rem = max(0.0, round($orig - $paid, 2));
+                    $status = 'UPCOMING';
+                    if ($rem <= 0.001) {
+                        $status = 'PAID';
+                    } elseif ($b->due_date && $b->due_date->isPast()) {
+                        $status = 'OVERDUE';
+                    } elseif ($b->due_date && $b->due_date->isCurrentMonth()) {
+                        $status = 'CURRENT';
+                    }
+
+                    return (object) [
+                        'month' => $b->month_name ?: ($b->due_date ? strtoupper($b->due_date->format('F Y')) : 'MONTH'),
+                        'due_date' => $b->due_date,
+                        'original' => $orig,
+                        'fee' => $orig,
+                        'verified' => $paid,
+                        'paid' => $paid,
+                        'remaining' => $rem,
+                        'status' => $status,
+                    ];
+                });
+
+                $applicant->student->account->monthly_schedule = $childRows;
+                $applicant->student->account->paid_to_date = (float) $childRows->sum('paid');
+                if ($childRows->isNotEmpty()) {
+                    $applicant->student->account->remaining_balance = (float) $childRows->sum('remaining');
+                }
+            }
+        }
+
         $transactions = FinanceTransaction::query()
             ->with('officialReceipt')
             ->where('user_id', $family->id)
