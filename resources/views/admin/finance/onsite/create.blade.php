@@ -307,12 +307,11 @@
                                 </div>
 
                                 {{-- Row 2: Reference Number, Date/Time (if non-cash), and Receiving Account --}}
-                                <div class="grid gap-4 sm:grid-cols-2" :class="method !== 'cash' ? 'lg:grid-cols-3' : 'lg:grid-cols-2'">
-                                    {{-- Reference Number --}}
-                                    <div class="space-y-1.5">
+                                <div class="grid gap-4 sm:grid-cols-2" :class="method !== 'cash' ? 'lg:grid-cols-3' : 'lg:grid-cols-1'">
+                                    {{-- Reference Number (Digital & Remittance only) --}}
+                                    <div x-show="method !== 'cash'" x-cloak class="space-y-1.5">
                                         <label for="financeReferenceInput" class="block text-xs font-bold text-slate-700">
-                                            Transaction / reference no.
-                                            <span x-show="method === 'cash'" class="font-normal text-slate-400">(not needed for cash)</span>
+                                            Transaction / reference no. <span class="text-rose-600">*</span>
                                         </label>
                                         <input
                                             id="financeReferenceInput"
@@ -324,16 +323,16 @@
                                             placeholder="Reference No. or Transaction ID"
                                             class="h-11 w-full rounded-xl border border-slate-300 bg-slate-50/50 px-3.5 text-sm text-slate-900 placeholder:text-slate-400 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 focus:border-emerald-600 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition shadow-2xs"
                                         >
-                                        <span x-show="method !== 'cash'" x-cloak class="block text-[11px] text-slate-500 leading-tight">OCR uses reference first, then transaction ID.</span>
+                                        <span class="block text-[11px] text-slate-500 leading-tight">OCR uses reference first, then transaction ID.</span>
                                         @if (isset($errors) && $errors->has('reference_number'))
                                             <span class="block text-xs font-bold text-rose-700">{{ $errors->first('reference_number') }}</span>
                                         @endif
                                     </div>
 
-                                    {{-- Transaction Date and Time (Non-Cash only) --}}
+                                    {{-- Transaction Date and Time (Digital & Remittance only) --}}
                                     <div x-show="method !== 'cash'" x-cloak class="space-y-1.5">
                                         <label for="financeTransactionAtInput" class="block text-xs font-bold text-slate-700">
-                                            Transaction date & time
+                                            Transaction date & time <span class="text-rose-600">*</span>
                                         </label>
                                         <input
                                             id="financeTransactionAtInput"
@@ -348,16 +347,16 @@
                                     </div>
 
                                     {{-- Receiving Account / Counter --}}
-                                    <div class="space-y-1.5" :class="method === 'cash' ? 'sm:col-span-1' : ''">
+                                    <div class="space-y-1.5">
                                         <label for="financeAccountReceivedInput" class="block text-xs font-bold text-slate-700">
-                                            Receiving account / counter
+                                            Receiving account / counter <span class="font-normal text-slate-400">(optional)</span>
                                         </label>
                                         <input
                                             id="financeAccountReceivedInput"
                                             name="account_received"
                                             autocomplete="off"
                                             value=""
-                                            placeholder="AMIS cashier or account"
+                                            placeholder="AMIS cashier or counter"
                                             class="h-11 w-full rounded-xl border border-slate-300 bg-slate-50/50 px-3.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-600 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition shadow-2xs"
                                         >
                                     </div>

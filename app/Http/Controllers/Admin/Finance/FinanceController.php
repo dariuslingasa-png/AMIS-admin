@@ -507,13 +507,25 @@ class FinanceController extends Controller
     public function onsiteStore(Request $request)
     {
         $this->authorizeFinance($request);
+
+        $normalizedInput = [
+            'amount' => str_replace(',', '', (string) $request->input('amount')),
+        ];
+        if ($request->input('payment_method') === 'cash' || ! $request->filled('transaction_at')) {
+            // Cash has no external transaction timestamp. Record the trusted
+            // server time at the moment Finance confirms the payment.
+            $normalizedInput['transaction_at'] = now(config('finance.timezone', 'Asia/Manila'))
+                ->format('Y-m-d H:i:s');
+        }
+        $request->merge($normalizedInput);
+
         $rawUser = $request->input('user_id');
         if ($this->demoData->isDemoFamilyId($rawUser)) {
             $validated = $request->validate([
                 'user_id' => ['required'],
                 'payment_method' => ['required', Rule::in(['cash', 'gcash', 'maya', 'bdo', 'bank_transfer', 'remittance', 'other'])],
                 'amount' => ['required', 'numeric', 'min:0.01', 'max:99999999.99'],
-                'transaction_at' => ['required', 'date'],
+                'transaction_at' => ['nullable', 'date'],
                 'reference_number' => ['nullable', 'required_unless:payment_method,cash', 'string', 'max:150'],
                 'remarks' => ['nullable', 'string', 'max:1000'],
             ]);
@@ -524,21 +536,11 @@ class FinanceController extends Controller
                 ->with('success', 'TEST / DEMO PAYMENT RECORDED FOR '.$demoTx->family->name.'! Total: ₱'.number_format($validated['amount'], 2).'. (NOTE: Demo payments do not touch the production database or official receipt numbers.)');
         }
 
-        $normalizedInput = [
-            'amount' => str_replace(',', '', (string) $request->input('amount')),
-        ];
-        if ($request->input('payment_method') === 'cash') {
-            // Cash has no external transaction timestamp. Record the trusted
-            // server time at the moment Finance confirms the payment.
-            $normalizedInput['transaction_at'] = now(config('finance.timezone', 'Asia/Manila'))
-                ->format('Y-m-d H:i:s');
-        }
-        $request->merge($normalizedInput);
         $validated = $request->validate([
             'user_id' => ['required', 'integer', 'exists:users,id'],
             'payment_method' => ['required', Rule::in(['cash', 'gcash', 'maya', 'bdo', 'bank_transfer', 'remittance', 'other'])],
             'amount' => ['required', 'numeric', 'min:0.01', 'max:99999999.99'],
-            'transaction_at' => ['required', 'date'],
+            'transaction_at' => ['nullable', 'date'],
             'reference_number' => ['nullable', 'required_unless:payment_method,cash', 'string', 'max:150'],
             'account_received' => ['nullable', 'string', 'max:180'],
             'receipt' => ['nullable', 'required_unless:payment_method,cash', 'file', 'mimes:jpg,jpeg,png', 'max:10240'],
