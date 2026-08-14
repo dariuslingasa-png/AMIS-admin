@@ -112,25 +112,35 @@ class User extends Authenticatable
     {
         $roles = is_array($role) ? $role : [$role];
 
-        if ($this->relationLoaded('roles') || $this->roles()->exists()) {
-            return $this->roles->pluck('slug')->intersect($roles)->isNotEmpty();
+        if (in_array($this->role, $roles, true)) {
+            return true;
         }
 
-        return in_array($this->role, $roles, true);
+        try {
+            if (Schema::hasTable('roles') && Schema::hasTable('role_user') && ($this->relationLoaded('roles') || $this->roles()->exists())) {
+                return $this->roles->pluck('slug')->intersect($roles)->isNotEmpty();
+            }
+        } catch (\Throwable $e) {
+        }
+
+        return false;
     }
 
     public function hasPermission(string|array $permission): bool
     {
         $permissions = is_array($permission) ? $permission : [$permission];
 
-        if ($this->relationLoaded('roles') || $this->roles()->exists()) {
-            $userPermissions = $this->roles->flatMap(function ($role) {
-                return $role->permissions->pluck('slug');
-            })->unique();
+        try {
+            if (Schema::hasTable('roles') && Schema::hasTable('role_user') && Schema::hasTable('permissions') && ($this->relationLoaded('roles') || $this->roles()->exists())) {
+                $userPermissions = $this->roles->flatMap(function ($role) {
+                    return $role->permissions->pluck('slug');
+                })->unique();
 
-            if ($userPermissions->intersect($permissions)->isNotEmpty()) {
-                return true;
+                if ($userPermissions->intersect($permissions)->isNotEmpty()) {
+                    return true;
+                }
             }
+        } catch (\Throwable $e) {
         }
 
         foreach ($permissions as $perm) {
@@ -144,11 +154,18 @@ class User extends Authenticatable
 
     public function hasAdminPortalAccess(): bool
     {
-        if ($this->relationLoaded('roles') || $this->roles()->exists()) {
-            return $this->roles->pluck('slug')->intersect(self::ADMIN_PORTAL_ROLE_SLUGS)->isNotEmpty();
+        if (in_array($this->role, self::ADMIN_PORTAL_ROLE_SLUGS, true)) {
+            return true;
         }
 
-        return in_array($this->role, self::ADMIN_PORTAL_ROLE_SLUGS, true);
+        try {
+            if (Schema::hasTable('roles') && Schema::hasTable('role_user') && ($this->relationLoaded('roles') || $this->roles()->exists())) {
+                return $this->roles->pluck('slug')->intersect(self::ADMIN_PORTAL_ROLE_SLUGS)->isNotEmpty();
+            }
+        } catch (\Throwable $e) {
+        }
+
+        return false;
     }
 
     public function canReviewEnrollmentPayments(): bool
@@ -167,14 +184,17 @@ class User extends Authenticatable
             return false;
         }
 
-        if ($this->relationLoaded('roles') || $this->roles()->exists()) {
-            $rolePermissions = $this->roles->flatMap(function ($role) {
-                return $role->permissions->pluck('slug');
-            });
+        try {
+            if (Schema::hasTable('roles') && Schema::hasTable('role_user') && ($this->relationLoaded('roles') || $this->roles()->exists())) {
+                $rolePermissions = $this->roles->flatMap(function ($role) {
+                    return $role->permissions->pluck('slug');
+                });
 
-            if ($rolePermissions->contains('view_only')) {
-                return true;
+                if ($rolePermissions->contains('view_only')) {
+                    return true;
+                }
             }
+        } catch (\Throwable $e) {
         }
 
         return (bool) ($this->access_permissions['view_only'] ?? ($this->role === 'staff'));

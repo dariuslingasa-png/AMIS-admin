@@ -25,7 +25,6 @@ class FinanceManualSoaTest extends TestCase
             'username' => 'test_admin_' . uniqid(),
             'role' => 'admin',
             'account_status' => 'verified',
-            'active_admin_session_id' => null,
         ]);
 
         $file1 = UploadedFile::fake()->create('ahmad_july_soa_v1.pdf', 150, 'application/pdf');
@@ -118,7 +117,6 @@ class FinanceManualSoaTest extends TestCase
             'username' => 'test_admin_' . uniqid(),
             'role' => 'admin',
             'account_status' => 'verified',
-            'active_admin_session_id' => null,
         ]);
 
         $paymentResponse = $this->actingAs($admin)->post(route('admin.finance.onsite.store'), [
@@ -139,7 +137,6 @@ class FinanceManualSoaTest extends TestCase
             'username' => 'test_admin_' . uniqid(),
             'role' => 'admin',
             'account_status' => 'verified',
-            'active_admin_session_id' => null,
         ]);
 
         // Ahmad
@@ -167,7 +164,6 @@ class FinanceManualSoaTest extends TestCase
             'username' => 'test_admin_' . uniqid(),
             'role' => 'admin',
             'account_status' => 'verified',
-            'active_admin_session_id' => null,
         ]);
 
         $response = $this->actingAs($admin)->post(route('admin.finance.students.adjust-schedule', ['studentIdentifier' => 'AFPS-DEMO-2026-002-2']), [

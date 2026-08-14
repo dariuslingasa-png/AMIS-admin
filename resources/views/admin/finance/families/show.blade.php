@@ -347,7 +347,7 @@
                             <div class="lg:col-span-5 space-y-4">
                                 {{-- OPTION A: FINANCE-UPLOADED MANUAL SOA --}}
                                 <div class="rounded-2xl border border-slate-200 bg-slate-50/70 p-5 shadow-2xs">
-                                    <div class="flex items-center justify-between mb-3">
+                                    <div class="flex items-center justify-between mb-2">
                                         <div>
                                             <span class="inline-flex rounded-md bg-slate-200 text-slate-700 px-2 py-0.5 text-xs font-bold uppercase tracking-wider">Option 1</span>
                                             <h5 class="mt-1 text-sm font-black text-slate-900">Finance-Uploaded Manual SOA</h5>
@@ -357,6 +357,10 @@
                                             {{ $latestManualSoa ? 'Upload Revision' : 'Upload SOA' }}
                                         </button>
                                     </div>
+
+                                    <p class="text-[11px] text-slate-500 mb-3 bg-white/80 rounded-xl p-2.5 border border-slate-200 leading-relaxed">
+                                        <strong class="text-slate-700">Notice:</strong> Manual SOA uploads are for reference only and do not affect payment balances. Historical balances are updated only through <strong>Edit / Old Receipt</strong>.
+                                    </p>
 
                                     @if ($latestManualSoa)
                                         <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-2xs">
@@ -412,7 +416,7 @@
                                         <h5 class="mt-1 text-sm font-black text-slate-900">Official School Statement of Account</h5>
                                     </div>
                                     <p class="text-xs text-slate-500 mb-3.5">
-                                        Official AL MUNAWWARA ISLAMIC SCHOOL format with Arabic branding, DepED recognition, Quranic ayah, and complete fee assessment ledger.
+                                        Computed database-driven Statement of Account reflecting both encoded historical records and new-system payments with Arabic branding, DepED recognition, Quranic ayah, and assessment ledger.
                                     </p>
                                     <a
                                         href="{{ route('admin.finance.students.official-soa', ['studentIdentifier' => $sId]) }}"
@@ -560,6 +564,14 @@
                     <input type="hidden" name="grade_level" :value="activeStudent?.grade">
                     <input type="hidden" name="school_year" :value="activeStudent?.school_year || '2026-2027'">
 
+                    {{-- REFERENCE ONLY NOTICE BANNER --}}
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600 flex items-start gap-2 leading-relaxed">
+                        <svg class="h-4 w-4 text-slate-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <div>
+                            <strong class="font-bold text-slate-800">For Reference Only:</strong> Manual SOA uploads are for reference only and do not affect payment balances. Historical balances are updated only through <strong>Edit / Old Receipt</strong>.
+                        </div>
+                    </div>
+
                     <div>
                         <label class="block text-xs font-bold text-slate-700">Billing Month <span class="text-rose-600">*</span></label>
                         <select name="billing_month" required class="mt-1 block w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm font-semibold text-slate-800 shadow-sm focus:border-slate-900 focus:outline-hidden">
@@ -675,7 +687,7 @@
                 <div class="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
                     <div>
                         <div class="flex items-center gap-2">
-                            <span class="inline-flex rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider text-emerald-800 border border-emerald-200">Schedule &amp; Historical Payment</span>
+                            <span class="inline-flex rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider text-emerald-800 border border-emerald-200">LEGACY / HISTORICAL RECORD</span>
                             <span class="inline-flex rounded-md bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-700" x-text="adjustData.grade_level"></span>
                         </div>
                         <h3 class="mt-1.5 text-lg font-black text-slate-900" x-text="adjustData.student_name"></h3>
@@ -686,6 +698,14 @@
                     <button type="button" @click="showAdjustModal = false" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition">
                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
+                </div>
+
+                {{-- PRIMARY MIGRATION NOTICE BANNER --}}
+                <div class="mt-4 rounded-xl border border-emerald-200 bg-emerald-50/80 p-3.5 text-xs text-emerald-950 flex items-start gap-2.5 leading-relaxed">
+                    <svg class="h-4 w-4 text-emerald-700 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <div>
+                        <strong class="font-bold text-emerald-900">Primary Migration Record:</strong> Encodes historical pre-system payments and adjusts fee schedules. Updates the student's historical paid amount and consolidated remaining balance directly without issuing a new-system receipt.
+                    </div>
                 </div>
 
                 <form :action="'/admin/finance/students/' + encodeURIComponent(adjustData.student_id) + '/adjust-schedule'" method="POST" enctype="multipart/form-data" class="mt-5 space-y-4">
