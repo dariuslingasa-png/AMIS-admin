@@ -174,14 +174,15 @@ class FamilyPaymentReceiptService
 
         $rows = $rows->map(function (array $row) {
             $amountDue = round((float) ($row['amount_due'] ?? $row['balance_before'] ?? 0), 2);
-            $amountPaid = round((float) ($row['amount_paid'] ?? $row['applied_amount'] ?? 0), 2);
-            $remaining = round((float) ($row['remaining'] ?? $row['remaining_after'] ?? 0), 2);
+            $appliedThisTx = round((float) ($row['applied_this_transaction'] ?? $row['applied_amount'] ?? $row['amount_paid'] ?? 0), 2);
+            $totalPaid = round((float) ($row['total_paid_to_date'] ?? ($row['amount_paid'] ?? $appliedThisTx)), 2);
+            $remaining = round((float) ($row['remaining'] ?? $row['remaining_after'] ?? max(0, $amountDue - $totalPaid)), 2);
 
-            if ($amountDue < 0 || $amountPaid < 0 || $remaining < 0) {
+            if ($amountDue < 0 || $totalPaid < 0 || $remaining < 0) {
                 throw new LogicException('Family payment receipt consistency check failed: negative student amount.');
             }
-            if ($this->moneyCents($amountPaid) > $this->moneyCents($amountDue)
-                || $this->moneyCents($amountPaid) + $this->moneyCents($remaining) !== $this->moneyCents($amountDue)) {
+            if ($this->moneyCents($totalPaid) > $this->moneyCents($amountDue)
+                || $this->moneyCents($totalPaid) + $this->moneyCents($remaining) !== $this->moneyCents($amountDue)) {
                 throw new LogicException('Family payment receipt consistency check failed: student balance equation.');
             }
 
@@ -190,7 +191,9 @@ class FamilyPaymentReceiptService
                 'grade_level' => (string) ($row['grade_level'] ?? 'Not recorded'),
                 'billing_month' => mb_strtoupper((string) ($row['billing_month'] ?? 'Billing month')),
                 'amount_due' => $amountDue,
-                'amount_paid' => $amountPaid,
+                'applied_this_transaction' => $appliedThisTx,
+                'amount_paid' => $totalPaid,
+                'total_paid_to_date' => $totalPaid,
                 'remaining' => $remaining,
                 'status' => (string) ($row['status'] ?? $this->status($amountDue, $remaining)),
             ]);
