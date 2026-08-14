@@ -534,6 +534,11 @@ class FinanceController extends Controller
 
             $demoTx = $this->demoData->storeOnsitePayment($validated);
 
+            if ($request->input('return_to') === 'family') {
+                return redirect()->route('admin.finance.families.show', ['family' => $rawUser])
+                    ->with('success', 'Payment of ₱'.number_format($validated['amount'], 2).' recorded and allocated oldest-first for '.$demoTx->family->name.'.');
+            }
+
             return redirect()->route('admin.finance.onsite.create', ['family' => $rawUser])
                 ->with('success', 'TEST / DEMO PAYMENT RECORDED FOR '.$demoTx->family->name.'! Total: ₱'.number_format($validated['amount'], 2).'. (NOTE: Demo payments do not touch the production database or official receipt numbers.)');
         }
@@ -659,6 +664,11 @@ class FinanceController extends Controller
             'remarks' => $validated['remarks'] ?? null,
             'correction_reason' => $validated['correction_reason'] ?? null,
         ], $request->user());
+
+        if ($request->input('return_to') === 'family') {
+            return redirect()->route('admin.finance.families.show', ['family' => $family->id])
+                ->with('success', 'Onsite payment of ₱'.number_format($validated['amount'], 2).' recorded and automatically allocated for '.$family->name.'.');
+        }
 
         return redirect()->route('admin.finance.receipts.show', $transaction->officialReceipt)
             ->with('success', 'Onsite payment recorded, automatically allocated, and official receipt issued.');

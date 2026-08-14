@@ -111,4 +111,25 @@ class FinanceManualSoaTest extends TestCase
             'is_current' => true,
         ]);
     }
+
+    public function test_family_payment_can_be_recorded_from_student_view(): void
+    {
+        $admin = User::factory()->create([
+            'username' => 'test_admin_' . uniqid(),
+            'role' => 'admin',
+            'account_status' => 'verified',
+            'active_admin_session_id' => null,
+        ]);
+
+        $paymentResponse = $this->actingAs($admin)->post(route('admin.finance.onsite.store'), [
+            'user_id' => '999001', // Demo family ID
+            'return_to' => 'family',
+            'payment_method' => 'cash',
+            'amount' => '3000.00',
+            'remarks' => 'Settled cash payment at counter via Family SOA view.',
+        ]);
+
+        $paymentResponse->assertRedirect(route('admin.finance.families.show', ['family' => '999001']));
+        $paymentResponse->assertSessionHas('success');
+    }
 }
