@@ -4,6 +4,7 @@ namespace App\Services\Finance;
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -127,24 +128,23 @@ class FinanceDemoDataService
             return collect();
         }
 
-        // Fetch cumulative approved payments for this demo user from shared database
         $userId = $family['user_id'] ?? null;
-        $approvedPaymentsTotal = 0.0;
+        $approvedSubmissions = collect();
 
         if ($userId && DB::getSchemaBuilder()->hasTable('payment_submissions')) {
             try {
-                $approvedPaymentsTotal = (float) DB::table('payment_submissions')
+                $approvedSubmissions = DB::table('payment_submissions')
                     ->where('user_id', $userId)
                     ->whereIn('status', ['approved', 'verified'])
-                    ->sum('total_amount');
+                    ->orderBy('id')
+                    ->get();
             } catch (\Throwable $e) {
-                $approvedPaymentsTotal = 0.0;
+                $approvedSubmissions = collect();
             }
         }
 
-        $remainingPaymentPool = $approvedPaymentsTotal;
         $monthlyStart = Carbon::create(2026, 7, 15)->startOfDay();
-        $schedule = collect();
+        $rawSchedule = [];
 
         for ($installment = 1; $installment <= 9; $installment++) {
             $dueDate = $monthlyStart->copy()->addMonthsNoOverflow($installment - 1);
@@ -152,22 +152,10 @@ class FinanceDemoDataService
 
             $childrenRows = [];
             $groupOriginalTotal = 0.0;
-            $groupVerifiedTotal = 0.0;
-            $groupRemainingTotal = 0.0;
 
             foreach ($family['children'] as $child) {
-                $originalDue = (float) $child['monthly_due'];
+                $originalDue = round((float) $child['monthly_due'], 2);
                 $groupOriginalTotal += $originalDue;
-
-                $applied = 0.0;
-                if ($remainingPaymentPool > 0) {
-                    $applied = min($remainingPaymentPool, $originalDue);
-                    $remainingPaymentPool = max(0.0, round($remainingPaymentPool - $applied, 2));
-                }
-
-                $remainingDue = max(0.0, round($originalDue - $applied, 2));
-                $groupVerifiedTotal += $applied;
-                $groupRemainingTotal += $remainingDue;
 
                 $studentObj = (object) [
                     'id' => $child['student_id'],
@@ -181,40 +169,53 @@ class FinanceDemoDataService
                 $childrenRows[] = [
                     'student' => $studentObj,
                     'original' => $originalDue,
-                    'verified' => $applied,
-                    'remaining' => $remainingDue,
-                    'status' => $remainingDue <= 0 ? 'PAID' : ($applied > 0 ? 'PARTIALLY PAID' : 'UNPAID'),
+                    'original_due' => $originalDue,
+                    'verified' => 0.0,
+                    'remaining' => $originalDue,
+                    'allocated' => 0.0,
+                    'status' => 'UNPAID',
                 ];
             }
 
-            $groupOriginalTotal = round($groupOriginalTotal, 2);
-            $groupVerifiedTotal = round($groupVerifiedTotal, 2);
-            $groupRemainingTotal = round($groupRemainingTotal, 2);
+            $rawSchedule[] = [
+                'label' => $monthLabel,
+                'due_date' => $dueDate,
+                'children' => $childrenRows,
+                'total_due' => round($groupOriginalTotal, 2),
+                'total_paid' => 0.0,
+                'remaining' => round($groupOriginalTotal, 2),
+                'status' => 'UPCOMING',
+            ];
+        }
+
+        // Apply all approved payments sequentially through the ₱100 round-robin allocator
+        foreach ($approvedSubmissions as $sub) {
+            $this->allocateScheduleRoundRobin($rawSchedule, (float) $sub->total_amount, $family['id'] ?? $familyId, false);
+        }
+
+        $schedule = collect();
+        foreach ($rawSchedule as $mGroup) {
+            $dueDate = $mGroup['due_date'];
+            $groupVerifiedTotal = $mGroup['total_paid'];
+            $groupRemainingTotal = $mGroup['remaining'];
 
             $status = 'UPCOMING';
-            if ($groupRemainingTotal <= 0) {
+            if ($groupRemainingTotal <= 0.01) {
                 $status = 'PAID';
             } elseif ($dueDate->isPast() && $dueDate->month !== now()->month) {
                 $status = 'OVERDUE';
             } elseif ($dueDate->month === now()->month && $dueDate->year === now()->year) {
-                $status = $groupVerifiedTotal > 0 ? 'PARTIALLY PAID' : 'CURRENT';
+                $status = $groupVerifiedTotal > 0.01 ? 'PARTIALLY PAID' : 'CURRENT';
             }
 
-            $schedule->push([
-                'label' => $monthLabel,
-                'due_date' => $dueDate,
-                'children' => $childrenRows,
-                'total_due' => $groupOriginalTotal,
-                'total_paid' => $groupVerifiedTotal,
-                'remaining' => $groupRemainingTotal,
-                'status' => $status,
-            ]);
+            $mGroup['status'] = $status;
+            $schedule->push($mGroup);
         }
 
         return $schedule;
     }
 
-    public function previewAllocation(int|string $familyId, float $amount): array
+    public function previewAllocation(int|string $familyId, float $amount, bool $persistPointer = false): array
     {
         $schedule = $this->getBillingSchedule($familyId);
         if ($schedule->isEmpty() || $amount <= 0) {
@@ -225,65 +226,216 @@ class FinanceDemoDataService
             ];
         }
 
-        $remainingAmount = $amount;
+        $scheduleArray = $schedule->toArray();
+        $rawFamily = $this->getRawFamily($familyId);
+        $famId = $rawFamily['id'] ?? $familyId;
+
+        return $this->allocateScheduleRoundRobin($scheduleArray, $amount, $famId, $persistPointer);
+    }
+
+    /**
+     * Clean ₱100 Round-Robin Allocation Algorithm.
+     * Level 1: Oldest outstanding billing month first (FIFO).
+     * Level 2: Inside month, Child 1 -> Child 2 -> ... -> Child N in ₱100 increments with persistent pointer.
+     */
+    public function allocateScheduleRoundRobin(
+        array &$schedule,
+        float $paymentAmount,
+        int|string $familyId,
+        bool $persistPointer = false
+    ): array {
+        $remainingPayment = round((float) $paymentAmount, 2);
         $allocations = [];
 
-        foreach ($schedule as $monthGroup) {
-            if ($remainingAmount <= 0) {
+        foreach ($schedule as &$monthGroup) {
+            if ($remainingPayment <= 0.001) {
                 break;
             }
 
-            if ($monthGroup['remaining'] <= 0) {
+            $monthLabel = $monthGroup['label'] ?? ($monthGroup['month_label'] ?? 'MONTH');
+            $childrenState = &$monthGroup['children'];
+            $monthTotalRemaining = 0.0;
+            foreach ($childrenState as $c) {
+                $monthTotalRemaining += (float) ($c['remaining'] ?? ($c['remaining_amount'] ?? 0));
+            }
+            $monthTotalRemaining = round($monthTotalRemaining, 2);
+
+            if ($monthTotalRemaining <= 0.001) {
                 continue;
             }
 
-            $monthAllocations = [];
-            $monthHasAllocation = false;
-
-            foreach ($monthGroup['children'] as $child) {
-                $due = (float) $child['remaining'];
-                $allocated = 0.0;
-                if ($remainingAmount > 0 && $due > 0) {
-                    $allocated = min($remainingAmount, $due);
-                    $remainingAmount = max(0, round($remainingAmount - $allocated, 2));
-                    $monthHasAllocation = true;
-                }
-
-                $status = match (true) {
-                    $due <= 0.01 => 'FULLY_PAID',
-                    $allocated >= $due => 'FULLY_PAID',
-                    $allocated > 0.01 => 'PARTIALLY_PAID',
-                    default => 'UNPAID',
-                };
-
-                $monthAllocations[] = [
-                    'sequence' => count($allocations) + count($monthAllocations) + 1,
-                    'month' => $monthGroup['label'],
-                    'billing_month' => $monthGroup['label'],
-                    'student_name' => $child['student']->full_name,
-                    'student_id' => $child['student']->amis_student_id,
-                    'grade_level' => $child['student']->grade_level,
-                    'original_due' => $due,
-                    'balance_before' => $due,
-                    'allocated' => $allocated,
-                    'applied_amount' => $allocated,
-                    'remaining_due' => max(0, round($due - $allocated, 2)),
-                    'remaining_after' => max(0, round($due - $allocated, 2)),
-                    'status' => $status,
-                ];
+            $numChildren = count($childrenState);
+            if ($numChildren === 0) {
+                continue;
             }
 
-            if ($monthHasAllocation) {
-                foreach ($monthAllocations as $allocRow) {
-                    $allocations[] = $allocRow;
+            $monthKey = "demo_rr_ptr_{$familyId}_" . preg_replace('/[^a-zA-Z0-9]/', '_', strtolower($monthLabel));
+            $pointer = (int) Cache::get($monthKey, 0);
+            if ($pointer < 0 || $pointer >= $numChildren) {
+                $pointer = 0;
+            }
+
+            // Level 1: If remaining payment can fully cover all children in this month
+            if ($remainingPayment >= ($monthTotalRemaining - 0.001)) {
+                foreach ($childrenState as $idx => &$c) {
+                    $cRem = (float) ($c['remaining'] ?? ($c['remaining_amount'] ?? 0));
+                    if ($cRem > 0.001) {
+                        $allocatedNow = $cRem;
+                        $c['allocated'] = round(($c['allocated'] ?? 0) + $allocatedNow, 2);
+                        $c['verified'] = round(($c['verified'] ?? ($c['verified_paid'] ?? 0)) + $allocatedNow, 2);
+                        $c['verified_paid'] = $c['verified'];
+                        $c['remaining'] = 0.0;
+                        $c['remaining_amount'] = 0.0;
+                        $c['amount_due'] = 0.0;
+                        $c['is_paid'] = true;
+                        $c['status'] = 'FULLY_PAID';
+
+                        $remainingPayment = max(0.0, round($remainingPayment - $allocatedNow, 2));
+
+                        $studentObj = $c['student'] ?? null;
+                        $studentName = $c['full_name'] ?? (is_object($studentObj) ? ($studentObj->full_name ?? '') : ($c['student_name'] ?? 'Student'));
+                        $studentId = $c['student_id'] ?? (is_object($studentObj) ? ($studentObj->amis_student_id ?? '') : '');
+                        $gradeLevel = $c['grade_level'] ?? (is_object($studentObj) ? ($studentObj->grade_level ?? '') : '');
+                        $originalDue = (float) ($c['original'] ?? ($c['original_amount'] ?? ($c['original_due'] ?? $cRem)));
+
+                        $allocations[] = [
+                            'sequence' => count($allocations) + 1,
+                            'month' => $monthLabel,
+                            'billing_month' => $monthLabel,
+                            'student_name' => $studentName,
+                            'student_id' => $studentId,
+                            'grade_level' => $gradeLevel,
+                            'original_due' => $originalDue,
+                            'balance_before' => $cRem,
+                            'allocated' => $allocatedNow,
+                            'applied_amount' => $allocatedNow,
+                            'remaining_due' => 0.0,
+                            'remaining_after' => 0.0,
+                            'status' => 'FULLY_PAID',
+                        ];
+                    }
+                }
+                unset($c);
+
+                if ($persistPointer) {
+                    Cache::put($monthKey, 0, now()->addYear());
+                }
+            } else {
+                // Level 2: ₱100 Round-robin allocation loop inside this month
+                $monthTxAllocations = [];
+                $safetyLimit = 50000;
+
+                while ($remainingPayment > 0.001 && $safetyLimit-- > 0) {
+                    $eligible = [];
+                    for ($i = 0; $i < $numChildren; $i++) {
+                        $remVal = (float) ($childrenState[$i]['remaining'] ?? ($childrenState[$i]['remaining_amount'] ?? 0));
+                        if ($remVal > 0.001) {
+                            $eligible[] = $i;
+                        }
+                    }
+
+                    if (empty($eligible)) {
+                        break;
+                    }
+
+                    $targetIndex = null;
+                    for ($step = 0; $step < $numChildren; $step++) {
+                        $check = ($pointer + $step) % $numChildren;
+                        if (in_array($check, $eligible, true)) {
+                            $targetIndex = $check;
+                            break;
+                        }
+                    }
+
+                    if ($targetIndex === null) {
+                        break;
+                    }
+
+                    $c = &$childrenState[$targetIndex];
+                    $cRem = (float) ($c['remaining'] ?? ($c['remaining_amount'] ?? 0));
+
+                    if ($cRem < 100.0) {
+                        $unit = min($cRem, $remainingPayment);
+                    } elseif ($remainingPayment < 100.0) {
+                        $unit = min($remainingPayment, $cRem);
+                    } else {
+                        $unit = min(100.0, $cRem, $remainingPayment);
+                    }
+
+                    $unit = round($unit, 2);
+                    if ($unit <= 0.0001) {
+                        break;
+                    }
+
+                    $c['allocated'] = round(($c['allocated'] ?? 0) + $unit, 2);
+                    $c['verified'] = round(($c['verified'] ?? ($c['verified_paid'] ?? 0)) + $unit, 2);
+                    $c['verified_paid'] = $c['verified'];
+                    $c['remaining'] = max(0.0, round($cRem - $unit, 2));
+                    $c['remaining_amount'] = $c['remaining'];
+                    $c['amount_due'] = $c['remaining'];
+                    $c['is_paid'] = $c['remaining'] <= 0.01;
+                    $c['status'] = $c['remaining'] <= 0.01 ? 'FULLY_PAID' : 'PARTIALLY_PAID';
+
+                    $monthTxAllocations[$targetIndex] = round(($monthTxAllocations[$targetIndex] ?? 0) + $unit, 2);
+                    $remainingPayment = max(0.0, round($remainingPayment - $unit, 2));
+
+                    $pointer = ($targetIndex + 1) % $numChildren;
+                }
+                unset($c);
+
+                if ($persistPointer) {
+                    Cache::put($monthKey, $pointer, now()->addYear());
+                }
+
+                foreach ($monthTxAllocations as $idx => $allocatedNow) {
+                    $c = $childrenState[$idx];
+                    $studentObj = $c['student'] ?? null;
+                    $studentName = $c['full_name'] ?? (is_object($studentObj) ? ($studentObj->full_name ?? '') : ($c['student_name'] ?? 'Student'));
+                    $studentId = $c['student_id'] ?? (is_object($studentObj) ? ($studentObj->amis_student_id ?? '') : '');
+                    $gradeLevel = $c['grade_level'] ?? (is_object($studentObj) ? ($studentObj->grade_level ?? '') : '');
+                    $cRem = (float) ($c['remaining'] ?? ($c['remaining_amount'] ?? 0));
+                    $originalDue = (float) ($c['original'] ?? ($c['original_amount'] ?? ($c['original_due'] ?? round($cRem + $allocatedNow, 2))));
+
+                    $allocations[] = [
+                        'sequence' => count($allocations) + 1,
+                        'month' => $monthLabel,
+                        'billing_month' => $monthLabel,
+                        'student_name' => $studentName,
+                        'student_id' => $studentId,
+                        'grade_level' => $gradeLevel,
+                        'original_due' => round($cRem + $allocatedNow, 2),
+                        'balance_before' => round($cRem + $allocatedNow, 2),
+                        'allocated' => $allocatedNow,
+                        'applied_amount' => $allocatedNow,
+                        'remaining_due' => $cRem,
+                        'remaining_after' => $cRem,
+                        'status' => $cRem <= 0.01 ? 'FULLY_PAID' : 'PARTIALLY_PAID',
+                    ];
                 }
             }
+
+            // Recalculate totals on month group
+            $mTotDue = 0.0;
+            $mTotPaid = 0.0;
+            $mTotRem = 0.0;
+
+            foreach ($childrenState as $c) {
+                $mTotDue += (float) ($c['original'] ?? ($c['original_amount'] ?? 0));
+                $mTotPaid += (float) ($c['verified'] ?? ($c['verified_paid'] ?? 0));
+                $mTotRem += (float) ($c['remaining'] ?? ($c['remaining_amount'] ?? 0));
+            }
+
+            $monthGroup['total_due'] = round($mTotDue, 2);
+            $monthGroup['total_paid'] = round($mTotPaid, 2);
+            $monthGroup['remaining'] = round($mTotRem, 2);
+            $monthGroup['total_remaining'] = round($mTotRem, 2);
         }
+        unset($monthGroup);
 
         return [
             'allocations' => $allocations,
-            'total_allocated' => round($amount - $remainingAmount, 2),
-            'advance_credit' => $remainingAmount > 0 ? round($remainingAmount, 2) : 0.00,
+            'total_allocated' => round($paymentAmount - $remainingPayment, 2),
+            'advance_credit' => $remainingPayment > 0 ? round($remainingPayment, 2) : 0.00,
         ];
     }
 
