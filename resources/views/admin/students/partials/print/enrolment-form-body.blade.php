@@ -541,7 +541,7 @@
 </div>
 
 <!-- PAGE 2: MEDICAL INFORMATION, EMERGENCY CONTACTS, REFERRAL & POLICIES -->
-<div class="paper-container paper-page-break">
+<div class="paper-container">
     <div class="section-header-row" style="margin-top: 4px; margin-bottom: 8px;">
         MEDICAL INFORMATION
     </div>
