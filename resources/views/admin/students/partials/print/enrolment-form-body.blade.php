@@ -152,7 +152,7 @@
 <style>
     @page {
         size: 210mm 297mm;
-        margin: 5mm 9mm 5mm 9mm !important;
+        margin: 6mm 10mm 6mm 10mm !important;
     }
     * {
         box-sizing: border-box !important;
@@ -165,7 +165,7 @@
         margin: 0 !important;
         font-family: 'DejaVu Sans', sans-serif !important;
         color: #0f172a !important;
-        line-height: 1.12 !important;
+        line-height: 1.15 !important;
         font-size: 10px !important;
         width: 100% !important;
     }
@@ -184,7 +184,7 @@
     .page-number-badge {
         display: none !important;
     }
-    .input-line, .p2-full-line, .lrn-input {
+    .input-line, .p2-full-line {
         display: block !important;
         width: 100% !important;
         border: none !important;
@@ -197,13 +197,13 @@
         font-size: 9.5px !important;
         color: #0f172a !important;
         line-height: 1.1 !important;
-        height: 14.5px !important;
+        height: 15px !important;
         box-sizing: border-box !important;
     }
     .label-text {
         display: block !important;
         font-family: 'DejaVu Sans', sans-serif !important;
-        font-size: 6.8px !important;
+        font-size: 7px !important;
         font-weight: bold !important;
         color: #475569 !important;
         text-transform: uppercase !important;
@@ -214,12 +214,12 @@
         background-color: #f1f5f9 !important;
         border-left: 3px solid #059669 !important;
         font-family: 'DejaVu Sans', sans-serif !important;
-        font-size: 8.5px !important;
+        font-size: 8.8px !important;
         font-weight: bold !important;
         color: #0f172a !important;
-        padding: 1.5px 4px !important;
-        margin-top: 5px !important;
-        margin-bottom: 2px !important;
+        padding: 2px 4px !important;
+        margin-top: 6px !important;
+        margin-bottom: 3px !important;
         text-transform: uppercase !important;
     }
     .top-header-row {
@@ -239,9 +239,50 @@
         table-layout: fixed !important;
         border-collapse: collapse !important;
     }
-    .form-title-area { display: table-cell !important; vertical-align: top !important; width: 62% !important; }
-    .checkbox-stack { display: table-cell !important; vertical-align: top !important; width: 18% !important; text-align: left !important; padding-top: 4px !important; }
-    .photo-box { display: table-cell !important; vertical-align: top !important; width: 20% !important; text-align: right !important; }
+    .form-title-area { display: table-cell !important; vertical-align: top !important; width: 58% !important; }
+    .checkbox-stack { display: table-cell !important; vertical-align: top !important; width: 17% !important; text-align: left !important; padding-top: 4px !important; }
+    .photo-box { display: table-cell !important; vertical-align: top !important; width: 25% !important; text-align: right !important; }
+
+    .student-info-bar {
+        background-color: #f1f5f9 !important;
+        border-left: 3px solid #059669 !important;
+        padding: 2px 4px !important;
+        margin-top: 4px !important;
+        margin-bottom: 2px !important;
+        display: table !important;
+        width: 100% !important;
+        table-layout: fixed !important;
+    }
+    .student-info-bar .section-title {
+        display: table-cell !important;
+        vertical-align: middle !important;
+        font-family: 'DejaVu Sans', sans-serif !important;
+        font-size: 8.5px !important;
+        font-weight: bold !important;
+        color: #0f172a !important;
+        text-transform: uppercase !important;
+    }
+    .student-info-bar .lrn-container {
+        display: table-cell !important;
+        vertical-align: middle !important;
+        text-align: right !important;
+        font-size: 8px !important;
+        font-weight: bold !important;
+        color: #0f172a !important;
+    }
+    .lrn-input {
+        display: inline-block !important;
+        width: 85px !important;
+        border: none !important;
+        border-bottom: 1.1px solid #0f172a !important;
+        background: transparent !important;
+        padding: 0 2px !important;
+        font-family: 'DejaVu Sans', sans-serif !important;
+        font-weight: bold !important;
+        font-size: 8.5px !important;
+        text-align: center !important;
+        height: 13px !important;
+    }
 
     .grid-5-col, .grid-4-col-birth, .grid-2-col-school, .grid-parent-row, .grid-children-row, .grid-physician-row, .p2-emergency-grid, .signature-grid, .grid-office-row {
         display: table !important;
@@ -261,8 +302,8 @@
     }
     .refund-notice-box {
         border: 1.2px solid #dc2626 !important;
-        padding: 2px 3px !important;
-        font-size: 6.8px !important;
+        padding: 2px 4px !important;
+        font-size: 7px !important;
         font-weight: bold !important;
         color: #dc2626 !important;
         text-align: center !important;
@@ -271,17 +312,17 @@
         box-sizing: border-box !important;
     }
     .lives-with-row {
-        margin-top: 4px !important;
-        font-size: 7.5px !important;
+        margin-top: 5px !important;
+        font-size: 8px !important;
         font-weight: bold !important;
     }
     .radio-option {
         display: inline-block !important;
-        margin-left: 6px !important;
+        margin-left: 8px !important;
     }
     .radio-line {
         display: inline-block !important;
-        width: 12px !important;
+        width: 14px !important;
         border-bottom: 1.1px solid #0f172a !important;
         text-align: center !important;
         font-weight: bold !important;
@@ -296,14 +337,14 @@
     }
     .p2-inline-line {
         display: inline-block !important;
-        width: 12px !important;
+        width: 14px !important;
         border-bottom: 1.1px solid #0f172a !important;
         text-align: center !important;
         font-weight: bold !important;
     }
     .p2-explain-block {
         margin-top: 1px !important;
-        margin-bottom: 3px !important;
+        margin-bottom: 2px !important;
     }
     .p2-explain-label {
         display: block !important;
@@ -311,44 +352,45 @@
         color: #475569 !important;
     }
     .p2-policy-text {
-        font-size: 7px !important;
-        line-height: 1.18 !important;
-        margin-top: 3px !important;
+        font-size: 7.8px !important;
+        line-height: 1.3 !important;
+        margin-top: 8px !important;
         color: #334155 !important;
         text-align: justify !important;
     }
     .signature-disclaimer {
-        font-size: 6.8px !important;
+        font-size: 7px !important;
         color: #64748b !important;
-        margin-top: 2px !important;
+        margin-top: 6px !important;
         font-style: italic !important;
     }
     .office-perforated-line {
         border: none !important;
         border-top: 1px dashed #94a3b8 !important;
-        margin: 4px 0 !important;
+        margin: 14px 0 10px 0 !important;
     }
     .date-slash-inputs {
         display: inline-block !important;
     }
     .date-slash-input {
-        width: 20px !important;
+        width: 22px !important;
         display: inline-block !important;
         border: none !important;
         border-bottom: 1.1px solid #0f172a !important;
         text-align: center !important;
-        font-size: 7.5px !important;
+        font-size: 8px !important;
         font-weight: bold !important;
     }
     .attachments-title {
-        font-size: 7.2px !important;
+        font-size: 8px !important;
         font-weight: bold !important;
-        margin-top: 3px !important;
+        margin-top: 10px !important;
     }
     .attachments-list {
-        font-size: 6.8px !important;
-        line-height: 1.15 !important;
-        margin-left: 12px !important;
+        font-size: 7.5px !important;
+        line-height: 1.3 !important;
+        margin-left: 14px !important;
+        margin-top: 4px !important;
     }
     .school-arabic-name {
         display: none !important;
@@ -356,7 +398,7 @@
 </style>
 @endif
 
-<!-- PAGE 1: STUDENT & PARENT REGISTRATION -->
+<!-- PAGE 1: STUDENT & PARENT REGISTRATION + MEDICAL INFO -->
 <div class="paper-container paper-page-break">
     @if(isset($pageNumber))
         <div class="page-number-badge">
@@ -406,16 +448,16 @@
             <h2 class="form-title" style="font-size: 1.10rem; margin: 0;">ENROLMENT APPLICATION FORM</h2>
             <p class="sy-title" style="font-size: 0.90rem; margin: 1px 0 4px 0;">SY {{ $app->school_year ?? '2026-2027' }}</p>
             
-            <div class="student-info-bar" style="margin-bottom: 0;">
-                <span class="section-title" style="font-size: 0.82rem;">STUDENT INFORMATION</span>
+            <div class="student-info-bar">
+                <span class="section-title">STUDENT INFORMATION</span>
                 <div class="lrn-container">
-                    <span style="font-size: 0.78rem;">LRN:</span>
+                    <span>LRN:</span>
                     <input type="text" class="lrn-input" value="{{ mb_strtoupper($app->lrn ?? $student->student_number) }}" style="{{ $getDynamicStyle($app->lrn ?? $student->student_number, '0.88rem', '0.78rem', '0.70rem', '0.60rem', 12, 18, 24) }}">
                 </div>
             </div>
         </div>
 
-        <div class="checkbox-stack" style="padding-top: 4px;">
+        <div class="checkbox-stack">
             <div class="checkbox-item">
                 <span class="custom-checkbox">{{ $isOld ? '✓' : '' }}</span>
                 <span>OLD</span>
@@ -427,14 +469,14 @@
         </div>
 
         <div class="photo-box" id="student-photo-container">
-            <div style="float: right; width: 75px; height: 75px; border: 1.5px solid #0f172a; position: relative; overflow: hidden; background: #ffffff;">
+            <div style="display: inline-block; width: 75px; height: 75px; border: 1.2px solid #0f172a; position: relative; overflow: hidden; background: #fafafa; text-align: center; vertical-align: top;">
                 @if($photoSrc)
                     <img src="{{ $photoSrc }}" alt="Student 2x2 Photo" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'; document.getElementById('photo-fallback-box').style.display='block';">
-                    <div id="photo-fallback-box" style="display: none; width: 100%; height: 100%; text-align: center; background: #fafafa; color: #94a3b8; padding-top: 22px;">
+                    <div id="photo-fallback-box" style="display: none; width: 100%; height: 100%; text-align: center; background: #fafafa; padding-top: 22px;">
                         <span style="font-family: sans-serif; font-size: 7.5px; font-weight: bold; text-transform: uppercase; color: #64748b;">2x2 PHOTO</span>
                     </div>
                 @else
-                    <div style="display: block; width: 100%; height: 100%; text-align: center; background: #fafafa; color: #94a3b8; padding-top: 22px;">
+                    <div style="display: block; width: 100%; height: 100%; text-align: center; background: #fafafa; padding-top: 22px;">
                         <span style="font-family: sans-serif; font-size: 7.5px; font-weight: bold; text-transform: uppercase; color: #64748b;">2x2 PHOTO</span>
                     </div>
                 @endif
@@ -629,7 +671,7 @@
     </div>
 
     <!-- MEDICAL INFORMATION (ON PAGE 1) -->
-    <div class="section-header-row" style="margin-top: 4px; margin-bottom: 2px;">
+    <div class="section-header-row" style="margin-top: 6px; margin-bottom: 3px;">
         MEDICAL INFORMATION
     </div>
 
@@ -660,7 +702,7 @@
         <input type="text" class="p2-full-line" value="{{ mb_strtoupper($app->current_medications ?? '') }}">
     </div>
 
-    <div class="field-container" style="margin-top: 2.5px;">
+    <div class="field-container" style="margin-top: 3px;">
         <div class="grid-physician-row">
             <div>
                 <input type="text" class="input-line" value="{{ mb_strtoupper($app->family_physician ?? '') }}">
@@ -686,7 +728,7 @@
         EMERGENCY CONTACTS <span style="font-size: 0.85em; font-weight: normal; text-transform: none; color: #475569;">(Other than above names)</span>
     </div>
 
-    <div class="field-container" style="margin-top: 4px;">
+    <div class="field-container" style="margin-top: 6px;">
         <div class="p2-emergency-grid">
             <div>
                 <input type="text" class="input-line" value="{{ mb_strtoupper($app->emergency_name ?? '') }}" style="{{ $getDynamicStyle($app->emergency_name ?? '', '0.98rem', '0.80rem', '0.68rem', '0.58rem', 20, 28, 35) }}">
@@ -703,28 +745,28 @@
         </div>
     </div>
 
-    <div class="section-header-row" style="margin-top: 14px;">
+    <div class="section-header-row" style="margin-top: 18px;">
         REFERRAL
     </div>
 
-    <div class="field-container" style="margin-top: 4px;">
+    <div class="field-container" style="margin-top: 6px;">
         <input type="text" class="input-line" value="{{ mb_strtoupper($app->referral_source ?? '') }}">
         <span class="label-text">I heard about AMIS from</span>
     </div>
 
-    <p class="p2-policy-text" style="margin-top: 14px;">
+    <p class="p2-policy-text" style="margin-top: 18px;">
         I understand that if and when the applicant is enrolled, I agree to comply with the rules, regulations and policies of Al Munawwara Islamic School as outlined in the Parent Student Handbook and other official communications.
     </p>
 
-    <p class="p2-policy-text" style="margin-top: 8px;">
+    <p class="p2-policy-text" style="margin-top: 10px;">
         It is further understood that Al Munawwara Islamic School reserves the right to dismiss any student for any reason deemed to be in the best interest of the school. Dismissal of the student does not release the parent from the financial obligations related to the school fees and other fees thereat.
     </p>
 
-    <div class="section-header-row" style="margin-top: 16px;">
+    <div class="section-header-row" style="margin-top: 20px;">
         SIGNATURE
     </div>
 
-    <div class="field-container" style="margin-top: 6px;">
+    <div class="field-container" style="margin-top: 8px;">
         <div class="signature-grid">
             <div>
                 <input type="text" class="input-line" value="{{ $fatherFull ?: $motherFull }}" style="{{ $getDynamicStyle($fatherFull ?: $motherFull, '0.98rem', '0.80rem', '0.68rem', '0.58rem', 22, 32, 40) }}">
@@ -737,13 +779,13 @@
         </div>
     </div>
 
-    <p class="signature-disclaimer" style="margin-top: 4px;">
+    <p class="signature-disclaimer" style="margin-top: 6px;">
         *Only completed application will be accepted. Submission of an application does not guarantee admission
     </p>
 
-    <hr class="office-perforated-line" style="margin: 14px 0 10px 0;">
+    <hr class="office-perforated-line" style="margin: 20px 0 14px 0;">
 
-    <div class="grid-office-row" style="margin-top: 8px;">
+    <div class="grid-office-row" style="margin-top: 10px;">
         <div>
             <span>Application submitted on:</span>
             <div class="date-slash-inputs">
@@ -762,8 +804,8 @@
         </div>
     </div>
 
-    <div class="attachments-title" style="margin-top: 10px;">To be attached:</div>
-    <ol class="attachments-list" style="margin-top: 4px;">
+    <div class="attachments-title" style="margin-top: 14px;">To be attached:</div>
+    <ol class="attachments-list" style="margin-top: 6px;">
         <li>Photo copy of Birth Certificate</li>
         <li>Official Transcript from Previous School (Report Card)</li>
         <li>Medical Record (If any)</li>
