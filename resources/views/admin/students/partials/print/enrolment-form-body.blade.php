@@ -803,21 +803,33 @@
             FOR OFFICE USE ONLY
         </div>
         <div class="grid-office-row" style="margin-top: 4px;">
-            <div>
-                <span>Application submitted on:</span>
+            <div style="width: 44%;">
+                <span style="font-size: 7.5px; font-weight: bold;">Application submitted on:</span>
                 <div class="date-slash-inputs">
                     <input type="text" class="date-slash-input" value="{{ $student->created_at->format('m') }}"> /
                     <input type="text" class="date-slash-input" value="{{ $student->created_at->format('d') }}"> /
                     <input type="text" class="date-slash-input" value="{{ $student->created_at->format('Y') }}">
                 </div>
             </div>
-            <div>
-                <span>Paid:</span>
-                <input type="text" class="input-line" style="width: 100px; display: inline-block;" value="{{ $app?->payment?->amount_paid ? '₱' . number_format($app->payment->amount_paid, 2) : '' }}">
+            <div style="width: 28%;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="width: 32px; vertical-align: bottom; font-size: 7.5px; font-weight: bold;">Paid:</td>
+                        <td style="vertical-align: bottom;">
+                            <input type="text" class="input-line" value="{{ $app?->payment?->amount_paid ? '₱' . number_format($app->payment->amount_paid, 2) : '' }}">
+                        </td>
+                    </tr>
+                </table>
             </div>
-            <div>
-                <span>OR No.:</span>
-                <input type="text" class="input-line" style="width: 100px; display: inline-block;" value="{{ mb_strtoupper($app?->payment?->reference_number ?? '') }}">
+            <div style="width: 28%;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="width: 42px; vertical-align: bottom; font-size: 7.5px; font-weight: bold;">OR No.:</td>
+                        <td style="vertical-align: bottom;">
+                            <input type="text" class="input-line" value="{{ mb_strtoupper($app?->payment?->reference_number ?? '') }}">
+                        </td>
+                    </tr>
+                </table>
             </div>
         </div>
 
