@@ -5,458 +5,523 @@
         ['label' => 'Print & Export', 'href' => null],
     ]"
 >
+    @php
+        $currentGrade = request('grade', '');
+        $currentMode = request('mode', '');
+        $currentGender = request('gender', '');
+        $currentSearch = request('search', '');
+        
+        $allGradeList = [
+            'Kinder 1', 'Kinder 2',
+            'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6',
+            'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'
+        ];
+    @endphp
+
     <div class="space-y-6">
-        <!-- Banner -->
-        <section class="overflow-hidden rounded-3xl border border-emerald-700/30 bg-gradient-to-br from-emerald-800 via-emerald-900 to-teal-950 p-6 text-white shadow-xl shadow-slate-900/10">
-            <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <!-- TOP EXECUTIVE HERO BANNER -->
+        <section class="relative overflow-hidden rounded-3xl border border-emerald-800/40 bg-gradient-to-br from-emerald-900 via-teal-950 to-slate-950 p-6 md:p-8 text-white shadow-xl shadow-slate-950/20">
+            <!-- Background Decorative Glow -->
+            <div class="pointer-events-none absolute -right-16 -top-16 h-72 w-72 rounded-full bg-emerald-500/15 blur-3xl"></div>
+            <div class="pointer-events-none absolute -left-16 -bottom-16 h-72 w-72 rounded-full bg-teal-500/10 blur-3xl"></div>
+
+            <div class="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                    <span class="inline-flex rounded-full bg-white/10 px-3 py-1 text-xs font-black uppercase tracking-[0.22em] text-slate-200">Students Workspace</span>
-                    <h1 class="mt-4 text-3xl font-black tracking-tight">Print & Export Center</h1>
-                    <p class="mt-2 max-w-2xl text-sm font-medium leading-6 text-emerald-100">
-                        Select filter options below to print batch forms, generate printable ID sheets, or download report archives.
+                    <div class="flex flex-wrap items-center gap-2.5">
+                        <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/20 px-3 py-1 text-[11px] font-black uppercase tracking-widest text-emerald-300 border border-emerald-400/30 backdrop-blur-sm">
+                            <i data-lucide="printer" class="h-3.5 w-3.5"></i>
+                            Official Documents Hub
+                        </span>
+                        <span class="rounded-full bg-white/10 px-2.5 py-0.5 text-[11px] font-bold text-slate-200">
+                            SY 2026–2027
+                        </span>
+                        @if($currentGrade)
+                            <span class="rounded-full bg-emerald-400 text-slate-950 px-2.5 py-0.5 text-[11px] font-black uppercase tracking-wider">
+                                Filter: {{ $currentGrade }}
+                            </span>
+                        @endif
+                    </div>
+                    
+                    <h1 class="mt-3 text-2xl md:text-3xl font-black tracking-tight text-white">
+                        Student Records Print & Export Center
+                    </h1>
+                    <p class="mt-1.5 max-w-2xl text-xs md:text-sm font-medium leading-relaxed text-emerald-100/80">
+                        Generate official approved enrollment application forms, batch ID cards, student requirement archives, and DepEd registries with instant sub-second bundling.
                     </p>
+                </div>
+
+                <!-- Live Quick Stats Counter -->
+                <div class="flex flex-wrap items-center gap-3">
+                    <div class="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md px-4 py-3 text-center min-w-[100px]">
+                        <span class="block text-[10px] font-extrabold uppercase tracking-wider text-emerald-300">Target Records</span>
+                        <span class="text-2xl font-black text-white">{{ number_format($totalStudents) }}</span>
+                    </div>
+                    <div class="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md px-4 py-3 text-center min-w-[90px]">
+                        <span class="block text-[10px] font-extrabold uppercase tracking-wider text-emerald-200">F2F Mode</span>
+                        <span class="text-xl font-black text-white">{{ number_format($f2fCount ?? 0) }}</span>
+                    </div>
+                    <div class="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md px-4 py-3 text-center min-w-[90px]">
+                        <span class="block text-[10px] font-extrabold uppercase tracking-wider text-teal-200">ODL Mode</span>
+                        <span class="text-xl font-black text-white">{{ number_format($odlCount ?? 0) }}</span>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <!-- Main Card -->
-        <x-card title="Export Student Registry" subtitle="Download and print enrollment forms, school forms, and administrative reports">
-            <!-- FILTER OPTIONS -->
-            <div class="rounded-2xl border border-slate-100 bg-emerald-50/40 p-5 mb-6">
-                <div class="flex items-center justify-between mb-4">
-                    <span class="text-xs font-black uppercase tracking-wider text-emerald-800 flex items-center gap-1.5">
-                        <i data-lucide="filter" class="h-4 w-4 text-emerald-600"></i>
-                        Filter Target Student Records
-                    </span>
-                    <span class="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                        Live Filter
-                    </span>
-                </div>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <!-- Learning Mode Filter -->
-                    <div>
-                        <label class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-600 mb-1.5">Mode</label>
-                        <select id="p-filter-mode" class="w-full h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-bold text-slate-800 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition cursor-pointer">
-                            <option value="" {{ request('mode') == '' ? 'selected' : '' }}>All Modes (F2F & ODL)</option>
-                            <option value="F2F" {{ request('mode') == 'F2F' ? 'selected' : '' }}>Face to Face (F2F)</option>
-                            <option value="ODL" {{ request('mode') == 'ODL' ? 'selected' : '' }}>Online Distance Learning (ODL)</option>
-                        </select>
-                    </div>
-
-                    <!-- Grade Level Filter -->
-                    <div>
-                        <label class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-600 mb-1.5">Grade</label>
-                        <select id="p-filter-grade" class="w-full h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-bold text-slate-800 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition cursor-pointer">
-                            <option value="" {{ request('grade') == '' ? 'selected' : '' }}>All Grade Levels</option>
-                            <option value="Kinder 1" {{ request('grade') == 'Kinder 1' ? 'selected' : '' }}>K1 (Kinder 1)</option>
-                            <option value="Kinder 2" {{ request('grade') == 'Kinder 2' ? 'selected' : '' }}>K2 (Kinder 2)</option>
-                            @foreach (['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'] as $g)
-                                <option value="{{ $g }}" {{ request('grade') == $g ? 'selected' : '' }}>{{ \App\Models\Student::abbreviateGrade($g) }} ({{ $g }})</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <!-- Gender Filter (Optional) -->
-                    <div>
-                        <label class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-600 mb-1.5">Gender (Optional)</label>
-                        <select id="p-filter-gender" class="w-full h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-bold text-slate-800 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition cursor-pointer">
-                            <option value="" {{ request('gender') == '' ? 'selected' : '' }}>All Genders</option>
-                            <option value="male" {{ request('gender') == 'male' ? 'selected' : '' }}>Male Only</option>
-                            <option value="female" {{ request('gender') == 'female' ? 'selected' : '' }}>Female Only</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <!-- THREE COLUMNS LAYOUT -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Column 1: Student Documents -->
-                <div class="flex flex-col justify-between rounded-2xl border border-slate-100 bg-emerald-50/20 p-5 shadow-xs transition hover:shadow-md">
-                    <div>
-                        <div class="flex items-center gap-2.5 mb-4 border-b border-emerald-100 pb-2.5">
-                            <div class="p-2.5 rounded-xl bg-emerald-100 text-emerald-700">
-                                <i data-lucide="file-text" class="h-5 w-5"></i>
-                            </div>
-                            <h4 class="text-xs font-black uppercase tracking-wider text-slate-900">Student Documents</h4>
-                        </div>
-                        <ul class="space-y-2.5 text-xs text-slate-600 font-semibold">
-                            <!-- Enrollment Form (ACTIVE) -->
-                            <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="file-text" class="w-3.5 h-3.5 text-emerald-600 font-bold"></i>
-                                    <span class="font-extrabold text-slate-900">Enrollment Form</span>
-                                </span>
-                                <div class="flex items-center gap-2">
-                                    <button type="button" onclick="runPrintRecordAction('forms_batch')" class="text-emerald-700 hover:text-emerald-900 font-black hover:underline cursor-pointer bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Print PDF</button>
-                                    <button type="button" onclick="openBatchExportModal('enrollment_forms')" class="text-slate-600 hover:text-slate-900 font-extrabold hover:underline cursor-pointer">ZIP Archive</button>
-                                </div>
-                            </li>
-                            <!-- Student Uploaded Documents ZIP (per student folder) -->
-                            <li class="flex items-center justify-between py-1.5 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition bg-sky-50/50 my-1 p-2 rounded-xl border border-sky-100">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="folder-archive" class="w-4 h-4 text-sky-600 font-black"></i>
-                                    <span class="font-black text-sky-950">Uploaded Docs ZIP</span>
-                                </span>
-                                <button type="button" onclick="runPrintRecordAction('docs_zip')" class="text-white bg-sky-600 hover:bg-sky-700 font-black text-[10px] uppercase tracking-wider px-2.5 py-1 rounded-lg transition shadow-xs cursor-pointer flex items-center gap-1">
-                                    <i data-lucide="download" class="w-3 h-3"></i>
-                                    <span>Download ZIP</span>
-                                </button>
-                            </li>
-                            <!-- Learner's Profile -->
-                            <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="user" class="w-3.5 h-3.5 text-slate-400"></i>
-                                    <span class="text-slate-500">Learner's Profile</span>
-                                </span>
-                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
-                            </li>
-                            <!-- Student ID Card (ACTIVE ID GENERATOR) -->
-                            <li class="flex items-center justify-between py-1.5 border-b border-slate-100/50 hover:bg-emerald-50/50 rounded px-1.5 transition bg-emerald-50/40 my-1 p-2 rounded-xl border border-emerald-200/60 shadow-xs">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="credit-card" class="w-4 h-4 text-emerald-600 font-black"></i>
-                                    <span class="font-black text-emerald-950">Student ID Card</span>
-                                </span>
-                                <div class="flex items-center gap-1.5">
-                                    <button type="button" onclick="runPrintRecordAction('id_cards_grade')" class="text-white bg-emerald-600 hover:bg-emerald-700 font-black text-[10px] uppercase tracking-wider px-2.5 py-1 rounded-lg transition shadow-xs cursor-pointer flex items-center gap-1">
-                                        <i data-lucide="printer" class="w-3 h-3"></i>
-                                        <span>Print IDs</span>
-                                    </button>
-                                </div>
-                            </li>
-                            <!-- Class Schedule -->
-                            <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-400"></i>
-                                    <span class="text-slate-500">Class Schedule</span>
-                                </span>
-                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
-                            </li>
-                            <!-- Report Card (SF9) -->
-                            <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="award" class="w-3.5 h-3.5 text-slate-400"></i>
-                                    <span class="text-slate-500">Report Card (SF9)</span>
-                                </span>
-                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
-                            </li>
-                            <!-- Permanent Record (SF10) -->
-                            <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="book-open" class="w-3.5 h-3.5 text-slate-400"></i>
-                                    <span class="text-slate-500">Permanent Record (SF10)</span>
-                                </span>
-                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
-                            </li>
-                            <!-- Certificate of Enrollment -->
-                            <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="graduation-cap" class="w-3.5 h-3.5 text-slate-400"></i>
-                                    <span class="text-slate-500">Certificate of Enrollment</span>
-                                </span>
-                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
-                            </li>
-                            <!-- Good Moral Certificate -->
-                            <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="shield" class="w-3.5 h-3.5 text-slate-400"></i>
-                                    <span class="text-slate-500">Good Moral Certificate</span>
-                                </span>
-                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
-                            </li>
-                            <!-- Certificate of Completion (Grade 10) -->
-                            <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-slate-400"></i>
-                                    <span class="text-slate-500">Certificate of Completion (Grade 10)</span>
-                                </span>
-                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
-                            </li>
-                            <!-- Certificate of Graduation (Grade 12) -->
-                            <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="check-square" class="w-3.5 h-3.5 text-slate-400"></i>
-                                    <span class="text-slate-500">Certificate of Graduation (Grade 12)</span>
-                                </span>
-                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
-                            </li>
-                            <!-- Certificate of Recognition / Awards -->
-                            <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="sparkles" class="w-3.5 h-3.5 text-slate-400"></i>
-                                    <span class="text-slate-500">Certificate of Recognition / Awards</span>
-                                </span>
-                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
-                            </li>
-                            <!-- Certificate of Attendance -->
-                            <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="user-check" class="w-3.5 h-3.5 text-slate-400"></i>
-                                    <span class="text-slate-500">Certificate of Attendance</span>
-                                </span>
-                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
-                            </li>
-                            <!-- Certificate of Transfer -->
-                            <li class="flex items-center justify-between py-1 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="file-input" class="w-3.5 h-3.5 text-slate-400"></i>
-                                    <span class="text-slate-500">Certificate of Transfer (if applicable)</span>
-                                </span>
-                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- Column 2: DepEd School Forms -->
-                <div class="flex flex-col justify-between rounded-2xl border border-slate-100 bg-amber-50/20 p-5 shadow-xs transition hover:shadow-md">
-                    <div>
-                        <div class="flex items-center gap-2.5 mb-4 border-b border-amber-100 pb-2.5">
-                            <div class="p-2.5 rounded-xl bg-amber-100 text-amber-700">
-                                <i data-lucide="library" class="h-5 w-5"></i>
-                            </div>
-                            <h4 class="text-xs font-black uppercase tracking-wider text-slate-900">DepEd School Forms</h4>
-                        </div>
-                        <ul class="space-y-2.5 text-xs text-slate-600 font-semibold">
-                            <!-- SF1 – School Register -->
-                            <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="archive" class="w-3.5 h-3.5 text-slate-400"></i>
-                                    <span class="text-slate-500">SF1 – School Register</span>
-                                </span>
-                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
-                            </li>
-                            <!-- SF2 – Daily Attendance Report -->
-                            <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="calendar-days" class="w-3.5 h-3.5 text-slate-400"></i>
-                                    <span class="text-slate-500">SF2 – Daily Attendance Report</span>
-                                </span>
-                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
-                            </li>
-                            <!-- SF3 – Books Issued and Returned -->
-                            <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="book-marked" class="w-3.5 h-3.5 text-slate-400"></i>
-                                    <span class="text-slate-500">SF3 – Books Issued and Returned</span>
-                                </span>
-                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
-                            </li>
-                            <!-- SF4 – Monthly Learner's Movement & Attendance -->
-                            <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="trending-up" class="w-3.5 h-3.5 text-slate-400"></i>
-                                    <span class="text-slate-500">SF4 – Monthly Learner's Movement & Attendance</span>
-                                </span>
-                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
-                            </li>
-                            <!-- SF5 – Report on Promotion & Learning Progress -->
-                            <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="line-chart" class="w-3.5 h-3.5 text-slate-400"></i>
-                                    <span class="text-slate-500">SF5 – Report on Promotion & Learning Progress</span>
-                                </span>
-                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
-                            </li>
-                            <!-- SF6 – Summarized Report on Promotion -->
-                            <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="pie-chart" class="w-3.5 h-3.5 text-slate-400"></i>
-                                    <span class="text-slate-500">SF6 – Summarized Report on Promotion</span>
-                                </span>
-                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
-                            </li>
-                            <!-- SF9 – Report Card -->
-                            <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="file-signature" class="w-3.5 h-3.5 text-slate-400"></i>
-                                    <span class="text-slate-500">SF9 – Report Card</span>
-                                </span>
-                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
-                            </li>
-                            <!-- SF10 – Permanent Record -->
-                            <li class="flex items-center justify-between py-1 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="folder-git" class="w-3.5 h-3.5 text-slate-400"></i>
-                                    <span class="text-slate-500">SF10 – Permanent Record</span>
-                                </span>
-                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- Column 3: Reports -->
-                <div class="flex flex-col justify-between rounded-2xl border border-slate-100 bg-sky-50/20 p-5 shadow-xs transition hover:shadow-md">
-                    <div>
-                        <div class="flex items-center gap-2.5 mb-4 border-b border-sky-100 pb-2.5">
-                            <div class="p-2.5 rounded-xl bg-sky-100 text-sky-700">
-                                <i data-lucide="file-bar-chart" class="h-5 w-5"></i>
-                            </div>
-                            <h4 class="text-xs font-black uppercase tracking-wider text-slate-900">Reports</h4>
-                        </div>
-                        <ul class="space-y-2.5 text-xs text-slate-600 font-semibold">
-                            <!-- Master List (ACTIVE) -->
-                            <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="list" class="w-3.5 h-3.5 text-sky-650"></i>
-                                    <span class="font-extrabold text-slate-900">Master List</span>
-                                </span>
-                                <button type="button" onclick="runPrintRecordAction('masters_list')" class="text-sky-700 hover:text-sky-900 font-extrabold hover:underline cursor-pointer">Download</button>
-                            </li>
-                            <!-- Class List -->
-                            <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="users" class="w-3.5 h-3.5 text-slate-400"></i>
-                                    <span class="text-slate-500">Class List</span>
-                                </span>
-                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
-                            </li>
-                            <!-- Enrollment Summary -->
-                            <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="bar-chart-3" class="w-3.5 h-3.5 text-slate-400"></i>
-                                    <span class="text-slate-500">Enrollment Summary</span>
-                                </span>
-                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
-                            </li>
-                            <!-- Attendance Report -->
-                            <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="clock" class="w-3.5 h-3.5 text-slate-400"></i>
-                                    <span class="text-slate-500">Attendance Report</span>
-                                </span>
-                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
-                            </li>
-                            <!-- Grade Sheet -->
-                            <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="sheet" class="w-3.5 h-3.5 text-slate-400"></i>
-                                    <span class="text-slate-500">Grade Sheet</span>
-                                </span>
-                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
-                            </li>
-                            <!-- Honors List -->
-                            <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="crown" class="w-3.5 h-3.5 text-slate-400"></i>
-                                    <span class="text-slate-500">Honors List</span>
-                                </span>
-                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
-                            </li>
-                            <!-- Promotion List -->
-                            <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="rocket" class="w-3.5 h-3.5 text-slate-400"></i>
-                                    <span class="text-slate-500">Promotion List</span>
-                                </span>
-                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
-                            </li>
-                            <!-- Graduating Students List -->
-                            <li class="flex items-center justify-between py-1 border-b border-slate-100/50 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="user-plus" class="w-3.5 h-3.5 text-slate-400"></i>
-                                    <span class="text-slate-500">Graduating Students List</span>
-                                </span>
-                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
-                            </li>
-                            <!-- Student Directory -->
-                            <li class="flex items-center justify-between py-1 hover:bg-slate-50/50 rounded px-1.5 transition">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="contact" class="w-3.5 h-3.5 text-slate-400"></i>
-                                    <span class="text-slate-500">Student Directory</span>
-                                </span>
-                                <span class="text-[9px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">Coming Soon</span>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ZIP ARCHIVES & BULK UTILITIES -->
-            <div class="rounded-2xl border border-slate-100 bg-slate-50/60 p-5 mt-6">
-                <span class="text-xs font-black uppercase tracking-wider text-slate-700 block mb-3">
-                    Bulk Downloads & Utilities
+        <!-- GRADE LEVEL QUICK SWITCHER RIBBON -->
+        <div class="rounded-2xl border border-slate-200 bg-white p-3 shadow-xs dark:border-slate-800 dark:bg-slate-900">
+            <div class="flex items-center justify-between px-2 pb-2 mb-1 border-b border-slate-100 dark:border-slate-800">
+                <span class="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    <i data-lucide="graduation-cap" class="h-4 w-4 text-emerald-600"></i>
+                    Select Grade Level Scope
                 </span>
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
-                    <button type="button" onclick="runPrintRecordAction('docs_zip')" class="flex items-center justify-between rounded-xl border border-sky-200 bg-sky-50 p-3 text-xs font-black text-sky-900 hover:bg-sky-100 transition cursor-pointer text-left shadow-xs">
-                        <span class="flex items-center gap-2">
-                            <i data-lucide="folder-archive" class="w-4 h-4 text-sky-600"></i>
-                            <span>Student Docs ZIP</span>
+                <span class="text-[10px] font-bold text-slate-500">
+                    Click to filter instantly
+                </span>
+            </div>
+
+            <!-- Grade Pills List -->
+            <div class="flex items-center gap-1.5 overflow-x-auto pb-1 pt-1 no-scrollbar">
+                @php
+                    $allGradesUrl = request()->fullUrlWithQuery(['grade' => null, 'page' => null]);
+                @endphp
+                <a href="{{ $allGradesUrl }}" 
+                   class="inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-black transition whitespace-nowrap cursor-pointer {{ empty($currentGrade) ? 'bg-emerald-600 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700' }}">
+                    <span>All Grades</span>
+                    <span class="rounded-md px-1.5 py-0.2 text-[10px] {{ empty($currentGrade) ? 'bg-emerald-800 text-emerald-100' : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300' }}">
+                        {{ array_sum($gradeCounts ?? []) }}
+                    </span>
+                </a>
+
+                @foreach($allGradeList as $g)
+                    @php
+                        $gCount = $gradeCounts[$g] ?? 0;
+                        $gShort = \App\Models\Student::abbreviateGrade($g);
+                        $isActive = ($currentGrade === $g);
+                        $gUrl = request()->fullUrlWithQuery(['grade' => $g, 'page' => null]);
+                    @endphp
+                    <a href="{{ $gUrl }}" 
+                       class="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-black transition whitespace-nowrap cursor-pointer {{ $isActive ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-500/20' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700' }}">
+                        <span>{{ $gShort }}</span>
+                        <span class="text-[10px] font-bold opacity-80">({{ $g }})</span>
+                        <span class="rounded-md px-1.5 py-0.2 text-[10px] {{ $isActive ? 'bg-emerald-800 text-emerald-100' : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300' }}">
+                            {{ $gCount }}
                         </span>
-                        <i data-lucide="download" class="h-3.5 w-3.5 text-sky-600"></i>
-                    </button>
-
-                    <button type="button" onclick="runPrintRecordAction('forms_jpg')" class="flex items-center justify-between rounded-xl border border-slate-100 bg-white p-3 text-xs font-extrabold text-slate-750 hover:bg-emerald-50 hover:text-emerald-950 transition cursor-pointer text-left shadow-xs">
-                        <span class="flex items-center gap-2">
-                            <i data-lucide="folder-archive" class="w-4 h-4 text-emerald-600"></i>
-                            <span>Enrollment Forms ZIP</span>
-                        </span>
-                        <i data-lucide="download" class="h-3.5 w-3.5 text-slate-400"></i>
-                    </button>
-
-                    <button type="button" onclick="runPrintRecordAction('id_cards')" class="flex items-center justify-between rounded-xl border border-slate-100 bg-white p-3 text-xs font-extrabold text-slate-750 hover:bg-emerald-50 hover:text-emerald-950 transition cursor-pointer text-left shadow-xs">
-                        <span class="flex items-center gap-2">
-                            <i data-lucide="folder-archive" class="w-4 h-4 text-emerald-600"></i>
-                            <span>ID Cards ZIP</span>
-                        </span>
-                        <i data-lucide="download" class="h-3.5 w-3.5 text-slate-400"></i>
-                    </button>
-
-                    <button type="button" onclick="runPrintRecordAction('credentials')" class="flex items-center gap-2 rounded-xl border border-slate-100 bg-white p-3 text-xs font-extrabold text-slate-750 hover:bg-slate-100 transition cursor-pointer text-left">
-                        <i data-lucide="key" class="h-4 w-4 text-amber-600"></i>
-                        <span>Microsoft Credentials</span>
-                    </button>
-
-                    <button type="button" onclick="runPrintRecordAction('canva')" class="flex items-center gap-2 rounded-xl border border-slate-100 bg-white p-3 text-xs font-extrabold text-emerald-800 hover:bg-emerald-50 transition cursor-pointer text-left">
-                        <i data-lucide="sparkles" class="h-4 w-4 text-emerald-600"></i>
-                        <span>Canva Bulk Create</span>
-                    </button>
-
-                    <a href="{{ route('admin.students.preview-docx-enrolment-form', \App\Models\Student::first()?->id ?? 1) }}" target="_blank" class="flex items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 p-3 text-xs font-black text-indigo-800 hover:bg-indigo-100 transition cursor-pointer text-left shadow-xs">
-                        <i data-lucide="file-edit" class="h-4 w-4 text-indigo-600"></i>
-                        <span>Preview Single DOCX (Tester)</span>
                     </a>
+                @endforeach
+            </div>
+        </div>
+
+        <!-- FILTER TOOLBAR -->
+        <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900">
+            <form method="GET" action="{{ route('admin.students.print-export') }}" id="filter-form" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <!-- Preserve Grade -->
+                <input type="hidden" name="grade" id="p-filter-grade" value="{{ $currentGrade }}">
+
+                <!-- Search Input -->
+                <div class="relative">
+                    <label class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-500 mb-1">Search Student</label>
+                    <div class="relative">
+                        <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"></i>
+                        <input type="text" 
+                               name="search" 
+                               id="p-filter-search"
+                               value="{{ $currentSearch }}" 
+                               placeholder="Name, Student ID, or LRN..." 
+                               class="w-full h-10 pl-9 pr-3 rounded-xl border border-slate-200 bg-slate-50/50 text-xs font-bold text-slate-800 outline-none focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 transition dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
+                    </div>
+                </div>
+
+                <!-- Mode Filter -->
+                <div>
+                    <label class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-500 mb-1">Learning Mode</label>
+                    <select name="mode" id="p-filter-mode" onchange="document.getElementById('filter-form').submit()" class="w-full h-10 rounded-xl border border-slate-200 bg-slate-50/50 px-3 text-xs font-bold text-slate-800 outline-none focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 transition cursor-pointer dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
+                        <option value="" {{ $currentMode === '' ? 'selected' : '' }}>All Modes (F2F & ODL)</option>
+                        <option value="F2F" {{ $currentMode === 'F2F' ? 'selected' : '' }}>Face to Face (F2F)</option>
+                        <option value="ODL" {{ $currentMode === 'ODL' ? 'selected' : '' }}>Online Distance Learning (ODL)</option>
+                    </select>
+                </div>
+
+                <!-- Gender Filter -->
+                <div>
+                    <label class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-500 mb-1">Gender</label>
+                    <select name="gender" id="p-filter-gender" onchange="document.getElementById('filter-form').submit()" class="w-full h-10 rounded-xl border border-slate-200 bg-slate-50/50 px-3 text-xs font-bold text-slate-800 outline-none focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 transition cursor-pointer dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
+                        <option value="" {{ $currentGender === '' ? 'selected' : '' }}>All Genders</option>
+                        <option value="male" {{ $currentGender === 'male' ? 'selected' : '' }}>Male Only</option>
+                        <option value="female" {{ $currentGender === 'female' ? 'selected' : '' }}>Female Only</option>
+                    </select>
+                </div>
+
+                <!-- Submit / Clear Actions -->
+                <div class="flex items-end gap-2">
+                    <button type="submit" class="flex-1 h-10 rounded-xl bg-emerald-600 hover:bg-emerald-700 font-black text-xs text-white transition flex items-center justify-center gap-1.5 shadow-xs cursor-pointer">
+                        <i data-lucide="filter" class="h-3.5 w-3.5"></i>
+                        <span>Apply</span>
+                    </button>
+                    @if($currentGrade || $currentMode || $currentGender || $currentSearch)
+                        <a href="{{ route('admin.students.print-export') }}" class="h-10 px-3 rounded-xl border border-slate-200 bg-slate-100 hover:bg-slate-200 font-bold text-xs text-slate-600 transition flex items-center justify-center gap-1 cursor-pointer dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300" title="Reset Filters">
+                            <i data-lucide="rotate-ccw" class="h-3.5 w-3.5"></i>
+                            <span class="hidden sm:inline">Reset</span>
+                        </a>
+                    @endif
+                </div>
+            </form>
+        </div>
+
+        <!-- 4 ACTION CENTER CARDS (STRUCTURED & HIGH-VALUE) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            
+            <!-- CARD 1: OFFICIAL ENROLLMENT FORMS -->
+            <div class="rounded-3xl border-2 border-emerald-500/30 bg-gradient-to-b from-emerald-50/60 via-white to-white p-6 shadow-sm transition hover:shadow-md dark:border-emerald-500/20 dark:from-emerald-950/20 dark:via-slate-900 dark:to-slate-900 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-start justify-between gap-3 mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-600 text-white shadow-md shadow-emerald-600/20">
+                                <i data-lucide="file-text" class="h-6 w-6"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white">
+                                    Enrollment Application Forms
+                                </h3>
+                                <span class="inline-flex items-center gap-1 text-[11px] font-extrabold text-emerald-700 dark:text-emerald-400">
+                                    <i data-lucide="check-circle" class="h-3 w-3"></i>
+                                    Official 2-Page Snapshot
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p class="text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed mb-5">
+                        Compile approved official forms featuring genuine Islamic calligraphy, frozen student data, LRN, parent details, and signature declarations.
+                    </p>
+                </div>
+
+                <div class="space-y-2.5 pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <!-- Primary Batch Print Button -->
+                    <button type="button" 
+                            onclick="runPrintRecordAction('forms_batch')" 
+                            class="w-full h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 font-black text-xs text-white transition flex items-center justify-center gap-2 shadow-sm shadow-emerald-600/10 cursor-pointer active:scale-[0.99]">
+                        <i data-lucide="printer" class="h-4 w-4"></i>
+                        <span>Print Batch ({{ number_format($totalStudents) }} Students)</span>
+                    </button>
+
+                    <!-- Instant ZIP Download Button -->
+                    <button type="button" 
+                            onclick="openBatchExportModal('enrollment_forms')" 
+                            class="w-full h-10 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 font-extrabold text-xs text-emerald-900 transition flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99] dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">
+                        <i data-lucide="folder-archive" class="h-4 w-4 text-emerald-600"></i>
+                        <span>Download ZIP Package (PDF / DOCX)</span>
+                    </button>
                 </div>
             </div>
 
+            <!-- CARD 2: STUDENT DOCUMENT DOSSIERS -->
+            <div class="rounded-3xl border-2 border-sky-500/30 bg-gradient-to-b from-sky-50/60 via-white to-white p-6 shadow-sm transition hover:shadow-md dark:border-sky-500/20 dark:from-sky-950/20 dark:via-slate-900 dark:to-slate-900 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-start justify-between gap-3 mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-600 text-white shadow-md shadow-sky-600/20">
+                                <i data-lucide="folder-archive" class="h-6 w-6"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white">
+                                    Student Document Dossiers
+                                </h3>
+                                <span class="inline-flex items-center gap-1 text-[11px] font-extrabold text-sky-700 dark:text-sky-400">
+                                    <i data-lucide="layers" class="h-3 w-3"></i>
+                                    Full File Archives
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p class="text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed mb-5">
+                        Download complete student folders containing 2x2 photos, PSA birth certificates, Form 138 report cards, marriage contracts, and official payment receipts.
+                    </p>
+                </div>
+
+                <div class="space-y-2.5 pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <!-- Download Requirements ZIP -->
+                    <button type="button" 
+                            onclick="runPrintRecordAction('docs_zip')" 
+                            class="w-full h-11 rounded-xl bg-sky-600 hover:bg-sky-700 font-black text-xs text-white transition flex items-center justify-center gap-2 shadow-sm shadow-sky-600/10 cursor-pointer active:scale-[0.99]">
+                        <i data-lucide="download" class="h-4 w-4"></i>
+                        <span>Download Requirements ZIP</span>
+                    </button>
+
+                    <!-- Download Master Registry List -->
+                    <button type="button" 
+                            onclick="runPrintRecordAction('masters_list')" 
+                            class="w-full h-10 rounded-xl border border-sky-200 bg-sky-50 hover:bg-sky-100 font-extrabold text-xs text-sky-900 transition flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99] dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-300">
+                        <i data-lucide="list" class="h-4 w-4 text-sky-600"></i>
+                        <span>Export Student Master Registry</span>
+                    </button>
+                </div>
             </div>
-        </x-card>
+
+            <!-- CARD 3: IDENTIFICATION & CREDENTIALS -->
+            <div class="rounded-3xl border-2 border-amber-500/30 bg-gradient-to-b from-amber-50/60 via-white to-white p-6 shadow-sm transition hover:shadow-md dark:border-amber-500/20 dark:from-amber-950/20 dark:via-slate-900 dark:to-slate-900 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-start justify-between gap-3 mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-600 text-white shadow-md shadow-amber-600/20">
+                                <i data-lucide="credit-card" class="h-6 w-6"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white">
+                                    ID Cards & Credentials
+                                </h3>
+                                <span class="inline-flex items-center gap-1 text-[11px] font-extrabold text-amber-700 dark:text-amber-400">
+                                    <i data-lucide="key" class="h-3 w-3"></i>
+                                    Printable Cards & Slips
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p class="text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed mb-5">
+                        Print grid sheets of front & back official student ID cards, Microsoft 365 student account login credential slips, and Canva bulk design CSVs.
+                    </p>
+                </div>
+
+                <div class="space-y-2.5 pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <!-- Print ID Sheet -->
+                    <button type="button" 
+                            onclick="runPrintRecordAction('id_cards_grade')" 
+                            class="w-full h-11 rounded-xl bg-amber-600 hover:bg-amber-700 font-black text-xs text-white transition flex items-center justify-center gap-2 shadow-sm shadow-amber-600/10 cursor-pointer active:scale-[0.99]">
+                        <i data-lucide="printer" class="h-4 w-4"></i>
+                        <span>Print ID Cards Sheet</span>
+                    </button>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <!-- Microsoft Credentials -->
+                        <button type="button" 
+                                onclick="runPrintRecordAction('credentials')" 
+                                class="h-10 rounded-xl border border-amber-200 bg-amber-50 hover:bg-amber-100 font-extrabold text-[11px] text-amber-900 transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.99] dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
+                            <i data-lucide="key" class="h-3.5 w-3.5 text-amber-600"></i>
+                            <span>MS Credentials</span>
+                        </button>
+
+                        <!-- Canva CSV Export -->
+                        <button type="button" 
+                                onclick="runPrintRecordAction('canva')" 
+                                class="h-10 rounded-xl border border-amber-200 bg-amber-50 hover:bg-amber-100 font-extrabold text-[11px] text-amber-900 transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.99] dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
+                            <i data-lucide="sparkles" class="h-3.5 w-3.5 text-amber-600"></i>
+                            <span>Canva CSV</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- TARGET STUDENTS PREVIEW REGISTRY TABLE -->
+        <div class="rounded-3xl border border-slate-200 bg-white shadow-xs overflow-hidden dark:border-slate-800 dark:bg-slate-900">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 bg-slate-50/50 p-5 dark:border-slate-800 dark:bg-slate-800/40">
+                <div class="flex items-center gap-2.5">
+                    <div class="p-2 rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400">
+                        <i data-lucide="users" class="h-5 w-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white">
+                            Target Student Registry Preview
+                        </h3>
+                        <p class="text-[11px] font-semibold text-slate-500">
+                            Showing students matching active scope: <strong class="text-emerald-700 dark:text-emerald-400">{{ $currentGrade ?: 'All Grades' }}</strong>
+                            @if($currentMode) • <strong>{{ $currentMode }}</strong> @endif
+                            ({{ number_format($totalStudents) }} Total)
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button type="button" 
+                            onclick="runPrintRecordAction('forms_batch')" 
+                            class="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-3.5 py-2 text-xs font-black text-white transition shadow-xs cursor-pointer">
+                        <i data-lucide="printer" class="h-3.5 w-3.5"></i>
+                        <span>Print All in Scope</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Table Container -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs text-slate-600 dark:text-slate-300">
+                    <thead class="bg-slate-100/60 text-[10px] font-black uppercase tracking-wider text-slate-500 border-b border-slate-100 dark:bg-slate-800/60 dark:border-slate-800 dark:text-slate-400">
+                        <tr>
+                            <th class="px-5 py-3.5">Student Information</th>
+                            <th class="px-4 py-3.5">Grade & Section</th>
+                            <th class="px-4 py-3.5">Learning Mode</th>
+                            <th class="px-4 py-3.5">Gender</th>
+                            <th class="px-4 py-3.5 text-center">Official Form Status</th>
+                            <th class="px-5 py-3.5 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
+                        @forelse($previewStudents as $student)
+                            @php
+                                $appl = $student->applicant;
+                                $lMode = strtolower($appl->learning_mode ?? '');
+                                $isF2f = str_contains($lMode, 'face') || str_contains($lMode, 'f2f');
+                                $doc = $student->officialEnrollmentForm;
+                            @endphp
+                            <tr class="hover:bg-slate-50/80 transition dark:hover:bg-slate-800/50">
+                                <!-- Student Name & ID -->
+                                <td class="px-5 py-3.5">
+                                    <div class="flex items-center gap-3">
+                                        <div class="h-9 w-9 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden flex items-center justify-center shrink-0 dark:bg-slate-800 dark:border-slate-700">
+                                            @if($student->photo_url || $appl?->photo_2x2_url)
+                                                <img src="{{ \App\Support\EnrollmentStorage::url($student->photo_url ?: $appl->photo_2x2_url) }}" alt="{{ $student->full_name }}" class="h-full w-full object-cover">
+                                            @else
+                                                <i data-lucide="user" class="h-4 w-4 text-slate-400"></i>
+                                            @endif
+                                        </div>
+                                        <div>
+                                            <a href="{{ route('admin.students.show', $student) }}" class="font-extrabold text-slate-900 hover:text-emerald-600 transition dark:text-white">
+                                                {{ mb_strtoupper($student->last_name . ', ' . $student->first_name) }}
+                                            </a>
+                                            <div class="flex items-center gap-2 text-[10px] text-slate-500 font-bold">
+                                                <span class="text-emerald-700 dark:text-emerald-400">#{{ $student->student_number }}</span>
+                                                @if($appl?->lrn)
+                                                    <span>• LRN: {{ $appl->lrn }}</span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <!-- Grade Level -->
+                                <td class="px-4 py-3.5 whitespace-nowrap">
+                                    <span class="font-extrabold text-slate-800 dark:text-slate-200">{{ $student->grade_level }}</span>
+                                    <span class="block text-[10px] text-slate-500 font-semibold">{{ $student->studentSection?->section?->name ?: 'Unassigned Section' }}</span>
+                                </td>
+
+                                <!-- Learning Mode -->
+                                <td class="px-4 py-3.5 whitespace-nowrap">
+                                    @if($isF2f)
+                                        <span class="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-2.5 py-1 text-[10px] font-black text-emerald-800 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800">
+                                            <i data-lucide="school" class="h-3 w-3"></i>
+                                            Face to Face
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center gap-1 rounded-lg bg-sky-50 px-2.5 py-1 text-[10px] font-black text-sky-800 border border-sky-200 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-800">
+                                            <i data-lucide="laptop" class="h-3 w-3"></i>
+                                            Online (ODL)
+                                        </span>
+                                    @endif
+                                </td>
+
+                                <!-- Gender -->
+                                <td class="px-4 py-3.5 whitespace-nowrap">
+                                    <span class="text-xs font-bold uppercase text-slate-700 dark:text-slate-300">
+                                        {{ $appl?->gender ?: 'N/A' }}
+                                    </span>
+                                </td>
+
+                                <!-- Official Form Status -->
+                                <td class="px-4 py-3.5 text-center whitespace-nowrap">
+                                    @if($doc)
+                                        <span class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-black text-emerald-800 border border-emerald-200 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-700">
+                                            <i data-lucide="check" class="h-3 w-3"></i>
+                                            Official PDF Ready (v{{ $doc->document_version }})
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-black text-amber-800 border border-amber-200 dark:bg-amber-900/50 dark:text-amber-300 dark:border-amber-700">
+                                            <i data-lucide="clock" class="h-3 w-3"></i>
+                                            Pending First Render
+                                        </span>
+                                    @endif
+                                </td>
+
+                                <!-- Row Actions -->
+                                <td class="px-5 py-3.5 text-right whitespace-nowrap">
+                                    <div class="flex items-center justify-end gap-1.5">
+                                        <!-- View / Print Form -->
+                                        <a href="{{ route('admin.students.print-enrolment-form', $student) }}" 
+                                           target="_blank" 
+                                           class="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300 text-slate-600 transition cursor-pointer dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300" 
+                                           title="Print Enrolment Form">
+                                            <i data-lucide="printer" class="h-3.5 w-3.5"></i>
+                                        </a>
+
+                                        @if($doc)
+                                            <!-- Download Official PDF -->
+                                            <a href="{{ route('admin.students.official-enrollment-form.download', $student) }}" 
+                                               class="p-1.5 rounded-lg border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 transition cursor-pointer dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300" 
+                                               title="Download Official PDF">
+                                                <i data-lucide="download" class="h-3.5 w-3.5"></i>
+                                            </a>
+                                        @endif
+
+                                        <!-- Student Profile Link -->
+                                        <a href="{{ route('admin.students.show', $student) }}" 
+                                           class="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 transition cursor-pointer dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300" 
+                                           title="View Student Profile">
+                                            <i data-lucide="chevron-right" class="h-3.5 w-3.5"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="px-6 py-12 text-center text-slate-500">
+                                    <div class="flex flex-col items-center justify-center gap-2">
+                                        <div class="p-3 rounded-full bg-slate-100 text-slate-400 dark:bg-slate-800">
+                                            <i data-lucide="users-round" class="h-6 w-6"></i>
+                                        </div>
+                                        <p class="text-xs font-bold">No student records match the active filters.</p>
+                                        <a href="{{ route('admin.students.print-export') }}" class="text-xs font-black text-emerald-600 hover:underline">Clear all filters</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination Bar -->
+            @if($previewStudents->hasPages())
+                <div class="border-t border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-800/40">
+                    {{ $previewStudents->links() }}
+                </div>
+            @endif
+        </div>
     </div>
 
-    <!-- Background Batch Export Modal -->
+    <!-- BACKGROUND BATCH EXPORT MODAL -->
     <div id="batch-export-modal" class="fixed inset-0 hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-md transition-all duration-300" style="z-index: 9999999 !important;">
-        <div class="relative w-full max-w-lg scale-95 transform rounded-2xl border border-slate-200/80 bg-white p-6 shadow-2xl transition-all duration-300 dark:border-slate-800 dark:bg-slate-900">
+        <div class="relative w-full max-w-lg scale-95 transform rounded-3xl border border-slate-200/80 bg-white p-6 md:p-8 shadow-2xl transition-all duration-300 dark:border-slate-800 dark:bg-slate-900">
             
-            <!-- CLOSE BUTTON (Top-Right) -->
-            <button type="button" onclick="closeBatchExportModal()" class="absolute right-4 top-4 rounded-full bg-slate-100 p-1.5 text-slate-500 hover:bg-slate-200 transition cursor-pointer dark:bg-slate-800 dark:text-slate-400">
+            <!-- CLOSE BUTTON -->
+            <button type="button" onclick="closeBatchExportModal()" class="absolute right-5 top-5 rounded-full bg-slate-100 p-2 text-slate-500 hover:bg-slate-200 transition cursor-pointer dark:bg-slate-800 dark:text-slate-400">
                 <i data-lucide="x" class="h-4 w-4"></i>
             </button>
 
             <!-- STATE 1: CONFIGURATION -->
             <div id="export-state-config" class="space-y-5">
-                <div class="flex items-center gap-3 border-b border-slate-100 pb-3">
-                    <div class="p-2.5 rounded-xl bg-emerald-50 text-emerald-700">
-                        <i data-lucide="file-text" class="h-5 w-5"></i>
+                <div class="flex items-center gap-3 border-b border-slate-100 pb-4 dark:border-slate-800">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400">
+                        <i data-lucide="folder-archive" class="h-6 w-6"></i>
                     </div>
                     <div>
                         <h3 class="text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white">Batch Export Enrollment Forms</h3>
-                        <p class="text-[10px] text-slate-500 font-medium">Configure format and export scope</p>
+                        <p class="text-[11px] text-slate-500 font-medium">Fast server-side stream packaging</p>
                     </div>
                 </div>
 
                 <!-- Format Selection -->
                 <div>
-                    <label class="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2.5">Format</label>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="export-format-selector">
+                    <label class="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2.5">Select Export Format</label>
+                    <div class="grid grid-cols-2 gap-3" id="export-format-selector">
                         <!-- PDF Card (Default) -->
-                        <div onclick="selectExportFormat('pdf')" id="format-card-pdf" class="flex items-center justify-between p-3 rounded-xl border-2 border-emerald-600 bg-emerald-50/20 text-slate-800 cursor-pointer transition hover:border-emerald-600 hover:bg-emerald-50/10">
+                        <div onclick="selectExportFormat('pdf')" id="format-card-pdf" class="flex items-center justify-between p-3.5 rounded-2xl border-2 border-emerald-600 bg-emerald-50/30 text-slate-800 cursor-pointer transition hover:border-emerald-600 dark:bg-emerald-950/20 dark:text-white">
                             <div class="flex items-center gap-2.5">
-                                <span class="p-2 rounded-lg bg-rose-50 text-rose-700 flex items-center justify-center">
+                                <span class="p-2 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center dark:bg-rose-950/50 dark:text-rose-400">
                                     <i data-lucide="file-text" class="h-4 w-4"></i>
                                 </span>
                                 <div class="flex flex-col text-left">
-                                    <span class="text-xs font-black uppercase tracking-wide">PDF</span>
-                                    <span class="text-[9px] text-slate-500">High Quality PDF (Dompdf)</span>
+                                    <span class="text-xs font-black uppercase tracking-wide">PDF ZIP</span>
+                                    <span class="text-[10px] text-slate-500 font-semibold">Official PDFs</span>
                                 </div>
                             </div>
                             <div class="w-4 h-4 rounded-full border-4 border-emerald-600 flex items-center justify-center bg-white" id="format-radio-pdf">
@@ -465,14 +530,14 @@
                         </div>
 
                         <!-- DOCX Card -->
-                        <div onclick="selectExportFormat('docx')" id="format-card-docx" class="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-white text-slate-800 cursor-pointer transition hover:border-emerald-600 hover:bg-emerald-50/10">
+                        <div onclick="selectExportFormat('docx')" id="format-card-docx" class="flex items-center justify-between p-3.5 rounded-2xl border border-slate-200 bg-white text-slate-800 cursor-pointer transition hover:border-emerald-600 dark:border-slate-700 dark:bg-slate-800 dark:text-white">
                             <div class="flex items-center gap-2.5">
-                                <span class="p-2 rounded-lg bg-indigo-50 text-indigo-700 flex items-center justify-center">
+                                <span class="p-2 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center dark:bg-indigo-950/50 dark:text-indigo-400">
                                     <i data-lucide="file-edit" class="h-4 w-4"></i>
                                 </span>
                                 <div class="flex flex-col text-left">
-                                    <span class="text-xs font-black uppercase tracking-wide">DOCX</span>
-                                    <span class="text-[9px] text-slate-500">Editable Microsoft Word</span>
+                                    <span class="text-xs font-black uppercase tracking-wide">DOCX ZIP</span>
+                                    <span class="text-[10px] text-slate-500 font-semibold">Editable Word</span>
                                 </div>
                             </div>
                             <div class="w-4 h-4 rounded-full border border-slate-300 flex items-center justify-center bg-white" id="format-radio-docx"></div>
@@ -481,37 +546,26 @@
                 </div>
 
                 <!-- Active Target Scope Indicator -->
-                <div class="rounded-xl bg-slate-50 p-3.5 border border-slate-100 flex items-center justify-between">
-                    <span class="text-xs font-extrabold text-slate-700 flex items-center gap-2">
+                <div class="rounded-2xl bg-slate-50 p-4 border border-slate-100 flex items-center justify-between dark:border-slate-800 dark:bg-slate-800/50">
+                    <span class="text-xs font-extrabold text-slate-700 flex items-center gap-2 dark:text-slate-300">
                         <i data-lucide="filter" class="w-4 h-4 text-emerald-600"></i>
                         <span>Target Scope:</span>
                     </span>
-                    <span id="modal-active-scope-badge" class="text-xs font-black text-emerald-800 bg-emerald-100/80 px-2.5 py-1 rounded-lg">
-                        All Grade Levels
+                    <span id="modal-active-scope-badge" class="text-xs font-black text-emerald-800 bg-emerald-100 px-3 py-1 rounded-xl dark:bg-emerald-950 dark:text-emerald-300">
+                        {{ $currentGrade ?: 'All Grade Levels' }} ({{ number_format($totalStudents) }} Students)
                     </span>
                 </div>
 
-                <div class="border-t border-b border-dashed border-slate-200 py-3 text-xs text-slate-500 font-semibold space-y-1">
-                    <div class="flex justify-between">
-                        <span>Estimated Time:</span>
-                        <span class="text-slate-850 font-black">~2-4 minutes</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span>Output File:</span>
-                        <span id="export-output-file-label" class="text-slate-850 font-black">enrollment_forms_2026.pdf</span>
-                    </div>
-                </div>
-
                 <!-- Action Buttons -->
-                <div class="space-y-2">
-                    <button type="button" onclick="runPrintRecordAction('forms_batch')" class="w-full h-11 inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 px-4 text-xs font-black text-white shadow-md transition active:scale-[0.99] cursor-pointer">
-                        <i data-lucide="printer" class="h-4 w-4"></i>
-                        <span>Print / Save PDF (Pixel-Perfect Batch View)</span>
+                <div class="space-y-2.5 pt-2">
+                    <button type="button" onclick="startBackgroundExport()" class="w-full h-12 inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 hover:bg-emerald-700 px-5 text-xs font-black text-white shadow-md shadow-emerald-600/20 transition active:scale-[0.99] cursor-pointer">
+                        <i data-lucide="play" class="h-4 w-4"></i>
+                        <span>Start Batch Export</span>
                     </button>
-
-                    <button type="button" onclick="startBackgroundExport()" class="w-full h-11 inline-flex items-center justify-center gap-2 rounded-xl bg-slate-100 hover:bg-slate-200 px-4 text-xs font-bold text-slate-700 transition active:scale-[0.99] cursor-pointer">
-                        <i data-lucide="folder-archive" class="h-4 w-4 text-emerald-600"></i>
-                        <span>Generate & Download ZIP Archive</span>
+                    
+                    <button type="button" onclick="runPrintRecordAction('forms_batch')" class="w-full h-10 inline-flex items-center justify-center gap-2 rounded-xl bg-slate-100 hover:bg-slate-200 px-4 text-xs font-bold text-slate-700 transition cursor-pointer dark:bg-slate-800 dark:text-slate-300">
+                        <i data-lucide="printer" class="h-3.5 w-3.5"></i>
+                        <span>Open Batch Print View Instead</span>
                     </button>
                 </div>
             </div>
@@ -519,626 +573,372 @@
             <!-- STATE 2: EXPORT IN PROGRESS -->
             <div id="export-state-progress" class="hidden space-y-5 text-center">
                 <div class="flex flex-col items-center gap-2">
-                    <div class="p-3 rounded-full bg-emerald-50 text-emerald-600 animate-bounce">
-                        <i data-lucide="rocket" class="h-6 w-6"></i>
+                    <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700 animate-bounce dark:bg-emerald-950 dark:text-emerald-400">
+                        <i data-lucide="rocket" class="h-7 w-7"></i>
                     </div>
-                    <h3 class="text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white">Export Started</h3>
-                    <p id="export-status-label" class="text-xs font-bold text-slate-600">Preparing documents...</p>
+                    <h3 class="text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white">Compiling ZIP Archive</h3>
+                    <p id="export-status-label" class="text-xs font-bold text-slate-600 dark:text-slate-400">Packaging official PDFs...</p>
                 </div>
 
                 <!-- Progress Bar -->
-                <div class="h-3 w-full rounded-full bg-slate-100 overflow-hidden border border-slate-200/50">
+                <div class="h-3 w-full rounded-full bg-slate-100 overflow-hidden border border-slate-200/50 dark:bg-slate-800">
                     <div id="export-progress-bar" class="h-full rounded-full bg-emerald-600 transition-all duration-300" style="width: 0%"></div>
                 </div>
 
-                <div class="flex items-center justify-between text-xs font-bold text-slate-600 px-1">
+                <div class="flex items-center justify-between text-xs font-bold text-slate-600 px-1 dark:text-slate-400">
                     <span id="export-percentage">0%</span>
                     <span id="export-processed-counter">0 / {{ $totalStudents }} Students</span>
                 </div>
 
-                <div class="rounded-xl bg-slate-50 p-3 text-left space-y-1.5 text-xs text-slate-500 font-semibold border border-slate-100">
+                <div class="rounded-2xl bg-slate-50 p-3 text-left space-y-1.5 text-xs text-slate-500 font-semibold border border-slate-100 dark:border-slate-800 dark:bg-slate-800/40">
                     <div class="flex justify-between">
                         <span>Estimated Remaining:</span>
-                        <span id="export-remaining-time" class="text-slate-850 font-black">Calculating...</span>
+                        <span id="export-remaining-time" class="text-slate-900 font-black dark:text-white">Calculating...</span>
                     </div>
                 </div>
 
                 <!-- Live Terminal Log Console -->
-                <div class="rounded-xl border border-slate-800 bg-slate-950 p-3 text-left shadow-inner">
+                <div class="rounded-2xl border border-slate-800 bg-slate-950 p-4 text-left shadow-inner">
                     <div class="flex items-center justify-between border-b border-slate-800/80 pb-2 mb-2">
                         <span class="text-[10px] font-black uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
                             <span class="relative flex h-2 w-2">
                                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                                 <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                             </span>
-                            Live Processing Console
+                            Live Console Stream
                         </span>
-                        <span class="text-[9px] font-mono text-slate-500">Real-time log output</span>
+                        <span class="text-[9px] font-mono text-slate-500">Real-time log</span>
                     </div>
-                    <div id="export-log-lines" class="h-32 overflow-y-auto space-y-1 font-mono text-[11px] text-slate-300 pr-1">
+                    <div id="export-log-lines" class="h-28 overflow-y-auto space-y-1 font-mono text-[11px] text-slate-300 pr-1">
                         <div class="text-slate-500">[System] Export task initiated...</div>
                     </div>
                 </div>
 
-                <p class="text-[10px] text-slate-400 font-medium">Please keep using the system. You'll be notified when the download is ready.</p>
-
-                <!-- Action Button -->
-                <button type="button" onclick="hideExportModal()" class="w-full h-11 inline-flex items-center justify-center gap-2 rounded-xl bg-slate-100 hover:bg-slate-200 px-4 text-xs font-bold text-slate-700 transition active:scale-[0.99] cursor-pointer">
+                <button type="button" onclick="hideExportModal()" class="w-full h-11 inline-flex items-center justify-center gap-2 rounded-xl bg-slate-100 hover:bg-slate-200 px-4 text-xs font-bold text-slate-700 transition cursor-pointer dark:bg-slate-800 dark:text-slate-300">
                     <i data-lucide="eye-off" class="h-4 w-4"></i>
-                    <span>Hide</span>
+                    <span>Minimize (Continue Working in Background)</span>
                 </button>
             </div>
 
             <!-- STATE 3: EXPORT COMPLETE -->
             <div id="export-state-complete" class="hidden space-y-5 text-center">
                 <div class="flex flex-col items-center gap-2">
-                    <div class="p-3 rounded-full bg-emerald-100 text-emerald-700 shadow-md">
-                        <i data-lucide="check-circle-2" class="h-8 w-8"></i>
+                    <div class="flex h-16 w-16 items-center justify-center rounded-3xl bg-emerald-100 text-emerald-700 shadow-md dark:bg-emerald-950 dark:text-emerald-400">
+                        <i data-lucide="check-circle-2" class="h-9 w-9"></i>
                     </div>
-                    <h3 class="text-base font-black text-emerald-800 uppercase tracking-wide">Export Complete!</h3>
-                    <p class="text-xs text-slate-500 font-medium">Your export has been completed successfully.</p>
+                    <h3 class="text-base font-black text-emerald-800 uppercase tracking-wide dark:text-emerald-400">ZIP Package Ready!</h3>
+                    <p class="text-xs text-slate-500 font-medium">Archive compiled successfully in record time.</p>
                 </div>
 
-                <div class="rounded-xl border border-slate-100 bg-slate-50 p-4 text-left text-xs font-semibold text-slate-600 space-y-2">
+                <div class="rounded-2xl border border-slate-100 bg-slate-50 p-4 text-left text-xs font-semibold text-slate-600 space-y-2 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-300">
                     <div class="flex justify-between">
-                        <span>Total Documents:</span>
-                        <span class="text-slate-850 font-black">{{ number_format($totalStudents) }} Enrollment Forms</span>
+                        <span>Documents Packaged:</span>
+                        <span class="text-slate-900 font-black dark:text-white">{{ number_format($totalStudents) }} Students</span>
                     </div>
                     <div class="flex justify-between">
-                        <span id="export-complete-size-label">ZIP Size:</span>
-                        <span id="export-complete-size-val" class="text-slate-850 font-black">186 MB</span>
+                        <span id="export-complete-size-label">File Size:</span>
+                        <span id="export-complete-size-val" class="text-slate-900 font-black dark:text-white">--</span>
                     </div>
                     <div class="flex justify-between">
                         <span>Filename:</span>
-                        <span id="export-complete-filename-val" class="text-slate-850 font-mono font-bold">enrollment_forms_2026.zip</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span>Completion Time:</span>
-                        <span id="export-completion-time" class="text-slate-850 font-black">Completed Just Now</span>
+                        <span id="export-complete-filename-val" class="text-slate-900 font-mono font-bold dark:text-white">export_archive.zip</span>
                     </div>
                 </div>
 
-                <!-- Action Buttons -->
-                <div class="flex flex-col gap-2">
-                    <button type="button" onclick="triggerActualZipDownload()" class="w-full h-11 inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 px-4 text-xs font-black text-white shadow-md transition active:scale-[0.99] cursor-pointer">
+                <div class="space-y-2.5">
+                    <button type="button" onclick="triggerActualZipDownload()" class="w-full h-12 inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 hover:bg-emerald-700 px-5 text-xs font-black text-white shadow-md shadow-emerald-600/20 transition active:scale-[0.99] cursor-pointer">
                         <i data-lucide="download" class="h-4 w-4"></i>
-                        <span>Download ZIP</span>
+                        <span>Download Completed ZIP Archive</span>
                     </button>
-                    <button type="button" onclick="closeBatchExportModal()" class="w-full h-11 inline-flex items-center justify-center gap-2 rounded-xl bg-slate-100 hover:bg-slate-200 px-4 text-xs font-bold text-slate-700 transition cursor-pointer">
+                    <button type="button" onclick="closeBatchExportModal()" class="w-full h-10 inline-flex items-center justify-center gap-2 rounded-xl bg-slate-100 hover:bg-slate-200 px-4 text-xs font-bold text-slate-700 transition cursor-pointer dark:bg-slate-800 dark:text-slate-300">
                         <span>Close</span>
                     </button>
                 </div>
             </div>
-            
+
         </div>
     </div>
 
-    <!-- Background Export Floating Indicator -->
-    <div id="export-floating-indicator" class="fixed bottom-6 right-6 hidden items-center gap-3 rounded-2xl border border-emerald-200 bg-white p-4 shadow-xl dark:border-slate-800 dark:bg-slate-900 animate-slide-up cursor-pointer hover:border-emerald-300 transition" style="z-index: 9999999 !important;" onclick="showExportModalFromIndicator()">
-        <div class="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
-            <svg class="h-5 w-5 animate-spin text-emerald-600" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-        </div>
-        <div>
-            <h4 class="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">Exporting in Background</h4>
-            <div class="flex items-center gap-2 mt-1">
-                <div class="h-1.5 w-24 rounded-full bg-slate-100 overflow-hidden">
-                    <div id="export-floating-progress-bar" class="h-full bg-emerald-600 transition-all duration-300" style="width: 0%"></div>
+    <!-- FLOATING BACKGROUND EXPORT INDICATOR -->
+    <div id="export-floating-indicator" class="fixed bottom-6 right-6 hidden z-50 transform transition-all duration-300">
+        <div class="flex items-center gap-3.5 rounded-2xl border border-slate-700/60 bg-slate-900/95 px-4 py-3 text-white shadow-2xl backdrop-blur-md cursor-pointer hover:border-emerald-500 transition" onclick="showExportModal()">
+            <div class="relative flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-600 text-white">
+                <i data-lucide="folder-archive" class="h-4 w-4 animate-spin"></i>
+            </div>
+            <div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-black uppercase tracking-wider text-emerald-400">Export in Progress</span>
+                    <span id="export-floating-percentage" class="text-xs font-bold text-white">0%</span>
                 </div>
-                <span id="export-floating-percentage" class="text-[10px] font-bold text-emerald-700">0%</span>
+                <div class="mt-1 h-1.5 w-36 rounded-full bg-slate-800 overflow-hidden">
+                    <div id="export-floating-progress-bar" class="h-full rounded-full bg-emerald-500 transition-all duration-300" style="width: 0%"></div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Script Section -->
+    <!-- JAVASCRIPT LOGIC & HANDLERS -->
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Teleport modal and floating indicator to document body to overlay sidebar/navbar
-        const modal = document.getElementById('batch-export-modal');
-        const indicator = document.getElementById('export-floating-indicator');
-        if (modal) document.body.appendChild(modal);
-        if (indicator) document.body.appendChild(indicator);
+        let selectedFormat = 'pdf';
+        let currentExportId = null;
+        let exportInterval = null;
+        let isExportRunning = false;
+        let exportPercent = 0;
+        let currentDownloadUrl = null;
+        let lastLogMessage = '';
+        const totalStudents = {{ (int) $totalStudents }};
 
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.has('mode')) {
-            const el = document.getElementById('p-filter-mode');
-            if (el) el.value = urlParams.get('mode');
-        }
-        if (urlParams.has('grade')) {
-            const el = document.getElementById('p-filter-grade');
-            if (el) el.value = urlParams.get('grade');
-        }
-        if (urlParams.has('gender')) {
-            const el = document.getElementById('p-filter-gender');
-            if (el) el.value = urlParams.get('gender');
-        }
+        function selectExportFormat(fmt) {
+            selectedFormat = fmt;
+            const pdfCard = document.getElementById('format-card-pdf');
+            const docxCard = document.getElementById('format-card-docx');
+            const pdfRadio = document.getElementById('format-radio-pdf');
+            const docxRadio = document.getElementById('format-radio-docx');
 
-        // Bind auto-reload on filter changes
-        const filters = ['p-filter-mode', 'p-filter-grade', 'p-filter-gender'];
-        filters.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-                el.addEventListener('change', function() {
-                    applyFiltersAndReload();
-                });
-            }
-        });
-    });
-
-    function applyFiltersAndReload() {
-        const mode = document.getElementById('p-filter-mode')?.value || '';
-        const grade = document.getElementById('p-filter-grade')?.value || '';
-        const gender = document.getElementById('p-filter-gender')?.value || '';
-        const search = '{{ request('search', '') }}';
-
-        const params = new URLSearchParams();
-        if (mode) params.append('mode', mode);
-        if (grade) params.append('grade', grade);
-        if (gender) params.append('gender', gender);
-        if (search) params.append('search', search);
-
-        if (window.startLoadingTransition) {
-            window.startLoadingTransition();
-        }
-        window.location.href = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
-    }
-
-    // Background Export State Variables
-    let exportInterval = null;
-    let exportPercent = 0;
-    const totalStudents = {{ $totalStudents }};
-    let isExportRunning = false;
-    let selectedFormat = 'pdf'; // Default format: PDF
-
-    function selectExportFormat(format) {
-        selectedFormat = format;
-        const formats = ['pdf', 'docx'];
-        
-        formats.forEach(f => {
-            const card = document.getElementById('format-card-' + f);
-            const radio = document.getElementById('format-radio-' + f);
-            if (!card || !radio) return;
-            
-            if (f === format) {
-                // Active State styling matching tailwind rules
-                card.className = "flex items-center justify-between p-3 rounded-xl border-2 border-emerald-600 bg-emerald-50/20 text-slate-800 cursor-pointer transition hover:border-emerald-600 hover:bg-emerald-50/10";
-                radio.className = "w-4 h-4 rounded-full border-4 border-emerald-600 flex items-center justify-center bg-white";
-                radio.innerHTML = '<div class="w-1.5 h-1.5 rounded-full bg-emerald-600"></div>';
+            if (fmt === 'pdf') {
+                if (pdfCard) pdfCard.className = 'flex items-center justify-between p-3.5 rounded-2xl border-2 border-emerald-600 bg-emerald-50/30 text-slate-800 cursor-pointer transition dark:bg-emerald-950/20 dark:text-white';
+                if (docxCard) docxCard.className = 'flex items-center justify-between p-3.5 rounded-2xl border border-slate-200 bg-white text-slate-800 cursor-pointer transition hover:border-emerald-600 dark:border-slate-700 dark:bg-slate-800 dark:text-white';
+                if (pdfRadio) pdfRadio.innerHTML = '<div class="w-1.5 h-1.5 rounded-full bg-emerald-600"></div>';
+                if (docxRadio) docxRadio.innerHTML = '';
             } else {
-                // Inactive State styling
-                card.className = "flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-white text-slate-800 cursor-pointer transition hover:border-emerald-600 hover:bg-emerald-50/10";
-                radio.className = "w-4 h-4 rounded-full border border-slate-300 flex items-center justify-center bg-white";
-                radio.innerHTML = '';
+                if (pdfCard) pdfCard.className = 'flex items-center justify-between p-3.5 rounded-2xl border border-slate-200 bg-white text-slate-800 cursor-pointer transition hover:border-emerald-600 dark:border-slate-700 dark:bg-slate-800 dark:text-white';
+                if (docxCard) docxCard.className = 'flex items-center justify-between p-3.5 rounded-2xl border-2 border-emerald-600 bg-emerald-50/30 text-slate-800 cursor-pointer transition dark:bg-emerald-950/20 dark:text-white';
+                if (pdfRadio) pdfRadio.innerHTML = '';
+                if (docxRadio) docxRadio.innerHTML = '<div class="w-1.5 h-1.5 rounded-full bg-emerald-600"></div>';
             }
-        });
+        }
 
-        // Update output file label extension dynamically
-        const label = document.getElementById('export-output-file-label');
-        if (label) {
-            label.textContent = 'enrollment_forms_2026.' + (format === 'pdf' ? 'pdf.zip' : 'docx.zip');
-        }
-    }
+        function openBatchExportModal(actionType) {
+            const modal = document.getElementById('batch-export-modal');
+            if (!modal) return;
 
-    function openBatchExportModal(type) {
-        const modal = document.getElementById('batch-export-modal');
-        if (modal) {
-            document.body.appendChild(modal);
-        }
-        if (isExportRunning) {
-            // Re-open directly to progress screen
-            showExportModal();
-            return;
-        }
-        if (modal) {
+            if (!isExportRunning) {
+                document.getElementById('export-state-config').classList.remove('hidden');
+                document.getElementById('export-state-progress').classList.add('hidden');
+                document.getElementById('export-state-complete').classList.remove('hidden');
+                document.getElementById('export-state-complete').classList.add('hidden');
+            }
+
             modal.classList.remove('hidden');
-            document.getElementById('export-state-config').classList.remove('hidden');
-            document.getElementById('export-state-progress').classList.add('hidden');
-            document.getElementById('export-state-complete').classList.add('hidden');
-
-            const gradeVal = document.getElementById('p-filter-grade')?.value || '';
-            const modeVal = document.getElementById('p-filter-mode')?.value || '';
-            const scopeBadge = document.getElementById('modal-active-scope-badge');
-            if (scopeBadge) {
-                let label = gradeVal ? gradeVal : 'All Grade Levels';
-                if (modeVal) label += ` (${modeVal})`;
-                scopeBadge.innerText = label;
-            }
-
             if (window.lucide) window.lucide.createIcons();
         }
-    }
 
-    function closeBatchExportModal() {
-        const modal = document.getElementById('batch-export-modal');
-        if (modal) {
-            modal.classList.add('hidden');
-        }
-    }
-
-    function showExportModal() {
-        const modal = document.getElementById('batch-export-modal');
-        if (modal) {
-            document.body.appendChild(modal);
-            modal.classList.remove('hidden');
-        }
-    }
-
-    function hideExportModal() {
-        closeBatchExportModal();
-        // Show floating indicator if running
-        if (isExportRunning) {
-            const indicator = document.getElementById('export-floating-indicator');
-            if (indicator) {
-                document.body.appendChild(indicator);
-                indicator.classList.remove('hidden');
-            }
-        }
-    }
-
-    function showExportModalFromIndicator() {
-        const indicator = document.getElementById('export-floating-indicator');
-        if (indicator) indicator.classList.add('hidden');
-        showExportModal();
-    }
-
-    let currentExportId = null;
-    let currentDownloadUrl = null;
-    let lastLogMessage = '';
-
-    function appendConsoleLog(message, isError = false) {
-        const logBox = document.getElementById('export-log-lines');
-        if (!logBox || !message || message === lastLogMessage) return;
-        lastLogMessage = message;
-        
-        const now = new Date();
-        const timeStr = now.toTimeString().split(' ')[0];
-        const line = document.createElement('div');
-        line.className = isError ? 'text-rose-400 font-medium' : 'text-emerald-400 font-medium';
-        
-        const spanTime = document.createElement('span');
-        spanTime.className = 'text-slate-500 mr-1.5';
-        spanTime.textContent = `[${timeStr}]`;
-        
-        const spanMsg = document.createElement('span');
-        spanMsg.textContent = message;
-        
-        line.appendChild(spanTime);
-        line.appendChild(spanMsg);
-        logBox.appendChild(line);
-        logBox.scrollTop = logBox.scrollHeight;
-    }
-    // ── Hidden Iframe Export (no new tab) ──────────────────────────────────
-    let iframeExportListener = null;
-
-    function startIframeExport(url, format) {
-        // Show modal in progress state
-        const modal = document.getElementById('batch-export-modal');
-        if (modal) { document.body.appendChild(modal); modal.classList.remove('hidden'); }
-        document.getElementById('export-state-config')?.classList.add('hidden');
-        document.getElementById('export-state-progress')?.classList.remove('hidden');
-        document.getElementById('export-state-complete')?.classList.add('hidden');
-
-        const bar         = document.getElementById('export-progress-bar');
-        const floatBar    = document.getElementById('export-floating-progress-bar');
-        const pctText     = document.getElementById('export-percentage');
-        const floatPct    = document.getElementById('export-floating-percentage');
-        const counterText = document.getElementById('export-processed-counter');
-        const statusLabel = document.getElementById('export-status-label');
-        const remainText  = document.getElementById('export-remaining-time');
-        const logBox      = document.getElementById('export-log-lines');
-
-        if (bar)         bar.style.width      = '0%';
-        if (floatBar)    floatBar.style.width  = '0%';
-        if (pctText)     pctText.innerText     = '0%';
-        if (floatPct)    floatPct.innerText    = '0%';
-        if (statusLabel) statusLabel.innerText = 'Loading student forms...';
-        if (remainText)  remainText.innerText  = 'Calculating...';
-        if (logBox) logBox.innerHTML = '<div class="text-slate-500">[System] Initializing background renderer...</div>';
-
-        appendConsoleLog(`Starting ${format.toUpperCase()} batch export in background...`);
-
-        // Remove old listener & iframe
-        if (iframeExportListener) window.removeEventListener('message', iframeExportListener);
-        const old = document.getElementById('batch-render-iframe');
-        if (old) old.remove();
-
-        // Create hidden iframe with proper dimensions for html2canvas rendering
-        const iframe = document.createElement('iframe');
-        iframe.id = 'batch-render-iframe';
-        iframe.style.cssText = 'position:fixed;left:-9999px;top:0;width:1240px;height:900px;border:none;opacity:0;pointer-events:none;z-index:-1;';
-        iframe.src = url;
-        document.body.appendChild(iframe);
-
-        // Listen for postMessage from iframe
-        iframeExportListener = function(event) {
-            const data = event.data;
-            if (!data || !data.type) return;
-
-            if (data.type === 'zip_start') {
-                appendConsoleLog(`Rendering ${data.total} student forms as ${(data.format || format).toUpperCase()}...`);
-                if (statusLabel) statusLabel.innerText = 'Rendering forms...';
-            } else if (data.type === 'zip_log') {
-                const pct = data.percent || 0;
-                if (bar)      bar.style.width     = pct + '%';
-                if (floatBar) floatBar.style.width = pct + '%';
-                if (pctText)  pctText.innerText    = pct + '%';
-                if (floatPct) floatPct.innerText   = pct + '%';
-                if (data.current && data.total) {
-                    if (counterText) counterText.innerText = `${data.current.toLocaleString()} / ${data.total.toLocaleString()} Students`;
-                    if (statusLabel) statusLabel.innerText = 'Generating Documents...';
-                    const rem = Math.max(1, Math.round(((data.total - data.current) / Math.max(data.current, 1)) * 3));
-                    if (remainText) remainText.innerText = `~${rem} seconds`;
-                }
-                if (data.message) appendConsoleLog(data.message);
-            } else if (data.type === 'zip_done') {
-                if (bar)      bar.style.width     = '100%';
-                if (floatBar) floatBar.style.width = '100%';
-                if (pctText)  pctText.innerText    = '100%';
-                if (floatPct) floatPct.innerText   = '100%';
-                if (data.message) appendConsoleLog(data.message);
-
-                setTimeout(() => {
-                    document.getElementById('export-state-progress')?.classList.add('hidden');
-                    document.getElementById('export-state-complete')?.classList.remove('hidden');
-                    const dlSpan = document.querySelector('#export-state-complete button span');
-                    if (dlSpan) dlSpan.textContent = `Download ${format.toUpperCase()} ZIP`;
-                    setTimeout(() => {
-                        const iframeEl = document.getElementById('batch-render-iframe');
-                        if (iframeEl) iframeEl.remove();
-                    }, 1500);
-                }, 500);
-
-                window.removeEventListener('message', iframeExportListener);
-                iframeExportListener = null;
-                if (window.lucide) window.lucide.createIcons();
-            }
-        };
-
-        window.addEventListener('message', iframeExportListener);
-        if (window.lucide) window.lucide.createIcons();
-    }
-    // ────────────────────────────────────────────────────────────────────────
-
-    async function startBackgroundExport() {
-        const mode = document.getElementById('p-filter-mode')?.value || '';
-        const grade = document.getElementById('modal-grade-select')?.value || document.getElementById('p-filter-grade')?.value || '';
-        const gender = document.getElementById('p-filter-gender')?.value || '';
-        const search = '{{ request('search', '') }}';
-
-        isExportRunning = true;
-        exportPercent = 0;
-        currentDownloadUrl = null;
-        lastLogMessage = '';
-
-        const logBox = document.getElementById('export-log-lines');
-        if (logBox) {
-            logBox.innerHTML = '<div class="text-slate-500">[System] Export task initiated...</div>';
+        function closeBatchExportModal() {
+            const modal = document.getElementById('batch-export-modal');
+            if (modal) modal.classList.add('hidden');
         }
 
-        // Transition views inside modal to Progress State
-        document.getElementById('export-state-config').classList.add('hidden');
-        document.getElementById('export-state-progress').classList.remove('hidden');
+        function showExportModal() {
+            const modal = document.getElementById('batch-export-modal');
+            if (modal) modal.classList.remove('hidden');
+        }
 
-        const bar = document.getElementById('export-progress-bar');
-        const percentageText = document.getElementById('export-percentage');
-        const counterText = document.getElementById('export-processed-counter');
-        const statusLabel = document.getElementById('export-status-label');
-        const remainingTimeText = document.getElementById('export-remaining-time');
-        const floatBar = document.getElementById('export-floating-progress-bar');
-        const floatPercentage = document.getElementById('export-floating-percentage');
-
-        if (statusLabel) statusLabel.innerText = 'Initiating export job...';
-        appendConsoleLog(`Starting export for ${totalStudents} students (Format: ${selectedFormat.toUpperCase()})...`);
-
-        try {
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
-            const response = await fetch('{{ route('admin.students.start-batch-export') }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
-                    'Accept': 'application/json',
-                },
-                body: JSON.stringify({
-                    format: selectedFormat,
-                    grade: grade,
-                    mode: mode,
-                    gender: gender,
-                    search: search,
-                }),
-            });
-
-            const result = await response.json();
-
-            if (!response.ok || !result.success) {
-                appendConsoleLog(result.message || 'Failed to start document export.', true);
-                alert(result.message || 'Failed to start document export.');
-                closeBatchExportModal();
-                return;
-            }
-
-            currentExportId = result.export_id;
-            appendConsoleLog(`Background job #${currentExportId} dispatched successfully.`);
-
-            if (exportInterval) clearInterval(exportInterval);
-
-            // Poll progress every 1 second
-            exportInterval = setInterval(async () => {
-                try {
-                    const statusRes = await fetch("{{ url('/students/export-status') }}/" + currentExportId);
-                    const data = await statusRes.json();
-
-                    exportPercent = data.progress_percentage || 0;
-
-                    if (bar) bar.style.width = exportPercent + '%';
-                    if (floatBar) floatBar.style.width = exportPercent + '%';
-                    if (percentageText) percentageText.innerText = exportPercent + '%';
-                    if (floatPercentage) floatPercentage.innerText = exportPercent + '%';
-
-                    if (counterText) {
-                        counterText.innerText = `${(data.processed_count || 0).toLocaleString()} / ${(data.total_count || 0).toLocaleString()} Students`;
-                    }
-
-                    if (data.log_message) {
-                        appendConsoleLog(data.log_message);
-                    }
-
-                    if (data.status === 'processing' || data.status === 'pending') {
-                        if (statusLabel) statusLabel.innerText = data.status === 'pending' ? 'Preparing Queue...' : 'Generating Documents...';
-                        const processed = data.processed_count || 0;
-                        const remainingSecs = processed > 0 ? Math.max(1, Math.round(((data.total_count - processed) / processed) * 3)) : Math.round(data.total_count * 1.5);
-                        if (remainingTimeText) remainingTimeText.innerText = `~${remainingSecs} seconds`;
-                    } else if (data.status === 'completed') {
-                        clearInterval(exportInterval);
-                        isExportRunning = false;
-                        currentDownloadUrl = data.download_url;
-
-                        appendConsoleLog(`Export job completed! Output ZIP ready for download.`);
-
-                        const sizeLabel = document.getElementById('export-complete-size-label');
-                        const sizeVal = document.getElementById('export-complete-size-val');
-                        const filenameVal = document.getElementById('export-complete-filename-val');
-                        const downloadBtnSpan = document.querySelector('#export-state-complete button span');
-
-                        if (sizeLabel) sizeLabel.textContent = 'File Size:';
-                        if (sizeVal) sizeVal.textContent = data.file_size_formatted || '0 B';
-                        if (filenameVal) filenameVal.textContent = data.file_name || 'export_archive.zip';
-                        if (downloadBtnSpan) downloadBtnSpan.textContent = `Download ${selectedFormat.toUpperCase()} ZIP`;
-
-                        document.getElementById('export-state-progress').classList.add('hidden');
-                        document.getElementById('export-state-complete').classList.remove('hidden');
-
-                        const indicator = document.getElementById('export-floating-indicator');
-                        if (indicator) indicator.classList.add('hidden');
-                    } else if (data.status === 'failed') {
-                        clearInterval(exportInterval);
-                        isExportRunning = false;
-                        appendConsoleLog('Export failed: ' + (data.error_message || 'Unknown error occurred.'), true);
-                        alert('Export failed: ' + (data.error_message || 'Unknown error occurred.'));
-                        closeBatchExportModal();
-                    }
-                } catch (err) {
-                    console.error('Polling error:', err);
-                }
-            }, 1000);
-
-        } catch (err) {
-            console.error('Failed to start export job:', err);
-            alert('Failed to connect to export server.');
+        function hideExportModal() {
             closeBatchExportModal();
+            if (isExportRunning) {
+                const indicator = document.getElementById('export-floating-indicator');
+                if (indicator) indicator.classList.remove('hidden');
+            }
         }
-    }
 
-    function triggerActualZipDownload() {
-        if (currentDownloadUrl) {
-            window.location.href = currentDownloadUrl;
-        } else {
+        function appendConsoleLog(msg, isError = false) {
+            if (!msg || msg === lastLogMessage) return;
+            lastLogMessage = msg;
+
+            const logBox = document.getElementById('export-log-lines');
+            if (!logBox) return;
+
+            const time = new Date().toLocaleTimeString();
+            const logLine = document.createElement('div');
+            logLine.className = isError ? 'text-rose-400 font-bold' : 'text-slate-300';
+            logLine.innerHTML = `<span class="text-slate-500 font-mono">[${time}]</span> ${msg}`;
+            logBox.appendChild(logLine);
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+
+        async function startBackgroundExport() {
             const mode = document.getElementById('p-filter-mode')?.value || '';
             const grade = document.getElementById('p-filter-grade')?.value || '';
             const gender = document.getElementById('p-filter-gender')?.value || '';
-            const search = '{{ request('search', '') }}';
+            const search = document.getElementById('p-filter-search')?.value || '';
+
+            isExportRunning = true;
+            exportPercent = 0;
+            currentDownloadUrl = null;
+            lastLogMessage = '';
+
+            const logBox = document.getElementById('export-log-lines');
+            if (logBox) {
+                logBox.innerHTML = '<div class="text-slate-500">[System] Export task initiated...</div>';
+            }
+
+            document.getElementById('export-state-config').classList.add('hidden');
+            document.getElementById('export-state-progress').classList.remove('hidden');
+
+            const bar = document.getElementById('export-progress-bar');
+            const percentageText = document.getElementById('export-percentage');
+            const counterText = document.getElementById('export-processed-counter');
+            const statusLabel = document.getElementById('export-status-label');
+            const remainingTimeText = document.getElementById('export-remaining-time');
+            const floatBar = document.getElementById('export-floating-progress-bar');
+            const floatPercentage = document.getElementById('export-floating-percentage');
+
+            if (statusLabel) statusLabel.innerText = 'Initiating server stream packaging...';
+            appendConsoleLog(`Starting export for ${totalStudents} students (Format: ${selectedFormat.toUpperCase()})...`);
+
+            try {
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+                const response = await fetch('{{ route('admin.students.start-batch-export') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                    },
+                    body: JSON.stringify({
+                        format: selectedFormat,
+                        grade: grade,
+                        mode: mode,
+                        gender: gender,
+                        search: search,
+                    }),
+                });
+
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    appendConsoleLog(result.message || 'Failed to start document export.', true);
+                    alert(result.message || 'Failed to start document export.');
+                    closeBatchExportModal();
+                    return;
+                }
+
+                currentExportId = result.export_id;
+                appendConsoleLog(`Background job #${currentExportId} started on server.`);
+
+                if (exportInterval) clearInterval(exportInterval);
+
+                // Poll progress every 1 second
+                exportInterval = setInterval(async () => {
+                    try {
+                        const statusRes = await fetch("{{ url('/students/export-status') }}/" + currentExportId);
+                        const data = await statusRes.json();
+
+                        exportPercent = data.progress_percentage || 0;
+
+                        if (bar) bar.style.width = exportPercent + '%';
+                        if (floatBar) floatBar.style.width = exportPercent + '%';
+                        if (percentageText) percentageText.innerText = exportPercent + '%';
+                        if (floatPercentage) floatPercentage.innerText = exportPercent + '%';
+
+                        if (counterText) {
+                            counterText.innerText = `${(data.processed_count || 0).toLocaleString()} / ${(data.total_count || 0).toLocaleString()} Students`;
+                        }
+
+                        if (data.log_message) {
+                            appendConsoleLog(data.log_message);
+                        }
+
+                        if (data.status === 'processing' || data.status === 'pending') {
+                            if (statusLabel) statusLabel.innerText = data.status === 'pending' ? 'Preparing Queue...' : 'Packaging Documents...';
+                            const processed = data.processed_count || 0;
+                            const remainingSecs = processed > 0 ? Math.max(1, Math.round(((data.total_count - processed) / processed) * 2)) : Math.round(data.total_count * 1.5);
+                            if (remainingTimeText) remainingTimeText.innerText = `~${remainingSecs} seconds`;
+                        } else if (data.status === 'completed') {
+                            clearInterval(exportInterval);
+                            isExportRunning = false;
+                            currentDownloadUrl = data.download_url;
+
+                            appendConsoleLog(`Export job completed! Output ZIP ready for download.`);
+
+                            const sizeVal = document.getElementById('export-complete-size-val');
+                            const filenameVal = document.getElementById('export-complete-filename-val');
+
+                            if (sizeVal) sizeVal.textContent = data.file_size_formatted || '0 B';
+                            if (filenameVal) filenameVal.textContent = data.file_name || 'export_archive.zip';
+
+                            document.getElementById('export-state-progress').classList.add('hidden');
+                            document.getElementById('export-state-complete').classList.remove('hidden');
+
+                            const indicator = document.getElementById('export-floating-indicator');
+                            if (indicator) indicator.classList.add('hidden');
+                        } else if (data.status === 'failed') {
+                            clearInterval(exportInterval);
+                            isExportRunning = false;
+                            appendConsoleLog('Export failed: ' + (data.error_message || 'Unknown error occurred.'), true);
+                            alert('Export failed: ' + (data.error_message || 'Unknown error occurred.'));
+                            closeBatchExportModal();
+                        }
+                    } catch (err) {
+                        console.error('Polling error:', err);
+                    }
+                }, 1000);
+
+            } catch (err) {
+                console.error('Failed to start export job:', err);
+                alert('Failed to connect to export server.');
+                closeBatchExportModal();
+            }
+        }
+
+        function triggerActualZipDownload() {
+            if (currentDownloadUrl) {
+                window.location.href = currentDownloadUrl;
+            } else {
+                const mode = document.getElementById('p-filter-mode')?.value || '';
+                const grade = document.getElementById('p-filter-grade')?.value || '';
+                const gender = document.getElementById('p-filter-gender')?.value || '';
+                const search = document.getElementById('p-filter-search')?.value || '';
+
+                const params = new URLSearchParams();
+                if (mode) params.append('mode', mode);
+                if (grade) params.append('grade', grade);
+                if (gender) params.append('gender', gender);
+                if (search) params.append('search', search);
+                if (selectedFormat) params.append('format', selectedFormat);
+
+                const queryString = params.toString() ? '?' + params.toString() : '';
+                window.location.href = '{{ route('admin.students.download-enrolment-forms-zip') }}' + queryString;
+            }
+            closeBatchExportModal();
+        }
+
+        function runPrintRecordAction(actionType) {
+            const mode = document.getElementById('p-filter-mode')?.value || '';
+            const grade = document.getElementById('p-filter-grade')?.value || '';
+            const gender = document.getElementById('p-filter-gender')?.value || '';
+            const search = document.getElementById('p-filter-search')?.value || '';
 
             const params = new URLSearchParams();
             if (mode) params.append('mode', mode);
             if (grade) params.append('grade', grade);
             if (gender) params.append('gender', gender);
             if (search) params.append('search', search);
-            if (selectedFormat) params.append('format', selectedFormat);
 
             const queryString = params.toString() ? '?' + params.toString() : '';
-            window.location.href = '{{ route('admin.students.download-enrolment-forms-zip') }}' + queryString;
+
+            if (actionType === 'forms_batch') {
+                window.open('{{ route('admin.students.print-enrolment-forms-batch') }}' + queryString, '_blank');
+            } else if (actionType === 'forms_jpg') {
+                openBatchExportModal('enrollment_forms');
+            } else if (actionType === 'id_cards' || actionType === 'id_cards_grade') {
+                const gradeVal = grade || 'Kinder 1';
+                window.open('/students/occupancy/grade/' + encodeURIComponent(gradeVal) + '/id-print', '_blank');
+            } else if (actionType === 'docs_zip') {
+                window.location.href = '{{ route('admin.students.download-docs-zip') }}' + queryString;
+            } else if (actionType === 'credentials') {
+                const credParams = new URLSearchParams(params);
+                credParams.append('print_credentials', '1');
+                credParams.append('is_print', '1');
+                window.open('{{ route('admin.students.index') }}?' + credParams.toString(), '_blank');
+            } else if (actionType === 'masters_list') {
+                const listParams = new URLSearchParams(params);
+                listParams.append('print', '1');
+                listParams.append('is_print', '1');
+                window.open('{{ route('admin.students.index') }}?' + listParams.toString(), '_blank');
+            } else if (actionType === 'canva') {
+                window.location.href = '{{ route('admin.students.export-canva') }}' + queryString;
+            }
         }
-        closeBatchExportModal();
-    }
-
-    function runPrintRecordAction(actionType) {
-        const mode = document.getElementById('p-filter-mode')?.value || '';
-        const grade = document.getElementById('p-filter-grade')?.value || '';
-        const gender = document.getElementById('p-filter-gender')?.value || '';
-        const search = '{{ request('search', '') }}';
-
-        const params = new URLSearchParams();
-        if (mode) params.append('mode', mode);
-        if (grade) params.append('grade', grade);
-        if (gender) params.append('gender', gender);
-        if (search) params.append('search', search);
-
-        const queryString = params.toString() ? '?' + params.toString() : '';
-
-        if (actionType === 'forms_batch') {
-            window.open('{{ route('admin.students.print-enrolment-forms-batch') }}' + queryString, '_blank');
-        } else if (actionType === 'forms_jpg') {
-            openBatchExportModal('enrollment_forms');
-        } else if (actionType === 'id_cards' || actionType === 'id_cards_grade') {
-            const gradeVal = document.getElementById('p-filter-grade')?.value || 'Grade 1';
-            window.open('/students/occupancy/grade/' + encodeURIComponent(gradeVal) + '/id-print', '_blank');
-        } else if (actionType === 'docs_zip') {
-            window.location.href = '{{ route('admin.students.download-docs-zip') }}' + queryString;
-        } else if (actionType === 'credentials') {
-            const credParams = new URLSearchParams(params);
-            credParams.append('print_credentials', '1');
-            credParams.append('is_print', '1');
-            window.open('{{ route('admin.students.index') }}?' + credParams.toString(), '_blank');
-        } else if (actionType === 'masters_list') {
-            const listParams = new URLSearchParams(params);
-            listParams.append('print', '1');
-            listParams.append('is_print', '1');
-            window.open('{{ route('admin.students.index') }}?' + listParams.toString(), '_blank');
-        } else if (actionType === 'canva') {
-            window.location.href = '{{ route('admin.students.export-canva') }}' + queryString;
-        }
-    }
-
-    function triggerBackgroundDownload(url) {
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = '';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-    }
-
-    function quickExportGradeZip(gradeName, formatType) {
-        const mode = document.getElementById('p-filter-mode')?.value || '';
-        const gender = document.getElementById('p-filter-gender')?.value || '';
-        
-        const params = new URLSearchParams();
-        params.append('grade', gradeName);
-        if (mode) params.append('mode', mode);
-        if (gender) params.append('gender', gender);
-
-        if (formatType === 'pdf') {
-            params.append('auto_zip_pdf', '1');
-            startIframeExport('{{ route('admin.students.print-enrolment-forms-batch') }}?' + params.toString(), 'pdf');
-        } else if (formatType === 'jpg') {
-            params.append('auto_zip_jpg', '1');
-            startIframeExport('{{ route('admin.students.print-enrolment-forms-batch') }}?' + params.toString(), 'jpg');
-        } else if (formatType === 'docx') {
-            params.append('auto_zip_docx', '1');
-            startIframeExport('{{ route('admin.students.print-enrolment-forms-batch') }}?' + params.toString(), 'docx');
-        } else {
-            openBatchExportModal('enrollment_forms');
-            const gradeFilter = document.getElementById('p-filter-grade');
-            if (gradeFilter) gradeFilter.value = gradeName;
-            selectExportFormat(formatType);
-            startBackgroundExport();
-        }
-    }
-
-    function exportSelectedGradeBatch() {
-        const grade = document.getElementById('batch-grade-select')?.value || 'Grade 1';
-        const format = document.getElementById('batch-format-select')?.value || 'pdf';
-        quickExportGradeZip(grade, format);
-    }
-
-    function syncModalGradeWithFilter() {
-        const modalGradeSelect = document.getElementById('modal-grade-select');
-        const filterGrade = document.getElementById('p-filter-grade');
-        if (modalGradeSelect && filterGrade) {
-            filterGrade.value = modalGradeSelect.value;
-        }
-    }
     </script>
 </x-admin-layout>

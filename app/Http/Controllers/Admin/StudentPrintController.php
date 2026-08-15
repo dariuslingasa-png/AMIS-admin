@@ -267,8 +267,22 @@ class StudentPrintController extends Controller
             }
         }
 
-        $totalStudents = $query->count();
-        return view('admin.students.print-export', compact('totalStudents'));
+        $totalStudents = (clone $query)->count();
+        $previewStudents = (clone $query)->with(['applicant', 'officialEnrollmentForm'])
+            ->orderBy('last_name')
+            ->paginate(15)
+            ->withQueryString();
+
+        $gradeCounts = Student::query()
+            ->selectRaw('grade_level, count(*) as total')
+            ->groupBy('grade_level')
+            ->pluck('total', 'grade_level')
+            ->toArray();
+
+        $f2fCount = (clone $query)->whereHas('applicant', fn ($q) => $q->whereRaw('LOWER(learning_mode) LIKE ?', ['%face%'])->orWhereRaw('LOWER(learning_mode) LIKE ?', ['%f2f%']))->count();
+        $odlCount = (clone $query)->whereHas('applicant', fn ($q) => $q->whereRaw('LOWER(learning_mode) LIKE ?', ['%online%'])->orWhereRaw('LOWER(learning_mode) LIKE ?', ['%odl%'])->orWhereRaw('LOWER(learning_mode) LIKE ?', ['%flexible%']))->count();
+
+        return view('admin.students.print-export', compact('totalStudents', 'previewStudents', 'gradeCounts', 'f2fCount', 'odlCount'));
     }
 
     public function previewDocxEnrolmentForm(Student $student)
