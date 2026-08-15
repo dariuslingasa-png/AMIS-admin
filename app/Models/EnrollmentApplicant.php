@@ -291,4 +291,9 @@ class EnrollmentApplicant extends Model
     {
         return Student::abbreviateGrade($this->grade_level);
     }
+
+    public function documents()
+    {
+        return $this->hasMany(StudentDocument::class, 'enrollment_applicant_id');
+    }
 }

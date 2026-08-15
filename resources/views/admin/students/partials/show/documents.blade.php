@@ -1,4 +1,94 @@
 <div x-show="activeTab === 'documents'" class="space-y-6" x-cloak>
+    <!-- Official Finalized Documents Section -->
+    @php
+        $officialForm = $student->officialEnrollmentForm;
+        $isApproved = ($student->applicant?->status === 'approved');
+    @endphp
+    <x-card title="Official Documents" subtitle="Permanent immutable historical documents and Google Drive archive records">
+        <div class="space-y-4">
+            <div class="rounded-2xl border border-slate-200 bg-gradient-to-r from-slate-50 to-white p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xs">
+                <div class="flex items-start gap-3.5">
+                    <div class="w-11 h-11 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 shrink-0 shadow-xs">
+                        <i data-lucide="file-check-2" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2.5 flex-wrap">
+                            <h4 class="text-sm font-black text-slate-900">Enrollment Application Form</h4>
+                            @if($officialForm)
+                                <span class="inline-flex items-center gap-1 rounded-full bg-emerald-100/80 px-2.5 py-0.5 text-[10px] font-black text-emerald-800 border border-emerald-200/60">
+                                    ✓ Version {{ $officialForm->document_version }} (Finalized)
+                                </span>
+                            @elseif($isApproved)
+                                <span class="inline-flex items-center gap-1 rounded-full bg-sky-100/80 px-2.5 py-0.5 text-[10px] font-black text-sky-800 border border-sky-200/60">
+                                    Ready for Finalization
+                                </span>
+                            @else
+                                <span class="inline-flex items-center gap-1 rounded-full bg-amber-100/80 px-2.5 py-0.5 text-[10px] font-black text-amber-800 border border-amber-200/60">
+                                    Draft Preview (Pending Approval)
+                                </span>
+                            @endif
+                        </div>
+                        <p class="text-xs text-slate-500 font-medium mt-1">
+                            @if($officialForm)
+                                Generated: <strong class="text-slate-700">{{ $officialForm->generated_at?->format('M d, Y g:i A') ?? $officialForm->created_at->format('M d, Y g:i A') }}</strong>
+                                • File size: {{ $officialForm->formatted_file_size }}
+                            @else
+                                The official permanent PDF is generated automatically upon application approval.
+                            @endif
+                        </p>
+
+                        <!-- Google Drive Archive Status -->
+                        <div class="mt-2.5 flex items-center gap-2 flex-wrap">
+                            <span class="text-[11px] font-bold text-slate-400">Archive Status:</span>
+                            @if($officialForm && $officialForm->archive_status === 'VERIFIED')
+                                <span class="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-2.5 py-0.5 text-[10px] font-extrabold text-emerald-700 border border-emerald-200">
+                                    <i data-lucide="cloud-check" class="w-3.5 h-3.5 text-emerald-600"></i>
+                                    Archived • Google Drive: Verified
+                                </span>
+                            @elseif($officialForm && in_array($officialForm->archive_status, ['QUEUED', 'PENDING', 'UPLOADING', 'RETRY_PENDING']))
+                                <span class="inline-flex items-center gap-1 rounded-lg bg-sky-50 px-2.5 py-0.5 text-[10px] font-extrabold text-sky-700 border border-sky-200">
+                                    <i data-lucide="cloud-upload" class="w-3.5 h-3.5 text-sky-600 animate-pulse"></i>
+                                    Archive Status: Queued (Next Sync: 12:00 NN / 12:00 MN)
+                                </span>
+                            @elseif($isApproved)
+                                <span class="inline-flex items-center gap-1 rounded-lg bg-slate-50 px-2.5 py-0.5 text-[10px] font-extrabold text-slate-600 border border-slate-200">
+                                    <i data-lucide="clock" class="w-3.5 h-3.5 text-slate-500"></i>
+                                    Pending Generation
+                                </span>
+                            @else
+                                <span class="inline-flex items-center gap-1 rounded-lg bg-slate-50 px-2.5 py-0.5 text-[10px] font-extrabold text-slate-400 border border-slate-200">
+                                    Not Queued (Draft Mode)
+                                </span>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 flex-wrap">
+                    @if($isApproved)
+                        <a href="{{ route('admin.students.official-enrollment-form.view', $student) }}" target="_blank" class="inline-flex h-9 items-center gap-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 px-3 text-xs font-extrabold text-slate-700 shadow-xs transition cursor-pointer">
+                            <i data-lucide="eye" class="w-3.5 h-3.5 text-slate-500"></i>
+                            <span>View</span>
+                        </a>
+                        <a href="{{ route('admin.students.official-enrollment-form.download', $student) }}" class="inline-flex h-9 items-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 text-xs font-extrabold shadow-sm transition cursor-pointer">
+                            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                            <span>Download PDF</span>
+                        </a>
+                    @else
+                        <a href="{{ route('admin.students.print-enrolment-form', $student) }}" target="_blank" class="inline-flex h-9 items-center gap-1.5 rounded-xl border border-amber-300 bg-amber-50 hover:bg-amber-100 px-3.5 text-xs font-extrabold text-amber-800 shadow-xs transition cursor-pointer">
+                            <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+                            <span>Preview Draft</span>
+                        </a>
+                    @endif
+                    <a href="{{ route('admin.students.print-enrolment-form', $student) }}" target="_blank" class="inline-flex h-9 items-center gap-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 px-3 text-xs font-extrabold text-slate-700 shadow-xs transition cursor-pointer">
+                        <i data-lucide="printer" class="w-3.5 h-3.5 text-slate-500"></i>
+                        <span>Print</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </x-card>
+
     <!-- Mandatory Registration Requirements -->
     <x-card title="Registration Requirements" subtitle="Verify mandatory certificates and documents submitted during enrollment">
         <div class="mb-4 flex items-center justify-between gap-3">

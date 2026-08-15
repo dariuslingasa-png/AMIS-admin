@@ -217,6 +217,10 @@ Route::name('admin.')->group(function () {
         Route::get('/students/{student}', [StudentController::class, 'show'])->name('students.show');
         Route::get('/students/{student}/id-editor', [StudentIdController::class, 'idEditor'])->name('students.id-editor');
         Route::get('/students/{student}/print-enrolment-form', [StudentPrintController::class, 'printEnrolmentForm'])->name('students.print-enrolment-form');
+        Route::get('/students/{student}/official-enrollment-form/download', [StudentPrintController::class, 'downloadOfficialForm'])->name('students.official-enrollment-form.download');
+        Route::get('/students/{student}/official-enrollment-form/view', [StudentPrintController::class, 'viewOfficialForm'])->name('students.official-enrollment-form.view');
+        Route::get('/students/documents/{document}/download', [StudentPrintController::class, 'downloadDocument'])->name('students.documents.download');
+        Route::get('/students/documents/{document}/view', [StudentPrintController::class, 'viewDocument'])->name('students.documents.view');
         Route::get('/students/{student}/preview-docx-enrolment-form', [StudentPrintController::class, 'previewDocxEnrolmentForm'])->name('students.preview-docx-enrolment-form');
         Route::post('/students/{student}/update-profile', [StudentController::class, 'updateProfile'])->name('students.update-profile');
         Route::post('/students/{student}/update-photo', [StudentPhotoController::class, 'updatePhoto'])->name('students.update-photo');

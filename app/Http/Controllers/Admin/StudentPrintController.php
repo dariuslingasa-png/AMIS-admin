@@ -18,9 +18,12 @@ class StudentPrintController extends Controller
             'applicant.user',
             'applicant.payment',
             'studentSection.section',
+            'officialEnrollmentForm',
         ]);
 
         $applicant = $student->applicant;
+        $isApproved = ($applicant?->status === 'approved');
+
         $siblings = [];
         if ($applicant && $applicant->user_id) {
             $siblings = EnrollmentApplicant::where('user_id', $applicant->user_id)
@@ -28,11 +31,81 @@ class StudentPrintController extends Controller
                 ->get();
         }
 
+        // If approved, ensure official permanent PDF is generated
+        $officialDoc = $student->officialEnrollmentForm;
+        if ($isApproved && ! $officialDoc && $applicant) {
+            try {
+                $docService = app(\App\Services\Admin\Enrollment\EnrollmentDocumentService::class);
+                $officialDoc = $docService->generateApprovedEnrollmentForm($student, $applicant, auth()->id());
+                $docService->queueRequirements($student, $applicant);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning("Could not auto-generate missing official PDF for student {$student->id}: ".$e->getMessage());
+            }
+        }
+
         return view('admin.students.print-enrolment-form', [
             'student' => $student,
             'applicant' => $applicant,
             'siblings' => $siblings,
+            'isApproved' => $isApproved,
+            'officialDocument' => $officialDoc,
         ]);
+    }
+
+    public function downloadOfficialForm(Student $student)
+    {
+        abort_unless(auth()->user()?->canViewAdminGrade($student->grade_level), 403);
+
+        $student->loadMissing(['applicant', 'officialEnrollmentForm']);
+        $officialDoc = $student->officialEnrollmentForm;
+
+        if (! $officialDoc && $student->applicant?->status === 'approved') {
+            $docService = app(\App\Services\Admin\Enrollment\EnrollmentDocumentService::class);
+            $officialDoc = $docService->generateApprovedEnrollmentForm($student, $student->applicant, auth()->id());
+        }
+
+        if (! $officialDoc) {
+            abort(404, 'Official Enrollment Form has not been finalized yet. The application must be approved first.');
+        }
+
+        $docService = app(\App\Services\Admin\Enrollment\EnrollmentDocumentService::class);
+        return $docService->streamOrDownload($officialDoc, true);
+    }
+
+    public function viewOfficialForm(Student $student)
+    {
+        abort_unless(auth()->user()?->canViewAdminGrade($student->grade_level), 403);
+
+        $student->loadMissing(['applicant', 'officialEnrollmentForm']);
+        $officialDoc = $student->officialEnrollmentForm;
+
+        if (! $officialDoc && $student->applicant?->status === 'approved') {
+            $docService = app(\App\Services\Admin\Enrollment\EnrollmentDocumentService::class);
+            $officialDoc = $docService->generateApprovedEnrollmentForm($student, $student->applicant, auth()->id());
+        }
+
+        if (! $officialDoc) {
+            abort(404, 'Official Enrollment Form has not been finalized yet. The application must be approved first.');
+        }
+
+        $docService = app(\App\Services\Admin\Enrollment\EnrollmentDocumentService::class);
+        return $docService->streamOrDownload($officialDoc, false);
+    }
+
+    public function downloadDocument(\App\Models\StudentDocument $document)
+    {
+        abort_unless(auth()->user()?->canViewAdminGrade($document->student?->grade_level), 403);
+
+        $docService = app(\App\Services\Admin\Enrollment\EnrollmentDocumentService::class);
+        return $docService->streamOrDownload($document, true);
+    }
+
+    public function viewDocument(\App\Models\StudentDocument $document)
+    {
+        abort_unless(auth()->user()?->canViewAdminGrade($document->student?->grade_level), 403);
+
+        $docService = app(\App\Services\Admin\Enrollment\EnrollmentDocumentService::class);
+        return $docService->streamOrDownload($document, false);
     }
 
     public function printEnrolmentFormsBatch(Request $request)

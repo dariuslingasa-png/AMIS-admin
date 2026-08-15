@@ -762,13 +762,24 @@
         <!-- Row 1: Document & Student Profile Info + Actions -->
         <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid #f1f5f9;">
             <div style="display: flex; align-items: center; gap: 10px;">
-                <div style="width: 38px; height: 38px; border-radius: 10px; background: #ecfdf5; border: 1px solid #a7f3d0; display: flex; align-items: center; justify-content: center; color: #059669; shrink-0;">
+                <div style="width: 38px; height: 38px; border-radius: 10px; background: {{ ($isApproved ?? true) ? '#ecfdf5' : '#fffbeb' }}; border: 1px solid {{ ($isApproved ?? true) ? '#a7f3d0' : '#fde68a' }}; display: flex; align-items: center; justify-content: center; color: {{ ($isApproved ?? true) ? '#059669' : '#d97706' }}; shrink-0;">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>
                 </div>
                 <div>
-                    <h2 style="font-size: 0.95rem; font-weight: 800; color: #0f172a; margin: 0; line-height: 1.2;">
-                        Enrolment Application Form
-                    </h2>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <h2 style="font-size: 0.95rem; font-weight: 800; color: #0f172a; margin: 0; line-height: 1.2;">
+                            Enrolment Application Form
+                        </h2>
+                        @if($isApproved ?? true)
+                            <span style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 9999px; background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">
+                                ✓ Official Approved Form
+                            </span>
+                        @else
+                            <span style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 9999px; background: #fffbeb; color: #b45309; border: 1px solid #fde68a; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">
+                                ⚠️ Draft / Preview (Pending Approval)
+                            </span>
+                        @endif
+                    </div>
                     <p style="font-size: 0.75rem; font-weight: 600; color: #64748b; margin: 2px 0 0 0;">
                         Student: <strong style="color: #0f172a;">{{ $student->full_name }}</strong> • AMIS ID: <strong style="color: #059669;">#{{ $student->student_number }}</strong>
                     </p>
@@ -777,6 +788,13 @@
             <div style="display: flex; gap: 8px; align-items: center;">
                 <button onclick="window.close()" style="font-family: inherit; font-size: 0.78rem; font-weight: 700; padding: 8px 14px; border-radius: 10px; border: 1px solid #cbd5e1; background: #f8fafc; color: #334155; cursor: pointer; transition: all 0.15s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f8fafc'">Close</button>
 
+                @if($isApproved ?? true)
+                    <a href="{{ route('admin.students.official-enrollment-form.download', $student) }}" style="font-family: inherit; font-size: 0.78rem; font-weight: 700; padding: 8px 16px; border-radius: 10px; border: 1px solid #059669; background: #ecfdf5; color: #047857; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(5, 150, 105, 0.15); text-decoration: none; transition: all 0.15s;" onmouseover="this.style.background='#d1fae5'" onmouseout="this.style.background='#ecfdf5'">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                        <span>Download Official PDF</span>
+                    </a>
+                @endif
+
                 <button onclick="downloadSingleFormDocx()" id="btn-download-docx" style="font-family: inherit; font-size: 0.78rem; font-weight: 700; padding: 8px 16px; border-radius: 10px; border: 1px solid #6366f1; background: #eef2ff; color: #4338ca; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(99, 102, 241, 0.15); transition: all 0.15s;" onmouseover="this.style.background='#e0e7ff'" onmouseout="this.style.background='#eef2ff'">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
                     <span>Download DOCX</span>
@@ -784,7 +802,7 @@
 
                 <button onclick="triggerPrintPDF()" style="font-family: inherit; font-size: 0.78rem; font-weight: 700; padding: 8px 18px; border-radius: 10px; border: none; background: #059669; color: white; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(5, 150, 105, 0.2); transition: all 0.15s;" onmouseover="this.style.background='#047857'" onmouseout="this.style.background='#059669'">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
-                    <span>Print / Save as PDF</span>
+                    <span>Print Form</span>
                 </button>
             </div>
         </div>

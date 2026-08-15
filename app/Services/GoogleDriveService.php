@@ -80,10 +80,109 @@ class GoogleDriveService
         return $response->json('id');
     }
 
-    public function uploadFileToFolder(string $filePath, string $filename, string $parentId): bool
+    public function findOrCreateFolderPath(array $hierarchy, ?string $rootParentId = null): string
+    {
+        $currentParent = $rootParentId ?: $this->folderId ?: 'root';
+
+        foreach ($hierarchy as $folderName) {
+            $folderName = trim((string) $folderName);
+            if ($folderName === '') {
+                continue;
+            }
+            $currentParent = $this->findOrCreateFolder($folderName, $currentParent);
+        }
+
+        return $currentParent;
+    }
+
+    public function findFileByName(string $filename, string $parentId): ?array
+    {
+        if (! $this->isConfigured()) {
+            return null;
+        }
+
+        try {
+            $accessToken = $this->getAccessToken();
+            $query = "name='".str_replace("'", "\\'", $filename)."' and '{$parentId}' in parents and trashed = false";
+            $response = Http::withHeaders([
+                'Authorization' => "Bearer {$accessToken}",
+            ])->get('https://www.googleapis.com/drive/v3/files', [
+                'q' => $query,
+                'fields' => 'files(id, name, size, md5Checksum)',
+                'pageSize' => 1,
+            ]);
+
+            if ($response->successful()) {
+                $files = $response->json('files');
+                if (! empty($files)) {
+                    return $files[0];
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::warning("Google Drive findFileByName failed for '{$filename}': ".$e->getMessage());
+        }
+
+        return null;
+    }
+
+    public function verifyFile(string $fileId, int $expectedSize = 0): bool
+    {
+        if (! $this->isConfigured() || empty($fileId)) {
+            return false;
+        }
+
+        try {
+            $accessToken = $this->getAccessToken();
+            $response = Http::withHeaders([
+                'Authorization' => "Bearer {$accessToken}",
+            ])->get("https://www.googleapis.com/drive/v3/files/{$fileId}", [
+                'fields' => 'id, name, size, trashed',
+            ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                if (! empty($data['id']) && empty($data['trashed'])) {
+                    if ($expectedSize > 0 && isset($data['size'])) {
+                        return (int) $data['size'] === $expectedSize;
+                    }
+                    return true;
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::warning("Google Drive verifyFile failed for '{$fileId}': ".$e->getMessage());
+        }
+
+        return false;
+    }
+
+    public function downloadFile(string $fileId): string
+    {
+        if (! $this->isConfigured()) {
+            throw new \Exception('Google Drive credentials are not configured.');
+        }
+
+        $accessToken = $this->getAccessToken();
+        $response = Http::withHeaders([
+            'Authorization' => "Bearer {$accessToken}",
+        ])->get("https://www.googleapis.com/drive/v3/files/{$fileId}?alt=media");
+
+        if (! $response->successful()) {
+            throw new \Exception("Google Drive API download failed for '{$fileId}': ".$response->body());
+        }
+
+        return $response->body();
+    }
+
+    public function uploadFileToFolderWithResult(string $filePath, string $filename, string $parentId): ?string
     {
         if (! $this->isConfigured()) {
             throw new \Exception('Google Drive credentials are not fully configured.');
+        }
+
+        // Check if file already exists in target folder
+        $existing = $this->findFileByName($filename, $parentId);
+        if ($existing && ! empty($existing['id'])) {
+            return $existing['id'];
         }
 
         $accessToken = $this->getAccessToken();
@@ -119,17 +218,23 @@ class GoogleDriveService
         $response = Http::withHeaders([
             'Authorization' => "Bearer {$accessToken}",
         ])->withBody($multipartBody, "multipart/related; boundary={$boundary}")
-            ->post('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart');
+            ->post('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,size');
 
         if (! $response->successful()) {
-            Log::error('Google Drive Upload File to Folder Failed', [
+            Log::error('Google Drive Upload File Failed', [
                 'status' => $response->status(),
                 'body' => $response->body(),
             ]);
             throw new \Exception('Google Drive API returned error: '.$response->body());
         }
 
-        return true;
+        return $response->json('id');
+    }
+
+    public function uploadFileToFolder(string $filePath, string $filename, string $parentId): bool
+    {
+        $id = $this->uploadFileToFolderWithResult($filePath, $filename, $parentId);
+        return ! empty($id);
     }
 
     private function getAccessToken(): string

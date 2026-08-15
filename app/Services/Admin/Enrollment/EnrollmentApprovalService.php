@@ -55,6 +55,17 @@ class EnrollmentApprovalService
                 ]);
             }
 
+            // Auto-generate permanent official Enrollment Application Form PDF and queue requirements if missing
+            try {
+                $docService = app(\App\Services\Admin\Enrollment\EnrollmentDocumentService::class);
+                if (! $applicant->student->officialEnrollmentForm) {
+                    $docService->generateApprovedEnrollmentForm($applicant->student, $applicant, auth()->id());
+                }
+                $docService->queueRequirements($applicant->student, $applicant);
+            } catch (\Throwable $e) {
+                Log::error("Auto Enrollment Form PDF generation failed on backfill for student {$applicant->student->id}: ".$e->getMessage());
+            }
+
             // Sync enrollees files to Google Drive on approval
             try {
                 $driveUploadService = app(GoogleDriveUploadService::class);
@@ -66,10 +77,10 @@ class EnrollmentApprovalService
             if (! $applicant->student->account && $this->shouldGenerateSoa($applicant)) {
                 $this->generateSoa($applicant->student, $applicant);
 
-                return 'Student already onboarded. Missing SOA was generated. Microsoft profile photo sync was retried. Files synced to Google Drive.';
+                return 'Student already onboarded. Missing SOA was generated. Official enrollment form verified. Microsoft profile photo sync was retried. Files synced to Google Drive.';
             }
 
-            return 'Student already onboarded. Microsoft profile photo sync was retried. Files synced to Google Drive.';
+            return 'Student already onboarded. Official enrollment form verified. Microsoft profile photo sync was retried. Files synced to Google Drive.';
         }
 
         // ── Duplicate student guard ────────────────────────────────────────────
@@ -154,12 +165,21 @@ class EnrollmentApprovalService
                 return 'Application approved. Student number generated.'.$credentialsInfo.' Note: Microsoft account creation failed. Please create it manually. Error: '.$msError;
             }
 
+            // Auto-generate permanent official Enrollment Application Form PDF and queue requirements
+            try {
+                $docService = app(\App\Services\Admin\Enrollment\EnrollmentDocumentService::class);
+                $docService->generateApprovedEnrollmentForm($student, $applicant, auth()->id());
+                $docService->queueRequirements($student, $applicant);
+            } catch (\Throwable $e) {
+                Log::error("Auto Enrollment Form PDF generation failed on approval for student {$student->id}: ".$e->getMessage());
+            }
+
             return match ($onboardingStatus) {
-                'sent' => 'Application approved.'.$credentialsInfo.' Student credentials were generated and sent to the parent.',
-                'missing_payment_proof' => 'Application approved.'.$credentialsInfo.' Student credentials were generated. Welcome email was not sent because no payment proof is uploaded yet.',
-                'missing_recipient' => 'Application approved.'.$credentialsInfo.' Student credentials were generated. Welcome email was not sent because no valid recipient email was found.',
-                'failed' => 'Application approved.'.$credentialsInfo.' Student credentials were generated. Welcome email failed to send; please check the mail logs.',
-                default => 'Application approved.'.$credentialsInfo.' Student credentials were generated. Welcome email auto-send is currently disabled.',
+                'sent' => 'Application approved.'.$credentialsInfo.' Student credentials and official enrollment form were generated and sent to the parent.',
+                'missing_payment_proof' => 'Application approved.'.$credentialsInfo.' Student credentials and official enrollment form were generated. Welcome email was not sent because no payment proof is uploaded yet.',
+                'missing_recipient' => 'Application approved.'.$credentialsInfo.' Student credentials and official enrollment form were generated. Welcome email was not sent because no valid recipient email was found.',
+                'failed' => 'Application approved.'.$credentialsInfo.' Student credentials and official enrollment form were generated. Welcome email failed to send; please check the mail logs.',
+                default => 'Application approved.'.$credentialsInfo.' Student credentials and official enrollment form were generated. Welcome email auto-send is currently disabled.',
             };
         });
 

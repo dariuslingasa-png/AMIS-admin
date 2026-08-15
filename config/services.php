@@ -90,6 +90,10 @@ return [
         'folder_id' => env('GOOGLE_DRIVE_FOLDER_ID'),
     ],
 
+    'archive' => [
+        'local_retention_days' => (int) env('ARCHIVE_LOCAL_RETENTION_DAYS', 14),
+    ],
+
     'amis' => [
         'api_token' => env('AMIS_API_TOKEN', 'amis-scan-key-2026-secure'),
     ],

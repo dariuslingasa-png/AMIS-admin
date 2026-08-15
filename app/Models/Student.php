@@ -103,6 +103,18 @@ class Student extends Model
         return $this->hasMany(StudentMsTeam::class);
     }
 
+    public function documents()
+    {
+        return $this->hasMany(StudentDocument::class);
+    }
+
+    public function officialEnrollmentForm()
+    {
+        return $this->hasOne(StudentDocument::class)
+            ->where('document_type', 'enrollment_form')
+            ->where('is_current', true);
+    }
+
     public function getEmailAttribute(): ?string
     {
         return $this->school_email ?? $this->ms_email;
