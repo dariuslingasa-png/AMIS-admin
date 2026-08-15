@@ -156,7 +156,7 @@
         font-family: 'DejaVu Sans', sans-serif !important;
         color: #0f172a !important;
         line-height: 1.15 !important;
-        font-size: 11px !important;
+        font-size: 10.5px !important;
     }
     .paper-container {
         width: 100% !important;
@@ -165,11 +165,10 @@
         padding: 0 !important;
         box-shadow: none !important;
         border: none !important;
-        page-break-inside: avoid !important;
     }
-    .paper-page-break {
-        page-break-after: always !important;
-        break-after: page !important;
+    .form-section-block {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
     }
     .input-line, .p2-full-line {
         display: block !important;
@@ -181,16 +180,16 @@
         margin: 0 !important;
         font-family: 'DejaVu Sans', sans-serif !important;
         font-weight: bold !important;
-        font-size: 10.5px !important;
+        font-size: 10px !important;
         color: #0f172a !important;
         line-height: 1.15 !important;
-        height: 17px !important;
+        height: 16px !important;
         box-sizing: border-box !important;
     }
     .label-text {
         display: block !important;
         font-family: 'DejaVu Sans', sans-serif !important;
-        font-size: 7.5px !important;
+        font-size: 7px !important;
         font-weight: bold !important;
         color: #475569 !important;
         text-transform: uppercase !important;
@@ -201,21 +200,21 @@
         background-color: #f1f5f9 !important;
         border-left: 3px solid #059669 !important;
         font-family: 'DejaVu Sans', sans-serif !important;
-        font-size: 9.5px !important;
+        font-size: 9px !important;
         font-weight: bold !important;
         color: #0f172a !important;
-        padding: 2px 5px !important;
-        margin-top: 8px !important;
+        padding: 2px 4px !important;
+        margin-top: 7px !important;
         margin-bottom: 3px !important;
         text-transform: uppercase !important;
     }
-    .top-header-row { display: table !important; width: 100% !important; margin-bottom: 8px !important; table-layout: fixed !important; }
+    .top-header-row { display: table !important; width: 100% !important; margin-bottom: 6px !important; table-layout: fixed !important; }
     .header-left-group { display: table-cell !important; vertical-align: middle !important; width: 73% !important; }
     .header-right-group { display: table-cell !important; vertical-align: middle !important; width: 27% !important; text-align: right !important; }
     
-    .form-middle-grid { display: table !important; width: 100% !important; margin-bottom: 8px !important; table-layout: fixed !important; }
+    .form-middle-grid { display: table !important; width: 100% !important; margin-bottom: 6px !important; table-layout: fixed !important; }
     .form-title-area { display: table-cell !important; vertical-align: top !important; width: 62% !important; }
-    .checkbox-stack { display: table-cell !important; vertical-align: top !important; width: 18% !important; text-align: left !important; padding-top: 8px !important; }
+    .checkbox-stack { display: table-cell !important; vertical-align: top !important; width: 18% !important; text-align: left !important; padding-top: 6px !important; }
     .photo-box { display: table-cell !important; vertical-align: top !important; width: 20% !important; text-align: right !important; }
 
     .grid-5-col, .grid-4-col-birth, .grid-2-col-school, .grid-parent-row, .grid-children-row, .grid-physician-row, .p2-emergency-grid, .signature-grid, .grid-office-row {
@@ -231,12 +230,12 @@
         padding: 0 2px !important;
     }
     .field-container {
-        margin-top: 6px !important;
+        margin-top: 5px !important;
     }
     .refund-notice-box {
         border: 1.5px solid #dc2626 !important;
-        padding: 2px 5px !important;
-        font-size: 7.5px !important;
+        padding: 2px 4px !important;
+        font-size: 7px !important;
         font-weight: bold !important;
         color: #dc2626 !important;
         text-align: center !important;
@@ -244,8 +243,8 @@
         line-height: 1.15 !important;
     }
     .lives-with-row {
-        margin-top: 6px !important;
-        font-size: 8.5px !important;
+        margin-top: 5px !important;
+        font-size: 8px !important;
     }
     .school-arabic-name {
         display: none !important;
@@ -253,8 +252,8 @@
 </style>
 @endif
 
-<!-- PAGE 1: ENROLMENT APPLICATION FORM -->
-<div class="paper-container paper-page-break">
+<!-- ENROLMENT APPLICATION FORM (CONTINUOUS NATURAL FLOW) -->
+<div class="paper-container">
     @if(isset($pageNumber))
         <div class="page-number-badge">
             PAGE {{ $pageNumber }}{{ isset($totalPages) && $totalPages > 1 ? ' OF ' . $totalPages : '' }}
@@ -538,11 +537,9 @@
             <span>Guardian</span>
         </div>
     </div>
-</div>
 
-<!-- PAGE 2: MEDICAL INFORMATION, EMERGENCY CONTACTS, REFERRAL & POLICIES -->
-<div class="paper-container">
-    <div class="section-header-row" style="margin-top: 4px; margin-bottom: 8px;">
+    <!-- MEDICAL INFORMATION (FLOWS CONTINUOUSLY) -->
+    <div class="section-header-row" style="margin-top: 8px; margin-bottom: 4px;">
         MEDICAL INFORMATION
     </div>
 

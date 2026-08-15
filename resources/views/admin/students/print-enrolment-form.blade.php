@@ -109,18 +109,18 @@
         /* Paper Document Layout (A4 Scale) */
         .paper-container {
             width: 210mm;
-            min-height: 297mm;
+            min-height: auto;
             margin: 0 auto 30px auto;
             background: #ffffff;
-            padding: 11mm 16mm 11mm 16mm;
+            padding: 10mm 14mm;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
             position: relative;
             border-radius: 2px;
         }
 
-        .paper-page-break {
-            page-break-after: always;
-            break-after: page;
+        .form-section-block {
+            page-break-inside: avoid;
+            break-inside: avoid;
         }
 
         /* PAGE 1: Header Layout */
@@ -620,23 +620,31 @@
             }
 
             body {
-                background: none;
-                padding: 0;
+                background: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
             }
 
-            .action-bar, .action-bar-container, .toolbar, .page-number-badge {
+            .action-bar, .action-bar-container, .toolbar, .page-number-badge, #print-skeleton-overlay {
                 display: none !important;
             }
 
             .paper-container {
-                box-shadow: none;
-                padding: 10mm 12mm 10mm 12mm;
-                width: 100%;
-                margin: 0;
+                box-shadow: none !important;
+                padding: 0 !important;
+                width: 100% !important;
+                min-height: auto !important;
+                margin: 0 !important;
+                border: none !important;
+            }
+
+            .form-section-block {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
             }
 
             .input-line, .p2-full-line, .lrn-input {
-                border-bottom: 1.5px solid #000 !important;
+                border-bottom: 1.2px solid #000 !important;
             }
 
             img {
@@ -648,8 +656,8 @@
             }
 
             @page {
-                size: A4 portrait;
-                margin: 0;
+                size: 210mm 297mm;
+                margin: 6mm 10mm;
             }
         }
     </style>
