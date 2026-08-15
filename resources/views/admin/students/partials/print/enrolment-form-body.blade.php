@@ -181,7 +181,10 @@
         page-break-after: always !important;
         break-after: page !important;
     }
-    .input-line, .p2-full-line {
+    .page-number-badge {
+        display: none !important;
+    }
+    .input-line, .p2-full-line, .lrn-input {
         display: block !important;
         width: 100% !important;
         border: none !important;
@@ -441,15 +444,15 @@
 
     <div class="field-container" style="margin-top: 2px;">
         <div class="grid-5-col">
-            <div>
+            <div style="width: 25%;">
                 <input type="text" class="input-line" value="{{ mb_strtoupper($app->last_name ?? '') }}" style="{{ $getDynamicStyle($app->last_name ?? '', '0.96rem', '0.84rem', '0.70rem', '0.58rem', 14, 20, 26) }}">
                 <span class="label-text">Last</span>
             </div>
-            <div>
+            <div style="width: 25%;">
                 <input type="text" class="input-line" value="{{ mb_strtoupper($app->first_name ?? '') }}" style="{{ $getDynamicStyle($app->first_name ?? '', '0.96rem', '0.84rem', '0.70rem', '0.58rem', 14, 20, 26) }}">
                 <span class="label-text">First</span>
             </div>
-            <div>
+            <div style="width: 21%;">
                 @php
                     $rawMiddle = trim($app->middle_name ?? '');
                     $mDisplay = '';
@@ -461,7 +464,7 @@
                 <input type="text" class="input-line" value="{{ $mDisplay }}" style="{{ $getDynamicStyle($mDisplay, '0.96rem', '0.84rem', '0.72rem', '0.60rem', 22, 32, 42) }}">
                 <span class="label-text">Middle</span>
             </div>
-            <div>
+            <div style="width: 11%;">
                 @php
                     $g = strtoupper(trim($app->gender ?? ''));
                     $sexChar = str_starts_with($g, 'F') ? 'F' : (str_starts_with($g, 'M') ? 'M' : $g);
@@ -469,7 +472,7 @@
                 <input type="text" class="input-line" value="{{ $sexChar }}" style="text-align: center;">
                 <span class="label-text" style="text-align: center;">Sex</span>
             </div>
-            <div>
+            <div style="width: 18%;">
                 @php
                     $rawGrade = $student->grade_level ?? $app->grade_level ?? '';
                     $shortGrade = $formatGradeLevelShort($rawGrade);
@@ -624,11 +627,9 @@
             <span>Guardian</span>
         </div>
     </div>
-</div>
 
-<!-- PAGE 2: MEDICAL INFORMATION, EMERGENCY CONTACTS, REFERRAL & POLICIES -->
-<div class="paper-container">
-    <div class="section-header-row" style="margin-top: 2px;">
+    <!-- MEDICAL INFORMATION (ON PAGE 1) -->
+    <div class="section-header-row" style="margin-top: 4px; margin-bottom: 2px;">
         MEDICAL INFORMATION
     </div>
 
@@ -659,75 +660,90 @@
         <input type="text" class="p2-full-line" value="{{ mb_strtoupper($app->current_medications ?? '') }}">
     </div>
 
-    <div class="grid-physician-row">
-        <div>
-            <input type="text" class="input-line" value="{{ mb_strtoupper($app->family_physician ?? '') }}">
-            <span class="label-text">Family Physician:</span>
-        </div>
-        <div>
-            <input type="text" class="input-line" value="{{ mb_strtoupper($app->physician_phone ?? '') }}">
-            <span class="label-text">Phone:</span>
+    <div class="field-container" style="margin-top: 2.5px;">
+        <div class="grid-physician-row">
+            <div>
+                <input type="text" class="input-line" value="{{ mb_strtoupper($app->family_physician ?? '') }}">
+                <span class="label-text">Family Physician:</span>
+            </div>
+            <div>
+                <input type="text" class="input-line" value="{{ mb_strtoupper($app->physician_phone ?? '') }}">
+                <span class="label-text">Phone:</span>
+            </div>
         </div>
     </div>
+</div>
 
-    <div class="section-header-row">
+<!-- PAGE 2: EMERGENCY CONTACTS, REFERRAL, POLICIES & SIGNATURES -->
+<div class="paper-container">
+    @if(isset($pageNumber))
+        <div class="page-number-badge">
+            PAGE 2{{ isset($totalPages) && $totalPages > 1 ? ' OF ' . $totalPages : '' }}
+        </div>
+    @endif
+
+    <div class="section-header-row" style="margin-top: 0;">
         EMERGENCY CONTACTS <span style="font-size: 0.85em; font-weight: normal; text-transform: none; color: #475569;">(Other than above names)</span>
     </div>
 
-    <div class="p2-emergency-grid">
-        <div>
-            <input type="text" class="input-line" value="{{ mb_strtoupper($app->emergency_name ?? '') }}" style="{{ $getDynamicStyle($app->emergency_name ?? '', '0.98rem', '0.80rem', '0.68rem', '0.58rem', 20, 28, 35) }}">
-            <span class="label-text">Name</span>
-        </div>
-        <div>
-            <input type="text" class="input-line" value="{{ mb_strtoupper($app->emergency_relationship ?? '') }}">
-            <span class="label-text">Relationship</span>
-        </div>
-        <div>
-            <input type="text" class="input-line" value="{{ mb_strtoupper($app->emergency_phone ?? '') }}">
-            <span class="label-text">Phone</span>
+    <div class="field-container" style="margin-top: 4px;">
+        <div class="p2-emergency-grid">
+            <div>
+                <input type="text" class="input-line" value="{{ mb_strtoupper($app->emergency_name ?? '') }}" style="{{ $getDynamicStyle($app->emergency_name ?? '', '0.98rem', '0.80rem', '0.68rem', '0.58rem', 20, 28, 35) }}">
+                <span class="label-text">Name</span>
+            </div>
+            <div>
+                <input type="text" class="input-line" value="{{ mb_strtoupper($app->emergency_relationship ?? '') }}">
+                <span class="label-text">Relationship</span>
+            </div>
+            <div>
+                <input type="text" class="input-line" value="{{ mb_strtoupper($app->emergency_phone ?? '') }}">
+                <span class="label-text">Phone</span>
+            </div>
         </div>
     </div>
 
-    <div class="section-header-row">
+    <div class="section-header-row" style="margin-top: 14px;">
         REFERRAL
     </div>
 
-    <div class="field-container">
+    <div class="field-container" style="margin-top: 4px;">
         <input type="text" class="input-line" value="{{ mb_strtoupper($app->referral_source ?? '') }}">
         <span class="label-text">I heard about AMIS from</span>
     </div>
 
-    <p class="p2-policy-text">
+    <p class="p2-policy-text" style="margin-top: 14px;">
         I understand that if and when the applicant is enrolled, I agree to comply with the rules, regulations and policies of Al Munawwara Islamic School as outlined in the Parent Student Handbook and other official communications.
     </p>
 
-    <p class="p2-policy-text">
+    <p class="p2-policy-text" style="margin-top: 8px;">
         It is further understood that Al Munawwara Islamic School reserves the right to dismiss any student for any reason deemed to be in the best interest of the school. Dismissal of the student does not release the parent from the financial obligations related to the school fees and other fees thereat.
     </p>
 
-    <div class="section-header-row">
+    <div class="section-header-row" style="margin-top: 16px;">
         SIGNATURE
     </div>
 
-    <div class="signature-grid">
-        <div>
-            <input type="text" class="input-line" value="{{ $fatherFull ?: $motherFull }}" style="{{ $getDynamicStyle($fatherFull ?: $motherFull, '0.98rem', '0.80rem', '0.68rem', '0.58rem', 22, 32, 40) }}">
-            <span class="label-text">Parent/Guardian</span>
-        </div>
-        <div>
-            <input type="text" class="input-line" value="{{ mb_strtoupper($student->created_at->format('M d, Y')) }}">
-            <span class="label-text">Date</span>
+    <div class="field-container" style="margin-top: 6px;">
+        <div class="signature-grid">
+            <div>
+                <input type="text" class="input-line" value="{{ $fatherFull ?: $motherFull }}" style="{{ $getDynamicStyle($fatherFull ?: $motherFull, '0.98rem', '0.80rem', '0.68rem', '0.58rem', 22, 32, 40) }}">
+                <span class="label-text">Parent/Guardian</span>
+            </div>
+            <div>
+                <input type="text" class="input-line" value="{{ mb_strtoupper($student->created_at->format('M d, Y')) }}">
+                <span class="label-text">Date</span>
+            </div>
         </div>
     </div>
 
-    <p class="signature-disclaimer">
+    <p class="signature-disclaimer" style="margin-top: 4px;">
         *Only completed application will be accepted. Submission of an application does not guarantee admission
     </p>
 
-    <hr class="office-perforated-line">
+    <hr class="office-perforated-line" style="margin: 14px 0 10px 0;">
 
-    <div class="grid-office-row">
+    <div class="grid-office-row" style="margin-top: 8px;">
         <div>
             <span>Application submitted on:</span>
             <div class="date-slash-inputs">
@@ -738,16 +754,16 @@
         </div>
         <div>
             <span>Paid:</span>
-            <input type="text" class="input-line" style="width: 90px; display: inline-block;" value="{{ $app?->payment?->amount_paid ? '₱' . number_format($app->payment->amount_paid, 2) : '' }}">
+            <input type="text" class="input-line" style="width: 100px; display: inline-block;" value="{{ $app?->payment?->amount_paid ? '₱' . number_format($app->payment->amount_paid, 2) : '' }}">
         </div>
         <div>
             <span>OR No.:</span>
-            <input type="text" class="input-line" style="width: 90px; display: inline-block;" value="{{ mb_strtoupper($app?->payment?->reference_number ?? '') }}">
+            <input type="text" class="input-line" style="width: 100px; display: inline-block;" value="{{ mb_strtoupper($app?->payment?->reference_number ?? '') }}">
         </div>
     </div>
 
-    <div class="attachments-title">To be attached:</div>
-    <ol class="attachments-list">
+    <div class="attachments-title" style="margin-top: 10px;">To be attached:</div>
+    <ol class="attachments-list" style="margin-top: 4px;">
         <li>Photo copy of Birth Certificate</li>
         <li>Official Transcript from Previous School (Report Card)</li>
         <li>Medical Record (If any)</li>
