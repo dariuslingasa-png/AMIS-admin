@@ -407,18 +407,26 @@ class StudentExportController extends Controller
 
                     if ($includeEnrolmentHtml) {
                         try {
-                            $siblings = $appl->user_id ? EnrollmentApplicant::where('user_id', $appl->user_id)->where('id', '!=', $appl->id)->get() : [];
-                            $enrolmentHtml = view('admin.students.print-enrolment-form', [
-                                'student' => $student,
-                                'applicant' => $appl,
-                                'siblings' => $siblings,
-                                'isPdf' => true,
-                            ])->render();
-                            $zip->addFromString("{$basePath}/Enrollment Application Form - {$studentFolderName}.html", $enrolmentHtml);
-                            $filesAdded++;
-                            unset($enrolmentHtml, $siblings);
+                            $officialDoc = $student->officialEnrollmentForm;
+                            $localAbsPath = $officialDoc?->local_path ? EnrollmentStorage::getAbsolutePath($officialDoc->local_path) : null;
+
+                            if ($localAbsPath && file_exists($localAbsPath)) {
+                                $zip->addFile($localAbsPath, "{$basePath}/{$studentFolderName} - Official Enrollment Form.pdf");
+                                $filesAdded++;
+                            } else {
+                                $siblings = $appl->user_id ? EnrollmentApplicant::where('user_id', $appl->user_id)->where('id', '!=', $appl->id)->get() : [];
+                                $enrolmentHtml = view('admin.students.print-enrolment-form', [
+                                    'student' => $student,
+                                    'applicant' => $appl,
+                                    'siblings' => $siblings,
+                                    'isPdf' => true,
+                                ])->render();
+                                $zip->addFromString("{$basePath}/Enrollment Application Form - {$studentFolderName}.html", $enrolmentHtml);
+                                $filesAdded++;
+                                unset($enrolmentHtml, $siblings);
+                            }
                         } catch (\Exception $e) {
-                            Log::warning("Failed to render enrolment form for student {$student->id}: ".$e->getMessage());
+                            Log::warning("Failed to attach enrolment form for student {$student->id}: ".$e->getMessage());
                         }
                     }
 
@@ -698,7 +706,7 @@ class StudentExportController extends Controller
         $export = DocumentExport::create([
             'user_id' => $request->user()?->id,
             'document_type' => 'enrolment_form',
-            'format' => strtolower($request->input('format', 'html')),
+            'format' => strtolower($request->input('format', 'pdf')),
             'filter_grade' => $request->grade,
             'filter_mode' => $request->mode,
             'filter_gender' => $request->gender,
@@ -710,7 +718,7 @@ class StudentExportController extends Controller
 
         // Dispatch background CLI runner so AJAX POST returns instantly
         $artisanPath = base_path('artisan');
-        $phpBinary = PHP_BINARY ?: 'php';
+        $phpBinary = (defined('PHP_BINARY') && file_exists(PHP_BINARY)) ? PHP_BINARY : '/usr/local/bin/php';
         if (str_contains(PHP_OS_FAMILY, 'Windows')) {
             pclose(popen("start /B {$phpBinary} {$artisanPath} export:process {$export->id}", "r"));
         } else {

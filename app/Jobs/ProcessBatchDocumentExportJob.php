@@ -5,8 +5,8 @@ namespace App\Jobs;
 use App\Models\DocumentExport;
 use App\Models\EnrollmentApplicant;
 use App\Models\Student;
-use Dompdf\Dompdf;
-use Dompdf\Options;
+use App\Services\Admin\Enrollment\EnrollmentDocumentService;
+use App\Support\EnrollmentStorage;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -39,7 +39,7 @@ class ProcessBatchDocumentExportJob implements ShouldQueue
 
         try {
             // Build base query matching the filters
-            $query = Student::with('applicant');
+            $query = Student::with(['applicant', 'officialEnrollmentForm']);
 
             if (!empty($export->filter_grade)) {
                 $query->where('grade_level', $export->filter_grade);
@@ -112,13 +112,15 @@ class ProcessBatchDocumentExportJob implements ShouldQueue
             }
 
             $processed = 0;
-            $format = strtolower($export->format);
+            $format = strtolower($export->format ?: 'pdf');
             $upperFormat = strtoupper($format);
 
             $export->update([
                 'status' => 'processing',
                 'error_message' => "Starting {$upperFormat} generation for {$total} students...",
             ]);
+
+            $docService = app(EnrollmentDocumentService::class);
 
             foreach ($students as $student) {
                 $appl = $student->applicant;
@@ -141,7 +143,7 @@ class ProcessBatchDocumentExportJob implements ShouldQueue
 
                 $export->update([
                     'processed_count' => $processed,
-                    'error_message' => "Generating {$upperFormat} [{$processed}/{$total}]: {$studentName}...",
+                    'error_message' => "Packaging {$upperFormat} [{$processed}/{$total}]: {$studentName}...",
                 ]);
 
                 $gradeFolder = trim($student->grade_level ?: 'Grade 1');
@@ -166,28 +168,35 @@ class ProcessBatchDocumentExportJob implements ShouldQueue
                     $basePath = "{$gShort}/ODL/{$shiftFolder}";
                 }
 
-                $siblings = $appl->user_id ? ($allSiblings[$appl->user_id] ?? collect())->reject(fn ($a) => $a->id === $appl->id) : collect();
-
-                $enrolmentHtml = view('admin.students.print-enrolment-form', [
-                    'student' => $student,
-                    'applicant' => $appl,
-                    'siblings' => $siblings,
-                    'isPdf' => true,
-                ])->render();
-
                 if ($format === 'pdf') {
-                    $options = new Options();
-                    $options->set('isHtml5ParserEnabled', true);
-                    $options->set('isRemoteEnabled', true);
-                    $options->set('defaultFont', 'sans-serif');
-                    $dompdf = new Dompdf($options);
-                    $dompdf->loadHtml($enrolmentHtml);
-                    $dompdf->setPaper('A4', 'portrait');
-                    $dompdf->render();
-                    $pdfContent = $dompdf->output();
+                    // Check if student has pre-generated official PDF
+                    $officialDoc = $student->officialEnrollmentForm;
+                    $localAbsPath = $officialDoc?->local_path ? EnrollmentStorage::getAbsolutePath($officialDoc->local_path) : null;
 
-                    $zip->addFromString("{$basePath}/Enrollment Application Form - {$studentFolderName}.pdf", $pdfContent);
+                    if ($localAbsPath && file_exists($localAbsPath)) {
+                        // Instant file add from disk (1 ms!)
+                        $zip->addFile($localAbsPath, "{$basePath}/{$officialDoc->stored_filename}");
+                    } else {
+                        // Generate permanent PDF once and cache in student_documents
+                        try {
+                            $newDoc = $docService->generateApprovedEnrollmentForm($student, $appl, $export->user_id);
+                            $newAbsPath = EnrollmentStorage::getAbsolutePath($newDoc->local_path);
+                            if ($newAbsPath && file_exists($newAbsPath)) {
+                                $zip->addFile($newAbsPath, "{$basePath}/{$newDoc->stored_filename}");
+                            }
+                        } catch (\Throwable $err) {
+                            Log::warning("Failed to generate PDF for student #{$student->student_number}: " . $err->getMessage());
+                        }
+                    }
                 } elseif ($format === 'docx') {
+                    $siblings = $appl->user_id ? ($allSiblings[$appl->user_id] ?? collect())->reject(fn ($a) => $a->id === $appl->id) : collect();
+                    $enrolmentHtml = view('admin.students.print-enrolment-form', [
+                        'student' => $student,
+                        'applicant' => $appl,
+                        'siblings' => $siblings,
+                        'isPdf' => true,
+                    ])->render();
+
                     $wordHtml = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">';
                     $wordHtml .= '<head><meta charset="utf-8"><title>Enrollment Form</title>';
                     $wordHtml .= '<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>90</w:Zoom></w:WordDocument></xml><![endif]--></head>';
@@ -195,6 +204,14 @@ class ProcessBatchDocumentExportJob implements ShouldQueue
 
                     $zip->addFromString("{$basePath}/Enrollment Application Form - {$studentFolderName}.docx", $wordHtml);
                 } else {
+                    $siblings = $appl->user_id ? ($allSiblings[$appl->user_id] ?? collect())->reject(fn ($a) => $a->id === $appl->id) : collect();
+                    $enrolmentHtml = view('admin.students.print-enrolment-form', [
+                        'student' => $student,
+                        'applicant' => $appl,
+                        'siblings' => $siblings,
+                        'isPdf' => true,
+                    ])->render();
+
                     $zip->addFromString("{$basePath}/Enrollment Application Form - {$studentFolderName}.html", $enrolmentHtml);
                 }
 

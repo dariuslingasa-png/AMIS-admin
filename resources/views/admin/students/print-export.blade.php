@@ -907,19 +907,6 @@
         const gender = document.getElementById('p-filter-gender')?.value || '';
         const search = '{{ request('search', '') }}';
 
-        // For PDF and DOCX: use the pixel-perfect batch page renderer (html2canvas-based)
-        // Run inside a hidden iframe — no new tab!
-        if (selectedFormat === 'pdf' || selectedFormat === 'docx') {
-            const params = new URLSearchParams();
-            if (grade) params.append('grade', grade);
-            if (mode) params.append('mode', mode);
-            if (gender) params.append('gender', gender);
-            if (search) params.append('search', search);
-            params.append(selectedFormat === 'pdf' ? 'auto_zip_pdf' : 'auto_zip_docx', '1');
-            startIframeExport('{{ route('admin.students.print-enrolment-forms-batch') }}?' + params.toString(), selectedFormat);
-            return;
-        }
-
         isExportRunning = true;
         exportPercent = 0;
         currentDownloadUrl = null;
@@ -980,7 +967,7 @@
             // Poll progress every 1 second
             exportInterval = setInterval(async () => {
                 try {
-                    const statusRes = await fetch(`/students/export-status/${currentExportId}`);
+                    const statusRes = await fetch("{{ url('/students/export-status') }}/" + currentExportId);
                     const data = await statusRes.json();
 
                     exportPercent = data.progress_percentage || 0;
