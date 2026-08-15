@@ -705,24 +705,42 @@
             function onImgLoad() {
                 loadedImages++;
                 const pct = Math.min(100, Math.round((loadedImages / totalImages) * 100));
-                updateProgress(pct, `Loading student forms (${loadedImages}/${totalImages})...`);
+                updateProgress(pct, `Loading student forms (${Math.min(loadedImages, {{ count($students) }})}/{{ count($students) }})...`);
 
                 if (loadedImages >= totalImages) {
-                    setTimeout(() => {
-                        updateProgress(100, 'Loading complete!');
-                        setTimeout(() => {
-                            if (overlay) overlay.classList.add('hidden-overlay');
-                        }, 200);
-                    }, 100);
+                    finishLoading();
+                }
+            }
+
+            let isFinished = false;
+            function finishLoading() {
+                if (isFinished) return;
+                isFinished = true;
+                updateProgress(100, 'Loading complete!');
+                setTimeout(() => {
+                    if (overlay) overlay.classList.add('hidden-overlay');
+                    fitAllFormFontSizes();
+                    checkAutoDownload();
+                }, 300);
+            }
+
+            function checkAutoDownload() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const autoAction = urlParams.get('auto') || urlParams.get('download') || urlParams.get('action');
+                if (autoAction === 'pdf' || autoAction === 'batch_pdf') {
+                    generateBatchPdfDownload();
+                } else if (autoAction === 'zip' || autoAction === 'zip_pdf') {
+                    generatePdfZip();
+                } else if (autoAction === 'jpg' || autoAction === 'zip_jpg') {
+                    generatePngZip();
+                } else if (autoAction === 'print') {
+                    window.print();
                 }
             }
 
             setTimeout(() => {
-                if (overlay && !overlay.classList.contains('hidden-overlay')) {
-                    updateProgress(100, 'Ready');
-                    overlay.classList.add('hidden-overlay');
-                }
-            }, 3500);
+                finishLoading();
+            }, 2500);
         });
 
         async function generatePngZip() {
