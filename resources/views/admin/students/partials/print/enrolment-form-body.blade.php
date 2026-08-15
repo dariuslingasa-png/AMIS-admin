@@ -796,33 +796,38 @@
         *Only completed application will be accepted. Submission of an application does not guarantee admission
     </p>
 
-    <hr class="office-perforated-line" style="margin: 20px 0 14px 0;">
+    <hr class="office-perforated-line" style="margin: 16px 0 12px 0;">
 
-    <div class="grid-office-row" style="margin-top: 10px;">
-        <div>
-            <span>Application submitted on:</span>
-            <div class="date-slash-inputs">
-                <input type="text" class="date-slash-input" value="{{ $student->created_at->format('m') }}"> /
-                <input type="text" class="date-slash-input" value="{{ $student->created_at->format('d') }}"> /
-                <input type="text" class="date-slash-input" value="{{ $student->created_at->format('Y') }}">
+    <div style="border: 1px solid #94a3b8; padding: 6px 10px; margin-top: 4px; background: #ffffff;">
+        <div style="font-size: 8px; font-weight: bold; color: #0f172a; margin-bottom: 4px; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; padding-bottom: 2px;">
+            FOR OFFICE USE ONLY
+        </div>
+        <div class="grid-office-row" style="margin-top: 4px;">
+            <div>
+                <span>Application submitted on:</span>
+                <div class="date-slash-inputs">
+                    <input type="text" class="date-slash-input" value="{{ $student->created_at->format('m') }}"> /
+                    <input type="text" class="date-slash-input" value="{{ $student->created_at->format('d') }}"> /
+                    <input type="text" class="date-slash-input" value="{{ $student->created_at->format('Y') }}">
+                </div>
+            </div>
+            <div>
+                <span>Paid:</span>
+                <input type="text" class="input-line" style="width: 100px; display: inline-block;" value="{{ $app?->payment?->amount_paid ? '₱' . number_format($app->payment->amount_paid, 2) : '' }}">
+            </div>
+            <div>
+                <span>OR No.:</span>
+                <input type="text" class="input-line" style="width: 100px; display: inline-block;" value="{{ mb_strtoupper($app?->payment?->reference_number ?? '') }}">
             </div>
         </div>
-        <div>
-            <span>Paid:</span>
-            <input type="text" class="input-line" style="width: 100px; display: inline-block;" value="{{ $app?->payment?->amount_paid ? '₱' . number_format($app->payment->amount_paid, 2) : '' }}">
-        </div>
-        <div>
-            <span>OR No.:</span>
-            <input type="text" class="input-line" style="width: 100px; display: inline-block;" value="{{ mb_strtoupper($app?->payment?->reference_number ?? '') }}">
-        </div>
-    </div>
 
-    <div class="attachments-title" style="margin-top: 14px;">To be attached:</div>
-    <ol class="attachments-list" style="margin-top: 6px;">
-        <li>Photo copy of Birth Certificate</li>
-        <li>Official Transcript from Previous School (Report Card)</li>
-        <li>Medical Record (If any)</li>
-        <li>Photo copy of Marriage Contract of Parents</li>
-        <li>Picture 2 x 2</li>
-    </ol>
+        <div class="attachments-title" style="margin-top: 8px;">To be attached:</div>
+        <ol class="attachments-list" style="margin-top: 3px;">
+            <li>Photo copy of Birth Certificate</li>
+            <li>Official Transcript from Previous School (Report Card)</li>
+            <li>Medical Record (If any)</li>
+            <li>Photo copy of Marriage Contract of Parents</li>
+            <li>Picture 2 x 2</li>
+        </ol>
+    </div>
 </div>
