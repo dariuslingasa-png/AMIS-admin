@@ -84,16 +84,28 @@
         $studentAge = \Carbon\Carbon::parse($app->date_of_birth)->age;
     }
 
-    // Robust Student 2x2 Photo URL resolver using official EnrollmentStorage helper
-    $photoSrc = null;
+    // Robust Student 2x2 Photo URL / Base64 resolver
+    $photoBase64 = null;
     if ($app && !empty($app->photo_2x2_url)) {
-        $photoSrc = \App\Support\EnrollmentStorage::url($app->photo_2x2_url);
+        $candidate = storage_path('app/public/' . ltrim(str_replace('storage/', '', $app->photo_2x2_url), '/'));
+        if (file_exists($candidate)) {
+            $photoBase64 = 'data:image/jpeg;base64,' . base64_encode(file_get_contents($candidate));
+        }
     }
-    if (!$photoSrc && $student && !empty($student->photo_url)) {
-        $photoSrc = \App\Support\EnrollmentStorage::url($student->photo_url);
+    if (!$photoBase64 && $student && !empty($student->photo_url)) {
+        $candidate = storage_path('app/public/' . ltrim(str_replace('storage/', '', $student->photo_url), '/'));
+        if (file_exists($candidate)) {
+            $photoBase64 = 'data:image/jpeg;base64,' . base64_encode(file_get_contents($candidate));
+        }
     }
-    if (!$photoSrc && $student && !empty($student->obfuscated_id)) {
-        $photoSrc = 'https://amis.edu.ph/student-photo/' . $student->obfuscated_id . '.jpg';
+    if (!$photoBase64 && !($isPdf ?? false)) {
+        if ($app && !empty($app->photo_2x2_url)) {
+            $photoBase64 = \App\Support\EnrollmentStorage::url($app->photo_2x2_url);
+        } elseif ($student && !empty($student->photo_url)) {
+            $photoBase64 = \App\Support\EnrollmentStorage::url($student->photo_url);
+        } elseif ($student && !empty($student->obfuscated_id)) {
+            $photoBase64 = 'https://amis.edu.ph/student-photo/' . $student->obfuscated_id . '.jpg';
+        }
     }
 
     // Multi-tier Helper function for dynamic font-size calculation on long text (keeps normal text large)
@@ -470,15 +482,16 @@
 
         <div class="photo-box" id="student-photo-container">
             <div style="display: inline-block; width: 75px; height: 75px; border: 1.2px solid #0f172a; position: relative; overflow: hidden; background: #fafafa; text-align: center; vertical-align: top;">
-                @if($photoSrc)
-                    <img src="{{ $photoSrc }}" alt="Student 2x2 Photo" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'; document.getElementById('photo-fallback-box').style.display='block';">
-                    <div id="photo-fallback-box" style="display: none; width: 100%; height: 100%; text-align: center; background: #fafafa; padding-top: 22px;">
-                        <span style="font-family: sans-serif; font-size: 7.5px; font-weight: bold; text-transform: uppercase; color: #64748b;">2x2 PHOTO</span>
-                    </div>
+                @if(!empty($photoBase64))
+                    <img src="{{ $photoBase64 }}" alt="" style="width: 100%; height: 100%; object-fit: cover;">
                 @else
-                    <div style="display: block; width: 100%; height: 100%; text-align: center; background: #fafafa; padding-top: 22px;">
-                        <span style="font-family: sans-serif; font-size: 7.5px; font-weight: bold; text-transform: uppercase; color: #64748b;">2x2 PHOTO</span>
-                    </div>
+                    <table style="width: 100%; height: 100%; border-collapse: collapse;">
+                        <tr>
+                            <td style="vertical-align: middle; text-align: center; color: #64748b; font-size: 7.5px; font-weight: bold; font-family: sans-serif; line-height: 1.2;">
+                                2x2<br>PHOTO
+                            </td>
+                        </tr>
+                    </table>
                 @endif
             </div>
         </div>
