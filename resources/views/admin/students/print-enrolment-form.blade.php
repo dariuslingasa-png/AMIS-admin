@@ -109,7 +109,7 @@
         /* Paper Document Layout (A4 Scale) */
         .paper-container {
             width: 210mm;
-            min-height: auto;
+            min-height: 297mm;
             margin: 0 auto 30px auto;
             background: #ffffff;
             padding: 10mm 14mm;
@@ -118,9 +118,9 @@
             border-radius: 2px;
         }
 
-        .form-section-block {
-            page-break-inside: avoid;
-            break-inside: avoid;
+        .paper-page-break {
+            page-break-after: always;
+            break-after: page;
         }
 
         /* PAGE 1: Header Layout */
