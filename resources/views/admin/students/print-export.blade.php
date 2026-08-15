@@ -370,15 +370,15 @@
                                 <td class="px-5 py-3.5">
                                     <div class="flex items-center gap-3">
                                         <div class="h-9 w-9 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden flex items-center justify-center shrink-0 dark:bg-slate-800 dark:border-slate-700">
-                                            @if($student->photo_url || $appl?->photo_2x2_url)
-                                                <img src="{{ \App\Support\EnrollmentStorage::url($student->photo_url ?: $appl->photo_2x2_url) }}" alt="{{ $student->full_name }}" class="h-full w-full object-cover">
+                                            @if($student->student_id_url || $appl?->photo_2x2_url)
+                                                <img src="{{ \App\Support\EnrollmentStorage::url($student->student_id_url ?: $appl->photo_2x2_url) }}" alt="Student Photo" class="h-full w-full object-cover">
                                             @else
                                                 <i data-lucide="user" class="h-4 w-4 text-slate-400"></i>
                                             @endif
                                         </div>
                                         <div>
                                             <a href="{{ route('admin.students.show', $student) }}" class="font-extrabold text-slate-900 hover:text-emerald-600 transition dark:text-white">
-                                                {{ mb_strtoupper($student->last_name . ', ' . $student->first_name) }}
+                                                {{ mb_strtoupper(($appl?->last_name ?? 'STUDENT') . ', ' . ($appl?->first_name ?? '') . ($appl?->middle_name ? ' ' . substr($appl->middle_name, 0, 1) . '.' : '')) }}
                                             </a>
                                             <div class="flex items-center gap-2 text-[10px] text-slate-500 font-bold">
                                                 <span class="text-emerald-700 dark:text-emerald-400">#{{ $student->student_number }}</span>

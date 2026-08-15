@@ -268,8 +268,11 @@ class StudentPrintController extends Controller
         }
 
         $totalStudents = (clone $query)->count();
-        $previewStudents = (clone $query)->with(['applicant', 'officialEnrollmentForm'])
-            ->orderBy('last_name')
+        $previewStudents = (clone $query)->with(['applicant', 'officialEnrollmentForm', 'studentSection.section'])
+            ->leftJoin('enrollment_applicants', 'students.enrollment_applicant_id', '=', 'enrollment_applicants.id')
+            ->select('students.*')
+            ->orderBy('enrollment_applicants.last_name')
+            ->orderBy('enrollment_applicants.first_name')
             ->paginate(15)
             ->withQueryString();
 
