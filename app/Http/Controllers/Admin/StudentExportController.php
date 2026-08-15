@@ -361,8 +361,10 @@ class StudentExportController extends Controller
 
         $filesAdded = 0;
 
-        $applyFilters(Student::with(['applicant.payment', 'studentSection.section.subjects']))
-            ->chunk(50, function ($students) use (&$zip, &$filesAdded) {
+        $includeEnrolmentHtml = ($baseCount <= 10);
+
+        $applyFilters(Student::with(['applicant.payment', 'studentSection.section']))
+            ->chunk(50, function ($students) use (&$zip, &$filesAdded, $includeEnrolmentHtml) {
                 foreach ($students as $student) {
                     $appl = $student->applicant;
                     if (! $appl) {
@@ -403,19 +405,21 @@ class StudentExportController extends Controller
                         $basePath = "{$gShort}/ODL/{$shiftFolder}/{$studentFolderName}";
                     }
 
-                    try {
-                        $siblings = $appl->user_id ? EnrollmentApplicant::where('user_id', $appl->user_id)->where('id', '!=', $appl->id)->get() : [];
-                        $enrolmentHtml = view('admin.students.print-enrolment-form', [
-                            'student' => $student,
-                            'applicant' => $appl,
-                            'siblings' => $siblings,
-                            'isPdf' => true,
-                        ])->render();
-                        $zip->addFromString("{$basePath}/Enrollment Application Form - {$studentFolderName}.html", $enrolmentHtml);
-                        $filesAdded++;
-                        unset($enrolmentHtml, $siblings);
-                    } catch (\Exception $e) {
-                        Log::warning("Failed to render enrolment form for student {$student->id}: ".$e->getMessage());
+                    if ($includeEnrolmentHtml) {
+                        try {
+                            $siblings = $appl->user_id ? EnrollmentApplicant::where('user_id', $appl->user_id)->where('id', '!=', $appl->id)->get() : [];
+                            $enrolmentHtml = view('admin.students.print-enrolment-form', [
+                                'student' => $student,
+                                'applicant' => $appl,
+                                'siblings' => $siblings,
+                                'isPdf' => true,
+                            ])->render();
+                            $zip->addFromString("{$basePath}/Enrollment Application Form - {$studentFolderName}.html", $enrolmentHtml);
+                            $filesAdded++;
+                            unset($enrolmentHtml, $siblings);
+                        } catch (\Exception $e) {
+                            Log::warning("Failed to render enrolment form for student {$student->id}: ".$e->getMessage());
+                        }
                     }
 
                     $docTypes = [
@@ -454,7 +458,7 @@ class StudentExportController extends Controller
             return back()->with('error', 'No document files or data could be compiled for the matched students.');
         }
 
-        return response()->download($tempFile, $fileName);
+        return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
     }
 
     public function downloadEnrolmentFormsZip(Request $request)

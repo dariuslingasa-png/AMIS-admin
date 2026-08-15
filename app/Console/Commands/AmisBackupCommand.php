@@ -213,16 +213,16 @@ class AmisBackupCommand extends Command
             \RecursiveIteratorIterator::LEAVES_ONLY
         );
 
-        $excludedNames = ['vendor', 'node_modules', 'bootstrap/cache', '.git', 'laravel.log'];
+        $excludedNames = ['vendor', 'node_modules', 'bootstrap/cache', '.git', 'laravel.log', 'backups', 'deploy-backups', 'exports', 'temp_'];
 
         foreach ($files as $name => $file) {
             if (! $file->isDir()) {
                 $filePath = $file->getRealPath();
 
-                // Exclude vendor, node_modules, .git
+                // Exclude vendor, node_modules, .git, backups
                 $skip = false;
                 foreach ($excludedNames as $ex) {
-                    if (str_contains($filePath, '/'.$ex.'/')) {
+                    if (str_contains($filePath, '/'.$ex.'/') || str_ends_with($filePath, '/'.$ex)) {
                         $skip = true;
                         break;
                     }
@@ -260,7 +260,7 @@ class AmisBackupCommand extends Command
         }
     }
 
-    private function pruneOldBackups(int $retentionDays = 30): void
+    private function pruneOldBackups(int $retentionDays = 7): void
     {
         $backupDir = storage_path('app/backups');
         $cutoffTime = time() - ($retentionDays * 86400);
@@ -273,11 +273,13 @@ class AmisBackupCommand extends Command
         // Sort files by mtime descending (newest first)
         usort($files, fn ($a, $b) => filemtime($b) - filemtime($a));
 
-        // Always keep the latest backup
-        $latestBackup = array_shift($files);
+        // Keep maximum 5 newest backups
+        $keepCount = 5;
+        $retained = 0;
 
         foreach ($files as $file) {
-            if (filemtime($file) < $cutoffTime) {
+            $retained++;
+            if ($retained > $keepCount || filemtime($file) < $cutoffTime) {
                 @unlink($file);
                 Log::info('Auto-pruned expired backup file: '.basename($file));
             }
