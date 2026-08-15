@@ -77,8 +77,10 @@
                     @endphp
                     <tr class="transition-colors duration-100 ease-in-out hover:bg-slate-50">
                         <!-- Student Number -->
-                        <td class="whitespace-nowrap px-5 py-4 font-extrabold tabular-nums text-emerald-700">
-                            {{ $student->student_number ?? '-' }}
+                        <td class="whitespace-nowrap px-5 py-4">
+                            <span class="inline-flex items-center font-mono font-black text-xs text-emerald-800 bg-emerald-50 border border-emerald-200/80 px-2.5 py-1 rounded-lg tracking-tight">
+                                {{ $student->student_number ?? '-' }}
+                            </span>
                         </td>
 
                         <!-- Student Photo & Name -->
@@ -113,22 +115,58 @@
                         </td>
 
                         <!-- Student Type -->
-                        <td class="whitespace-nowrap px-5 py-4 text-sm font-semibold text-slate-700">
-                            {{ $studentTypeLabel }}
+                        <td class="whitespace-nowrap px-5 py-4">
+                            @php
+                                $typeLower = strtolower($studentType ?: '');
+                                $typeBadgeClass = match (true) {
+                                    str_contains($typeLower, 'transferee') => 'bg-sky-50 text-sky-700 border-sky-200',
+                                    str_contains($typeLower, 'new') => 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                                    str_contains($typeLower, 'old') => 'bg-slate-100 text-slate-700 border-slate-200',
+                                    str_contains($typeLower, 'returnee') => 'bg-amber-50 text-amber-800 border-amber-200',
+                                    default => 'bg-slate-50 text-slate-600 border-slate-200',
+                                };
+                            @endphp
+                            <span class="inline-flex items-center rounded-md px-2.5 py-1 text-xs font-bold border {{ $typeBadgeClass }}">
+                                {{ $studentTypeLabel }}
+                            </span>
                         </td>
 
                         <!-- Mode -->
-                        <td class="whitespace-nowrap px-5 py-4 text-sm font-semibold text-slate-700">
-                            {{ $modeAbbr }}
+                        <td class="whitespace-nowrap px-5 py-4">
+                            @if ($modeAbbr === 'ODL')
+                                <span class="inline-flex items-center gap-1 rounded-md bg-indigo-50 px-2.5 py-1 text-xs font-bold text-indigo-700 border border-indigo-200" title="Online Distance Learning">
+                                    <i data-lucide="laptop" class="h-3 w-3"></i>
+                                    ODL
+                                </span>
+                            @else
+                                <span class="inline-flex items-center gap-1 rounded-md bg-teal-50 px-2.5 py-1 text-xs font-bold text-teal-700 border border-teal-200" title="Face to Face">
+                                    <i data-lucide="building-2" class="h-3 w-3"></i>
+                                    F2F
+                                </span>
+                            @endif
                         </td>
 
                         <!-- Gender -->
-                        <td class="whitespace-nowrap px-5 py-4 text-sm font-semibold text-slate-700">
-                            {{ $genderLabel }}
+                        <td class="whitespace-nowrap px-5 py-4">
+                            @if ($gender === 'female')
+                                <span class="inline-flex items-center gap-1 rounded-md bg-rose-50 px-2.5 py-1 text-xs font-bold text-rose-700 border border-rose-200">
+                                    <span class="h-1.5 w-1.5 rounded-full bg-rose-500"></span>
+                                    Female
+                                </span>
+                            @elseif ($gender === 'male')
+                                <span class="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700 border border-blue-200">
+                                    <span class="h-1.5 w-1.5 rounded-full bg-blue-500"></span>
+                                    Male
+                                </span>
+                            @else
+                                <span class="inline-flex items-center rounded-md bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-400 border border-slate-200">
+                                    Not Set
+                                </span>
+                            @endif
                         </td>
 
                         <!-- Grade -->
-                        <td class="whitespace-nowrap px-5 py-4 font-extrabold text-slate-700">
+                        <td class="whitespace-nowrap px-5 py-4">
                             @php
                                 $gradeRaw = $student->grade_level ?? '-';
                                 $gradeAbbr = preg_replace(
@@ -137,15 +175,22 @@
                                     $gradeRaw
                                 );
                             @endphp
-                            {{ $gradeAbbr }}
+                            <span class="inline-flex items-center justify-center font-black text-xs text-slate-800 bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-md min-w-[38px]">
+                                {{ $gradeAbbr }}
+                            </span>
                         </td>
 
                         <!-- Section / Class Occupancy -->
-                        <td class="whitespace-nowrap px-5 py-4 font-semibold text-slate-700">
+                        <td class="whitespace-nowrap px-5 py-4">
                             @if($student->studentSection && $student->studentSection->section)
-                                {{ $student->studentSection->section->name }}
+                                <span class="inline-flex items-center gap-1 rounded-md bg-white px-2.5 py-1 text-xs font-bold text-slate-800 border border-slate-200 shadow-2xs">
+                                    <i data-lucide="users" class="h-3 w-3 text-slate-400"></i>
+                                    {{ $student->studentSection->section->name }}
+                                </span>
                             @else
-                                <span class="text-sm font-normal text-slate-400">Unassigned</span>
+                                <span class="inline-flex items-center rounded-md bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-400 border border-slate-200/60 italic">
+                                    Unassigned
+                                </span>
                             @endif
                         </td>
 
