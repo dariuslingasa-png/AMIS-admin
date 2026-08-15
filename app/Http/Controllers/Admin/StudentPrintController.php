@@ -282,10 +282,12 @@ class StudentPrintController extends Controller
             ->pluck('total', 'grade_level')
             ->toArray();
 
-        $f2fCount = (clone $query)->whereHas('applicant', fn ($q) => $q->whereRaw('LOWER(learning_mode) LIKE ?', ['%face%'])->orWhereRaw('LOWER(learning_mode) LIKE ?', ['%f2f%']))->count();
-        $odlCount = (clone $query)->whereHas('applicant', fn ($q) => $q->whereRaw('LOWER(learning_mode) LIKE ?', ['%online%'])->orWhereRaw('LOWER(learning_mode) LIKE ?', ['%odl%'])->orWhereRaw('LOWER(learning_mode) LIKE ?', ['%flexible%']))->count();
+        $currentGrade = (string) $request->input('grade', '');
+        $currentMode = (string) $request->input('mode', '');
+        $currentGender = (string) $request->input('gender', '');
+        $currentSearch = (string) $request->input('search', '');
 
-        return view('admin.students.print-export', compact('totalStudents', 'previewStudents', 'gradeCounts', 'f2fCount', 'odlCount'));
+        return view('admin.students.print-export', compact('totalStudents', 'previewStudents', 'gradeCounts', 'f2fCount', 'odlCount', 'currentGrade', 'currentMode', 'currentGender', 'currentSearch'));
     }
 
     public function previewDocxEnrolmentForm(Student $student)

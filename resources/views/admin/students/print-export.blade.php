@@ -6,10 +6,10 @@
     ]"
 >
     @php
-        $currentGrade = request('grade', '');
-        $currentMode = request('mode', '');
-        $currentGender = request('gender', '');
-        $currentSearch = request('search', '');
+        $currentGrade = $currentGrade ?? request('grade', '');
+        $currentMode = $currentMode ?? request('mode', '');
+        $currentGender = $currentGender ?? request('gender', '');
+        $currentSearch = $currentSearch ?? request('search', '');
         
         $allGradeList = [
             'Kinder 1', 'Kinder 2',
