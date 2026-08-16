@@ -909,13 +909,11 @@
             $checkedByName = null;
             $checkedDate = null;
 
-            if (!empty($officialDoc?->creator?->name)) {
+            if (!empty($officialDoc?->creator?->name) && !in_array(strtolower(trim($officialDoc->creator->name)), ['admin', 'amis admin', 'system', 'amis generated', 'test user'])) {
                 $checkedByName = $officialDoc->creator->name;
                 $checkedDate = $officialDoc->created_at?->format('M d, Y');
-            } elseif ($app?->status === 'approved') {
-                if (auth()->check()) {
-                    $checkedByName = auth()->user()->name;
-                }
+            } elseif (!empty($app?->reviewer_name)) {
+                $checkedByName = $app->reviewer_name;
                 $checkedDate = $app->updated_at ? $app->updated_at->format('M d, Y') : $submittedDate->format('M d, Y');
             }
         @endphp

@@ -1125,6 +1125,163 @@
         'totalPages' => 1,
     ])
 
+    @if(!($isPdf ?? false))
+        @php
+            $app = $applicant ?? $student?->applicant;
+            $photoUrl = \App\Support\EnrollmentStorage::url($app?->photo_2x2_url);
+            $birthCertUrl = \App\Support\EnrollmentStorage::url($app?->birth_cert_url);
+            $reportCardUrl = \App\Support\EnrollmentStorage::url($app?->report_card_url);
+            $marriageUrl = \App\Support\EnrollmentStorage::url($app?->marriage_contract_url);
+            $medicalUrl = \App\Support\EnrollmentStorage::url($app?->medical_record_url);
+            $affidavitUrl = \App\Support\EnrollmentStorage::url($app?->affidavit_url);
+
+            $attachedDocumentsList = [
+                [
+                    'key' => 'photo_2x2',
+                    'label' => '2x2 ID Photo',
+                    'url' => $photoUrl,
+                    'is_photo' => true,
+                    'mandatory' => true,
+                    'svg' => '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #0284c7;"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>',
+                ],
+                [
+                    'key' => 'birth_cert',
+                    'label' => 'Birth Certificate (PSA / NSO)',
+                    'url' => $birthCertUrl,
+                    'is_photo' => false,
+                    'mandatory' => true,
+                    'svg' => '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #059669;"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>',
+                ],
+                [
+                    'key' => 'report_card',
+                    'label' => 'Report Card (Form 138 / SF9)',
+                    'url' => $reportCardUrl,
+                    'is_photo' => false,
+                    'mandatory' => ($app?->student_type !== 'Old'),
+                    'svg' => '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #7c3aed;"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
+                ],
+                [
+                    'key' => 'marriage_contract',
+                    'label' => 'Marriage Contract of Parents',
+                    'url' => $marriageUrl,
+                    'is_photo' => false,
+                    'mandatory' => false,
+                    'svg' => '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #d97706;"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>',
+                ],
+                [
+                    'key' => 'medical_record',
+                    'label' => 'Medical History Records',
+                    'url' => $medicalUrl,
+                    'is_photo' => false,
+                    'mandatory' => false,
+                    'svg' => '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #dc2626;"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>',
+                ],
+            ];
+            if (!empty($affidavitUrl)) {
+                $attachedDocumentsList[] = [
+                    'key' => 'affidavit',
+                    'label' => 'Temporary Proof (Affidavit / Form 137)',
+                    'url' => $affidavitUrl,
+                    'is_photo' => false,
+                    'mandatory' => false,
+                    'svg' => '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #475569;"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h18"/></svg>',
+                ];
+            }
+        @endphp
+
+        <!-- Attached Documents Gallery Section (Web View - Hidden in Print) -->
+        <section class="student-attached-documents-section no-print" style="max-width: 820px; margin: 32px auto 40px auto; background: #ffffff; border-radius: 16px; padding: 24px 28px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.04); font-family: 'Inter', system-ui, -apple-system, sans-serif;">
+            <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #0f172a; padding-bottom: 12px; margin-bottom: 18px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 36px; height: 36px; border-radius: 10px; background: #ecfdf5; border: 1px solid #a7f3d0; display: flex; align-items: center; justify-content: center; color: #059669;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L8.6 3.3A2 2 0 0 0 6.9 2.5H4a2 2 0 0 0-2 2v13.5a2 2 0 0 0 2 2z"/></svg>
+                    </div>
+                    <div>
+                        <h3 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: #0f172a; line-height: 1.2;">
+                            Attached Student Documents
+                        </h3>
+                        <p style="margin: 2px 0 0 0; font-size: 0.75rem; font-weight: 600; color: #64748b;">
+                            Uploaded credentials for verification • Scroll down to inspect
+                        </p>
+                    </div>
+                </div>
+                <div>
+                    <span style="background: #0f172a; color: #ffffff; padding: 4px 10px; border-radius: 6px; font-size: 0.72rem; font-weight: 800; text-transform: uppercase;">
+                        AMIS ID: #{{ $student->student_number }}
+                    </span>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px;">
+                @foreach($attachedDocumentsList as $doc)
+                    @php
+                        $hasFile = !empty($doc['url']);
+                        $isDocPdf = $hasFile && strtolower(pathinfo(parse_url($doc['url'], PHP_URL_PATH) ?? '', PATHINFO_EXTENSION)) === 'pdf';
+                    @endphp
+
+                    <div style="border-radius: 12px; border: 1px solid {{ $hasFile ? '#e2e8f0' : '#fecaca' }}; background: {{ $hasFile ? '#ffffff' : '#fff5f5' }}; padding: 14px; display: flex; flex-direction: column; justify-content: space-between; gap: 10px;">
+                        <!-- Header -->
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="width: 28px; height: 28px; border-radius: 8px; background: #f8fafc; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; shrink-0;">
+                                    {!! $doc['svg'] !!}
+                                </div>
+                                <div>
+                                    <h4 style="margin: 0; font-size: 0.78rem; font-weight: 800; color: #0f172a; line-height: 1.2;">
+                                        {{ $doc['label'] }}
+                                    </h4>
+                                    <span style="font-size: 0.62rem; font-weight: 700; color: {{ $doc['mandatory'] ? '#e11d48' : '#64748b' }}; text-transform: uppercase;">
+                                        {{ $doc['mandatory'] ? 'Mandatory' : 'Optional' }}
+                                    </span>
+                                </div>
+                            </div>
+                            <span style="background: {{ $hasFile ? '#ecfdf5' : '#ffe4e6' }}; color: {{ $hasFile ? '#047857' : '#be123c' }}; border: 1px solid {{ $hasFile ? '#a7f3d0' : '#fecaca' }}; padding: 2px 6px; border-radius: 4px; font-size: 0.60rem; font-weight: 800; text-transform: uppercase; white-space: nowrap;">
+                                {{ $hasFile ? 'ATTACHED' : 'MISSING' }}
+                            </span>
+                        </div>
+
+                        <!-- Preview Thumbnail -->
+                        <div style="height: 120px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                            @if($hasFile && !$isDocPdf)
+                                <a href="{{ $doc['url'] }}" target="_blank" title="Click to open HD image" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+                                    <img src="{{ $doc['url'] }}" alt="{{ $doc['label'] }}" style="max-width: 100%; max-height: 100%; object-fit: contain; padding: 4px;">
+                                </a>
+                            @elseif($hasFile && $isDocPdf)
+                                <a href="{{ $doc['url'] }}" target="_blank" title="Click to view PDF" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: #dc2626; text-decoration: none;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                    <span style="font-size: 0.65rem; font-weight: 800; color: #991b1b; text-transform: uppercase;">PDF Document</span>
+                                </a>
+                            @else
+                                <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: #94a3b8; text-align: center;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                                    <span style="font-size: 0.65rem; font-weight: 700; color: #94a3b8;">No File Uploaded</span>
+                                </div>
+                            @endif
+                        </div>
+
+                        <!-- Actions -->
+                        <div>
+                            @if($hasFile)
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                                    <a href="{{ $doc['url'] }}" target="_blank" style="display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 6px 10px; border-radius: 6px; font-size: 0.70rem; font-weight: 700; text-decoration: none; background: #f1f5f9; color: #0f172a; border: 1px solid #cbd5e1;">
+                                        <span>View HD</span>
+                                    </a>
+                                    <a href="{{ $doc['url'] }}" download target="_blank" style="display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 6px 10px; border-radius: 6px; font-size: 0.70rem; font-weight: 700; text-decoration: none; background: #059669; color: #ffffff; border: none;">
+                                        <span>Download</span>
+                                    </a>
+                                </div>
+                            @else
+                                <span style="display: block; text-align: center; font-size: 0.70rem; font-weight: 700; color: #94a3b8; padding: 5px 0;">
+                                    Unavailable
+                                </span>
+                            @endif
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </section>
+    @endif
+
     <script>
         function triggerPrintPDF() {
             window.print();
