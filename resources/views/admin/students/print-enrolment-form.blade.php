@@ -140,8 +140,8 @@
         }
 
         .header-logo-amis {
-            width: 72px;
-            height: 72px;
+            width: 66px;
+            height: 66px;
             object-fit: contain;
             flex-shrink: 0;
         }
@@ -153,31 +153,40 @@
         }
 
         .school-arabic-name {
-            font-family: 'Noto Naskh Arabic', 'Amiri', 'Traditional Arabic', serif;
-            font-size: 1.25rem;
+            font-family: 'Amiri', 'Noto Naskh Arabic', 'Traditional Arabic', serif;
+            font-size: 1.45rem;
             font-weight: 700;
             color: #047857;
             text-align: center;
             direction: rtl;
-            line-height: 1.1;
+            line-height: 1.2;
+            margin-bottom: 2px;
+        }
+
+        .header-arabic-wordmark {
+            height: 28px;
+            max-width: 340px;
+            object-fit: contain;
+            display: inline-block;
             margin-bottom: 2px;
         }
 
         .school-name {
-            font-family: 'Merriweather', serif;
+            font-family: 'Merriweather', Georgia, serif;
             font-size: 1.18rem;
             font-weight: 900;
-            letter-spacing: 0.3px;
+            letter-spacing: 0.4px;
             color: #0f172a;
             text-transform: uppercase;
             white-space: nowrap;
             text-align: center;
-            line-height: 1.2;
+            line-height: 1.15;
         }
 
         .school-address {
-            font-family: 'Merriweather', serif;
-            font-size: 0.88rem;
+            font-family: 'Merriweather', Georgia, serif;
+            font-size: 0.84rem;
+            font-weight: 600;
             margin-top: 2px;
             color: #334155;
             white-space: nowrap;
@@ -187,7 +196,7 @@
         .header-right-group {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             flex-shrink: 0;
         }
 
@@ -201,16 +210,16 @@
         /* NO REFUND OF ENROLLMENT FEE Box styling */
         .refund-notice-box {
             border: 2px solid #dc2626;
-            padding: 6px 12px;
+            padding: 5px 8px;
             text-align: center;
             font-family: 'Inter', sans-serif;
             font-weight: 800;
-            font-size: 0.88rem;
-            line-height: 1.25;
+            font-size: 0.82rem;
+            line-height: 1.15;
             color: #dc2626;
             text-transform: uppercase;
             white-space: nowrap;
-            border-radius: 5px;
+            border-radius: 4px;
             margin: 0;
             display: inline-flex;
             flex-direction: column;

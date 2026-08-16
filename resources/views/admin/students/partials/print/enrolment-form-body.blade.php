@@ -415,7 +415,14 @@
         margin-top: 4px !important;
     }
     .school-arabic-name {
-        display: none !important;
+        font-family: 'DejaVu Sans', serif !important;
+        font-size: 11.5px !important;
+        font-weight: bold !important;
+        color: #047857 !important;
+        text-align: center !important;
+        direction: rtl !important;
+        line-height: 1.2 !important;
+        margin-bottom: 2px !important;
     }
 </style>
 @endif
@@ -431,19 +438,25 @@
         <div class="header-left-group">
             <table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
                 <tr>
-                    <td style="width: 54px; vertical-align: middle;">
-                        <img src="{{ $amisLogoSrc }}" alt="AMIS Logo" class="header-logo-amis" style="width: 50px; height: 50px; object-fit: contain;">
+                    <td style="width: 68px; vertical-align: middle; text-align: left;">
+                        <img src="{{ $amisLogoSrc }}" alt="AMIS Logo" class="header-logo-amis" style="width: 62px; height: 62px; object-fit: contain; vertical-align: middle;">
                     </td>
-                    <td style="vertical-align: middle; text-align: center; padding: 0 4px;">
+                    <td style="vertical-align: middle; text-align: center; padding: 0 8px;">
                         @if(!empty($arabicWordmarkSrc))
-                            <div style="text-align: center; margin-bottom: 2px;">
-                                <img src="{{ $arabicWordmarkSrc }}" alt="المدرسة المنورة الإسلامية" style="height: 17px; max-width: 210px; object-fit: contain;">
+                            <div style="text-align: center; margin-bottom: 3px;">
+                                <img src="{{ $arabicWordmarkSrc }}" alt="المدرسة المنورة الإسلامية" class="header-arabic-wordmark" style="height: @if($isPdf ?? false) 22px @else 28px @endif; max-width: @if($isPdf ?? false) 260px @else 340px @endif; object-fit: contain; display: inline-block;">
                             </div>
                         @else
-                            <div class="school-arabic-name">المدرسة المنورة الإسلامية</div>
+                            <div class="school-arabic-name" style="font-family: 'Amiri', 'Noto Naskh Arabic', 'Traditional Arabic', serif; font-size: @if($isPdf ?? false) 11.5px @else 1.40rem @endif; font-weight: bold; color: #047857; text-align: center; direction: rtl; line-height: 1.2; margin-bottom: 2px;">
+                                المدرسة المنورة الإسلامية
+                            </div>
                         @endif
-                        <h1 class="school-name" style="font-size: 0.95rem; margin: 0; line-height: 1.15;">AL MUNAWWARA ISLAMIC SCHOOL</h1>
-                        <p class="school-address" style="font-size: 0.74rem; margin: 1px 0 0 0;">Bugac Ma-a Road, Davao City Philippines</p>
+                        <h1 class="school-name" style="font-family: 'Merriweather', Georgia, serif; font-size: @if($isPdf ?? false) 11px @else 1.18rem @endif; font-weight: 900; letter-spacing: 0.4px; color: #0f172a; margin: 0; line-height: 1.15; text-transform: uppercase;">
+                            AL MUNAWWARA ISLAMIC SCHOOL
+                        </h1>
+                        <p class="school-address" style="font-family: 'Merriweather', Georgia, serif; font-size: @if($isPdf ?? false) 7.8px @else 0.84rem @endif; font-weight: 600; color: #334155; margin: 2px 0 0 0;">
+                            Bugac Ma-a Road, Davao City Philippines
+                        </p>
                     </td>
                 </tr>
             </table>
@@ -452,11 +465,11 @@
         <div class="header-right-group">
             <table style="width: 100%; border-collapse: collapse;">
                 <tr>
-                    <td style="vertical-align: middle; padding-right: 4px; text-align: right;">
-                        <img src="{{ $depedLogoSrc }}" alt="DepEd Logo" class="header-logo-deped" style="width: 44px; height: 44px; object-fit: contain;">
+                    <td style="vertical-align: middle; padding-right: 8px; text-align: right;">
+                        <img src="{{ $depedLogoSrc }}" alt="DepEd Logo" class="header-logo-deped" style="width: 62px; height: 62px; object-fit: contain; vertical-align: middle;">
                     </td>
                     <td style="vertical-align: middle; text-align: right;">
-                        <div class="refund-notice-box">
+                        <div class="refund-notice-box" style="border: @if($isPdf ?? false) 1.2px @else 2px @endif solid #dc2626; color: #dc2626; font-size: @if($isPdf ?? false) 7.5px @else 0.82rem @endif; font-weight: 800; padding: @if($isPdf ?? false) 3px 5px @else 5px 8px @endif; border-radius: 4px; line-height: 1.15; text-align: center; text-transform: uppercase;">
                             NO REFUND OF<br>ENROLLMENT FEE
                         </div>
                     </td>
