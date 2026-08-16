@@ -4,17 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     @php
-        $app = $applicant;
+        $app = $applicant ?? $student?->applicant;
         
-        // Auto PDF Filename format for document title: LASTNAME FIRSTNAME GRADE LEVEL
-        $lName = mb_strtoupper(trim($app->last_name ?? $student->last_name ?? ''));
-        $fName = mb_strtoupper(trim($app->first_name ?? $student->first_name ?? ''));
-        $gLevel = mb_strtoupper(trim($student->grade_level ?? $app->grade_level ?? ''));
-        
-        $autoFileName = implode(' ', array_filter([$lName, $fName, $gLevel ? 'GRADE ' . $gLevel : '']));
-        if (empty(trim($autoFileName)) || $autoFileName === 'GRADE') {
-            $autoFileName = mb_strtoupper(trim($student->full_name)) . ($gLevel ? ' GRADE ' . $gLevel : '');
-        }
+        // Auto Filename format: Grade_Lastname_FirstName_SY
+        $rawGrade = trim($student->grade_level ?? $app?->grade_level ?? 'Grade');
+        $rawLast = trim($student->last_name ?? $app?->last_name ?? 'Student');
+        $rawFirst = trim($student->first_name ?? $app?->first_name ?? 'Name');
+        $rawSy = trim($student->school_year ?? $app?->school_year ?? config('services.school.year') ?? '2026-2027');
+
+        $cleanGrade = trim(preg_replace('/[^A-Za-z0-9]+/', '_', $rawGrade), '_');
+        $cleanLast = trim(preg_replace('/[^A-Za-z0-9]+/', '_', $rawLast), '_');
+        $cleanFirst = trim(preg_replace('/[^A-Za-z0-9]+/', '_', $rawFirst), '_');
+        $cleanSy = trim(preg_replace('/[^A-Za-z0-9\-]+/', '_', $rawSy), '_');
+
+        $autoFileName = "{$cleanGrade}_{$cleanLast}_{$cleanFirst}_{$cleanSy}";
     @endphp
     <title>{{ $autoFileName }}</title>
     
@@ -1584,13 +1587,10 @@
                 zip.file('word/document.xml', docXml);
 
                 const content = await zip.generateAsync({ type: 'blob' });
-                const url = URL.createObjectURL(content);
-                const a = document.createElement('a');
-                a.href = url;
-                const studentId = '{{ $student->student_number }}';
+                const autoFileName = '{{ $autoFileName }}';
                 a.download = withAttachments 
-                    ? `AMIS-Enrollment-Form-With-Attachments-${studentId}.docx` 
-                    : `AMIS-Enrollment-Form-${studentId}.docx`;
+                    ? `${autoFileName}_With_Attachments.docx` 
+                    : `${autoFileName}.docx`;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
