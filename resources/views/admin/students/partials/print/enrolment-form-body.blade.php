@@ -20,7 +20,7 @@
     }
     $amisLogoSrc = $GLOBALS['AMIS_LOGO_BASE64'];
     $depedLogoSrc = $GLOBALS['DEPED_LOGO_BASE64'];
-    $arabicWordmarkSrc = $GLOBALS['ARABIC_WORDMARK_PNG_BASE64'] ?? asset('images/amis-arabic-wordmark.png');
+    $arabicWordmarkSrc = $GLOBALS['ARABIC_WORDMARK_PNG_BASE64'] ?? (!empty($isPdf) ? null : asset('images/amis-arabic-wordmark.png'));
 
     // Parent Name formatting helper: Format middle name to Middle Initial (e.g. SAHARODIN G. SALINDAWAN)
     $formatParentName = function($first, $middle, $last) {
