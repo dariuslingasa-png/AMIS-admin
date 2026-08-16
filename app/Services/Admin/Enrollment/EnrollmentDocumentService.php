@@ -49,7 +49,7 @@ class EnrollmentDocumentService
             ->orderByDesc('document_version')
             ->first();
 
-        $version = $latestDoc ? ($latestDoc->document_version + 1) : 1;
+        $version = $latestDoc ? ($isCorrection ? $latestDoc->document_version : ($latestDoc->document_version + 1)) : 1;
 
         // 4. Generate clean sanitized filename
         // Format: AMIS-Enrollment-{SchoolYear}-{AMIS_ID}-{StudentName}.pdf
@@ -105,31 +105,44 @@ class EnrollmentDocumentService
         $fileSize = strlen($pdfOutput);
         $checksum = hash('sha256', $pdfOutput);
 
-        // 8. Mark older versions as not current
-        StudentDocument::where('student_id', $student->id)
-            ->where('document_type', 'enrollment_form')
-            ->update(['is_current' => false]);
+        if ($isCorrection && $latestDoc) {
+            $latestDoc->update([
+                'stored_filename' => $filename,
+                'local_path' => $relativeFilePath,
+                'file_size' => $fileSize,
+                'checksum' => $checksum,
+                'generation_status' => 'generated',
+                'snapshot_data' => $snapshot,
+                'generated_at' => now(),
+            ]);
+            $document = $latestDoc;
+        } else {
+            // 8. Mark older versions as not current
+            StudentDocument::where('student_id', $student->id)
+                ->where('document_type', 'enrollment_form')
+                ->update(['is_current' => false]);
 
-        // 9. Save database document record
-        $document = StudentDocument::create([
-            'student_id' => $student->id,
-            'enrollment_applicant_id' => $applicant->id,
-            'document_type' => 'enrollment_form',
-            'document_version' => $version,
-            'is_current' => true,
-            'original_filename' => $filename,
-            'stored_filename' => $filename,
-            'local_path' => $relativeFilePath,
-            'file_size' => $fileSize,
-            'mime_type' => 'application/pdf',
-            'checksum' => $checksum,
-            'generation_status' => 'generated',
-            'archive_status' => 'QUEUED',
-            'snapshot_data' => $snapshot,
-            'generated_at' => now(),
-            'queued_at' => now(),
-            'created_by' => $createdBy,
-        ]);
+            // 9. Save database document record
+            $document = StudentDocument::create([
+                'student_id' => $student->id,
+                'enrollment_applicant_id' => $applicant->id,
+                'document_type' => 'enrollment_form',
+                'document_version' => $version,
+                'is_current' => true,
+                'original_filename' => $filename,
+                'stored_filename' => $filename,
+                'local_path' => $relativeFilePath,
+                'file_size' => $fileSize,
+                'mime_type' => 'application/pdf',
+                'checksum' => $checksum,
+                'generation_status' => 'generated',
+                'archive_status' => 'QUEUED',
+                'snapshot_data' => $snapshot,
+                'generated_at' => now(),
+                'queued_at' => now(),
+                'created_by' => $createdBy,
+            ]);
+        }
 
         // 10. Audit log
         AdminAuditLog::record(

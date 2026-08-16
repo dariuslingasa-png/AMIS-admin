@@ -56,19 +56,19 @@ class StudentPrintController extends Controller
     {
         abort_unless(auth()->user()?->canViewAdminGrade($student->grade_level), 403);
 
-        $student->loadMissing(['applicant', 'officialEnrollmentForm']);
-        $officialDoc = $student->officialEnrollmentForm;
+        $student->loadMissing(['applicant.user', 'applicant.payment', 'studentSection.section', 'officialEnrollmentForm']);
+        $docService = app(\App\Services\Admin\Enrollment\EnrollmentDocumentService::class);
 
-        if (! $officialDoc && $student->applicant?->status === 'approved') {
-            $docService = app(\App\Services\Admin\Enrollment\EnrollmentDocumentService::class);
-            $officialDoc = $docService->generateApprovedEnrollmentForm($student, $student->applicant, auth()->id());
+        if ($student->applicant) {
+            $officialDoc = $docService->generateApprovedEnrollmentForm($student, $student->applicant, auth()->id(), true);
+        } else {
+            $officialDoc = $student->officialEnrollmentForm;
         }
 
         if (! $officialDoc) {
             abort(404, 'Official Enrollment Form has not been finalized yet. The application must be approved first.');
         }
 
-        $docService = app(\App\Services\Admin\Enrollment\EnrollmentDocumentService::class);
         return $docService->streamOrDownload($officialDoc, true);
     }
 
@@ -76,19 +76,19 @@ class StudentPrintController extends Controller
     {
         abort_unless(auth()->user()?->canViewAdminGrade($student->grade_level), 403);
 
-        $student->loadMissing(['applicant', 'officialEnrollmentForm']);
-        $officialDoc = $student->officialEnrollmentForm;
+        $student->loadMissing(['applicant.user', 'applicant.payment', 'studentSection.section', 'officialEnrollmentForm']);
+        $docService = app(\App\Services\Admin\Enrollment\EnrollmentDocumentService::class);
 
-        if (! $officialDoc && $student->applicant?->status === 'approved') {
-            $docService = app(\App\Services\Admin\Enrollment\EnrollmentDocumentService::class);
-            $officialDoc = $docService->generateApprovedEnrollmentForm($student, $student->applicant, auth()->id());
+        if ($student->applicant) {
+            $officialDoc = $docService->generateApprovedEnrollmentForm($student, $student->applicant, auth()->id(), true);
+        } else {
+            $officialDoc = $student->officialEnrollmentForm;
         }
 
         if (! $officialDoc) {
             abort(404, 'Official Enrollment Form has not been finalized yet. The application must be approved first.');
         }
 
-        $docService = app(\App\Services\Admin\Enrollment\EnrollmentDocumentService::class);
         return $docService->streamOrDownload($officialDoc, false);
     }
 
