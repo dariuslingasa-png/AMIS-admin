@@ -28,6 +28,7 @@
     <title>{{ $autoFileName }}</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     
+@if(!($isPdf ?? false))
     <!-- Premium Google Fonts: Merriweather for Headers, Inter for Data & Noto Naskh Arabic for Arabic -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -35,7 +36,8 @@
     
     <!-- Cropper.js for 2x2 Photo ID Adjustments -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
-    
+@endif
+
 @if(!($isPdf ?? false))
     <style>
         * {
