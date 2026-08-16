@@ -503,4 +503,52 @@ class EnrollmentDocumentService
         $base = implode('_', array_filter([$cleanGrade, $cleanLast, $cleanFirst, $cleanSy]));
         return $withAttachments ? "{$base}_With_Attachments.pdf" : "{$base}.pdf";
     }
+
+    /**
+     * Generate combined PDF for an entire batch or grade of students.
+     */
+    public function generateBatchGradeEnrollmentPdf($students, string $gradeTitle = 'All Grades'): string
+    {
+        ini_set('memory_limit', '2048M');
+        ini_set('max_execution_time', 0);
+        set_time_limit(0);
+
+        $userIds = $students->pluck('applicant.user_id')->filter()->unique();
+        $allSiblings = $userIds->isNotEmpty() ? \App\Models\EnrollmentApplicant::withoutGlobalScopes()->whereIn('user_id', $userIds)->get()->groupBy('user_id') : collect();
+
+        $siblingsMap = [];
+        foreach ($students as $s) {
+            $app = $s->applicant;
+            if ($app && $app->user_id) {
+                $siblingsMap[$s->id] = ($allSiblings[$app->user_id] ?? collect())->reject(fn ($a) => $a->id === $app->id);
+            } else {
+                $siblingsMap[$s->id] = collect();
+            }
+        }
+
+        $html = view('admin.students.print-enrolment-form-batch', [
+            'students' => $students,
+            'gradeTitle' => $gradeTitle,
+            'siblingsMap' => $siblingsMap,
+            'isPdf' => true,
+        ])->render();
+
+        $options = new Options();
+        $options->set('isHtml5ParserEnabled', true);
+        $options->set('isRemoteEnabled', true);
+        $options->set('defaultFont', 'DejaVu Sans');
+        $options->set('chroot', [
+            base_path(),
+            storage_path(),
+            public_path(),
+        ]);
+
+        $dompdf = new Dompdf($options);
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        return $dompdf->output();
+    }
 }
+

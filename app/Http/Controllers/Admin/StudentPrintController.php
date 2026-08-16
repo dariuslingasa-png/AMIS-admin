@@ -163,7 +163,7 @@ class StudentPrintController extends Controller
             ->get();
 
         $userIds = $students->pluck('applicant.user_id')->filter()->unique();
-        $allSiblings = EnrollmentApplicant::whereIn('user_id', $userIds)->get()->groupBy('user_id');
+        $allSiblings = $userIds->isNotEmpty() ? EnrollmentApplicant::withoutGlobalScopes()->whereIn('user_id', $userIds)->get()->groupBy('user_id') : collect();
 
         $siblingsMap = [];
         foreach ($students as $s) {
@@ -177,6 +177,18 @@ class StudentPrintController extends Controller
 
         $section = $request->filled('section_id') ? Section::find($request->section_id) : null;
         $gradeTitle = $section ? ($section->grade_level.' - '.($section->official_name ?: $section->name)) : ($request->grade ?: 'All Grades');
+
+        if ($request->get('download') === 'pdf' || $request->get('format') === 'pdf' || $request->get('action') === 'batch_pdf') {
+            $docService = app(\App\Services\Admin\Enrollment\EnrollmentDocumentService::class);
+            $pdfOutput = $docService->generateBatchGradeEnrollmentPdf($students, $gradeTitle);
+            $gradeClean = preg_replace('/[^A-Za-z0-9]+/', '-', trim($gradeTitle ?: 'All-Grades'));
+            $filename = "AMIS-Enrollment-Forms-{$gradeClean}-SY-2026-2027.pdf";
+
+            return response($pdfOutput, 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+            ]);
+        }
 
         return view('admin.students.print-enrolment-form-batch', [
             'students' => $students,
