@@ -216,8 +216,8 @@
         }
 
         .header-logo-amis {
-            width: 66px;
-            height: 66px;
+            width: 84px;
+            height: 84px;
             object-fit: contain;
             flex-shrink: 0;
         }
@@ -230,18 +230,18 @@
 
         .school-arabic-name {
             font-family: 'Amiri', 'Noto Naskh Arabic', 'Traditional Arabic', serif;
-            font-size: 1.45rem;
+            font-size: 1.80rem;
             font-weight: 700;
             color: #047857;
             text-align: center;
             direction: rtl;
-            line-height: 1.2;
+            line-height: 1.25;
             margin-bottom: 2px;
         }
 
         .header-arabic-wordmark {
-            height: 28px;
-            max-width: 340px;
+            height: 40px;
+            max-width: 380px;
             object-fit: contain;
             display: inline-block;
             margin-bottom: 2px;
@@ -249,9 +249,9 @@
 
         .school-name {
             font-family: 'Merriweather', Georgia, serif;
-            font-size: 1.18rem;
+            font-size: 1.26rem;
             font-weight: 900;
-            letter-spacing: 0.4px;
+            letter-spacing: 0.5px;
             color: #0f172a;
             text-transform: uppercase;
             white-space: nowrap;
@@ -261,7 +261,7 @@
 
         .school-address {
             font-family: 'Merriweather', Georgia, serif;
-            font-size: 0.84rem;
+            font-size: 0.86rem;
             font-weight: 600;
             margin-top: 2px;
             color: #334155;
@@ -277,8 +277,8 @@
         }
 
         .header-logo-deped {
-            width: 66px;
-            height: 66px;
+            width: 84px;
+            height: 84px;
             object-fit: contain;
             flex-shrink: 0;
         }
