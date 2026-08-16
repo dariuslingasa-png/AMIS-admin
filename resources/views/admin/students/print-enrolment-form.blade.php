@@ -1068,11 +1068,40 @@
                     <span>Close</span>
                 </button>
 
-                <!-- Secondary: Download DOCX -->
-                <button onclick="downloadSingleFormDocx()" id="btn-download-docx" class="header-btn btn-secondary" title="Download Editable DOCX file">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
-                    <span>Download DOCX</span>
-                </button>
+                <!-- Secondary: Download DOCX Dropdown -->
+                <div class="download-dropdown-wrapper" style="position: relative; display: inline-block;">
+                    <button type="button" onclick="toggleDownloadDropdown(event)" id="btn-download-docx" class="header-btn btn-secondary" title="Choose DOCX download options" aria-haspopup="true" aria-expanded="false" style="cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        <span>Download DOCX</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 2px;"><polyline points="6 9 12 15 18 9"/></svg>
+                    </button>
+
+                    <div id="downloadDropdownMenu" class="download-dropdown-menu" style="display: none; position: absolute; right: 0; top: calc(100% + 8px); width: 290px; background: #ffffff; border-radius: 14px; border: 1px solid #cbd5e1; box-shadow: 0 14px 35px rgba(15, 23, 42, 0.12), 0 4px 10px rgba(15, 23, 42, 0.06); padding: 6px; z-index: 9999; font-family: 'Inter', system-ui, sans-serif;">
+                        <!-- Option 1: Enrollment Form Only (DOCX) -->
+                        <button type="button" onclick="downloadSingleFormDocx(false); closeDownloadDropdown();" class="download-menu-item" style="width: 100%; border: none; background: transparent; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; color: #0f172a; transition: background 0.15s ease;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
+                            <div style="width: 32px; height: 32px; border-radius: 8px; background: #ecfdf5; border: 1px solid #a7f3d0; display: flex; align-items: center; justify-content: center; color: #059669; shrink-0;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.82rem; font-weight: 800; color: #0f172a; line-height: 1.2;">Enrollment Form Only</div>
+                                <div style="font-size: 0.68rem; font-weight: 500; color: #64748b; margin-top: 1px;">Official 2-Page Form (.docx)</div>
+                            </div>
+                        </button>
+
+                        <div style="height: 1px; background: #e2e8f0; margin: 4px 6px;"></div>
+
+                        <!-- Option 2: Enrollment Form with Attachments (DOCX) -->
+                        <button type="button" onclick="downloadSingleFormDocx(true); closeDownloadDropdown();" class="download-menu-item" style="width: 100%; border: none; background: transparent; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; color: #0f172a; transition: background 0.15s ease;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
+                            <div style="width: 32px; height: 32px; border-radius: 8px; background: #e0f2fe; border: 1px solid #bae6fd; display: flex; align-items: center; justify-content: center; color: #0284c7; shrink-0;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.82rem; font-weight: 800; color: #0f172a; line-height: 1.2;">Enrollment Form with Attachments</div>
+                                <div style="font-size: 0.68rem; font-weight: 500; color: #64748b; margin-top: 1px;">Form + Supporting Documents (.docx)</div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
 
                 <!-- Primary CTA: Print Form -->
                 <button onclick="triggerPrintPDF()" class="header-btn btn-primary" title="Print Enrollment Application Form">
@@ -1283,6 +1312,32 @@
     @endif
 
     <script>
+        const attachedDocFiles = @json($attachedDocumentsList ?? []);
+
+        function toggleDownloadDropdown(e) {
+            e.stopPropagation();
+            const menu = document.getElementById('downloadDropdownMenu');
+            const btn = document.getElementById('btn-download-docx');
+            if (!menu) return;
+            const isHidden = menu.style.display === 'none' || menu.style.display === '';
+            menu.style.display = isHidden ? 'block' : 'none';
+            if (btn) btn.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
+        }
+
+        function closeDownloadDropdown() {
+            const menu = document.getElementById('downloadDropdownMenu');
+            const btn = document.getElementById('btn-download-docx');
+            if (menu) menu.style.display = 'none';
+            if (btn) btn.setAttribute('aria-expanded', 'false');
+        }
+
+        document.addEventListener('click', function(e) {
+            const wrapper = document.querySelector('.download-dropdown-wrapper');
+            if (wrapper && !wrapper.contains(e.target)) {
+                closeDownloadDropdown();
+            }
+        });
+
         function triggerPrintPDF() {
             window.print();
         }
@@ -1293,32 +1348,36 @@
         document.addEventListener('DOMContentLoaded', fitAllFormFontSizes);
         window.addEventListener('load', fitAllFormFontSizes);
 
-        async function downloadSingleFormDocx() {
+        async function downloadSingleFormDocx(withAttachments = false) {
             fitAllFormFontSizes();
-            const pages = document.querySelectorAll('.paper-container');
-            if (!pages || pages.length === 0) return;
+            const formPages = document.querySelectorAll('.paper-container');
+            if (!formPages || formPages.length === 0) return;
 
             const btn = document.getElementById('btn-download-docx');
-            if (btn) btn.disabled = true;
-
-            if (typeof html2canvas === 'undefined') {
-                const script = document.createElement('script');
-                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-                document.head.appendChild(script);
-                await new Promise(res => script.onload = res);
-            }
-            if (typeof JSZip === 'undefined') {
-                const script = document.createElement('script');
-                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
-                document.head.appendChild(script);
-                await new Promise(res => script.onload = res);
+            const originalBtnHtml = btn ? btn.innerHTML : '';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<svg class="animate-spin" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg><span>Generating DOCX...</span>';
             }
 
-            const zip = new JSZip();
-            
-            const xmlHeader = '<' + '?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
-            
-            zip.file('[Content_Types].xml', `${xmlHeader}
+            try {
+                if (typeof html2canvas === 'undefined') {
+                    const script = document.createElement('script');
+                    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+                    document.head.appendChild(script);
+                    await new Promise(res => script.onload = res);
+                }
+                if (typeof JSZip === 'undefined') {
+                    const script = document.createElement('script');
+                    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+                    document.head.appendChild(script);
+                    await new Promise(res => script.onload = res);
+                }
+
+                const zip = new JSZip();
+                const xmlHeader = '<' + '?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+
+                zip.file('[Content_Types].xml', `${xmlHeader}
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
     <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
     <Default Extension="xml" ContentType="application/xml"/>
@@ -1326,29 +1385,34 @@
     <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
 </Types>`);
 
-            zip.file('_rels/.rels', `${xmlHeader}
+                zip.file('_rels/.rels', `${xmlHeader}
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
     <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
 </Relationships>`);
 
-            let docRels = `${xmlHeader}
+                let docRels = `${xmlHeader}
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">`;
+                let docBody = '';
+                let totalImageCount = 0;
 
-            let docBody = '';
+                // 1. Capture Main Form Pages (Page 1 & Page 2)
+                for (let i = 0; i < formPages.length; i++) {
+                    totalImageCount++;
+                    const canvas = await html2canvas(formPages[i], { scale: 2.2, useCORS: true, logging: false });
+                    const imgDataUrl = canvas.toDataURL('image/png');
+                    const base64Data = imgDataUrl.replace(/^data:image\/png;base64,/, '');
 
-            for (let i = 0; i < pages.length; i++) {
-                const canvas = await html2canvas(pages[i], { scale: 2.5, useCORS: true, logging: false });
-                const imgDataUrl = canvas.toDataURL('image/png');
-                const base64Data = imgDataUrl.replace(/^data:image\/png;base64,/, '');
+                    const imgId = `rId${totalImageCount + 1}`;
+                    const imgFileName = `image${totalImageCount}.png`;
 
-                const imgId = `rId${i + 2}`;
-                const imgFileName = `image${i + 1}.png`;
+                    zip.file(`word/media/${imgFileName}`, base64Data, { base64: true });
+                    docRels += `\n    <Relationship Id="${imgId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/${imgFileName}"/>`;
 
-                zip.file(`word/media/${imgFileName}`, base64Data, { base64: true });
+                    if (totalImageCount > 1) {
+                        docBody += '<w:p><w:pPr><w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/></w:pPr><w:r><w:br w:type="page"/></w:r></w:p>';
+                    }
 
-                docRels += `\n    <Relationship Id="${imgId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/${imgFileName}"/>`;
-
-                docBody += `
+                    docBody += `
 <w:p>
     <w:pPr>
         <w:jc w:val="center"/>
@@ -1358,7 +1422,7 @@
         <w:drawing>
             <wp:inline distT="0" distB="0" distL="0" distR="0">
                 <wp:extent cx="7560000" cy="10440000"/>
-                <wp:docPr id="${i + 1}" name="Page ${i + 1}"/>
+                <wp:docPr id="${totalImageCount}" name="Page ${totalImageCount}"/>
                 <a:graphic>
                     <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
                         <pic:pic>
@@ -1384,15 +1448,114 @@
         </w:drawing>
     </w:r>
 </w:p>`;
-                if (i < pages.length - 1) {
-                    docBody += '<w:p><w:pPr><w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/></w:pPr><w:r><w:br w:type="page"/></w:r></w:p>';
                 }
-            }
 
-            docRels += '\n</Relationships>';
-            zip.file('word/_rels/document.xml.rels', docRels);
+                // 2. If withAttachments is selected, capture available uploaded supporting documents
+                if (withAttachments && typeof attachedDocFiles !== 'undefined' && Array.isArray(attachedDocFiles)) {
+                    for (const doc of attachedDocFiles) {
+                        if (!doc.url) continue;
 
-            const docXml = `${xmlHeader}
+                        const isDocPdf = doc.url.toLowerCase().endsWith('.pdf') || doc.url.toLowerCase().includes('.pdf?');
+                        if (isDocPdf) continue;
+
+                        const tempContainer = document.createElement('div');
+                        tempContainer.style.width = '794px';
+                        tempContainer.style.minHeight = '1123px';
+                        tempContainer.style.background = '#ffffff';
+                        tempContainer.style.padding = '36px 44px';
+                        tempContainer.style.boxSizing = 'border-box';
+                        tempContainer.style.position = 'fixed';
+                        tempContainer.style.left = '-9999px';
+                        tempContainer.style.top = '0';
+                        tempContainer.style.zIndex = '-1000';
+                        tempContainer.style.fontFamily = "'Inter', system-ui, sans-serif";
+
+                        tempContainer.innerHTML = `
+                            <div style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2.5px solid #059669; padding-bottom: 8px; margin-bottom: 20px;">
+                                <div>
+                                    <div style="font-size: 15px; font-weight: 900; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px;">
+                                        ATTACHMENT: ${doc.label}
+                                    </div>
+                                    <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-top: 3px;">
+                                        Student: {{ addslashes($student->full_name) }} • AMIS ID: #{{ $student->student_number }} • Grade: {{ $student->grade_level }}
+                                    </div>
+                                </div>
+                                <div>
+                                    <span style="background: #0f172a; color: #ffffff; padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: 800; text-transform: uppercase;">
+                                        SY 2026-2027
+                                    </span>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; justify-content: center; height: 960px; background: #fafafa; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; padding: 12px;">
+                                <img src="${doc.url}" crossorigin="anonymous" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                            </div>
+                        `;
+
+                        document.body.appendChild(tempContainer);
+
+                        await new Promise(r => {
+                            const img = tempContainer.querySelector('img');
+                            if (!img || img.complete) r();
+                            else { img.onload = r; img.onerror = r; }
+                        });
+
+                        totalImageCount++;
+                        const canvas = await html2canvas(tempContainer, { scale: 2, useCORS: true, logging: false });
+                        document.body.removeChild(tempContainer);
+
+                        const imgDataUrl = canvas.toDataURL('image/png');
+                        const base64Data = imgDataUrl.replace(/^data:image\/png;base64,/, '');
+
+                        const imgId = `rId${totalImageCount + 1}`;
+                        const imgFileName = `image${totalImageCount}.png`;
+
+                        zip.file(`word/media/${imgFileName}`, base64Data, { base64: true });
+                        docRels += `\n    <Relationship Id="${imgId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/${imgFileName}"/>`;
+
+                        docBody += '<w:p><w:pPr><w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/></w:pPr><w:r><w:br w:type="page"/></w:r></w:p>';
+                        docBody += `
+<w:p>
+    <w:pPr>
+        <w:jc w:val="center"/>
+        <w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/>
+    </w:pPr>
+    <w:r>
+        <w:drawing>
+            <wp:inline distT="0" distB="0" distL="0" distR="0">
+                <wp:extent cx="7560000" cy="10440000"/>
+                <wp:docPr id="${totalImageCount}" name="Attachment ${totalImageCount - 2}"/>
+                <a:graphic>
+                    <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                        <pic:pic>
+                            <pic:nvPicPr>
+                                <pic:cNvPr id="0" name="Picture"/>
+                                <pic:cNvPicPr/>
+                            </pic:nvPicPr>
+                            <pic:blipFill>
+                                <a:blip r:embed="${imgId}"/>
+                                <a:stretch><a:fillRect/></a:stretch>
+                            </pic:blipFill>
+                            <pic:spPr>
+                                <a:xfrm>
+                                    <a:off x="0" y="0"/>
+                                    <a:ext cx="7560000" cy="10440000"/>
+                                </a:xfrm>
+                                <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
+                            </pic:spPr>
+                        </pic:pic>
+                    </a:graphicData>
+                </a:graphic>
+            </wp:inline>
+        </w:drawing>
+    </w:r>
+</w:p>`;
+                    }
+                }
+
+                docRels += '\n</Relationships>';
+                zip.file('word/_rels/document.xml.rels', docRels);
+
+                const docXml = `${xmlHeader}
 <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
             xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
             xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
@@ -1407,18 +1570,29 @@
     </w:body>
 </w:document>`;
 
-            zip.file('word/document.xml', docXml);
+                zip.file('word/document.xml', docXml);
 
-            const content = await zip.generateAsync({ type: 'blob' });
-            const url = URL.createObjectURL(content);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${document.title || 'Enrollment_Form'}.docx`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-
-            if (btn) btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg><span>Download DOCX</span>';
+                const content = await zip.generateAsync({ type: 'blob' });
+                const url = URL.createObjectURL(content);
+                const a = document.createElement('a');
+                a.href = url;
+                const studentId = '{{ $student->student_number }}';
+                a.download = withAttachments 
+                    ? `AMIS-Enrollment-Form-With-Attachments-${studentId}.docx` 
+                    : `AMIS-Enrollment-Form-${studentId}.docx`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            } catch (err) {
+                console.error('Error generating DOCX:', err);
+                alert('An error occurred while generating the DOCX file. Please try again.');
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = originalBtnHtml;
+                }
+            }
         }
 
         if (new URLSearchParams(window.location.search).get('auto_print') === '1') {
