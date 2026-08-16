@@ -750,26 +750,31 @@
             padding: 1px 2px;
         }
 
-        .attachments-title {
-            font-family: 'Inter', sans-serif;
-            font-size: 0.95rem;
-            font-style: italic;
-            font-weight: 800;
+        .doc-chk-box {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 14px;
+            height: 14px;
+            border: 1.5px solid #334155;
+            border-radius: 2px;
+            background: #ffffff;
+            text-align: center;
+            font-size: 11px;
+            font-weight: 900;
             color: #0f172a;
-            margin-top: 12px;
-            margin-bottom: 6px;
+            vertical-align: middle;
+            box-sizing: border-box;
+            line-height: 1;
         }
 
-        .attachments-list {
+        .doc-checklist-table th,
+        .doc-checklist-table td {
             font-family: 'Inter', sans-serif;
-            font-size: 0.88rem;
-            line-height: 1.55;
-            margin-left: 22px;
-            color: #334155;
         }
 
-        .attachments-list li {
-            margin-bottom: 3px;
+        .doc-verification-row {
+            font-family: 'Inter', sans-serif;
         }
 
         .page-number-badge {

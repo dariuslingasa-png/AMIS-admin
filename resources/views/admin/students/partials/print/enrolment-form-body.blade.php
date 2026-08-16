@@ -246,6 +246,19 @@
         table-layout: fixed !important;
         border-collapse: collapse !important;
     }
+
+    .doc-chk-box {
+        display: inline-block !important;
+        width: 11px !important;
+        height: 11px !important;
+        border: 1px solid #1e293b !important;
+        background: #ffffff !important;
+        text-align: center !important;
+        line-height: 10px !important;
+        font-size: 8.5pt !important;
+        font-weight: bold !important;
+        vertical-align: middle !important;
+    }
     
     .form-middle-grid {
         display: table !important;
@@ -852,24 +865,24 @@
     <hr class="office-perforated-line" style="margin: 16px 0 12px 0;">
 
     <div class="office-use-box" style="border: 1px solid #94a3b8; padding: @if($isPdf ?? false) 6px 8px @else 10px 14px @endif; margin-top: 4px; background: #ffffff; border-radius: 4px;">
-        <div class="office-use-title" style="font-size: @if($isPdf ?? false) 11px @else 0.95rem @endif; font-weight: 800; color: #0f172a; margin-bottom: 6px; text-transform: uppercase; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px;">
+        <div class="office-use-title" style="font-size: @if($isPdf ?? false) 10.5pt @else 0.95rem @endif; font-weight: 800; color: #0f172a; margin-bottom: 6px; text-transform: uppercase; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px;">
             FOR OFFICE USE ONLY
         </div>
         <div class="grid-office-row" style="margin-top: 6px;">
             <div style="width: 44%;">
-                <span class="office-label" style="font-size: @if($isPdf ?? false) 9.5px @else 0.90rem @endif; font-weight: 700; color: #1e293b;">Application submitted on:</span>
+                <span class="office-label" style="font-size: @if($isPdf ?? false) 9pt @else 0.90rem @endif; font-weight: 700; color: #1e293b;">Application submitted on:</span>
                 <div class="date-slash-inputs" style="margin-left: 4px;">
-                    <span class="date-slash-input" style="font-size: @if($isPdf ?? false) 10.5px @else 0.95rem @endif; font-weight: bold; border-bottom: 1.5px solid #0f172a; padding: 0 2px; width: @if($isPdf ?? false) 28px @else 32px @endif; display: inline-block; text-align: center;">{{ $submittedDate->format('m') }}</span> /
-                    <span class="date-slash-input" style="font-size: @if($isPdf ?? false) 10.5px @else 0.95rem @endif; font-weight: bold; border-bottom: 1.5px solid #0f172a; padding: 0 2px; width: @if($isPdf ?? false) 28px @else 32px @endif; display: inline-block; text-align: center;">{{ $submittedDate->format('d') }}</span> /
-                    <span class="date-slash-input date-slash-year" style="font-size: @if($isPdf ?? false) 10.5px @else 0.95rem @endif; font-weight: bold; border-bottom: 1.5px solid #0f172a; padding: 0 2px; width: @if($isPdf ?? false) 52px @else 44px @endif; display: inline-block; text-align: center;">{{ $submittedDate->format('Y') }}</span>
+                    <span class="date-slash-input" style="font-size: @if($isPdf ?? false) 10pt @else 0.95rem @endif; font-weight: bold; border-bottom: 1.5px solid #0f172a; padding: 0 2px; width: @if($isPdf ?? false) 28px @else 32px @endif; display: inline-block; text-align: center;">{{ $submittedDate->format('m') }}</span> /
+                    <span class="date-slash-input" style="font-size: @if($isPdf ?? false) 10pt @else 0.95rem @endif; font-weight: bold; border-bottom: 1.5px solid #0f172a; padding: 0 2px; width: @if($isPdf ?? false) 28px @else 32px @endif; display: inline-block; text-align: center;">{{ $submittedDate->format('d') }}</span> /
+                    <span class="date-slash-input date-slash-year" style="font-size: @if($isPdf ?? false) 10pt @else 0.95rem @endif; font-weight: bold; border-bottom: 1.5px solid #0f172a; padding: 0 2px; width: @if($isPdf ?? false) 52px @else 44px @endif; display: inline-block; text-align: center;">{{ $submittedDate->format('Y') }}</span>
                 </div>
             </div>
             <div style="width: 28%;">
                 <table style="width: 100%; border-collapse: collapse;">
                     <tr>
-                        <td style="width: 38px; vertical-align: bottom; font-size: @if($isPdf ?? false) 9.5px @else 0.90rem @endif; font-weight: 700; color: #1e293b;">Paid:</td>
+                        <td style="width: 38px; vertical-align: bottom; font-size: @if($isPdf ?? false) 9pt @else 0.90rem @endif; font-weight: 700; color: #1e293b;">Paid:</td>
                         <td style="vertical-align: bottom;">
-                            <div class="input-line" style="font-size: @if($isPdf ?? false) 10px @else 0.92rem @endif;">{!! $app?->payment?->amount_paid ? '₱' . number_format($app->payment->amount_paid, 2) : '&nbsp;' !!}</div>
+                            <div class="input-line" style="font-size: @if($isPdf ?? false) 9.5pt @else 0.92rem @endif;">{!! $app?->payment?->amount_paid ? '₱' . number_format($app->payment->amount_paid, 2) : '&nbsp;' !!}</div>
                         </td>
                     </tr>
                 </table>
@@ -877,22 +890,126 @@
             <div style="width: 28%;">
                 <table style="width: 100%; border-collapse: collapse;">
                     <tr>
-                        <td style="width: 50px; vertical-align: bottom; font-size: @if($isPdf ?? false) 9.5px @else 0.90rem @endif; font-weight: 700; color: #1e293b;">OR No.:</td>
+                        <td style="width: 50px; vertical-align: bottom; font-size: @if($isPdf ?? false) 9pt @else 0.90rem @endif; font-weight: 700; color: #1e293b;">OR No.:</td>
                         <td style="vertical-align: bottom;">
-                            <div class="input-line" style="font-size: @if($isPdf ?? false) 10px @else 0.92rem @endif;">{!! !empty($app?->payment?->reference_number) ? e(mb_strtoupper($app->payment->reference_number)) : '&nbsp;' !!}</div>
+                            <div class="input-line" style="font-size: @if($isPdf ?? false) 9.5pt @else 0.92rem @endif;">{!! !empty($app?->payment?->reference_number) ? e(mb_strtoupper($app->payment->reference_number)) : '&nbsp;' !!}</div>
                         </td>
                     </tr>
                 </table>
             </div>
         </div>
 
-        <div class="attachments-title" style="font-size: @if($isPdf ?? false) 10.5px @else 0.95rem @endif; font-weight: 800; font-style: italic; color: #0f172a; margin-top: 10px; margin-bottom: 4px;">To be attached:</div>
-        <ol class="attachments-list" style="font-size: @if($isPdf ?? false) 9.5px @else 0.88rem @endif; line-height: @if($isPdf ?? false) 1.4 @else 1.55 @endif; margin-left: 20px; color: #334155;">
-            <li style="margin-bottom: 2px;">Photo copy of Birth Certificate</li>
-            <li style="margin-bottom: 2px;">Official Transcript from Previous School (Report Card)</li>
-            <li style="margin-bottom: 2px;">Medical Record (If any)</li>
-            <li style="margin-bottom: 2px;">Photo copy of Marriage Contract of Parents</li>
-            <li style="margin-bottom: 2px;">Picture 2 x 2</li>
-        </ol>
+        @php
+            $hasBirthCert = (!empty($app?->birth_cert_url) && $app->birth_cert_url !== '[]' && $app->birth_cert_url !== '[""]') || (($app?->document_statuses['birth_cert'] ?? '') === 'approved');
+            $hasReportCard = (!empty($app?->report_card_url) && $app->report_card_url !== '[]' && $app->report_card_url !== '[""]') || (($app?->document_statuses['report_card'] ?? '') === 'approved');
+            $hasMedicalRecord = (!empty($app?->medical_record_url) && $app->medical_record_url !== '[]' && $app->medical_record_url !== '[""]') || (($app?->document_statuses['medical_record'] ?? '') === 'approved');
+            $hasMarriageContract = (!empty($app?->marriage_contract_url) && $app->marriage_contract_url !== '[]' && $app->marriage_contract_url !== '[""]') || (($app?->document_statuses['marriage_contract'] ?? '') === 'approved');
+            $hasPhoto2x2 = (!empty($app?->photo_2x2_url) && $app->photo_2x2_url !== '[]' && $app->photo_2x2_url !== '[""]') || !empty($photoBase64) || (($app?->document_statuses['photo_2x2'] ?? '') === 'approved');
+
+            $checkedByName = null;
+            $checkedDate = null;
+
+            if (!empty($officialDoc?->creator?->name)) {
+                $checkedByName = $officialDoc->creator->name;
+                $checkedDate = $officialDoc->created_at?->format('M d, Y');
+            } elseif ($app?->status === 'approved') {
+                if (auth()->check()) {
+                    $checkedByName = auth()->user()->name;
+                }
+                $checkedDate = $app->updated_at ? $app->updated_at->format('M d, Y') : $submittedDate->format('M d, Y');
+            }
+        @endphp
+
+        <!-- Document Checklist Table -->
+        <table class="doc-checklist-table" style="width: 100%; border-collapse: collapse; margin-top: 8px; font-size: @if($isPdf ?? false) 8.5pt @else 0.86rem @endif;">
+            <thead>
+                <tr>
+                    <th style="text-align: left; font-size: @if($isPdf ?? false) 9pt @else 0.90rem @endif; font-weight: 800; font-style: italic; color: #0f172a; padding: 2px 0 4px 0; text-transform: uppercase;">
+                        To be attached:
+                    </th>
+                    <th style="text-align: right; width: 90px; font-size: @if($isPdf ?? false) 8pt @else 0.80rem @endif; font-weight: 800; color: #475569; padding: 2px 10px 4px 0; text-transform: uppercase; letter-spacing: 0.5px;">
+                        Received
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 1.5px 0; color: #1e293b; line-height: 1.25;">
+                        1. Photo copy of Birth Certificate
+                    </td>
+                    <td style="text-align: right; padding: 1.5px 16px 1.5px 0; vertical-align: middle;">
+                        <span class="doc-chk-box">{!! $hasBirthCert ? '&#10003;' : '&nbsp;' !!}</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 1.5px 0; color: #1e293b; line-height: 1.25;">
+                        2. Official Transcript from Previous School (Report Card)
+                    </td>
+                    <td style="text-align: right; padding: 1.5px 16px 1.5px 0; vertical-align: middle;">
+                        <span class="doc-chk-box">{!! $hasReportCard ? '&#10003;' : '&nbsp;' !!}</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 1.5px 0; color: #1e293b; line-height: 1.25;">
+                        3. Medical Record (If any)
+                    </td>
+                    <td style="text-align: right; padding: 1.5px 16px 1.5px 0; vertical-align: middle;">
+                        <span class="doc-chk-box">{!! $hasMedicalRecord ? '&#10003;' : '&nbsp;' !!}</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 1.5px 0; color: #1e293b; line-height: 1.25;">
+                        4. Photo copy of Marriage Contract of Parents
+                    </td>
+                    <td style="text-align: right; padding: 1.5px 16px 1.5px 0; vertical-align: middle;">
+                        <span class="doc-chk-box">{!! $hasMarriageContract ? '&#10003;' : '&nbsp;' !!}</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 1.5px 0; color: #1e293b; line-height: 1.25;">
+                        5. Picture 2 x 2
+                    </td>
+                    <td style="text-align: right; padding: 1.5px 16px 1.5px 0; vertical-align: middle;">
+                        <span class="doc-chk-box">{!! $hasPhoto2x2 ? '&#10003;' : '&nbsp;' !!}</span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Verification Information Row -->
+        <div class="doc-verification-row" style="margin-top: 8px; border-top: 1px dashed #cbd5e1; padding-top: 5px;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                    <td style="width: 65%; vertical-align: bottom; padding-right: 14px;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tr>
+                                <td style="width: 145px; vertical-align: bottom; font-size: @if($isPdf ?? false) 8pt @else 0.82rem @endif; font-weight: 700; color: #1e293b; white-space: nowrap;">
+                                    Documents Checked By:
+                                </td>
+                                <td style="vertical-align: bottom;">
+                                    <div class="input-line" style="font-size: @if($isPdf ?? false) 8.5pt @else 0.86rem @endif; min-height: 14px;">
+                                        {!! !empty($checkedByName) ? e(mb_strtoupper($checkedByName)) : '&nbsp;' !!}
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                    <td style="width: 35%; vertical-align: bottom;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tr>
+                                <td style="width: 85px; vertical-align: bottom; font-size: @if($isPdf ?? false) 8pt @else 0.82rem @endif; font-weight: 700; color: #1e293b; white-space: nowrap;">
+                                    Date Checked:
+                                </td>
+                                <td style="vertical-align: bottom;">
+                                    <div class="input-line" style="font-size: @if($isPdf ?? false) 8.5pt @else 0.86rem @endif; min-height: 14px;">
+                                        {!! !empty($checkedDate) ? e(mb_strtoupper($checkedDate)) : '&nbsp;' !!}
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </div>
     </div>
 </div>
