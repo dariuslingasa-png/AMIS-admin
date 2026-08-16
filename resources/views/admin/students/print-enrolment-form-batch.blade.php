@@ -976,37 +976,59 @@
             }, 400);
         }
 
-        function fitAllFormFontSizes() {
+        async function fitAllFormFontSizes() {
+            if (document.fonts && document.fonts.ready) {
+                try { await document.fonts.ready; } catch(e) {}
+            }
+
+            const dummyCanvas = document.createElement('canvas');
+            const ctx = dummyCanvas.getContext('2d');
+
             document.querySelectorAll('.input-line, .lrn-input, .p2-full-line, .auto-fit-field, .address-auto-fit').forEach(el => {
                 const text = (el.value || el.innerText || '').trim();
                 if (!text) return;
-                
+
+                // Never shrink short text unnecessarily (e.g. AAYAN, ALI, C., F, M, K1, AGE)
+                if (text.length <= 6) {
+                    el.style.fontSize = '';
+                    return;
+                }
+
+                // Reset font size before measuring
+                el.style.fontSize = '';
                 el.style.whiteSpace = 'nowrap';
+
                 const style = window.getComputedStyle(el);
-                let size = parseFloat(style.fontSize) || 14;
-                const minSize = 8.5;
+                const defaultSize = parseFloat(style.fontSize) || 13.5;
+                const minSize = 9.5;
 
-                const containerWidth = el.clientWidth || el.getBoundingClientRect().width;
-                if (containerWidth <= 0) return;
+                const rect = el.getBoundingClientRect();
+                const parentRect = el.parentElement ? el.parentElement.getBoundingClientRect() : null;
+                const containerWidth = Math.max(rect.width, parentRect ? parentRect.width : 0);
 
-                const dummyCanvas = document.createElement('canvas');
-                const ctx = dummyCanvas.getContext('2d');
+                if (containerWidth < 30) return; // Hidden or unrendered element
+
                 const fontWeight = style.fontWeight || '700';
-                const fontFamily = style.fontFamily || 'Inter, sans-serif';
+                const fontFamily = 'Inter, sans-serif';
 
-                ctx.font = `${fontWeight} ${size}px ${fontFamily}`;
+                ctx.font = `${fontWeight} ${defaultSize}px ${fontFamily}`;
                 let textWidth = ctx.measureText(text).width;
 
-                if (textWidth > containerWidth - 4) {
+                const availableWidth = containerWidth - 8;
+
+                if (textWidth > availableWidth) {
+                    let size = defaultSize;
                     while (size > minSize) {
+                        size -= 0.5;
                         ctx.font = `${fontWeight} ${size}px ${fontFamily}`;
                         textWidth = ctx.measureText(text).width;
-                        if (textWidth <= containerWidth - 4) {
+                        if (textWidth <= availableWidth) {
                             break;
                         }
-                        size -= 0.5;
                     }
-                    el.style.fontSize = size + 'px';
+                    el.style.fontSize = `${size}px`;
+                } else {
+                    el.style.fontSize = '';
                 }
             });
         }

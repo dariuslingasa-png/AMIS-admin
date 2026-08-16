@@ -106,18 +106,18 @@
     }
 
     // Multi-tier Helper function for dynamic font-size calculation on long text (keeps normal text large)
-    $getDynamicStyle = function($text, $baseSize = '0.96rem', $mediumSize = '0.84rem', $smallSize = '0.72rem', $xsmallSize = '0.60rem', $t1 = 26, $t2 = 36, $t3 = 48) {
+    $getDynamicStyle = function($text, $baseSize = '0.96rem', $mediumSize = '0.86rem', $smallSize = '0.76rem', $xsmallSize = '0.68rem', $t1 = 28, $t2 = 38, $t3 = 50) {
         $len = mb_strlen(trim($text ?? ''));
         if ($len > $t3) {
-            return "font-size: {$xsmallSize}; font-weight: 800;";
+            return "font-size: {$xsmallSize}; font-weight: 750;";
         }
         if ($len > $t2) {
-            return "font-size: {$smallSize}; font-weight: 800;";
+            return "font-size: {$smallSize}; font-weight: 750;";
         }
         if ($len > $t1) {
             return "font-size: {$mediumSize}; font-weight: 750;";
         }
-        return "font-size: {$baseSize}; font-weight: 750;";
+        return "";
     };
 
     // Specialized Auto Font-Size Helper for Address & Home Address (14px default, scales only when overflowing full width)
@@ -496,15 +496,15 @@
 
     <div class="field-container" style="margin-top: 2px;">
         <div class="grid-5-col">
-            <div style="width: 25%;">
-                <input type="text" class="input-line" value="{{ mb_strtoupper($app->last_name ?? '') }}" style="{{ $getDynamicStyle($app->last_name ?? '', '0.96rem', '0.84rem', '0.70rem', '0.58rem', 14, 20, 26) }}">
+            <div @if($isPdf ?? false) style="width: 28%;" @endif>
+                <input type="text" class="input-line" value="{{ mb_strtoupper($app->last_name ?? '') }}" style="{{ $getDynamicStyle($app->last_name ?? '', '0.96rem', '0.86rem', '0.76rem', '0.68rem', 20, 28, 36) }}">
                 <span class="label-text">Last</span>
             </div>
-            <div style="width: 25%;">
-                <input type="text" class="input-line" value="{{ mb_strtoupper($app->first_name ?? '') }}" style="{{ $getDynamicStyle($app->first_name ?? '', '0.96rem', '0.84rem', '0.70rem', '0.58rem', 14, 20, 26) }}">
+            <div @if($isPdf ?? false) style="width: 28%;" @endif>
+                <input type="text" class="input-line" value="{{ mb_strtoupper($app->first_name ?? '') }}" style="{{ $getDynamicStyle($app->first_name ?? '', '0.96rem', '0.86rem', '0.76rem', '0.68rem', 20, 28, 36) }}">
                 <span class="label-text">First</span>
             </div>
-            <div style="width: 21%;">
+            <div @if($isPdf ?? false) style="width: 24%;" @endif>
                 @php
                     $rawMiddle = trim($app->middle_name ?? '');
                     $mDisplay = '';
@@ -513,10 +513,10 @@
                         $mDisplay = ($fChar === '.') ? '.' : mb_strtoupper($fChar, 'UTF-8') . '.';
                     }
                 @endphp
-                <input type="text" class="input-line" value="{{ $mDisplay }}" style="{{ $getDynamicStyle($mDisplay, '0.96rem', '0.84rem', '0.72rem', '0.60rem', 22, 32, 42) }}">
+                <input type="text" class="input-line" value="{{ $mDisplay }}" style="{{ $getDynamicStyle($mDisplay, '0.96rem', '0.86rem', '0.76rem', '0.68rem', 20, 28, 36) }}">
                 <span class="label-text">Middle</span>
             </div>
-            <div style="width: 11%;">
+            <div @if($isPdf ?? false) style="width: 8%;" @endif>
                 @php
                     $g = strtoupper(trim($app->gender ?? ''));
                     $sexChar = str_starts_with($g, 'F') ? 'F' : (str_starts_with($g, 'M') ? 'M' : $g);
@@ -524,7 +524,7 @@
                 <input type="text" class="input-line" value="{{ $sexChar }}" style="text-align: center;">
                 <span class="label-text" style="text-align: center;">Sex</span>
             </div>
-            <div style="width: 18%;">
+            <div @if($isPdf ?? false) style="width: 12%;" @endif>
                 @php
                     $rawGrade = $student->grade_level ?? $app->grade_level ?? '';
                     $shortGrade = $formatGradeLevelShort($rawGrade);
