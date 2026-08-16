@@ -16,46 +16,100 @@ class StudentPhotoController extends Controller
 {
     public function updatePhoto(Request $request, Student $student)
     {
-        abort_unless(auth()->user()?->hasRole('super_admin'), 403);
+        abort_unless(
+            auth()->user()?->canViewAdminGrade($student->grade_level) || auth()->user()?->hasAnyRole(['admin', 'super_admin']),
+            403
+        );
 
         $request->validate([
-            'photo' => 'required|image|mimes:jpeg,jpg,png|max:5120',
+            'photo' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:10240',
+            'cropped_image' => 'nullable|string',
         ]);
 
-        if ($request->hasFile('photo') && $request->file('photo')->isValid()) {
-            $path = $request->file('photo')->store('optimized', 'public');
+        $path = null;
 
-            if ($student->applicant) {
-                $student->applicant->update([
-                    'photo_2x2_url' => $path,
-                ]);
+        if ($request->filled('cropped_image')) {
+            $base64String = $request->input('cropped_image');
+            if (preg_match('/^data:image\/(\w+);base64,/', $base64String, $matches)) {
+                $imageType = strtolower($matches[1]);
+                $base64String = substr($base64String, strpos($base64String, ',') + 1);
+                $imageData = base64_decode($base64String);
 
-                AdminAuditLog::create([
-                    'user_id' => auth()->id(),
-                    'event' => 'update_student_photo',
-                    'ip_address' => request()->ip(),
-                    'user_agent' => Str::limit((string) request()->userAgent(), 1000, ''),
-                    'successful' => true,
-                    'message' => 'Super Administrator updated profile photo for student UPN: '.$student->school_email,
-                    'metadata' => [
-                        'student_id' => $student->id,
-                        'school_email' => $student->school_email,
-                        'photo_path' => $path,
-                    ],
-                ]);
+                if ($imageData === false) {
+                    return response()->json(['success' => false, 'message' => 'Invalid image data provided.'], 422);
+                }
 
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Profile photo updated successfully.',
-                    'photo_url' => EnrollmentStorage::url($path),
-                ]);
+                $ext = in_array($imageType, ['jpg', 'jpeg', 'png', 'webp']) ? $imageType : 'jpg';
+                $filename = 'optimized/photo_' . $student->id . '_' . time() . '_' . Str::random(8) . '.' . $ext;
+                Storage::disk('public')->put($filename, $imageData);
+                $path = $filename;
             }
+        } elseif ($request->hasFile('photo') && $request->file('photo')->isValid()) {
+            $path = $request->file('photo')->store('optimized', 'public');
+        }
+
+        if (! $path) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No valid photo or cropped image received.',
+            ], 400);
+        }
+
+        if ($student->applicant) {
+            $student->applicant->update([
+                'photo_2x2_url' => $path,
+            ]);
+        }
+
+        if (\Illuminate\Support\Facades\Schema::hasColumn('students', 'photo_2x2_url')) {
+            $student->update(['photo_2x2_url' => $path]);
+        } elseif (\Illuminate\Support\Facades\Schema::hasColumn('students', 'photo_url')) {
+            $student->update(['photo_url' => $path]);
+        }
+
+        $photoDoc = \App\Models\StudentDocument::where('student_id', $student->id)
+            ->where('document_type', 'photo_2x2')
+            ->first();
+        if ($photoDoc) {
+            $abs = Storage::disk('public')->path($path);
+            $fileSize = file_exists($abs) ? filesize($abs) : 0;
+            $photoDoc->update([
+                'local_path' => $path,
+                'file_size' => $fileSize,
+                'checksum' => file_exists($abs) ? hash_file('sha256', $abs) : null,
+                'generated_at' => now(),
+            ]);
+        }
+
+        AdminAuditLog::create([
+            'user_id' => auth()->id(),
+            'event' => 'update_student_2x2_photo',
+            'ip_address' => request()->ip(),
+            'user_agent' => Str::limit((string) request()->userAgent(), 1000, ''),
+            'successful' => true,
+            'message' => 'Administrator updated 2x2 photo for student ID: ' . ($student->student_number ?? $student->id),
+            'metadata' => [
+                'student_id' => $student->id,
+                'school_email' => $student->school_email,
+                'photo_path' => $path,
+            ],
+        ]);
+
+        $fullUrl = EnrollmentStorage::url($path);
+        $cleanPath = ltrim(str_replace(['/storage/', 'storage/'], '', $path), '/');
+        $localCandidate = storage_path('app/public/' . $cleanPath);
+        $dataUri = $fullUrl;
+        if (file_exists($localCandidate)) {
+            $mime = @mime_content_type($localCandidate) ?: 'image/jpeg';
+            $dataUri = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($localCandidate));
         }
 
         return response()->json([
-            'success' => false,
-            'message' => 'Failed to upload photo.',
-        ], 400);
+            'success' => true,
+            'message' => 'Photo updated successfully.',
+            'photo_url' => $fullUrl,
+            'data_uri' => $dataUri,
+        ]);
     }
 
     public function deletePhoto(Request $request, Student $student)

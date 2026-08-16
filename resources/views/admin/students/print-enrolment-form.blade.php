@@ -26,11 +26,15 @@
             : mb_strtoupper($student->full_name ?: ($app?->full_name ?: 'STUDENT'));
     @endphp
     <title>{{ $autoFileName }}</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     
     <!-- Premium Google Fonts: Merriweather for Headers, Inter for Data & Noto Naskh Arabic for Arabic -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Noto+Naskh+Arabic:wght@700&family=Inter:wght@400;500;600;700;800&family=Merriweather:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Cropper.js for 2x2 Photo ID Adjustments -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
     
 @if(!($isPdf ?? false))
     <style>
@@ -534,6 +538,7 @@
             overflow: hidden;
             border-radius: 3px;
             box-sizing: border-box;
+            position: relative;
         }
 
         .photo-box img {
@@ -542,6 +547,174 @@
             object-fit: cover;
             object-position: center;
             display: block;
+        }
+
+        .photo-edit-overlay-btn {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(15, 23, 42, 0.88);
+            color: #ffffff;
+            border: none;
+            padding: 5px 6px;
+            font-size: 0.68rem;
+            font-weight: 700;
+            font-family: 'Inter', system-ui, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s ease, background 0.15s ease;
+            backdrop-filter: blur(4px);
+            z-index: 10;
+        }
+
+        .photo-box:hover .photo-edit-overlay-btn {
+            opacity: 1;
+        }
+
+        .photo-edit-overlay-btn:hover {
+            background: #059669;
+        }
+
+        /* 2x2 Photo Adjuster Modal */
+        .photo-cropper-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.70);
+            backdrop-filter: blur(6px);
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            animation: cropperFadeIn 0.2s ease-out forwards;
+        }
+        @keyframes cropperFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .photo-cropper-card {
+            width: 100%;
+            max-width: 500px;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.35);
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            animation: cropperSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes cropperSlideUp {
+            from { opacity: 0; transform: translateY(20px) scale(0.97); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .photo-cropper-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid #e2e8f0;
+            background: #ffffff;
+        }
+        .cropper-close-btn {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+        }
+        .cropper-close-btn:hover {
+            background: #f1f5f9;
+            color: #0f172a;
+        }
+        .photo-cropper-body {
+            padding: 16px 20px;
+            background: #ffffff;
+        }
+        .cropper-controls-strip {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: 12px;
+            padding: 8px 12px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+        }
+        .cropper-tool-btn {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            color: #334155;
+            padding: 6px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+        }
+        .cropper-tool-btn:hover {
+            background: #f1f5f9;
+            color: #0f172a;
+            border-color: #94a3b8;
+        }
+        .photo-cropper-footer {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 14px 20px;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+        }
+        .cropper-btn-cancel {
+            padding: 8px 16px;
+            border-radius: 8px;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            font-family: 'Inter', system-ui, sans-serif;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #475569;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .cropper-btn-cancel:hover {
+            background: #f1f5f9;
+            color: #0f172a;
+        }
+        .cropper-btn-save {
+            padding: 8px 18px;
+            border-radius: 8px;
+            background: #059669;
+            border: none;
+            font-family: 'Inter', system-ui, sans-serif;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #ffffff;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 6px rgba(5, 150, 105, 0.3);
+            transition: all 0.15s ease;
+        }
+        .cropper-btn-save:hover {
+            background: #047857;
+            box-shadow: 0 4px 10px rgba(5, 150, 105, 0.4);
+        }
+        .cropper-btn-save:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
         }
 
         /* Section Header Divider */
@@ -1779,6 +1952,298 @@
                     btn.innerHTML = originalBtnHtml;
                 }
             }
+        }
+
+    <!-- 2x2 Photo Cropper & Adjuster Modal -->
+    <div id="photoCropperModal" class="photo-cropper-backdrop" style="display: none;" onclick="handleBackdropClick(event)">
+        <div class="photo-cropper-card" onclick="event.stopPropagation()">
+            <!-- Modal Header -->
+            <div class="photo-cropper-header">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 36px; height: 36px; border-radius: 10px; background: #ecfdf5; border: 1px solid #a7f3d0; display: flex; align-items: center; justify-content: center; color: #059669; flex-shrink: 0;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                    </div>
+                    <div>
+                        <h3 style="font-family: 'Inter', system-ui, sans-serif; font-size: 1.05rem; font-weight: 800; color: #0f172a; margin: 0; line-height: 1.2;">2×2 Photo Adjuster</h3>
+                        <p style="font-family: 'Inter', system-ui, sans-serif; font-size: 0.75rem; color: #64748b; margin: 2px 0 0 0;">Drag, zoom, and frame face for official AMIS ID & documents</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closePhotoCropperModal()" class="cropper-close-btn" title="Close">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="photo-cropper-body">
+                <!-- Cropper Workspace -->
+                <div class="cropper-workspace-wrapper" style="width: 100%; height: 300px; background: #0f172a; border-radius: 12px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                    <img id="cropperTargetImage" src="" alt="Adjust Photo" style="max-width: 100%; max-height: 100%; display: block;">
+                </div>
+
+                <!-- Controls & Real-Time Preview Strip -->
+                <div class="cropper-controls-strip">
+                    <!-- Zoom Slider -->
+                    <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+                        <button type="button" onclick="cropperZoom(-0.1)" class="cropper-tool-btn" title="Zoom Out">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                        </button>
+                        <input type="range" id="cropperZoomSlider" min="0.1" max="3" step="0.02" value="1" oninput="onZoomSliderChange(this.value)" style="flex: 1; accent-color: #059669; cursor: pointer;">
+                        <button type="button" onclick="cropperZoom(0.1)" class="cropper-tool-btn" title="Zoom In">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                        </button>
+                    </div>
+
+                    <!-- Rotation & Flip Actions -->
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <button type="button" onclick="cropperRotate(-90)" class="cropper-tool-btn" title="Rotate Left 90°">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 2v6h6"/><path d="M2.66 15.57a10 10 0 1 0 .57-8.38L2.5 8"/></svg>
+                        </button>
+                        <button type="button" onclick="cropperRotate(90)" class="cropper-tool-btn" title="Rotate Right 90°">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6"/><path d="M21.34 15.57a10 10 0 1 1-.57-8.38L21.5 8"/></svg>
+                        </button>
+                        <button type="button" onclick="cropperReset()" class="cropper-tool-btn" title="Reset View">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Upload New Photo / Replace -->
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; margin-top: 10px;">
+                    <div style="font-family: 'Inter', system-ui, sans-serif; font-size: 0.78rem; color: #475569;">
+                        Want to use a different photo file?
+                    </div>
+                    <label class="cropper-upload-btn" style="cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; background: #ffffff; border: 1px solid #cbd5e1; font-family: 'Inter', system-ui, sans-serif; font-size: 0.75rem; font-weight: 700; color: #0f172a; transition: all 0.15s ease;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        <span>Choose New File</span>
+                        <input type="file" id="cropperFileInput" accept="image/jpeg,image/png,image/webp,image/jpg" onchange="handleNewPhotoSelected(event)" style="display: none;">
+                    </label>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="photo-cropper-footer">
+                <button type="button" onclick="closePhotoCropperModal()" class="cropper-btn-cancel">Cancel</button>
+                <button type="button" id="btnSaveCroppedPhoto" onclick="saveCroppedPhoto()" class="cropper-btn-save">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span>Save Photo</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cropper.js Script -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
+
+    <script>
+        let activeCropper = null;
+        let originalPhotoDataUri = '{{ $photoBase64 ?? '' }}';
+
+        function openPhotoCropperModal() {
+            const modal = document.getElementById('photoCropperModal');
+            if (!modal) return;
+
+            const currentImg = document.getElementById('enrolment-form-photo-img');
+            let photoSrc = (currentImg && currentImg.src && !currentImg.src.endsWith('/') && currentImg.style.display !== 'none') 
+                ? currentImg.src 
+                : originalPhotoDataUri;
+
+            if (!photoSrc || photoSrc.includes('placeholder') || photoSrc === window.location.href) {
+                // Trigger file input directly if no photo exists
+                document.getElementById('cropperFileInput').click();
+                return;
+            }
+
+            modal.style.display = 'flex';
+            initCropperInstance(photoSrc);
+        }
+
+        function closePhotoCropperModal() {
+            const modal = document.getElementById('photoCropperModal');
+            if (modal) modal.style.display = 'none';
+            if (activeCropper) {
+                activeCropper.destroy();
+                activeCropper = null;
+            }
+        }
+
+        function handleBackdropClick(e) {
+            if (e.target.id === 'photoCropperModal') {
+                closePhotoCropperModal();
+            }
+        }
+
+        function initCropperInstance(imageSrc) {
+            if (activeCropper) {
+                activeCropper.destroy();
+                activeCropper = null;
+            }
+
+            const targetImg = document.getElementById('cropperTargetImage');
+            targetImg.src = imageSrc;
+
+            targetImg.onload = () => {
+                activeCropper = new Cropper(targetImg, {
+                    aspectRatio: 1, // Fixed 1:1 square for 2x2 photo
+                    viewMode: 1,
+                    dragMode: 'move',
+                    autoCropArea: 0.95,
+                    restore: false,
+                    guides: true,
+                    center: true,
+                    highlight: false,
+                    cropBoxMovable: false,
+                    cropBoxResizable: false,
+                    toggleDragModeOnDblclick: false,
+                    ready() {
+                        const zoomSlider = document.getElementById('cropperZoomSlider');
+                        if (zoomSlider) zoomSlider.value = 1;
+                    }
+                });
+            };
+        }
+
+        function onZoomSliderChange(val) {
+            if (!activeCropper) return;
+            activeCropper.zoomTo(parseFloat(val));
+        }
+
+        function cropperZoom(ratio) {
+            if (!activeCropper) return;
+            activeCropper.zoom(ratio);
+            const zoomSlider = document.getElementById('cropperZoomSlider');
+            if (zoomSlider) {
+                const currentData = activeCropper.getImageData();
+                zoomSlider.value = (currentData && currentData.scaleX) ? currentData.scaleX : 1;
+            }
+        }
+
+        function cropperRotate(deg) {
+            if (!activeCropper) return;
+            activeCropper.rotate(deg);
+        }
+
+        function cropperReset() {
+            if (!activeCropper) return;
+            activeCropper.reset();
+            const zoomSlider = document.getElementById('cropperZoomSlider');
+            if (zoomSlider) zoomSlider.value = 1;
+        }
+
+        function handleNewPhotoSelected(e) {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+
+            const modal = document.getElementById('photoCropperModal');
+            if (modal) modal.style.display = 'flex';
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                initCropperInstance(event.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function saveCroppedPhoto() {
+            if (!activeCropper) return;
+
+            const saveBtn = document.getElementById('btnSaveCroppedPhoto');
+            const originalHtml = saveBtn ? saveBtn.innerHTML : '';
+            if (saveBtn) {
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '<svg class="animate-spin" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg><span>Saving...</span>';
+            }
+
+            try {
+                // Generate 600x600 HD 2x2 square crop
+                const croppedCanvas = activeCropper.getCroppedCanvas({
+                    width: 600,
+                    height: 600,
+                    imageSmoothingEnabled: true,
+                    imageSmoothingQuality: 'high'
+                });
+
+                const base64Data = croppedCanvas.toDataURL('image/jpeg', 0.92);
+
+                const response = await fetch("{{ route('admin.students.update-photo', $student) }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        cropped_image: base64Data
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    // Update the image on Page 1 immediately
+                    const photoImg = document.getElementById('enrolment-form-photo-img');
+                    const placeholder = document.getElementById('enrolment-form-photo-placeholder');
+                    if (photoImg) {
+                        photoImg.src = result.data_uri || base64Data;
+                        photoImg.style.display = 'block';
+                    }
+                    if (placeholder) {
+                        placeholder.style.display = 'none';
+                    }
+
+                    // Update global photo base64 for PDF / DOCX generators
+                    originalPhotoDataUri = result.data_uri || base64Data;
+
+                    // Also update in attachedDocFiles if 2x2 photo is present in attachments
+                    if (typeof attachedDocFiles !== 'undefined' && Array.isArray(attachedDocFiles)) {
+                        const photoDoc = attachedDocFiles.find(d => d.key === 'photo_2x2');
+                        if (photoDoc) {
+                            photoDoc.url = result.photo_url || result.data_uri || base64Data;
+                            photoDoc.data_uri = result.data_uri || base64Data;
+                        }
+                    }
+
+                    closePhotoCropperModal();
+                    showPhotoToast('Photo updated successfully!', 'success');
+                } else {
+                    alert(result.message || 'Failed to save photo. Please try again.');
+                }
+            } catch (err) {
+                console.error('Error saving photo:', err);
+                alert('Failed to save photo. Please try again.');
+            } finally {
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = originalHtml;
+                }
+            }
+        }
+
+        function showPhotoToast(msg, type = 'success') {
+            const toast = document.createElement('div');
+            toast.style.position = 'fixed';
+            toast.style.bottom = '24px';
+            toast.style.right = '24px';
+            toast.style.background = type === 'success' ? '#059669' : '#dc2626';
+            toast.style.color = '#ffffff';
+            toast.style.padding = '12px 20px';
+            toast.style.borderRadius = '10px';
+            toast.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.2)';
+            toast.style.fontFamily = "'Inter', system-ui, sans-serif";
+            toast.style.fontSize = '0.85rem';
+            toast.style.fontWeight = '700';
+            toast.style.zIndex = '999999';
+            toast.style.display = 'flex';
+            toast.style.alignItems = 'center';
+            toast.style.gap = '8px';
+            toast.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>${msg}</span>`;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.3s ease';
+                setTimeout(() => {
+                    if (toast.parentNode) toast.parentNode.removeChild(toast);
+                }, 300);
+            }, 3500);
         }
 
         if (new URLSearchParams(window.location.search).get('auto_print') === '1') {

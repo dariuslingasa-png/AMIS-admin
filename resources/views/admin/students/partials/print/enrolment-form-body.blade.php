@@ -541,13 +541,25 @@
                     @endif
                 </div>
             @else
-                @if(!empty($photoBase64))
-                    <img src="{{ $photoBase64 }}" alt="2x2 Photo" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;">
-                @else
-                    <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-size: 0.80rem; font-weight: 700; font-family: 'Inter', sans-serif; line-height: 1.2; text-align: center;">
-                        2x2<br>PHOTO
-                    </div>
-                @endif
+                <div class="photo-box-inner" style="position: relative; width: 100%; height: 100%; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #f8fafc; cursor: pointer;" onclick="openPhotoCropperModal()" title="Click to adjust / crop 2x2 Photo">
+                    @if(!empty($photoBase64))
+                        <img id="enrolment-form-photo-img" src="{{ $photoBase64 }}" alt="2x2 Photo" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;">
+                        <div id="enrolment-form-photo-placeholder" style="display: none; width: 100%; height: 100%; align-items: center; justify-content: center; color: #94a3b8; font-size: 0.80rem; font-weight: 700; font-family: 'Inter', sans-serif; line-height: 1.2; text-align: center;">
+                            2x2<br>PHOTO
+                        </div>
+                    @else
+                        <img id="enrolment-form-photo-img" src="" alt="2x2 Photo" style="display: none; width: 100%; height: 100%; object-fit: cover; object-position: center;">
+                        <div id="enrolment-form-photo-placeholder" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-size: 0.80rem; font-weight: 700; font-family: 'Inter', sans-serif; line-height: 1.2; text-align: center;">
+                            2x2<br>PHOTO
+                        </div>
+                    @endif
+
+                    <!-- On-screen Hover Edit Button (Hidden in Print/PDF/Docx) -->
+                    <button type="button" class="photo-edit-overlay-btn no-print" title="Adjust / Crop 2x2 Photo">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                        <span>Edit Photo</span>
+                    </button>
+                </div>
             @endif
         </div>
     </div>
