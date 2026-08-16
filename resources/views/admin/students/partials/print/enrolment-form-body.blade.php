@@ -411,13 +411,17 @@
         display: inline-block !important;
     }
     .date-slash-input {
-        width: 30px !important;
+        width: 28px !important;
         display: inline-block !important;
         border: none !important;
         border-bottom: 1.2px solid #0f172a !important;
         text-align: center !important;
         font-size: 10.5pt !important;
         font-weight: bold !important;
+        white-space: nowrap !important;
+    }
+    .date-slash-year {
+        width: 52px !important;
     }
     .attachments-title {
         font-size: 10pt !important;
@@ -865,9 +869,9 @@
             <div style="width: 44%;">
                 <span class="office-label" style="font-size: @if($isPdf ?? false) 9.5px @else 0.90rem @endif; font-weight: 700; color: #1e293b;">Application submitted on:</span>
                 <div class="date-slash-inputs" style="margin-left: 4px;">
-                    <span class="date-slash-input" style="font-size: @if($isPdf ?? false) 10.5px @else 0.95rem @endif; font-weight: bold; border-bottom: 1.5px solid #0f172a; padding: 0 2px; width: @if($isPdf ?? false) 26px @else 32px @endif; display: inline-block; text-align: center;">{{ $submittedDate->format('m') }}</span> /
-                    <span class="date-slash-input" style="font-size: @if($isPdf ?? false) 10.5px @else 0.95rem @endif; font-weight: bold; border-bottom: 1.5px solid #0f172a; padding: 0 2px; width: @if($isPdf ?? false) 26px @else 32px @endif; display: inline-block; text-align: center;">{{ $submittedDate->format('d') }}</span> /
-                    <span class="date-slash-input" style="font-size: @if($isPdf ?? false) 10.5px @else 0.95rem @endif; font-weight: bold; border-bottom: 1.5px solid #0f172a; padding: 0 2px; width: @if($isPdf ?? false) 42px @else 44px @endif; display: inline-block; text-align: center;">{{ $submittedDate->format('Y') }}</span>
+                    <span class="date-slash-input" style="font-size: @if($isPdf ?? false) 10.5px @else 0.95rem @endif; font-weight: bold; border-bottom: 1.5px solid #0f172a; padding: 0 2px; width: @if($isPdf ?? false) 28px @else 32px @endif; display: inline-block; text-align: center;">{{ $submittedDate->format('m') }}</span> /
+                    <span class="date-slash-input" style="font-size: @if($isPdf ?? false) 10.5px @else 0.95rem @endif; font-weight: bold; border-bottom: 1.5px solid #0f172a; padding: 0 2px; width: @if($isPdf ?? false) 28px @else 32px @endif; display: inline-block; text-align: center;">{{ $submittedDate->format('d') }}</span> /
+                    <span class="date-slash-input date-slash-year" style="font-size: @if($isPdf ?? false) 10.5px @else 0.95rem @endif; font-weight: bold; border-bottom: 1.5px solid #0f172a; padding: 0 2px; width: @if($isPdf ?? false) 52px @else 44px @endif; display: inline-block; text-align: center;">{{ $submittedDate->format('Y') }}</span>
                 </div>
             </div>
             <div style="width: 28%;">
