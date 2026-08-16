@@ -52,12 +52,16 @@ class StudentPrintController extends Controller
         ]);
     }
 
-    public function downloadOfficialForm(Student $student)
+    public function downloadOfficialForm(Student $student, \Illuminate\Http\Request $request)
     {
         abort_unless(auth()->user()?->canViewAdminGrade($student->grade_level), 403);
 
         $student->loadMissing(['applicant.user', 'applicant.payment', 'studentSection.section', 'officialEnrollmentForm']);
         $docService = app(\App\Services\Admin\Enrollment\EnrollmentDocumentService::class);
+
+        if ($request->boolean('with_attachments') && $student->applicant) {
+            return $docService->generateAndDownloadWithAttachments($student, $student->applicant);
+        }
 
         if ($student->applicant) {
             $officialDoc = $docService->generateApprovedEnrollmentForm($student, $student->applicant, auth()->id(), true);

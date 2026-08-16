@@ -1068,11 +1068,51 @@
                     <span>Close</span>
                 </button>
 
-                <!-- Secondary: Download DOCX -->
-                <button onclick="downloadSingleFormDocx()" id="btn-download-docx" class="header-btn btn-secondary" title="Download Editable DOCX file">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
-                    <span>Download DOCX</span>
-                </button>
+                <!-- Secondary: Download Dropdown -->
+                <div class="download-dropdown-wrapper" style="position: relative; display: inline-block;">
+                    <button type="button" onclick="toggleDownloadDropdown(event)" id="downloadDropdownBtn" class="header-btn btn-secondary" title="Choose download options" aria-haspopup="true" aria-expanded="false" style="cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        <span>Download</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 2px;"><polyline points="6 9 12 15 18 9"/></svg>
+                    </button>
+
+                    <div id="downloadDropdownMenu" class="download-dropdown-menu" style="display: none; position: absolute; right: 0; top: calc(100% + 8px); width: 290px; background: #ffffff; border-radius: 14px; border: 1px solid #cbd5e1; box-shadow: 0 14px 35px rgba(15, 23, 42, 0.12), 0 4px 10px rgba(15, 23, 42, 0.06); padding: 6px; z-index: 9999; font-family: 'Inter', system-ui, sans-serif;">
+                        <!-- Option 1: Enrollment Form -->
+                        <a href="{{ route('admin.students.official-enrollment-form.download', $student) }}" class="download-menu-item" style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; text-decoration: none; color: #0f172a; transition: background 0.15s ease;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
+                            <div style="width: 32px; height: 32px; border-radius: 8px; background: #ecfdf5; border: 1px solid #a7f3d0; display: flex; align-items: center; justify-content: center; color: #059669; shrink-0;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.82rem; font-weight: 800; color: #0f172a; line-height: 1.2;">Enrollment Form</div>
+                                <div style="font-size: 0.68rem; font-weight: 500; color: #64748b; margin-top: 1px;">Official 2-Page Form (PDF)</div>
+                            </div>
+                        </a>
+
+                        <!-- Option 2: Enrollment Form with Attachments -->
+                        <a href="{{ route('admin.students.official-enrollment-form.download', [$student, 'with_attachments' => 1]) }}" class="download-menu-item" style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; text-decoration: none; color: #0f172a; transition: background 0.15s ease;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
+                            <div style="width: 32px; height: 32px; border-radius: 8px; background: #e0f2fe; border: 1px solid #bae6fd; display: flex; align-items: center; justify-content: center; color: #0284c7; shrink-0;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.82rem; font-weight: 800; color: #0f172a; line-height: 1.2;">Enrollment Form with Attachments</div>
+                                <div style="font-size: 0.68rem; font-weight: 500; color: #64748b; margin-top: 1px;">Form + Supporting Documents (PDF)</div>
+                            </div>
+                        </a>
+
+                        <div style="height: 1px; background: #e2e8f0; margin: 4px 6px;"></div>
+
+                        <!-- Option 3: Download DOCX -->
+                        <button type="button" onclick="downloadSingleFormDocx(); closeDownloadDropdown();" class="download-menu-item" style="width: 100%; border: none; background: transparent; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; color: #0f172a; transition: background 0.15s ease;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
+                            <div style="width: 32px; height: 32px; border-radius: 8px; background: #f8fafc; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; color: #475569; shrink-0;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.82rem; font-weight: 800; color: #0f172a; line-height: 1.2;">Editable Form (DOCX)</div>
+                                <div style="font-size: 0.68rem; font-weight: 500; color: #64748b; margin-top: 1px;">Microsoft Word Format (.docx)</div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
 
                 <!-- Primary CTA: Print Form -->
                 <button onclick="triggerPrintPDF()" class="header-btn btn-primary" title="Print Enrollment Application Form">
@@ -1283,6 +1323,30 @@
     @endif
 
     <script>
+        function toggleDownloadDropdown(e) {
+            e.stopPropagation();
+            const menu = document.getElementById('downloadDropdownMenu');
+            const btn = document.getElementById('downloadDropdownBtn');
+            if (!menu) return;
+            const isHidden = menu.style.display === 'none' || menu.style.display === '';
+            menu.style.display = isHidden ? 'block' : 'none';
+            if (btn) btn.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
+        }
+
+        function closeDownloadDropdown() {
+            const menu = document.getElementById('downloadDropdownMenu');
+            const btn = document.getElementById('downloadDropdownBtn');
+            if (menu) menu.style.display = 'none';
+            if (btn) btn.setAttribute('aria-expanded', 'false');
+        }
+
+        document.addEventListener('click', function(e) {
+            const wrapper = document.querySelector('.download-dropdown-wrapper');
+            if (wrapper && !wrapper.contains(e.target)) {
+                closeDownloadDropdown();
+            }
+        });
+
         function triggerPrintPDF() {
             window.print();
         }

@@ -164,6 +164,131 @@ class EnrollmentDocumentService
     }
 
     /**
+     * Generate and download Enrollment Form with all supporting uploaded documents appended.
+     */
+    public function generateAndDownloadWithAttachments(Student $student, EnrollmentApplicant $applicant): Response
+    {
+        $student->loadMissing(['applicant.user', 'applicant.payment', 'studentSection.section']);
+
+        // 1. Resolve siblings
+        $siblings = [];
+        if ($applicant->user_id) {
+            $siblings = EnrollmentApplicant::where('user_id', $applicant->user_id)
+                ->where('id', '!=', $applicant->id)
+                ->get();
+        }
+
+        // 2. Resolve uploaded supporting documents
+        $docDefinitions = [
+            ['key' => 'photo_2x2', 'label' => '2x2 ID Photo', 'url' => $applicant->photo_2x2_url],
+            ['key' => 'birth_cert', 'label' => 'PSA / NSO Birth Certificate', 'url' => $applicant->birth_cert_url],
+            ['key' => 'report_card', 'label' => 'Report Card / Form 138 / SF9', 'url' => $applicant->report_card_url],
+            ['key' => 'marriage_contract', 'label' => 'Marriage Contract of Parents', 'url' => $applicant->marriage_contract_url],
+            ['key' => 'medical_record', 'label' => 'Medical History Records', 'url' => $applicant->medical_record_url],
+            ['key' => 'affidavit', 'label' => 'Temporary Proof / Affidavit / Form 137', 'url' => $applicant->affidavit_url],
+        ];
+
+        $imageAttachments = [];
+        $pdfAttachmentPaths = [];
+
+        foreach ($docDefinitions as $def) {
+            $rawPath = $def['url'];
+            if (empty($rawPath) || $rawPath === '[]' || $rawPath === '[""]') {
+                continue;
+            }
+
+            $state = EnrollmentStorage::getFileState($rawPath);
+            if (! $state['exists_on_disk'] || empty($state['absolute_path'])) {
+                continue;
+            }
+
+            $abs = $state['absolute_path'];
+            $ext = strtolower(pathinfo($abs, PATHINFO_EXTENSION));
+
+            if (in_array($ext, ['jpg', 'jpeg', 'png', 'webp', 'gif'])) {
+                $mime = match ($ext) {
+                    'png' => 'image/png',
+                    'webp' => 'image/webp',
+                    'gif' => 'image/gif',
+                    default => 'image/jpeg',
+                };
+                $dataUri = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($abs));
+                $imageAttachments[] = [
+                    'label' => $def['label'],
+                    'data_uri' => $dataUri,
+                ];
+            } elseif ($ext === 'pdf') {
+                $pdfAttachmentPaths[] = $abs;
+            }
+        }
+
+        // 3. Render HTML with PDF flags and attachments
+        $html = view('admin.students.print-enrolment-form', [
+            'student' => $student,
+            'applicant' => $applicant,
+            'siblings' => $siblings,
+            'isPdf' => true,
+            'isApproved' => true,
+            'includeAttachments' => true,
+            'imageAttachments' => $imageAttachments,
+        ])->render();
+
+        // 4. Compile Base PDF via Dompdf
+        $options = new Options();
+        $options->set('isHtml5ParserEnabled', true);
+        $options->set('isRemoteEnabled', true);
+        $options->set('defaultFont', 'DejaVu Sans');
+        $options->set('chroot', [
+            base_path(),
+            storage_path(),
+            public_path(),
+        ]);
+
+        $dompdf = new Dompdf($options);
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+        $basePdfOutput = $dompdf->output();
+
+        $studentId = $student->student_number ?? $student->id;
+        $downloadFilename = "AMIS-Enrollment-Form-With-Attachments-{$studentId}.pdf";
+
+        // 5. If there are PDF attachments, merge them using Ghostscript
+        if (! empty($pdfAttachmentPaths) && file_exists('/usr/bin/gs')) {
+            $tmpDir = sys_get_temp_dir();
+            $basePdfPath = tempnam($tmpDir, 'amis_base_') . '.pdf';
+            $mergedPdfPath = tempnam($tmpDir, 'amis_merged_') . '.pdf';
+
+            file_put_contents($basePdfPath, $basePdfOutput);
+
+            $escapedInputs = array_map('escapeshellarg', array_merge([$basePdfPath], $pdfAttachmentPaths));
+            $cmd = '/usr/bin/gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -sOutputFile=' . escapeshellarg($mergedPdfPath) . ' ' . implode(' ', $escapedInputs);
+            exec($cmd, $output, $returnCode);
+
+            if ($returnCode === 0 && file_exists($mergedPdfPath) && filesize($mergedPdfPath) > 0) {
+                $finalPdfContent = file_get_contents($mergedPdfPath);
+                @unlink($basePdfPath);
+                @unlink($mergedPdfPath);
+
+                return response($finalPdfContent, 200, [
+                    'Content-Type' => 'application/pdf',
+                    'Content-Disposition' => "attachment; filename=\"{$downloadFilename}\"",
+                    'Content-Length' => strlen($finalPdfContent),
+                ]);
+            }
+
+            @unlink($basePdfPath);
+            @unlink($mergedPdfPath);
+        }
+
+        return response($basePdfOutput, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => "attachment; filename=\"{$downloadFilename}\"",
+            'Content-Length' => strlen($basePdfOutput),
+        ]);
+    }
+
+    /**
      * Queue mandatory enrollment requirements for Google Drive archival.
      */
     public function queueRequirements(Student $student, EnrollmentApplicant $applicant): array

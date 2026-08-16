@@ -986,7 +986,7 @@
                                 </td>
                                 <td style="vertical-align: bottom;">
                                     <div class="input-line" style="font-size: @if($isPdf ?? false) 8.5pt @else 0.86rem @endif; min-height: 14px;">
-                                        {!! !empty($checkedByName) ? e(mb_strtoupper($checkedByName)) : '&nbsp;' !!}
+                                        &nbsp;
                                     </div>
                                 </td>
                             </tr>
@@ -1000,7 +1000,7 @@
                                 </td>
                                 <td style="vertical-align: bottom;">
                                     <div class="input-line" style="font-size: @if($isPdf ?? false) 8.5pt @else 0.86rem @endif; min-height: 14px;">
-                                        {!! !empty($checkedDate) ? e(mb_strtoupper($checkedDate)) : '&nbsp;' !!}
+                                        &nbsp;
                                     </div>
                                 </td>
                             </tr>
@@ -1011,3 +1011,21 @@
         </div>
     </div>
 </div>
+
+@if(!empty($includeAttachments) && !empty($imageAttachments))
+    @foreach($imageAttachments as $att)
+        <div class="paper-container attachment-print-page" style="page-break-before: always; width: 100%; text-align: center; padding-top: 12px;">
+            <div style="text-align: left; border-bottom: 2px solid #059669; padding-bottom: 4px; margin-bottom: 12px;">
+                <div style="font-family: 'DejaVu Sans', sans-serif; font-size: 10.5pt; font-weight: bold; color: #0f172a; text-transform: uppercase;">
+                    ATTACHMENT: {{ $att['label'] }}
+                </div>
+                <div style="font-family: 'DejaVu Sans', sans-serif; font-size: 7.5pt; color: #475569; margin-top: 2px;">
+                    Student: {{ $student->full_name }} &bull; AMIS ID: #{{ $student->student_number }} &bull; Grade: {{ $student->grade_level }}
+                </div>
+            </div>
+            <div style="display: block; text-align: center; width: 100%; margin-top: 8px;">
+                <img src="{{ $att['data_uri'] }}" style="max-width: 180mm; max-height: 235mm; object-fit: contain; margin: 0 auto; display: inline-block;">
+            </div>
+        </div>
+    @endforeach
+@endif
