@@ -250,8 +250,7 @@ class EnrollmentDocumentService
         $dompdf->render();
         $basePdfOutput = $dompdf->output();
 
-        $studentId = $student->student_number ?? $student->id;
-        $downloadFilename = "AMIS-Enrollment-Form-With-Attachments-{$studentId}.pdf";
+        $downloadFilename = $this->getFormattedPdfFilename($student, $applicant, true);
 
         // 5. If there are PDF attachments, merge them using Ghostscript
         if (! empty($pdfAttachmentPaths) && file_exists('/usr/bin/gs')) {
@@ -377,7 +376,11 @@ class EnrollmentDocumentService
      */
     public function streamOrDownload(StudentDocument $document, bool $download = false): Response
     {
-        $filename = $document->stored_filename ?: ($document->original_filename ?: "AMIS_Document_{$document->id}.pdf");
+        if ($document->document_type === 'enrollment_form') {
+            $filename = $this->getFormattedPdfFilename($document->student, $document->applicant ?? $document->student?->applicant);
+        } else {
+            $filename = $document->stored_filename ?: ($document->original_filename ?: "AMIS_Document_{$document->id}.pdf");
+        }
         $mimeType = $document->mime_type ?: 'application/pdf';
 
         // 1. Check local storage
@@ -480,5 +483,24 @@ class EnrollmentDocumentService
                 'approved_by' => auth()->id(),
             ],
         ];
+    }
+
+    /**
+     * Get auto filename for enrollment form PDFs: Grade_Lastname_FirstName_SY.pdf
+     */
+    public function getFormattedPdfFilename(?Student $student, ?EnrollmentApplicant $applicant, bool $withAttachments = false): string
+    {
+        $rawGrade = trim($student?->grade_level ?: ($applicant?->grade_level ?: 'Grade'));
+        $rawLast = trim($student?->last_name ?: ($applicant?->last_name ?: ($student?->full_name ?: 'Student')));
+        $rawFirst = trim($student?->first_name ?: ($applicant?->first_name ?: ''));
+        $rawSy = trim($student?->school_year ?: ($applicant?->school_year ?: (config('services.school.year') ?: '2026-2027')));
+
+        $cleanGrade = trim(preg_replace('/[^A-Za-z0-9]+/', '_', $rawGrade), '_');
+        $cleanLast = trim(preg_replace('/[^A-Za-z0-9]+/', '_', $rawLast), '_');
+        $cleanFirst = trim(preg_replace('/[^A-Za-z0-9]+/', '_', $rawFirst), '_');
+        $cleanSy = trim(preg_replace('/[^A-Za-z0-9\-]+/', '_', $rawSy), '_');
+
+        $base = implode('_', array_filter([$cleanGrade, $cleanLast, $cleanFirst, $cleanSy]));
+        return $withAttachments ? "{$base}_With_Attachments.pdf" : "{$base}.pdf";
     }
 }
