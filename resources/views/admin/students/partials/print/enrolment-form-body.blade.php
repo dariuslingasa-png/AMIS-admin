@@ -844,7 +844,10 @@
                 <span class="label-text">Parent/Guardian</span>
             </div>
             <div>
-                <div class="input-line">{!! mb_strtoupper($student->created_at->format('M d, Y')) !!}</div>
+                @php
+                    $submittedDate = $student->created_at ?? $app->created_at ?? now();
+                @endphp
+                <div class="input-line">{!! mb_strtoupper($submittedDate->format('M d, Y')) !!}</div>
                 <span class="label-text">Date</span>
             </div>
         </div>
@@ -864,9 +867,9 @@
             <div style="width: 44%;">
                 <span class="office-label" style="font-size: @if($isPdf ?? false) 9.5px @else 0.90rem @endif; font-weight: 700; color: #1e293b;">Application submitted on:</span>
                 <div class="date-slash-inputs" style="margin-left: 4px;">
-                    <span class="date-slash-input" style="font-size: @if($isPdf ?? false) 10.5px @else 0.95rem @endif; font-weight: bold; border-bottom: 1.5px solid #0f172a; padding: 0 4px;">{{ $student->created_at->format('m') }}</span> /
-                    <span class="date-slash-input" style="font-size: @if($isPdf ?? false) 10.5px @else 0.95rem @endif; font-weight: bold; border-bottom: 1.5px solid #0f172a; padding: 0 4px;">{{ $student->created_at->format('d') }}</span> /
-                    <span class="date-slash-input" style="font-size: @if($isPdf ?? false) 10.5px @else 0.95rem @endif; font-weight: bold; border-bottom: 1.5px solid #0f172a; padding: 0 4px;">{{ $student->created_at->format('Y') }}</span>
+                    <span class="date-slash-input" style="font-size: @if($isPdf ?? false) 10.5px @else 0.95rem @endif; font-weight: bold; border-bottom: 1.5px solid #0f172a; padding: 0 4px;">{{ $submittedDate->format('m') }}</span> /
+                    <span class="date-slash-input" style="font-size: @if($isPdf ?? false) 10.5px @else 0.95rem @endif; font-weight: bold; border-bottom: 1.5px solid #0f172a; padding: 0 4px;">{{ $submittedDate->format('d') }}</span> /
+                    <span class="date-slash-input" style="font-size: @if($isPdf ?? false) 10.5px @else 0.95rem @endif; font-weight: bold; border-bottom: 1.5px solid #0f172a; padding: 0 4px;">{{ $submittedDate->format('Y') }}</span>
                 </div>
             </div>
             <div style="width: 28%;">
