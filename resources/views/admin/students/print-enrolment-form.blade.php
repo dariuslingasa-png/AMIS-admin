@@ -1164,6 +1164,14 @@
             $medicalUrl = \App\Support\EnrollmentStorage::url($app?->medical_record_url);
             $affidavitUrl = \App\Support\EnrollmentStorage::url($app?->affidavit_url);
 
+            $lastName = trim($student->last_name ?? $app?->last_name ?? '');
+            $firstName = trim($student->first_name ?? $app?->first_name ?? '');
+            $middleName = trim($student->middle_name ?? $app?->middle_name ?? '');
+            $middleInitial = !empty($middleName) ? ' ' . mb_substr($middleName, 0, 1) . '.' : '';
+            $formalFormattedName = !empty($lastName) && !empty($firstName)
+                ? mb_strtoupper("{$lastName}, {$firstName}{$middleInitial}")
+                : mb_strtoupper($student->full_name ?: ($app?->full_name ?: 'STUDENT'));
+
             $attachedDocumentsList = [
                 [
                     'key' => 'photo_2x2',
@@ -1234,10 +1242,13 @@
                         </p>
                     </div>
                 </div>
-                <div>
-                    <span style="background: #0f172a; color: #ffffff; padding: 4px 10px; border-radius: 6px; font-size: 0.72rem; font-weight: 800; text-transform: uppercase;">
+                <div style="text-align: right;">
+                    <div style="font-size: 0.92rem; font-weight: 800; color: #0f172a; text-transform: uppercase; letter-spacing: 0.3px;">
+                        {{ $formalFormattedName }}
+                    </div>
+                    <div style="font-size: 0.70rem; font-weight: 700; color: #059669; margin-top: 1px;">
                         AMIS ID: #{{ $student->student_number }}
-                    </span>
+                    </div>
                 </div>
             </div>
 
@@ -1477,13 +1488,13 @@
                                         ATTACHMENT: ${doc.label}
                                     </div>
                                     <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-top: 3px;">
-                                        Student: {{ addslashes((string) ($student->full_name ?? '')) }} • AMIS ID: #{{ $student->student_number }} • Grade: {{ $student->grade_level }}
+                                        AMIS ID: #{{ $student->student_number }} • Grade: {{ $student->grade_level }}
                                     </div>
                                 </div>
-                                <div>
-                                    <span style="background: #0f172a; color: #ffffff; padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: 800; text-transform: uppercase;">
-                                        SY 2026-2027
-                                    </span>
+                                <div style="text-align: right;">
+                                    <div style="font-size: 14px; font-weight: 900; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px;">
+                                        {{ addslashes($formalFormattedName) }}
+                                    </div>
                                 </div>
                             </div>
                             <div style="display: flex; align-items: center; justify-content: center; height: 960px; background: #fafafa; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; padding: 12px;">

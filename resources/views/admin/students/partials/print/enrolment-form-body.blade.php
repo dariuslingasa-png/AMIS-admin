@@ -1013,16 +1013,35 @@
 </div>
 
 @if(!empty($includeAttachments) && !empty($imageAttachments))
+    @php
+        $app = $applicant ?? $student?->applicant;
+        $lastName = trim($student->last_name ?? $app?->last_name ?? '');
+        $firstName = trim($student->first_name ?? $app?->first_name ?? '');
+        $middleName = trim($student->middle_name ?? $app?->middle_name ?? '');
+        $middleInitial = !empty($middleName) ? ' ' . mb_substr($middleName, 0, 1) . '.' : '';
+        $formalFormattedName = !empty($lastName) && !empty($firstName)
+            ? mb_strtoupper("{$lastName}, {$firstName}{$middleInitial}")
+            : mb_strtoupper($student->full_name ?: ($app?->full_name ?: 'STUDENT'));
+    @endphp
     @foreach($imageAttachments as $att)
         <div class="paper-container attachment-print-page" style="page-break-before: always; width: 100%; text-align: center; padding-top: 12px;">
-            <div style="text-align: left; border-bottom: 2px solid #059669; padding-bottom: 4px; margin-bottom: 12px;">
-                <div style="font-family: 'DejaVu Sans', sans-serif; font-size: 10.5pt; font-weight: bold; color: #0f172a; text-transform: uppercase;">
-                    ATTACHMENT: {{ $att['label'] }}
-                </div>
-                <div style="font-family: 'DejaVu Sans', sans-serif; font-size: 7.5pt; color: #475569; margin-top: 2px;">
-                    Student: {{ $student->full_name }} &bull; AMIS ID: #{{ $student->student_number }} &bull; Grade: {{ $student->grade_level }}
-                </div>
-            </div>
+            <table style="width: 100%; border-collapse: collapse; border-bottom: 2px solid #059669; padding-bottom: 4px; margin-bottom: 12px;">
+                <tr>
+                    <td style="text-align: left; vertical-align: bottom;">
+                        <div style="font-family: 'DejaVu Sans', sans-serif; font-size: 10.5pt; font-weight: bold; color: #0f172a; text-transform: uppercase;">
+                            ATTACHMENT: {{ $att['label'] }}
+                        </div>
+                        <div style="font-family: 'DejaVu Sans', sans-serif; font-size: 7.5pt; color: #475569; margin-top: 2px;">
+                            AMIS ID: #{{ $student->student_number }} &bull; Grade: {{ $student->grade_level }}
+                        </div>
+                    </td>
+                    <td style="text-align: right; vertical-align: bottom;">
+                        <div style="font-family: 'DejaVu Sans', sans-serif; font-size: 10pt; font-weight: bold; color: #0f172a; text-transform: uppercase;">
+                            {{ $formalFormattedName }}
+                        </div>
+                    </td>
+                </tr>
+            </table>
             <div style="display: block; text-align: center; width: 100%; margin-top: 8px;">
                 <img src="{{ $att['data_uri'] }}" style="max-width: 180mm; max-height: 235mm; object-fit: contain; margin: 0 auto; display: inline-block;">
             </div>
