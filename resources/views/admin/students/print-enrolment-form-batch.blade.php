@@ -208,40 +208,43 @@
             gap: 10px;
         }
 
-        .header-left-group {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex: 1;
+        .top-header-row {
+            width: 100%;
+            margin-bottom: 8px;
+        }
+
+        .header-main-table {
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: collapse;
         }
 
         .header-logo-amis {
-            width: 84px;
-            height: 84px;
+            width: 76px;
+            height: 76px;
             object-fit: contain;
-            flex-shrink: 0;
+            display: block;
         }
 
         .header-school-text {
             text-align: center;
-            flex-grow: 1;
-            padding: 0 5px;
+            padding: 0 6px;
         }
 
         .school-arabic-name {
             font-family: 'Amiri', 'Noto Naskh Arabic', 'Traditional Arabic', serif;
-            font-size: 1.80rem;
+            font-size: 1.65rem;
             font-weight: 700;
             color: #047857;
             text-align: center;
             direction: rtl;
-            line-height: 1.25;
+            line-height: 1.2;
             margin-bottom: 2px;
         }
 
         .header-arabic-wordmark {
-            height: 40px;
-            max-width: 380px;
+            height: 36px;
+            max-width: 360px;
             object-fit: contain;
             display: inline-block;
             margin-bottom: 2px;
@@ -249,9 +252,9 @@
 
         .school-name {
             font-family: 'Merriweather', Georgia, serif;
-            font-size: 1.26rem;
+            font-size: 1.15rem;
             font-weight: 900;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.3px;
             color: #0f172a;
             text-transform: uppercase;
             white-space: nowrap;
@@ -261,7 +264,7 @@
 
         .school-address {
             font-family: 'Merriweather', Georgia, serif;
-            font-size: 0.86rem;
+            font-size: 0.82rem;
             font-weight: 600;
             margin-top: 2px;
             color: #334155;
@@ -269,37 +272,27 @@
             text-align: center;
         }
 
-        .header-right-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-shrink: 0;
-        }
-
         .header-logo-deped {
-            width: 84px;
-            height: 84px;
+            width: 76px;
+            height: 76px;
             object-fit: contain;
-            flex-shrink: 0;
+            display: inline-block;
         }
 
         .refund-notice-box {
             border: 2px solid #dc2626;
-            padding: 5px 8px;
+            padding: 4px 6px;
             text-align: center;
             font-family: 'Inter', sans-serif;
             font-weight: 800;
-            font-size: 0.82rem;
+            font-size: 0.78rem;
             line-height: 1.15;
             color: #dc2626;
             text-transform: uppercase;
             white-space: nowrap;
             border-radius: 4px;
             margin: 0;
-            display: inline-flex;
-            flex-direction: column;
-            justify-content: center;
-            align-self: center;
+            display: inline-block;
         }
 
         .form-middle-grid {

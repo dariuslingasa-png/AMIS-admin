@@ -236,17 +236,16 @@
         padding: 3px 6px !important;
         margin-top: 8px !important;
         margin-bottom: 4px !important;
-        text-transform: uppercase !important;
     }
     .top-header-row {
-        display: table !important;
         width: 100% !important;
         margin-bottom: 6px !important;
+    }
+    .header-main-table {
+        width: 100% !important;
         table-layout: fixed !important;
         border-collapse: collapse !important;
     }
-    .header-left-group { display: table-cell !important; vertical-align: middle !important; width: 73% !important; }
-    .header-right-group { display: table-cell !important; vertical-align: middle !important; width: 27% !important; text-align: right !important; }
     
     .form-middle-grid {
         display: table !important;
@@ -462,47 +461,38 @@
         </div>
     @endif
     <div class="top-header-row">
-        <div class="header-left-group">
-            <table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
-                <tr>
-                    <td style="width: @if($isPdf ?? false) 84px @else 92px @endif; vertical-align: middle; text-align: left;">
-                        <img src="{{ $amisLogoSrc }}" alt="AMIS Logo" class="header-logo-amis" style="width: @if($isPdf ?? false) 76px @else 84px @endif; height: @if($isPdf ?? false) 76px @else 84px @endif; object-fit: contain; vertical-align: middle;">
-                    </td>
-                    <td style="vertical-align: middle; text-align: center; padding: 0 6px;">
-                        @if(!empty($arabicWordmarkSrc))
-                            <div style="text-align: center; margin-bottom: 2px;">
-                                <img src="{{ $arabicWordmarkSrc }}" alt="المدرسة المنورة الإسلامية" class="header-arabic-wordmark" style="height: @if($isPdf ?? false) 36px @else 42px @endif; max-width: @if($isPdf ?? false) 340px @else 380px @endif; object-fit: contain; display: inline-block;">
-                            </div>
-                        @else
-                            <div class="school-arabic-name" style="font-family: 'Amiri', 'Noto Naskh Arabic', 'Traditional Arabic', serif; font-size: @if($isPdf ?? false) 15.5pt @else 1.80rem @endif; font-weight: bold; color: #047857; text-align: center; direction: rtl; line-height: 1.25; margin-bottom: 2px;">
-                                المدرسة المنورة الإسلامية
-                            </div>
-                        @endif
-                        <h1 class="school-name" style="font-family: 'Merriweather', Georgia, serif; font-size: @if($isPdf ?? false) 14pt @else 1.26rem @endif; font-weight: 900; letter-spacing: 0.5px; color: #0f172a; margin: 0; line-height: 1.15; text-transform: uppercase;">
-                            AL MUNAWWARA ISLAMIC SCHOOL
-                        </h1>
-                        <p class="school-address" style="font-family: 'Merriweather', Georgia, serif; font-size: @if($isPdf ?? false) 8.5pt @else 0.86rem @endif; font-weight: 600; color: #334155; margin: 2px 0 0 0;">
-                            Bugac Ma-a Road, Davao City Philippines
-                        </p>
-                    </td>
-                </tr>
-            </table>
-        </div>
-
-        <div class="header-right-group">
-            <table style="width: 100%; border-collapse: collapse;">
-                <tr>
-                    <td style="vertical-align: middle; padding-right: 8px; text-align: right;">
-                        <img src="{{ $depedLogoSrc }}" alt="DepEd Logo" class="header-logo-deped" style="width: @if($isPdf ?? false) 76px @else 84px @endif; height: @if($isPdf ?? false) 76px @else 84px @endif; object-fit: contain; vertical-align: middle;">
-                    </td>
-                    <td style="vertical-align: middle; text-align: right;">
-                        <div class="refund-notice-box" style="border: @if($isPdf ?? false) 1.5px @else 2px @endif solid #dc2626; color: #dc2626; font-size: @if($isPdf ?? false) 7.5pt @else 0.82rem @endif; font-weight: 800; padding: @if($isPdf ?? false) 3px 6px @else 5px 8px @endif; border-radius: 4px; line-height: 1.15; text-align: center; text-transform: uppercase;">
-                            NO REFUND OF<br>ENROLLMENT FEE
+        <table class="header-main-table" style="width: 100%; border-collapse: collapse; table-layout: fixed;">
+            <tr>
+                <td style="width: @if($isPdf ?? false) 74px @else 80px @endif; vertical-align: middle; text-align: left; padding: 0;">
+                    <img src="{{ $amisLogoSrc }}" alt="AMIS Logo" class="header-logo-amis" style="width: @if($isPdf ?? false) 70px @else 76px @endif; height: @if($isPdf ?? false) 70px @else 76px @endif; object-fit: contain; display: block;">
+                </td>
+                <td style="vertical-align: middle; text-align: center; padding: 0 6px;">
+                    @if(!empty($arabicWordmarkSrc))
+                        <div style="text-align: center; margin-bottom: 2px;">
+                            <img src="{{ $arabicWordmarkSrc }}" alt="المدرسة المنورة الإسلامية" class="header-arabic-wordmark" style="height: @if($isPdf ?? false) 32px @else 36px @endif; max-width: @if($isPdf ?? false) 320px @else 360px @endif; object-fit: contain; display: inline-block;">
                         </div>
-                    </td>
-                </tr>
-            </table>
-        </div>
+                    @else
+                        <div class="school-arabic-name" style="font-family: 'Amiri', 'Noto Naskh Arabic', 'Traditional Arabic', serif; font-size: @if($isPdf ?? false) 14.5pt @else 1.65rem @endif; font-weight: bold; color: #047857; text-align: center; direction: rtl; line-height: 1.2; margin-bottom: 2px;">
+                            المدرسة المنورة الإسلامية
+                        </div>
+                    @endif
+                    <h1 class="school-name" style="font-family: 'Merriweather', Georgia, serif; font-size: @if($isPdf ?? false) 12.5pt @else 1.15rem @endif; font-weight: 900; letter-spacing: 0.3px; color: #0f172a; margin: 0; line-height: 1.15; text-transform: uppercase; white-space: nowrap;">
+                        AL MUNAWWARA ISLAMIC SCHOOL
+                    </h1>
+                    <p class="school-address" style="font-family: 'Merriweather', Georgia, serif; font-size: @if($isPdf ?? false) 8pt @else 0.82rem @endif; font-weight: 600; color: #334155; margin: 2px 0 0 0; white-space: nowrap;">
+                        Bugac Ma-a Road, Davao City Philippines
+                    </p>
+                </td>
+                <td style="width: @if($isPdf ?? false) 74px @else 80px @endif; vertical-align: middle; text-align: center; padding: 0 4px;">
+                    <img src="{{ $depedLogoSrc }}" alt="DepEd Logo" class="header-logo-deped" style="width: @if($isPdf ?? false) 70px @else 76px @endif; height: @if($isPdf ?? false) 70px @else 76px @endif; object-fit: contain; display: inline-block; vertical-align: middle;">
+                </td>
+                <td style="width: @if($isPdf ?? false) 104px @else 114px @endif; vertical-align: middle; text-align: right; padding: 0;">
+                    <div class="refund-notice-box" style="border: @if($isPdf ?? false) 1.5px @else 2px @endif solid #dc2626; color: #dc2626; font-size: @if($isPdf ?? false) 7pt @else 0.78rem @endif; font-weight: 800; padding: @if($isPdf ?? false) 3px 5px @else 4px 6px @endif; border-radius: 4px; line-height: 1.15; text-align: center; text-transform: uppercase; display: inline-block;">
+                        NO REFUND OF<br>ENROLLMENT FEE
+                    </div>
+                </td>
+            </tr>
+        </table>
     </div>
 
     <div class="form-middle-grid">
