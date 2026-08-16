@@ -78,23 +78,28 @@
 
     // Robust Student 2x2 Photo URL / Base64 resolver
     $photoBase64 = null;
-    if ($app && !empty($app->photo_2x2_url)) {
-        $candidate = storage_path('app/public/' . ltrim(str_replace('storage/', '', $app->photo_2x2_url), '/'));
-        if (file_exists($candidate)) {
-            $mime = @mime_content_type($candidate) ?: 'image/jpeg';
-            $photoBase64 = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($candidate));
-        } else {
-            $photoBase64 = \App\Support\EnrollmentStorage::url($app->photo_2x2_url);
+    $tryResolvePhoto = function($rawPath) use ($isPdf) {
+        if (empty($rawPath) || $rawPath === '[]' || $rawPath === '[""]') return null;
+        $state = \App\Support\EnrollmentStorage::getFileState($rawPath);
+        if ($state['exists_on_disk'] && !empty($state['absolute_path']) && file_exists($state['absolute_path'])) {
+            $abs = $state['absolute_path'];
+            $mime = @mime_content_type($abs) ?: 'image/jpeg';
+            return 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($abs));
         }
+        if (!empty($isPdf)) {
+            return null; // Never make blocking loopback HTTP calls during Dompdf compilation
+        }
+        return \App\Support\EnrollmentStorage::url($rawPath);
+    };
+
+    if ($app && !empty($app->photo_2x2_url)) {
+        $photoBase64 = $tryResolvePhoto($app->photo_2x2_url);
     }
     if (!$photoBase64 && $student && !empty($student->photo_url)) {
-        $candidate = storage_path('app/public/' . ltrim(str_replace('storage/', '', $student->photo_url), '/'));
-        if (file_exists($candidate)) {
-            $mime = @mime_content_type($candidate) ?: 'image/jpeg';
-            $photoBase64 = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($candidate));
-        } else {
-            $photoBase64 = \App\Support\EnrollmentStorage::url($student->photo_url);
-        }
+        $photoBase64 = $tryResolvePhoto($student->photo_url);
+    }
+    if (!$photoBase64 && $student && !empty($student->student_id_url)) {
+        $photoBase64 = $tryResolvePhoto($student->student_id_url);
     }
 
     // Multi-tier Helper function for dynamic font-size calculation on long text (keeps normal text large)
