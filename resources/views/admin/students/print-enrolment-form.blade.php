@@ -1122,7 +1122,7 @@
                         </div>
 
                         <!-- Option 3: Enrollment Form Only (PDF) -->
-                        <a href="{{ route('admin.students.official-enrollment-form.download', $student) }}" onclick="closeDownloadDropdown();" class="download-menu-item" style="width: 100%; border: none; background: transparent; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; color: #0f172a; text-decoration: none; transition: background 0.15s ease;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
+                        <button type="button" onclick="downloadSingleFormPdf(false); closeDownloadDropdown();" class="download-menu-item" style="width: 100%; border: none; background: transparent; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; color: #0f172a; transition: background 0.15s ease;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
                             <div style="width: 30px; height: 30px; border-radius: 8px; background: #fef2f2; border: 1px solid #fecaca; display: flex; align-items: center; justify-content: center; color: #dc2626; shrink-0;">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M10 12h4"/><path d="M10 16h4"/></svg>
                             </div>
@@ -1130,10 +1130,10 @@
                                 <div style="font-size: 0.80rem; font-weight: 800; color: #0f172a; line-height: 1.2;">Enrollment Form Only</div>
                                 <div style="font-size: 0.68rem; font-weight: 500; color: #64748b; margin-top: 1px;">Official 2-Page Form (.pdf)</div>
                             </div>
-                        </a>
+                        </button>
 
                         <!-- Option 4: Enrollment Form with Attachments (PDF) -->
-                        <a href="{{ route('admin.students.official-enrollment-form.download', $student) }}?with_attachments=1" onclick="closeDownloadDropdown();" class="download-menu-item" style="width: 100%; border: none; background: transparent; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; color: #0f172a; text-decoration: none; transition: background 0.15s ease;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
+                        <button type="button" onclick="downloadSingleFormPdf(true); closeDownloadDropdown();" class="download-menu-item" style="width: 100%; border: none; background: transparent; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; color: #0f172a; transition: background 0.15s ease;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
                             <div style="width: 30px; height: 30px; border-radius: 8px; background: #fef2f2; border: 1px solid #fecaca; display: flex; align-items: center; justify-content: center; color: #dc2626; shrink-0;">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
                             </div>
@@ -1141,7 +1141,7 @@
                                 <div style="font-size: 0.80rem; font-weight: 800; color: #0f172a; line-height: 1.2;">Enrollment Form + Attachments</div>
                                 <div style="font-size: 0.68rem; font-weight: 500; color: #64748b; margin-top: 1px;">Form + Supporting Documents (.pdf)</div>
                             </div>
-                        </a>
+                        </button>
 
                     </div>
                 </div>
@@ -1654,6 +1654,125 @@
             } catch (err) {
                 console.error('Error generating DOCX:', err);
                 alert('An error occurred while generating the DOCX file. Please try again.');
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = originalBtnHtml;
+                }
+            }
+        }
+
+        async function downloadSingleFormPdf(withAttachments = false) {
+            fitAllFormFontSizes();
+            const formPages = document.querySelectorAll('.paper-container');
+            if (!formPages || formPages.length === 0) return;
+
+            const btn = document.getElementById('btn-download-docx');
+            const originalBtnHtml = btn ? btn.innerHTML : '';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<svg class="animate-spin" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg><span>Generating PDF...</span>';
+            }
+
+            try {
+                if (typeof html2canvas === 'undefined') {
+                    const script = document.createElement('script');
+                    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+                    document.head.appendChild(script);
+                    await new Promise(res => script.onload = res);
+                }
+                if (typeof window.jspdf === 'undefined') {
+                    const script = document.createElement('script');
+                    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+                    document.head.appendChild(script);
+                    await new Promise(res => script.onload = res);
+                }
+
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: 'a4',
+                    compress: true
+                });
+
+                let pageIndex = 0;
+
+                // 1. Capture Main Form Pages (Page 1 & Page 2)
+                for (let i = 0; i < formPages.length; i++) {
+                    if (pageIndex > 0) {
+                        pdf.addPage('a4', 'portrait');
+                    }
+                    const canvas = await html2canvas(formPages[i], { scale: 2.2, useCORS: true, logging: false });
+                    const imgData = canvas.toDataURL('image/jpeg', 0.95);
+                    pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297, undefined, 'FAST');
+                    pageIndex++;
+                }
+
+                // 2. If withAttachments is selected, capture available uploaded supporting documents
+                if (withAttachments && typeof attachedDocFiles !== 'undefined' && Array.isArray(attachedDocFiles)) {
+                    for (const doc of attachedDocFiles) {
+                        if (!doc.url) continue;
+
+                        const isDocPdf = doc.url.toLowerCase().endsWith('.pdf') || doc.url.toLowerCase().includes('.pdf?');
+                        if (isDocPdf) continue;
+
+                        const tempContainer = document.createElement('div');
+                        tempContainer.style.width = '794px';
+                        tempContainer.style.minHeight = '1123px';
+                        tempContainer.style.background = '#ffffff';
+                        tempContainer.style.padding = '36px 44px';
+                        tempContainer.style.boxSizing = 'border-box';
+                        tempContainer.style.position = 'fixed';
+                        tempContainer.style.left = '-9999px';
+                        tempContainer.style.top = '0';
+                        tempContainer.style.zIndex = '-1000';
+                        tempContainer.style.fontFamily = "'Inter', system-ui, sans-serif";
+
+                        tempContainer.innerHTML = `
+                            <div style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2.5px solid #059669; padding-bottom: 8px; margin-bottom: 20px;">
+                                <div>
+                                    <div style="font-size: 15px; font-weight: 900; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px;">
+                                        ATTACHMENT: ${doc.label}
+                                    </div>
+                                    <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-top: 3px;">
+                                        AMIS ID: #{{ $student->student_number }} • Grade: {{ $student->grade_level }}
+                                    </div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-size: 14px; font-weight: 900; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px;">
+                                        {{ addslashes($formalFormattedName) }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; justify-content: center; height: 960px; background: #fafafa; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; padding: 12px;">
+                                <img src="${doc.data_uri || doc.url}" crossorigin="anonymous" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                            </div>
+                        `;
+
+                        document.body.appendChild(tempContainer);
+
+                        await new Promise(r => {
+                            const img = tempContainer.querySelector('img');
+                            if (!img || img.complete) r();
+                            else { img.onload = r; img.onerror = r; }
+                        });
+
+                        pdf.addPage('a4', 'portrait');
+                        const canvas = await html2canvas(tempContainer, { scale: 2, useCORS: true, logging: false });
+                        document.body.removeChild(tempContainer);
+
+                        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+                        pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297, undefined, 'FAST');
+                        pageIndex++;
+                    }
+                }
+
+                const autoFileName = '{{ $autoFileName }}';
+                pdf.save(withAttachments ? `${autoFileName}_With_Attachments.pdf` : `${autoFileName}.pdf`);
+            } catch (err) {
+                console.error('Error generating PDF:', err);
+                alert('An error occurred while generating the PDF file. Please try again.');
             } finally {
                 if (btn) {
                     btn.disabled = false;
