@@ -574,7 +574,7 @@
                 <div class="input-line">{!! !empty($app->first_name) ? e(mb_strtoupper($app->first_name)) : '&nbsp;' !!}</div>
                 <span class="label-text">First</span>
             </div>
-            <div @if($isPdf ?? false) style="width: 24%;" @endif>
+            <div @if($isPdf ?? false) style="width: 22%;" @endif>
                 @php
                     $rawMiddle = trim($app->middle_name ?? '');
                     $mDisplay = '';
@@ -586,7 +586,7 @@
                 <div class="input-line">{!! !empty($mDisplay) ? e($mDisplay) : '&nbsp;' !!}</div>
                 <span class="label-text">Middle</span>
             </div>
-            <div @if($isPdf ?? false) style="width: 8%;" @endif>
+            <div @if($isPdf ?? false) style="width: 7%;" @endif>
                 @php
                     $g = strtoupper(trim($app->gender ?? ''));
                     $sexChar = str_starts_with($g, 'F') ? 'F' : (str_starts_with($g, 'M') ? 'M' : $g);
@@ -594,12 +594,12 @@
                 <div class="input-line" style="text-align: center;">{!! !empty($sexChar) ? e($sexChar) : '&nbsp;' !!}</div>
                 <span class="label-text" style="text-align: center;">Sex</span>
             </div>
-            <div @if($isPdf ?? false) style="width: 12%;" @endif>
+            <div @if($isPdf ?? false) style="width: 15%;" @endif>
                 @php
                     $rawGrade = $student->grade_level ?? $app->grade_level ?? '';
                     $shortGrade = $formatGradeLevelShort($rawGrade);
                 @endphp
-                <div class="input-line auto-fit-field" style="text-align: center;">{!! !empty($shortGrade) ? e($shortGrade) : '&nbsp;' !!}</div>
+                <div class="input-line" style="text-align: center;">{!! !empty($shortGrade) ? e($shortGrade) : '&nbsp;' !!}</div>
                 <span class="label-text" style="text-align: center; line-height: 1.05;">GRADE<br>LEVEL</span>
             </div>
         </div>

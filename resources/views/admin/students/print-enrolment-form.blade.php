@@ -791,8 +791,8 @@
 
         .grid-5-col {
             display: grid;
-            grid-template-columns: 2.9fr 2.9fr 2.6fr 0.6fr 1.0fr;
-            gap: 12px;
+            grid-template-columns: 2.8fr 2.8fr 2.2fr 0.7fr 1.5fr;
+            gap: 10px;
             align-items: end;
         }
 
@@ -1583,7 +1583,54 @@
         }
 
         async function fitAllFormFontSizes() {
-            // Text naturally wraps to multiple lines with auto-height and full visibility
+            if (document.fonts && document.fonts.ready) {
+                try {
+                    await document.fonts.ready;
+                } catch (e) {
+                    console.warn('Font loading check:', e);
+                }
+            }
+
+            await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+            const fields = document.querySelectorAll('.input-line, .p2-full-line, .lrn-input');
+            const defaultSize = 13.5;
+            const minSize = 9.5;
+
+            fields.forEach(el => {
+                const text = el.textContent ? el.textContent.trim() : '';
+                if (!text || text === '\u00a0' || text === '&nbsp;') {
+                    el.style.fontSize = `${defaultSize}px`;
+                    return;
+                }
+
+                // Reset to default standard font size
+                el.style.fontSize = `${defaultSize}px`;
+                el.style.whiteSpace = 'nowrap';
+                el.style.transform = 'none';
+
+                const clientWidth = el.clientWidth;
+                if (clientWidth <= 0) return;
+
+                // If text fits in container, keep default size (Never shrink short text like AAYAN, C., F, KINDER 1)
+                if (el.scrollWidth <= clientWidth + 1) {
+                    return;
+                }
+
+                // If text overflows, progressively reduce in 0.25px steps down to minSize
+                let currentSize = defaultSize;
+                while (el.scrollWidth > el.clientWidth + 1 && currentSize > minSize) {
+                    currentSize -= 0.25;
+                    el.style.fontSize = `${currentSize}px`;
+                }
+
+                // If it still overflows at minimum size, allow word wrap
+                if (el.scrollWidth > el.clientWidth + 1) {
+                    el.style.whiteSpace = 'normal';
+                    el.style.overflowWrap = 'anywhere';
+                    el.style.wordBreak = 'break-word';
+                }
+            });
         }
         document.addEventListener('DOMContentLoaded', fitAllFormFontSizes);
         window.addEventListener('load', fitAllFormFontSizes);
