@@ -593,40 +593,47 @@
 <body>
 
     <!-- Full-Screen Loading Overlay with robust inline styles -->
-    <div id="loadingOverlay" class="loading-overlay" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; z-index: 999999;">
+    <div id="loadingOverlay" class="loading-overlay" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; z-index: 999999; transition: opacity 0.25s ease;">
         <div class="loading-card">
             <div class="spinner-ring"></div>
-            <div class="loading-title">Loading Enrollment Forms</div>
+            <div id="loadingTitle" class="loading-title">Preparing Enrollment Forms</div>
             <div class="loading-progress-bg">
                 <div id="loadingProgressBar" class="loading-progress-fill"></div>
             </div>
-            <div id="loadingProgressCount" class="loading-subtext">Rendering student forms (0/{{ count($students) }})...</div>
+            <div id="loadingProgressCount" class="loading-subtext">Loading student forms (0/{{ count($students) }})...</div>
         </div>
     </div>
 
     <!-- Top Action Bar for Screen Viewing -->
-    <div class="action-bar">
-        <h2>Enrolment Application Forms ({{ $gradeTitle ?? 'All Grades' }}) — {{ count($students) }} Students</h2>
-        <div class="btn-group">
-            <button class="btn btn-secondary" onclick="window.close()">
-                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    <div class="action-bar" style="max-width: 960px; margin: 0 auto 16px auto; display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 12px 20px; border-radius: 14px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06); font-family: 'Inter', sans-serif; position: sticky; top: 10px; z-index: 100; border: 1px solid #e2e8f0;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 34px; height: 34px; border-radius: 8px; background: #ecfdf5; border: 1px solid #a7f3d0; display: flex; align-items: center; justify-content: center; color: #059669; shrink-0;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>
+            </div>
+            <div>
+                <h2 style="font-size: 0.92rem; font-weight: 800; color: #0f172a; margin: 0; line-height: 1.2;">
+                    Batch Enrollment Forms ({{ $gradeTitle ?? 'All Grades' }})
+                </h2>
+                <p style="font-size: 0.74rem; font-weight: 600; color: #64748b; margin: 2px 0 0 0;">
+                    Total: <strong style="color: #059669;">{{ count($students) }} Students</strong> • 2 Pages per form
+                </p>
+            </div>
+        </div>
+        <div class="btn-group" style="display: flex; gap: 8px; align-items: center;">
+            <button class="btn btn-secondary" onclick="window.close()" style="padding: 7px 12px; font-size: 0.78rem;">
                 Close
             </button>
-            <button class="btn btn-primary" onclick="generateBatchPdfDownload()">
-                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/></svg>
-                Download PDF
-            </button>
-            <button class="btn btn-zip" onclick="generatePdfZip()" style="background-color: #eff6ff; color: #1e40af; border-color: #bfdbfe;">
+            <button class="btn btn-zip" onclick="generatePdfZip()" style="background-color: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; padding: 7px 14px; font-size: 0.78rem;">
                 <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 ZIP (PDFs)
             </button>
-            <button class="btn btn-zip" id="btn-download-png-zip" onclick="generatePngZip()" style="background-color: #f5f3ff; color: #5b21b6; border-color: #ddd6fe;">
+            <button class="btn btn-zip" id="btn-download-png-zip" onclick="generatePngZip()" style="background-color: #f5f3ff; color: #5b21b6; border: 1px solid #ddd6fe; padding: 7px 14px; font-size: 0.78rem;">
                 <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 ZIP (JPGs)
             </button>
-            <button class="btn btn-secondary" onclick="window.print()">
+            <button class="btn btn-primary" onclick="window.print()" style="padding: 7px 16px; font-size: 0.78rem; background-color: #059669;">
                 <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-                Print / Save PDF
+                Print Forms
             </button>
         </div>
     </div>
@@ -671,76 +678,108 @@
     @endforelse
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             if (window.parent && window.parent !== window) {
                 window.parent.postMessage({ type: 'zip_started' }, '*');
             }
+
             const overlay = document.getElementById('loadingOverlay');
             const fill = document.getElementById('loadingProgressBar');
             const text = document.getElementById('loadingProgressCount');
-            const images = document.querySelectorAll('img');
-            const totalImages = images.length || 1;
-            let loadedImages = 0;
+            const title = document.getElementById('loadingTitle');
+            const totalStudents = {{ count($students) }};
 
             function updateProgress(percent, countMsg) {
-                if (fill) fill.style.width = percent + '%';
+                if (fill) fill.style.width = Math.min(100, Math.max(0, percent)) + '%';
                 if (text) text.innerText = countMsg;
             }
 
-            if (images.length === 0) {
-                updateProgress(100, 'Ready');
-                setTimeout(() => overlay && overlay.classList.add('hidden-overlay'), 200);
+            if (totalStudents === 0) {
+                updateProgress(100, 'No student records found.');
+                setTimeout(() => {
+                    if (overlay) {
+                        overlay.style.display = 'none';
+                        overlay.classList.add('hidden-overlay');
+                    }
+                }, 300);
                 return;
             }
 
-            images.forEach(img => {
-                if (img.complete) {
-                    onImgLoad();
-                } else {
-                    img.addEventListener('load', onImgLoad);
-                    img.addEventListener('error', onImgLoad);
+            // 1. Safe Image Preloading: Never block on broken / missing images
+            const images = Array.from(document.querySelectorAll('.student-print-wrapper img'));
+            const imagePromises = images.map(img => {
+                if (img.complete && img.naturalHeight !== 0) {
+                    return Promise.resolve();
                 }
+                return new Promise((resolve) => {
+                    const timer = setTimeout(() => resolve(), 1200); // 1.2s max safety fallback per image
+                    img.addEventListener('load', () => { clearTimeout(timer); resolve(); }, { once: true });
+                    img.addEventListener('error', () => { clearTimeout(timer); resolve(); }, { once: true });
+                });
             });
 
-            function onImgLoad() {
-                loadedImages++;
-                const pct = Math.min(100, Math.round((loadedImages / totalImages) * 100));
-                updateProgress(pct, `Loading student forms (${Math.min(loadedImages, {{ count($students) }})}/{{ count($students) }})...`);
-
-                if (loadedImages >= totalImages) {
-                    finishLoading();
+            // 2. Accurate progress ticker tracking students (1/25 ... 25/25)
+            let loadedCount = 0;
+            const stepTime = Math.max(25, Math.min(75, Math.floor(1200 / totalStudents)));
+            const interval = setInterval(() => {
+                if (loadedCount < totalStudents) {
+                    loadedCount++;
+                    const pct = Math.round((loadedCount / totalStudents) * 85);
+                    updateProgress(pct, `Loading student forms (${loadedCount}/${totalStudents})...`);
                 }
+            }, stepTime);
+
+            // Wait for all images or their fast timeouts
+            try {
+                await Promise.allSettled(imagePromises);
+            } catch (err) {
+                console.warn('Image preloader warning:', err);
+            } finally {
+                clearInterval(interval);
             }
 
-            let isFinished = false;
-            function finishLoading() {
-                if (isFinished) return;
-                isFinished = true;
-                updateProgress(100, 'Loading complete!');
+            // 3. Auto-fit all dynamic form text sizes
+            updateProgress(95, `Loading student forms (${totalStudents}/${totalStudents})...`);
+            try {
+                fitAllFormFontSizes();
+            } catch (err) {
+                console.warn('Font fitting error:', err);
+            }
+
+            // 4. Transition to "Preparing print preview..."
+            updateProgress(100, 'Preparing print preview...');
+            if (title) title.innerText = 'Preparing Print Preview';
+
+            await new Promise(r => setTimeout(r, 350));
+
+            // 5. Hide loading overlay BEFORE calling window.print()
+            if (overlay) {
+                overlay.style.opacity = '0';
+                overlay.style.pointerEvents = 'none';
                 setTimeout(() => {
-                    if (overlay) overlay.classList.add('hidden-overlay');
-                    fitAllFormFontSizes();
-                    checkAutoDownload();
+                    overlay.style.display = 'none';
+                    overlay.classList.add('hidden-overlay');
+                }, 200);
+            }
+
+            // 6. Handle auto actions or trigger browser print preview
+            const urlParams = new URLSearchParams(window.location.search);
+            const autoAction = urlParams.get('auto') || urlParams.get('download') || urlParams.get('action');
+
+            if (autoAction === 'pdf' || autoAction === 'batch_pdf') {
+                setTimeout(() => generateBatchPdfDownload(), 150);
+            } else if (autoAction === 'zip' || autoAction === 'zip_pdf') {
+                setTimeout(() => generatePdfZip(), 150);
+            } else if (autoAction === 'jpg' || autoAction === 'zip_jpg') {
+                setTimeout(() => generatePngZip(), 150);
+            } else if (autoAction === 'no_print' || autoAction === 'view') {
+                // Stay in view mode
+            } else {
+                // Default: Automatically trigger print preview!
+                setTimeout(() => {
+                    window.print();
                 }, 300);
             }
-
-            function checkAutoDownload() {
-                const urlParams = new URLSearchParams(window.location.search);
-                const autoAction = urlParams.get('auto') || urlParams.get('download') || urlParams.get('action');
-                if (autoAction === 'pdf' || autoAction === 'batch_pdf') {
-                    generateBatchPdfDownload();
-                } else if (autoAction === 'zip' || autoAction === 'zip_pdf') {
-                    generatePdfZip();
-                } else if (autoAction === 'jpg' || autoAction === 'zip_jpg') {
-                    generatePngZip();
-                } else if (autoAction === 'print') {
-                    window.print();
-                }
-            }
-
-            setTimeout(() => {
-                finishLoading();
-            }, 2500);
         });
 
         async function generatePngZip() {

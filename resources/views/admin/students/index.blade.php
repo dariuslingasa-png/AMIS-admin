@@ -535,7 +535,7 @@
             if (actionType === 'forms_batch') {
                 window.open('{{ route('admin.students.print-enrolment-forms-batch') }}' + queryString, '_blank');
             } else if (actionType === 'forms_jpg') {
-                downloadEnrolmentPngZip('{{ route('admin.students.print-enrolment-forms-batch') }}' + queryString);
+                window.open('{{ route('admin.students.print-enrolment-forms-batch') }}' + (queryString ? queryString + '&auto=jpg' : '?auto=jpg'), '_blank');
             } else if (actionType === 'id_cards') {
                 const idParams = new URLSearchParams(params);
                 idParams.append('print_id', '1');

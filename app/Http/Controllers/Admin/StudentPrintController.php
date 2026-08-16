@@ -113,7 +113,12 @@ class StudentPrintController extends Controller
         ini_set('memory_limit', '1024M');
         ini_set('max_execution_time', 300);
 
-        $query = Student::with(['applicant.user', 'applicant.payment', 'studentSection.section']);
+        $query = Student::with([
+            'applicant.user',
+            'applicant.payment',
+            'studentSection.section',
+            'officialEnrollmentForm'
+        ]);
 
         if ($request->filled('section_id')) {
             $query->whereHas('studentSection', function ($q) use ($request) {
