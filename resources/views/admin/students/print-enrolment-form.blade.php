@@ -1953,6 +1953,7 @@
                 }
             }
         }
+    </script>
 
     <!-- 2x2 Photo Cropper & Adjuster Modal -->
     <div id="photoCropperModal" class="photo-cropper-backdrop" style="display: none;" onclick="handleBackdropClick(event)">
@@ -2048,7 +2049,6 @@
                 : originalPhotoDataUri;
 
             if (!photoSrc || photoSrc.includes('placeholder') || photoSrc === window.location.href) {
-                // Trigger file input directly if no photo exists
                 document.getElementById('cropperFileInput').click();
                 return;
             }
@@ -2079,9 +2079,12 @@
             }
 
             const targetImg = document.getElementById('cropperTargetImage');
-            targetImg.src = imageSrc;
-
-            targetImg.onload = () => {
+            
+            const startCropper = () => {
+                if (activeCropper) {
+                    activeCropper.destroy();
+                    activeCropper = null;
+                }
                 activeCropper = new Cropper(targetImg, {
                     aspectRatio: 1, // Fixed 1:1 square for 2x2 photo
                     viewMode: 1,
@@ -2100,6 +2103,12 @@
                     }
                 });
             };
+
+            targetImg.onload = startCropper;
+            targetImg.src = imageSrc;
+            if (targetImg.complete) {
+                startCropper();
+            }
         }
 
         function onZoomSliderChange(val) {
