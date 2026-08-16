@@ -7,17 +7,17 @@
         $app = $applicant ?? $student?->applicant;
         
         // Auto Filename format: Grade_Lastname_FirstName_SY
-        $rawGrade = trim($student->grade_level ?? $app?->grade_level ?? 'Grade');
-        $rawLast = trim($student->last_name ?? $app?->last_name ?? 'Student');
-        $rawFirst = trim($student->first_name ?? $app?->first_name ?? 'Name');
-        $rawSy = trim($student->school_year ?? $app?->school_year ?? config('services.school.year') ?? '2026-2027');
+        $rawGrade = trim($student->grade_level ?: ($app?->grade_level ?: 'Grade'));
+        $rawLast = trim($student->last_name ?: ($app?->last_name ?: ($student->full_name ?: 'Student')));
+        $rawFirst = trim($student->first_name ?: ($app?->first_name ?: ''));
+        $rawSy = trim($student->school_year ?: ($app?->school_year ?: (config('services.school.year') ?: '2026-2027')));
 
         $cleanGrade = trim(preg_replace('/[^A-Za-z0-9]+/', '_', $rawGrade), '_');
         $cleanLast = trim(preg_replace('/[^A-Za-z0-9]+/', '_', $rawLast), '_');
         $cleanFirst = trim(preg_replace('/[^A-Za-z0-9]+/', '_', $rawFirst), '_');
         $cleanSy = trim(preg_replace('/[^A-Za-z0-9\-]+/', '_', $rawSy), '_');
 
-        $autoFileName = "{$cleanGrade}_{$cleanLast}_{$cleanFirst}_{$cleanSy}";
+        $autoFileName = implode('_', array_filter([$cleanGrade, $cleanLast, $cleanFirst, $cleanSy]));
     @endphp
     <title>{{ $autoFileName }}</title>
     
@@ -1167,9 +1167,9 @@
             $medicalUrl = \App\Support\EnrollmentStorage::url($app?->medical_record_url);
             $affidavitUrl = \App\Support\EnrollmentStorage::url($app?->affidavit_url);
 
-            $lastName = trim($student->last_name ?? $app?->last_name ?? '');
-            $firstName = trim($student->first_name ?? $app?->first_name ?? '');
-            $middleName = trim($student->middle_name ?? $app?->middle_name ?? '');
+            $lastName = trim($student->last_name ?: ($app?->last_name ?: ''));
+            $firstName = trim($student->first_name ?: ($app?->first_name ?: ''));
+            $middleName = trim($student->middle_name ?: ($app?->middle_name ?: ''));
             $middleInitial = !empty($middleName) ? ' ' . mb_substr($middleName, 0, 1) . '.' : '';
             $formalFormattedName = !empty($lastName) && !empty($firstName)
                 ? mb_strtoupper("{$lastName}, {$firstName}{$middleInitial}")
