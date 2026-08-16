@@ -199,14 +199,19 @@
         border: none !important;
         border-bottom: 1.1px solid #0f172a !important;
         background: transparent !important;
-        padding: 0 2px !important;
+        padding: 0 2px 1px 2px !important;
         margin: 0 !important;
         font-family: 'DejaVu Sans', sans-serif !important;
         font-weight: bold !important;
-        font-size: 9.5px !important;
+        font-size: 9.2px !important;
         color: #0f172a !important;
-        line-height: 1.1 !important;
-        height: 15px !important;
+        line-height: 1.2 !important;
+        min-height: 14px !important;
+        height: auto !important;
+        white-space: normal !important;
+        overflow-wrap: anywhere !important;
+        word-wrap: break-word !important;
+        word-break: break-word !important;
         box-sizing: border-box !important;
     }
     .label-text {
@@ -290,7 +295,11 @@
         font-weight: bold !important;
         font-size: 8.5px !important;
         text-align: center !important;
-        height: 13px !important;
+        min-height: 13px !important;
+        height: auto !important;
+        white-space: normal !important;
+        overflow-wrap: anywhere !important;
+        word-break: break-word !important;
     }
 
     .grid-5-col, .grid-4-col-birth, .grid-2-col-school, .grid-parent-row, .grid-children-row, .grid-physician-row, .p2-emergency-grid, .signature-grid, .grid-office-row {
@@ -305,6 +314,10 @@
         vertical-align: bottom !important;
         padding: 0 2px !important;
         box-sizing: border-box !important;
+        white-space: normal !important;
+        overflow-wrap: anywhere !important;
+        word-wrap: break-word !important;
+        word-break: break-word !important;
     }
     .field-container {
         margin-top: 3.5px !important;
@@ -461,7 +474,7 @@
                 <span class="section-title">STUDENT INFORMATION</span>
                 <div class="lrn-container">
                     <span>LRN:</span>
-                    <input type="text" class="lrn-input" value="{{ mb_strtoupper($app->lrn ?? $student->student_number) }}" style="{{ $getDynamicStyle($app->lrn ?? $student->student_number, '0.88rem', '0.78rem', '0.70rem', '0.60rem', 12, 18, 24) }}">
+                    <span class="lrn-input">{{ mb_strtoupper($app->lrn ?? $student->student_number ?? 'NA') }}</span>
                 </div>
             </div>
         </div>
@@ -497,11 +510,11 @@
     <div class="field-container" style="margin-top: 2px;">
         <div class="grid-5-col">
             <div @if($isPdf ?? false) style="width: 28%;" @endif>
-                <input type="text" class="input-line" value="{{ mb_strtoupper($app->last_name ?? '') }}" style="{{ $getDynamicStyle($app->last_name ?? '', '0.96rem', '0.86rem', '0.76rem', '0.68rem', 20, 28, 36) }}">
+                <div class="input-line">{!! !empty($app->last_name) ? e(mb_strtoupper($app->last_name)) : '&nbsp;' !!}</div>
                 <span class="label-text">Last</span>
             </div>
             <div @if($isPdf ?? false) style="width: 28%;" @endif>
-                <input type="text" class="input-line" value="{{ mb_strtoupper($app->first_name ?? '') }}" style="{{ $getDynamicStyle($app->first_name ?? '', '0.96rem', '0.86rem', '0.76rem', '0.68rem', 20, 28, 36) }}">
+                <div class="input-line">{!! !empty($app->first_name) ? e(mb_strtoupper($app->first_name)) : '&nbsp;' !!}</div>
                 <span class="label-text">First</span>
             </div>
             <div @if($isPdf ?? false) style="width: 24%;" @endif>
@@ -513,7 +526,7 @@
                         $mDisplay = ($fChar === '.') ? '.' : mb_strtoupper($fChar, 'UTF-8') . '.';
                     }
                 @endphp
-                <input type="text" class="input-line" value="{{ $mDisplay }}" style="{{ $getDynamicStyle($mDisplay, '0.96rem', '0.86rem', '0.76rem', '0.68rem', 20, 28, 36) }}">
+                <div class="input-line">{!! !empty($mDisplay) ? e($mDisplay) : '&nbsp;' !!}</div>
                 <span class="label-text">Middle</span>
             </div>
             <div @if($isPdf ?? false) style="width: 8%;" @endif>
@@ -521,7 +534,7 @@
                     $g = strtoupper(trim($app->gender ?? ''));
                     $sexChar = str_starts_with($g, 'F') ? 'F' : (str_starts_with($g, 'M') ? 'M' : $g);
                 @endphp
-                <input type="text" class="input-line" value="{{ $sexChar }}" style="text-align: center;">
+                <div class="input-line" style="text-align: center;">{!! !empty($sexChar) ? e($sexChar) : '&nbsp;' !!}</div>
                 <span class="label-text" style="text-align: center;">Sex</span>
             </div>
             <div @if($isPdf ?? false) style="width: 12%;" @endif>
@@ -529,51 +542,51 @@
                     $rawGrade = $student->grade_level ?? $app->grade_level ?? '';
                     $shortGrade = $formatGradeLevelShort($rawGrade);
                 @endphp
-                <input type="text" class="input-line auto-fit-field" value="{{ $shortGrade }}" style="text-align: center;">
+                <div class="input-line auto-fit-field" style="text-align: center;">{!! !empty($shortGrade) ? e($shortGrade) : '&nbsp;' !!}</div>
                 <span class="label-text" style="text-align: center; line-height: 1.05;">GRADE<br>LEVEL</span>
             </div>
         </div>
     </div>
 
     <div class="field-container">
-        <input type="text" class="input-line address-auto-fit" value="{{ $fullAddress }}" style="{{ $getAddressStyle($fullAddress) }}">
+        <div class="input-line address-auto-fit">{!! !empty($fullAddress) ? e($fullAddress) : '&nbsp;' !!}</div>
         <span class="label-text">Address</span>
     </div>
 
     <div class="field-container">
         <div class="grid-4-col-birth">
             <div>
-                <input type="text" class="input-line" value="{{ $studentAge }}">
+                <div class="input-line">{!! $studentAge !== '' ? e($studentAge) : '&nbsp;' !!}</div>
                 <span class="label-text">Age</span>
             </div>
             <div>
-                <input type="text" class="input-line" value="{{ $app->date_of_birth ? mb_strtoupper(\Carbon\Carbon::parse($app->date_of_birth)->format('M d, Y')) : '' }}">
+                <div class="input-line">{!! $app->date_of_birth ? e(mb_strtoupper(\Carbon\Carbon::parse($app->date_of_birth)->format('M d, Y'))) : '&nbsp;' !!}</div>
                 <span class="label-text">Date of Birth</span>
             </div>
             <div>
-                <input type="text" class="input-line" value="{{ mb_strtoupper($app->place_of_birth ?? '') }}" style="{{ $getDynamicStyle($app->place_of_birth ?? '', '0.96rem', '0.84rem', '0.72rem', '0.60rem', 18, 25, 32) }}">
+                <div class="input-line">{!! !empty($app->place_of_birth) ? e(mb_strtoupper($app->place_of_birth)) : '&nbsp;' !!}</div>
                 <span class="label-text">Place of Birth</span>
             </div>
             <div>
-                <input type="text" class="input-line" value="{{ mb_strtoupper($app->religion ?? 'ISLAM') }}" style="{{ $getDynamicStyle($app->religion ?? 'ISLAM', '0.96rem', '0.84rem', '0.72rem', '0.60rem', 14, 20, 26) }}">
+                <div class="input-line">{!! !empty($app->religion) ? e(mb_strtoupper($app->religion)) : 'ISLAM' !!}</div>
                 <span class="label-text">Religion</span>
             </div>
         </div>
     </div>
 
     <div class="field-container">
-        <input type="text" class="input-line" value="{{ mb_strtoupper($app->last_school_attended ?? '') }}" style="{{ $getDynamicStyle($app->last_school_attended ?? '', '0.96rem', '0.84rem', '0.72rem', '0.60rem', 30, 42, 55) }}">
+        <div class="input-line">{!! !empty($app->last_school_attended) ? e(mb_strtoupper($app->last_school_attended)) : '&nbsp;' !!}</div>
         <span class="label-text">Previous Attended School Name</span>
     </div>
 
     <div class="field-container">
         <div class="grid-2-col-school">
             <div>
-                <input type="text" class="input-line" value="{{ mb_strtoupper($app->last_school_address ?? '') }}" style="{{ $getDynamicStyle($app->last_school_address ?? '', '0.96rem', '0.84rem', '0.72rem', '0.60rem', 30, 42, 55) }}">
+                <div class="input-line">{!! !empty($app->last_school_address) ? e(mb_strtoupper($app->last_school_address)) : '&nbsp;' !!}</div>
                 <span class="label-text">Previous School Address</span>
             </div>
             <div>
-                <input type="text" class="input-line" value="{{ $app->last_school_contact ?? '' }}">
+                <div class="input-line">{!! !empty($app->last_school_contact) ? e($app->last_school_contact) : '&nbsp;' !!}</div>
                 <span class="label-text">Telephone No.</span>
             </div>
         </div>
@@ -586,18 +599,18 @@
     <div class="field-container">
         <div class="grid-parent-row">
             <div>
-                <input type="text" class="input-line" value="{{ $fatherFull }}" style="{{ $getDynamicStyle($fatherFull, '0.96rem', '0.84rem', '0.70rem', '0.58rem', 18, 25, 32) }}">
+                <div class="input-line">{!! !empty($fatherFull) ? e($fatherFull) : '&nbsp;' !!}</div>
                 <span class="label-text">Father's Full Name</span>
             </div>
             <div>
-                <input type="text" class="input-line" value="{{ mb_strtoupper($app->father_occupation ?? '') }}" style="{{ $getDynamicStyle($app->father_occupation ?? '', '0.92rem', '0.78rem', '0.64rem', '0.54rem', 11, 15, 20) }}">
+                <div class="input-line">{!! !empty($app->father_occupation) ? e(mb_strtoupper($app->father_occupation)) : '&nbsp;' !!}</div>
                 <span class="label-text">Occupation</span>
             </div>
             <div>
                 @php
                     $fTel = trim(implode(' / ', array_filter([$app->father_phone ?? null, $app->father_email ?? null])));
                 @endphp
-                <input type="text" class="input-line" value="{{ $fTel }}" style="{{ $getDynamicStyle($fTel, '0.96rem', '0.84rem', '0.70rem', '0.58rem', 16, 22, 28) }}">
+                <div class="input-line">{!! !empty($fTel) ? e($fTel) : '&nbsp;' !!}</div>
                 <span class="label-text">Tel./Email Address</span>
             </div>
         </div>
@@ -606,25 +619,25 @@
     <div class="field-container">
         <div class="grid-parent-row">
             <div>
-                <input type="text" class="input-line" value="{{ $motherFull }}" style="{{ $getDynamicStyle($motherFull, '0.96rem', '0.84rem', '0.70rem', '0.58rem', 18, 25, 32) }}">
+                <div class="input-line">{!! !empty($motherFull) ? e($motherFull) : '&nbsp;' !!}</div>
                 <span class="label-text">Mother's Full Name</span>
             </div>
             <div>
-                <input type="text" class="input-line" value="{{ mb_strtoupper($app->mother_occupation ?? '') }}" style="{{ $getDynamicStyle($app->mother_occupation ?? '', '0.92rem', '0.78rem', '0.64rem', '0.54rem', 11, 15, 20) }}">
+                <div class="input-line">{!! !empty($app->mother_occupation) ? e(mb_strtoupper($app->mother_occupation)) : '&nbsp;' !!}</div>
                 <span class="label-text">Occupation</span>
             </div>
             <div>
                 @php
                     $mTel = trim(implode(' / ', array_filter([$app->mother_phone ?? null, $app->mother_email ?? null])));
                 @endphp
-                <input type="text" class="input-line" value="{{ $mTel }}" style="{{ $getDynamicStyle($mTel, '0.96rem', '0.84rem', '0.70rem', '0.58rem', 16, 22, 28) }}">
+                <div class="input-line">{!! !empty($mTel) ? e($mTel) : '&nbsp;' !!}</div>
                 <span class="label-text">Tel./Email Address</span>
             </div>
         </div>
     </div>
 
     <div class="field-container">
-        <input type="text" class="input-line address-auto-fit" value="{{ $fullAddress }}" style="{{ $getAddressStyle($fullAddress) }}">
+        <div class="input-line address-auto-fit">{!! !empty($fullAddress) ? e($fullAddress) : '&nbsp;' !!}</div>
         <span class="label-text">Home Address</span>
     </div>
 
@@ -646,15 +659,15 @@
         <div class="field-container">
             <div class="grid-children-row">
                 <div>
-                    <input type="text" class="input-line" value="{{ $sibName }}" style="{{ $getDynamicStyle($sibName, '0.98rem', '0.82rem', '0.68rem', '0.58rem', 22, 32, 40) }}">
+                    <div class="input-line">{!! !empty($sibName) ? e($sibName) : '&nbsp;' !!}</div>
                     <span class="label-text">Name</span>
                 </div>
                 <div>
-                    <input type="text" class="input-line" value="{{ $sibAge }}">
+                    <div class="input-line">{!! $sibAge !== '' ? e($sibAge) : '&nbsp;' !!}</div>
                     <span class="label-text">Age</span>
                 </div>
                 <div>
-                    <input type="text" class="input-line" value="{{ $sibGrade }}">
+                    <div class="input-line">{!! !empty($sibGrade) ? e($sibGrade) : '&nbsp;' !!}</div>
                     <span class="label-text">Grade Level</span>
                 </div>
             </div>
@@ -698,7 +711,7 @@
 
     <div class="p2-explain-block">
         <span class="p2-explain-label">If yes, please explain:</span>
-        <input type="text" class="p2-full-line" value="{{ mb_strtoupper($app->med_explanation ?? '') }}">
+        <div class="p2-full-line">{!! !empty($app->med_explanation) ? e(mb_strtoupper($app->med_explanation)) : '&nbsp;' !!}</div>
     </div>
 
     <div class="p2-question-row">
@@ -709,17 +722,17 @@
 
     <div class="p2-explain-block">
         <span class="p2-explain-label">If yes, please explain:</span>
-        <input type="text" class="p2-full-line" value="{{ mb_strtoupper($app->current_medications ?? '') }}">
+        <div class="p2-full-line">{!! !empty($app->current_medications) ? e(mb_strtoupper($app->current_medications)) : '&nbsp;' !!}</div>
     </div>
 
     <div class="field-container" style="margin-top: 3px;">
         <div class="grid-physician-row">
             <div>
-                <input type="text" class="input-line" value="{{ mb_strtoupper($app->family_physician ?? '') }}">
+                <div class="input-line">{!! !empty($app->family_physician) ? e(mb_strtoupper($app->family_physician)) : '&nbsp;' !!}</div>
                 <span class="label-text">Family Physician:</span>
             </div>
             <div>
-                <input type="text" class="input-line" value="{{ mb_strtoupper($app->physician_phone ?? '') }}">
+                <div class="input-line">{!! !empty($app->physician_phone) ? e(mb_strtoupper($app->physician_phone)) : '&nbsp;' !!}</div>
                 <span class="label-text">Phone:</span>
             </div>
         </div>
@@ -741,15 +754,15 @@
     <div class="field-container" style="margin-top: 6px;">
         <div class="p2-emergency-grid">
             <div>
-                <input type="text" class="input-line" value="{{ mb_strtoupper($app->emergency_name ?? '') }}" style="{{ $getDynamicStyle($app->emergency_name ?? '', '0.98rem', '0.80rem', '0.68rem', '0.58rem', 20, 28, 35) }}">
+                <div class="input-line">{!! !empty($app->emergency_name) ? e(mb_strtoupper($app->emergency_name)) : '&nbsp;' !!}</div>
                 <span class="label-text">Name</span>
             </div>
             <div>
-                <input type="text" class="input-line" value="{{ mb_strtoupper($app->emergency_relationship ?? '') }}">
+                <div class="input-line">{!! !empty($app->emergency_relationship) ? e(mb_strtoupper($app->emergency_relationship)) : '&nbsp;' !!}</div>
                 <span class="label-text">Relationship</span>
             </div>
             <div>
-                <input type="text" class="input-line" value="{{ mb_strtoupper($app->emergency_phone ?? '') }}">
+                <div class="input-line">{!! !empty($app->emergency_phone) ? e(mb_strtoupper($app->emergency_phone)) : '&nbsp;' !!}</div>
                 <span class="label-text">Phone</span>
             </div>
         </div>
@@ -760,7 +773,7 @@
     </div>
 
     <div class="field-container" style="margin-top: 6px;">
-        <input type="text" class="input-line" value="{{ mb_strtoupper($app->referral_source ?? '') }}">
+        <div class="input-line">{!! !empty($app->referral_source) ? e(mb_strtoupper($app->referral_source)) : '&nbsp;' !!}</div>
         <span class="label-text">I heard about AMIS from</span>
     </div>
 
@@ -779,11 +792,11 @@
     <div class="field-container" style="margin-top: 8px;">
         <div class="signature-grid">
             <div>
-                <input type="text" class="input-line" value="{{ $fatherFull ?: $motherFull }}" style="{{ $getDynamicStyle($fatherFull ?: $motherFull, '0.98rem', '0.80rem', '0.68rem', '0.58rem', 22, 32, 40) }}">
+                <div class="input-line">{!! !empty($fatherFull ?: $motherFull) ? e($fatherFull ?: $motherFull) : '&nbsp;' !!}</div>
                 <span class="label-text">Parent/Guardian</span>
             </div>
             <div>
-                <input type="text" class="input-line" value="{{ mb_strtoupper($student->created_at->format('M d, Y')) }}">
+                <div class="input-line">{!! mb_strtoupper($student->created_at->format('M d, Y')) !!}</div>
                 <span class="label-text">Date</span>
             </div>
         </div>
@@ -803,9 +816,9 @@
             <div style="width: 44%;">
                 <span style="font-size: 7.5px; font-weight: bold;">Application submitted on:</span>
                 <div class="date-slash-inputs">
-                    <input type="text" class="date-slash-input" value="{{ $student->created_at->format('m') }}"> /
-                    <input type="text" class="date-slash-input" value="{{ $student->created_at->format('d') }}"> /
-                    <input type="text" class="date-slash-input" value="{{ $student->created_at->format('Y') }}">
+                    <span class="date-slash-input">{{ $student->created_at->format('m') }}</span> /
+                    <span class="date-slash-input">{{ $student->created_at->format('d') }}</span> /
+                    <span class="date-slash-input">{{ $student->created_at->format('Y') }}</span>
                 </div>
             </div>
             <div style="width: 28%;">
@@ -813,7 +826,7 @@
                     <tr>
                         <td style="width: 32px; vertical-align: bottom; font-size: 7.5px; font-weight: bold;">Paid:</td>
                         <td style="vertical-align: bottom;">
-                            <input type="text" class="input-line" value="{{ $app?->payment?->amount_paid ? '₱' . number_format($app->payment->amount_paid, 2) : '' }}">
+                            <div class="input-line">{!! $app?->payment?->amount_paid ? '₱' . number_format($app->payment->amount_paid, 2) : '&nbsp;' !!}</div>
                         </td>
                     </tr>
                 </table>
@@ -823,7 +836,7 @@
                     <tr>
                         <td style="width: 42px; vertical-align: bottom; font-size: 7.5px; font-weight: bold;">OR No.:</td>
                         <td style="vertical-align: bottom;">
-                            <input type="text" class="input-line" value="{{ mb_strtoupper($app?->payment?->reference_number ?? '') }}">
+                            <div class="input-line">{!! !empty($app?->payment?->reference_number) ? e(mb_strtoupper($app->payment->reference_number)) : '&nbsp;' !!}</div>
                         </td>
                     </tr>
                 </table>

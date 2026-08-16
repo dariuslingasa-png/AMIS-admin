@@ -444,18 +444,65 @@
             border: none;
             border-bottom: 1.5px solid #0f172a;
             font-family: 'Inter', sans-serif;
-            font-size: 0.98rem;
+            font-size: 0.92rem;
             font-weight: 700;
             color: #0f172a;
             outline: none;
-            padding: 2px 4px;
+            padding: 2px 2px 1px 2px;
+            line-height: 1.25;
+            min-height: 20px;
+            height: auto;
             width: 100%;
             background: transparent;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            white-space: normal;
+            overflow-wrap: anywhere;
+            word-wrap: break-word;
+            word-break: break-word;
             display: block;
+            box-sizing: border-box;
             text-transform: uppercase;
+        }
+
+        .p2-full-line {
+            border: none;
+            border-bottom: 1.5px solid #0f172a;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.90rem;
+            font-weight: 700;
+            color: #0f172a;
+            outline: none;
+            padding: 2px 2px 1px 2px;
+            line-height: 1.25;
+            min-height: 20px;
+            height: auto;
+            width: 100%;
+            background: transparent;
+            white-space: normal;
+            overflow-wrap: anywhere;
+            word-wrap: break-word;
+            word-break: break-word;
+            display: block;
+            box-sizing: border-box;
+            text-transform: uppercase;
+        }
+
+        .lrn-input {
+            display: inline-block;
+            border: none;
+            border-bottom: 1.5px solid #0f172a;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: #0f172a;
+            padding: 0 4px;
+            line-height: 1.2;
+            min-width: 85px;
+            min-height: 16px;
+            height: auto;
+            text-align: center;
+            white-space: normal;
+            overflow-wrap: anywhere;
+            word-break: break-word;
         }
 
         .label-text {
@@ -473,25 +520,28 @@
             display: grid;
             grid-template-columns: 2.9fr 2.9fr 2.6fr 0.6fr 1.0fr;
             gap: 12px;
+            align-items: end;
         }
 
         .grid-4-col-birth {
             display: grid;
             grid-template-columns: 1.2fr 2.5fr 3.5fr 2fr;
             gap: 15px;
+            align-items: end;
         }
 
         .grid-2-col-school {
             display: grid;
             grid-template-columns: 5fr 2.5fr;
             gap: 15px;
+            align-items: end;
         }
 
         .grid-parent-row {
             display: grid;
             grid-template-columns: 3.8fr 2.1fr 2.9fr;
             gap: 15px;
-            align-items: flex-end;
+            align-items: end;
         }
 
         .grid-children-row {
@@ -499,6 +549,7 @@
             grid-template-columns: 4.5fr 1.5fr 2.5fr;
             gap: 15px;
             margin-bottom: 8px;
+            align-items: end;
         }
 
         .lives-with-row {
@@ -977,64 +1028,10 @@
         }
 
         async function fitAllFormFontSizes() {
-            if (document.fonts && document.fonts.ready) {
-                try { await document.fonts.ready; } catch(e) {}
-            }
-
-            const dummyCanvas = document.createElement('canvas');
-            const ctx = dummyCanvas.getContext('2d');
-
-            document.querySelectorAll('.input-line, .lrn-input, .p2-full-line, .auto-fit-field, .address-auto-fit').forEach(el => {
-                const text = (el.value || el.innerText || '').trim();
-                if (!text) return;
-
-                // Never shrink short text unnecessarily (e.g. AAYAN, ALI, C., F, M, K1, AGE)
-                if (text.length <= 6) {
-                    el.style.fontSize = '';
-                    return;
-                }
-
-                // Reset font size before measuring
-                el.style.fontSize = '';
-                el.style.whiteSpace = 'nowrap';
-
-                const style = window.getComputedStyle(el);
-                const defaultSize = parseFloat(style.fontSize) || 13.5;
-                const minSize = 9.5;
-
-                const rect = el.getBoundingClientRect();
-                const parentRect = el.parentElement ? el.parentElement.getBoundingClientRect() : null;
-                const containerWidth = Math.max(rect.width, parentRect ? parentRect.width : 0);
-
-                if (containerWidth < 30) return; // Hidden or unrendered element
-
-                const fontWeight = style.fontWeight || '700';
-                const fontFamily = 'Inter, sans-serif';
-
-                ctx.font = `${fontWeight} ${defaultSize}px ${fontFamily}`;
-                let textWidth = ctx.measureText(text).width;
-
-                const availableWidth = containerWidth - 8;
-
-                if (textWidth > availableWidth) {
-                    let size = defaultSize;
-                    while (size > minSize) {
-                        size -= 0.5;
-                        ctx.font = `${fontWeight} ${size}px ${fontFamily}`;
-                        textWidth = ctx.measureText(text).width;
-                        if (textWidth <= availableWidth) {
-                            break;
-                        }
-                    }
-                    el.style.fontSize = `${size}px`;
-                } else {
-                    el.style.fontSize = '';
-                }
-            });
+            // Text naturally wraps to multiple lines with auto-height and full visibility
         }
         document.addEventListener('DOMContentLoaded', fitAllFormFontSizes);
         window.addEventListener('load', fitAllFormFontSizes);
-        setTimeout(fitAllFormFontSizes, 100);
 
         async function generatePdfZip() {
             const { jsPDF } = window.jspdf;
