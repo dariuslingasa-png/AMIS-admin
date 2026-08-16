@@ -1587,6 +1587,9 @@
                 zip.file('word/document.xml', docXml);
 
                 const content = await zip.generateAsync({ type: 'blob' });
+                const url = URL.createObjectURL(content);
+                const a = document.createElement('a');
+                a.href = url;
                 const autoFileName = '{{ $autoFileName }}';
                 a.download = withAttachments 
                     ? `${autoFileName}_With_Attachments.docx` 
