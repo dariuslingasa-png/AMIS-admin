@@ -253,9 +253,9 @@
         table-layout: fixed !important;
         border-collapse: collapse !important;
     }
-    .form-title-area { display: table-cell !important; vertical-align: top !important; width: 58% !important; }
-    .checkbox-stack { display: table-cell !important; vertical-align: top !important; width: 17% !important; text-align: left !important; padding-top: 4px !important; }
-    .photo-box { display: table-cell !important; vertical-align: top !important; width: 25% !important; text-align: right !important; }
+    .form-title-area { display: table-cell !important; vertical-align: top !important; width: 56% !important; }
+    .checkbox-stack { display: table-cell !important; vertical-align: top !important; width: 16% !important; text-align: left !important; padding-top: 4px !important; }
+    .photo-box { display: table-cell !important; vertical-align: top !important; width: 28% !important; text-align: right !important; }
 
     .student-info-bar {
         background-color: #f1f5f9 !important;
@@ -526,13 +526,13 @@
 
         <div class="photo-box" id="student-photo-container">
             @if($isPdf ?? false)
-                <div style="display: inline-block; width: 68px; height: 68px; border: 0.8px solid #94a3b8; overflow: hidden; background: #f8fafc; text-align: center; vertical-align: top;">
+                <div style="display: inline-block; width: 82px; height: 82px; border: 0.8px solid #94a3b8; overflow: hidden; background: #f8fafc; text-align: center; vertical-align: top;">
                     @if(!empty($photoBase64))
                         <img src="{{ $photoBase64 }}" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block;">
                     @else
                         <table style="width: 100%; height: 100%; border-collapse: collapse;">
                             <tr>
-                                <td style="vertical-align: middle; text-align: center; color: #94a3b8; font-size: 7.5px; font-weight: bold; font-family: sans-serif; line-height: 1.2;">
+                                <td style="vertical-align: middle; text-align: center; color: #94a3b8; font-size: 8px; font-weight: bold; font-family: sans-serif; line-height: 1.2;">
                                     2x2<br>PHOTO
                                 </td>
                             </tr>
@@ -543,7 +543,7 @@
                 @if(!empty($photoBase64))
                     <img src="{{ $photoBase64 }}" alt="2x2 Photo" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;">
                 @else
-                    <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-size: 0.72rem; font-weight: 700; font-family: 'Inter', sans-serif; line-height: 1.2; text-align: center;">
+                    <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-size: 0.80rem; font-weight: 700; font-family: 'Inter', sans-serif; line-height: 1.2; text-align: center;">
                         2x2<br>PHOTO
                     </div>
                 @endif

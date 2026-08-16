@@ -304,9 +304,9 @@
 
         .form-middle-grid {
             display: grid;
-            grid-template-columns: 1fr auto 92px;
+            grid-template-columns: 1fr auto 112px;
             align-items: flex-start;
-            gap: 15px;
+            gap: 16px;
             margin-bottom: 12px;
         }
 
@@ -411,8 +411,8 @@
         }
 
         .photo-box {
-            width: 92px;
-            height: 92px;
+            width: 112px;
+            height: 112px;
             border: 1px solid #94a3b8;
             background: #f8fafc;
             justify-self: end;
@@ -422,7 +422,7 @@
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            border-radius: 2px;
+            border-radius: 3px;
             box-sizing: border-box;
         }
 
