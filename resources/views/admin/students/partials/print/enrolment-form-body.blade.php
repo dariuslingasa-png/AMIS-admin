@@ -288,7 +288,7 @@
     }
     .lrn-input {
         display: inline-block !important;
-        width: 95px !important;
+        width: 125px !important;
         border: none !important;
         border-bottom: 1.2px solid #0f172a !important;
         background: transparent !important;
@@ -299,9 +299,7 @@
         text-align: center !important;
         min-height: 16px !important;
         height: auto !important;
-        white-space: normal !important;
-        overflow-wrap: anywhere !important;
-        word-break: break-word !important;
+        white-space: nowrap !important;
     }
 
     .grid-5-col, .grid-4-col-birth, .grid-2-col-school, .grid-parent-row, .grid-children-row, .grid-physician-row, .p2-emergency-grid, .signature-grid, .grid-office-row {
@@ -519,11 +517,11 @@
 
         <div class="checkbox-stack">
             <div class="checkbox-item">
-                <span class="custom-checkbox">{{ $isOld ? '✓' : '' }}</span>
+                <span class="custom-checkbox">{!! $isOld ? '&#10003;' : '' !!}</span>
                 <span>OLD</span>
             </div>
             <div class="checkbox-item">
-                <span class="custom-checkbox">{{ $isNew ? '✓' : '' }}</span>
+                <span class="custom-checkbox">{!! $isNew ? '&#10003;' : '' !!}</span>
                 <span>NEW</span>
             </div>
         </div>
@@ -726,17 +724,17 @@
         <span>Applicant lives with:</span>
         
         <div class="radio-option">
-            <span class="radio-line">{{ $bothParents ? '✓' : '' }}</span>
+            <span class="radio-line">{!! $bothParents ? '&#10003;' : '&nbsp;' !!}</span>
             <span>Both Parents</span>
         </div>
 
         <div class="radio-option">
-            <span class="radio-line">{{ $singleParent ? '✓' : '' }}</span>
+            <span class="radio-line">{!! $singleParent ? '&#10003;' : '&nbsp;' !!}</span>
             <span>Mother/Father</span>
         </div>
 
         <div class="radio-option">
-            <span class="radio-line">{{ $guardianPresent ? '✓' : '' }}</span>
+            <span class="radio-line">{!! $guardianPresent ? '&#10003;' : '&nbsp;' !!}</span>
             <span>Guardian</span>
         </div>
     </div>
@@ -762,8 +760,8 @@
 
     <div class="p2-question-row">
         Has the student ever had psychological testing or been screened for academic difficulties or learning disabilities? 
-        &nbsp; YES <span class="p2-inline-line">{{ $hasPsych ? '✓' : '' }}</span> 
-        &nbsp;&nbsp; NO <span class="p2-inline-line">{{ !$hasPsych ? '✓' : '' }}</span>
+        &nbsp; YES <span class="p2-inline-line">{!! $hasPsych ? '&#10003;' : '&nbsp;' !!}</span> 
+        &nbsp;&nbsp; NO <span class="p2-inline-line">{!! !$hasPsych ? '&#10003;' : '&nbsp;' !!}</span>
     </div>
 
     <div class="p2-explain-block">
@@ -773,8 +771,8 @@
 
     <div class="p2-question-row">
         Prescription Medication: 
-        &nbsp; YES <span class="p2-inline-line">{{ $hasMed ? '✓' : '' }}</span> 
-        &nbsp;&nbsp; NO <span class="p2-inline-line">{{ !$hasMed ? '✓' : '' }}</span>
+        &nbsp; YES <span class="p2-inline-line">{!! $hasMed ? '&#10003;' : '&nbsp;' !!}</span> 
+        &nbsp;&nbsp; NO <span class="p2-inline-line">{!! !$hasMed ? '&#10003;' : '&nbsp;' !!}</span>
     </div>
 
     <div class="p2-explain-block">
@@ -867,9 +865,9 @@
             <div style="width: 44%;">
                 <span class="office-label" style="font-size: @if($isPdf ?? false) 9.5px @else 0.90rem @endif; font-weight: 700; color: #1e293b;">Application submitted on:</span>
                 <div class="date-slash-inputs" style="margin-left: 4px;">
-                    <span class="date-slash-input" style="font-size: @if($isPdf ?? false) 10.5px @else 0.95rem @endif; font-weight: bold; border-bottom: 1.5px solid #0f172a; padding: 0 4px;">{{ $submittedDate->format('m') }}</span> /
-                    <span class="date-slash-input" style="font-size: @if($isPdf ?? false) 10.5px @else 0.95rem @endif; font-weight: bold; border-bottom: 1.5px solid #0f172a; padding: 0 4px;">{{ $submittedDate->format('d') }}</span> /
-                    <span class="date-slash-input" style="font-size: @if($isPdf ?? false) 10.5px @else 0.95rem @endif; font-weight: bold; border-bottom: 1.5px solid #0f172a; padding: 0 4px;">{{ $submittedDate->format('Y') }}</span>
+                    <span class="date-slash-input" style="font-size: @if($isPdf ?? false) 10.5px @else 0.95rem @endif; font-weight: bold; border-bottom: 1.5px solid #0f172a; padding: 0 2px; width: @if($isPdf ?? false) 26px @else 32px @endif; display: inline-block; text-align: center;">{{ $submittedDate->format('m') }}</span> /
+                    <span class="date-slash-input" style="font-size: @if($isPdf ?? false) 10.5px @else 0.95rem @endif; font-weight: bold; border-bottom: 1.5px solid #0f172a; padding: 0 2px; width: @if($isPdf ?? false) 26px @else 32px @endif; display: inline-block; text-align: center;">{{ $submittedDate->format('d') }}</span> /
+                    <span class="date-slash-input" style="font-size: @if($isPdf ?? false) 10.5px @else 0.95rem @endif; font-weight: bold; border-bottom: 1.5px solid #0f172a; padding: 0 2px; width: @if($isPdf ?? false) 42px @else 44px @endif; display: inline-block; text-align: center;">{{ $submittedDate->format('Y') }}</span>
                 </div>
             </div>
             <div style="width: 28%;">
