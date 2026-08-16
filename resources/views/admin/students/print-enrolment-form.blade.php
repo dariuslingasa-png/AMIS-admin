@@ -1227,6 +1227,19 @@
                     'svg' => '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #475569;"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h18"/></svg>',
                 ];
             }
+
+            foreach ($attachedDocumentsList as &$docItem) {
+                $docItem['data_uri'] = $docItem['url'];
+                if (!empty($docItem['url'])) {
+                    $cleanPath = ltrim(str_replace(['/storage/', 'storage/'], '', parse_url($docItem['url'], PHP_URL_PATH) ?? ''), '/');
+                    $localCandidate = storage_path('app/public/' . $cleanPath);
+                    if (file_exists($localCandidate)) {
+                        $mime = @mime_content_type($localCandidate) ?: 'image/jpeg';
+                        $docItem['data_uri'] = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($localCandidate));
+                    }
+                }
+            }
+            unset($docItem);
         @endphp
 
         <!-- Attached Documents Gallery Section (Web View - Hidden in Print) -->
@@ -1501,7 +1514,7 @@
                                 </div>
                             </div>
                             <div style="display: flex; align-items: center; justify-content: center; height: 960px; background: #fafafa; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; padding: 12px;">
-                                <img src="${doc.url}" crossorigin="anonymous" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                                <img src="${doc.data_uri || doc.url}" crossorigin="anonymous" style="max-width: 100%; max-height: 100%; object-fit: contain;">
                             </div>
                         `;
 

@@ -6,27 +6,21 @@
     $isOld = str_contains($studentType, 'OLD');
     $isNew = str_contains($studentType, 'NEW') || !$isOld;
 
-    if ($isPdf ?? false) {
-        if (!isset($GLOBALS['AMIS_LOGO_BASE64'])) {
-            $path = public_path('images/AMIS_Logo.png');
-            $GLOBALS['AMIS_LOGO_BASE64'] = file_exists($path) ? 'data:image/png;base64,' . base64_encode(file_get_contents($path)) : asset('images/AMIS_Logo.png');
-        }
-        if (!isset($GLOBALS['DEPED_LOGO_BASE64'])) {
-            $path = public_path('images/logo/deped_logo.png');
-            $GLOBALS['DEPED_LOGO_BASE64'] = file_exists($path) ? 'data:image/png;base64,' . base64_encode(file_get_contents($path)) : asset('images/logo/deped_logo.png');
-        }
-        if (!isset($GLOBALS['ARABIC_WORDMARK_PNG_BASE64'])) {
-            $path = public_path('images/amis-arabic-wordmark.png');
-            $GLOBALS['ARABIC_WORDMARK_PNG_BASE64'] = file_exists($path) ? 'data:image/png;base64,' . base64_encode(file_get_contents($path)) : null;
-        }
-        $amisLogoSrc = $GLOBALS['AMIS_LOGO_BASE64'];
-        $depedLogoSrc = $GLOBALS['DEPED_LOGO_BASE64'];
-        $arabicWordmarkSrc = $GLOBALS['ARABIC_WORDMARK_PNG_BASE64'] ?? null;
-    } else {
-        $amisLogoSrc = asset('images/AMIS_Logo.png');
-        $depedLogoSrc = asset('images/logo/deped_logo.png');
-        $arabicWordmarkSrc = asset('images/amis-arabic-wordmark.png');
+    if (!isset($GLOBALS['AMIS_LOGO_BASE64'])) {
+        $path = public_path('images/AMIS_Logo.png');
+        $GLOBALS['AMIS_LOGO_BASE64'] = file_exists($path) ? 'data:image/png;base64,' . base64_encode(file_get_contents($path)) : asset('images/AMIS_Logo.png');
     }
+    if (!isset($GLOBALS['DEPED_LOGO_BASE64'])) {
+        $path = public_path('images/logo/deped_logo.png');
+        $GLOBALS['DEPED_LOGO_BASE64'] = file_exists($path) ? 'data:image/png;base64,' . base64_encode(file_get_contents($path)) : asset('images/logo/deped_logo.png');
+    }
+    if (!isset($GLOBALS['ARABIC_WORDMARK_PNG_BASE64'])) {
+        $path = public_path('images/amis-arabic-wordmark.png');
+        $GLOBALS['ARABIC_WORDMARK_PNG_BASE64'] = file_exists($path) ? 'data:image/png;base64,' . base64_encode(file_get_contents($path)) : null;
+    }
+    $amisLogoSrc = $GLOBALS['AMIS_LOGO_BASE64'];
+    $depedLogoSrc = $GLOBALS['DEPED_LOGO_BASE64'];
+    $arabicWordmarkSrc = $GLOBALS['ARABIC_WORDMARK_PNG_BASE64'] ?? asset('images/amis-arabic-wordmark.png');
 
     // Parent Name formatting helper: Format middle name to Middle Initial (e.g. SAHARODIN G. SALINDAWAN)
     $formatParentName = function($first, $middle, $last) {
@@ -85,21 +79,19 @@
     // Robust Student 2x2 Photo URL / Base64 resolver
     $photoBase64 = null;
     if ($app && !empty($app->photo_2x2_url)) {
-        if ($isPdf ?? false) {
-            $candidate = storage_path('app/public/' . ltrim(str_replace('storage/', '', $app->photo_2x2_url), '/'));
-            if (file_exists($candidate)) {
-                $photoBase64 = 'data:image/jpeg;base64,' . base64_encode(file_get_contents($candidate));
-            }
+        $candidate = storage_path('app/public/' . ltrim(str_replace('storage/', '', $app->photo_2x2_url), '/'));
+        if (file_exists($candidate)) {
+            $mime = @mime_content_type($candidate) ?: 'image/jpeg';
+            $photoBase64 = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($candidate));
         } else {
             $photoBase64 = \App\Support\EnrollmentStorage::url($app->photo_2x2_url);
         }
     }
     if (!$photoBase64 && $student && !empty($student->photo_url)) {
-        if ($isPdf ?? false) {
-            $candidate = storage_path('app/public/' . ltrim(str_replace('storage/', '', $student->photo_url), '/'));
-            if (file_exists($candidate)) {
-                $photoBase64 = 'data:image/jpeg;base64,' . base64_encode(file_get_contents($candidate));
-            }
+        $candidate = storage_path('app/public/' . ltrim(str_replace('storage/', '', $student->photo_url), '/'));
+        if (file_exists($candidate)) {
+            $mime = @mime_content_type($candidate) ?: 'image/jpeg';
+            $photoBase64 = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($candidate));
         } else {
             $photoBase64 = \App\Support\EnrollmentStorage::url($student->photo_url);
         }
