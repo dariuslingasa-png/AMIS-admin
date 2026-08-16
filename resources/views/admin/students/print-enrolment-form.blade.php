@@ -747,8 +747,8 @@
             display: grid;
             grid-template-columns: 4fr 3fr;
             gap: 20px;
-            margin-top: 16px;
-            margin-bottom: 20px;
+            margin-top: 6px;
+            margin-bottom: 6px;
             align-items: end;
         }
 
@@ -756,16 +756,16 @@
             display: grid;
             grid-template-columns: 4.5fr 3.5fr 3fr;
             gap: 15px;
-            margin-top: 8px;
-            margin-bottom: 20px;
+            margin-top: 6px;
+            margin-bottom: 8px;
             align-items: end;
         }
 
         .p2-policy-text {
             font-family: 'Merriweather', serif;
-            font-size: 0.92rem;
-            line-height: 1.5;
-            margin-top: 12px;
+            font-size: 0.88rem;
+            line-height: 1.4;
+            margin-top: 8px;
             text-align: justify;
             color: #1e293b;
         }
@@ -774,28 +774,28 @@
             display: grid;
             grid-template-columns: 5fr 2.5fr;
             gap: 30px;
-            margin-top: 35px;
-            margin-bottom: 8px;
+            margin-top: 18px;
+            margin-bottom: 6px;
             align-items: end;
         }
 
         .signature-disclaimer {
             font-family: 'Inter', sans-serif;
-            font-size: 0.82rem;
+            font-size: 0.80rem;
             font-style: italic;
             color: #64748b;
-            margin-bottom: 25px;
+            margin-bottom: 12px;
         }
 
         .office-perforated-line {
             border: none;
             border-top: 1.5px dashed #64748b;
-            margin: 16px 0 12px 0;
+            margin: 12px 0 8px 0;
         }
 
         .office-use-box {
             border: 1px solid #94a3b8;
-            padding: 10px 14px;
+            padding: 8px 12px;
             margin-top: 4px;
             background: #ffffff;
             border-radius: 4px;

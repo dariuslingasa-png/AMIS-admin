@@ -161,7 +161,7 @@
 <style>
     @page {
         size: 210mm 297mm;
-        margin: 6mm 10mm 6mm 10mm !important;
+        margin: 8mm 10mm 8mm 10mm !important;
     }
     * {
         box-sizing: border-box !important;
@@ -174,8 +174,8 @@
         margin: 0 !important;
         font-family: 'DejaVu Sans', sans-serif !important;
         color: #0f172a !important;
-        line-height: 1.15 !important;
-        font-size: 10px !important;
+        line-height: 1.25 !important;
+        font-size: 10.5pt !important;
         width: 100% !important;
     }
     .paper-container {
@@ -197,16 +197,16 @@
         display: block !important;
         width: 100% !important;
         border: none !important;
-        border-bottom: 1.1px solid #0f172a !important;
+        border-bottom: 1.2px solid #0f172a !important;
         background: transparent !important;
-        padding: 0 2px 1px 2px !important;
-        margin: 0 !important;
+        padding: 1px 2px 2px 2px !important;
+        margin: 0 0 2px 0 !important;
         font-family: 'DejaVu Sans', sans-serif !important;
         font-weight: bold !important;
-        font-size: 9.2px !important;
+        font-size: 10pt !important;
         color: #0f172a !important;
-        line-height: 1.2 !important;
-        min-height: 14px !important;
+        line-height: 1.25 !important;
+        min-height: 18px !important;
         height: auto !important;
         white-space: normal !important;
         overflow-wrap: anywhere !important;
@@ -217,29 +217,31 @@
     .label-text {
         display: block !important;
         font-family: 'DejaVu Sans', sans-serif !important;
-        font-size: 7px !important;
+        font-size: 7.5pt !important;
         font-weight: bold !important;
         color: #475569 !important;
         text-transform: uppercase !important;
-        margin-top: 1px !important;
-        line-height: 1 !important;
+        margin-top: 2px !important;
+        line-height: 1.15 !important;
+        padding: 0 1px !important;
+        letter-spacing: 0.2px !important;
     }
     .section-header-row {
         background-color: #f1f5f9 !important;
-        border-left: 3px solid #059669 !important;
+        border-left: 3.5px solid #059669 !important;
         font-family: 'DejaVu Sans', sans-serif !important;
-        font-size: 8.8px !important;
+        font-size: 9.5pt !important;
         font-weight: bold !important;
         color: #0f172a !important;
-        padding: 2px 4px !important;
-        margin-top: 6px !important;
-        margin-bottom: 3px !important;
+        padding: 3px 6px !important;
+        margin-top: 8px !important;
+        margin-bottom: 4px !important;
         text-transform: uppercase !important;
     }
     .top-header-row {
         display: table !important;
         width: 100% !important;
-        margin-bottom: 4px !important;
+        margin-bottom: 6px !important;
         table-layout: fixed !important;
         border-collapse: collapse !important;
     }
@@ -249,7 +251,7 @@
     .form-middle-grid {
         display: table !important;
         width: 100% !important;
-        margin-bottom: 4px !important;
+        margin-bottom: 6px !important;
         table-layout: fixed !important;
         border-collapse: collapse !important;
     }
@@ -259,10 +261,10 @@
 
     .student-info-bar {
         background-color: #f1f5f9 !important;
-        border-left: 3px solid #059669 !important;
-        padding: 2px 4px !important;
-        margin-top: 4px !important;
-        margin-bottom: 2px !important;
+        border-left: 3.5px solid #059669 !important;
+        padding: 3px 6px !important;
+        margin-top: 5px !important;
+        margin-bottom: 3px !important;
         display: table !important;
         width: 100% !important;
         table-layout: fixed !important;
@@ -271,7 +273,7 @@
         display: table-cell !important;
         vertical-align: middle !important;
         font-family: 'DejaVu Sans', sans-serif !important;
-        font-size: 8.5px !important;
+        font-size: 9.5pt !important;
         font-weight: bold !important;
         color: #0f172a !important;
         text-transform: uppercase !important;
@@ -280,22 +282,22 @@
         display: table-cell !important;
         vertical-align: middle !important;
         text-align: right !important;
-        font-size: 8px !important;
+        font-size: 9pt !important;
         font-weight: bold !important;
         color: #0f172a !important;
     }
     .lrn-input {
         display: inline-block !important;
-        width: 85px !important;
+        width: 95px !important;
         border: none !important;
-        border-bottom: 1.1px solid #0f172a !important;
+        border-bottom: 1.2px solid #0f172a !important;
         background: transparent !important;
-        padding: 0 2px !important;
+        padding: 0 4px !important;
         font-family: 'DejaVu Sans', sans-serif !important;
         font-weight: bold !important;
-        font-size: 8.5px !important;
+        font-size: 9.5pt !important;
         text-align: center !important;
-        min-height: 13px !important;
+        min-height: 16px !important;
         height: auto !important;
         white-space: normal !important;
         overflow-wrap: anywhere !important;
@@ -307,12 +309,12 @@
         width: 100% !important;
         table-layout: fixed !important;
         border-collapse: collapse !important;
-        margin-bottom: 2px !important;
+        margin-bottom: 3px !important;
     }
     .grid-5-col > div, .grid-4-col-birth > div, .grid-2-col-school > div, .grid-parent-row > div, .grid-children-row > div, .grid-physician-row > div, .p2-emergency-grid > div, .signature-grid > div, .grid-office-row > div {
         display: table-cell !important;
         vertical-align: bottom !important;
-        padding: 0 2px !important;
+        padding: 0 3px !important;
         box-sizing: border-box !important;
         white-space: normal !important;
         overflow-wrap: anywhere !important;
@@ -320,88 +322,90 @@
         word-break: break-word !important;
     }
     .field-container {
-        margin-top: 3.5px !important;
+        margin-top: 4px !important;
     }
     .refund-notice-box {
-        border: 1.2px solid #dc2626 !important;
-        padding: 2px 4px !important;
-        font-size: 7px !important;
+        border: 1.5px solid #dc2626 !important;
+        padding: 3px 6px !important;
+        font-size: 7.5pt !important;
         font-weight: bold !important;
         color: #dc2626 !important;
         text-align: center !important;
         display: inline-block !important;
-        line-height: 1.1 !important;
+        line-height: 1.15 !important;
         box-sizing: border-box !important;
+        border-radius: 3px !important;
     }
     .lives-with-row {
-        margin-top: 5px !important;
-        font-size: 8px !important;
+        margin-top: 8px !important;
+        font-size: 9pt !important;
         font-weight: bold !important;
     }
     .radio-option {
         display: inline-block !important;
-        margin-left: 8px !important;
+        margin-left: 12px !important;
     }
     .radio-line {
         display: inline-block !important;
-        width: 14px !important;
-        border-bottom: 1.1px solid #0f172a !important;
+        width: 16px !important;
+        border-bottom: 1.2px solid #0f172a !important;
         text-align: center !important;
         font-weight: bold !important;
-        margin-right: 2px !important;
+        margin-right: 3px !important;
     }
     .p2-question-row {
-        font-size: 8px !important;
+        font-size: 9pt !important;
         font-weight: bold !important;
-        margin-top: 4px !important;
-        margin-bottom: 2px !important;
-        line-height: 1.2 !important;
+        margin-top: 6px !important;
+        margin-bottom: 3px !important;
+        line-height: 1.3 !important;
     }
     .p2-inline-line {
         display: inline-block !important;
-        width: 14px !important;
-        border-bottom: 1.1px solid #0f172a !important;
+        width: 16px !important;
+        border-bottom: 1.2px solid #0f172a !important;
         text-align: center !important;
         font-weight: bold !important;
     }
     .p2-explain-block {
-        margin-top: 1px !important;
-        margin-bottom: 2px !important;
+        margin-top: 2px !important;
+        margin-bottom: 4px !important;
     }
     .p2-explain-label {
         display: block !important;
-        font-size: 7px !important;
+        font-size: 7.5pt !important;
         color: #475569 !important;
+        font-weight: bold !important;
     }
     .p2-policy-text {
-        font-size: 7.8px !important;
-        line-height: 1.3 !important;
-        margin-top: 8px !important;
+        font-size: 8.8pt !important;
+        line-height: 1.4 !important;
+        margin-top: 10px !important;
         color: #334155 !important;
         text-align: justify !important;
     }
     .signature-disclaimer {
-        font-size: 7px !important;
+        font-size: 7.5pt !important;
         color: #64748b !important;
-        margin-top: 6px !important;
+        margin-top: 8px !important;
         font-style: italic !important;
     }
     .office-perforated-line {
         border: none !important;
-        border-top: 1px dashed #94a3b8 !important;
-        margin: 12px 0 8px 0 !important;
+        border-top: 1.5px dashed #94a3b8 !important;
+        margin: 14px 0 10px 0 !important;
     }
     .office-use-title {
-        font-size: 11px !important;
+        font-size: 10.5pt !important;
         font-weight: bold !important;
         color: #0f172a !important;
-        margin-bottom: 4px !important;
+        margin-bottom: 5px !important;
         text-transform: uppercase !important;
         border-bottom: 1px solid #cbd5e1 !important;
-        padding-bottom: 2px !important;
+        padding-bottom: 3px !important;
     }
     .office-label {
-        font-size: 9.5px !important;
+        font-size: 8.8pt !important;
         font-weight: bold !important;
         color: #1e293b !important;
     }
@@ -409,35 +413,35 @@
         display: inline-block !important;
     }
     .date-slash-input {
-        width: 26px !important;
+        width: 30px !important;
         display: inline-block !important;
         border: none !important;
-        border-bottom: 1.1px solid #0f172a !important;
+        border-bottom: 1.2px solid #0f172a !important;
         text-align: center !important;
-        font-size: 10.5px !important;
+        font-size: 10.5pt !important;
         font-weight: bold !important;
     }
     .attachments-title {
-        font-size: 10.5px !important;
+        font-size: 10pt !important;
         font-weight: bold !important;
         font-style: italic !important;
         color: #0f172a !important;
-        margin-top: 8px !important;
-        margin-bottom: 3px !important;
+        margin-top: 10px !important;
+        margin-bottom: 4px !important;
     }
     .attachments-list {
-        font-size: 9.2px !important;
-        line-height: 1.4 !important;
-        margin-left: 16px !important;
-        margin-top: 3px !important;
+        font-size: 8.8pt !important;
+        line-height: 1.45 !important;
+        margin-left: 18px !important;
+        margin-top: 4px !important;
         color: #334155 !important;
     }
     .attachments-list li {
-        margin-bottom: 2px !important;
+        margin-bottom: 2.5px !important;
     }
     .school-arabic-name {
         font-family: 'DejaVu Sans', serif !important;
-        font-size: 11.5px !important;
+        font-size: 12pt !important;
         font-weight: bold !important;
         color: #047857 !important;
         text-align: center !important;
@@ -465,17 +469,17 @@
                     <td style="vertical-align: middle; text-align: center; padding: 0 8px;">
                         @if(!empty($arabicWordmarkSrc))
                             <div style="text-align: center; margin-bottom: 3px;">
-                                <img src="{{ $arabicWordmarkSrc }}" alt="المدرسة المنورة الإسلامية" class="header-arabic-wordmark" style="height: @if($isPdf ?? false) 22px @else 28px @endif; max-width: @if($isPdf ?? false) 260px @else 340px @endif; object-fit: contain; display: inline-block;">
+                                <img src="{{ $arabicWordmarkSrc }}" alt="المدرسة المنورة الإسلامية" class="header-arabic-wordmark" style="height: @if($isPdf ?? false) 26px @else 28px @endif; max-width: @if($isPdf ?? false) 300px @else 340px @endif; object-fit: contain; display: inline-block;">
                             </div>
                         @else
-                            <div class="school-arabic-name" style="font-family: 'Amiri', 'Noto Naskh Arabic', 'Traditional Arabic', serif; font-size: @if($isPdf ?? false) 11.5px @else 1.40rem @endif; font-weight: bold; color: #047857; text-align: center; direction: rtl; line-height: 1.2; margin-bottom: 2px;">
+                            <div class="school-arabic-name" style="font-family: 'Amiri', 'Noto Naskh Arabic', 'Traditional Arabic', serif; font-size: @if($isPdf ?? false) 12.5pt @else 1.40rem @endif; font-weight: bold; color: #047857; text-align: center; direction: rtl; line-height: 1.2; margin-bottom: 2px;">
                                 المدرسة المنورة الإسلامية
                             </div>
                         @endif
-                        <h1 class="school-name" style="font-family: 'Merriweather', Georgia, serif; font-size: @if($isPdf ?? false) 11px @else 1.18rem @endif; font-weight: 900; letter-spacing: 0.4px; color: #0f172a; margin: 0; line-height: 1.15; text-transform: uppercase;">
+                        <h1 class="school-name" style="font-family: 'Merriweather', Georgia, serif; font-size: @if($isPdf ?? false) 13.5pt @else 1.18rem @endif; font-weight: 900; letter-spacing: 0.4px; color: #0f172a; margin: 0; line-height: 1.15; text-transform: uppercase;">
                             AL MUNAWWARA ISLAMIC SCHOOL
                         </h1>
-                        <p class="school-address" style="font-family: 'Merriweather', Georgia, serif; font-size: @if($isPdf ?? false) 7.8px @else 0.84rem @endif; font-weight: 600; color: #334155; margin: 2px 0 0 0;">
+                        <p class="school-address" style="font-family: 'Merriweather', Georgia, serif; font-size: @if($isPdf ?? false) 8.5pt @else 0.84rem @endif; font-weight: 600; color: #334155; margin: 2px 0 0 0;">
                             Bugac Ma-a Road, Davao City Philippines
                         </p>
                     </td>
@@ -490,7 +494,7 @@
                         <img src="{{ $depedLogoSrc }}" alt="DepEd Logo" class="header-logo-deped" style="width: 62px; height: 62px; object-fit: contain; vertical-align: middle;">
                     </td>
                     <td style="vertical-align: middle; text-align: right;">
-                        <div class="refund-notice-box" style="border: @if($isPdf ?? false) 1.2px @else 2px @endif solid #dc2626; color: #dc2626; font-size: @if($isPdf ?? false) 7.5px @else 0.82rem @endif; font-weight: 800; padding: @if($isPdf ?? false) 3px 5px @else 5px 8px @endif; border-radius: 4px; line-height: 1.15; text-align: center; text-transform: uppercase;">
+                        <div class="refund-notice-box" style="border: @if($isPdf ?? false) 1.5px @else 2px @endif solid #dc2626; color: #dc2626; font-size: @if($isPdf ?? false) 7.5pt @else 0.82rem @endif; font-weight: 800; padding: @if($isPdf ?? false) 3px 6px @else 5px 8px @endif; border-radius: 4px; line-height: 1.15; text-align: center; text-transform: uppercase;">
                             NO REFUND OF<br>ENROLLMENT FEE
                         </div>
                     </td>
@@ -501,8 +505,8 @@
 
     <div class="form-middle-grid">
         <div class="form-title-area">
-            <h2 class="form-title" style="font-size: 1.10rem; margin: 0;">ENROLMENT APPLICATION FORM</h2>
-            <p class="sy-title" style="font-size: 0.90rem; margin: 1px 0 4px 0;">SY {{ $app->school_year ?? '2026-2027' }}</p>
+            <h2 class="form-title" style="font-size: @if($isPdf ?? false) 12pt @else 1.10rem @endif; margin: 0;">ENROLMENT APPLICATION FORM</h2>
+            <p class="sy-title" style="font-size: @if($isPdf ?? false) 9.5pt @else 0.90rem @endif; margin: 1px 0 4px 0;">SY {{ $app->school_year ?? '2026-2027' }}</p>
             
             <div class="student-info-bar">
                 <span class="section-title">STUDENT INFORMATION</span>
@@ -736,9 +740,18 @@
             <span>Guardian</span>
         </div>
     </div>
+</div>
 
-    <!-- MEDICAL INFORMATION (ON PAGE 1) -->
-    <div class="section-header-row" style="margin-top: 6px; margin-bottom: 3px;">
+<!-- PAGE 2: MEDICAL INFORMATION, EMERGENCY CONTACTS, REFERRAL, POLICIES & SIGNATURES -->
+<div class="paper-container">
+    @if(isset($pageNumber))
+        <div class="page-number-badge">
+            PAGE 2{{ isset($totalPages) && $totalPages > 1 ? ' OF ' . $totalPages : '' }}
+        </div>
+    @endif
+
+    <!-- MEDICAL INFORMATION -->
+    <div class="section-header-row" style="margin-top: 0;">
         MEDICAL INFORMATION
     </div>
 
@@ -781,17 +794,8 @@
             </div>
         </div>
     </div>
-</div>
 
-<!-- PAGE 2: EMERGENCY CONTACTS, REFERRAL, POLICIES & SIGNATURES -->
-<div class="paper-container">
-    @if(isset($pageNumber))
-        <div class="page-number-badge">
-            PAGE 2{{ isset($totalPages) && $totalPages > 1 ? ' OF ' . $totalPages : '' }}
-        </div>
-    @endif
-
-    <div class="section-header-row" style="margin-top: 0;">
+    <div class="section-header-row" style="margin-top: 14px;">
         EMERGENCY CONTACTS <span style="font-size: 0.85em; font-weight: normal; text-transform: none; color: #475569;">(Other than above names)</span>
     </div>
 

@@ -589,6 +589,110 @@
             line-height: 18px;
         }
 
+        .p2-question-row {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.88rem;
+            font-weight: 700;
+            margin-top: 10px;
+            margin-bottom: 4px;
+            color: #1e293b;
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .p2-inline-line {
+            display: inline-block;
+            width: 28px;
+            border-bottom: 1.5px solid #0f172a;
+            text-align: center;
+            font-weight: 800;
+            height: 18px;
+            line-height: 18px;
+        }
+
+        .p2-explain-block {
+            margin-top: 4px;
+            margin-bottom: 10px;
+        }
+
+        .p2-explain-label {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #64748b;
+            margin-bottom: 2px;
+            display: block;
+        }
+
+        .p2-full-line {
+            border: none;
+            border-bottom: 1.5px solid #0f172a;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: #0f172a;
+            outline: none;
+            padding: 2px 2px 1px 2px;
+            line-height: 1.25;
+            min-height: 20px;
+            height: auto;
+            margin-bottom: 6px;
+            background: transparent;
+            white-space: normal;
+            overflow-wrap: anywhere;
+            word-wrap: break-word;
+            word-break: break-word;
+            display: block;
+            box-sizing: border-box;
+            text-transform: uppercase;
+        }
+
+        .grid-physician-row {
+            display: grid;
+            grid-template-columns: 4fr 3fr;
+            gap: 20px;
+            margin-top: 6px;
+            margin-bottom: 6px;
+            align-items: end;
+        }
+
+        .p2-emergency-grid {
+            display: grid;
+            grid-template-columns: 4.5fr 3.5fr 3fr;
+            gap: 15px;
+            margin-top: 6px;
+            margin-bottom: 8px;
+            align-items: end;
+        }
+
+        .p2-policy-text {
+            font-family: 'Merriweather', serif;
+            font-size: 0.88rem;
+            line-height: 1.4;
+            margin-top: 8px;
+            text-align: justify;
+            color: #1e293b;
+        }
+
+        .signature-grid {
+            display: grid;
+            grid-template-columns: 5fr 2.5fr;
+            gap: 30px;
+            margin-top: 18px;
+            margin-bottom: 6px;
+            align-items: end;
+        }
+
+        .signature-disclaimer {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.80rem;
+            font-style: italic;
+            color: #64748b;
+            margin-bottom: 12px;
+        }
+
         .office-perforated-line {
             border: none;
             border-top: 1.5px dashed #64748b;
