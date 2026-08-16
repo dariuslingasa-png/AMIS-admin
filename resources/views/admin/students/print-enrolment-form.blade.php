@@ -1477,7 +1477,7 @@
                                         ATTACHMENT: ${doc.label}
                                     </div>
                                     <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-top: 3px;">
-                                        Student: {{ addslashes($student->full_name) }} • AMIS ID: #{{ $student->student_number }} • Grade: {{ $student->grade_level }}
+                                        Student: {{ addslashes((string) ($student->full_name ?? '')) }} • AMIS ID: #{{ $student->student_number }} • Grade: {{ $student->grade_level }}
                                     </div>
                                 </div>
                                 <div>
