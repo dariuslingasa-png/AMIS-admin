@@ -41,69 +41,256 @@
             print-color-adjust: exact !important;
         }
 
-        /* Top Action Bar (Screen Only) */
-        .action-bar {
-            max-width: 840px;
-            margin: 0 auto 16px auto;
+        /* Top Action Bar & Form Navigation Header (Screen Only) */
+        .action-bar-container {
+            max-width: 960px;
+            margin: 0 auto 20px auto;
+            background: #ffffff;
+            padding: 16px 20px;
+            border-radius: 14px;
+            box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
+            border: 1px solid #e2e8f0;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            position: sticky;
+            top: 12px;
+            z-index: 1000;
+        }
+
+        .header-main-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: #ffffff;
-            padding: 12px 24px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
-            font-family: 'Inter', sans-serif;
-            position: sticky;
-            top: 10px;
-            z-index: 100;
-            border: 1px solid #e2e8f0;
+            gap: 16px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid #f1f5f9;
         }
 
-        .action-bar h2 {
-            font-size: 0.95rem;
-            font-weight: 700;
+        .header-identity-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .header-icon-box {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #059669;
+            flex-shrink: 0;
+        }
+
+        .header-title-block {
+            min-width: 0;
+        }
+
+        .header-title-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .header-page-title {
+            font-size: 1.05rem;
+            font-weight: 800;
             color: #0f172a;
+            margin: 0;
+            line-height: 1.25;
+            letter-spacing: -0.2px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 9px;
+            border-radius: 9999px;
+            font-size: 0.70rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            line-height: 1;
+            white-space: nowrap;
+        }
+
+        .status-approved {
+            background: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+        }
+
+        .status-pending {
+            background: #fffbeb;
+            color: #b45309;
+            border: 1px solid #fde68a;
+        }
+
+        .header-student-meta {
             display: flex;
             align-items: center;
             gap: 8px;
+            font-size: 0.80rem;
+            color: #64748b;
+            margin-top: 3px;
+            flex-wrap: wrap;
         }
 
-        .btn-group {
-            display: flex;
-            gap: 10px;
+        .meta-item {
+            white-space: nowrap;
         }
 
-        .btn {
-            font-family: 'Inter', sans-serif;
-            font-size: 0.85rem;
+        .meta-name {
+            color: #0f172a;
             font-weight: 700;
-            padding: 8px 18px;
-            border-radius: 8px;
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s ease;
+        }
+
+        .meta-id {
+            color: #059669;
+            font-weight: 700;
+        }
+
+        .meta-divider {
+            color: #cbd5e1;
+            font-weight: bold;
+        }
+
+        .header-actions-group {
             display: flex;
             align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .header-btn {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            font-size: 0.80rem;
+            font-weight: 600;
+            height: 36px;
+            padding: 0 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             gap: 6px;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            text-decoration: none;
+            transition: all 0.15s ease-in-out;
+            white-space: nowrap;
+            box-sizing: border-box;
         }
 
         .btn-primary {
-            background-color: #059669;
-            color: white;
+            background: #059669;
+            color: #ffffff;
+            border: 1px solid #059669;
+            box-shadow: 0 1px 3px rgba(5, 150, 105, 0.25);
+            font-weight: 700;
         }
+
         .btn-primary:hover {
-            background-color: #047857;
+            background: #047857;
+            border-color: #047857;
+            box-shadow: 0 2px 5px rgba(5, 150, 105, 0.35);
             transform: translateY(-1px);
         }
 
         .btn-secondary {
-            background-color: #f1f5f9;
+            background: #f8fafc;
             color: #334155;
             border: 1px solid #cbd5e1;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
         }
+
         .btn-secondary:hover {
-            background-color: #e2e8f0;
+            background: #f1f5f9;
+            color: #0f172a;
+            border-color: #94a3b8;
+            transform: translateY(-1px);
+        }
+
+        .btn-tertiary {
+            background: transparent;
+            color: #64748b;
+            border: 1px solid transparent;
+        }
+
+        .btn-tertiary:hover {
+            background: #f1f5f9;
+            color: #334155;
+            border-color: #e2e8f0;
+        }
+
+        .header-tabs-nav {
+            margin-top: 12px;
+        }
+
+        .tabs-scroll-track {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            padding: 2px 0;
+        }
+
+        .tabs-scroll-track::-webkit-scrollbar {
+            display: none;
+        }
+
+        .nav-tab-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.74rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            text-decoration: none;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            color: #64748b;
+            transition: all 0.15s ease-in-out;
+            white-space: nowrap;
+            letter-spacing: 0.3px;
+        }
+
+        .nav-tab-item:hover {
+            background: #ffffff;
+            color: #0f172a;
+            border-color: #cbd5e1;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+
+        .nav-tab-item.active {
+            background: #ecfdf5;
+            color: #047857;
+            border-color: #a7f3d0;
+            font-weight: 700;
+            box-shadow: 0 1px 3px rgba(5, 150, 105, 0.08);
+        }
+
+        @media (max-width: 860px) {
+            .header-main-row {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+            }
+            .header-actions-group {
+                justify-content: flex-start;
+                flex-wrap: wrap;
+            }
+            .header-btn {
+                flex: 1 1 auto;
+                min-width: 120px;
+            }
         }
 
         /* Paper Document Layout (A4 Scale) */
@@ -847,89 +1034,102 @@
     </script>
 
     <!-- Top Action Bar & Student Form Switcher Navigation Bar -->
-    <div class="action-bar-container" style="max-width: 1000px; margin: 0 auto 20px auto; background: #ffffff; padding: 14px 20px; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.03); font-family: 'Inter', system-ui, -apple-system, sans-serif; position: sticky; top: 12px; z-index: 1000; border: 1px solid #e2e8f0;">
+    <header class="action-bar-container">
         <!-- Row 1: Document & Student Profile Info + Actions -->
-        <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid #f1f5f9;">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <div style="width: 38px; height: 38px; border-radius: 10px; background: {{ ($isApproved ?? true) ? '#ecfdf5' : '#fffbeb' }}; border: 1px solid {{ ($isApproved ?? true) ? '#a7f3d0' : '#fde68a' }}; display: flex; align-items: center; justify-content: center; color: {{ ($isApproved ?? true) ? '#059669' : '#d97706' }}; shrink-0;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>
+        <div class="header-main-row">
+            <!-- Left: Document Title, Status Badge & Student Meta -->
+            <div class="header-identity-group">
+                <div class="header-icon-box">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>
                 </div>
-                <div>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <h2 style="font-size: 0.95rem; font-weight: 800; color: #0f172a; margin: 0; line-height: 1.2;">
-                            Enrolment Application Form
-                        </h2>
+                <div class="header-title-block">
+                    <div class="header-title-row">
+                        <h1 class="header-page-title">Enrollment Application Form</h1>
                         @if($isApproved ?? true)
-                            <span style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 9999px; background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">
-                                ✓ Official Approved Form
+                            <span class="status-badge status-approved">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                Official Approved Form
                             </span>
                         @else
-                            <span style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 9999px; background: #fffbeb; color: #b45309; border: 1px solid #fde68a; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">
-                                ⚠️ Draft / Preview (Pending Approval)
+                            <span class="status-badge status-pending">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                Draft Preview
                             </span>
                         @endif
                     </div>
-                    <p style="font-size: 0.75rem; font-weight: 600; color: #64748b; margin: 2px 0 0 0;">
-                        Student: <strong style="color: #0f172a;">{{ $student->full_name }}</strong> • AMIS ID: <strong style="color: #059669;">#{{ $student->student_number }}</strong>
-                    </p>
+                    <div class="header-student-meta">
+                        <span class="meta-item">Student: <strong class="meta-name">{{ $student->full_name }}</strong></span>
+                        <span class="meta-divider">•</span>
+                        <span class="meta-item">AMIS ID: <strong class="meta-id">#{{ $student->student_number }}</strong></span>
+                    </div>
                 </div>
             </div>
-            <div style="display: flex; gap: 8px; align-items: center;">
-                <button onclick="window.close()" style="font-family: inherit; font-size: 0.78rem; font-weight: 700; padding: 8px 14px; border-radius: 10px; border: 1px solid #cbd5e1; background: #f8fafc; color: #334155; cursor: pointer; transition: all 0.15s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f8fafc'">Close</button>
 
+            <!-- Right: Action Buttons Group (Equal Height, Clear Visual Hierarchy) -->
+            <div class="header-actions-group">
+                <!-- Tertiary: Close Button -->
+                <button onclick="window.close()" class="header-btn btn-tertiary" title="Close this window">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    <span>Close</span>
+                </button>
+
+                <!-- Secondary: Download Official PDF -->
                 @if($isApproved ?? true)
-                    <a href="{{ route('admin.students.official-enrollment-form.download', $student) }}" style="font-family: inherit; font-size: 0.78rem; font-weight: 700; padding: 8px 16px; border-radius: 10px; border: 1px solid #059669; background: #ecfdf5; color: #047857; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(5, 150, 105, 0.15); text-decoration: none; transition: all 0.15s;" onmouseover="this.style.background='#d1fae5'" onmouseout="this.style.background='#ecfdf5'">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-                        <span>Download Official PDF</span>
+                    <a href="{{ route('admin.students.official-enrollment-form.download', $student) }}" class="header-btn btn-secondary" title="Download Official PDF file">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        <span>Download PDF</span>
                     </a>
                 @endif
 
-                <button onclick="downloadSingleFormDocx()" id="btn-download-docx" style="font-family: inherit; font-size: 0.78rem; font-weight: 700; padding: 8px 16px; border-radius: 10px; border: 1px solid #6366f1; background: #eef2ff; color: #4338ca; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(99, 102, 241, 0.15); transition: all 0.15s;" onmouseover="this.style.background='#e0e7ff'" onmouseout="this.style.background='#eef2ff'">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <!-- Secondary: Download DOCX -->
+                <button onclick="downloadSingleFormDocx()" id="btn-download-docx" class="header-btn btn-secondary" title="Download Editable DOCX file">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
                     <span>Download DOCX</span>
                 </button>
 
-                <button onclick="triggerPrintPDF()" style="font-family: inherit; font-size: 0.78rem; font-weight: 700; padding: 8px 18px; border-radius: 10px; border: none; background: #059669; color: white; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(5, 150, 105, 0.2); transition: all 0.15s;" onmouseover="this.style.background='#047857'" onmouseout="this.style.background='#059669'">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+                <!-- Primary CTA: Print Form -->
+                <button onclick="triggerPrintPDF()" class="header-btn btn-primary" title="Print Enrollment Application Form">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
                     <span>Print Form</span>
                 </button>
             </div>
         </div>
 
         <!-- Row 2: Sleek Segmented Tab Switcher Bar (SAME TAB NAVIGATION - target="_self") -->
-        <div style="display: flex; align-items: center; justify-content: flex-start; gap: 6px; overflow-x: auto; padding-top: 10px;">
-            <!-- ID FORM -->
-            <a href="{{ route('admin.students.index', ['search' => $student->student_number, 'print_id' => 1]) }}" target="_self" style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 10px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; text-decoration: none; border: 1px solid #e2e8f0; background: #f8fafc; color: #475569; transition: all 0.15s; white-space: nowrap;" onmouseover="this.style.background='#f1f5f9';this.style.color='#0f172a'" onmouseout="this.style.background='#f8fafc';this.style.color='#475569'">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 7h3v3H7z"/><path d="M14 7h3"/><path d="M14 11h3"/><path d="M7 14h10"/><path d="M7 17h10"/></svg>
-                <span>ID Form</span>
-            </a>
+        <nav class="header-tabs-nav" aria-label="Student Forms Navigation">
+            <div class="tabs-scroll-track">
+                <!-- ID FORM -->
+                <a href="{{ route('admin.students.index', ['search' => $student->student_number, 'print_id' => 1]) }}" target="_self" class="nav-tab-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 7h3v3H7z"/><path d="M14 7h3"/><path d="M14 11h3"/><path d="M7 14h10"/><path d="M7 17h10"/></svg>
+                    <span>ID Form</span>
+                </a>
 
-            <!-- MICROSOFT ACCOUNT FORM -->
-            <a href="{{ route('admin.students.index', ['search' => $student->student_number, 'print_credentials' => 1]) }}" target="_self" style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 10px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; text-decoration: none; border: 1px solid #e2e8f0; background: #f8fafc; color: #475569; transition: all 0.15s; white-space: nowrap;" onmouseover="this.style.background='#f1f5f9';this.style.color='#0f172a'" onmouseout="this.style.background='#f8fafc';this.style.color='#475569'">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 18v3c0 .6.4 1 1 1h4v-3h3v-3h2l1.4-1.4a6.5 6.5 0 1 0-4-4Z"/><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/></svg>
-                <span>Microsoft Account Form</span>
-            </a>
+                <!-- MICROSOFT ACCOUNT FORM -->
+                <a href="{{ route('admin.students.index', ['search' => $student->student_number, 'print_credentials' => 1]) }}" target="_self" class="nav-tab-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 18v3c0 .6.4 1 1 1h4v-3h3v-3h2l1.4-1.4a6.5 6.5 0 1 0-4-4Z"/><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/></svg>
+                    <span>Microsoft Account Form</span>
+                </a>
 
-            <!-- ENROLLMENT FORM (ACTIVE) -->
-            <a href="{{ route('admin.students.print-enrolment-form', $student) }}" target="_self" style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 10px; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; text-decoration: none; border: 1px solid #059669; background: #ecfdf5; color: #047857; shadow: 0 1px 2px rgba(5,150,105,0.1); white-space: nowrap;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>
-                <span>Enrollment Form</span>
-            </a>
+                <!-- ENROLLMENT FORM (ACTIVE) -->
+                <a href="{{ route('admin.students.print-enrolment-form', $student) }}" target="_self" class="nav-tab-item active">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>
+                    <span>Enrollment Form</span>
+                </a>
 
+                <!-- GRADE FORM -->
+                <a href="{{ route('admin.students.show', $student) }}" target="_self" class="nav-tab-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                    <span>Grade Form</span>
+                </a>
 
-            <!-- GRADE FORM -->
-            <a href="{{ route('admin.students.show', $student) }}" target="_self" style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 10px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; text-decoration: none; border: 1px solid #e2e8f0; background: #f8fafc; color: #475569; transition: all 0.15s; white-space: nowrap;" onmouseover="this.style.background='#f1f5f9';this.style.color='#0f172a'" onmouseout="this.style.background='#f8fafc';this.style.color='#475569'">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-                <span>Grade Form</span>
-            </a>
-
-            <!-- DOCUMENTS FORM -->
-            <a href="{{ route('admin.students.index', ['search' => $student->student_number, 'print_documents' => 1]) }}" target="_self" style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 10px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; text-decoration: none; border: 1px solid #e2e8f0; background: #f8fafc; color: #475569; transition: all 0.15s; white-space: nowrap;" onmouseover="this.style.background='#f1f5f9';this.style.color='#0f172a'" onmouseout="this.style.background='#f8fafc';this.style.color='#475569'">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L8.6 3.3A2 2 0 0 0 6.9 2.5H4a2 2 0 0 0-2 2v13.5a2 2 0 0 0 2 2z"/></svg>
-                <span>Documents Form</span>
-            </a>
-        </div>
-    </div>
+                <!-- DOCUMENTS FORM -->
+                <a href="{{ route('admin.students.index', ['search' => $student->student_number, 'print_documents' => 1]) }}" target="_self" class="nav-tab-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L8.6 3.3A2 2 0 0 0 6.9 2.5H4a2 2 0 0 0-2 2v13.5a2 2 0 0 0 2 2z"/></svg>
+                    <span>Documents Form</span>
+                </a>
+            </div>
+        </nav>
+    </header>
     @endif @include('admin.students.partials.print.enrolment-form-body', [
         'student'    => $student,
         'applicant'  => $applicant,
