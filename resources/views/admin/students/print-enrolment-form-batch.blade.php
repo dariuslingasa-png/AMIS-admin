@@ -304,9 +304,9 @@
 
         .form-middle-grid {
             display: grid;
-            grid-template-columns: 1fr auto 125px;
+            grid-template-columns: 1fr auto 92px;
             align-items: flex-start;
-            gap: 12px;
+            gap: 15px;
             margin-bottom: 12px;
         }
 
@@ -411,10 +411,10 @@
         }
 
         .photo-box {
-            width: 125px;
-            height: 125px;
-            border: 2px solid #0f172a;
-            background: #fafafa;
+            width: 92px;
+            height: 92px;
+            border: 1px solid #94a3b8;
+            background: #f8fafc;
             justify-self: end;
             align-self: flex-start;
             margin-top: 0;
@@ -422,13 +422,15 @@
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            border-radius: 3px;
+            border-radius: 2px;
+            box-sizing: border-box;
         }
 
         .photo-box img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            object-position: center;
             display: block;
         }
 

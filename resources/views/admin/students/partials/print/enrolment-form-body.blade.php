@@ -504,19 +504,29 @@
         </div>
 
         <div class="photo-box" id="student-photo-container">
-            <div style="display: inline-block; width: 75px; height: 75px; border: 1.2px solid #0f172a; position: relative; overflow: hidden; background: #fafafa; text-align: center; vertical-align: top;">
+            @if($isPdf ?? false)
+                <div style="display: inline-block; width: 68px; height: 68px; border: 0.8px solid #94a3b8; overflow: hidden; background: #f8fafc; text-align: center; vertical-align: top;">
+                    @if(!empty($photoBase64))
+                        <img src="{{ $photoBase64 }}" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+                    @else
+                        <table style="width: 100%; height: 100%; border-collapse: collapse;">
+                            <tr>
+                                <td style="vertical-align: middle; text-align: center; color: #94a3b8; font-size: 7.5px; font-weight: bold; font-family: sans-serif; line-height: 1.2;">
+                                    2x2<br>PHOTO
+                                </td>
+                            </tr>
+                        </table>
+                    @endif
+                </div>
+            @else
                 @if(!empty($photoBase64))
-                    <img src="{{ $photoBase64 }}" alt="" style="width: 100%; height: 100%; object-fit: cover;">
+                    <img src="{{ $photoBase64 }}" alt="2x2 Photo" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;">
                 @else
-                    <table style="width: 100%; height: 100%; border-collapse: collapse;">
-                        <tr>
-                            <td style="vertical-align: middle; text-align: center; color: #64748b; font-size: 7.5px; font-weight: bold; font-family: sans-serif; line-height: 1.2;">
-                                2x2<br>PHOTO
-                            </td>
-                        </tr>
-                    </table>
+                    <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-size: 0.72rem; font-weight: 700; font-family: 'Inter', sans-serif; line-height: 1.2; text-align: center;">
+                        2x2<br>PHOTO
+                    </div>
                 @endif
-            </div>
+            @endif
         </div>
     </div>
 
