@@ -589,6 +589,92 @@
             line-height: 18px;
         }
 
+        .office-perforated-line {
+            border: none;
+            border-top: 1.5px dashed #64748b;
+            margin: 16px 0 12px 0;
+        }
+
+        .office-use-box {
+            border: 1px solid #94a3b8;
+            padding: 10px 14px;
+            margin-top: 4px;
+            background: #ffffff;
+            border-radius: 4px;
+        }
+
+        .office-use-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            border-bottom: 1px solid #cbd5e1;
+            padding-bottom: 4px;
+            letter-spacing: 0.5px;
+        }
+
+        .grid-office-row {
+            display: grid;
+            grid-template-columns: 3.5fr 2.5fr 2.5fr;
+            gap: 15px;
+            margin-bottom: 12px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.90rem;
+            font-weight: 700;
+            color: #1e293b;
+            align-items: end;
+        }
+
+        .office-label {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.90rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .date-slash-inputs {
+            display: inline-flex;
+            align-items: baseline;
+            gap: 4px;
+        }
+
+        .date-slash-input {
+            border: none;
+            border-bottom: 1.5px solid #0f172a;
+            width: 36px;
+            text-align: center;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #0f172a;
+            outline: none;
+            padding: 1px 2px;
+        }
+
+        .attachments-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            font-style: italic;
+            font-weight: 800;
+            color: #0f172a;
+            margin-top: 12px;
+            margin-bottom: 6px;
+        }
+
+        .attachments-list {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.88rem;
+            line-height: 1.55;
+            margin-left: 22px;
+            color: #334155;
+        }
+
+        .attachments-list li {
+            margin-bottom: 3px;
+        }
+
         .page-number-badge {
             position: absolute;
             top: 5mm;

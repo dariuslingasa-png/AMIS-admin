@@ -389,30 +389,51 @@
     .office-perforated-line {
         border: none !important;
         border-top: 1px dashed #94a3b8 !important;
-        margin: 14px 0 10px 0 !important;
+        margin: 12px 0 8px 0 !important;
+    }
+    .office-use-title {
+        font-size: 11px !important;
+        font-weight: bold !important;
+        color: #0f172a !important;
+        margin-bottom: 4px !important;
+        text-transform: uppercase !important;
+        border-bottom: 1px solid #cbd5e1 !important;
+        padding-bottom: 2px !important;
+    }
+    .office-label {
+        font-size: 9.5px !important;
+        font-weight: bold !important;
+        color: #1e293b !important;
     }
     .date-slash-inputs {
         display: inline-block !important;
     }
     .date-slash-input {
-        width: 22px !important;
+        width: 26px !important;
         display: inline-block !important;
         border: none !important;
         border-bottom: 1.1px solid #0f172a !important;
         text-align: center !important;
-        font-size: 8px !important;
+        font-size: 10.5px !important;
         font-weight: bold !important;
     }
     .attachments-title {
-        font-size: 8px !important;
+        font-size: 10.5px !important;
         font-weight: bold !important;
-        margin-top: 10px !important;
+        font-style: italic !important;
+        color: #0f172a !important;
+        margin-top: 8px !important;
+        margin-bottom: 3px !important;
     }
     .attachments-list {
-        font-size: 7.5px !important;
-        line-height: 1.3 !important;
-        margin-left: 14px !important;
-        margin-top: 4px !important;
+        font-size: 9.2px !important;
+        line-height: 1.4 !important;
+        margin-left: 16px !important;
+        margin-top: 3px !important;
+        color: #334155 !important;
+    }
+    .attachments-list li {
+        margin-bottom: 2px !important;
     }
     .school-arabic-name {
         font-family: 'DejaVu Sans', serif !important;
@@ -831,25 +852,25 @@
 
     <hr class="office-perforated-line" style="margin: 16px 0 12px 0;">
 
-    <div style="border: 1px solid #94a3b8; padding: 6px 10px; margin-top: 4px; background: #ffffff;">
-        <div style="font-size: 8px; font-weight: bold; color: #0f172a; margin-bottom: 4px; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; padding-bottom: 2px;">
+    <div class="office-use-box" style="border: 1px solid #94a3b8; padding: @if($isPdf ?? false) 6px 8px @else 10px 14px @endif; margin-top: 4px; background: #ffffff; border-radius: 4px;">
+        <div class="office-use-title" style="font-size: @if($isPdf ?? false) 11px @else 0.95rem @endif; font-weight: 800; color: #0f172a; margin-bottom: 6px; text-transform: uppercase; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px;">
             FOR OFFICE USE ONLY
         </div>
-        <div class="grid-office-row" style="margin-top: 4px;">
+        <div class="grid-office-row" style="margin-top: 6px;">
             <div style="width: 44%;">
-                <span style="font-size: 7.5px; font-weight: bold;">Application submitted on:</span>
-                <div class="date-slash-inputs">
-                    <span class="date-slash-input">{{ $student->created_at->format('m') }}</span> /
-                    <span class="date-slash-input">{{ $student->created_at->format('d') }}</span> /
-                    <span class="date-slash-input">{{ $student->created_at->format('Y') }}</span>
+                <span class="office-label" style="font-size: @if($isPdf ?? false) 9.5px @else 0.90rem @endif; font-weight: 700; color: #1e293b;">Application submitted on:</span>
+                <div class="date-slash-inputs" style="margin-left: 4px;">
+                    <span class="date-slash-input" style="font-size: @if($isPdf ?? false) 10.5px @else 0.95rem @endif; font-weight: bold; border-bottom: 1.5px solid #0f172a; padding: 0 4px;">{{ $student->created_at->format('m') }}</span> /
+                    <span class="date-slash-input" style="font-size: @if($isPdf ?? false) 10.5px @else 0.95rem @endif; font-weight: bold; border-bottom: 1.5px solid #0f172a; padding: 0 4px;">{{ $student->created_at->format('d') }}</span> /
+                    <span class="date-slash-input" style="font-size: @if($isPdf ?? false) 10.5px @else 0.95rem @endif; font-weight: bold; border-bottom: 1.5px solid #0f172a; padding: 0 4px;">{{ $student->created_at->format('Y') }}</span>
                 </div>
             </div>
             <div style="width: 28%;">
                 <table style="width: 100%; border-collapse: collapse;">
                     <tr>
-                        <td style="width: 32px; vertical-align: bottom; font-size: 7.5px; font-weight: bold;">Paid:</td>
+                        <td style="width: 38px; vertical-align: bottom; font-size: @if($isPdf ?? false) 9.5px @else 0.90rem @endif; font-weight: 700; color: #1e293b;">Paid:</td>
                         <td style="vertical-align: bottom;">
-                            <div class="input-line">{!! $app?->payment?->amount_paid ? '₱' . number_format($app->payment->amount_paid, 2) : '&nbsp;' !!}</div>
+                            <div class="input-line" style="font-size: @if($isPdf ?? false) 10px @else 0.92rem @endif;">{!! $app?->payment?->amount_paid ? '₱' . number_format($app->payment->amount_paid, 2) : '&nbsp;' !!}</div>
                         </td>
                     </tr>
                 </table>
@@ -857,22 +878,22 @@
             <div style="width: 28%;">
                 <table style="width: 100%; border-collapse: collapse;">
                     <tr>
-                        <td style="width: 42px; vertical-align: bottom; font-size: 7.5px; font-weight: bold;">OR No.:</td>
+                        <td style="width: 50px; vertical-align: bottom; font-size: @if($isPdf ?? false) 9.5px @else 0.90rem @endif; font-weight: 700; color: #1e293b;">OR No.:</td>
                         <td style="vertical-align: bottom;">
-                            <div class="input-line">{!! !empty($app?->payment?->reference_number) ? e(mb_strtoupper($app->payment->reference_number)) : '&nbsp;' !!}</div>
+                            <div class="input-line" style="font-size: @if($isPdf ?? false) 10px @else 0.92rem @endif;">{!! !empty($app?->payment?->reference_number) ? e(mb_strtoupper($app->payment->reference_number)) : '&nbsp;' !!}</div>
                         </td>
                     </tr>
                 </table>
             </div>
         </div>
 
-        <div class="attachments-title" style="margin-top: 8px;">To be attached:</div>
-        <ol class="attachments-list" style="margin-top: 3px;">
-            <li>Photo copy of Birth Certificate</li>
-            <li>Official Transcript from Previous School (Report Card)</li>
-            <li>Medical Record (If any)</li>
-            <li>Photo copy of Marriage Contract of Parents</li>
-            <li>Picture 2 x 2</li>
+        <div class="attachments-title" style="font-size: @if($isPdf ?? false) 10.5px @else 0.95rem @endif; font-weight: 800; font-style: italic; color: #0f172a; margin-top: 10px; margin-bottom: 4px;">To be attached:</div>
+        <ol class="attachments-list" style="font-size: @if($isPdf ?? false) 9.5px @else 0.88rem @endif; line-height: @if($isPdf ?? false) 1.4 @else 1.55 @endif; margin-left: 20px; color: #334155;">
+            <li style="margin-bottom: 2px;">Photo copy of Birth Certificate</li>
+            <li style="margin-bottom: 2px;">Official Transcript from Previous School (Report Card)</li>
+            <li style="margin-bottom: 2px;">Medical Record (If any)</li>
+            <li style="margin-bottom: 2px;">Photo copy of Marriage Contract of Parents</li>
+            <li style="margin-bottom: 2px;">Picture 2 x 2</li>
         </ol>
     </div>
 </div>
