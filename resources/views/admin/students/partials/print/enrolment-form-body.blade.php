@@ -622,7 +622,7 @@
                 <span class="label-text">Age</span>
             </div>
             <div>
-                <div class="input-line">{!! $app->date_of_birth ? e(mb_strtoupper(\Carbon\Carbon::parse($app->date_of_birth)->format('M d, Y'))) : '&nbsp;' !!}</div>
+                <div class="input-line">{!! !empty($app?->date_of_birth) ? e(mb_strtoupper(\Carbon\Carbon::parse($app->date_of_birth)->format('M d, Y'))) : '&nbsp;' !!}</div>
                 <span class="label-text">Date of Birth</span>
             </div>
             <div>
@@ -909,11 +909,11 @@
         </div>
 
         @php
-            $hasBirthCert = (!empty($app?->birth_cert_url) && $app->birth_cert_url !== '[]' && $app->birth_cert_url !== '[""]') || (($app?->document_statuses['birth_cert'] ?? '') === 'approved');
-            $hasReportCard = (!empty($app?->report_card_url) && $app->report_card_url !== '[]' && $app->report_card_url !== '[""]') || (($app?->document_statuses['report_card'] ?? '') === 'approved');
-            $hasMedicalRecord = (!empty($app?->medical_record_url) && $app->medical_record_url !== '[]' && $app->medical_record_url !== '[""]') || (($app?->document_statuses['medical_record'] ?? '') === 'approved');
-            $hasMarriageContract = (!empty($app?->marriage_contract_url) && $app->marriage_contract_url !== '[]' && $app->marriage_contract_url !== '[""]') || (($app?->document_statuses['marriage_contract'] ?? '') === 'approved');
-            $hasPhoto2x2 = (!empty($app?->photo_2x2_url) && $app->photo_2x2_url !== '[]' && $app->photo_2x2_url !== '[""]') || !empty($photoBase64) || (($app?->document_statuses['photo_2x2'] ?? '') === 'approved');
+            $hasBirthCert = (!empty($app?->birth_cert_url) && $app?->birth_cert_url !== '[]' && $app?->birth_cert_url !== '[""]') || (($app?->document_statuses['birth_cert'] ?? '') === 'approved');
+            $hasReportCard = (!empty($app?->report_card_url) && $app?->report_card_url !== '[]' && $app?->report_card_url !== '[""]') || (($app?->document_statuses['report_card'] ?? '') === 'approved');
+            $hasMedicalRecord = (!empty($app?->medical_record_url) && $app?->medical_record_url !== '[]' && $app?->medical_record_url !== '[""]') || (($app?->document_statuses['medical_record'] ?? '') === 'approved');
+            $hasMarriageContract = (!empty($app?->marriage_contract_url) && $app?->marriage_contract_url !== '[]' && $app?->marriage_contract_url !== '[""]') || (($app?->document_statuses['marriage_contract'] ?? '') === 'approved');
+            $hasPhoto2x2 = (!empty($app?->photo_2x2_url) && $app?->photo_2x2_url !== '[]' && $app?->photo_2x2_url !== '[""]') || !empty($photoBase64) || (($app?->document_statuses['photo_2x2'] ?? '') === 'approved');
 
             $checkedByName = null;
             $checkedDate = null;

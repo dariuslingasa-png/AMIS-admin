@@ -14,30 +14,46 @@ class StudentPrintController extends Controller
     {
         abort_unless(auth()->user()?->canViewAdminGrade($student->grade_level), 403);
 
-        $student->load([
-            'applicant.user',
-            'applicant.payment',
-            'studentSection.section',
-            'officialEnrollmentForm',
-        ]);
+        try {
+            $relations = ['applicant.user', 'applicant.payment', 'studentSection.section'];
+            if (\Illuminate\Support\Facades\Schema::hasTable('student_documents')) {
+                $relations[] = 'officialEnrollmentForm';
+            }
+            $student->loadMissing($relations);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning("Could not eager load relations for student {$student->id}: ".$e->getMessage());
+        }
 
-        $applicant = $student->applicant;
+        $applicant = null;
+        try {
+            $applicant = $student->applicant;
+        } catch (\Throwable $e) {
+            // fallback
+        }
+
         $isApproved = ($applicant?->status === 'approved');
 
-        $siblings = [];
+        $siblings = collect();
         if ($applicant && $applicant->user_id) {
-            $siblings = EnrollmentApplicant::where('user_id', $applicant->user_id)
-                ->where('id', '!=', $applicant->id)
-                ->get();
+            try {
+                $siblings = EnrollmentApplicant::where('user_id', $applicant->user_id)
+                    ->where('id', '!=', $applicant->id)
+                    ->get();
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning("Could not query siblings for applicant {$applicant->id}: ".$e->getMessage());
+            }
         }
 
         // If approved, ensure official permanent PDF is generated
-        $officialDoc = $student->officialEnrollmentForm;
-        if ($isApproved && ! $officialDoc && $applicant) {
+        $officialDoc = null;
+        if (\Illuminate\Support\Facades\Schema::hasTable('student_documents')) {
             try {
-                $docService = app(\App\Services\Admin\Enrollment\EnrollmentDocumentService::class);
-                $officialDoc = $docService->generateApprovedEnrollmentForm($student, $applicant, auth()->id());
-                $docService->queueRequirements($student, $applicant);
+                $officialDoc = $student->officialEnrollmentForm;
+                if ($isApproved && ! $officialDoc && $applicant) {
+                    $docService = app(\App\Services\Admin\Enrollment\EnrollmentDocumentService::class);
+                    $officialDoc = $docService->generateApprovedEnrollmentForm($student, $applicant, auth()->id());
+                    $docService->queueRequirements($student, $applicant);
+                }
             } catch (\Throwable $e) {
                 \Illuminate\Support\Facades\Log::warning("Could not auto-generate missing official PDF for student {$student->id}: ".$e->getMessage());
             }
