@@ -1049,7 +1049,7 @@ class FinanceController extends Controller
                     'category' => (str_contains($foundChild['grade_level'], 'Grade 7') || str_contains($foundChild['grade_level'], 'Grade 8') || str_contains($foundChild['grade_level'], 'Grade 9') || str_contains($foundChild['grade_level'], 'Grade 10')) ? 'Junior High' : 'Elementary',
                     'grade_level' => $foundChild['grade_level'],
                     'discount_privilege' => $discountPercent > 0 ? "{$discountPercent}%" : '0%',
-                    'discount_status' => $discountPercent > 0 ? 'Active (Sibling Discount)' : 'N/A',
+                    'discount_status' => $discountPercent > 0 ? 'Active (Sibling Discount)' : 'No Sibling Discount',
                     'tuition_fee' => $tuition,
                     'misc_fee' => $misc,
                     'total_fees' => $totalFees,
