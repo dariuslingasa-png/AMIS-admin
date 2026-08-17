@@ -38,4 +38,18 @@ class DiscountSetting extends Model
             default => (float) $this->fourth_child_percentage,
         };
     }
+
+    public function siblingPercentageForFamilySize(int $childCount): float
+    {
+        if (! $this->is_active || $childCount <= 1) {
+            return 0.0;
+        }
+
+        return match ($childCount) {
+            2 => (float) ($this->second_child_percentage ?: 10.0),
+            3 => (float) ($this->third_child_percentage ?: 15.0),
+            4 => (float) ($this->fourth_child_percentage ?: 20.0),
+            default => (float) max($this->fourth_child_percentage ?: 20.0, 25.0),
+        };
+    }
 }
