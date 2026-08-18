@@ -72,6 +72,7 @@
             'icon' => 'wallet', 'iconClass' => 'text-amber-600', 'headerClass' => 'text-amber-700', 'activeClass' => 'sidebar-link-active-amber', 'title' => 'Finance',
             'links' => [
                 ['Dashboard', 'layout-dashboard', route('admin.finance.dashboard'), request()->routeIs('admin.finance.dashboard')],
+                ['Monthly Payment Reminder', 'bell-ring', route('admin.finance.monthly-reminders.index'), request()->routeIs('admin.finance.monthly-reminders.*')],
                 ['Payment Verification', 'badge-check', route('admin.finance.verification.index'), request()->routeIs('admin.finance.verification.*')],
                 ['Record Onsite Payment', 'hand-coins', route('admin.finance.onsite.create'), request()->routeIs('admin.finance.onsite.*')],
                 ['Transactions', 'arrow-left-right', route('admin.finance.transactions.index'), request()->routeIs('admin.finance.transactions.*')],
@@ -153,11 +154,9 @@
             ],
         ],
         [
-            'active' => request()->routeIs('admin.system-management.*') || request()->routeIs('admin.email-composer.*') || request()->routeIs('admin.payment-reminder.*'),
+            'active' => request()->routeIs('admin.system-management.*'),
             'icon' => 'settings-2', 'iconClass' => 'text-slate-600', 'headerClass' => 'text-slate-700', 'activeClass' => 'sidebar-link-active-slate', 'title' => 'System Management',
             'links' => [
-                ['Email Composer', 'mail-plus', route('admin.email-composer.index'), request()->routeIs('admin.email-composer.*')],
-                ['Payment Reminder', 'bell-ring', route('admin.payment-reminder.index'), request()->routeIs('admin.payment-reminder.*')],
                 ['Backup Center', 'database', route('admin.system-management.backups.index'), request()->routeIs('admin.system-management.backups.*')],
                 ['System Health', 'heart-pulse', route('admin.system-management.health.index'), request()->routeIs('admin.system-management.health.*')],
                 ['DevOps Control', 'cpu', route('admin.system-management.devops.index'), request()->routeIs('admin.system-management.devops.*')],

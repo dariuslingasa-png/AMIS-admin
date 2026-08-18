@@ -66,12 +66,18 @@ return new class extends Migration
             $table->integer('sibling_order')->nullable();
             $table->string('discount_type')->nullable();
             $table->decimal('discount_percentage', 5, 2)->nullable();
-            $table->decimal('discount_amount', 10, 2)->nullable();
+            $table->string('father_email')->nullable();
+            $table->string('mother_email')->nullable();
+            $table->string('guardian_email')->nullable();
+            $table->string('emergency_name')->nullable();
+            $table->string('emergency_relationship')->nullable();
+            $table->string('emergency_phone')->nullable();
             $table->timestamp('registry_email_sent_at')->nullable();
             $table->string('onboarding_email_status')->nullable();
             $table->timestamp('onboarding_email_sent_at')->nullable();
             $table->text('onboarding_email_error')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

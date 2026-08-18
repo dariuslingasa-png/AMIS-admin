@@ -11,13 +11,12 @@ use App\Http\Controllers\Admin\ApplicantController;
 use App\Http\Controllers\Admin\ApprovalController;
 use App\Http\Controllers\Admin\AttendanceController;
 use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Admin\EmailComposerController;
-use App\Http\Controllers\Admin\PaymentReminderController;
 use App\Http\Controllers\Admin\EnrollmentAnalyticsController;
 use App\Http\Controllers\Admin\EnrollmentController;
 use App\Http\Controllers\Admin\EnrollmentReportController;
 use App\Http\Controllers\Admin\FacultyAttendanceController;
 use App\Http\Controllers\Admin\Finance\FinanceController;
+use App\Http\Controllers\Admin\Finance\MonthlyPaymentReminderController;
 use App\Http\Controllers\Admin\GoogleDriveAuthController;
 use App\Http\Controllers\Admin\RegistrationController;
 use App\Http\Controllers\Admin\RequirementController;
@@ -271,6 +270,16 @@ Route::name('admin.')->group(function () {
 
             Route::get('/reports', [FinanceController::class, 'reports'])->name('reports.index');
             Route::get('/reports/export', [FinanceController::class, 'reportsExport'])->name('reports.export');
+
+            // Monthly Payment Reminders (Finance -> Monthly Payment Reminder)
+            Route::prefix('monthly-reminders')->name('monthly-reminders.')->group(function () {
+                Route::get('/', [MonthlyPaymentReminderController::class, 'index'])->name('index');
+                Route::post('/send', [MonthlyPaymentReminderController::class, 'sendBatch'])->name('send')->middleware('throttle:10,1');
+                Route::post('/send-test', [MonthlyPaymentReminderController::class, 'sendTest'])->name('send-test')->middleware('throttle:15,1');
+                Route::get('/preview-email', [MonthlyPaymentReminderController::class, 'previewEmail'])->name('preview-email');
+                Route::get('/history', [MonthlyPaymentReminderController::class, 'history'])->name('history');
+                Route::post('/send-single/{familyId}', [MonthlyPaymentReminderController::class, 'sendSingle'])->name('send-single')->middleware('throttle:15,1');
+            });
         });
 
         // Compatibility redirects for bookmarked legacy Finance URLs.
@@ -321,21 +330,6 @@ Route::name('admin.')->group(function () {
         Route::patch('/administration/users/{user}/security', [AdministrationController::class, 'usersSecurityUpdate'])->name('administration.users.security.update');
 
         Route::get('/website/announcements', [AdminAnnouncementController::class, 'index'])->name('website.announcements.index');
-
-        // Email Composer & Bulk Email System
-        Route::prefix('email-composer')->name('email-composer.')->group(function () {
-            Route::get('/', [EmailComposerController::class, 'index'])->name('index');
-            Route::get('/create', [EmailComposerController::class, 'create'])->name('create');
-            Route::post('/send-test', [EmailComposerController::class, 'sendTest'])->name('send-test');
-            Route::post('/send-bulk', [EmailComposerController::class, 'sendBulk'])->name('send-bulk');
-            Route::post('/save-draft', [EmailComposerController::class, 'saveDraft'])->name('drafts.save');
-            Route::delete('/drafts/{draft}', [EmailComposerController::class, 'destroyDraft'])->name('drafts.destroy');
-            Route::get('/templates', [EmailComposerController::class, 'templates'])->name('templates');
-            Route::post('/templates', [EmailComposerController::class, 'storeTemplate'])->name('templates.store');
-            Route::post('/templates/{template}/duplicate', [EmailComposerController::class, 'duplicateTemplate'])->name('templates.duplicate');
-            Route::delete('/templates/{template}', [EmailComposerController::class, 'destroyTemplate'])->name('templates.destroy');
-            Route::get('/logs', [EmailComposerController::class, 'logs'])->name('logs');
-        });
         Route::get('/website/announcements/create', [AdminAnnouncementController::class, 'create'])->name('website.announcements.create');
         Route::post('/website/announcements', [AdminAnnouncementController::class, 'store'])->name('website.announcements.store');
         Route::get('/website/announcements/{id}/edit', [AdminAnnouncementController::class, 'edit'])->name('website.announcements.edit');
@@ -517,18 +511,6 @@ Route::name('admin.')->group(function () {
             Route::get('/halaqah-parents', [RegistrationController::class, 'halaqahParents'])->name('halaqah-parents');
             Route::patch('/halaqah/{id}/toggle', [RegistrationController::class, 'toggleStatus'])->name('halaqah.toggle');
             Route::delete('/halaqah/{id}', [RegistrationController::class, 'destroy'])->name('halaqah.destroy');
-        });
-
-        // ── Payment Reminder System ────────────────────────────────────────────
-        Route::prefix('payment-reminder')->name('payment-reminder.')->group(function () {
-            Route::get('/',                          [PaymentReminderController::class, 'index'])   ->name('index');
-            Route::post('/prepare',                  [PaymentReminderController::class, 'prepare']) ->name('prepare')->middleware('throttle:10,1');
-            Route::get('/{campaign}/preview',        [PaymentReminderController::class, 'preview']) ->name('preview');
-            Route::post('/{campaign}/send-test',     [PaymentReminderController::class, 'sendTest'])->name('send-test')->middleware('throttle:10,1');
-            Route::post('/{campaign}/start',         [PaymentReminderController::class, 'start'])   ->name('start')->middleware('throttle:5,1');
-            Route::post('/{campaign}/pause',         [PaymentReminderController::class, 'pause'])   ->name('pause');
-            Route::post('/{campaign}/resume',        [PaymentReminderController::class, 'resume'])  ->name('resume')->middleware('throttle:5,1');
-            Route::get('/{campaign}/logs',           [PaymentReminderController::class, 'logs'])    ->name('logs');
         });
     });
 });
