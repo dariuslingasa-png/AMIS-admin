@@ -82,10 +82,7 @@ class SendMonthlyPaymentReminderJob implements ShouldQueue
         ]);
 
         try {
-            $mailable = new PaymentReminderMail(
-                parentName: $reminder->parent_name,
-                studentNames: $reminder->student_names
-            );
+            $mailable = new PaymentReminderMail();
 
             Mail::to($email)->send($mailable);
 

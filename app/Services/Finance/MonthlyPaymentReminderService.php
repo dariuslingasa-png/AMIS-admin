@@ -341,12 +341,9 @@ class MonthlyPaymentReminderService
     /**
      * Send a single test email without touching reminder stats or DB records.
      */
-    public function sendTestEmail(string $targetEmail, ?string $parentName = null): bool
+    public function sendTestEmail(string $targetEmail): bool
     {
-        $mailable = new PaymentReminderMail(
-            parentName: $parentName ?? 'Valued AMIS Parent',
-            studentNames: 'Aisha Zaina (Grade 3 · 260001)'
-        );
+        $mailable = new PaymentReminderMail();
 
         Mail::to(trim($targetEmail))->send($mailable);
 

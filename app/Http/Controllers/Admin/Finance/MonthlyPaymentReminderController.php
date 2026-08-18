@@ -121,7 +121,7 @@ class MonthlyPaymentReminderController extends Controller
         $testEmail = $request->input('test_email');
 
         try {
-            $this->reminderService->sendTestEmail($testEmail, Auth::user()?->name ?? 'AMIS Administrator');
+            $this->reminderService->sendTestEmail($testEmail);
 
             return back()->with('success', "✓ Test payment reminder email dispatched to {$testEmail}. Check your inbox or spam folder.");
         } catch (\Throwable $e) {
@@ -158,12 +158,10 @@ class MonthlyPaymentReminderController extends Controller
         $this->authorizeFinance();
 
         return view('emails.payment_reminder', [
-            'parentName'   => 'Fathima Montana',
-            'studentNames' => 'Aisha Zaina P. Athique (Grade 3 · 260001)',
-            'image1Path'   => public_path('images/reminder/poster_payment_reminder.png'),
-            'image2Path'   => public_path('images/reminder/poster_payment_info.png'),
-            'image3Path'   => public_path('images/reminder/banner_already_paid.jpg'),
-            'logoPath'     => public_path('images/AMIS_Logo.png'),
+            'image1Path' => public_path('images/reminder/image1_due_soon.png'),
+            'image2Path' => public_path('images/reminder/image2_payment_info.png'),
+            'image3Path' => public_path('images/reminder/image3_automated_reminder.jpg'),
+            'logoPath'   => public_path('images/AMIS_Logo.png'),
         ]);
     }
 

@@ -19,7 +19,7 @@
                     Monthly Payment Reminders
                 </h1>
                 <p class="text-xs font-semibold text-slate-500 mt-0.5">
-                    Official notification system for parent and family monthly school fee reminders.
+                    Official general monthly payment reminder system for AMIS parents and guardians.
                 </p>
             </div>
 
@@ -92,12 +92,12 @@
         @endif
 
         <!-- ── STATS CARDS ────────────────────────────────────────────────── -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
-            <!-- Current Month -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
+            <!-- Current Reminder Month -->
             <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 shadow-xs">
-                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Reminder Cycle</p>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Reminder Month</p>
                 <p class="text-lg font-black text-slate-900 dark:text-white mt-1">
-                    {{ Carbon\Carbon::parse($selectedMonth . '-01')->format('M Y') }}
+                    {{ Carbon\Carbon::parse($selectedMonth . '-01')->format('F Y') }}
                 </p>
                 <p class="text-xs font-semibold text-slate-500 mt-0.5">Active SY 2026-2027</p>
             </div>
@@ -109,15 +109,6 @@
                     {{ number_format($metrics['eligible_families']) }}
                 </p>
                 <p class="text-xs font-semibold text-slate-500 mt-0.5">Approved Enrollments</p>
-            </div>
-
-            <!-- With Outstanding Balance -->
-            <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 shadow-xs">
-                <p class="text-xs font-bold text-amber-600 uppercase tracking-wider">With Balance</p>
-                <p class="text-2xl font-black text-amber-600 mt-1">
-                    {{ number_format($metrics['with_balance']) }}
-                </p>
-                <p class="text-xs font-semibold text-slate-500 mt-0.5">Active SOA accounts</p>
             </div>
 
             <!-- Already Sent -->
@@ -148,16 +139,18 @@
             </div>
         </div>
 
-        <!-- ── SENDER SETTINGS NOTICE ─────────────────────────────────────── -->
+        <!-- ── SENDER IDENTITY BANNER ─────────────────────────────────────── -->
         <div class="bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl px-5 py-3.5 text-xs text-slate-600 dark:text-slate-300 flex flex-wrap items-center justify-between gap-3">
             <div class="flex items-center gap-2.5">
                 <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                <span>Sender Identity: <strong class="font-black text-slate-800 dark:text-white">{{ env('REMINDER_MAIL_FROM_NAME', 'AMIS Support Staff') }}</strong> (&lt;{{ env('REMINDER_MAIL_FROM_ADDRESS', config('mail.from.address')) }}&gt;)</span>
+                <span>Sender Identity: <strong class="font-black text-slate-800 dark:text-white">{{ env('REMINDER_MAIL_FROM_NAME', 'AMIS Support Staff') }}</strong> (&lt;{{ env('REMINDER_MAIL_FROM_ADDRESS', config('mail.from.address', 'amisonlinesupport@gmail.com')) }}&gt;)</span>
             </div>
             <div class="flex items-center gap-3 text-slate-500">
-                <span>Rule: <strong>1 Email per Family</strong> (Multi-child grouped)</span>
+                <span>Rule: <strong>1 Email per Family</strong></span>
                 <span>•</span>
-                <span>Rule: <strong>Send Only Once</strong> per monthly billing cycle</span>
+                <span>Rule: <strong>Send Only Once</strong> per monthly cycle</span>
+                <span>•</span>
+                <span>Rule: <strong>General Announcement (No student data in email)</strong></span>
             </div>
         </div>
 
@@ -171,12 +164,10 @@
                 <div class="flex flex-wrap items-center gap-1.5 w-full md:w-auto">
                     @php
                         $filterTabs = [
-                            ''             => 'All Families (' . $metrics['eligible_families'] . ')',
-                            'not_sent'     => 'Not Sent (' . $metrics['pending'] . ')',
-                            'sent'         => 'Sent (' . $metrics['already_sent'] . ')',
-                            'with_balance' => 'With Balance (' . $metrics['with_balance'] . ')',
-                            'fully_paid'   => 'Fully Paid (' . $metrics['fully_paid'] . ')',
-                            'failed'       => 'Failed (' . $metrics['failed'] . ')',
+                            ''         => 'All Families (' . $metrics['eligible_families'] . ')',
+                            'not_sent' => 'Pending (' . $metrics['pending'] . ')',
+                            'sent'     => 'Sent (' . $metrics['already_sent'] . ')',
+                            'failed'   => 'Failed (' . $metrics['failed'] . ')',
                         ];
                     @endphp
 
@@ -192,7 +183,7 @@
                 <div class="flex items-center gap-2 w-full md:w-72">
                     <div class="relative w-full">
                         <input type="text" name="q" value="{{ $search }}"
-                               placeholder="Search parent, student, ID, email..."
+                               placeholder="Search parent name, email..."
                                class="w-full text-xs font-medium pl-9 pr-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500">
                         <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -205,19 +196,18 @@
             </form>
         </div>
 
-        <!-- ── MAIN RECIPIENTS TABLE ──────────────────────────────────────── -->
+        <!-- ── MAIN RECIPIENTS TABLE (CLEAN & SIMPLE) ─────────────────────── -->
         <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xs overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-xs">
                     <thead>
                         <tr class="border-b border-slate-100 dark:border-slate-700 bg-slate-50/75 dark:bg-slate-900/50 text-slate-500 uppercase tracking-wider font-bold">
                             <th class="px-5 py-3.5">#</th>
-                            <th class="px-4 py-3.5">Parent / Guardian</th>
+                            <th class="px-4 py-3.5">Parent / Family</th>
                             <th class="px-4 py-3.5">Email Address</th>
-                            <th class="px-4 py-3.5">Enrolled Student(s)</th>
-                            <th class="px-4 py-3.5 text-right">Family Balance</th>
-                            <th class="px-4 py-3.5 text-center">Reminder Status</th>
-                            <th class="px-4 py-3.5 text-right">Last Sent</th>
+                            <th class="px-4 py-3.5 text-center">Reminder Month</th>
+                            <th class="px-4 py-3.5 text-center">Status</th>
+                            <th class="px-4 py-3.5 text-right">Sent At</th>
                             <th class="px-4 py-3.5 text-right">Action</th>
                         </tr>
                     </thead>
@@ -236,24 +226,8 @@
                                     {{ $family->email }}
                                 </td>
 
-                                <td class="px-4 py-3.5">
-                                    <div class="space-y-1">
-                                        @foreach($family->students as $s)
-                                            <span class="inline-block px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-semibold mr-1">
-                                                {{ $s['name'] }} <span class="text-slate-400 font-mono">({{ $s['grade'] }})</span>
-                                            </span>
-                                        @endforeach
-                                    </div>
-                                </td>
-
-                                <td class="px-4 py-3.5 text-right font-bold {{ $family->total_balance > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-500' }}">
-                                    @if($family->total_balance > 0)
-                                        PHP {{ number_format($family->total_balance, 2) }}
-                                    @elseif($family->is_fully_paid)
-                                        <span class="text-emerald-600 font-bold">Fully Paid</span>
-                                    @else
-                                        <span class="text-slate-400">₱0.00</span>
-                                    @endif
+                                <td class="px-4 py-3.5 text-center font-mono font-bold text-slate-600 dark:text-slate-300">
+                                    {{ Carbon\Carbon::parse($selectedMonth . '-01')->format('M Y') }}
                                 </td>
 
                                 <td class="px-4 py-3.5 text-center">
@@ -269,19 +243,15 @@
                                         <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200" title="{{ $family->last_error }}">
                                             ⚠ {{ $family->status === 'RETRY' ? 'Retry' : 'Failed' }}
                                         </span>
-                                    @elseif($family->is_fully_paid)
-                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-teal-50 text-teal-700 border border-teal-200">
-                                            Fully Paid (Skip)
-                                        </span>
                                     @else
                                         <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200">
-                                            Not Sent
+                                            Pending
                                         </span>
                                     @endif
                                 </td>
 
                                 <td class="px-4 py-3.5 text-right text-slate-500 font-mono text-xs">
-                                    {{ $family->sent_at ? Carbon\Carbon::parse($family->sent_at)->format('M d, H:i') : '—' }}
+                                    {{ $family->sent_at ? Carbon\Carbon::parse($family->sent_at)->format('M d, Y H:i') : '—' }}
                                 </td>
 
                                 <td class="px-4 py-3.5 text-right">
@@ -298,7 +268,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="px-5 py-12 text-center text-slate-400">
+                                <td colspan="7" class="px-5 py-12 text-center text-slate-400">
                                     No parent records found for the selected filter and month.
                                 </td>
                             </tr>
@@ -328,10 +298,10 @@
                         </div>
                         <div>
                             <h3 class="text-base font-black text-slate-900 dark:text-white">
-                                Send {{ Carbon\Carbon::parse($selectedMonth . '-01')->format('F Y') }} Monthly Reminders?
+                                Send Monthly Payment Reminder?
                             </h3>
                             <p class="text-xs font-semibold text-slate-500 mt-0.5">
-                                Idempotent batch send via Laravel Queue worker.
+                                Reminder Month: {{ Carbon\Carbon::parse($selectedMonth . '-01')->format('F Y') }}
                             </p>
                         </div>
                     </div>
@@ -340,6 +310,10 @@
                 <div class="p-6 space-y-4 text-xs font-semibold text-slate-600 dark:text-slate-300">
                     <div class="bg-slate-50 dark:bg-slate-800/60 rounded-2xl p-4 space-y-2 border border-slate-100 dark:border-slate-700">
                         <div class="flex justify-between">
+                            <span class="text-slate-500">Reminder Month:</span>
+                            <span class="font-bold text-slate-900 dark:text-white">{{ Carbon\Carbon::parse($selectedMonth . '-01')->format('F Y') }}</span>
+                        </div>
+                        <div class="flex justify-between">
                             <span class="text-slate-500">Eligible Families:</span>
                             <span class="font-bold text-slate-900 dark:text-white">{{ number_format($metrics['eligible_families']) }}</span>
                         </div>
@@ -347,20 +321,16 @@
                             <span class="text-slate-500">Already Sent (Will Skip):</span>
                             <span class="font-bold text-emerald-600">{{ number_format($metrics['already_sent']) }}</span>
                         </div>
-                        <div class="flex justify-between">
-                            <span class="text-slate-500">Fully Paid (Will Skip):</span>
-                            <span class="font-bold text-teal-600">{{ number_format($metrics['fully_paid']) }}</span>
-                        </div>
                         <div class="border-t border-slate-200 dark:border-slate-700 pt-2 flex justify-between text-sm">
                             <span class="font-black text-slate-900 dark:text-white">Will Receive Reminder:</span>
                             <span class="font-black text-emerald-600">{{ number_format($metrics['will_receive_count']) }} families</span>
                         </div>
                     </div>
 
-                    <div class="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-xl text-amber-800 dark:text-amber-200">
+                    <div class="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-xl text-emerald-800 dark:text-emerald-200">
                         <p class="font-bold">🔒 Idempotency Protection Active:</p>
-                        <p class="mt-0.5 text-xs text-amber-700 dark:text-amber-300">
-                            The {{ number_format($metrics['already_sent']) }} families who already received their reminder for {{ Carbon\Carbon::parse($selectedMonth . '-01')->format('F Y') }} will <strong>NEVER</strong> be emailed again.
+                        <p class="mt-0.5 text-xs text-emerald-700 dark:text-emerald-300">
+                            Only unsent eligible recipients will be queued. The {{ number_format($metrics['already_sent']) }} families already sent this cycle will <strong>NEVER</strong> be emailed again.
                         </p>
                     </div>
 
@@ -385,7 +355,7 @@
             </div>
         </div>
 
-        <!-- ── PREVIEW EMAIL MODAL ────────────────────────────────────────── -->
+        <!-- ── PREVIEW EMAIL MODAL (USES EXACT TEMPLATE) ───────────────────── -->
         <div x-cloak x-show="showPreviewModal" style="display: none; z-index: 99999;"
              class="fixed inset-0 flex items-center justify-center bg-slate-900/70 backdrop-blur-xs p-4 animate-fade-in text-slate-900"
              @click.outside="showPreviewModal = false">
@@ -393,10 +363,10 @@
                 <div class="p-4 px-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
                     <div>
                         <h3 class="text-sm font-black text-slate-900 dark:text-white">
-                            Payment Reminder Email Visual Preview
+                            Official Monthly Payment Reminder Email Preview
                         </h3>
                         <p class="text-xs font-semibold text-slate-500">
-                            Includes all 3 approved images, receipt instruction, and AMIS Support Staff sender.
+                            Shows the exact final email with all 3 approved posters and receipt submission instructions.
                         </p>
                     </div>
                     <button type="button" @click="showPreviewModal = false" class="text-slate-400 hover:text-slate-600 p-1">
@@ -405,7 +375,7 @@
                 </div>
                 <div class="flex-1 bg-slate-100 dark:bg-slate-950 p-4 overflow-auto">
                     <iframe src="{{ route('admin.finance.monthly-reminders.preview-email') }}"
-                            class="w-full h-full min-h-[600px] bg-white rounded-xl border border-slate-200 shadow-xs"
+                            class="w-full h-full min-h-[650px] bg-white rounded-xl border border-slate-200 shadow-xs"
                             title="Reminder Email Preview"></iframe>
                 </div>
             </div>
