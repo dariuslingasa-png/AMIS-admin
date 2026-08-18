@@ -153,10 +153,11 @@
             ],
         ],
         [
-            'active' => request()->routeIs('admin.system-management.*') || request()->routeIs('admin.email-composer.*'),
+            'active' => request()->routeIs('admin.system-management.*') || request()->routeIs('admin.email-composer.*') || request()->routeIs('admin.payment-reminder.*'),
             'icon' => 'settings-2', 'iconClass' => 'text-slate-600', 'headerClass' => 'text-slate-700', 'activeClass' => 'sidebar-link-active-slate', 'title' => 'System Management',
             'links' => [
                 ['Email Composer', 'mail-plus', route('admin.email-composer.index'), request()->routeIs('admin.email-composer.*')],
+                ['Payment Reminder', 'bell-ring', route('admin.payment-reminder.index'), request()->routeIs('admin.payment-reminder.*')],
                 ['Backup Center', 'database', route('admin.system-management.backups.index'), request()->routeIs('admin.system-management.backups.*')],
                 ['System Health', 'heart-pulse', route('admin.system-management.health.index'), request()->routeIs('admin.system-management.health.*')],
                 ['DevOps Control', 'cpu', route('admin.system-management.devops.index'), request()->routeIs('admin.system-management.devops.*')],

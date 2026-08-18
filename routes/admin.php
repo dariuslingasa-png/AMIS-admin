@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\ApprovalController;
 use App\Http\Controllers\Admin\AttendanceController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EmailComposerController;
+use App\Http\Controllers\Admin\PaymentReminderController;
 use App\Http\Controllers\Admin\EnrollmentAnalyticsController;
 use App\Http\Controllers\Admin\EnrollmentController;
 use App\Http\Controllers\Admin\EnrollmentReportController;
@@ -516,6 +517,18 @@ Route::name('admin.')->group(function () {
             Route::get('/halaqah-parents', [RegistrationController::class, 'halaqahParents'])->name('halaqah-parents');
             Route::patch('/halaqah/{id}/toggle', [RegistrationController::class, 'toggleStatus'])->name('halaqah.toggle');
             Route::delete('/halaqah/{id}', [RegistrationController::class, 'destroy'])->name('halaqah.destroy');
+        });
+
+        // ── Payment Reminder System ────────────────────────────────────────────
+        Route::prefix('payment-reminder')->name('payment-reminder.')->group(function () {
+            Route::get('/',                          [PaymentReminderController::class, 'index'])   ->name('index');
+            Route::post('/prepare',                  [PaymentReminderController::class, 'prepare']) ->name('prepare')->middleware('throttle:10,1');
+            Route::get('/{campaign}/preview',        [PaymentReminderController::class, 'preview']) ->name('preview');
+            Route::post('/{campaign}/send-test',     [PaymentReminderController::class, 'sendTest'])->name('send-test')->middleware('throttle:10,1');
+            Route::post('/{campaign}/start',         [PaymentReminderController::class, 'start'])   ->name('start')->middleware('throttle:5,1');
+            Route::post('/{campaign}/pause',         [PaymentReminderController::class, 'pause'])   ->name('pause');
+            Route::post('/{campaign}/resume',        [PaymentReminderController::class, 'resume'])  ->name('resume')->middleware('throttle:5,1');
+            Route::get('/{campaign}/logs',           [PaymentReminderController::class, 'logs'])    ->name('logs');
         });
     });
 });
