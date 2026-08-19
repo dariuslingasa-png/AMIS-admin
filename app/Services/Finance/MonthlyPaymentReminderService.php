@@ -24,10 +24,13 @@ class MonthlyPaymentReminderService
      */
     public function getFamiliesCollection(string $billingMonth): Collection
     {
-        // 1. Fetch all approved applicants with their student and account information
+        // 1. Fetch all approved/enrolled applicants with their student and account information
         $applicants = EnrollmentApplicant::query()
-            ->with(['student.account'])
-            ->where('status', 'approved')
+            ->with(['student.account', 'user'])
+            ->where(function ($q) {
+                $q->whereIn('status', ['approved', 'enrolled', 'active'])
+                  ->orWhereHas('student.account');
+            })
             ->orderBy('id', 'asc')
             ->get();
 
@@ -41,12 +44,12 @@ class MonthlyPaymentReminderService
         $familiesMap = [];
 
         foreach ($applicants as $applicant) {
-            // Find all potential parent emails in priority order
+            // Find all potential parent emails in priority order with full fallbacks
             $rawEmails = array_filter([
                 $applicant->parent_email,
-                $applicant->mother_email,
-                $applicant->father_email,
-                $applicant->guardian_email,
+                $applicant->email,
+                $applicant->user?->email,
+                $applicant->student?->school_email,
             ]);
 
             if (empty($rawEmails)) {
@@ -54,8 +57,16 @@ class MonthlyPaymentReminderService
             }
 
             // Primary parent email normalized
-            $primaryEmail = strtolower(trim((string) reset($rawEmails)));
-            if (!filter_var($primaryEmail, FILTER_VALIDATE_EMAIL)) {
+            $primaryEmail = null;
+            foreach ($rawEmails as $cand) {
+                $clean = strtolower(trim((string) $cand));
+                if (filter_var($clean, FILTER_VALIDATE_EMAIL)) {
+                    $primaryEmail = $clean;
+                    break;
+                }
+            }
+
+            if (!$primaryEmail) {
                 continue;
             }
 
