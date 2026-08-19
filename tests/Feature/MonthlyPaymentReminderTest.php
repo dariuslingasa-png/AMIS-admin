@@ -179,7 +179,7 @@ class MonthlyPaymentReminderTest extends TestCase
 
         $envelope1 = $mailable1->envelope();
         $this->assertEquals(
-            'AMIS Payment Reminder – Monthly School Fees – ABDULRAHEEM BAULO – August 2026',
+            'AMIS Payment Reminder – August 2026 – ABDULRAHEEM BAULO',
             $envelope1->subject
         );
 
@@ -196,7 +196,7 @@ class MonthlyPaymentReminderTest extends TestCase
 
         $envelope2 = $mailable2->envelope();
         $this->assertEquals(
-            'AMIS Payment Reminder – Monthly School Fees – FATIMA ZAHRA – August 2026',
+            'AMIS Payment Reminder – August 2026 – FATIMA ZAHRA',
             $envelope2->subject
         );
 
