@@ -205,11 +205,24 @@
         ['title' => 'Home Address', 'icon' => 'map-pin', 'key' => 'parents', 'fields' => [['Full Home Address', $homeAddress ?: $student->applicant->home_address]]],
     ];
 
-    $hasMedicalConcern = (bool) $student->applicant->medical_has_concern;
+    $rawConcern = strtolower(trim((string) ($student->applicant->medical_has_concern ?? '')));
+    $hasMedicalConcern = !empty($rawConcern) && !in_array($rawConcern, ['no', 'none', 'false', '0', 'n/a', 'na'], true);
+
+    if (!$hasMedicalConcern) {
+        $hasMedicalConcern = !empty($student->applicant->allergies)
+            || !empty($student->applicant->current_medications)
+            || !empty($student->applicant->health_conditions)
+            || !empty($student->applicant->medical_history)
+            || !empty($student->applicant->emergency_instructions);
+    }
+
+    $emergencyAddress = $student->applicant->emergency_address
+        ?: ($homeAddress ?: ($student->applicant->home_address ?: $student->applicant->address));
+
     $medicalSections = [
         ['title' => 'Emergency Contact', 'icon' => 'shield-alert', 'key' => 'parents', 'fields' => [
             ['Contact Person', $student->applicant->emergency_name], ['Relationship', $student->applicant->emergency_relationship],
-            ['Emergency Phone', $student->applicant->emergency_phone], ['Emergency Address', $student->applicant->emergency_address],
+            ['Emergency Phone', $student->applicant->emergency_phone], ['Emergency Address', $emergencyAddress],
         ]],
     ];
     if ($hasMedicalConcern) {

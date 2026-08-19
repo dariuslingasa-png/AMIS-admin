@@ -228,11 +228,25 @@ class StudentController extends Controller
             'account.payments',
         ]);
 
-        $siblings = EnrollmentApplicant::where('user_id', $student->applicant->user_id)
-            ->where('id', '!=', $student->enrollment_applicant_id)
-            ->when(auth()->user()?->isTeacherAdminViewer(), fn ($query) => $query->whereIn('grade_level', auth()->user()->adminVisibleGradeLevels()))
-            ->whereNotIn('status', ['draft'])
-            ->get();
+        $siblings = EnrollmentApplicant::where(function ($query) use ($student) {
+            $userId = $student->applicant?->user_id;
+            $parentEmail = $student->applicant?->parent_email;
+
+            if ($userId) {
+                $query->where('user_id', $userId);
+            }
+            if (!empty($parentEmail)) {
+                if ($userId) {
+                    $query->orWhere('parent_email', $parentEmail);
+                } else {
+                    $query->where('parent_email', $parentEmail);
+                }
+            }
+        })
+        ->where('id', '!=', $student->enrollment_applicant_id)
+        ->when(auth()->user()?->isTeacherAdminViewer(), fn ($query) => $query->whereIn('grade_level', auth()->user()->adminVisibleGradeLevels()))
+        ->whereNotIn('status', ['draft'])
+        ->get();
 
         $statusLabels = EnrollmentReviewService::STATUS_LABELS;
 
@@ -616,6 +630,43 @@ class StudentController extends Controller
                 $applicant->mother_first_name = mb_strtoupper(implode(' ', $parts)) ?: 'MOTHER';
             }
             $applicant->save();
+
+            // Sync family-wide shared fields (parents, home address, emergency contact) to all siblings
+            $siblingApplicants = EnrollmentApplicant::where(function ($q) use ($applicant) {
+                if ($applicant->user_id) {
+                    $q->where('user_id', $applicant->user_id);
+                }
+                if (!empty($applicant->parent_email)) {
+                    if ($applicant->user_id) {
+                        $q->orWhere('parent_email', $applicant->parent_email);
+                    } else {
+                        $q->where('parent_email', $applicant->parent_email);
+                    }
+                }
+            })
+            ->where('id', '!=', $applicant->id)
+            ->get();
+
+            $sharedFamilyUpdates = [];
+            $sharedKeys = [
+                'parent_email', 'parent_mobile', 'parent_country_code',
+                'home_address', 'address', 'street_address',
+                'emergency_name', 'emergency_relationship', 'emergency_phone', 'emergency_address',
+                'father_first_name', 'father_last_name', 'father_occupation',
+                'mother_first_name', 'mother_last_name', 'mother_occupation'
+            ];
+
+            foreach ($sharedKeys as $key) {
+                if (isset($updateData[$key]) || $applicant->isDirty($key) || $request->filled($key)) {
+                    $sharedFamilyUpdates[$key] = $applicant->$key;
+                }
+            }
+
+            if (!empty($sharedFamilyUpdates) && $siblingApplicants->isNotEmpty()) {
+                foreach ($siblingApplicants as $sib) {
+                    $sib->update($sharedFamilyUpdates);
+                }
+            }
 
             $studentName = trim(($applicant->first_name ?? '').' '.($applicant->last_name ?? ''));
             AdminAuditLog::record(

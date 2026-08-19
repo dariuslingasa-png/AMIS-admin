@@ -33,7 +33,16 @@
     $fatherName = trim(($applicant->father_first_name ?? '').' '.($applicant->father_middle_name ?? '').' '.($applicant->father_last_name ?? ''));
     $motherName = trim(($applicant->mother_first_name ?? '').' '.($applicant->mother_middle_name ?? '').' '.($applicant->mother_last_name ?? ''));
     $emergencyContact = trim(($applicant->emergency_name ?? '').' / '.($applicant->emergency_phone ?? ''), ' /');
-    $hasMedicalConcern = (bool) $applicant->medical_has_concern;
+    $rawConcern = strtolower(trim((string) ($applicant->medical_has_concern ?? '')));
+    $hasMedicalConcern = !empty($rawConcern) && !in_array($rawConcern, ['no', 'none', 'false', '0', 'n/a', 'na'], true);
+
+    if (!$hasMedicalConcern) {
+        $hasMedicalConcern = !empty($applicant->allergies)
+            || !empty($applicant->current_medications)
+            || !empty($applicant->health_conditions)
+            || !empty($applicant->medical_history)
+            || !empty($applicant->emergency_instructions);
+    }
     $studentSections = [
         ['title' => 'Academic Details', 'icon' => 'graduation-cap', 'fields' => [
             ['Student Type', $applicant->student_type], ['Grade Level', $applicant->grade_abbr],
@@ -61,10 +70,11 @@
         ['title' => 'Parent Contact', 'icon' => 'phone', 'fields' => [['Parent Email', $applicant->parent_email], ['Parent Mobile', $parentMobile], ['Facebook Name / Link', $applicant->facebook], ['WhatsApp Number', $applicant->whatsapp], ['Referral Source', $applicant->referral_source]]],
         ['title' => 'Home Address', 'icon' => 'map-pin', 'fields' => [['Full Home Address', $homeAddress], ['City', $applicant->home_city], ['State / Province', $applicant->home_state_province], ['Postal Code', $applicant->home_postal_code]]],
     ];
+    $emergencyAddr = $applicant->emergency_address ?: ($homeAddress ?: $studentAddress);
     $medicalSections = [
         ['title' => 'Emergency Contact', 'icon' => 'shield-alert', 'fields' => [
             ['Contact Person', $emergencyContact], ['Relationship', $applicant->emergency_relationship],
-            ['Family Physician', $applicant->family_physician], ['Physician Phone', $applicant->physician_phone],
+            ['Emergency Address', $emergencyAddr], ['Family Physician', $applicant->family_physician], ['Physician Phone', $applicant->physician_phone],
         ]],
     ];
     if ($hasMedicalConcern) {
