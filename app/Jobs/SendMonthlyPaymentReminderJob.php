@@ -82,7 +82,31 @@ class SendMonthlyPaymentReminderJob implements ShouldQueue
         ]);
 
         try {
-            $mailable = new PaymentReminderMail();
+            // Resolve recipient name: student name or parent name
+            $recipientName = null;
+            if (!empty($reminder->student_names)) {
+                // If student_names has "(Grade · ID)", strip the parentheses details for a clean subject line
+                $clean = preg_replace('/\s*\([^)]*\)/', '', $reminder->student_names);
+                $names = array_filter(array_map('trim', explode(',', $clean)));
+                if (count($names) === 1) {
+                    $recipientName = reset($names);
+                } elseif (count($names) > 1) {
+                    $recipientName = reset($names) . ' & SIBLINGS';
+                }
+            }
+
+            if (empty($recipientName) && !empty($reminder->parent_name)) {
+                $recipientName = $reminder->parent_name;
+            }
+
+            if (empty($recipientName)) {
+                $recipientName = 'Valued Family';
+            }
+
+            $mailable = new PaymentReminderMail(
+                recipientName: $recipientName,
+                billingMonth: $reminder->billing_month
+            );
 
             Mail::to($email)->send($mailable);
 

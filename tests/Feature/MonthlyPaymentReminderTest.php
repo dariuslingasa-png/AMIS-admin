@@ -168,4 +168,41 @@ class MonthlyPaymentReminderTest extends TestCase
             'parent_email'  => 'unique.parent.batch@example.com',
         ]);
     }
+
+    #[Test]
+    public function mailable_generates_unique_subject_and_unthreaded_headers(): void
+    {
+        $mailable1 = new PaymentReminderMail(
+            recipientName: 'ABDULRAHEEM BAULO',
+            billingMonth: '2026-08'
+        );
+
+        $envelope1 = $mailable1->envelope();
+        $this->assertEquals(
+            'AMIS Payment Reminder – Monthly School Fees – ABDULRAHEEM BAULO – August 2026',
+            $envelope1->subject
+        );
+
+        $headers1 = $mailable1->headers();
+        $this->assertNotEmpty($headers1->messageId);
+        $this->assertEmpty($headers1->references);
+        $this->assertArrayHasKey('X-Entity-Ref-ID', $headers1->text);
+
+        // Verify another recipient has a different subject and unique messageId
+        $mailable2 = new PaymentReminderMail(
+            recipientName: 'FATIMA ZAHRA',
+            billingMonth: '2026-08'
+        );
+
+        $envelope2 = $mailable2->envelope();
+        $this->assertEquals(
+            'AMIS Payment Reminder – Monthly School Fees – FATIMA ZAHRA – August 2026',
+            $envelope2->subject
+        );
+
+        $this->assertNotEquals($envelope1->subject, $envelope2->subject);
+
+        $headers2 = $mailable2->headers();
+        $this->assertNotEquals($headers1->messageId, $headers2->messageId);
+    }
 }

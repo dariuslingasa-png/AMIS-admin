@@ -115,9 +115,10 @@ class MonthlyPaymentReminderController extends Controller
         ]);
 
         $testEmail = $request->input('test_email');
+        $billingMonth = $request->input('billing_month', Carbon::now()->format('Y-m'));
 
         try {
-            $this->reminderService->sendTestEmail($testEmail);
+            $this->reminderService->sendTestEmail($testEmail, $billingMonth, 'Test Recipient');
 
             return back()->with('success', "✓ Test payment reminder email dispatched to {$testEmail}. Check your inbox or spam folder.");
         } catch (\Throwable $e) {
