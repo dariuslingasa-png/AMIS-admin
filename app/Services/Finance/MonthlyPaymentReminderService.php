@@ -364,7 +364,8 @@ class MonthlyPaymentReminderService
             dispatchRef: $dispatchRef
         );
 
-        Mail::to(trim($targetEmail))->send($mailable);
+        $rotator = app(\App\Services\System\SmartSmtpRotatorService::class);
+        $rotator->sendMail(trim($targetEmail), $mailable);
 
         return true;
     }
