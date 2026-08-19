@@ -1003,6 +1003,28 @@
             });
         }
 
+        function toggleModalityCheckbox(item) {
+            const bar = item.closest('.modality-bar');
+            if (!bar) return;
+            const currentBox = item.querySelector('.custom-checkbox');
+            const isChecked = currentBox && currentBox.innerHTML.trim() !== '';
+            bar.querySelectorAll('.custom-checkbox').forEach(box => box.innerHTML = '');
+            if (!isChecked && currentBox) {
+                currentBox.innerHTML = '&#10003;';
+            }
+        }
+
+        function toggleOldNewCheckbox(item, type) {
+            const stack = item.closest('.checkbox-stack');
+            if (!stack) return;
+            const currentBox = item.querySelector('.custom-checkbox');
+            const isChecked = currentBox && currentBox.innerHTML.trim() !== '';
+            stack.querySelectorAll('.custom-checkbox').forEach(box => box.innerHTML = '');
+            if (!isChecked && currentBox) {
+                currentBox.innerHTML = '&#10003;';
+            }
+        }
+
         if (new URLSearchParams(window.location.search).get('auto_zip_png') === '1' || new URLSearchParams(window.location.search).get('auto_zip_jpg') === '1') {
             window.addEventListener('DOMContentLoaded', () => {
                 const checkReadyInterval = setInterval(async () => {

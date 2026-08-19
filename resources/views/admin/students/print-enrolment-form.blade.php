@@ -526,6 +526,42 @@
             border-radius: 3px;
         }
 
+        /* Modality & Shift Checkboxes Bar */
+        .modality-bar {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-top: 6px;
+            margin-bottom: 2px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .modality-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #0f172a;
+        }
+
+        .modality-bar .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.84rem;
+            font-weight: 800;
+            color: #0f172a;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .modality-bar .custom-checkbox {
+            width: 18px;
+            height: 18px;
+            font-size: 13px;
+        }
+
         /* 2x2 Photo Square Box */
         .photo-box {
             width: 112px;
@@ -1923,6 +1959,28 @@
                     if (toast.parentNode) toast.parentNode.removeChild(toast);
                 }, 300);
             }, 3500);
+        }
+
+        function toggleModalityCheckbox(item) {
+            const bar = item.closest('.modality-bar');
+            if (!bar) return;
+            const currentBox = item.querySelector('.custom-checkbox');
+            const isChecked = currentBox && currentBox.innerHTML.trim() !== '';
+            bar.querySelectorAll('.custom-checkbox').forEach(box => box.innerHTML = '');
+            if (!isChecked && currentBox) {
+                currentBox.innerHTML = '&#10003;';
+            }
+        }
+
+        function toggleOldNewCheckbox(item, type) {
+            const stack = item.closest('.checkbox-stack');
+            if (!stack) return;
+            const currentBox = item.querySelector('.custom-checkbox');
+            const isChecked = currentBox && currentBox.innerHTML.trim() !== '';
+            stack.querySelectorAll('.custom-checkbox').forEach(box => box.innerHTML = '');
+            if (!isChecked && currentBox) {
+                currentBox.innerHTML = '&#10003;';
+            }
         }
 
         if (new URLSearchParams(window.location.search).get('auto_print') === '1') {

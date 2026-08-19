@@ -129,6 +129,42 @@
         position: relative;
     }
 
+    /* Modality & Shift Checkboxes Bar */
+    .modality-bar {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-top: 6px;
+        margin-bottom: 2px;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .modality-title {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.85rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #0f172a;
+    }
+
+    .modality-bar .checkbox-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.84rem;
+        font-weight: 800;
+        color: #0f172a;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .modality-bar .custom-checkbox {
+        width: 18px;
+        height: 18px;
+        font-size: 13px;
+    }
+
     /* Section Header Divider */
     .section-header-row {
         font-family: 'Inter', sans-serif;

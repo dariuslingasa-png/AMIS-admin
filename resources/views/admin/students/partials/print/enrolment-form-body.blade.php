@@ -6,6 +6,15 @@
     $isOld = str_contains($studentType, 'OLD');
     $isNew = str_contains($studentType, 'NEW') || !$isOld;
 
+    // Modality & Shift determination
+    $rawMode = strtolower($app->learning_mode ?? ($student->studentSection?->section?->learning_mode ?? ''));
+    $rawShift = strtolower($student->studentSection?->section?->shift ?? ($app->shift ?? ''));
+    $rawSectionName = strtolower($student->studentSection?->section?->name ?? ($app->section ?? ''));
+
+    $is1stShift = str_contains($rawMode, '1st') || str_contains($rawShift, '1st') || str_contains($rawSectionName, '1st shift');
+    $is2ndShift = str_contains($rawMode, '2nd') || str_contains($rawShift, '2nd') || str_contains($rawSectionName, '2nd shift');
+    $isF2f = (str_contains($rawMode, 'face') || str_contains($rawMode, 'f2f') || (!$is1stShift && !$is2ndShift));
+
     if (!isset($GLOBALS['AMIS_LOGO_BASE64'])) {
         $path = public_path('images/AMIS_Logo.png');
         $GLOBALS['AMIS_LOGO_BASE64'] = file_exists($path) ? 'data:image/png;base64,' . base64_encode(file_get_contents($path)) : asset('images/AMIS_Logo.png');
@@ -311,6 +320,29 @@
         white-space: nowrap !important;
     }
 
+    .modality-bar {
+        display: table !important;
+        width: 100% !important;
+        margin-top: 3px !important;
+        margin-bottom: 2px !important;
+        font-family: 'DejaVu Sans', sans-serif !important;
+        font-size: 8pt !important;
+        font-weight: bold !important;
+    }
+    .modality-bar .modality-title {
+        display: table-cell !important;
+        vertical-align: middle !important;
+        width: 68px !important;
+        font-weight: bold !important;
+        text-transform: uppercase !important;
+        color: #0f172a !important;
+    }
+    .modality-bar .checkbox-item {
+        display: table-cell !important;
+        vertical-align: middle !important;
+        font-weight: bold !important;
+    }
+
     .grid-5-col, .grid-4-col-birth, .grid-2-col-school, .grid-parent-row, .grid-children-row, .grid-physician-row, .p2-emergency-grid, .signature-grid, .grid-office-row {
         display: table !important;
         width: 100% !important;
@@ -517,14 +549,30 @@
                     <span class="lrn-input">{{ mb_strtoupper($app->lrn ?? $student->student_number ?? 'NA') }}</span>
                 </div>
             </div>
+
+            <div class="modality-bar">
+                <span class="modality-title">MODALITY:</span>
+                <div class="checkbox-item" onclick="toggleModalityCheckbox(this)" title="Click to toggle F2F">
+                    <span class="custom-checkbox">{!! $isF2f ? '&#10003;' : '' !!}</span>
+                    <span>F2F</span>
+                </div>
+                <div class="checkbox-item" onclick="toggleModalityCheckbox(this)" title="Click to toggle 1st Shift">
+                    <span class="custom-checkbox">{!! $is1stShift ? '&#10003;' : '' !!}</span>
+                    <span>1ST SHIFT</span>
+                </div>
+                <div class="checkbox-item" onclick="toggleModalityCheckbox(this)" title="Click to toggle 2nd Shift">
+                    <span class="custom-checkbox">{!! $is2ndShift ? '&#10003;' : '' !!}</span>
+                    <span>2ND SHIFT</span>
+                </div>
+            </div>
         </div>
 
         <div class="checkbox-stack">
-            <div class="checkbox-item">
+            <div class="checkbox-item" onclick="toggleOldNewCheckbox(this, 'old')" title="Click to toggle Old student">
                 <span class="custom-checkbox">{!! $isOld ? '&#10003;' : '' !!}</span>
                 <span>OLD</span>
             </div>
-            <div class="checkbox-item">
+            <div class="checkbox-item" onclick="toggleOldNewCheckbox(this, 'new')" title="Click to toggle New student">
                 <span class="custom-checkbox">{!! $isNew ? '&#10003;' : '' !!}</span>
                 <span>NEW</span>
             </div>
