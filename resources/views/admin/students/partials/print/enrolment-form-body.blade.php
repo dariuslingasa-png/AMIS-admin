@@ -551,7 +551,6 @@
             </div>
 
             <div class="modality-bar">
-                <span class="modality-title">MODALITY:</span>
                 <div class="checkbox-item" onclick="toggleModalityCheckbox(this)" title="Click to toggle F2F">
                     <span class="custom-checkbox">{!! $isF2f ? '&#10003;' : '' !!}</span>
                     <span>F2F</span>
