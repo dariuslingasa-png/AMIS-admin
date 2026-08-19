@@ -140,8 +140,50 @@ class MonthlyPaymentReminderController extends Controller
     }
 
     /**
-     * Send test email to a specific address or bulk list of pasted emails.
+     * Get real-time live sending progress for the active billing month.
      */
+    public function progress(Request $request)
+    {
+        $this->authorizeFinance();
+
+        $billingMonth = $request->input('billing_month', Carbon::now()->format('Y-m'));
+
+        $total = MonthlyPaymentReminder::where('billing_month', $billingMonth)->count();
+        $sent = MonthlyPaymentReminder::where('billing_month', $billingMonth)->where('status', MonthlyPaymentReminder::STATUS_SENT)->count();
+        $pending = MonthlyPaymentReminder::where('billing_month', $billingMonth)->where('status', MonthlyPaymentReminder::STATUS_PENDING)->count();
+        $processing = MonthlyPaymentReminder::where('billing_month', $billingMonth)->where('status', MonthlyPaymentReminder::STATUS_PROCESSING)->count();
+        $failed = MonthlyPaymentReminder::where('billing_month', $billingMonth)->whereIn('status', [MonthlyPaymentReminder::STATUS_FAILED, MonthlyPaymentReminder::STATUS_RETRY])->count();
+
+        $percent = $total > 0 ? round(($sent / $total) * 100, 1) : 0;
+        $isComplete = $total > 0 && ($sent + $failed) >= $total && $pending === 0 && $processing === 0;
+
+        $recentSends = MonthlyPaymentReminder::where('billing_month', $billingMonth)
+            ->where('status', MonthlyPaymentReminder::STATUS_SENT)
+            ->orderByDesc('sent_at')
+            ->limit(4)
+            ->get(['parent_name', 'parent_email', 'student_names', 'sent_at', 'mail_transport'])
+            ->map(function ($r) {
+                return [
+                    'email' => $r->parent_email,
+                    'name' => $r->parent_name,
+                    'student' => $r->student_names,
+                    'time' => $r->sent_at ? Carbon::parse($r->sent_at)->format('h:i:s A') : '',
+                    'transport' => $r->mail_transport,
+                ];
+            });
+
+        return response()->json([
+            'total' => $total,
+            'sent' => $sent,
+            'pending' => $pending,
+            'processing' => $processing,
+            'failed' => $failed,
+            'percent' => $percent,
+            'is_complete' => $isComplete,
+            'is_running' => ($processing > 0 || ($pending > 0 && $sent > 0)),
+            'recent_sends' => $recentSends,
+        ]);
+    }
     public function sendTest(Request $request)
     {
         $this->authorizeFinance();

@@ -13,6 +13,49 @@
         },
         clearEmails() {
             this.testEmailsInput = '';
+        },
+        progressData: {
+            total: {{ $metrics['eligible_families'] ?? 0 }},
+            sent: {{ $metrics['already_sent'] ?? 0 }},
+            pending: {{ $metrics['pending'] ?? 0 }},
+            processing: 0,
+            failed: {{ $metrics['failed'] ?? 0 }},
+            percent: {{ $metrics['eligible_families'] > 0 ? round(($metrics['already_sent'] / $metrics['eligible_families']) * 100, 1) : 0 }},
+            is_running: false,
+            recent_sends: []
+        },
+        pollInterval: null,
+        startPolling() {
+            if (this.pollInterval) return;
+            this.fetchProgress();
+            this.pollInterval = setInterval(() => {
+                this.fetchProgress();
+            }, 1500);
+        },
+        stopPolling() {
+            if (this.pollInterval) {
+                clearInterval(this.pollInterval);
+                this.pollInterval = null;
+            }
+        },
+        async fetchProgress() {
+            try {
+                const res = await fetch('{{ route('admin.finance.monthly-reminders.progress') }}?billing_month={{ $selectedMonth }}');
+                if (res.ok) {
+                    const data = await res.json();
+                    this.progressData = data;
+                    if (data.is_complete && !data.is_running) {
+                        this.stopPolling();
+                    }
+                }
+            } catch (e) {
+                console.error('Progress polling error:', e);
+            }
+        },
+        init() {
+            @if(($metrics['already_sent'] > 0 && $metrics['pending'] > 0) || session('success'))
+                this.startPolling();
+            @endif
         }
     }">
 
@@ -99,6 +142,90 @@
                 @endforeach
             </div>
         @endif
+
+        <!-- ── REAL-TIME LIVE QUEUE PROGRESS TRACKER ─────────────────────── -->
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h3 class="text-sm font-black text-slate-900 dark:text-white">
+                                Live Queue Delivery Progress
+                            </h3>
+                            <template x-if="progressData.is_running || sendingBatch">
+                                <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 animate-pulse">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                    DISPATCHING LIVE
+                                </span>
+                            </template>
+                            <template x-if="!progressData.is_running && !sendingBatch && progressData.sent > 0 && progressData.pending === 0">
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">
+                                    ✓ ALL DELIVERED
+                                </span>
+                            </template>
+                        </div>
+                        <p class="text-xs text-slate-500 font-medium">
+                            Real-time background mailer monitoring for <span class="font-bold text-slate-700 dark:text-slate-300">{{ Carbon\Carbon::parse($selectedMonth . '-01')->format('F Y') }}</span>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button type="button" @click="fetchProgress()" title="Refresh live status"
+                            class="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition flex items-center gap-1.5 cursor-pointer shadow-2xs">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                        <span>Sync</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div>
+                <div class="flex items-center justify-between text-xs font-bold mb-1.5">
+                    <span class="text-slate-700 dark:text-slate-300">
+                        Delivered: <span class="text-emerald-600 font-black text-sm" x-text="progressData.sent"></span> / <span x-text="progressData.total"></span> Families
+                    </span>
+                    <span class="text-emerald-600 dark:text-emerald-400 font-black text-sm" x-text="progressData.percent + '%'"></span>
+                </div>
+                <div class="w-full h-3.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden p-0.5 border border-slate-200/70 dark:border-slate-700/60 shadow-inner">
+                    <div class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-500 ease-out relative"
+                         :style="'width: ' + Math.max(progressData.percent, (progressData.sent > 0 ? 3 : 0)) + '%'">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Real-time Recent Dispatched Ticker -->
+            <template x-if="progressData.recent_sends && progressData.recent_sends.length > 0">
+                <div class="pt-2 border-t border-slate-100 dark:border-slate-800/80">
+                    <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+                        ⚡ Real-Time Live Dispatches:
+                    </p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <template x-for="(send, idx) in progressData.recent_sends" :key="idx">
+                            <div class="flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/50 text-xs">
+                                <div class="truncate mr-2">
+                                    <p class="font-bold text-slate-800 dark:text-slate-200 truncate" x-text="send.name"></p>
+                                    <p class="text-[11px] text-slate-400 font-mono truncate" x-text="send.email"></p>
+                                </div>
+                                <div class="text-right shrink-0">
+                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-black bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                                        ✓ SENT
+                                    </span>
+                                    <p class="text-[10px] text-slate-400 mt-0.5" x-text="send.time"></p>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </template>
+        </div>
 
         <!-- ── STATS CARDS ────────────────────────────────────────────────── -->
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
