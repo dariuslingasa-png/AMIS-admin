@@ -126,9 +126,15 @@
       <tr>
         <td class="mobile-padding" style="padding: 24px 28px 12px 28px; background-color: #ffffff; font-size: 15px; line-height: 1.7; color: #334155;">
           
-          <h2 style="font-size: 18px; font-weight: 800; color: #166534; margin: 0 0 12px 0;">
-            Assalamu Alaikum!
+          <h2 style="font-size: 18px; font-weight: 800; color: #166534; margin: 0 0 6px 0;">
+            Assalamu Alaikum{{ !empty($recipientName) && $recipientName !== 'Valued Family' ? ', ' . $recipientName : '' }}!
           </h2>
+
+          @if(!empty($billingMonth))
+            <p style="margin: 0 0 12px 0; color: #15803d; font-size: 13px; font-weight: 700;">
+              Billing Cycle: {{ \Carbon\Carbon::parse(strlen($billingMonth) === 7 ? $billingMonth . '-01' : $billingMonth)->format('F Y') }}
+            </p>
+          @endif
 
           <p style="margin: 0 0 12px 0; color: #1e293b; font-size: 15px;">
             This is a friendly reminder regarding any pending monthly school payment.
@@ -137,6 +143,11 @@
           <p style="margin: 0 0 14px 0; color: #1e293b; font-size: 15px;">
             If you still have an outstanding balance, kindly settle your payment as soon as possible.
           </p>
+
+          <!-- Anti-trimming invisible unique token to prevent Gmail Show Quoted Text truncation -->
+          <div style="display:none;font-size:1px;color:#ffffff;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden;mso-hide:all;">
+            Reminder UUID: {{ (string) \Illuminate\Support\Str::uuid() }} • Time: {{ microtime(true) }}
+          </div>
 
           <!-- ── 3. IMPORTANT DISREGARD NOTICE ─────────────────────────────── -->
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 16px 0;">
