@@ -108,18 +108,19 @@ class SendMonthlyPaymentReminderJob implements ShouldQueue
                 billingMonth: $reminder->billing_month
             );
 
-            Mail::to($email)->send($mailable);
+            $rotator = app(\App\Services\System\SmartSmtpRotatorService::class);
+            $sendResult = $rotator->sendMail($email, $mailable);
 
             // ── SUCCESS: TERMINAL STATE ──────────────────────────────────────
             $reminder->update([
                 'status'         => MonthlyPaymentReminder::STATUS_SENT,
                 'sent_at'        => now(),
-                'mail_transport' => config('mail.default', 'smtp'),
+                'mail_transport' => $sendResult['mailer_used'] ?? 'smtp',
                 'last_error'     => null,
                 'next_retry_at'  => null,
             ]);
 
-            Log::info("SendMonthlyPaymentReminderJob: Reminder #{$reminder->id} sent successfully to {$email} for month {$reminder->billing_month}.");
+            Log::info("SendMonthlyPaymentReminderJob: Reminder #{$reminder->id} sent successfully to {$email} via {$sendResult['mailer_used']} for month {$reminder->billing_month}.");
 
         } catch (Throwable $e) {
             $errorMsg = substr($e->getMessage(), 0, 500);
