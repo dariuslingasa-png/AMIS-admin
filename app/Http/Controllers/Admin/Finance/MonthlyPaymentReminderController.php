@@ -60,13 +60,21 @@ class MonthlyPaymentReminderController extends Controller
             $monthsList[$key] = $m->format('F Y');
         }
 
+        // All eligible parent emails for the selected month (for automatic loading in test/custom modal)
+        $allEligibleEmails = $this->reminderService->getFamiliesCollection($selectedMonth)
+            ->pluck('email')
+            ->filter(fn($e) => filter_var((string) $e, FILTER_VALIDATE_EMAIL))
+            ->values()
+            ->toArray();
+
         return view('admin.finance.monthly-reminders.index', compact(
             'metrics',
             'families',
             'selectedMonth',
             'monthsList',
             'search',
-            'filter'
+            'filter',
+            'allEligibleEmails'
         ));
     }
 

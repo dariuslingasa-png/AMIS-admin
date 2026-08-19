@@ -5,7 +5,15 @@
         showTestModal: false,
         sendingBatch: false,
         sendingTest: false,
-        forceResend: false
+        forceResend: false,
+        allParentEmails: {{ Js::from($allEligibleEmails ?? []) }},
+        testEmailsInput: '{{ Auth::user()?->email ?? 'amisonlinesupport@gmail.com' }}',
+        loadAllParents() {
+            this.testEmailsInput = this.allParentEmails.join('\n');
+        },
+        clearEmails() {
+            this.testEmailsInput = '';
+        }
     }">
 
         <!-- ── HEADER & BREADCRUMBS ───────────────────────────────────────── -->
@@ -410,15 +418,34 @@
                       @submit="sendingTest = true" class="p-6 space-y-4">
                     @csrf
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                            Destination Email Address(es)
-                        </label>
-                        <textarea name="test_email" required rows="4"
-                                  placeholder="e.g. parent1@gmail.com, parent2@gmail.com&#10;or paste multiple emails (1 per line)"
-                                  class="w-full text-xs font-mono font-medium px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-blue-500">{{ Auth::user()?->email ?? 'amisonlinesupport@gmail.com' }}</textarea>
-                        <p class="text-[11px] text-slate-400 mt-1 font-medium">
-                            💡 You can paste 1 email or multiple Gmail addresses (separated by commas, spaces, or newlines).
-                        </p>
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                                Destination Email Address(es)
+                            </label>
+                            <div class="flex items-center gap-2">
+                                <button type="button" @click="loadAllParents()"
+                                        class="text-[11px] font-black px-2.5 py-1 rounded-lg bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-950/80 dark:hover:bg-emerald-900 text-emerald-800 dark:text-emerald-200 transition cursor-pointer flex items-center gap-1 shadow-2xs">
+                                    <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                    </svg>
+                                    <span>⚡ Load All {{ number_format(count($allEligibleEmails ?? [])) }} Parents</span>
+                                </button>
+                                <button type="button" @click="clearEmails()" x-show="testEmailsInput && testEmailsInput.length > 0"
+                                        class="text-[11px] font-semibold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition cursor-pointer">
+                                    Clear
+                                </button>
+                            </div>
+                        </div>
+
+                        <textarea name="test_email" required rows="5" x-model="testEmailsInput"
+                                  placeholder="e.g. parent1@gmail.com, parent2@gmail.com&#10;or click '⚡ Load All Parents' button above"
+                                  class="w-full text-xs font-mono font-medium px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+
+                        <div class="flex items-center justify-between mt-1 text-[11px] text-slate-400">
+                            <span>💡 You can paste 1 email, multiple emails, or click "Load All Parents".</span>
+                            <span class="font-bold text-emerald-600 dark:text-emerald-400"
+                                  x-text="testEmailsInput ? (testEmailsInput.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g) || []).length + ' email(s) ready' : ''"></span>
+                        </div>
                     </div>
 
                     <div class="flex items-center justify-end gap-3 pt-2">
