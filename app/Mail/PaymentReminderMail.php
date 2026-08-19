@@ -25,6 +25,8 @@ class PaymentReminderMail extends Mailable
         public ?string $recipientName = null,
         public ?string $billingMonth = null,
         public ?string $dispatchRef = null,
+        public ?string $fromAddress = null,
+        public ?string $fromName = null,
     ) {
         $this->image1Path = public_path('images/reminder/image1_due_soon.png');
         if (!file_exists($this->image1Path)) {
@@ -103,11 +105,12 @@ class PaymentReminderMail extends Mailable
      */
     public function envelope(): Envelope
     {
-        $fromName    = env('REMINDER_MAIL_FROM_NAME', 'AMIS Support Staff');
-        $fromAddress = env('REMINDER_MAIL_FROM_ADDRESS', config('mail.from.address', 'amisonlinesupport@gmail.com'));
+        $fromName    = $this->fromName ?: env('REMINDER_MAIL_FROM_NAME', 'AMIS Support Staff');
+        $fromAddress = $this->fromAddress ?: env('REMINDER_MAIL_FROM_ADDRESS', config('mail.from.address', 'amisonlinesupport@gmail.com'));
 
         return new Envelope(
             from: new Address($fromAddress, $fromName),
+            replyTo: [new Address('amisonlinesupport@gmail.com', 'AMIS Support Staff')],
             subject: $this->resolveSubject(),
         );
     }

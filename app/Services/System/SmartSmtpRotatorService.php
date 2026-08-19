@@ -75,6 +75,19 @@ class SmartSmtpRotatorService
 
             try {
                 $freshMailable = clone $mailable;
+
+                // SPF/DKIM Domain Alignment: Ensure From address aligns with the SMTP transport
+                $mailerUser = config("mail.mailers.{$mailer}.username");
+                if ($mailer === 'inquiries' || ($mailerUser && str_ends_with($mailerUser, '@amis.edu.ph'))) {
+                    if (property_exists($freshMailable, 'fromAddress')) {
+                        $freshMailable->fromAddress = $mailerUser ?: 'noreply@amis.edu.ph';
+                    }
+                } elseif ($mailerUser && str_ends_with($mailerUser, '@gmail.com')) {
+                    if (property_exists($freshMailable, 'fromAddress')) {
+                        $freshMailable->fromAddress = $mailerUser;
+                    }
+                }
+
                 Mail::mailer($mailer)->to($to)->send($freshMailable);
                 $this->incrementDailyCount($mailer);
 
