@@ -85,16 +85,12 @@ class MonthlyPaymentReminderController extends Controller
         try {
             $result = $this->reminderService->dispatchMonthlyReminders(
                 billingMonth: $billingMonth,
-                sentByUserId: Auth::id(),
-                includeFullyPaid: $includeFullyPaid
+                sentByUserId: Auth::id()
             );
 
             $msg = "✓ Queued {$result['dispatched']} reminder email(s) for sending.";
             if ($result['skipped_already_sent'] > 0) {
                 $msg .= " ({$result['skipped_already_sent']} skipped: already sent).";
-            }
-            if ($result['skipped_fully_paid'] > 0) {
-                $msg .= " ({$result['skipped_fully_paid']} skipped: fully paid).";
             }
 
             return redirect()

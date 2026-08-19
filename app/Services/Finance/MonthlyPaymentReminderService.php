@@ -132,11 +132,6 @@ class MonthlyPaymentReminderService
         foreach ($familiesMap as $email => $data) {
             $studentNamesFormatted = implode(', ', $data['student_names']);
             $studentCount = count($data['students']);
-            $totalBalance = (float) $data['total_balance'];
-
-            // Determine if fully paid
-            // A family is fully paid if they have student accounts recorded and remaining balance is 0
-            $isFullyPaid = $data['has_accounts'] && $totalBalance <= 0.00;
 
             // Check existing reminder state from database
             /** @var MonthlyPaymentReminder|null $reminder */
@@ -152,8 +147,6 @@ class MonthlyPaymentReminderService
                 $sentAt    = $reminder->sent_at;
                 $lastError = $reminder->last_error;
                 $attempts  = $reminder->attempts;
-            } elseif ($isFullyPaid) {
-                $status = 'SKIPPED_FULLY_PAID';
             }
 
             $results->push((object) [
@@ -163,8 +156,6 @@ class MonthlyPaymentReminderService
                 'students'       => $data['students'],
                 'student_names'  => $studentNamesFormatted,
                 'student_count'  => $studentCount,
-                'total_balance'  => $totalBalance,
-                'is_fully_paid'  => $isFullyPaid,
                 'status'         => $status,
                 'sent_at'        => $sentAt,
                 'last_error'     => $lastError,
@@ -185,24 +176,14 @@ class MonthlyPaymentReminderService
 
         $eligibleCount = $families->count();
         $alreadySentCount = $families->where('status', 'SENT')->count();
-        $fullyPaidCount = $families->where('is_fully_paid', true)->count();
-        $withBalanceCount = $families->where('total_balance', '>', 0)->count();
         $failedCount = $families->where('status', 'FAILED')->count();
-
-        // Will receive reminder: Eligible minus Already Sent minus Fully Paid
-        $willReceiveCount = $families->filter(function ($f) {
-            return $f->status !== 'SENT' && !$f->is_fully_paid;
-        })->count();
-
-        $pendingCount = $willReceiveCount;
+        $pendingCount = $families->where('status', '!=', 'SENT')->count();
 
         return [
             'billing_month'        => $billingMonth,
             'eligible_families'    => $eligibleCount,
-            'with_balance'         => $withBalanceCount,
             'already_sent'         => $alreadySentCount,
-            'fully_paid'           => $fullyPaidCount,
-            'will_receive_count'   => $willReceiveCount,
+            'will_receive_count'   => $pendingCount,
             'pending'              => $pendingCount,
             'failed'               => $failedCount,
         ];
@@ -271,14 +252,12 @@ class MonthlyPaymentReminderService
      */
     public function dispatchMonthlyReminders(
         string $billingMonth,
-        ?int $sentByUserId = null,
-        bool $includeFullyPaid = false
+        ?int $sentByUserId = null
     ): array {
         $families = $this->getFamiliesCollection($billingMonth);
 
         $dispatchedCount = 0;
         $skippedAlreadySent = 0;
-        $skippedFullyPaid = 0;
         $skippedInvalid = 0;
 
         foreach ($families as $family) {
@@ -296,12 +275,6 @@ class MonthlyPaymentReminderService
                 continue;
             }
 
-            // Skip fully paid families
-            if (!$includeFullyPaid && $family->is_fully_paid) {
-                $skippedFullyPaid++;
-                continue;
-            }
-
             // Atomically upsert the reminder row in DB
             $reminder = MonthlyPaymentReminder::firstOrCreate(
                 [
@@ -314,7 +287,7 @@ class MonthlyPaymentReminderService
                     'parent_name'     => $family->parent_name,
                     'student_names'   => $family->student_names,
                     'student_count'   => $family->student_count,
-                    'total_balance'   => $family->total_balance,
+                    'total_balance'   => 0.00,
                     'status'          => MonthlyPaymentReminder::STATUS_PENDING,
                     'sent_by_user_id' => $sentByUserId,
                 ]
@@ -339,12 +312,11 @@ class MonthlyPaymentReminderService
             }
         }
 
-        Log::info("Monthly Payment Reminder: Dispatched {$dispatchedCount} reminders for month {$billingMonth} (Skipped: {$skippedAlreadySent} already sent, {$skippedFullyPaid} fully paid, {$skippedInvalid} invalid).");
+        Log::info("Monthly Payment Reminder: Dispatched {$dispatchedCount} reminders for month {$billingMonth} (Skipped: {$skippedAlreadySent} already sent, {$skippedInvalid} invalid).");
 
         return [
             'dispatched'           => $dispatchedCount,
             'skipped_already_sent' => $skippedAlreadySent,
-            'skipped_fully_paid'   => $skippedFullyPaid,
             'skipped_invalid'      => $skippedInvalid,
         ];
     }
