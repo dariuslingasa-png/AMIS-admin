@@ -52,7 +52,13 @@ class StudentController extends Controller
             if ($request->filled('search')) {
                 $s = trim($request->search);
                 $terms = array_filter(explode(' ', $s));
-                $query->where(function ($q) use ($terms) {
+                $query->where(function ($q) use ($terms, $s) {
+                    // Exact 6-digit student number check (e.g. 261132)
+                    if (preg_match('/^26\d{4}$/', $s)) {
+                        $q->where('students.student_number', $s);
+                        return;
+                    }
+
                     foreach ($terms as $term) {
                         $q->where(function ($sub) use ($term) {
                             $sub->where('students.student_number', 'like', "%{$term}%")
@@ -62,12 +68,20 @@ class StudentController extends Controller
                                     $a->where('first_name', 'like', "%{$term}%")
                                         ->orWhere('middle_name', 'like', "%{$term}%")
                                         ->orWhere('last_name', 'like', "%{$term}%")
-                                        ->orWhere('lrn', 'like', "%{$term}%")
                                         ->orWhere('father_first_name', 'like', "%{$term}%")
                                         ->orWhere('father_last_name', 'like', "%{$term}%")
                                         ->orWhere('mother_first_name', 'like', "%{$term}%")
                                         ->orWhere('mother_last_name', 'like', "%{$term}%")
                                         ->orWhere('emergency_name', 'like', "%{$term}%");
+
+                                    // For numbers, avoid false-positive collisions with 12-digit LRNs
+                                    if (is_numeric($term) && strlen($term) >= 8) {
+                                        $a->orWhere('lrn', 'like', "{$term}%");
+                                    } elseif (is_numeric($term)) {
+                                        $a->orWhere('lrn', $term);
+                                    } else {
+                                        $a->orWhere('lrn', 'like', "%{$term}%");
+                                    }
                                 });
                         });
                     }
