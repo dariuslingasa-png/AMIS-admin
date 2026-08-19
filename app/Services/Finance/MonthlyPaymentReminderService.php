@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Mail;
 
 class MonthlyPaymentReminderService
 {
+    protected array $memoizedFamilies = [];
+
     /**
      * Resolve all families from active approved enrollments and compile their monthly status.
      *
@@ -24,6 +26,10 @@ class MonthlyPaymentReminderService
      */
     public function getFamiliesCollection(string $billingMonth): Collection
     {
+        if (isset($this->memoizedFamilies[$billingMonth])) {
+            return $this->memoizedFamilies[$billingMonth];
+        }
+
         // 1. Fetch all approved/enrolled applicants with their student and account information
         $applicants = EnrollmentApplicant::query()
             ->with(['student.account', 'user'])
@@ -174,6 +180,8 @@ class MonthlyPaymentReminderService
                 'reminder_id'    => $reminder?->id,
             ]);
         }
+
+        $this->memoizedFamilies[$billingMonth] = $results;
 
         return $results;
     }
