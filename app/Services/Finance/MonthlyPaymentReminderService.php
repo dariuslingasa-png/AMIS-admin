@@ -56,14 +56,25 @@ class MonthlyPaymentReminderService
                 continue;
             }
 
-            // Primary parent email normalized
+            // Primary parent email normalized (strictly exclude dummy placeholder emails)
             $primaryEmail = null;
             foreach ($rawEmails as $cand) {
                 $clean = strtolower(trim((string) $cand));
-                if (filter_var($clean, FILTER_VALIDATE_EMAIL)) {
-                    $primaryEmail = $clean;
-                    break;
+                if (!filter_var($clean, FILTER_VALIDATE_EMAIL)) {
+                    continue;
                 }
+
+                // Strictly ignore system-generated placeholder applicant emails
+                if (preg_match('/^applicant_\d+@amis\.edu\.ph$/i', $clean) ||
+                    str_contains($clean, 'placeholder') ||
+                    str_contains($clean, 'dummy') ||
+                    str_contains($clean, 'fake') ||
+                    str_starts_with($clean, 'test_applicant_')) {
+                    continue;
+                }
+
+                $primaryEmail = $clean;
+                break;
             }
 
             if (!$primaryEmail) {
