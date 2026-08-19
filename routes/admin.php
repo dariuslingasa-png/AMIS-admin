@@ -276,6 +276,7 @@ Route::name('admin.')->group(function () {
                 Route::get('/', [MonthlyPaymentReminderController::class, 'index'])->name('index');
                 Route::post('/send', [MonthlyPaymentReminderController::class, 'sendBatch'])->name('send')->middleware('throttle:10,1');
                 Route::post('/send-test', [MonthlyPaymentReminderController::class, 'sendTest'])->name('send-test')->middleware('throttle:15,1');
+                Route::post('/reset', [MonthlyPaymentReminderController::class, 'resetBatch'])->name('reset');
                 Route::get('/preview-email', [MonthlyPaymentReminderController::class, 'previewEmail'])->name('preview-email');
                 Route::get('/history', [MonthlyPaymentReminderController::class, 'history'])->name('history');
                 Route::post('/send-single/{familyId}', [MonthlyPaymentReminderController::class, 'sendSingle'])->name('send-single')->middleware('throttle:15,1');

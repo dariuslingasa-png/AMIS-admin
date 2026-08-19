@@ -4,7 +4,8 @@
         showPreviewModal: false,
         showTestModal: false,
         sendingBatch: false,
-        sendingTest: false
+        sendingTest: false,
+        forceResend: false
     }">
 
         <!-- ── HEADER & BREADCRUMBS ───────────────────────────────────────── -->
@@ -317,21 +318,14 @@
                             <span class="text-slate-500">Eligible Families:</span>
                             <span class="font-bold text-slate-900 dark:text-white">{{ number_format($metrics['eligible_families']) }}</span>
                         </div>
-                        <div class="flex justify-between">
+                        <div class="flex justify-between" x-show="!forceResend">
                             <span class="text-slate-500">Already Sent (Will Skip):</span>
                             <span class="font-bold text-emerald-600">{{ number_format($metrics['already_sent']) }}</span>
                         </div>
                         <div class="border-t border-slate-200 dark:border-slate-700 pt-2 flex justify-between text-sm">
                             <span class="font-black text-slate-900 dark:text-white">Will Receive Reminder:</span>
-                            <span class="font-black text-emerald-600">{{ number_format($metrics['will_receive_count']) }} families</span>
+                            <span class="font-black text-emerald-600" x-text="forceResend ? '{{ number_format($metrics['eligible_families']) }} families' : '{{ number_format($metrics['will_receive_count']) }} families'">{{ number_format($metrics['will_receive_count']) }} families</span>
                         </div>
-                    </div>
-
-                    <div class="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-xl text-emerald-800 dark:text-emerald-200">
-                        <p class="font-bold">🔒 Idempotency Protection Active:</p>
-                        <p class="mt-0.5 text-xs text-emerald-700 dark:text-emerald-300">
-                            Only unsent eligible recipients will be queued. The {{ number_format($metrics['already_sent']) }} families already sent this cycle will <strong>NEVER</strong> be emailed again.
-                        </p>
                     </div>
 
                     <form method="POST" action="{{ route('admin.finance.monthly-reminders.send') }}"
@@ -339,14 +333,31 @@
                         @csrf
                         <input type="hidden" name="billing_month" value="{{ $selectedMonth }}">
 
+                        <!-- Force Resend Toggle -->
+                        <div class="p-3.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-2xl space-y-1 text-left">
+                            <label class="flex items-start gap-2.5 cursor-pointer select-none">
+                                <input type="checkbox" name="force_resend" value="1" x-model="forceResend"
+                                       class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 mt-0.5 cursor-pointer">
+                                <div>
+                                    <span class="font-bold text-xs text-amber-900 dark:text-amber-200">
+                                        Resend to ALL {{ number_format($metrics['eligible_families']) }} Families
+                                    </span>
+                                    <p class="text-[11px] text-amber-700 dark:text-amber-300 font-medium mt-0.5 leading-snug">
+                                        Check this to override the already-sent filter and send updated unthreaded reminders to all registered families.
+                                    </p>
+                                </div>
+                            </label>
+                        </div>
+
                         <div class="flex items-center justify-end gap-3 mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
                             <button type="button" @click="showConfirmModal = false" :disabled="sendingBatch"
                                     class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 cursor-pointer">
                                 Cancel
                             </button>
-                            <button type="submit" :disabled="sendingBatch || {{ $metrics['will_receive_count'] }} === 0"
+                            <button type="submit" :disabled="sendingBatch || (!forceResend && {{ $metrics['will_receive_count'] }} === 0)"
                                     class="px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold transition shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
-                                <span x-show="!sendingBatch">✓ Send {{ number_format($metrics['will_receive_count']) }} Reminders</span>
+                                <span x-show="!sendingBatch && !forceResend">✓ Send {{ number_format($metrics['will_receive_count']) }} Reminders</span>
+                                <span x-show="!sendingBatch && forceResend" style="display: none;">✓ Resend to All {{ number_format($metrics['eligible_families']) }} Families</span>
                                 <span x-show="sendingBatch" style="display: none;">Queueing Reminders...</span>
                             </button>
                         </div>

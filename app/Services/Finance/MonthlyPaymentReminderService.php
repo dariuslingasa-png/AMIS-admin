@@ -247,12 +247,12 @@ class MonthlyPaymentReminderService
     /**
      * Dispatch monthly reminders safely in batches via Laravel Queue.
      *
-     * Rule: Never resend to parents who already received a reminder for this month.
-     * Rule: Skip fully paid families unless explicitly overridden.
+     * Rule: Never resend to parents who already received a reminder for this month unless $forceResend is true.
      */
     public function dispatchMonthlyReminders(
         string $billingMonth,
-        ?int $sentByUserId = null
+        ?int $sentByUserId = null,
+        bool $forceResend = false
     ): array {
         $families = $this->getFamiliesCollection($billingMonth);
 
@@ -269,14 +269,14 @@ class MonthlyPaymentReminderService
                 continue;
             }
 
-            // Check if already SENT for this month
-            if ($family->status === 'SENT') {
+            // Check if already SENT for this month (unless force resend requested)
+            if (!$forceResend && $family->status === 'SENT') {
                 $skippedAlreadySent++;
                 continue;
             }
 
             // Atomically upsert the reminder row in DB
-            $reminder = MonthlyPaymentReminder::firstOrCreate(
+            $reminder = MonthlyPaymentReminder::updateOrCreate(
                 [
                     'billing_month' => $billingMonth,
                     'parent_email'  => $email,
@@ -290,35 +290,52 @@ class MonthlyPaymentReminderService
                     'total_balance'   => 0.00,
                     'status'          => MonthlyPaymentReminder::STATUS_PENDING,
                     'sent_by_user_id' => $sentByUserId,
+                    'attempts'        => 0,
+                    'last_error'      => null,
                 ]
             );
 
-            // If it was already SENT between check and create, skip
-            if ($reminder->status === MonthlyPaymentReminder::STATUS_SENT) {
+            // If it was already SENT and NOT forcing resend, skip
+            if (!$forceResend && $reminder->status === MonthlyPaymentReminder::STATUS_SENT) {
                 $skippedAlreadySent++;
                 continue;
             }
 
-            // Reset status to PENDING if retrying
-            if (in_array($reminder->status, [MonthlyPaymentReminder::STATUS_FAILED, MonthlyPaymentReminder::STATUS_RETRY, MonthlyPaymentReminder::STATUS_PENDING])) {
-                $reminder->update([
-                    'status'          => MonthlyPaymentReminder::STATUS_PENDING,
-                    'sent_by_user_id' => $sentByUserId,
-                ]);
+            // Reset status to PENDING
+            $reminder->update([
+                'status'          => MonthlyPaymentReminder::STATUS_PENDING,
+                'sent_by_user_id' => $sentByUserId,
+                'attempts'        => 0,
+                'last_error'      => null,
+            ]);
 
-                // Dispatch to queue
-                SendMonthlyPaymentReminderJob::dispatch($reminder->id);
-                $dispatchedCount++;
-            }
+            // Dispatch to queue
+            SendMonthlyPaymentReminderJob::dispatch($reminder->id);
+            $dispatchedCount++;
         }
 
-        Log::info("Monthly Payment Reminder: Dispatched {$dispatchedCount} reminders for month {$billingMonth} (Skipped: {$skippedAlreadySent} already sent, {$skippedInvalid} invalid).");
+        Log::info("Monthly Payment Reminder: Dispatched {$dispatchedCount} reminders for month {$billingMonth} (Skipped: {$skippedAlreadySent} already sent, {$skippedInvalid} invalid, ForceResend: " . ($forceResend ? 'YES' : 'NO') . ").");
 
         return [
             'dispatched'           => $dispatchedCount,
             'skipped_already_sent' => $skippedAlreadySent,
             'skipped_invalid'      => $skippedInvalid,
         ];
+    }
+
+    /**
+     * Reset all reminder statuses for a given billing month back to PENDING.
+     */
+    public function resetMonthReminders(string $billingMonth): int
+    {
+        return MonthlyPaymentReminder::where('billing_month', $billingMonth)
+            ->update([
+                'status'          => MonthlyPaymentReminder::STATUS_PENDING,
+                'attempts'        => 0,
+                'last_error'      => null,
+                'last_attempt_at' => null,
+                'sent_at'         => null,
+            ]);
     }
 
     /**

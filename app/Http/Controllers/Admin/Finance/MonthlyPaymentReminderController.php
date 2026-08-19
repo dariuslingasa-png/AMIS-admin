@@ -82,15 +82,16 @@ class MonthlyPaymentReminderController extends Controller
         ]);
 
         $billingMonth = $request->input('billing_month');
-        $includeFullyPaid = (bool) $request->boolean('include_fully_paid', false);
+        $forceResend = (bool) $request->boolean('force_resend', false);
 
         try {
             $result = $this->reminderService->dispatchMonthlyReminders(
                 billingMonth: $billingMonth,
-                sentByUserId: Auth::id()
+                sentByUserId: Auth::id(),
+                forceResend: $forceResend
             );
 
-            $msg = "✓ Queued {$result['dispatched']} reminder email(s) for sending.";
+            $msg = "✓ Queued {$result['dispatched']} reminder email(s) for delivery.";
             if ($result['skipped_already_sent'] > 0) {
                 $msg .= " ({$result['skipped_already_sent']} skipped: already sent).";
             }
@@ -102,6 +103,31 @@ class MonthlyPaymentReminderController extends Controller
         } catch (\Throwable $e) {
             Log::error("Monthly Payment Reminder sendBatch error: " . $e->getMessage());
             return back()->withErrors(['error' => 'Failed to dispatch reminders: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Reset all sent reminders for a month back to PENDING.
+     */
+    public function resetBatch(Request $request)
+    {
+        $this->authorizeFinance();
+
+        $request->validate([
+            'billing_month' => 'required|string|regex:/^\d{4}-\d{2}$/',
+        ]);
+
+        $billingMonth = $request->input('billing_month');
+
+        try {
+            $count = $this->reminderService->resetMonthReminders($billingMonth);
+
+            return redirect()
+                ->route('admin.finance.monthly-reminders.index', ['month' => $billingMonth])
+                ->with('success', "✓ Successfully reset {$count} reminder records for {$billingMonth} back to PENDING.");
+        } catch (\Throwable $e) {
+            Log::error("Monthly Payment Reminder resetBatch error: " . $e->getMessage());
+            return back()->withErrors(['error' => 'Failed to reset reminders: ' . $e->getMessage()]);
         }
     }
 
