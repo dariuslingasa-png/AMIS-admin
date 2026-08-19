@@ -74,7 +74,8 @@ class SmartSmtpRotatorService
             }
 
             try {
-                Mail::mailer($mailer)->to($to)->send($mailable);
+                $freshMailable = clone $mailable;
+                Mail::mailer($mailer)->to($to)->send($freshMailable);
                 $this->incrementDailyCount($mailer);
 
                 Log::info("SmartSmtpRotator: Email sent successfully via mailer '{$mailer}' (Daily count: ".($count + 1).')');
