@@ -132,35 +132,64 @@ class MonthlyPaymentReminderController extends Controller
     }
 
     /**
-     * Send test email to a specific address.
+     * Send test email to a specific address or bulk list of pasted emails.
      */
     public function sendTest(Request $request)
     {
         $this->authorizeFinance();
 
-        $request->validate([
-            'test_email' => 'required|email',
-        ]);
+        $rawInput = trim((string) $request->input('test_email'));
+        if (empty($rawInput)) {
+            return back()->withErrors(['error' => 'Please enter at least one destination email address.']);
+        }
 
-        $testEmail = trim((string) $request->input('test_email'));
+        // Split by commas, semicolons, spaces, newlines
+        $parts = preg_split('/[\s,;]+/', $rawInput);
+        $emails = [];
+        foreach ($parts as $p) {
+            $cleaned = trim(strtolower($p));
+            if (filter_var($cleaned, FILTER_VALIDATE_EMAIL)) {
+                $emails[] = $cleaned;
+            }
+        }
+        $emails = array_values(array_unique($emails));
+
+        if (empty($emails)) {
+            return back()->withErrors(['error' => 'No valid email addresses found in the input.']);
+        }
+
         $billingMonth = $request->input('billing_month', Carbon::now()->format('Y-m'));
+        $successCount = 0;
+        $errors = [];
 
-        $matchedUser = User::where('email', $testEmail)->first();
-        $matchedApplicant = EnrollmentApplicant::where('parent_email', $testEmail)->orWhere('email', $testEmail)->first();
+        foreach ($emails as $email) {
+            $matchedUser = User::where('email', $email)->first();
+            $matchedApplicant = EnrollmentApplicant::where('parent_email', $email)->orWhere('email', $email)->first();
 
-        $recipientName = $matchedApplicant?->full_name
-            ?: ($matchedUser?->name
-            ?: strtoupper(explode('@', $testEmail)[0]));
+            $recipientName = $matchedApplicant?->full_name
+                ?: ($matchedUser?->name
+                ?: strtoupper(explode('@', $email)[0]));
 
-        $testRef = strtoupper(substr(md5(uniqid('', true)), 0, 4));
+            $testRef = strtoupper(substr(md5(uniqid('', true)), 0, 4));
 
-        try {
-            $this->reminderService->sendTestEmail($testEmail, $billingMonth, $recipientName, "Ref #{$testRef}");
+            try {
+                $this->reminderService->sendTestEmail($email, $billingMonth, $recipientName, "Ref #{$testRef}");
+                $successCount++;
+            } catch (\Throwable $e) {
+                $errors[] = "{$email}: " . $e->getMessage();
+            }
+        }
 
-            return back()->with('success', "✓ Test payment reminder email dispatched to {$testEmail}. Check your inbox or spam folder.");
-        } catch (\Throwable $e) {
-            Log::error("Monthly Payment Reminder sendTest error: " . $e->getMessage());
-            return back()->withErrors(['error' => 'Failed to send test email: ' . $e->getMessage()]);
+        if ($successCount > 0 && empty($errors)) {
+            $msg = $successCount === 1 
+                ? "✓ Test payment reminder email dispatched to {$emails[0]}." 
+                : "✓ Successfully dispatched test reminder emails to all {$successCount} address(es).";
+            return back()->with('success', $msg);
+        } elseif ($successCount > 0 && !empty($errors)) {
+            return back()->with('success', "✓ Dispatched to {$successCount} address(es). " . count($errors) . " failed.")
+                ->withErrors(['error' => 'Some emails failed: ' . implode(' | ', array_slice($errors, 0, 2))]);
+        } else {
+            return back()->withErrors(['error' => 'Failed to send: ' . implode(' | ', array_slice($errors, 0, 2))]);
         }
     }
 

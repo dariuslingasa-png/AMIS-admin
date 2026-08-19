@@ -399,10 +399,10 @@
             <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col">
                 <div class="p-6 border-b border-slate-100 dark:border-slate-800">
                     <h3 class="text-base font-black text-slate-900 dark:text-white">
-                        Send Test Payment Reminder
+                        Send Test / Custom Reminder
                     </h3>
                     <p class="text-xs font-semibold text-slate-500 mt-0.5">
-                        Dispatches a single preview email. Does NOT alter database records or stats.
+                        Dispatches reminder emails directly to the specified address(es). Does NOT alter regular monthly database tracking records.
                     </p>
                 </div>
 
@@ -411,12 +411,14 @@
                     @csrf
                     <div>
                         <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                            Destination Email Address
+                            Destination Email Address(es)
                         </label>
-                        <input type="email" name="test_email" required
-                               value="{{ Auth::user()?->email ?? 'amisonlinesupport@gmail.com' }}"
-                               placeholder="e.g. your-email@gmail.com"
-                               class="w-full text-xs font-medium px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500">
+                        <textarea name="test_email" required rows="4"
+                                  placeholder="e.g. parent1@gmail.com, parent2@gmail.com&#10;or paste multiple emails (1 per line)"
+                                  class="w-full text-xs font-mono font-medium px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-blue-500">{{ Auth::user()?->email ?? 'amisonlinesupport@gmail.com' }}</textarea>
+                        <p class="text-[11px] text-slate-400 mt-1 font-medium">
+                            💡 You can paste 1 email or multiple Gmail addresses (separated by commas, spaces, or newlines).
+                        </p>
                     </div>
 
                     <div class="flex items-center justify-end gap-3 pt-2">
@@ -425,8 +427,8 @@
                             Cancel
                         </button>
                         <button type="submit" :disabled="sendingTest"
-                                class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition shadow-sm cursor-pointer disabled:opacity-50">
-                            <span x-show="!sendingTest">Send Test Email</span>
+                                class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition shadow-sm cursor-pointer disabled:opacity-50 flex items-center gap-1.5">
+                            <span x-show="!sendingTest">Send Reminder(s)</span>
                             <span x-show="sendingTest" style="display: none;">Sending...</span>
                         </button>
                     </div>
