@@ -24,6 +24,7 @@ class PaymentReminderMail extends Mailable
     public function __construct(
         public ?string $recipientName = null,
         public ?string $billingMonth = null,
+        public ?string $dispatchRef = null,
     ) {
         $this->image1Path = public_path('images/reminder/image1_due_soon.png');
         if (!file_exists($this->image1Path)) {
@@ -41,6 +42,23 @@ class PaymentReminderMail extends Mailable
         }
 
         $this->logoPath = public_path('images/AMIS_Logo.png');
+
+        // Explicitly purge any threading headers from the Symfony MIME message
+        $this->withSymfonyMessage(function (\Symfony\Component\Mime\Email $message) {
+            $headers = $message->getHeaders();
+            if ($headers->has('In-Reply-To')) {
+                $headers->remove('In-Reply-To');
+            }
+            if ($headers->has('References')) {
+                $headers->remove('References');
+            }
+            if ($headers->has('Thread-Topic')) {
+                $headers->remove('Thread-Topic');
+            }
+            if ($headers->has('Thread-Index')) {
+                $headers->remove('Thread-Index');
+            }
+        });
     }
 
     /**
@@ -71,7 +89,9 @@ class PaymentReminderMail extends Mailable
             $monthYear = Carbon::now()->format('F Y');
         }
 
-        return "AMIS Payment Reminder – Monthly School Fees – {$name} – {$monthYear}";
+        $refSuffix = !empty($this->dispatchRef) ? " [{$this->dispatchRef}]" : '';
+
+        return "AMIS Payment Reminder – Monthly School Fees – {$name} – {$monthYear}{$refSuffix}";
     }
 
     /**

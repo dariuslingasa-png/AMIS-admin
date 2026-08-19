@@ -324,11 +324,16 @@ class MonthlyPaymentReminderService
     /**
      * Send a single test email without touching reminder stats or DB records.
      */
-    public function sendTestEmail(string $targetEmail, ?string $billingMonth = null, ?string $recipientName = 'Test Recipient'): bool
-    {
+    public function sendTestEmail(
+        string $targetEmail,
+        ?string $billingMonth = null,
+        ?string $recipientName = null,
+        ?string $dispatchRef = null
+    ): bool {
         $mailable = new PaymentReminderMail(
-            recipientName: $recipientName,
-            billingMonth: $billingMonth ?? now()->format('Y-m')
+            recipientName: $recipientName ?: 'Test Recipient',
+            billingMonth: $billingMonth ?? now()->format('Y-m'),
+            dispatchRef: $dispatchRef
         );
 
         Mail::to(trim($targetEmail))->send($mailable);

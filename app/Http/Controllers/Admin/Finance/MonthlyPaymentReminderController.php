@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Admin\Finance;
 
 use App\Http\Controllers\Controller;
+use App\Models\EnrollmentApplicant;
 use App\Models\MonthlyPaymentReminder;
+use App\Models\User;
 use App\Services\Finance\MonthlyPaymentReminderService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -114,11 +116,20 @@ class MonthlyPaymentReminderController extends Controller
             'test_email' => 'required|email',
         ]);
 
-        $testEmail = $request->input('test_email');
+        $testEmail = trim((string) $request->input('test_email'));
         $billingMonth = $request->input('billing_month', Carbon::now()->format('Y-m'));
 
+        $matchedUser = User::where('email', $testEmail)->first();
+        $matchedApplicant = EnrollmentApplicant::where('parent_email', $testEmail)->orWhere('email', $testEmail)->first();
+
+        $recipientName = $matchedApplicant?->full_name
+            ?: ($matchedUser?->name
+            ?: strtoupper(explode('@', $testEmail)[0]));
+
+        $testRef = strtoupper(substr(md5(uniqid('', true)), 0, 4));
+
         try {
-            $this->reminderService->sendTestEmail($testEmail, $billingMonth, 'Test Recipient');
+            $this->reminderService->sendTestEmail($testEmail, $billingMonth, $recipientName, "Ref #{$testRef}");
 
             return back()->with('success', "✓ Test payment reminder email dispatched to {$testEmail}. Check your inbox or spam folder.");
         } catch (\Throwable $e) {
