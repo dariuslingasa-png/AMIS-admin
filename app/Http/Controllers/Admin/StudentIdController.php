@@ -23,7 +23,7 @@ class StudentIdController extends Controller
         $firstName = $applicant ? trim($applicant->first_name) : 'PROFILE';
         $middleName = $applicant ? trim($applicant->middle_name) : '';
         $suffix = $applicant ? trim($applicant->suffix ?? '') : '';
-        $middleInitial = $middleName ? (substr($middleName, 0, 1).'.') : '';
+        $middleInitial = EnrollmentApplicant::formatMiddleInitial($middleName) ?? '';
 
         $displayGrade = $student->grade_level;
         if ($student->studentSection?->section) {

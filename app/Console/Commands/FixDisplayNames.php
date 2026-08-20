@@ -41,7 +41,7 @@ class FixDisplayNames extends Command
         $middleName = $middleName ? mb_strtoupper(trim($middleName), 'UTF-8') : null;
 
         if ($middleName && mb_strlen($middleName) > 0) {
-            $middleInitial = mb_substr($middleName, 0, 1, 'UTF-8').'.';
+            $middleInitial = \App\Models\EnrollmentApplicant::formatMiddleInitial($middleName);
 
             return trim("{$firstName} {$middleInitial} {$lastName}");
         }

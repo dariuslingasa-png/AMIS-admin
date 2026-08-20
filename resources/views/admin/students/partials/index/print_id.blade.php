@@ -562,11 +562,7 @@
             $lastName = trim($applicant->last_name ?? '');
             $suffix = trim($applicant->suffix ?? '');
             
-            $middleInitial = '';
-            if ($middleName !== '') {
-                $firstChar = mb_strtoupper(mb_substr($middleName, 0, 1));
-                $middleInitial = ($firstChar === '.') ? '.' : $firstChar . '.';
-            }
+            $middleInitial = \App\Models\EnrollmentApplicant::formatMiddleInitial($middleName) ?? '';
             
             $fullNameParts = array_filter([$firstName, $middleInitial, $lastName, $suffix], function($val) {
                 return $val !== '';

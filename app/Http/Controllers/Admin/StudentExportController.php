@@ -130,14 +130,10 @@ class StudentExportController extends Controller
                 $firstName = mb_strtoupper(trim($applicant->first_name ?? ''));
                 $middleName = mb_strtoupper(trim($applicant->middle_name ?? ''));
                 $lastName = mb_strtoupper(trim($applicant->last_name ?? ''));
+                $suffix = mb_strtoupper(trim($applicant->suffix ?? ''));
+                $middleInitial = EnrollmentApplicant::formatMiddleInitial($middleName) ?? '';
 
-                $middleInitial = '';
-                if ($middleName !== '') {
-                    $fc = mb_substr($middleName, 0, 1);
-                    $middleInitial = ($fc === '.') ? '.' : $fc.'.';
-                }
-
-                $fullNameParts = array_filter([$firstName, $middleInitial, $lastName]);
+                $fullNameParts = array_filter([$firstName, $middleInitial, $lastName, $suffix]);
                 $fullName = html_entity_decode(implode(' ', $fullNameParts), ENT_QUOTES, 'UTF-8');
 
                 $photoUrl = 'https://amis.edu.ph/student-photo/'.$student->obfuscated_id.'.jpg';

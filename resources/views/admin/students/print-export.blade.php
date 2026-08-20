@@ -378,7 +378,7 @@
                                         </div>
                                         <div>
                                             <a href="{{ route('admin.students.show', $student) }}" class="font-extrabold text-slate-900 hover:text-emerald-600 transition dark:text-white">
-                                                {{ mb_strtoupper(($appl?->last_name ?? 'STUDENT') . ', ' . ($appl?->first_name ?? '') . ($appl?->middle_name ? ' ' . substr($appl->middle_name, 0, 1) . '.' : '')) }}
+                                                {{ mb_strtoupper(($appl?->last_name ?? 'STUDENT') . ', ' . ($appl?->first_name ?? '') . (($m = \App\Models\EnrollmentApplicant::formatMiddleInitial($appl?->middle_name)) ? ' ' . $m : '') . ($appl?->suffix ? ' ' . $appl->suffix : '')) }}
                                             </a>
                                             <div class="flex items-center gap-2 text-[10px] text-slate-500 font-bold">
                                                 <span class="text-emerald-700 dark:text-emerald-400">#{{ $student->student_number }}</span>

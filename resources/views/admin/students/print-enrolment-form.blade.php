@@ -1042,9 +1042,11 @@
             $lastName = trim($student->last_name ?: ($app?->last_name ?: ''));
             $firstName = trim($student->first_name ?: ($app?->first_name ?: ''));
             $middleName = trim($student->middle_name ?: ($app?->middle_name ?: ''));
-            $middleInitial = !empty($middleName) ? ' ' . mb_substr($middleName, 0, 1) . '.' : '';
+            $suffix = trim($student->suffix ?: ($app?->suffix ?: ''));
+            $middleInitial = ($m = \App\Models\EnrollmentApplicant::formatMiddleInitial($middleName)) ? ' ' . $m : '';
+            $sfx = $suffix ? ' ' . $suffix : '';
             $formalFormattedName = !empty($lastName) && !empty($firstName)
-                ? mb_strtoupper("{$lastName}, {$firstName}{$middleInitial}")
+                ? mb_strtoupper("{$lastName}, {$firstName}{$middleInitial}{$sfx}")
                 : mb_strtoupper($student->full_name ?: ($app?->full_name ?: 'STUDENT'));
 
             $attachedDocumentsList = [

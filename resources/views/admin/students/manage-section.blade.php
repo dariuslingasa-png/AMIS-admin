@@ -11,11 +11,10 @@
         $first = trim($applicant->first_name ?? '');
         $last = trim($applicant->last_name ?? '');
         $middle = trim($applicant->middle_name ?? '');
-        $mInitial = '';
-        if ($middle) {
-            $mInitial = ' ' . strtoupper(substr($middle, 0, 1)) . '.';
-        }
-        return html_entity_decode($first . $mInitial . ' ' . $last, ENT_QUOTES, 'UTF-8');
+        $suffix = trim($applicant->suffix ?? '');
+        $mInitial = ($init = \App\Models\EnrollmentApplicant::formatMiddleInitial($middle)) ? ' ' . $init : '';
+        $sfx = $suffix ? ' ' . $suffix : '';
+        return html_entity_decode(trim($first . $mInitial . ' ' . $last . $sfx), ENT_QUOTES, 'UTF-8');
     };
 
     // Group Enrolled Students into Boys, Girls, and Others

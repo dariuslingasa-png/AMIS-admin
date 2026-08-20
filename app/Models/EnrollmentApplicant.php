@@ -28,8 +28,8 @@ class EnrollmentApplicant extends Model
             // 3. Sync name changes to student's User account name
             if (($applicant->wasChanged('first_name') || $applicant->wasChanged('middle_name') || $applicant->wasChanged('last_name') || $applicant->wasChanged('suffix')) && $applicant->student && $applicant->student->user) {
                 $user = $applicant->student->user;
-                $middleInitial = $applicant->middle_name ? mb_substr(trim($applicant->middle_name), 0, 1, 'UTF-8').'.' : '';
-                $user->name = preg_replace('/\s+/', ' ', trim($applicant->first_name.' '.$middleInitial.' '.$applicant->last_name.($applicant->suffix ? ' '.$applicant->suffix : '')));
+                $middleInitial = self::formatMiddleInitial($applicant->middle_name);
+                $user->name = preg_replace('/\s+/', ' ', trim($applicant->first_name.($middleInitial ? ' '.$middleInitial : '').' '.$applicant->last_name.($applicant->suffix ? ' '.$applicant->suffix : '')));
                 $user->saveQuietly();
             }
         });
@@ -160,9 +160,9 @@ class EnrollmentApplicant extends Model
 
     public function getFullNameAttribute(): string
     {
-        $middleInitial = $this->middle_name ? mb_substr(trim($this->middle_name), 0, 1, 'UTF-8').'.' : '';
+        $middleInitial = self::formatMiddleInitial($this->middle_name);
 
-        return preg_replace('/\s+/', ' ', trim($this->first_name.' '.$middleInitial.' '.$this->last_name.($this->suffix ? ' '.$this->suffix : '')));
+        return preg_replace('/\s+/', ' ', trim($this->first_name.($middleInitial ? ' '.$middleInitial : '').' '.$this->last_name.($this->suffix ? ' '.$this->suffix : '')));
     }
 
     /**
@@ -250,37 +250,65 @@ class EnrollmentApplicant extends Model
         $this->attributes['first_name'] = $value !== null ? mb_strtoupper($value, 'UTF-8') : null;
     }
 
+    public static function formatMiddleInitial(?string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $trimmed = trim($value);
+        if ($trimmed === '') {
+            return null;
+        }
+
+        // Standardize separators: replace hyphens, slashes, underscores, commas with spaces
+        $normalized = str_replace(['-', '/', '_', ','], ' ', $trimmed);
+
+        // Put space after internal dots if missing (e.g. "H.M." -> "H. M.", "A.B.C." -> "A. B. C.")
+        $spaced = preg_replace('/(?<=[a-zA-Z0-9])\.(?=[a-zA-Z0-9])/', '. ', $normalized);
+
+        // Split into parts by whitespace
+        $parts = preg_split('/[\s]+/', trim($spaced), -1, PREG_SPLIT_NO_EMPTY);
+        if (empty($parts)) {
+            return null;
+        }
+
+        $initials = '';
+        foreach ($parts as $part) {
+            $cleaned = preg_replace('/[^a-zA-Z0-9]/', '', $part);
+            if ($cleaned === '') {
+                continue;
+            }
+
+            // If the token is a short sequence of all-caps letters with no vowels (e.g. "HM" or "DL" or "HMK"),
+            // split each letter into its own initial
+            if (count($parts) === 1 && strlen($cleaned) >= 2 && strlen($cleaned) <= 3 && ctype_upper($cleaned) && !str_contains($trimmed, '.') && !preg_match('/[AEIOUaeiou]/', $cleaned)) {
+                foreach (str_split($cleaned) as $ch) {
+                    $initials .= mb_strtoupper($ch, 'UTF-8').'.';
+                }
+            } else {
+                // Otherwise, take the first letter of each word/token
+                $firstChar = mb_substr($cleaned, 0, 1, 'UTF-8');
+                $initials .= mb_strtoupper($firstChar, 'UTF-8').'.';
+            }
+        }
+
+        return $initials !== '' ? $initials : null;
+    }
+
     public function setMiddleNameAttribute($value)
     {
-        if ($value !== null && trim((string) $value) !== '') {
-            $trimmed = trim((string) $value);
-            $firstChar = mb_substr($trimmed, 0, 1, 'UTF-8');
-            $this->attributes['middle_name'] = mb_strtoupper(($firstChar === '.') ? '.' : $firstChar.'.', 'UTF-8');
-        } else {
-            $this->attributes['middle_name'] = null;
-        }
+        $this->attributes['middle_name'] = self::formatMiddleInitial($value);
     }
 
     public function setFatherMiddleNameAttribute($value)
     {
-        if ($value !== null && trim((string) $value) !== '') {
-            $trimmed = trim((string) $value);
-            $firstChar = mb_substr($trimmed, 0, 1, 'UTF-8');
-            $this->attributes['father_middle_name'] = mb_strtoupper(($firstChar === '.') ? '.' : $firstChar.'.', 'UTF-8');
-        } else {
-            $this->attributes['father_middle_name'] = null;
-        }
+        $this->attributes['father_middle_name'] = self::formatMiddleInitial($value);
     }
 
     public function setMotherMiddleNameAttribute($value)
     {
-        if ($value !== null && trim((string) $value) !== '') {
-            $trimmed = trim((string) $value);
-            $firstChar = mb_substr($trimmed, 0, 1, 'UTF-8');
-            $this->attributes['mother_middle_name'] = mb_strtoupper(($firstChar === '.') ? '.' : $firstChar.'.', 'UTF-8');
-        } else {
-            $this->attributes['mother_middle_name'] = null;
-        }
+        $this->attributes['mother_middle_name'] = self::formatMiddleInitial($value);
     }
 
     public function setLastNameAttribute($value)

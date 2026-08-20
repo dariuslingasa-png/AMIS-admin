@@ -49,11 +49,7 @@
     $lastName = trim($student->applicant->last_name ?? '');
     $suffix = trim($student->applicant->suffix ?? '');
 
-    $middleInitial = '';
-    if ($middleName !== '') {
-        $firstChar = mb_substr($middleName, 0, 1, 'UTF-8');
-        $middleInitial = ($firstChar === '.') ? '.' : $firstChar . '.';
-    }
+    $middleInitial = \App\Models\EnrollmentApplicant::formatMiddleInitial($middleName) ?? '';
 
     $nameParts = array_filter([$firstName, $middleInitial, $lastName, $suffix], fn($v) => $v !== '');
     $name = html_entity_decode(implode(' ', $nameParts), ENT_QUOTES, 'UTF-8');
@@ -1154,11 +1150,7 @@
                         $middleName = trim($student->applicant?->middle_name ?? '');
                         $lastName = trim($student->applicant?->last_name ?? '');
                         $suffix = trim($student->applicant?->suffix ?? '');
-                        $middleInitial = '';
-                        if ($middleName !== '') {
-                            $firstChar = mb_strtoupper(mb_substr($middleName, 0, 1));
-                            $middleInitial = ($firstChar === '.') ? '.' : $firstChar . '.';
-                        }
+                        $middleInitial = \App\Models\EnrollmentApplicant::formatMiddleInitial($middleName) ?? '';
                         
                         $fullNameParts = array_filter([$firstName, $middleInitial, $lastName, $suffix], fn($val) => $val !== '');
                         $fullName = html_entity_decode(implode(' ', $fullNameParts), ENT_QUOTES, 'UTF-8');
