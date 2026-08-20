@@ -111,7 +111,7 @@
         <!-- Main Workspace: Side-by-Side ID Previews + Right Sidebar Controls -->
         <div class="max-w-7xl mx-auto px-6 py-8">
             <div class="text-center mb-8">
-                <h2 class="text-lg font-black text-slate-800 dark:text-white uppercase tracking-wider">{{ strtoupper($lastName) }}, {{ strtoupper($firstName) }}</h2>
+                <h2 class="text-lg font-black text-slate-800 dark:text-white uppercase tracking-wider">{{ strtoupper($lastName) }}, {{ strtoupper($firstName) }}@if(!empty($suffix)) {{ strtoupper($suffix) }}@endif</h2>
                 <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-1">
                     {{ strtoupper($student->grade_level) }} 
                     @if($student->studentSection?->section)

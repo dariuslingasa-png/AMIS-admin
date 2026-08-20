@@ -22,6 +22,7 @@ class StudentIdController extends Controller
         $lastName = $applicant ? trim($applicant->last_name) : 'STUDENT';
         $firstName = $applicant ? trim($applicant->first_name) : 'PROFILE';
         $middleName = $applicant ? trim($applicant->middle_name) : '';
+        $suffix = $applicant ? trim($applicant->suffix ?? '') : '';
         $middleInitial = $middleName ? (substr($middleName, 0, 1).'.') : '';
 
         $displayGrade = $student->grade_level;
@@ -117,7 +118,7 @@ class StudentIdController extends Controller
             $lastNameStyle = 'white-space: nowrap;';
         }
 
-        $displayFirstName = trim($firstName.' '.$middleInitial);
+        $displayFirstName = trim(implode(' ', array_filter([$firstName, $middleInitial, $suffix])));
         $firstNameLen = strlen($displayFirstName);
         $displayFirstNameFontSize = $firstNameLen > 25 ? 14 : ($firstNameLen > 18 ? 16 : 18);
 
@@ -127,6 +128,7 @@ class StudentIdController extends Controller
             'nextStudentId' => $nextStudentId,
             'lastName' => $lastName,
             'firstName' => $firstName,
+            'suffix' => $suffix,
             'displayFirstName' => $displayFirstName,
             'lastNameFontSize' => $lastNameFontSize,
             'lastNameStyle' => $lastNameStyle,

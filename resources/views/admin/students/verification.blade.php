@@ -144,7 +144,7 @@
                                         @foreach ($groupStudents as $student)
                                             @php
                                                 $applicant = $student->applicant;
-                                                $fullName = $applicant ? html_entity_decode(trim(($applicant->first_name ?? '').' '.($applicant->middle_name ?? '').' '.($applicant->last_name ?? '')), ENT_QUOTES, 'UTF-8') : 'Unknown Student';
+                                                $fullName = $applicant ? html_entity_decode(trim(($applicant->first_name ?? '').' '.($applicant->middle_name ?? '').' '.($applicant->last_name ?? '').($applicant->suffix ? ' '.$applicant->suffix : '')), ENT_QUOTES, 'UTF-8') : 'Unknown Student';
                                             @endphp
                                             <div class="py-2 border-b border-slate-100 last:border-b-0 min-h-[52px] flex flex-col justify-center">
                                                 <span class="font-extrabold text-slate-900 block uppercase">{{ $fullName }}</span>

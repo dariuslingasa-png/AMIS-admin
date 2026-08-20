@@ -52,11 +52,12 @@
                         $firstName = trim($student->applicant->first_name ?? '');
                         $middleName = trim($student->applicant->middle_name ?? '');
                         $lastName = trim($student->applicant->last_name ?? '');
+                        $suffix = trim($student->applicant->suffix ?? '');
                         $middleInitial = '';
                         if ($middleName !== '') {
                             $middleInitial = \Illuminate\Support\Str::upper(\Illuminate\Support\Str::substr($middleName, 0, 1)) . '.';
                         }
-                        $fullName = html_entity_decode(implode(' ', array_filter([$firstName, $middleInitial, $lastName])), ENT_QUOTES, 'UTF-8');
+                        $fullName = html_entity_decode(implode(' ', array_filter([$firstName, $middleInitial, $lastName, $suffix])), ENT_QUOTES, 'UTF-8');
                         $name = $fullName ? \Illuminate\Support\Str::upper($fullName) : 'STUDENT PROFILE';
                         $initials = collect(explode(' ', $name))->filter()->take(2)->map(fn ($part) => \Illuminate\Support\Str::substr($part, 0, 1))->join('');
                         $photoUrl = \App\Support\EnrollmentStorage::url($student->applicant->photo_2x2_url ?? null);

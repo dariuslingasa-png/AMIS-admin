@@ -48,6 +48,7 @@ class EnrollmentApplicant extends Model
         'first_name',
         'last_name',
         'middle_name',
+        'suffix',
         'gender',
         'date_of_birth',
         'place_of_birth',
@@ -161,7 +162,7 @@ class EnrollmentApplicant extends Model
     {
         $middleInitial = $this->middle_name ? mb_substr(trim($this->middle_name), 0, 1, 'UTF-8').'.' : '';
 
-        return preg_replace('/\s+/', ' ', trim($this->first_name.' '.$middleInitial.' '.$this->last_name));
+        return preg_replace('/\s+/', ' ', trim($this->first_name.' '.$middleInitial.' '.$this->last_name.($this->suffix ? ' '.$this->suffix : '')));
     }
 
     /**
@@ -285,6 +286,11 @@ class EnrollmentApplicant extends Model
     public function setLastNameAttribute($value)
     {
         $this->attributes['last_name'] = $value !== null ? mb_strtoupper($value, 'UTF-8') : null;
+    }
+
+    public function setSuffixAttribute($value)
+    {
+        $this->attributes['suffix'] = ($value !== null && trim((string) $value) !== '') ? mb_strtoupper(trim((string) $value), 'UTF-8') : null;
     }
 
     public function getGradeAbbrAttribute(): string

@@ -68,6 +68,7 @@ class StudentController extends Controller
                                     $a->where('first_name', 'like', "%{$term}%")
                                         ->orWhere('middle_name', 'like', "%{$term}%")
                                         ->orWhere('last_name', 'like', "%{$term}%")
+                                        ->orWhere('suffix', 'like', "%{$term}%")
                                         ->orWhere('father_first_name', 'like', "%{$term}%")
                                         ->orWhere('father_last_name', 'like', "%{$term}%")
                                         ->orWhere('mother_first_name', 'like', "%{$term}%")

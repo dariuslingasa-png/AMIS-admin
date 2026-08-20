@@ -118,7 +118,7 @@
                             @forelse ($students as $student)
                                 @php
                                     $applicant = $student->applicant;
-                                    $fullName = $applicant ? html_entity_decode(trim(($applicant->first_name ?? '').' '.($applicant->middle_name ?? '').' '.($applicant->last_name ?? '')), ENT_QUOTES, 'UTF-8') : 'Unknown Student';
+                                    $fullName = $applicant ? html_entity_decode(trim(($applicant->first_name ?? '').' '.($applicant->middle_name ?? '').' '.($applicant->last_name ?? '').($applicant->suffix ? ' '.$applicant->suffix : '')), ENT_QUOTES, 'UTF-8') : 'Unknown Student';
                                     $status = $student->user->account_status ?? 'verified';
                                     $color = $statusColors[$status] ?? 'gray';
                                     $label = $statusLabels[$status] ?? ucfirst($status);

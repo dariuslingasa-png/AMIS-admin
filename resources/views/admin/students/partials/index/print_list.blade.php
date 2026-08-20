@@ -187,7 +187,7 @@
                             <tbody>
                                 @foreach ($changedStudents as $student)
                                     @php
-                                        $fullName = html_entity_decode(trim(($student->applicant->first_name ?? '').' '.($student->applicant->middle_name ?? '').' '.($student->applicant->last_name ?? '')), ENT_QUOTES, 'UTF-8');
+                                        $fullName = html_entity_decode(trim(($student->applicant->first_name ?? '').' '.($student->applicant->middle_name ?? '').' '.($student->applicant->last_name ?? '').($student->applicant->suffix ? ' '.$student->applicant->suffix : '')), ENT_QUOTES, 'UTF-8');
                                         $name = $fullName ? \Illuminate\Support\Str::upper($fullName) : 'STUDENT PROFILE';
                                         
                                         $lMode = $student->applicant->learning_mode ?? 'Face-to-Face';
@@ -229,7 +229,7 @@
                             <tbody>
                                 @foreach ($tempStudents as $student)
                                     @php
-                                        $fullName = html_entity_decode(trim(($student->applicant->first_name ?? '').' '.($student->applicant->middle_name ?? '').' '.($student->applicant->last_name ?? '')), ENT_QUOTES, 'UTF-8');
+                                        $fullName = html_entity_decode(trim(($student->applicant->first_name ?? '').' '.($student->applicant->middle_name ?? '').' '.($student->applicant->last_name ?? '').($student->applicant->suffix ? ' '.$student->applicant->suffix : '')), ENT_QUOTES, 'UTF-8');
                                         $name = $fullName ? \Illuminate\Support\Str::upper($fullName) : 'STUDENT PROFILE';
                                         
                                         $lMode = $student->applicant->learning_mode ?? 'Face-to-Face';
@@ -271,7 +271,7 @@
                             <tbody>
                                 @foreach ($noAccountStudents as $student)
                                     @php
-                                        $fullName = html_entity_decode(trim(($student->applicant->first_name ?? '').' '.($student->applicant->middle_name ?? '').' '.($student->applicant->last_name ?? '')), ENT_QUOTES, 'UTF-8');
+                                        $fullName = html_entity_decode(trim(($student->applicant->first_name ?? '').' '.($student->applicant->middle_name ?? '').' '.($student->applicant->last_name ?? '').($student->applicant->suffix ? ' '.$student->applicant->suffix : '')), ENT_QUOTES, 'UTF-8');
                                         $name = $fullName ? \Illuminate\Support\Str::upper($fullName) : 'STUDENT PROFILE';
                                         
                                         $lMode = $student->applicant->learning_mode ?? 'Face-to-Face';
@@ -315,7 +315,7 @@
                         <tbody>
                             @foreach ($sortedGradeStudents as $student)
                                 @php
-                                    $fullName = html_entity_decode(trim(($student->applicant->first_name ?? '').' '.($student->applicant->middle_name ?? '').' '.($student->applicant->last_name ?? '')), ENT_QUOTES, 'UTF-8');
+                                    $fullName = html_entity_decode(trim(($student->applicant->first_name ?? '').' '.($student->applicant->middle_name ?? '').' '.($student->applicant->last_name ?? '').($student->applicant->suffix ? ' '.$student->applicant->suffix : '')), ENT_QUOTES, 'UTF-8');
                                     $name = $fullName ? \Illuminate\Support\Str::upper($fullName) : 'STUDENT PROFILE';
                                     $gender = strtolower((string) ($student->applicant->gender ?? ''));
                                     $genderLabel = $gender === 'male' ? 'MALE' : ($gender === 'female' ? 'FEMALE' : 'NOT SET');

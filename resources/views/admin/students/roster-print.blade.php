@@ -250,10 +250,12 @@
                         $lastName = html_entity_decode($applicant?->last_name ?? '', ENT_QUOTES, 'UTF-8');
                         $firstName = html_entity_decode($applicant?->first_name ?? '', ENT_QUOTES, 'UTF-8');
                         $middleName = html_entity_decode($applicant?->middle_name ?? '', ENT_QUOTES, 'UTF-8');
+                        $suffix = html_entity_decode($applicant?->suffix ?? '', ENT_QUOTES, 'UTF-8');
                         
                         $nameParts = array_filter([
                             $firstName,
                             $middleName,
+                            $suffix,
                         ], fn ($part) => filled($part));
                         $name = trim($lastName . ', ' . implode(' ', $nameParts), ' ,') ?: 'N/A';
                     @endphp

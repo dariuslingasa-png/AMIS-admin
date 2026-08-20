@@ -617,6 +617,7 @@
                     $firstName = trim($applicant?->first_name ?? '');
                     $middleName = trim($applicant?->middle_name ?? '');
                     $lastName = trim($applicant?->last_name ?? '');
+                    $suffix = trim($applicant?->suffix ?? '');
                     
                     $middleInitial = '';
                     if ($middleName !== '') {
@@ -624,7 +625,7 @@
                         $middleInitial = ($firstChar === '.') ? '.' : $firstChar . '.';
                     }
                     
-                    $fullNameParts = array_filter([$lastName . ',', $firstName, $middleInitial], fn($v) => $v !== '');
+                    $fullNameParts = array_filter([$lastName . ',', $firstName, $middleInitial, $suffix], fn($v) => $v !== '');
                     $fullName = implode(' ', $fullNameParts);
 
                     $studentNumber = $student->student_number ?? 'N/A';
@@ -702,7 +703,7 @@
                         }
                     }
 
-                    $displayFirstName = trim($firstName . ' ' . $middleInitial);
+                    $displayFirstName = trim(implode(' ', array_filter([$firstName, $middleInitial, $suffix])));
                     $firstNameLen = strlen($displayFirstName);
                     if ($student->id_first_name_font_size) {
                         $firstNameFontSize = $student->id_first_name_font_size . 'px';

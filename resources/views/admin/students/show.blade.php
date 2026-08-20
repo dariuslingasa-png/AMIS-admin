@@ -47,6 +47,7 @@
     $firstName = trim($student->applicant->first_name ?? '');
     $middleName = trim($student->applicant->middle_name ?? '');
     $lastName = trim($student->applicant->last_name ?? '');
+    $suffix = trim($student->applicant->suffix ?? '');
 
     $middleInitial = '';
     if ($middleName !== '') {
@@ -54,7 +55,7 @@
         $middleInitial = ($firstChar === '.') ? '.' : $firstChar . '.';
     }
 
-    $nameParts = array_filter([$firstName, $middleInitial, $lastName], fn($v) => $v !== '');
+    $nameParts = array_filter([$firstName, $middleInitial, $lastName, $suffix], fn($v) => $v !== '');
     $name = html_entity_decode(implode(' ', $nameParts), ENT_QUOTES, 'UTF-8');
     $displayName = $name ? Str::upper($name) : 'STUDENT PROFILE';
     $isTeacherAdminViewer = auth()->user()?->isTeacherAdminViewer() ?? false;
@@ -77,7 +78,7 @@
         $lastNameFontSize = 9.5;
     }
 
-    $displayFirstName = trim($firstName . ' ' . $middleInitial);
+    $displayFirstName = trim(implode(' ', array_filter([$firstName, $middleInitial, $suffix])));
     $displayFirstNameLen = strlen($displayFirstName);
     $displayFirstNameFontSize = $displayFirstNameLen > 25 ? 11.5 : ($displayFirstNameLen > 18 ? 13 : 15);
     
@@ -1152,13 +1153,14 @@
                         $firstName = trim($student->applicant?->first_name ?? '');
                         $middleName = trim($student->applicant?->middle_name ?? '');
                         $lastName = trim($student->applicant?->last_name ?? '');
+                        $suffix = trim($student->applicant?->suffix ?? '');
                         $middleInitial = '';
                         if ($middleName !== '') {
                             $firstChar = mb_strtoupper(mb_substr($middleName, 0, 1));
                             $middleInitial = ($firstChar === '.') ? '.' : $firstChar . '.';
                         }
                         
-                        $fullNameParts = array_filter([$firstName, $middleInitial, $lastName], fn($val) => $val !== '');
+                        $fullNameParts = array_filter([$firstName, $middleInitial, $lastName, $suffix], fn($val) => $val !== '');
                         $fullName = html_entity_decode(implode(' ', $fullNameParts), ENT_QUOTES, 'UTF-8');
                         $displayGrade = $student->grade_level;
 
@@ -1319,7 +1321,7 @@
 
                             <!-- First Name -->
                              @php
-                                 $displayFirstName = trim($firstName . ' ' . $middleInitial);
+                                 $displayFirstName = trim(implode(' ', array_filter([$firstName, $middleInitial, $suffix])));
                                  $displayFirstNameLen = strlen($displayFirstName);
                                  $defaultFirstNameFontSize = $displayFirstNameLen > 25 ? '14px' : ($displayFirstNameLen > 18 ? '16px' : '18px');
                              @endphp
@@ -1410,7 +1412,7 @@
                         </div><!-- end scale wrapper -->
                         <span class="text-[10px] text-slate-400 font-semibold mt-1">Back Emergency Info Sheet</span>
                     </div>
-                    <input type="hidden" id="id-card-filename-slug" value="{{ implode('-', array_filter([$lastName, $firstName, str_replace(' ', '', $displayGrade)])) }}">
+                    <input type="hidden" id="id-card-filename-slug" value="{{ implode('-', array_filter([$lastName, $firstName, $suffix, str_replace(' ', '', $displayGrade)])) }}">
                 </div>
 
                 <!-- Footer -->

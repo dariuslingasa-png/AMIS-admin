@@ -166,7 +166,7 @@
             @if ($student)
                 @php
                     $applicant = $student->applicant;
-                    $fullName = trim(($applicant->first_name ?? '').' '.($applicant->middle_name ?? '').' '.($applicant->last_name ?? ''));
+                    $fullName = trim(($applicant->first_name ?? '').' '.($applicant->middle_name ?? '').' '.($applicant->last_name ?? '').($applicant->suffix ? ' '.$applicant->suffix : ''));
                     $status = $student->user->account_status ?? 'verified';
                     
                     // Fetch current active school year

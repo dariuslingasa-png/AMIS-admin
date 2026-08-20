@@ -5,7 +5,7 @@
     $accentClasses = ['accent-green', 'accent-blue', 'accent-amber', 'accent-violet', 'accent-rose'];
     $accentClass = $accentClasses[$familyNo % 5];
 
-    $name = html_entity_decode(trim(($applicant->first_name ?? '').' '.($applicant->middle_name ?? '').' '.($applicant->last_name ?? '')), ENT_QUOTES, 'UTF-8');
+    $name = html_entity_decode(trim(($applicant->first_name ?? '').' '.($applicant->middle_name ?? '').' '.($applicant->last_name ?? '').($applicant->suffix ? ' '.$applicant->suffix : '')), ENT_QUOTES, 'UTF-8');
     $displayName = $name ? Str::upper($name) : 'APPLICANT';
     $breadcrumbName = $displayName;
     $photoUrl = \App\Support\EnrollmentStorage::url($applicant->photo_2x2_url);

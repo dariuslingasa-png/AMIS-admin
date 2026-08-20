@@ -9,9 +9,10 @@
             $app = $st?->applicant;
             $ln = strtoupper(trim($app?->last_name ?? ''));
             $fn = strtoupper(trim($app?->first_name ?? ''));
+            $sf = strtoupper(trim($app?->suffix ?? ''));
             $gr = strtoupper(trim(str_replace(' ', '', $st?->grade_level ?? '')));
             if ($ln || $fn) {
-                $idTitle = implode('-', array_filter([$ln, $fn, $gr ?: 'GRADE']));
+                $idTitle = implode('-', array_filter([$ln, $fn, $sf, $gr ?: 'GRADE']));
             }
         }
     @endphp
@@ -559,6 +560,7 @@
             $firstName = trim($applicant->first_name ?? '');
             $middleName = trim($applicant->middle_name ?? '');
             $lastName = trim($applicant->last_name ?? '');
+            $suffix = trim($applicant->suffix ?? '');
             
             $middleInitial = '';
             if ($middleName !== '') {
@@ -566,7 +568,7 @@
                 $middleInitial = ($firstChar === '.') ? '.' : $firstChar . '.';
             }
             
-            $fullNameParts = array_filter([$firstName, $middleInitial, $lastName], function($val) {
+            $fullNameParts = array_filter([$firstName, $middleInitial, $lastName, $suffix], function($val) {
                 return $val !== '';
             });
             $fullName = html_entity_decode(implode(' ', $fullNameParts), ENT_QUOTES, 'UTF-8');
@@ -609,7 +611,7 @@
             <div class="id-pair-container">
                 <!-- Front Side -->
                 <div class="id-card-wrapper">
-                    <div class="id-card-scaler" id="print-front-box-{{ $student->id }}" data-filename="{{ implode('-', array_filter([$lastName, $firstName, str_replace(' ', '', $displayGrade)])) }}">
+                    <div class="id-card-scaler" id="print-front-box-{{ $student->id }}" data-filename="{{ implode('-', array_filter([$lastName, $firstName, $suffix, str_replace(' ', '', $displayGrade)])) }}">
                         <div class="id-card">
                              <!-- Background Template Image (Top Layer) -->
                              <img src="{{ asset('images/id/amis_frontid.png') }}?v={{ filemtime(public_path('images/id/amis_frontid.png')) }}" class="id-template" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 10; pointer-events: none;" alt="AMIS ID Template">
@@ -658,7 +660,7 @@
 
                             <!-- First Name -->
                             @php
-                                $displayFirstName = trim($firstName . ' ' . $middleInitial);
+                                $displayFirstName = trim(implode(' ', array_filter([$firstName, $middleInitial, $suffix])));
                                 $firstNameLen = strlen($displayFirstName);
                                 $firstNameFontSize = $firstNameLen > 25 ? '14px' : ($firstNameLen > 18 ? '16px' : '18px');
                             @endphp
