@@ -34,8 +34,28 @@ class AdminEbookController extends Controller
         'Grade 8',
         'Grade 9',
         'Grade 10',
+        'Grade 11',
+        'Grade 12',
         'K11',
         'K12',
+    ];
+
+    private const DISPLAY_GRADE_LEVELS = [
+        'Kindergarten',
+        'Kinder 1',
+        'Kinder 2',
+        'Grade 1',
+        'Grade 2',
+        'Grade 3',
+        'Grade 4',
+        'Grade 5',
+        'Grade 6',
+        'Grade 7',
+        'Grade 8',
+        'Grade 9',
+        'Grade 10',
+        'Grade 11',
+        'Grade 12',
     ];
 
     public function index(Request $request): View
@@ -43,14 +63,39 @@ class AdminEbookController extends Controller
         $books = Ebook::query()
             ->with('creator')
             ->withCount('readers')
-            ->when($request->filled('grade'), fn ($query) => $query->where('grade_level', (string) $request->string('grade')))
+            ->when($request->filled('grade'), function ($query) use ($request) {
+                $grade = (string) $request->string('grade')->trim();
+                $matchList = match ($grade) {
+                    'Grade 11', 'K11' => ['Grade 11', 'K11', 'g11', 'grade 11'],
+                    'Grade 12', 'K12' => ['Grade 12', 'K12', 'g12', 'grade 12'],
+                    'Kindergarten' => ['Kindergarten', 'Kinder 1', 'Kinder 2'],
+                    'Kinder 1' => ['Kinder 1', 'Kindergarten'],
+                    'Kinder 2' => ['Kinder 2', 'Kindergarten'],
+                    default => [$grade],
+                };
+
+                $query->where(function ($q) use ($matchList, $grade) {
+                    $q->whereIn('grade_level', $matchList)
+                      ->orWhere('grade_level', 'like', "%{$grade}%");
+                });
+            })
             ->when($request->filled('status'), fn ($query) => $query->where('status', (string) $request->string('status')))
+            ->when($request->filled('downloadable'), function ($query) use ($request) {
+                $val = (string) $request->string('downloadable')->trim();
+                if ($val === '1') {
+                    $query->where('is_downloadable', true);
+                } elseif ($val === '0') {
+                    $query->where('is_downloadable', false);
+                }
+            })
             ->when($request->filled('search'), function ($query) use ($request) {
                 $search = '%'.$request->string('search')->trim().'%';
 
                 $query->where(function ($inner) use ($search) {
                     $inner->where('title', 'like', $search)
-                        ->orWhere('description', 'like', $search);
+                        ->orWhere('description', 'like', $search)
+                        ->orWhere('author', 'like', $search)
+                        ->orWhere('grade_level', 'like', $search);
                 });
             })
             ->latest()
@@ -96,7 +141,7 @@ class AdminEbookController extends Controller
 
         return view('admin.ebook.index', [
             'books' => $books,
-            'gradeLevels' => self::GRADE_LEVELS,
+            'gradeLevels' => self::DISPLAY_GRADE_LEVELS,
             'stats' => $stats,
             'recentLogs' => $recentLogs,
             'chartData' => $chartData,

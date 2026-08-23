@@ -51,27 +51,64 @@
     <section class="mt-6 grid gap-6 xl:grid-cols-[1fr_360px]">
         <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
             <div class="border-b border-slate-100 p-5">
-                <form method="GET" action="{{ route('admin.ebook.index') }}" class="grid gap-3 lg:grid-cols-[1fr_180px_160px_auto]">
-                    <label class="relative">
+                <form method="GET" action="{{ route('admin.ebook.index') }}" class="flex flex-wrap items-center gap-3">
+                    <div class="relative flex-1 min-w-[200px]">
                         <i data-lucide="search" class="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-slate-400"></i>
-                        <input type="search" name="search" value="{{ request('search') }}" placeholder="Search books" class="h-11 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-4 text-sm font-semibold text-slate-800 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100">
-                    </label>
-                    <select name="grade" class="h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100">
-                        <option value="">All grades</option>
-                        @foreach ($gradeLevels as $grade)
-                            <option value="{{ $grade }}" @selected(request('grade') === $grade)>{{ $grade }}</option>
-                        @endforeach
-                    </select>
-                    <select name="status" class="h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100">
-                        <option value="">All status</option>
-                        <option value="published" @selected(request('status') === 'published')>Published</option>
-                        <option value="draft" @selected(request('status') === 'draft')>Draft</option>
-                    </select>
-                    <button type="submit" class="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 text-sm font-black text-white transition hover:bg-slate-800">
-                        <i data-lucide="filter" class="h-4 w-4"></i>
-                        Filter
-                    </button>
+                        <input type="search" name="search" value="{{ request('search') }}" placeholder="Search by title, author, or grade..." class="h-11 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-4 text-sm font-semibold text-slate-800 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100">
+                    </div>
+                    <div class="w-36 sm:w-44">
+                        <select name="grade" onchange="this.form.submit()" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 cursor-pointer">
+                            <option value="">All grades</option>
+                            @foreach ($gradeLevels as $grade)
+                                <option value="{{ $grade }}" @selected(request('grade') === $grade)>{{ $grade }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="w-32 sm:w-36">
+                        <select name="status" onchange="this.form.submit()" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 cursor-pointer">
+                            <option value="">All status</option>
+                            <option value="published" @selected(request('status') === 'published')>Published</option>
+                            <option value="draft" @selected(request('status') === 'draft')>Draft</option>
+                        </select>
+                    </div>
+                    <div class="w-40 sm:w-44">
+                        <select name="downloadable" onchange="this.form.submit()" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 cursor-pointer">
+                            <option value="">All downloads</option>
+                            <option value="1" @selected(request('downloadable') === '1')>Downloads Enabled</option>
+                            <option value="0" @selected(request('downloadable') === '0')>Downloads Disabled</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button type="submit" class="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 text-sm font-black text-white transition hover:bg-slate-800 shadow-xs cursor-pointer">
+                            <i data-lucide="filter" class="h-4 w-4"></i>
+                            Filter
+                        </button>
+                        @if(request()->filled('search') || request()->filled('grade') || request()->filled('status') || request()->filled('downloadable'))
+                            <a href="{{ route('admin.ebook.index') }}" class="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-bold text-rose-600 transition hover:bg-rose-50 shadow-xs" title="Reset all filters">
+                                <i data-lucide="x" class="h-4 w-4"></i>
+                                Reset
+                            </a>
+                        @endif
+                    </div>
                 </form>
+
+                @if(request()->filled('search') || request()->filled('grade') || request()->filled('status') || request()->filled('downloadable'))
+                    <div class="mt-3 flex flex-wrap items-center gap-2 text-xs font-bold text-slate-500">
+                        <span>Filtered: <strong class="text-emerald-700 font-black">{{ $books->total() }}</strong> {{ Str::plural('book', $books->total()) }} found</span>
+                        @if(request('search'))
+                            <span class="rounded-md bg-slate-100 px-2 py-0.5 text-slate-600">Search: "{{ request('search') }}"</span>
+                        @endif
+                        @if(request('grade'))
+                            <span class="rounded-md bg-emerald-50 text-emerald-700 px-2 py-0.5 border border-emerald-200">Grade: {{ request('grade') }}</span>
+                        @endif
+                        @if(request('status'))
+                            <span class="rounded-md bg-teal-50 text-teal-700 px-2 py-0.5 border border-teal-200">Status: {{ ucfirst(request('status')) }}</span>
+                        @endif
+                        @if(request()->filled('downloadable'))
+                            <span class="rounded-md bg-indigo-50 text-indigo-700 px-2 py-0.5 border border-indigo-200">Download: {{ request('downloadable') === '1' ? 'Enabled' : 'Disabled' }}</span>
+                        @endif
+                    </div>
+                @endif
             </div>
 
             <div class="overflow-x-auto">
