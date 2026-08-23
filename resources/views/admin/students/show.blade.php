@@ -1759,10 +1759,11 @@
                                 <label class="block text-xs font-bold text-slate-700 dark:text-slate-350 mb-1">Emergency Phone</label>
                                 <input type="text" name="emergency_phone" value="{{ $student->applicant->emergency_phone ?? '' }}" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-sm font-semibold text-slate-900 dark:text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500">
                             </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-350 mb-1">Emergency Address</label>
-                                <input type="text" name="emergency_address" value="{{ $student->applicant->emergency_address ?? '' }}" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-sm font-semibold text-slate-900 dark:text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 uppercase" placeholder="Enter emergency contact address">
-                            </div>
+                        </div>
+
+                        <div class="mt-3">
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-350 mb-1">Emergency Address</label>
+                            <textarea name="emergency_address" rows="2" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-sm font-semibold text-slate-900 dark:text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 uppercase" placeholder="Enter emergency contact address">{{ $student->applicant->emergency_address ?? '' }}</textarea>
                         </div>
                     </div>
 

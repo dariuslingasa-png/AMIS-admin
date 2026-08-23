@@ -529,7 +529,7 @@ class StudentController extends Controller
             'emergency_name' => 'nullable|string|max:255',
             'emergency_relationship' => 'nullable|string|max:255',
             'emergency_phone' => 'nullable|string|max:50',
-            'emergency_address' => 'nullable|string|max:500',
+            'emergency_address' => 'nullable|string|max:1000',
             'lrn' => 'nullable|string|max:50',
         ]);
 
