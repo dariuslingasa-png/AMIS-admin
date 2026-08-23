@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AdminEbookController extends Controller
 {
@@ -172,6 +173,19 @@ class AdminEbookController extends Controller
         }
 
         return redirect()->route('admin.ebook.index')->with('success', 'eBook updated successfully.');
+    }
+
+    public function download(Ebook $ebook): StreamedResponse|RedirectResponse
+    {
+        if (! $ebook->file_path || ! Storage::disk(self::STORAGE_DISK)->exists($ebook->file_path)) {
+            return back()->withErrors(['error' => 'eBook file was not found in storage.']);
+        }
+
+        $extension = pathinfo($ebook->file_path, PATHINFO_EXTENSION) ?: 'pdf';
+        $cleanTitle = Str::slug($ebook->title) ?: 'ebook';
+        $filename = "{$cleanTitle}.{$extension}";
+
+        return Storage::disk(self::STORAGE_DISK)->download($ebook->file_path, $filename);
     }
 
     public function destroy(Ebook $ebook): RedirectResponse

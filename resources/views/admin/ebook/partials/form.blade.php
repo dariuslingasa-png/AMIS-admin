@@ -46,7 +46,15 @@
             </label>
 
             <label class="block">
-                <span class="text-xs font-black uppercase tracking-wider text-slate-500">PDF Document</span>
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-black uppercase tracking-wider text-slate-500">PDF Document</span>
+                    @if($isEdit && $book?->file_path)
+                        <a href="{{ route('admin.ebook.download', $book) }}" class="inline-flex items-center gap-1 text-xs font-black text-emerald-600 hover:text-emerald-700 hover:underline">
+                            <i data-lucide="download" class="h-3.5 w-3.5"></i>
+                            Download Current PDF ({{ $book->pdf_size }})
+                        </a>
+                    @endif
+                </div>
                 <input type="file" name="pdf_file" accept="application/pdf" @required(! $isEdit) class="mt-2 block h-12 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 file:mr-4 file:rounded-lg file:border-0 file:bg-emerald-50 file:px-4 file:py-2 file:text-xs file:font-black file:text-emerald-700 hover:file:bg-emerald-100">
                 <span class="mt-2 block text-xs font-semibold text-slate-500">
                     {{ $isEdit ? 'Leave blank to keep the current PDF.' : 'PDF only, maximum 1GB.' }}

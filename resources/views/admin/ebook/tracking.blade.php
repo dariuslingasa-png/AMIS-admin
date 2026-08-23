@@ -142,16 +142,22 @@
                                 {{-- Divider --}}
                                 <div class="my-3 border-t border-slate-100"></div>
 
-                                {{-- Card Footer: Date and Uploader Metadata --}}
+                                {{-- Card Footer: Date, Download, and Uploader Metadata --}}
                                 <div class="flex items-center justify-between text-[10px] font-semibold text-slate-400">
                                     <span class="flex items-center gap-1">
                                         <i data-lucide="calendar" class="h-3.5 w-3.5 text-slate-400"></i>
                                         {{ $book->created_at?->format('M d, Y') }}
                                     </span>
-                                    <span class="flex items-center gap-1 max-w-[130px] truncate" title="Uploaded by {{ in_array(strtoupper($book->creator?->name ?? ''), ['ADMIN', 'AMIS ADMIN']) ? 'IT STAFF MON' : ($book->creator?->name ?? 'Unknown') }}">
-                                        <i data-lucide="user" class="h-3.5 w-3.5 text-slate-400"></i>
-                                        {{ in_array(strtoupper($book->creator?->name ?? ''), ['ADMIN', 'AMIS ADMIN']) ? 'IT STAFF MON' : ($book->creator?->name ?? 'Unknown') }}
-                                    </span>
+                                    <div class="flex items-center gap-1.5">
+                                        <a href="{{ route('admin.ebook.download', $book) }}" class="inline-flex items-center gap-1 rounded-md bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-black text-emerald-700 hover:bg-emerald-100 transition" title="Download eBook PDF">
+                                            <i data-lucide="download" class="h-3 w-3"></i>
+                                            Download
+                                        </a>
+                                        <span class="flex items-center gap-1 max-w-[110px] truncate" title="Uploaded by {{ in_array(strtoupper($book->creator?->name ?? ''), ['ADMIN', 'AMIS ADMIN']) ? 'IT STAFF MON' : ($book->creator?->name ?? 'Unknown') }}">
+                                            <i data-lucide="user" class="h-3.5 w-3.5 text-slate-400"></i>
+                                            {{ in_array(strtoupper($book->creator?->name ?? ''), ['ADMIN', 'AMIS ADMIN']) ? 'IT STAFF MON' : ($book->creator?->name ?? 'Unknown') }}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         @endforeach

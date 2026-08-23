@@ -121,6 +121,10 @@
                                 <td class="px-5 py-4 text-xs font-semibold text-slate-500">{{ optional($book->created_at)->format('M d, Y') }}</td>
                                 <td class="px-5 py-4">
                                     <div class="flex justify-end gap-2">
+                                        <a href="{{ route('admin.ebook.download', $book) }}" class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 text-xs font-black text-emerald-700 transition hover:bg-emerald-100" title="Download eBook PDF">
+                                            <i data-lucide="download" class="h-3.5 w-3.5"></i>
+                                            Download
+                                        </a>
                                         <a href="{{ route('admin.ebook.edit', $book) }}" class="inline-flex h-9 items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 text-xs font-black text-slate-700 transition hover:bg-slate-50">
                                             <i data-lucide="pencil" class="h-3.5 w-3.5"></i>
                                             Edit
@@ -138,7 +142,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="px-5 py-12 text-center">
+                                <td colspan="8" class="px-5 py-12 text-center">
                                     <div class="mx-auto flex max-w-sm flex-col items-center">
                                         <span class="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
                                             <i data-lucide="book-open" class="h-7 w-7"></i>
