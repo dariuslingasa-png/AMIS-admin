@@ -12,6 +12,8 @@ class Section extends Model
         'learning_mode',
         'shift',
         'gender',
+        'track_strand',
+        'academic_status',
         'ms_team_id',
         'ms_team_url',
         'schedule_published',
@@ -24,6 +26,11 @@ class Section extends Model
     public function subjects()
     {
         return $this->hasMany(SectionSubject::class);
+    }
+
+    public function schedules()
+    {
+        return $this->hasMany(ClassSchedule::class);
     }
 
     public function students()

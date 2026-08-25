@@ -11,8 +11,10 @@ use App\Services\Admin\Academic\ClassScheduleService;
 use App\Services\Admin\Academic\SectionSubjectSyncService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class AdminClassScheduleController extends Controller
 {
@@ -121,14 +123,17 @@ class AdminClassScheduleController extends Controller
         $validated = $request->validated();
         $sectionId = $validated['section_id'];
 
-        if (! empty($validated['spans_all_days'])) {
-            $this->schedules->store(array_merge($validated, ['day' => 'Sunday', 'spans_all_days' => true]));
-        } else {
-            $days = explode(',', $validated['day']);
-            foreach ($days as $day) {
+        DB::transaction(function () use ($validated) {
+            if (! empty($validated['spans_all_days'])) {
+                $this->schedules->store(array_merge($validated, ['day' => 'Sunday', 'spans_all_days' => true]));
+
+                return;
+            }
+
+            foreach (explode(',', $validated['day']) as $day) {
                 $this->schedules->store(array_merge($validated, ['day' => trim($day), 'spans_all_days' => false]));
             }
-        }
+        });
 
         if ($request->input('_add_another')) {
             return back()
@@ -163,12 +168,21 @@ class AdminClassScheduleController extends Controller
     {
         Gate::authorize('manage-academic');
 
+        if ($schedule->is_locked) {
+            throw ValidationException::withMessages(['schedule' => 'This schedule is manually locked and cannot be deleted.']);
+        }
+
         // Delete siblings in the same section with same subject, start, and end time
-        ClassSchedule::where('section_id', $schedule->section_id)
+        DB::transaction(fn () => ClassSchedule::where('section_id', $schedule->section_id)
             ->where('subject_name', $schedule->subject_name)
+            ->where('teacher_key', $schedule->teacher_key)
             ->where('start_time', $schedule->start_time)
             ->where('end_time', $schedule->end_time)
-            ->delete();
+            ->where('mode', $schedule->mode)
+            ->where('school_year', $schedule->school_year)
+            ->where('spans_all_days', $schedule->spans_all_days)
+            ->where('is_locked', false)
+            ->delete());
 
         return back()
             ->with('status', 'Class schedule deleted.')

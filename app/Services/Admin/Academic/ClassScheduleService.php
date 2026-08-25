@@ -4,7 +4,9 @@ namespace App\Services\Admin\Academic;
 
 use App\Models\ClassSchedule;
 use App\Models\Section;
+use App\Models\Subject;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class ClassScheduleService
@@ -14,6 +16,7 @@ class ClassScheduleService
     public function __construct(
         private readonly TeacherMatcherService $matcher,
         private readonly TeacherDirectoryService $directory,
+        private readonly AcademicScheduleConflictService $conflicts,
     ) {}
 
     // ── Query ────────────────────────────────────────────────────────────────
@@ -60,15 +63,16 @@ class ClassScheduleService
 
     public function store(array $data): ClassSchedule
     {
-        $this->ensureNoConflict($data);
-
+        $data = $this->canonicalizeSubject($data);
         $matched = $this->matcher->match($data['teacher_display'] ?? '');
-
-        return ClassSchedule::create([
+        $payload = [
             'section_id' => $data['section_id'],
+            'subject_id' => $data['subject_id'] ?? null,
+            'room_id' => $data['room_id'] ?? null,
             'subject_name' => $data['subject_name'],
             'spans_all_days' => (bool) ($data['spans_all_days'] ?? false),
             'is_special' => (bool) ($data['is_special'] ?? false),
+            'is_locked' => (bool) ($data['is_locked'] ?? false),
             'color_class' => $data['color_class'] ?? $this->inferColorClass($data['subject_name']),
             'teacher_key' => $matched['key'],
             'teacher_display' => $matched['display'],
@@ -77,28 +81,35 @@ class ClassScheduleService
             'start_time' => $data['start_time'],
             'end_time' => $data['end_time'],
             'mode' => $data['mode'] ?? 'f2f',
-            'school_year' => $data['school_year'] ?? '2026-2027',
+            'school_year' => $data['school_year'] ?? config('services.school.year', '2026-2027'),
             'created_by' => auth()->id(),
-        ]);
+        ];
+
+        return DB::transaction(function () use ($payload) {
+            $this->conflicts->assertCanSave($payload);
+
+            return ClassSchedule::create($payload);
+        });
     }
 
     public function update(ClassSchedule $schedule, array $data): ClassSchedule
     {
+        $data = $this->canonicalizeSubject($data);
         $oldSubject = $schedule->subject_name;
         $oldStart = $schedule->start_time;
         $oldEnd = $schedule->end_time;
         $oldSection = $schedule->section_id;
 
-        $this->ensureNoConflict($data, $schedule->id);
-
         $rawTeacher = $data['teacher_display'] ?? $schedule->teacher_display ?? '';
         $matched = $this->matcher->match($rawTeacher);
-
-        $schedule->update([
+        $payload = [
             'section_id' => $data['section_id'],
+            'subject_id' => $data['subject_id'] ?? $schedule->subject_id,
+            'room_id' => $data['room_id'] ?? null,
             'subject_name' => $data['subject_name'],
             'spans_all_days' => (bool) ($data['spans_all_days'] ?? false),
             'is_special' => (bool) ($data['is_special'] ?? false),
+            'is_locked' => (bool) ($data['is_locked'] ?? $schedule->is_locked),
             'color_class' => $data['color_class'] ?? $this->inferColorClass($data['subject_name']),
             'teacher_key' => $matched['key'],
             'teacher_display' => $matched['display'],
@@ -108,30 +119,33 @@ class ClassScheduleService
             'end_time' => $data['end_time'],
             'mode' => $data['mode'] ?? $schedule->mode,
             'school_year' => $data['school_year'] ?? $schedule->school_year,
-        ]);
+        ];
 
-        // Find and update sibling records on other days that belong to the same week slot
-        ClassSchedule::where('section_id', $oldSection)
-            ->where('subject_name', $oldSubject)
-            ->where('start_time', $oldStart)
-            ->where('end_time', $oldEnd)
-            ->whereKeyNot($schedule->id)
-            ->get()
-            ->each(function ($sibling) use ($schedule) {
-                $sibling->update([
-                    'subject_name' => $schedule->subject_name,
-                    'teacher_key' => $schedule->teacher_key,
-                    'teacher_display' => $schedule->teacher_display,
-                    'teacher_status' => $schedule->teacher_status,
-                    'start_time' => $schedule->start_time,
-                    'end_time' => $schedule->end_time,
-                    'color_class' => $schedule->color_class,
-                    'mode' => $schedule->mode,
-                    'school_year' => $schedule->school_year,
-                ]);
-            });
+        return DB::transaction(function () use ($schedule, $payload, $oldSection, $oldSubject, $oldStart, $oldEnd) {
+            $siblings = ClassSchedule::where('section_id', $oldSection)
+                ->where('subject_name', $oldSubject)
+                ->where('teacher_key', $schedule->teacher_key)
+                ->where('start_time', $oldStart)
+                ->where('end_time', $oldEnd)
+                ->where('mode', $schedule->mode)
+                ->where('school_year', $schedule->school_year)
+                ->where('spans_all_days', $schedule->spans_all_days)
+                ->whereKeyNot($schedule->id)
+                ->get();
 
-        return $schedule->fresh();
+            $this->conflicts->assertCanSave($payload, $schedule);
+            foreach ($siblings as $sibling) {
+                $this->conflicts->assertCanSave(array_merge($payload, ['day' => $sibling->day]), $sibling);
+            }
+
+            $schedule->update($payload);
+            $siblings->each(fn (ClassSchedule $sibling) => $sibling->update(array_merge($payload, [
+                'day' => $sibling->day,
+                'spans_all_days' => $sibling->spans_all_days,
+            ])));
+
+            return $schedule->fresh();
+        });
     }
 
     /**
@@ -163,6 +177,9 @@ class ClassScheduleService
         return [
             'id' => $s->id,
             'section_id' => $s->section_id,
+            'subject_id' => $s->subject_id,
+            'room_id' => $s->room_id,
+            'room_name' => $s->room?->name,
             'subject_name' => $s->subject_name,
             'teacher_name' => $teacherName,
             'teacher_key' => $s->teacher_key,
@@ -177,6 +194,7 @@ class ClassScheduleService
             'duration_min' => $s->endMinutes() - $s->startMinutes(),
             'spans_all_days' => $s->spans_all_days,
             'is_special' => $s->is_special,
+            'is_locked' => $s->is_locked,
             'color_class' => $s->color_class ?? $this->inferColorClass($s->subject_name),
             'mode' => $s->mode,
             'time_label' => $this->timeLabel($start).' – '.$this->timeLabel($end),
@@ -184,6 +202,8 @@ class ClassScheduleService
                 'id' => $s->id,
                 'section_id' => $s->section_id,
                 'subject_name' => $s->subject_name,
+                'subject_id' => $s->subject_id,
+                'room_id' => $s->room_id,
                 'teacher_display' => $s->teacher_display,
                 'teacher_key' => $s->teacher_key,
                 'teacher_status' => $s->teacher_status,
@@ -192,6 +212,7 @@ class ClassScheduleService
                 'end_time' => $end,
                 'spans_all_days' => $s->spans_all_days,
                 'is_special' => $s->is_special,
+                'is_locked' => $s->is_locked,
                 'mode' => $s->mode,
             ],
         ];
@@ -214,34 +235,6 @@ class ClassScheduleService
     }
 
     // ── Private ──────────────────────────────────────────────────────────────
-
-    private function ensureNoConflict(array $data, ?int $ignoreId = null): void
-    {
-        [$startH, $startM] = array_map('intval', explode(':', $data['start_time']));
-        [$endH, $endM] = array_map('intval', explode(':', $data['end_time']));
-        $startMin = $startH * 60 + $startM;
-        $endMin = $endH * 60 + $endM;
-
-        if ($endMin <= $startMin) {
-            throw ValidationException::withMessages(['end_time' => 'End time must be after start time.']);
-        }
-
-        $conflicts = ClassSchedule::where('section_id', $data['section_id'])
-            ->where('day', $data['day'])
-            ->where('mode', $data['mode'] ?? 'f2f')
-            ->when($ignoreId, fn ($q) => $q->whereKeyNot($ignoreId))
-            ->get();
-
-        foreach ($conflicts as $entry) {
-            $eStart = $entry->startMinutes();
-            $eEnd = $entry->endMinutes();
-            if ($startMin < $eEnd && $eStart < $endMin) {
-                throw ValidationException::withMessages([
-                    'start_time' => 'This section already has a class during that time slot.',
-                ]);
-            }
-        }
-    }
 
     private function inferColorClass(string $subject): string
     {
@@ -266,6 +259,35 @@ class ClassScheduleService
         }
 
         return 'academic';
+    }
+
+    private function canonicalizeSubject(array $data): array
+    {
+        $subjectId = (int) ($data['subject_id'] ?? 0);
+        if ($subjectId === 0) {
+            $data['subject_name'] = trim((string) ($data['subject_name'] ?? ''));
+
+            return $data;
+        }
+
+        $subject = Subject::query()->find($subjectId);
+        if (! $subject) {
+            throw ValidationException::withMessages([
+                'subject_id' => 'The selected curriculum subject is no longer available.',
+            ]);
+        }
+
+        $schoolYear = (string) ($data['school_year'] ?? config('services.school.year', '2026-2027'));
+        if ($subject->school_year !== $schoolYear) {
+            throw ValidationException::withMessages([
+                'subject_id' => 'The selected curriculum subject belongs to a different academic year.',
+            ]);
+        }
+
+        $data['subject_id'] = $subject->id;
+        $data['subject_name'] = $subject->name;
+
+        return $data;
     }
 
     private function timeLabel(string $time): string

@@ -286,7 +286,7 @@ class TeacherDirectoryService
 
     private function defaults(): array
     {
-        return ['name' => '', 'email' => '', 'dept' => '', 'sections' => '', 'status' => 'Active', 'license' => 'faculty_a1', 'photo' => null, 'first_name' => '', 'middle_name' => '', 'last_name' => '', 'gender' => 'Male', 'birthdate' => '', 'contact_number' => '', 'address' => '', 'password_changed' => 'No', 'temporary_password' => null, 'microsoft_sync' => true];
+        return ['name' => '', 'email' => '', 'dept' => '', 'sections' => '', 'status' => 'Active', 'max_load' => 40, 'license' => 'faculty_a1', 'photo' => null, 'first_name' => '', 'middle_name' => '', 'last_name' => '', 'gender' => 'Male', 'birthdate' => '', 'contact_number' => '', 'address' => '', 'password_changed' => 'No', 'temporary_password' => null, 'microsoft_sync' => true];
     }
 
     private function subjectPool(string $department): array

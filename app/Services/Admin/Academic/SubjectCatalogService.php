@@ -49,6 +49,8 @@ class SubjectCatalogService
             'name' => trim((string) $data['name']),
             'code' => filled($data['code'] ?? null) ? strtoupper(trim((string) $data['code'])) : null,
             'description' => filled($data['description'] ?? null) ? trim((string) $data['description']) : null,
+            'weekly_hours' => filled($data['weekly_hours'] ?? null) ? (float) $data['weekly_hours'] : null,
+            'semester' => filled($data['semester'] ?? null) && $data['semester'] !== 'Full Year' ? (string) $data['semester'] : null,
             'grade_level' => trim((string) $data['grade_level']),
             'school_year' => trim((string) $data['school_year']),
             'status' => (string) ($data['status'] ?? 'active'),

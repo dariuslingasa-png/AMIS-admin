@@ -1,0 +1,37 @@
+.academic-workspace-table th,
+.academic-workspace-table td {
+    vertical-align: middle;
+}
+
+@media print {
+    .no-print,
+    .admin-sidebar,
+    header,
+    nav,
+    footer:not(section footer),
+    #topLoadingBar,
+    #toastContainer {
+        display: none !important;
+    }
+
+    .admin-content {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #fff !important;
+    }
+
+    .admin-content main,
+    .admin-content main > div,
+    #adminMainContent,
+    #adminSlotContent {
+        width: 100% !important;
+        max-width: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    @page {
+        size: landscape;
+        margin: 10mm;
+    }
+}

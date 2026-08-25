@@ -22,6 +22,7 @@ class StoreTeacherRequest extends FormRequest
             'dept' => ['nullable', 'string', 'max:120'],
             'sections' => ['nullable', 'string', 'max:120'],
             'status' => ['required', 'in:Active,Inactive'],
+            'max_load' => ['nullable', 'numeric', 'min:1', 'max:80'],
             'microsoft_sync' => ['nullable', 'boolean'],
             'photo' => ['nullable', 'image', 'max:5120'],
         ];

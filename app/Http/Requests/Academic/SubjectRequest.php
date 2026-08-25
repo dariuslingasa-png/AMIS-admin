@@ -22,11 +22,15 @@ class SubjectRequest extends FormRequest
                 'nullable',
                 'string',
                 'max:50',
-                Rule::unique('subjects', 'code')->ignore($subjectId),
+                Rule::unique('subjects', 'code')
+                    ->where(fn ($query) => $query->where('school_year', $this->input('school_year')))
+                    ->ignore($subjectId),
             ],
             'description' => ['nullable', 'string', 'max:1200'],
+            'weekly_hours' => ['nullable', 'numeric', 'min:0.25', 'max:60'],
+            'semester' => ['nullable', Rule::in(['1st Semester', '2nd Semester', 'Full Year'])],
             'grade_level' => ['required', 'string', 'max:50'],
-            'school_year' => ['required', 'string', 'max:20'],
+            'school_year' => ['required', 'string', 'max:20', 'regex:/^\d{4}-\d{4}$/'],
             'status' => ['required', Rule::in(['active', 'inactive'])],
         ];
     }

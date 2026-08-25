@@ -10,9 +10,12 @@ class ClassSchedule extends Model
 {
     protected $fillable = [
         'section_id',
+        'subject_id',
+        'room_id',
         'subject_name',
         'spans_all_days',
         'is_special',
+        'is_locked',
         'color_class',
         'teacher_key',
         'teacher_display',
@@ -28,6 +31,7 @@ class ClassSchedule extends Model
     protected $casts = [
         'spans_all_days' => 'boolean',
         'is_special' => 'boolean',
+        'is_locked' => 'boolean',
     ];
 
     // ── Relationships ─────────────────────────────────────────────────────────
@@ -35,6 +39,16 @@ class ClassSchedule extends Model
     public function section(): BelongsTo
     {
         return $this->belongsTo(Section::class);
+    }
+
+    public function subject(): BelongsTo
+    {
+        return $this->belongsTo(Subject::class);
+    }
+
+    public function room(): BelongsTo
+    {
+        return $this->belongsTo(AcademicRoom::class, 'room_id');
     }
 
     public function creator(): BelongsTo

@@ -33,6 +33,7 @@
 @import "./pages/academic/sections.css";
 @import "./pages/academic/subjects.css";
 @import "./pages/academic/schedules.css";
+@import "./pages/academic/workspace.css";
 
 @theme {
     --color-primary-50: #ecfdf5;

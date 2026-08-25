@@ -2,6 +2,9 @@
 
 use App\Http\Controllers\Academic\GradeLevelController;
 use App\Http\Controllers\Academic\SchoolYearController;
+use App\Http\Controllers\Admin\AcademicRoomController;
+use App\Http\Controllers\Admin\AcademicSectionController;
+use App\Http\Controllers\Admin\AcademicWorkspaceController;
 use App\Http\Controllers\Admin\AccessControlController;
 use App\Http\Controllers\Admin\AdminAnnouncementController;
 use App\Http\Controllers\Admin\AdminEnrollmentSettingsController;
@@ -395,9 +398,11 @@ Route::name('admin.')->group(function () {
         Route::patch('/settings/enrollment', [AdminEnrollmentSettingsController::class, 'update'])->name('settings.enrollment.update');
 
         Route::prefix('academic')->name('academic.')->group(function () {
-            Route::get('/', [AdminAcademicController::class, 'dashboard'])->name('dashboard');
-            Route::get('/dashboard', [AdminAcademicController::class, 'dashboard'])->name('dashboard.index');
-            Route::get('/subjects', [AdminAcademicController::class, 'subjects'])->name('subjects');
+            Route::get('/', [AcademicWorkspaceController::class, 'dashboard'])->name('dashboard');
+            Route::get('/dashboard', [AcademicWorkspaceController::class, 'dashboard'])->name('dashboard.index');
+            Route::get('/schedule-copy', [AcademicWorkspaceController::class, 'scheduleCopy'])->name('schedule-copy');
+            Route::get('/builder', [AcademicWorkspaceController::class, 'builder'])->name('builder');
+            Route::get('/subjects', [AcademicWorkspaceController::class, 'subjects'])->name('subjects');
             Route::post('/subjects', [AdminAcademicSubjectController::class, 'store'])->name('subjects.store');
             Route::patch('/subjects/{subject}', [AdminAcademicSubjectController::class, 'update'])->name('subjects.update');
             Route::patch('/subjects/{subject}/archive', [AdminAcademicSubjectController::class, 'archive'])->name('subjects.archive');
@@ -406,7 +411,15 @@ Route::name('admin.')->group(function () {
             Route::get('/grade-levels', [GradeLevelController::class, 'index'])->name('grade-levels');
             Route::get('/class-advisory', [AdminAcademicController::class, 'classAdvisory'])->name('class-advisory');
             Route::post('/class-advisory', [AdminAcademicController::class, 'assignClassAdvisory'])->name('class-advisory.store');
-            Route::get('/teachers', [AdminAcademicTeacherController::class, 'index'])->name('teachers');
+            Route::get('/sections', [AcademicWorkspaceController::class, 'sections'])->name('sections');
+            Route::post('/sections', [AcademicSectionController::class, 'store'])->name('sections.store');
+            Route::patch('/sections/{section}', [AcademicSectionController::class, 'update'])->name('sections.update');
+            Route::delete('/sections/{section}', [AcademicSectionController::class, 'destroy'])->name('sections.destroy');
+            Route::get('/rooms', [AcademicWorkspaceController::class, 'rooms'])->name('rooms');
+            Route::post('/rooms', [AcademicRoomController::class, 'store'])->name('rooms.store');
+            Route::patch('/rooms/{room}', [AcademicRoomController::class, 'update'])->name('rooms.update');
+            Route::delete('/rooms/{room}', [AcademicRoomController::class, 'destroy'])->name('rooms.destroy');
+            Route::get('/teachers', [AcademicWorkspaceController::class, 'teachers'])->name('teachers');
             Route::post('/teachers', [AdminAcademicTeacherController::class, 'store'])->name('teachers.store');
             Route::patch('/teachers', [AdminAcademicTeacherController::class, 'update'])->name('teachers.update');
             Route::post('/teachers/resend', [AdminAcademicTeacherController::class, 'resendCredentials'])->name('teachers.resend');
@@ -414,7 +427,7 @@ Route::name('admin.')->group(function () {
             Route::get('/teachers/{id}', [AdminAcademicTeacherController::class, 'show'])->name('teachers.view');
             Route::post('/teachers/{id}/toggle-password', [AdminAcademicTeacherController::class, 'togglePasswordChanged'])->name('teachers.toggle-password');
             Route::delete('/teachers/{id}', [AdminAcademicTeacherController::class, 'destroy'])->name('teachers.destroy');
-            Route::get('/schedules', [AdminClassScheduleController::class, 'index'])->name('schedules');
+            Route::get('/schedules', [AcademicWorkspaceController::class, 'builder'])->name('schedules');
             Route::post('/schedules', [AdminClassScheduleController::class, 'store'])->name('schedules.store');
             Route::patch('/schedules/{schedule}', [AdminClassScheduleController::class, 'update'])->name('schedules.update');
             Route::delete('/schedules/{schedule}', [AdminClassScheduleController::class, 'destroy'])->name('schedules.destroy');
@@ -424,6 +437,9 @@ Route::name('admin.')->group(function () {
             Route::get('/school-years', [SchoolYearController::class, 'index'])->name('school-years');
             Route::get('/calendar', [AdminAcademicController::class, 'calendar'])->name('calendar');
             Route::get('/operations', [AdminAcademicController::class, 'operations'])->name('operations');
+            Route::get('/workload', [AcademicWorkspaceController::class, 'workload'])->name('workload');
+            Route::get('/reports', [AcademicWorkspaceController::class, 'reports'])->name('reports');
+            Route::get('/reports/export', [AcademicWorkspaceController::class, 'export'])->name('reports.export');
 
             Route::get('/school-years-list', [SchoolYearController::class, 'index'])->name('school-years.index');
             Route::get('/school-years-list/create', [SchoolYearController::class, 'create'])->name('school-years.create');

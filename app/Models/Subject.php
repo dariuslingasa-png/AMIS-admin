@@ -10,6 +10,8 @@ class Subject extends Model
         'name',
         'code',
         'description',
+        'weekly_hours',
+        'semester',
         'status',
         'archived_at',
         'grade_level',
@@ -20,7 +22,13 @@ class Subject extends Model
     {
         return [
             'archived_at' => 'datetime',
+            'weekly_hours' => 'decimal:2',
         ];
+    }
+
+    public function schedules()
+    {
+        return $this->hasMany(ClassSchedule::class);
     }
 
     public function msTeam()

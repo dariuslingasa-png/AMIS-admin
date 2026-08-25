@@ -42,10 +42,14 @@
             'icon' => 'book-open-check', 'iconClass' => 'text-sky-600', 'headerClass' => 'text-sky-700', 'activeClass' => 'sidebar-link-active-sky', 'title' => 'Academic',
             'links' => [
                 ['Dashboard', 'layout-dashboard', route('admin.academic.dashboard'), request()->routeIs('admin.academic.dashboard') || request()->routeIs('admin.academic.dashboard.index')],
-                ['Class Management', 'calendar-days', route('admin.academic.schedules'), request()->routeIs('admin.academic.schedules')],
-                ['Adviser', 'contact-2', route('admin.academic.class-advisory'), request()->routeIs('admin.academic.class-advisory')],
-                ['Teachers', 'contact-2', route('admin.academic.teachers'), request()->routeIs('admin.academic.teachers')],
-                ['Operations', 'activity', route('admin.academic.operations'), request()->routeIs('admin.academic.operations')],
+                ['Existing SY Schedule', 'calendar-clock', route('admin.academic.schedule-copy'), request()->routeIs('admin.academic.schedule-copy')],
+                ['Schedule Builder', 'calendar-range', route('admin.academic.builder'), request()->routeIs('admin.academic.builder') || request()->routeIs('admin.academic.schedules')],
+                ['Teachers', 'user-check', route('admin.academic.teachers'), request()->routeIs('admin.academic.teachers*')],
+                ['Subjects', 'book-open', route('admin.academic.subjects'), request()->routeIs('admin.academic.subjects*')],
+                ['Sections', 'layers', route('admin.academic.sections'), request()->routeIs('admin.academic.sections*')],
+                ['Rooms', 'school', route('admin.academic.rooms'), request()->routeIs('admin.academic.rooms*')],
+                ['Workload Tracking', 'chart-pie', route('admin.academic.workload'), request()->routeIs('admin.academic.workload')],
+                ['Reports & Export', 'file-chart-column', route('admin.academic.reports'), request()->routeIs('admin.academic.reports*')],
             ],
         ],
         [
