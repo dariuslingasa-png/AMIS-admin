@@ -1,5 +1,5 @@
 <x-academic.workspace-shell
-    title="{{ $level === 'secondary' ? 'Senior High School Workspace' : 'Junior High School Workspace' }}"
+    title="{{ $level === 'secondary' ? 'Junior & Senior High School Workspace' : 'Elementary School Workspace' }}"
     description="Build weekly timetables with centralized teacher, section, room, and locked-schedule conflict protection."
     :school-year="$schoolYear"
     :school-years="$schoolYears"

@@ -16,7 +16,7 @@ class AcademicWorkspaceService
 {
     public const GRADES = [
         'Kinder 1', 'Kinder 2', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4',
-        'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10',
+        'Grade 5', 'Grade 6', 'Grade 7', 'Grade 7 & 8', 'Grade 8', 'Grade 9', 'Grade 9 & 10', 'Grade 10',
         'Grade 11', 'Grade 12',
     ];
 
@@ -43,7 +43,7 @@ class AcademicWorkspaceService
             ],
             'departments' => [
                 [
-                    'title' => 'Junior High School',
+                    'title' => 'Elementary School',
                     'description' => 'Build and audit schedules for Kinder 1 through Grade 6.',
                     'grades' => array_slice(self::GRADES, 0, 8),
                     'sections' => $sections->whereIn('grade_level', array_slice(self::GRADES, 0, 8))->count(),
@@ -51,7 +51,7 @@ class AcademicWorkspaceService
                     'tone' => 'indigo',
                 ],
                 [
-                    'title' => 'Senior High School',
+                    'title' => 'Junior & Senior High School',
                     'description' => 'Build and audit schedules for Grade 7 through Grade 12.',
                     'grades' => array_slice(self::GRADES, 8),
                     'sections' => $sections->whereIn('grade_level', array_slice(self::GRADES, 8))->count(),

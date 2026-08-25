@@ -49,7 +49,7 @@
                 ['Subjects', 'book-open', route('admin.academic.subjects'), request()->routeIs('admin.academic.subjects*')],
                 ['Sections', 'layers', route('admin.academic.sections'), request()->routeIs('admin.academic.sections*')],
                 ['Rooms', 'school', route('admin.academic.rooms'), request()->routeIs('admin.academic.rooms*')],
-                ['Workload Tracking', 'chart-pie', route('admin.academic.workload'), request()->routeIs('admin.academic.workload')],
+                ['Faculty Loads & Timetables', 'chart-pie', route('admin.academic.workload'), request()->routeIs('admin.academic.workload')],
                 ['Reports & Export', 'file-chart-column', route('admin.academic.reports'), request()->routeIs('admin.academic.reports*')],
             ],
         ],

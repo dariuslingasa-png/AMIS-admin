@@ -1,6 +1,6 @@
 <x-academic.workspace-shell
-    title="Faculty Workload Tracker"
-    description="Monitor unique section-subject assignments against each teacher's maximum weekly teaching load."
+    title="Faculty Loads & Timetables"
+    description="Review each teacher's official subject loads, section assignments, weekly timetable, and remaining teaching capacity."
     :school-year="$schoolYear"
     :school-years="$schoolYears"
 >

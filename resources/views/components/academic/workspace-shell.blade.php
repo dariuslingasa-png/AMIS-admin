@@ -29,27 +29,6 @@
                     <div class="flex shrink-0 flex-wrap items-center gap-2">{{ $actions }}</div>
                 @endisset
             </div>
-            <nav class="no-print flex gap-1 overflow-x-auto border-t border-slate-100 bg-slate-50/80 px-3 py-2" aria-label="Academic workspace">
-                @php
-                    $links = [
-                        ['Dashboard', 'layout-dashboard', 'admin.academic.dashboard', request()->routeIs('admin.academic.dashboard*')],
-                        ['SY '.str_replace('-', '–', $schoolYear).' Schedule', 'calendar-clock', 'admin.academic.schedule-copy', request()->routeIs('admin.academic.schedule-copy')],
-                        ['Schedule Builder', 'calendar-range', 'admin.academic.builder', request()->routeIs('admin.academic.builder') || request()->routeIs('admin.academic.schedules')],
-                        ['Teachers', 'user-check', 'admin.academic.teachers', request()->routeIs('admin.academic.teachers*')],
-                        ['Advisers', 'contact-round', 'admin.academic.class-advisory', request()->routeIs('admin.academic.class-advisory')],
-                        ['Subjects', 'book-open', 'admin.academic.subjects', request()->routeIs('admin.academic.subjects*')],
-                        ['Sections', 'layers', 'admin.academic.sections', request()->routeIs('admin.academic.sections*')],
-                        ['Rooms', 'school', 'admin.academic.rooms', request()->routeIs('admin.academic.rooms*')],
-                        ['Workload', 'chart-pie', 'admin.academic.workload', request()->routeIs('admin.academic.workload')],
-                        ['Reports', 'file-chart-column', 'admin.academic.reports', request()->routeIs('admin.academic.reports*')],
-                    ];
-                @endphp
-                @foreach ($links as [$label, $icon, $routeName, $active])
-                    <a href="{{ route($routeName, ['school_year' => $schoolYear]) }}" class="inline-flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold transition {{ $active ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:bg-white hover:text-indigo-700' }}">
-                        <i data-lucide="{{ $icon }}" class="h-4 w-4"></i>{{ $label }}
-                    </a>
-                @endforeach
-            </nav>
         </section>
 
         {{ $slot }}
