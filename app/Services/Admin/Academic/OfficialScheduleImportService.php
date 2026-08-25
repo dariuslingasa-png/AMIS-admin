@@ -282,9 +282,11 @@ class OfficialScheduleImportService
             'score' => $this->sectionNameScore($sourceKey, $this->sectionNameKey((string) $section->name)),
         ])->sortByDesc('score')->values();
 
-        // Never attach official data to the only section merely because it is
-        // the only candidate. The normalized names must still match.
-        if ($ranked->isNotEmpty() && $ranked->first()['score'] > 0) {
+        // Common tokens such as "ibn" are not enough to identify a section.
+        // Accept only an exact normalized name or a strong substring match;
+        // otherwise create the missing official section instead of risking a
+        // cross-section import.
+        if ($ranked->isNotEmpty() && $ranked->first()['score'] >= 70) {
             return [$ranked->first()['section'], false];
         }
 
