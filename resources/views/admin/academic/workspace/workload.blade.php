@@ -46,7 +46,7 @@
             </div>
         </section>
     @else
-        <x-academic.workspace-filters placeholder="Search faculty workload..." />
+        <x-academic.workspace-filters placeholder="Search faculty workload..." :school-year="$schoolYear" />
 
     @php
         $totalAssigned = $workloads->sum('assigned_hours');

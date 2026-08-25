@@ -9,7 +9,7 @@
     </x-slot:actions>
 
     <div x-data="sectionDirectory()" @open-section-modal.window="openCreate()">
-        <x-academic.workspace-filters placeholder="Search section name, grade, modality, or strand..." :grades="true" :status="true">
+        <x-academic.workspace-filters placeholder="Search section name, grade, modality, or strand..." :grades="true" :status="true" :school-year="$schoolYear" :grade-options="$gradeOptions">
             <select name="mode" class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-700">
                 <option value="">All modalities</option>
                 <option value="f2f" @selected(request('mode') === 'f2f')>Face-to-Face</option>

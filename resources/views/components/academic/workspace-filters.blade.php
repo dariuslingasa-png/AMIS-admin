@@ -1,4 +1,10 @@
-@props(['placeholder' => 'Search...', 'grades' => false, 'status' => false])
+@props([
+    'placeholder' => 'Search...',
+    'grades' => false,
+    'status' => false,
+    'schoolYear',
+    'gradeOptions' => [],
+])
 
 <form method="GET" class="no-print flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:flex-row md:items-center">
     <input type="hidden" name="school_year" value="{{ $schoolYear }}">

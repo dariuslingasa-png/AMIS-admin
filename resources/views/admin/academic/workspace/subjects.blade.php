@@ -11,7 +11,7 @@
     </x-slot:actions>
 
     <div x-data="subjectDirectory()" @open-subject-modal.window="openCreate()">
-        <x-academic.workspace-filters placeholder="Search by subject name, code, or description..." :grades="true" :status="true" />
+        <x-academic.workspace-filters placeholder="Search by subject name, code, or description..." :grades="true" :status="true" :school-year="$schoolYear" :grade-options="$gradeOptions" />
 
         @if ($subjects->isEmpty())
             <div class="mt-6 rounded-3xl border-2 border-dashed border-slate-200 bg-white px-6 py-16 text-center">

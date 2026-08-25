@@ -7,7 +7,7 @@
     <x-slot:actions><button type="button" onclick="window.dispatchEvent(new CustomEvent('open-teacher-modal'))" class="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white"><i data-lucide="user-plus" class="h-4 w-4"></i>Register Teacher</button></x-slot:actions>
 
     <div x-data="teacherDirectory()" @open-teacher-modal.window="openCreate()">
-        <x-academic.workspace-filters placeholder="Search teacher, email, or department..." :status="true" />
+        <x-academic.workspace-filters placeholder="Search teacher, email, or department..." :status="true" :school-year="$schoolYear" />
 
         @if ($teachers->isEmpty())
             <div class="mt-6 rounded-3xl border-2 border-dashed border-slate-200 bg-white px-6 py-16 text-center"><i data-lucide="users" class="mx-auto h-9 w-9 text-slate-300"></i><h2 class="mt-4 text-lg font-black text-slate-800">No Teachers Found</h2><p class="mt-1 text-sm text-slate-500">Adjust the filters or register a faculty member.</p></div>
