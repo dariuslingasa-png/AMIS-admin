@@ -36,6 +36,7 @@
                         ['SY '.str_replace('-', '–', $schoolYear).' Schedule', 'calendar-clock', 'admin.academic.schedule-copy', request()->routeIs('admin.academic.schedule-copy')],
                         ['Schedule Builder', 'calendar-range', 'admin.academic.builder', request()->routeIs('admin.academic.builder') || request()->routeIs('admin.academic.schedules')],
                         ['Teachers', 'user-check', 'admin.academic.teachers', request()->routeIs('admin.academic.teachers*')],
+                        ['Advisers', 'contact-round', 'admin.academic.class-advisory', request()->routeIs('admin.academic.class-advisory')],
                         ['Subjects', 'book-open', 'admin.academic.subjects', request()->routeIs('admin.academic.subjects*')],
                         ['Sections', 'layers', 'admin.academic.sections', request()->routeIs('admin.academic.sections*')],
                         ['Rooms', 'school', 'admin.academic.rooms', request()->routeIs('admin.academic.rooms*')],

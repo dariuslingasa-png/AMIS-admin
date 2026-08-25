@@ -73,7 +73,14 @@ class AdminAcademicController extends Controller
     {
         Gate::authorize('manage-academic');
 
-        return view('admin.academic.class-advisory', $this->pages->advisory());
+        $data = $this->pages->advisory();
+        $data['schoolYear'] = (string) request('school_year', config('services.school.year'));
+        $data['schoolYears'] = collect([
+            $data['schoolYear'],
+            (string) config('services.school.year'),
+        ])->filter()->unique()->values();
+
+        return view('admin.academic.class-advisory', $data);
     }
 
     public function assignClassAdvisory(ClassAdvisoryAssignmentRequest $request)

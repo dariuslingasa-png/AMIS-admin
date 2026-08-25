@@ -45,6 +45,7 @@
                 ['Existing SY Schedule', 'calendar-clock', route('admin.academic.schedule-copy'), request()->routeIs('admin.academic.schedule-copy')],
                 ['Schedule Builder', 'calendar-range', route('admin.academic.builder'), request()->routeIs('admin.academic.builder') || request()->routeIs('admin.academic.schedules')],
                 ['Teachers', 'user-check', route('admin.academic.teachers'), request()->routeIs('admin.academic.teachers*')],
+                ['Advisers', 'contact-round', route('admin.academic.class-advisory'), request()->routeIs('admin.academic.class-advisory')],
                 ['Subjects', 'book-open', route('admin.academic.subjects'), request()->routeIs('admin.academic.subjects*')],
                 ['Sections', 'layers', route('admin.academic.sections'), request()->routeIs('admin.academic.sections*')],
                 ['Rooms', 'school', route('admin.academic.rooms'), request()->routeIs('admin.academic.rooms*')],
