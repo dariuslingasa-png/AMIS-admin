@@ -181,9 +181,27 @@ class StudentDashboardController extends Controller
             if ($studentSection?->section) {
                 $section = $studentSection->section;
                 $subjects = $studentSection->section->subjects;
+
+                if ($subjects->isEmpty()) {
+                    $schedSubjects = DB::table('class_schedules')
+                        ->where('section_id', $section->id)
+                        ->where('is_special', false)
+                        ->whereNotNull('subject_name')
+                        ->select('subject_name', 'teacher_display as teacher_name')
+                        ->distinct()
+                        ->get();
+                    $subjects = $schedSubjects;
+                }
             }
         }
-        return view('student.grades', compact('user', 'student', 'section', 'subjects'));
+
+        $fullName = trim(implode(' ', array_filter([
+            $student?->applicant?->first_name,
+            $student?->applicant?->middle_name,
+            $student?->applicant?->last_name,
+        ]))) ?: ($user->name ?? 'Student');
+
+        return view('student.grades', compact('user', 'student', 'section', 'subjects', 'fullName'));
     }
 
     public function subjects()
