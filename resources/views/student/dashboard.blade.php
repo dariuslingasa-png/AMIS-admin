@@ -514,21 +514,7 @@
         </style>
         @endif
 
-        {{-- Billing / SOA Card --}}
-        <a href="{{ route('student.billing') }}" class="fade-up" style="background: white; border: 1.5px solid #e2e8f0; border-radius: 20px; padding: 1.25rem 1.75rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; text-decoration: none; transition: all 0.2s ease-in-out;" onmouseover="this.style.transform='translateY(-2px)';this.style.borderColor='#a7f3d0';" onmouseout="this.style.transform='none';this.style.borderColor='#e2e8f0';">
-            <div style="display: flex; align-items: center; gap: 1rem; min-width: 0;">
-                <div style="width: 42px; height: 42px; border-radius: 12px; background: #ecfdf5; border: 1px solid #a7f3d0; display: flex; align-items: center; justify-content: center; color: #059669; flex-shrink: 0;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-wallet"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M16 12a2 2 0 0 0 0 4h5v-4z"/></svg>
-                </div>
-                <div style="min-width: 0; flex: 1;">
-                    <h3 style="font-size: 1.05rem; font-weight: 850; color: #0f172a; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Billing & Statement of Account</h3>
-                    <p style="font-size: 0.8rem; font-weight: 700; color: #64748b; margin: 0.15rem 0 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">View your tuition balance, official receipts, and monthly billing statements.</p>
-                </div>
-            </div>
-            <span style="font-size: 0.725rem; font-weight: 850; color: #065f46; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 0.25rem 0.65rem; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; display: inline-flex; align-items: center; gap: 0.25rem;">
-                View Account <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-            </span>
-        </a>
+
 
         {{-- Schedule Table Section --}}
         <div class="fade-up" style="display:flex;flex-direction:column;gap:0.85rem;">
@@ -690,24 +676,21 @@
     <div style="display:flex;flex-direction:column;gap:1.5rem;" class="fade-up">
 
         {{-- Announcement Card --}}
-        <div class="s-quick-actions-card" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:1.25rem; box-shadow:0 1px 4px rgba(0,0,0,0.04);">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.15rem;padding-bottom:0.75rem;border-bottom:1px solid #f1f5f9;">
-                <div style="display:flex;align-items:center;gap:0.6rem;">
-                    <div style="width:34px;height:34px;border-radius:10px;background:#fef3c7;display:flex;align-items:center;justify-content:center;color:#d97706;">
-                        <i data-lucide="megaphone" style="width:17px;height:17px;"></i>
+        <div class="s-quick-actions-card" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:1.15rem; box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;margin-bottom:1rem;padding-bottom:0.65rem;border-bottom:1px solid #f1f5f9;">
+                <div style="display:flex;align-items:center;gap:0.5rem;">
+                    <div style="width:30px;height:30px;border-radius:8px;background:#fef3c7;display:flex;align-items:center;justify-content:center;color:#d97706;flex-shrink:0;">
+                        <i data-lucide="megaphone" style="width:15px;height:15px;"></i>
                     </div>
-                    <div>
-                        <h3 class="s-quick-actions-title" style="margin:0 !important; font-size:1.05rem; font-weight:800; color:#0f172a; line-height:1.2;">Announcements</h3>
-                        <p style="margin:0; font-size:0.75rem; color:#64748b; font-weight:600;">School notices & updates</p>
-                    </div>
+                    <span style="font-size:0.95rem;font-weight:700;color:#0f172a;letter-spacing:0;">Announcements</span>
                 </div>
-                <a href="{{ route('student.announcements') }}" style="font-size:0.75rem;font-weight:800;color:#059669;text-decoration:none;display:inline-flex;align-items:center;gap:0.25rem;background:#ecfdf5;padding:0.35rem 0.65rem;border-radius:8px;transition:all 0.15s ease;">
+                <a href="{{ route('student.announcements') }}" style="font-size:0.72rem;font-weight:700;color:#059669;text-decoration:none;display:inline-flex;align-items:center;gap:0.2rem;flex-shrink:0;">
                     <span>View all</span>
-                    <i data-lucide="arrow-right" style="width:12px;height:12px;"></i>
+                    <i data-lucide="arrow-right" style="width:11px;height:11px;"></i>
                 </a>
             </div>
             
-            <div style="display:flex;flex-direction:column;gap:0.85rem;">
+            <div style="display:flex;flex-direction:column;gap:0.75rem;">
                 @forelse(array_slice($announcements, 0, 4) as $announcement)
                     @php
                         $toneColors = [
@@ -717,37 +700,39 @@
                         ];
                         $tc = $toneColors[$announcement['tone']] ?? $toneColors['emerald'];
                     @endphp
-                    <a href="{{ route('student.announcements') }}" style="text-decoration:none; padding:1.1rem; border-radius:12px; background:#f8fafc; border:1px solid #e2e8f0; display:flex; flex-direction:column; gap:0.55rem; transition:all 0.2s ease;"
-                       onmouseover="this.style.borderColor='#cbd5e1';this.style.background='#ffffff';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.06)';this.style.transform='translateY(-1px)';"
-                       onmouseout="this.style.borderColor='#e2e8f0';this.style.background='#f8fafc';this.style.boxShadow='none';this.style.transform='none';">
-                        <div style="display:flex; align-items:center; justify-content:space-between; gap:0.5rem; flex-wrap:nowrap;">
-                            <div style="display:flex; align-items:center; gap:0.35rem; flex-shrink:0;">
-                                <span style="font-size:0.68rem; font-weight:800; color:{{ $tc[0] }}; background:{{ $tc[1] }}; border:1px solid {{ $tc[2] }}; padding:0.15rem 0.5rem; border-radius:6px; text-transform:uppercase; letter-spacing:0.03em;">
+                    <a href="{{ route('student.announcements') }}" style="text-decoration:none; padding:0.9rem; border-radius:12px; background:#f8fafc; border:1px solid #e2e8f0; display:flex; flex-direction:column; gap:0.45rem; transition:all 0.2s ease;"
+                       onmouseover="this.style.borderColor='#cbd5e1';this.style.background='#ffffff';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.05)';"
+                       onmouseout="this.style.borderColor='#e2e8f0';this.style.background='#f8fafc';this.style.boxShadow='none';">
+                        <div style="display:flex; align-items:center; justify-content:space-between; gap:0.5rem;">
+                            <div style="display:flex; align-items:center; gap:0.3rem;">
+                                <span style="font-size:0.62rem; font-weight:700; color:{{ $tc[0] }}; background:{{ $tc[1] }}; border:1px solid {{ $tc[2] }}; padding:0.12rem 0.45rem; border-radius:4px; text-transform:uppercase; letter-spacing:0.03em;">
                                     {{ $announcement['type'] }}
                                 </span>
                                 @if(!$announcement['is_read'])
-                                    <span style="font-size:0.62rem; font-weight:900; color:white; background:#ef4444; padding:0.12rem 0.4rem; border-radius:5px; text-transform:uppercase; letter-spacing:0.03em;">
+                                    <span style="font-size:0.58rem; font-weight:800; color:white; background:#ef4444; padding:0.1rem 0.35rem; border-radius:4px; text-transform:uppercase; letter-spacing:0.03em;">
                                         NEW
                                     </span>
                                 @endif
                             </div>
-                            <div style="font-size:0.72rem; font-weight:700; color:#64748b; display:inline-flex; align-items:center; gap:0.45rem; flex-shrink:0; white-space:nowrap;">
-                                <span>{{ $announcement['date'] }}</span>
-                                <span style="display:inline-flex; align-items:center; gap:0.15rem; color:#94a3b8;">
-                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                                    {{ $announcement['total_views'] }}
-                                </span>
-                            </div>
+                            <span style="font-size:0.68rem; font-weight:600; color:#64748b; white-space:nowrap;">
+                                {{ $announcement['date'] }}
+                            </span>
                         </div>
-                        <h4 style="font-size:0.9rem; font-weight:800; color:#0f172a; margin:0; line-height:1.35; letter-spacing:-0.01em;">
+                        <h4 style="font-size:0.86rem; font-weight:700; color:#0f172a; margin:0; line-height:1.35; letter-spacing:0;">
                             {{ $announcement['title'] }}
                         </h4>
-                        <p style="font-size:0.78rem; font-weight:500; color:#475569; margin:0; line-height:1.5;">
+                        <p style="font-size:0.75rem; font-weight:400; color:#475569; margin:0; line-height:1.45;">
                             {{ $announcement['summary'] }}
                         </p>
+                        <div style="display:flex; align-items:center; justify-content:flex-end; font-size:0.65rem; font-weight:600; color:#94a3b8; margin-top:0.1rem;">
+                            <span style="display:inline-flex; align-items:center; gap:0.2rem;">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                                <span>{{ $announcement['total_views'] }} views</span>
+                            </span>
+                        </div>
                     </a>
                 @empty
-                    <div style="text-align:center;padding:2rem 1rem;color:#64748b;font-weight:600;font-size:0.85rem;background:#f8fafc;border-radius:12px;border:1px dashed #cbd5e1;">
+                    <div style="text-align:center;padding:1.5rem 1rem;color:#64748b;font-weight:600;font-size:0.8rem;background:#f8fafc;border-radius:12px;border:1px dashed #cbd5e1;">
                         No announcements yet.
                     </div>
                 @endforelse

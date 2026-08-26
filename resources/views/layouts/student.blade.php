@@ -793,28 +793,6 @@
 
 
 
-                <div class="student-sidebar-section" style="margin-top:0.5rem;">Finance</div>
-
-                <a href="{{ route('student.billing') }}"
-                   class="student-nav-item {{ request()->routeIs('student.billing*') && !request()->has('upload') ? 'active' : '' }}">
-                    {{-- Lucide: ReceiptText --}}
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/>
-                        <path d="M14 8H8"/><path d="M16 12H8"/><path d="M13 16H8"/>
-                    </svg>
-                    Statement of Account
-                </a>
-
-                <a href="{{ route('student.billing') }}?upload=1"
-                   class="student-nav-item s-nav-emerald {{ request()->routeIs('student.billing*') && request()->has('upload') ? 'active' : '' }}">
-                    {{-- Lucide: UploadCloud --}}
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" style="color: #10b981;">
-                        <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/>
-                        <path d="M12 12v9"/>
-                        <polyline points="16 16 12 12 8 16"/>
-                    </svg>
-                    Upload Proof
-                </a>
             </nav>
 
             {{-- Footer — just logout --}}
