@@ -402,50 +402,111 @@
             @media(max-width:640px){.class-countdown-banner{grid-template-columns:auto minmax(0,1fr);padding:1rem}.class-countdown-clock{grid-column:1/-1;width:100%}.class-countdown-copy h2{font-size:1rem}}
         </style>
 
-        {{-- Hero Banner --}}
-        <div class="s-dash-hero fade-up">
-            {{-- Dot mesh --}}
-            <div style="position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,0.06) 1px,transparent 1px);background-size:22px 22px;pointer-events:none;"></div>
-            {{-- Glow orb --}}
-            <div style="position:absolute;right:-30px;top:-30px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(52,211,153,0.2),transparent 65%);pointer-events:none;"></div>
+        {{-- Modern Beautiful Hero Banner --}}
+        <div class="s-dash-hero fade-up" style="
+            position: relative;
+            background: linear-gradient(135deg, #064e3b 0%, #047857 45%, #0d9488 100%) !important;
+            border-radius: 24px !important;
+            padding: 2rem 2.25rem !important;
+            overflow: hidden !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            box-shadow: 0 14px 38px -6px rgba(6, 78, 59, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 2rem !important;
+            flex-wrap: wrap !important;
+        ">
+            {{-- Ambient Decorative Elements --}}
+            <div style="position: absolute; inset: 0; background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px); background-size: 20px 20px; pointer-events: none; opacity: 0.8;"></div>
+            <div style="position: absolute; right: -40px; top: -40px; width: 260px; height: 260px; border-radius: 50%; background: radial-gradient(circle, rgba(52, 211, 153, 0.28) 0%, rgba(13, 148, 136, 0) 70%); pointer-events: none;"></div>
+            <div style="position: absolute; left: 20%; bottom: -50px; width: 220px; height: 220px; border-radius: 50%; background: radial-gradient(circle, rgba(16, 185, 129, 0.2) 0%, transparent 70%); pointer-events: none;"></div>
 
-            {{-- Avatar --}}
-            <div style="position:relative;width:80px;height:80px;flex-shrink:0;">
-                @if ($photoUrl)
-                    <img src="{{ $photoUrl }}" alt="{{ $fullName }}"
-                         onerror="if (!this.dataset.fallback) { this.dataset.fallback='1'; this.src='{{ $fallbackPhoto }}'; } else { this.style.display='none'; this.nextElementSibling.style.display='flex'; }"
-                         style="width:80px;height:80px;object-fit:cover;border-radius:50%;border:4px solid #ffffff;box-shadow:0 4px 12px rgba(0,0,0,0.15);display:block;"
-                         loading="eager" decoding="async">
-                    <div style="width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,0.2);border:4px solid #ffffff;box-shadow:0 4px 12px rgba(0,0,0,0.15);display:none;align-items:center;justify-content:center;box-sizing:border-box;">
-                        <span style="font-size:1.6rem;font-weight:900;color:white;line-height:1;text-align:center;">{{ $initials }}</span>
-                    </div>
-                @else
-                    <div style="width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,0.2);border:4px solid #ffffff;box-shadow:0 4px 12px rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center;box-sizing:border-box;">
-                        <span style="font-size:1.6rem;font-weight:900;color:white;line-height:1;display:flex;align-items:center;justify-content:center;text-align:center;">{{ $initials }}</span>
-                    </div>
-                @endif
-                <span style="position:absolute;bottom:2px;right:2px;width:14px;height:14px;border-radius:50%;background:#10b981;border:2.5px solid #ffffff;box-shadow:0 2px 4px rgba(0,0,0,0.1);z-index:5;"></span>
-            </div>
-
-            {{-- Text --}}
-            <div style="position:relative;">
-                <div class="s-dash-hero-meta">
-                    {{ $student?->grade_level }}
-                    · {{ strtoupper($student?->applicant?->student_type ?? 'new') }}
-                    @if($learningMode)
-                        · {{ $learningMode }}
+            {{-- Left Side: Avatar + Student Info --}}
+            <div style="display: flex; align-items: center; gap: 1.5rem; position: relative; z-index: 2; flex: 1; min-width: 280px;">
+                
+                {{-- Avatar with glowing ring --}}
+                <div style="position: relative; width: 84px; height: 84px; flex-shrink: 0;">
+                    <div style="position: absolute; inset: -4px; border-radius: 50%; background: linear-gradient(135deg, rgba(255,255,255,0.6), rgba(110,231,183,0.3)); filter: blur(2px);"></div>
+                    @if ($photoUrl)
+                        <img src="{{ $photoUrl }}" alt="{{ $fullName }}"
+                             onerror="if (!this.dataset.fallback) { this.dataset.fallback='1'; this.src='{{ $fallbackPhoto }}'; } else { this.style.display='none'; this.nextElementSibling.style.display='flex'; }"
+                             style="position: relative; width: 84px; height: 84px; object-fit: cover; border-radius: 50%; border: 3.5px solid #ffffff; box-shadow: 0 6px 18px rgba(0,0,0,0.25); display: block;"
+                             loading="eager" decoding="async">
+                        <div style="position: relative; width: 84px; height: 84px; border-radius: 50%; background: linear-gradient(135deg, #10b981 0%, #047857 100%); border: 3.5px solid #ffffff; box-shadow: 0 6px 18px rgba(0,0,0,0.25); display: none; align-items: center; justify-content: center; box-sizing: border-box;">
+                            <span style="font-size: 1.75rem; font-weight: 900; color: white; line-height: 1;">{{ $initials }}</span>
+                        </div>
+                    @else
+                        <div style="position: relative; width: 84px; height: 84px; border-radius: 50%; background: linear-gradient(135deg, #10b981 0%, #047857 100%); border: 3.5px solid #ffffff; box-shadow: 0 6px 18px rgba(0,0,0,0.25); display: flex; align-items: center; justify-content: center; box-sizing: border-box;">
+                            <span style="font-size: 1.75rem; font-weight: 900; color: white; line-height: 1;">{{ $initials }}</span>
+                        </div>
                     @endif
+                    <span style="position: absolute; bottom: 2px; right: 2px; width: 16px; height: 16px; border-radius: 50%; background: #34d399; border: 3px solid #064e3b; box-shadow: 0 0 10px #34d399; z-index: 5;"></span>
                 </div>
-                <div style="font-size: 1.1rem !important; font-weight: 800 !important; color: rgba(255, 255, 255, 0.8) !important; margin-bottom: 0.25rem !important; text-transform: uppercase; letter-spacing: 0.05em;">
-                    Assalamualaikum,
-                </div>
-                <h1 class="s-dash-hero-title" style="margin-top: 0 !important; font-size: 2.2rem !important; margin-bottom: 0.5rem !important;">
-                    {{ $fullName }}!
-                </h1>
-                <div class="s-dash-hero-sub">
-                    Student ID: <span style="text-decoration: underline;">{{ $student?->student_number }}</span> · {{ $student?->school_email }}
+
+                {{-- Information Block --}}
+                <div style="min-width: 0;">
+                    
+                    {{-- Badges Row --}}
+                    <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.4rem;">
+                        <span style="display: inline-flex; align-items: center; gap: 0.35rem; background: rgba(255, 255, 255, 0.16); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.25); color: #ffffff; padding: 0.2rem 0.65rem; border-radius: 999px; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em;">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                            {{ $student?->grade_level ?: 'Grade 1' }}
+                        </span>
+                        @if($section?->name)
+                            <span style="display: inline-flex; align-items: center; background: rgba(16, 185, 129, 0.25); border: 1px solid rgba(52, 211, 153, 0.4); color: #d1fae5; padding: 0.2rem 0.65rem; border-radius: 999px; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em;">
+                                {{ $section->name }}
+                            </span>
+                        @endif
+                        <span style="display: inline-flex; align-items: center; gap: 0.25rem; background: rgba(255, 255, 255, 0.12); color: #a7f3d0; padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.72rem; font-weight: 700;">
+                            <span style="width: 6px; height: 6px; border-radius: 50%; background: #34d399;"></span>
+                            {{ strtoupper($student?->applicant?->student_type ?? 'Continuing') }}
+                        </span>
+                    </div>
+
+                    {{-- Greeting --}}
+                    <div style="font-size: 0.95rem; font-weight: 700; color: #a7f3d0; letter-spacing: 0.02em; margin-bottom: 0.15rem; display: flex; align-items: center; gap: 0.4rem;">
+                        <span>Assalamu Alaikum,</span>
+                        <span style="opacity: 0.8; font-size: 0.85rem;">السَّلَامُ عَلَيْكُمْ</span>
+                    </div>
+
+                    {{-- Student Full Name --}}
+                    <h1 style="font-size: 2.15rem; font-weight: 900; color: #ffffff; margin: 0 0 0.45rem; line-height: 1.15; letter-spacing: -0.025em; text-shadow: 0 2px 10px rgba(0,0,0,0.15);">
+                        {{ $fullName }}
+                    </h1>
+
+                    {{-- Identifiers Meta Capsule --}}
+                    <div style="display: flex; align-items: center; gap: 0.65rem; flex-wrap: wrap; font-size: 0.82rem; font-weight: 600; color: rgba(255, 255, 255, 0.9);">
+                        <span style="display: inline-flex; align-items: center; gap: 0.35rem; background: rgba(0, 0, 0, 0.18); padding: 0.25rem 0.6rem; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.15);">
+                            <span style="color: #a7f3d0; font-weight: 800;">ID:</span>
+                            <span style="font-family: monospace; font-weight: 700; color: #ffffff;">{{ $student?->student_number ?? '260000' }}</span>
+                        </span>
+                        <span style="display: inline-flex; align-items: center; gap: 0.35rem; background: rgba(0, 0, 0, 0.18); padding: 0.25rem 0.65rem; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.15);">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6ee7b7" stroke-width="2.5"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                            <span>{{ $student?->school_email ?? Auth::user()->email }}</span>
+                        </span>
+                    </div>
+
                 </div>
             </div>
+
+            {{-- Right Side: Quick Academic Glance Card --}}
+            <div style="position: relative; z-index: 2; display: flex; align-items: center; gap: 0.75rem; flex-shrink: 0;">
+                <div style="background: rgba(255, 255, 255, 0.14); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.22); border-radius: 18px; padding: 1rem 1.35rem; display: flex; flex-direction: column; gap: 0.35rem; min-width: 140px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;">
+                        <span style="font-size: 0.68rem; font-weight: 800; color: #a7f3d0; text-transform: uppercase; letter-spacing: 0.05em;">School Year</span>
+                        <span style="width: 7px; height: 7px; border-radius: 50%; background: #34d399;"></span>
+                    </div>
+                    <div style="font-size: 1.15rem; font-weight: 900; color: #ffffff; font-family: inherit;">
+                        {{ $student?->school_year ?? '2026-2027' }}
+                    </div>
+                    <a href="{{ route('student.schedule') }}" style="display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.75rem; font-weight: 700; color: #ffffff; background: rgba(255,255,255,0.18); padding: 0.3rem 0.6rem; border-radius: 8px; text-decoration: none; margin-top: 0.2rem; transition: background 0.15s ease;" onmouseover="this.style.background='rgba(255,255,255,0.28)'" onmouseout="this.style.background='rgba(255,255,255,0.18)'">
+                        <span>My Timetable</span>
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    </a>
+                </div>
+            </div>
+
         </div>
 
         {{-- ── COMING SOON BANNER — F2F Students (Old & New) ─────────── --}}
