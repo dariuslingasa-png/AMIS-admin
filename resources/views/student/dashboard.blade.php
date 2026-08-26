@@ -131,94 +131,22 @@
         $todaySub = "Sunday, " . $nextSunday->format('F j, Y') . ' (PST)';
     }
 
-    // Weekly Timetable Data Builder
-    $weeklyDaysList = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
-    $weeklyGrouped = [
-        'Sunday' => [],
-        'Monday' => [],
-        'Tuesday' => [],
-        'Wednesday' => [],
-        'Thursday' => [],
-    ];
-    foreach ($schedules as $s) {
-        $d = ucfirst(strtolower($s->day));
-        if (isset($weeklyGrouped[$d])) {
-            $weeklyGrouped[$d][] = $s;
-        }
-    }
-    foreach ($weeklyGrouped as $day => $classes) {
-        usort($classes, fn($a, $b) => strcmp($a->start_time, $b->start_time));
-        $weeklyGrouped[$day] = $classes;
-    }
+    // Financial Statement of Account (SOA) Summary Data
+    $soaTotal = (float) ($account->total_balance ?? 0);
+    $soaPaid = (float) ($account->amount_paid ?? 0);
+    $soaRemaining = (float) ($account->remaining_balance ?? 0);
+    $soaProgress = $soaTotal > 0 ? min(100, max(0, ($soaPaid / $soaTotal) * 100)) : 0;
 
-    $weeklyTimeSlots = [];
-    foreach ($schedules as $s) {
-        $timeKey = substr($s->start_time, 0, 5) . '-' . substr($s->end_time, 0, 5);
-        $weeklyTimeSlots[$timeKey] = [
-            'start' => $s->start_time,
-            'end' => $s->end_time,
-            'label' => date('g:i A', strtotime($s->start_time)) . ' - ' . date('g:i A', strtotime($s->end_time)),
-        ];
-    }
-    uasort($weeklyTimeSlots, fn($a, $b) => strcmp($a['start'], $b['start']));
+    $billings = $account?->monthlyBillings ?? collect();
+    $soaPaidInstallments = $billings->where('status', 'paid')->count();
+    $soaUnpaidInstallments = $billings->where('status', 'unpaid');
+    $soaNextBilling = $soaUnpaidInstallments->sortBy('due_date')->first();
 
-    $weeklyMatrix = [];
-    foreach ($weeklyTimeSlots as $timeKey => $slot) {
-        $weeklyMatrix[$timeKey] = [
-            'slot' => $slot,
-            'days' => [
-                'Sunday' => null,
-                'Monday' => null,
-                'Tuesday' => null,
-                'Wednesday' => null,
-                'Thursday' => null,
-            ],
-        ];
-        foreach ($schedules as $s) {
-            $sKey = substr($s->start_time, 0, 5) . '-' . substr($s->end_time, 0, 5);
-            if ($sKey === $timeKey) {
-                $d = ucfirst(strtolower($s->day));
-                if (isset($weeklyMatrix[$timeKey]['days'][$d])) {
-                    $weeklyMatrix[$timeKey]['days'][$d] = $s;
-                }
-            }
-        }
-    }
+    $soaAccountStatus = !$account
+        ? 'No Balance'
+        : ($soaRemaining <= 0 ? 'Paid' : ($soaPaid > 0 ? 'Partially Paid' : 'Unpaid'));
 
-    $getSubjectStyle = function ($subjectName) {
-        $subjectLower = mb_strtolower((string) $subjectName);
-        if (str_contains($subjectLower, 'math')) {
-            return ['bg' => '#e0e7ff', 'border' => '#c7d2fe', 'text' => '#312e81'];
-        }
-        if (str_contains($subjectLower, 'science')) {
-            return ['bg' => '#f3e8ff', 'border' => '#e9d5ff', 'text' => '#581c87'];
-        }
-        if (str_contains($subjectLower, 'english') || str_contains($subjectLower, 'reading')) {
-            return ['bg' => '#e0f2fe', 'border' => '#bae6fd', 'text' => '#0c4a6e'];
-        }
-        if (str_contains($subjectLower, 'quran') || str_contains($subjectLower, 'qur')) {
-            return ['bg' => '#f0fdf4', 'border' => '#86efac', 'text' => '#14532d'];
-        }
-        if (str_contains($subjectLower, 'arabic')) {
-            return ['bg' => '#ecfdf5', 'border' => '#6ee7b7', 'text' => '#064e3b'];
-        }
-        if (str_contains($subjectLower, 'hadith') || str_contains($subjectLower, 'islamic') || str_contains($subjectLower, 'shaf')) {
-            return ['bg' => '#f0fdf4', 'border' => '#bbf7d0', 'text' => '#166534'];
-        }
-        if (str_contains($subjectLower, 'filipino')) {
-            return ['bg' => '#fef3c7', 'border' => '#fde68a', 'text' => '#78350f'];
-        }
-        if (str_contains($subjectLower, 'mapeh')) {
-            return ['bg' => '#ffe4e6', 'border' => '#fecdd3', 'text' => '#881337'];
-        }
-        if (str_contains($subjectLower, 'ap') || str_contains($subjectLower, 'araling')) {
-            return ['bg' => '#fff7ed', 'border' => '#fed7aa', 'text' => '#7c2d12'];
-        }
-        if (str_contains($subjectLower, 'tle') || str_contains($subjectLower, 'computer') || str_contains($subjectLower, 'ict')) {
-            return ['bg' => '#f0fdfa', 'border' => '#ccfbf1', 'text' => '#115e59'];
-        }
-        return ['bg' => '#f8fafc', 'border' => '#e2e8f0', 'text' => '#334155'];
-    };
+    $latestPayment = $payments->sortByDesc('created_at')->first();
 @endphp
 
 @once
@@ -419,7 +347,7 @@
 <script>
     window.scheduleCountdown = function(items) {
         return {
-            activeTab: 'schedule',
+            activeTab: 'overview',
             viewMode: '{{ $defaultViewMode }}', showIdModal: false, isFlipped: false, showEnded: false, countdownOpen: true,
             items, activeClass: null, nextClass: null, phase: 'loading', remaining: '--:--', timer: null,
             init() {
@@ -596,7 +524,7 @@
                     </span>
                 </div>
 
-                <button type="button" @click="activeTab = 'schedule'" style="
+                <button type="button" @click="activeTab = 'overview'" style="
                     display: inline-flex;
                     align-items: center;
                     gap: 0.45rem;
@@ -620,7 +548,7 @@
         </div>
     </div>
 
-    {{-- ── 2. Full-Width 3-Tab Navigation Bar ────────────────────────── --}}
+    {{-- ── 2. Full-Width 2-Tab Navigation Bar ────────────────────────── --}}
     <div class="fade-up" style="
         background: #ffffff;
         border: 1px solid #e2e8f0;
@@ -633,25 +561,10 @@
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
     ">
         <button type="button" 
-                @click="activeTab = 'schedule'" 
-                :class="activeTab === 'schedule' ? 'portal-tab-pill active' : 'portal-tab-pill'">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            <span>Class Schedule</span>
-        </button>
-
-        <button type="button" 
-                @click="activeTab = 'announcements'" 
-                :class="activeTab === 'announcements' ? 'portal-tab-pill active' : 'portal-tab-pill'">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
-            <span>Announcements</span>
-            @php
-                $unreadAnnouncementsCount = collect($announcements)->where('is_read', false)->count();
-            @endphp
-            @if($unreadAnnouncementsCount > 0)
-                <span style="font-size: 0.65rem; font-weight: 800; background: #ef4444; color: #ffffff; padding: 0.1rem 0.45rem; border-radius: 999px; line-height: 1;">
-                    {{ $unreadAnnouncementsCount }}
-                </span>
-            @endif
+                @click="activeTab = 'overview'" 
+                :class="activeTab === 'overview' ? 'portal-tab-pill active' : 'portal-tab-pill'">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+            <span>Student Overview</span>
         </button>
 
         <button type="button" 
@@ -694,8 +607,8 @@
         @media(max-width: 640px) {
             .portal-tab-pill {
                 padding: 0.65rem 0.35rem !important;
-                font-size: 0.78rem !important;
-                gap: 0.3rem !important;
+                font-size: 0.825rem !important;
+                gap: 0.35rem !important;
             }
             .portal-tab-pill svg {
                 width: 15px !important;
@@ -708,56 +621,22 @@
         .class-countdown-copy{position:relative;z-index:1;min-width:0}.class-countdown-copy h2{margin:.12rem 0;color:#fff;font-size:1.15rem;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.class-countdown-copy p{margin:0;color:#d1fae5;font-size:.78rem;font-weight:700}.class-countdown-copy .class-countdown-label{color:#a7f3d0;font-size:.65rem;font-weight:900;text-transform:uppercase;letter-spacing:.1em}
         .class-countdown-clock{position:relative;z-index:1;min-width:120px;border-radius:15px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);padding:.7rem 1rem;text-align:center}.class-countdown-clock strong{display:block;font-variant-numeric:tabular-nums;font-size:1.45rem;font-weight:950;letter-spacing:.03em}.class-countdown-clock span{display:block;margin-top:.1rem;color:#a7f3d0;font-size:.6rem;font-weight:850;text-transform:uppercase;letter-spacing:.08em}
         .class-countdown-inline{border-width:0 0 1px;border-radius:0;padding:1rem 1.25rem;box-shadow:inset 4px 0 0 #34d399}
-        @media(max-width:640px){.class-countdown-banner{grid-template-columns:auto minmax(0,1fr);padding:1rem}.class-countdown-clock{grid-column:1/-1;width:100%}.class-countdown-copy h2{font-size:1rem}}
-        
-        /* Timetable grid */
-        .dash-calendar-grid {
+        .completed-subjects-toggle{display:flex;width:100%;align-items:center;gap:.75rem;border:0;border-bottom:1px solid #e2e8f0;background:#f8fafc;padding:.8rem 1.25rem;text-align:left;color:#475569;cursor:pointer;transition:background .15s ease}.completed-subjects-toggle:hover{background:#f1f5f9}.completed-subjects-toggle-icon{display:flex;width:32px;height:32px;flex:0 0 32px;align-items:center;justify-content:center;border-radius:10px;background:#dcfce7;color:#16a34a}.completed-subjects-toggle-icon svg{width:16px;height:16px}.completed-subjects-toggle-copy{display:flex;min-width:0;flex:1;flex-direction:column}.completed-subjects-toggle-copy strong{font-size:.78rem;font-weight:900;color:#334155}.completed-subjects-toggle-copy small{margin-top:1px;font-size:.66rem;font-weight:700;color:#94a3b8}.completed-subjects-chevron{width:16px;height:16px;transition:transform .2s ease}.completed-subjects-chevron.is-open{transform:rotate(180deg)}
+        .s-two-col-grid {
             display: grid;
-            grid-template-columns: 7.5rem repeat(5, minmax(160px, 1fr));
-            gap: 0.5rem;
-            min-width: 900px;
+            grid-template-columns: 1.65fr 1fr;
+            gap: 1.5rem;
+            align-items: start;
         }
-        .dash-calendar-header {
-            font-size: 13px;
-            font-weight: 800;
-            text-transform: uppercase;
-            color: #ffffff;
-            background: #059669;
-            padding: 0.75rem 0.5rem;
-            border-radius: 10px;
-            text-align: center;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .dash-calendar-time-header {
-            background: #065f46;
-        }
-        .dash-calendar-time-block {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 0.5rem;
-            text-align: center;
-            min-height: 72px;
-        }
-        .dash-calendar-card {
-            border-radius: 12px;
-            padding: 0.65rem 0.75rem;
-            min-height: 72px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            transition: all 0.15s ease;
+        @media(max-width: 1024px) {
+            .s-two-col-grid {
+                grid-template-columns: 1fr !important;
+            }
         }
     </style>
 
-    {{-- ── TAB 1: CLASS SCHEDULE CONTENT ──────────────────────────────── --}}
-    <div x-show="activeTab === 'schedule'" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" style="display: flex; flex-direction: column; gap: 1.75rem; width: 100%;">
+    {{-- ── TAB 1: STUDENT OVERVIEW CONTENT ────────────────────────────── --}}
+    <div x-show="activeTab === 'overview'" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" style="display: flex; flex-direction: column; gap: 1.5rem; width: 100%;">
 
         {{-- ── COMING SOON BANNER — F2F Students ─────────── --}}
         @php
@@ -809,347 +688,351 @@
         </div>
         @endif
 
-        {{-- 1. Today's Classes Section --}}
-        <div class="fade-up" style="display: flex; flex-direction: column; gap: 0.85rem;">
-            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
-                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <div style="width: 30px; height: 30px; border-radius: 8px; background: #ecfdf5; display: flex; align-items: center; justify-content: center; color: #059669;">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    </div>
-                    <div>
-                        <h2 style="font-size: 1.25rem; font-weight: 800; color: #0f172a; margin: 0; line-height: 1.2;">
-                            {{ $todayLabel }}
-                        </h2>
-                        <span style="font-size: 0.8rem; color: #64748b; font-weight: 600;">{{ $todaySub }}</span>
-                    </div>
-                </div>
+        {{-- ── 2-Column Responsive Dashboard Grid ─────────────────────── --}}
+        <div class="s-two-col-grid" style="width: 100%;">
 
-                <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-                    @if($student && $student->ms_user_id && str_ends_with(strtolower($student->school_email), '@amis.edu.ph'))
-                        <form method="POST" action="{{ route('student.sync-teams') }}" style="margin: 0; display: inline-block;">
-                            @csrf
-                            <button type="submit" class="sched-tab-btn" style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem !important; padding: 0.45rem 0.85rem !important; background: #059669 !important; color: white !important; border-radius: 8px !important; box-shadow: 0 2px 4px rgba(5,150,105,0.15) !important; cursor: pointer;">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
-                                Sync MS Teams
-                            </button>
-                        </form>
-                    @endif
-                </div>
-            </div>
+            {{-- LEFT MAIN COLUMN: Today's Classes & Recent Announcements --}}
+            <div style="display: flex; flex-direction: column; gap: 1.5rem; min-width: 0; width: 100%;">
 
-            {{-- Table card --}}
-            <div class="s-table-card" style="background:white; border: 1.5px solid #e2e8f0; border-radius: 20px; overflow:hidden;">
-                <div>
-                    @php
-                        $todaySchedules = $schedules->filter(fn($cs) => strcasecmp($cs->day, $targetDayName) === 0)->sortBy('start_time');
-                        $nowForCollapse = \Carbon\Carbon::now('Asia/Manila');
-                        $endedCount = $isSchoolDay
-                            ? $todaySchedules->filter(function ($item) use ($nowForCollapse) {
-                                $end = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $nowForCollapse->format('Y-m-d').' '.$item->end_time, 'Asia/Manila');
-                                return $nowForCollapse->greaterThanOrEqualTo($end);
-                            })->count()
-                            : 0;
-                    @endphp
-
-                    @if($todaySchedules->isNotEmpty())
-                        @if($endedCount > 0)
-                            <button type="button" @click="showEnded = !showEnded" class="completed-subjects-toggle">
-                                <span class="completed-subjects-toggle-icon"><i data-lucide="circle-check-big"></i></span>
-                                <span class="completed-subjects-toggle-copy">
-                                    <strong>{{ $endedCount }} completed {{ \Illuminate\Support\Str::plural('subject', $endedCount) }}</strong>
-                                    <small x-text="showEnded ? 'Hide completed classes' : 'Tap to review completed classes'"></small>
-                                </span>
-                                <i data-lucide="chevron-down" class="completed-subjects-chevron" :class="showEnded ? 'is-open' : ''"></i>
-                            </button>
-                        @endif
-                        <div class="s-table-header" style="grid-template-columns: 1.8fr 1.2fr 1.3fr; padding: 0.75rem 1.25rem;">
-                            <div class="s-table-header-label">Subject Name</div>
-                            <div class="s-table-header-label">Teacher</div>
-                            <div class="s-table-header-label">Class Time</div>
+                {{-- 1. Today's Classes Section --}}
+                <div class="fade-up" style="display: flex; flex-direction: column; gap: 0.85rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <div style="width: 32px; height: 32px; border-radius: 9px; background: #ecfdf5; display: flex; align-items: center; justify-content: center; color: #059669;">
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            </div>
+                            <div>
+                                <h2 style="font-size: 1.2rem; font-weight: 800; color: #0f172a; margin: 0; line-height: 1.2;">
+                                    {{ $todayLabel }}
+                                </h2>
+                                <span style="font-size: 0.78rem; color: #64748b; font-weight: 600;">{{ $todaySub }}</span>
+                            </div>
                         </div>
 
-                        @php
-                            $colors = ['#059669','#0ea5e9','#8b5cf6','#f59e0b','#ec4899','#14b8a6','#ef4444','#f97316'];
-                            $bgs    = ['#ecfdf5','#eff6ff','#f5f3ff','#fffbeb','#fdf2f8','#f0fdfa','#fef2f2','#fff7ed'];
-                        @endphp
-                        @foreach ($todaySchedules as $i => $sched)
-                            @php
-                                $c = $colors[$i % count($colors)];
-                                $bg = $bgs[$i % count($bgs)];
-                                $subj = $subjects->firstWhere('subject_name', $sched->subject_name);
-                                $isSpecial = str_contains(strtolower($sched->subject_name), 'transition') || 
-                                             str_contains(strtolower($sched->subject_name), 'recess') || 
-                                             str_contains(strtolower($sched->subject_name), 'break') || 
-                                             str_contains(strtolower($sched->subject_name), 'general assembly') ||
-                                             str_contains(strtolower($sched->subject_name), 'homeroom');
-                                $rawTeacher = $isSpecial ? '—' : (!empty($sched->teacher_display) ? $sched->teacher_display : ($subj ? $subj->teacher_name : null));
-                                $currentTeacherName = $formatTeacherName($rawTeacher);
-                                $timeStr = date('g:i A', strtotime($sched->start_time)) . ' - ' . date('g:i A', strtotime($sched->end_time));
-                                $isLive = false;
-                                $isEnded = false;
-                                if ($isSchoolDay) {
-                                    $startTime = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $nowManila->format('Y-m-d') . ' ' . $sched->start_time, 'Asia/Manila');
-                                    $endTime = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $nowManila->format('Y-m-d') . ' ' . $sched->end_time, 'Asia/Manila');
-                                    if ($nowManila->between($startTime, $endTime)) {
-                                        $isLive = true;
-                                    } elseif ($nowManila->greaterThan($endTime)) {
-                                        $isEnded = true;
-                                    }
-                                }
-                            @endphp
-                            <div class="s-table-row" @if($isEnded) x-show="showEnded" x-transition.opacity.duration.150ms @endif @if($isLive) @click="countdownOpen = !countdownOpen" @endif style="grid-template-columns: 1.8fr 1.2fr 1.3fr; padding: 1rem 1.25rem; align-items: center; border-bottom: 1px solid #f1f5f9; position: relative; {{ $isEnded ? 'opacity: 0.55; background: #f8fafc;' : '' }} {{ $isLive ? 'cursor:pointer;' : '' }}">
-                                @if($isLive)
-                                    <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: #10b981; border-top-left-radius: 4px; border-bottom-left-radius: 4px;"></div>
-                                @endif
-                                <div style="display:flex;align-items:center;gap:0.75rem;min-width:0;">
-                                    <div style="width:8px;height:8px;border-radius:50%;background:{{ $isEnded ? '#94a3b8' : $c }};flex-shrink:0;box-shadow: 0 0 0 3px {{ $isEnded ? '#f1f5f9' : $bg }};"></div>
-                                    <span class="s-table-cell-subject" style="font-weight: 800; color: {{ $isEnded ? '#64748b' : '#0f172a' }}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; {{ $isEnded ? 'text-decoration: line-through;' : '' }}">
-                                        {{ $sched->subject_name }}
-                                        @if($isEnded)
-                                            <span style="font-size:0.6rem;font-weight:850;color:#64748b;background:#f1f5f9;border:1px solid #cbd5e1;padding:0.1rem 0.35rem;border-radius:5px;text-transform:uppercase;margin-left:0.35rem;display:inline-block;">Ended</span>
-                                        @endif
-                                    </span>
-                                    @if($isLive)
-                                        <i data-lucide="chevron-down" style="width:15px;height:15px;color:#059669;flex-shrink:0;transition:transform .2s;" :style="countdownOpen ? 'transform:rotate(180deg)' : ''"></i>
-                                    @endif
-                                </div>
-                                <div style="display:flex;align-items:center;gap:0.5rem;min-width:0;">
-                                    <span class="s-table-cell-teacher" style="font-weight: 750; color: {{ $isEnded ? '#94a3b8' : '#475569' }}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $currentTeacherName }}</span>
-                                </div>
-                                
-                                <div class="s-table-cell-schedule" style="color:{{ $isEnded ? '#94a3b8' : '#0d9488' }}; font-weight:800; white-space: nowrap; font-size: 0.78rem;">
-                                    <div style="display:flex;align-items:center;gap:0.3rem;">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                                        <span style="letter-spacing: -0.01em;">{{ $timeStr }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            @if($isLive)
-                                <section x-show="countdownOpen" x-transition.opacity.duration.150ms class="class-countdown-banner class-countdown-inline" aria-live="polite">
-                                    <div class="class-countdown-icon"><i data-lucide="timer"></i></div>
-                                    <div class="class-countdown-copy">
-                                        <p class="class-countdown-label">Class in progress · ends in</p>
-                                        <h2 x-text="activeClass?.subject ?? @js($sched->subject_name)"></h2>
-                                        <p><span x-text="activeClass?.teacher ?? @js($currentTeacherName)"></span> · {{ $timeStr }}</p>
-                                    </div>
-                                    <div class="class-countdown-clock"><strong x-text="remaining">--:--</strong><span>remaining</span></div>
-                                </section>
+                        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                            @if($student && $student->ms_user_id && str_ends_with(strtolower($student->school_email), '@amis.edu.ph'))
+                                <form method="POST" action="{{ route('student.sync-teams') }}" style="margin: 0; display: inline-block;">
+                                    @csrf
+                                    <button type="submit" class="sched-tab-btn" style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem !important; padding: 0.45rem 0.85rem !important; background: #059669 !important; color: white !important; border-radius: 8px !important; box-shadow: 0 2px 4px rgba(5,150,105,0.15) !important; cursor: pointer;">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                                        Sync MS Teams
+                                    </button>
+                                </form>
                             @endif
-                        @endforeach
-                    @else
-                        <div class="s-empty-card" style="padding: 3.5rem 1.5rem; text-align:center;">
-                            <div class="s-empty-icon-wrapper" style="background: #f0fdfa; display:inline-flex; align-items:center; justify-content:center; width:48px; height:48px; border-radius:50%; margin-bottom: 0.75rem;">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0d9488" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                            </div>
-                            <h3 class="s-empty-title" style="font-size: 1.15rem; font-weight:800; color:#1e293b; margin:0 0 0.25rem;">No Classes Scheduled Today</h3>
-                            <p class="s-empty-text" style="font-size: 0.85rem; color:#64748b; max-width: 340px; margin: 0 auto; line-height: 1.5;">
-                                @if(in_array($todayName, ['Friday', 'Saturday']))
-                                    Happy weekend! Enjoy your rest and recharge time. ☀️
-                                @else
-                                    You have no classes scheduled for today. Happy studying! 🎈
-                                @endif
-                            </p>
+
+                            <a href="{{ route('student.schedule') }}" style="font-size: 0.78rem; font-weight: 700; color: #059669; text-decoration: none; display: inline-flex; align-items: center; gap: 0.3rem; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 0.45rem 0.85rem; border-radius: 9px; transition: all 0.15s ease;">
+                                <span>View Full Schedule</span>
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                            </a>
                         </div>
-                    @endif
-                </div>
-            </div>
-        </div>
-
-        {{-- 2. Full Weekly Schedule Timetable Section --}}
-        <div class="fade-up" style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 20px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 1.25rem;">
-            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; padding-bottom: 0.85rem; border-bottom: 1px solid #f1f5f9;">
-                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <div style="width: 30px; height: 30px; border-radius: 8px; background: #e0f2fe; display: flex; align-items: center; justify-content: center; color: #0284c7;">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                     </div>
-                    <div>
-                        <h3 style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin: 0;">Full Weekly Schedule</h3>
-                        <span style="font-size: 0.8rem; color: #64748b; font-weight: 600;">Complete week timetable (Sunday to Thursday)</span>
-                    </div>
-                </div>
-            </div>
 
-            @if(!empty($weeklyMatrix))
-                {{-- Desktop Timetable Grid --}}
-                <div class="hidden sm:block" style="overflow-x: auto; width: 100%;">
-                    <div class="dash-calendar-grid">
-                        <div class="dash-calendar-header dash-calendar-time-header">Time</div>
-                        @foreach($weeklyDaysList as $dayName)
-                            <div class="dash-calendar-header">{{ $dayName }}</div>
-                        @endforeach
+                    {{-- Table Card --}}
+                    <div class="s-table-card" style="background:white; border: 1.5px solid #e2e8f0; border-radius: 20px; overflow:hidden;">
+                        <div>
+                            @php
+                                $todaySchedules = $schedules->filter(fn($cs) => strcasecmp($cs->day, $targetDayName) === 0)->sortBy('start_time');
+                                $nowForCollapse = \Carbon\Carbon::now('Asia/Manila');
+                                $endedCount = $isSchoolDay
+                                    ? $todaySchedules->filter(function ($item) use ($nowForCollapse) {
+                                        $end = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $nowForCollapse->format('Y-m-d').' '.$item->end_time, 'Asia/Manila');
+                                        return $nowForCollapse->greaterThanOrEqualTo($end);
+                                    })->count()
+                                    : 0;
+                            @endphp
 
-                        @foreach($weeklyMatrix as $timeKey => $row)
-                            <div style="display: contents;">
-                                <div class="dash-calendar-time-block">
-                                    <span style="font-size: 0.8rem; font-weight: 800; color: #0f172a;">{{ date('g:i A', strtotime($row['slot']['start'])) }}</span>
-                                    <span style="font-size: 0.62rem; color: #94a3b8; font-weight: 700; text-transform: uppercase;">to</span>
-                                    <span style="font-size: 0.8rem; font-weight: 800; color: #0f172a;">{{ date('g:i A', strtotime($row['slot']['end'])) }}</span>
+                            @if($todaySchedules->isNotEmpty())
+                                @if($endedCount > 0)
+                                    <button type="button" @click="showEnded = !showEnded" class="completed-subjects-toggle">
+                                        <span class="completed-subjects-toggle-icon"><i data-lucide="circle-check-big"></i></span>
+                                        <span class="completed-subjects-toggle-copy">
+                                            <strong>{{ $endedCount }} completed {{ \Illuminate\Support\Str::plural('subject', $endedCount) }}</strong>
+                                            <small x-text="showEnded ? 'Hide completed classes' : 'Tap to review completed classes'"></small>
+                                        </span>
+                                        <i data-lucide="chevron-down" class="completed-subjects-chevron" :class="showEnded ? 'is-open' : ''"></i>
+                                    </button>
+                                @endif
+                                <div class="s-table-header" style="grid-template-columns: 1.8fr 1.2fr 1.3fr; padding: 0.75rem 1.25rem;">
+                                    <div class="s-table-header-label">Subject Name</div>
+                                    <div class="s-table-header-label">Teacher</div>
+                                    <div class="s-table-header-label">Class Time</div>
                                 </div>
 
-                                @foreach($weeklyDaysList as $dayName)
+                                @php
+                                    $colors = ['#059669','#0ea5e9','#8b5cf6','#f59e0b','#ec4899','#14b8a6','#ef4444','#f97316'];
+                                    $bgs    = ['#ecfdf5','#eff6ff','#f5f3ff','#fffbeb','#fdf2f8','#f0fdfa','#fef2f2','#fff7ed'];
+                                @endphp
+                                @foreach ($todaySchedules as $i => $sched)
                                     @php
-                                        $item = $row['days'][$dayName] ?? null;
+                                        $c = $colors[$i % count($colors)];
+                                        $bg = $bgs[$i % count($bgs)];
+                                        $subj = $subjects->firstWhere('subject_name', $sched->subject_name);
+                                        $isSpecial = str_contains(strtolower($sched->subject_name), 'transition') || 
+                                                     str_contains(strtolower($sched->subject_name), 'recess') || 
+                                                     str_contains(strtolower($sched->subject_name), 'break') || 
+                                                     str_contains(strtolower($sched->subject_name), 'general assembly') ||
+                                                     str_contains(strtolower($sched->subject_name), 'homeroom');
+                                        $rawTeacher = $isSpecial ? '—' : (!empty($sched->teacher_display) ? $sched->teacher_display : ($subj ? $subj->teacher_name : null));
+                                        $currentTeacherName = $formatTeacherName($rawTeacher);
+                                        $timeStr = date('g:i A', strtotime($sched->start_time)) . ' - ' . date('g:i A', strtotime($sched->end_time));
+                                        $isLive = false;
+                                        $isEnded = false;
+                                        if ($isSchoolDay) {
+                                            $startTime = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $nowManila->format('Y-m-d') . ' ' . $sched->start_time, 'Asia/Manila');
+                                            $endTime = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $nowManila->format('Y-m-d') . ' ' . $sched->end_time, 'Asia/Manila');
+                                            if ($nowManila->between($startTime, $endTime)) {
+                                                $isLive = true;
+                                            } elseif ($nowManila->greaterThan($endTime)) {
+                                                $isEnded = true;
+                                            }
+                                        }
                                     @endphp
-                                    <div style="display: flex; flex-direction: column;">
-                                        @if($item)
-                                            @php
-                                                $style = $getSubjectStyle($item->subject_name);
-                                                $subj = $subjects->firstWhere('subject_name', $item->subject_name);
-                                                $rawTeacher = !empty($item->teacher_display) ? $item->teacher_display : ($subj ? $subj->teacher_name : null);
-                                                $tName = $formatTeacherName($rawTeacher);
-                                            @endphp
-                                            <div class="dash-calendar-card" style="background: {{ $style['bg'] }}; border: 1px solid {{ $style['border'] }}; color: {{ $style['text'] }};">
-                                                <span style="font-size: 0.825rem; font-weight: 800; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                                                    {{ $item->subject_name }}
-                                                </span>
-                                                <span style="font-size: 0.72rem; font-weight: 600; opacity: 0.85; margin-top: 0.2rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                                                    {{ $tName }}
-                                                </span>
+                                    <div class="s-table-row" @if($isEnded) x-show="showEnded" x-transition.opacity.duration.150ms @endif @if($isLive) @click="countdownOpen = !countdownOpen" @endif style="grid-template-columns: 1.8fr 1.2fr 1.3fr; padding: 1rem 1.25rem; align-items: center; border-bottom: 1px solid #f1f5f9; position: relative; {{ $isEnded ? 'opacity: 0.55; background: #f8fafc;' : '' }} {{ $isLive ? 'cursor:pointer;' : '' }}">
+                                        @if($isLive)
+                                            <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: #10b981; border-top-left-radius: 4px; border-bottom-left-radius: 4px;"></div>
+                                        @endif
+                                        <div style="display:flex;align-items:center;gap:0.75rem;min-width:0;">
+                                            <div style="width:8px;height:8px;border-radius:50%;background:{{ $isEnded ? '#94a3b8' : $c }};flex-shrink:0;box-shadow: 0 0 0 3px {{ $isEnded ? '#f1f5f9' : $bg }};"></div>
+                                            <span class="s-table-cell-subject" style="font-weight: 800; color: {{ $isEnded ? '#64748b' : '#0f172a' }}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; {{ $isEnded ? 'text-decoration: line-through;' : '' }}">
+                                                {{ $sched->subject_name }}
+                                                @if($isEnded)
+                                                    <span style="font-size:0.6rem;font-weight:850;color:#64748b;background:#f1f5f9;border:1px solid #cbd5e1;padding:0.1rem 0.35rem;border-radius:5px;text-transform:uppercase;margin-left:0.35rem;display:inline-block;">Ended</span>
+                                                @endif
+                                            </span>
+                                            @if($isLive)
+                                                <i data-lucide="chevron-down" style="width:15px;height:15px;color:#059669;flex-shrink:0;transition:transform .2s;" :style="countdownOpen ? 'transform:rotate(180deg)' : ''"></i>
+                                            @endif
+                                        </div>
+                                        <div style="display:flex;align-items:center;gap:0.5rem;min-width:0;">
+                                            <span class="s-table-cell-teacher" style="font-weight: 750; color: {{ $isEnded ? '#94a3b8' : '#475569' }}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $currentTeacherName }}</span>
+                                        </div>
+                                        
+                                        <div class="s-table-cell-schedule" style="color:{{ $isEnded ? '#94a3b8' : '#0d9488' }}; font-weight:800; white-space: nowrap; font-size: 0.78rem;">
+                                            <div style="display:flex;align-items:center;gap:0.3rem;">
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                                <span style="letter-spacing: -0.01em;">{{ $timeStr }}</span>
                                             </div>
+                                        </div>
+                                    </div>
+                                    @if($isLive)
+                                        <section x-show="countdownOpen" x-transition.opacity.duration.150ms class="class-countdown-banner class-countdown-inline" aria-live="polite">
+                                            <div class="class-countdown-icon"><i data-lucide="timer"></i></div>
+                                            <div class="class-countdown-copy">
+                                                <p class="class-countdown-label">Class in progress · ends in</p>
+                                                <h2 x-text="activeClass?.subject ?? @js($sched->subject_name)"></h2>
+                                                <p><span x-text="activeClass?.teacher ?? @js($currentTeacherName)"></span> · {{ $timeStr }}</p>
+                                            </div>
+                                            <div class="class-countdown-clock"><strong x-text="remaining">--:--</strong><span>remaining</span></div>
+                                        </section>
+                                    @endif
+                                @endforeach
+                            @else
+                                <div class="s-empty-card" style="padding: 3.5rem 1.5rem; text-align:center;">
+                                    <div class="s-empty-icon-wrapper" style="background: #f0fdfa; display:inline-flex; align-items:center; justify-content:center; width:48px; height:48px; border-radius:50%; margin-bottom: 0.75rem;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0d9488" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                    </div>
+                                    <h3 class="s-empty-title" style="font-size: 1.15rem; font-weight:800; color:#1e293b; margin:0 0 0.25rem;">No classes scheduled for today.</h3>
+                                    <p class="s-empty-text" style="font-size: 0.85rem; color:#64748b; max-width: 340px; margin: 0 auto 1.25rem auto; line-height: 1.5;">
+                                        @if(in_array($todayName, ['Friday', 'Saturday']))
+                                            Happy weekend! Enjoy your rest and recharge time. ☀️
                                         @else
-                                            <div style="height: 100%; min-height: 72px; background: #f8fafc; border: 1px dashed #e2e8f0; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #cbd5e1; font-size: 0.8rem;">
-                                                —
-                                            </div>
+                                            You have no classes scheduled for today. Happy studying! 🎈
+                                        @endif
+                                    </p>
+                                    <a href="{{ route('student.schedule') }}" style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.8125rem; font-weight: 700; color: #059669; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 0.5rem 1rem; border-radius: 10px; text-decoration: none;">
+                                        <span>View Full Schedule</span>
+                                        <i data-lucide="arrow-right" style="width: 13px; height: 13px;"></i>
+                                    </a>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
+                {{-- 2. Recent Announcements Section --}}
+                <div class="fade-up" style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 20px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1.25rem; padding-bottom: 0.85rem; border-bottom: 1px solid #f1f5f9;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <div style="width: 32px; height: 32px; border-radius: 9px; background: #fef3c7; display: flex; align-items: center; justify-content: center; color: #d97706;">
+                                <i data-lucide="megaphone" style="width: 17px; height: 17px;"></i>
+                            </div>
+                            <div>
+                                <h3 style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin: 0; line-height: 1.2;">Recent Announcements</h3>
+                                <span style="font-size: 0.78rem; color: #64748b; font-weight: 600;">School notices, advisories, and official updates</span>
+                            </div>
+                        </div>
+
+                        <a href="{{ route('student.announcements') }}" style="font-size: 0.78rem; font-weight: 700; color: #059669; text-decoration: none; display: inline-flex; align-items: center; gap: 0.3rem; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 0.45rem 0.85rem; border-radius: 9px; transition: all 0.15s ease;">
+                            <span>View All Announcements</span>
+                            <i data-lucide="arrow-right" style="width: 13px; height: 13px;"></i>
+                        </a>
+                    </div>
+
+                    {{-- Announcement Card List --}}
+                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                        @php
+                            $recentAnnouncements = collect($announcements)->take(3);
+                        @endphp
+                        @forelse($recentAnnouncements as $announcement)
+                            @php
+                                $toneColors = [
+                                    'emerald' => ['#059669', '#ecfdf5', '#a7f3d0'],
+                                    'sky' => ['#0284c7', '#f0f9ff', '#bae6fd'],
+                                    'amber' => ['#d97706', '#fffbeb', '#fde68a']
+                                ];
+                                $tc = $toneColors[$announcement['tone']] ?? $toneColors['emerald'];
+                            @endphp
+                            <a href="{{ route('student.announcements') }}" style="text-decoration:none; padding:1.15rem; border-radius:14px; background:#f8fafc; border:1px solid #e2e8f0; display:flex; flex-direction:column; gap:0.5rem; transition:all 0.18s ease;"
+                               onmouseover="this.style.borderColor='#cbd5e1';this.style.background='#ffffff';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.05)'; this.style.transform='translateY(-1px)'"
+                               onmouseout="this.style.borderColor='#e2e8f0';this.style.background='#f8fafc';this.style.boxShadow='none'; this.style.transform='none'">
+                                
+                                <div style="display:flex; align-items:center; justify-content:space-between; gap:0.5rem;">
+                                    <div style="display:flex; align-items:center; gap:0.4rem;">
+                                        <span style="font-size:0.68rem; font-weight:800; color:{{ $tc[0] }}; background:{{ $tc[1] }}; border:1px solid {{ $tc[2] }}; padding:0.15rem 0.5rem; border-radius:6px; text-transform:uppercase; letter-spacing:0.04em;">
+                                            {{ $announcement['type'] }}
+                                        </span>
+                                        @if(!$announcement['is_read'])
+                                            <span style="font-size:0.62rem; font-weight:800; color:white; background:#ef4444; padding:0.12rem 0.4rem; border-radius:5px; text-transform:uppercase; letter-spacing:0.03em;">
+                                                NEW
+                                            </span>
                                         @endif
                                     </div>
-                                @endforeach
+                                    <span style="font-size:0.75rem; font-weight:600; color:#64748b;">
+                                        {{ $announcement['date'] }}
+                                    </span>
+                                </div>
+
+                                <h4 style="font-size:0.95rem; font-weight:800; color:#0f172a; margin:0.15rem 0 0 0; line-height:1.35;">
+                                    {{ $announcement['title'] }}
+                                </h4>
+
+                                <p style="font-size:0.8125rem; font-weight:400; color:#475569; margin:0; line-height:1.5; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">
+                                    {{ $announcement['summary'] }}
+                                </p>
+
+                                <div style="display:flex; align-items:center; justify-content:space-between; font-size:0.72rem; font-weight:700; color:#059669; padding-top:0.45rem; margin-top:0.25rem; border-top:1px solid #f1f5f9;">
+                                    <span>Read announcement →</span>
+                                    <span style="color:#94a3b8; font-weight:600; display:inline-flex; align-items:center; gap:0.25rem;">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                                        <span>{{ $announcement['total_views'] }} views</span>
+                                    </span>
+                                </div>
+                            </a>
+                        @empty
+                            <div style="text-align:center; padding:2rem 1.5rem; color:#64748b; font-weight:600; font-size:0.85rem; background:#f8fafc; border-radius:14px; border:1px dashed #cbd5e1;">
+                                No announcements posted at this time.
                             </div>
-                        @endforeach
+                        @endforelse
                     </div>
                 </div>
 
-                {{-- Mobile Day-by-Day View --}}
-                <div class="block sm:hidden" x-data="{ weeklyActiveDay: '{{ in_array($todayName, $weeklyDaysList) ? $todayName : 'Sunday' }}' }">
-                    <div style="display: flex; gap: 0.35rem; overflow-x: auto; padding-bottom: 0.5rem; margin-bottom: 0.75rem;">
-                        @foreach($weeklyDaysList as $dayName)
-                            <button type="button" 
-                                    @click="weeklyActiveDay = '{{ $dayName }}'"
-                                    :style="weeklyActiveDay === '{{ $dayName }}' ? 'background: #059669; color: white; font-weight: 800;' : 'background: #f1f5f9; color: #475569; font-weight: 600;'"
-                                    style="flex: 1; padding: 0.45rem 0.5rem; border-radius: 8px; border: none; font-size: 0.78rem; cursor: pointer; text-align: center; white-space: nowrap;">
-                                {{ substr($dayName, 0, 3) }}
-                            </button>
-                        @endforeach
-                    </div>
-
-                    @foreach($weeklyDaysList as $dayName)
-                        <div x-show="weeklyActiveDay === '{{ $dayName }}'" style="display: flex; flex-direction: column; gap: 0.65rem;">
-                            @forelse($weeklyGrouped[$dayName] as $item)
-                                @php
-                                    $style = $getSubjectStyle($item->subject_name);
-                                    $subj = $subjects->firstWhere('subject_name', $item->subject_name);
-                                    $rawTeacher = !empty($item->teacher_display) ? $item->teacher_display : ($subj ? $subj->teacher_name : null);
-                                    $tName = $formatTeacherName($rawTeacher);
-                                    $timeStr = date('g:i A', strtotime($item->start_time)) . ' - ' . date('g:i A', strtotime($item->end_time));
-                                @endphp
-                                <div style="background: {{ $style['bg'] }}; border: 1px solid {{ $style['border'] }}; color: {{ $style['text'] }}; padding: 0.85rem; border-radius: 12px; display: flex; justify-content: space-between; align-items: center;">
-                                    <div>
-                                        <h4 style="font-size: 0.9rem; font-weight: 800; margin: 0;">{{ $item->subject_name }}</h4>
-                                        <p style="font-size: 0.78rem; font-weight: 600; opacity: 0.85; margin: 0.15rem 0 0 0;">{{ $tName }}</p>
-                                    </div>
-                                    <span style="font-size: 0.75rem; font-weight: 800; white-space: nowrap;">{{ $timeStr }}</span>
-                                </div>
-                            @empty
-                                <div style="text-align: center; padding: 1.5rem; color: #94a3b8; font-weight: 600; font-size: 0.825rem; background: #f8fafc; border-radius: 12px;">
-                                    No classes on {{ $dayName }}.
-                                </div>
-                            @endforelse
-                        </div>
-                    @endforeach
-                </div>
-            @else
-                <div style="text-align: center; padding: 2rem; color: #94a3b8; font-weight: 600; font-size: 0.875rem;">
-                    No weekly timetable records available.
-                </div>
-            @endif
-        </div>
-
-    </div>
-
-    {{-- ── TAB 2: ANNOUNCEMENTS CONTENT ──────────────────────────────── --}}
-    <div x-show="activeTab === 'announcements'" x-cloak x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" style="display: flex; flex-direction: column; gap: 1.5rem; width: 100%;">
-        <div style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 20px; padding: 1.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-            
-            {{-- Announcements Header --}}
-            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; padding-bottom: 1.25rem; border-bottom: 1px solid #f1f5f9;">
-                <div style="display: flex; align-items: center; gap: 0.75rem;">
-                    <div style="width: 38px; height: 38px; border-radius: 12px; background: #fef3c7; display: flex; align-items: center; justify-content: center; color: #d97706; flex-shrink: 0;">
-                        <i data-lucide="megaphone" style="width: 20px; height: 20px;"></i>
-                    </div>
-                    <div>
-                        <h3 style="font-size: 1.25rem; font-weight: 800; color: #0f172a; margin: 0; line-height: 1.2;">School Announcements</h3>
-                        <p style="font-size: 0.825rem; color: #64748b; margin: 0.2rem 0 0 0; font-weight: 500;">Official notices, advisories, academic schedules, and school memoranda</p>
-                    </div>
-                </div>
-
-                <a href="{{ route('student.announcements') }}" style="font-size: 0.8125rem; font-weight: 700; color: #059669; text-decoration: none; display: inline-flex; align-items: center; gap: 0.35rem; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 0.5rem 1rem; border-radius: 10px; transition: all 0.15s ease;" onmouseover="this.style.background='#d1fae5'" onmouseout="this.style.background='#ecfdf5'">
-                    <span>View All Announcements</span>
-                    <i data-lucide="arrow-right" style="width: 14px; height: 14px;"></i>
-                </a>
             </div>
 
-            {{-- Announcements List Grid --}}
-            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.25rem;">
-                @forelse($announcements as $announcement)
-                    @php
-                        $toneColors = [
-                            'emerald' => ['#059669', '#ecfdf5', '#a7f3d0'],
-                            'sky' => ['#0284c7', '#f0f9ff', '#bae6fd'],
-                            'amber' => ['#d97706', '#fffbeb', '#fde68a']
-                        ];
-                        $tc = $toneColors[$announcement['tone']] ?? $toneColors['emerald'];
-                    @endphp
-                    <a href="{{ route('student.announcements') }}" style="text-decoration:none; padding:1.25rem; border-radius:16px; background:#f8fafc; border:1px solid #e2e8f0; display:flex; flex-direction:column; justify-content:space-between; gap:0.75rem; transition:all 0.2s ease;"
-                       onmouseover="this.style.borderColor='#cbd5e1';this.style.background='#ffffff';this.style.boxShadow='0 6px 18px rgba(0,0,0,0.06)'; this.style.transform='translateY(-2px)'"
-                       onmouseout="this.style.borderColor='#e2e8f0';this.style.background='#f8fafc';this.style.boxShadow='none'; this.style.transform='none'">
-                        
-                        <div style="display:flex; flex-direction:column; gap:0.65rem;">
-                            <div style="display:flex; align-items:center; justify-content:space-between; gap:0.5rem;">
-                                <div style="display:flex; align-items:center; gap:0.4rem;">
-                                    <span style="font-size:0.68rem; font-weight:800; color:{{ $tc[0] }}; background:{{ $tc[1] }}; border:1px solid {{ $tc[2] }}; padding:0.2rem 0.6rem; border-radius:6px; text-transform:uppercase; letter-spacing:0.04em;">
-                                        {{ $announcement['type'] }}
-                                    </span>
-                                    @if(!$announcement['is_read'])
-                                        <span style="font-size:0.62rem; font-weight:800; color:white; background:#ef4444; padding:0.15rem 0.45rem; border-radius:6px; text-transform:uppercase; letter-spacing:0.03em;">
-                                            NEW
-                                        </span>
-                                    @endif
-                                </div>
-                                <span style="font-size:0.75rem; font-weight:600; color:#64748b; white-space:nowrap;">
-                                    {{ $announcement['date'] }}
-                                </span>
+            {{-- RIGHT SIDE COLUMN: Account Balance / SOA Financial Summary --}}
+            <div style="display: flex; flex-direction: column; gap: 1.5rem; min-width: 0;">
+
+                {{-- Account Balance Card --}}
+                <div class="fade-up" style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 20px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 1.25rem;">
+                    
+                    {{-- Card Header --}}
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 0.85rem; border-bottom: 1px solid #f1f5f9;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <div style="width: 32px; height: 32px; border-radius: 9px; background: #ecfdf5; display: flex; align-items: center; justify-content: center; color: #059669;">
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 5H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Z"/><path d="M16 12h.01"/></svg>
                             </div>
-
-                            <h4 style="font-size:1rem; font-weight:800; color:#0f172a; margin:0; line-height:1.35; letter-spacing:-0.01em;">
-                                {{ $announcement['title'] }}
-                            </h4>
-
-                            <p style="font-size:0.825rem; font-weight:400; color:#475569; margin:0; line-height:1.55;">
-                                {{ $announcement['summary'] }}
-                            </p>
+                            <h3 style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin: 0;">Account Balance</h3>
                         </div>
+                        <span style="font-size: 0.72rem; font-weight: 700; color: #64748b; background: #f1f5f9; padding: 0.2rem 0.55rem; border-radius: 6px;">
+                            SY {{ $student?->school_year ?? '2026–2027' }}
+                        </span>
+                    </div>
 
-                        <div style="display:flex; align-items:center; justify-content:space-between; font-size:0.72rem; font-weight:600; color:#94a3b8; padding-top:0.75rem; border-top:1px solid #f1f5f9;">
-                            <span style="color: #059669; font-weight: 700;">Read announcement →</span>
-                            <span style="display:inline-flex; align-items:center; gap:0.25rem;">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                                <span>{{ $announcement['total_views'] }} views</span>
+                    {{-- Main Balance Banner --}}
+                    <div style="background: linear-gradient(135deg, #064e3b 0%, #047857 70%, #0d9488 100%); border-radius: 16px; padding: 1.25rem; color: #ffffff; display: flex; flex-direction: column; gap: 0.65rem; position: relative; overflow: hidden;">
+                        <div style="position: absolute; right: -15px; bottom: -15px; width: 100px; height: 100px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,0.12), transparent 70%); pointer-events: none;"></div>
+                        
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 0.75rem; font-weight: 700; color: #a7f3d0; text-transform: uppercase; letter-spacing: 0.05em;">Remaining Balance</span>
+                            @php
+                                $statusStyle = match($soaAccountStatus) {
+                                    'Paid' => ['bg' => '#10b981', 'text' => '#ffffff'],
+                                    'Partially Paid' => ['bg' => '#f59e0b', 'text' => '#ffffff'],
+                                    'Unpaid' => ['bg' => '#ef4444', 'text' => '#ffffff'],
+                                    default => ['bg' => 'rgba(255,255,255,0.2)', 'text' => '#ffffff']
+                                };
+                            @endphp
+                            <span style="font-size: 0.68rem; font-weight: 800; background: {{ $statusStyle['bg'] }}; color: {{ $statusStyle['text'] }}; padding: 0.15rem 0.55rem; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.03em;">
+                                {{ $soaAccountStatus }}
                             </span>
                         </div>
-                    </a>
-                @empty
-                    <div style="grid-column: 1 / -1; text-align:center; padding:3.5rem 1.5rem; color:#64748b; font-weight:600; font-size:0.875rem; background:#f8fafc; border-radius:16px; border:1px dashed #cbd5e1;">
-                        <div style="width:44px; height:44px; border-radius:50%; background:#f1f5f9; display:inline-flex; align-items:center; justify-content:center; margin-bottom:0.75rem; color:#94a3b8;">
-                            <i data-lucide="bell-off" style="width:22px; height:22px;"></i>
+
+                        <div style="font-size: 1.65rem; font-weight: 900; line-height: 1.1; letter-spacing: -0.02em;">
+                            <small style="font-size: 0.95rem; font-weight: 700; opacity: 0.85;">PHP</small>
+                            {{ number_format($soaRemaining, 2) }}
                         </div>
-                        <h4 style="font-size:1.05rem; font-weight:800; color:#1e293b; margin:0 0 0.25rem;">No Announcements at this time</h4>
-                        <p style="font-size:0.825rem; color:#64748b; margin:0;">Check back later for school updates and official advisories.</p>
+
+                        {{-- Progress bar --}}
+                        <div style="margin-top: 0.25rem;">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.68rem; font-weight: 700; color: #d1fae5; margin-bottom: 0.25rem;">
+                                <span>{{ round($soaProgress) }}% Paid</span>
+                                <span>PHP {{ number_format($soaPaid, 2) }} of {{ number_format($soaTotal, 2) }}</span>
+                            </div>
+                            <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.2); border-radius: 999px; overflow: hidden;">
+                                <div style="height: 100%; width: {{ $soaProgress }}%; background: #34d399; border-radius: 999px;"></div>
+                            </div>
+                        </div>
                     </div>
-                @endforelse
+
+                    {{-- Financial Breakdown List --}}
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.65rem; border-bottom: 1px dashed #f1f5f9;">
+                            <span style="font-size: 0.8rem; font-weight: 600; color: #64748b;">Latest Payment</span>
+                            <span style="font-size: 0.825rem; font-weight: 800; color: #0f172a;">
+                                @if($latestPayment)
+                                    PHP {{ number_format($latestPayment->amount, 2) }} <span style="font-size: 0.72rem; color: #64748b; font-weight: 600;">({{ \Carbon\Carbon::parse($latestPayment->payment_date)->format('M d, Y') }})</span>
+                                @else
+                                    <span style="color: #94a3b8; font-weight: 600;">No recent payments</span>
+                                @endif
+                            </span>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.65rem; border-bottom: 1px dashed #f1f5f9;">
+                            <span style="font-size: 0.8rem; font-weight: 600; color: #64748b;">Next Due Date</span>
+                            <span style="font-size: 0.825rem; font-weight: 800; color: #0f172a;">
+                                @if($soaNextBilling)
+                                    {{ $soaNextBilling->due_date->format('M d, Y') }}
+                                @else
+                                    <span style="color: #059669; font-weight: 700;">No pending due</span>
+                                @endif
+                            </span>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 0.8rem; font-weight: 600; color: #64748b;">Installments</span>
+                            <span style="font-size: 0.825rem; font-weight: 800; color: #0f172a;">
+                                {{ $soaPaidInstallments }} paid of {{ $billings->count() ?: 0 }}
+                            </span>
+                        </div>
+                    </div>
+
+                    {{-- Action CTA --}}
+                    <div style="margin-top: 0.25rem;">
+                        <a href="{{ route('student.billing') }}" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.45rem; padding: 0.75rem 1rem; border-radius: 12px; background: #059669; color: #ffffff; font-size: 0.875rem; font-weight: 700; text-decoration: none; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.2); transition: all 0.15s ease;"
+                           onmouseover="this.style.background='#047857'; this.style.boxShadow='0 6px 16px rgba(5,150,105,0.3)';"
+                           onmouseout="this.style.background='#059669'; this.style.boxShadow='0 4px 12px rgba(5, 150, 105, 0.2)';">
+                            <span>View Statement of Account</span>
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                        </a>
+                    </div>
+                </div>
+
             </div>
+
         </div>
+
     </div>
 
-    {{-- ── TAB 3: PERSONAL INFORMATION CONTENT ────────────────────────── --}}
+    {{-- ── TAB 2: PERSONAL INFORMATION CONTENT ────────────────────────── --}}
     <div x-show="activeTab === 'profile'" x-cloak x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" style="display: flex; flex-direction: column; gap: 1.5rem; width: 100%;">
         
         {{-- Responsive 2-Column Info Grid --}}
@@ -1296,7 +1179,7 @@
 
                     <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.75rem; border-bottom: 1px dashed #f1f5f9;">
                         <span style="font-size: 0.825rem; font-weight: 600; color: #64748b;">Password</span>
-                        <span style="font-size: 0.825rem; font-weight: 700; color: #64748b; font-family: monospace;">Managed through M365</span>
+                        <span style="font-size: 0.825rem; font-weight: 700; color: #64748b; font-family: monospace;">Password managed through Microsoft 365</span>
                     </div>
 
                     {{-- Actions --}}
