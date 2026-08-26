@@ -690,79 +690,68 @@
     <div style="display:flex;flex-direction:column;gap:1.5rem;" class="fade-up">
 
         {{-- Announcement Card --}}
-        <div class="s-quick-actions-card">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
-                <h3 class="s-quick-actions-title" style="margin-bottom:0 !important;">Announcement</h3>
+        <div class="s-quick-actions-card" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:1.25rem; box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.15rem;padding-bottom:0.75rem;border-bottom:1px solid #f1f5f9;">
+                <div style="display:flex;align-items:center;gap:0.6rem;">
+                    <div style="width:34px;height:34px;border-radius:10px;background:#fef3c7;display:flex;align-items:center;justify-content:center;color:#d97706;">
+                        <i data-lucide="megaphone" style="width:17px;height:17px;"></i>
+                    </div>
+                    <div>
+                        <h3 class="s-quick-actions-title" style="margin:0 !important; font-size:1.05rem; font-weight:800; color:#0f172a; line-height:1.2;">Announcements</h3>
+                        <p style="margin:0; font-size:0.75rem; color:#64748b; font-weight:600;">School notices & updates</p>
+                    </div>
+                </div>
+                <a href="{{ route('student.announcements') }}" style="font-size:0.75rem;font-weight:800;color:#059669;text-decoration:none;display:inline-flex;align-items:center;gap:0.25rem;background:#ecfdf5;padding:0.35rem 0.65rem;border-radius:8px;transition:all 0.15s ease;">
+                    <span>View all</span>
+                    <i data-lucide="arrow-right" style="width:12px;height:12px;"></i>
+                </a>
             </div>
             
-            <div style="display:flex;flex-direction:column;gap:1rem;">
-                @forelse(array_slice($announcements, 0, 3) as $announcement)
+            <div style="display:flex;flex-direction:column;gap:0.85rem;">
+                @forelse(array_slice($announcements, 0, 4) as $announcement)
                     @php
                         $toneColors = [
-                            'emerald' => ['#059669', '#ecfdf5'],
-                            'sky' => ['#0ea5e9', '#f0f9ff'],
-                            'amber' => ['#d97706', '#fffbeb']
+                            'emerald' => ['#059669', '#ecfdf5', '#a7f3d0'],
+                            'sky' => ['#0284c7', '#f0f9ff', '#bae6fd'],
+                            'amber' => ['#d97706', '#fffbeb', '#fde68a']
                         ];
                         $tc = $toneColors[$announcement['tone']] ?? $toneColors['emerald'];
                     @endphp
-                    <div style="padding: 1rem; border-radius: 12px; background: #f8fafc; border: 1.5px solid #e2e8f0; display:flex; flex-direction:column; gap:0.5rem;">
-                        <div style="display:flex; align-items:center; justify-content: space-between;">
-                            <div style="display:flex; align-items:center; gap:0.375rem;">
-                                <span style="font-size: 0.75rem; font-weight: 850; color: {{ $tc[0] }}; background: {{ $tc[1] }}; padding: 0.2rem 0.5rem; border-radius: 6px; text-transform: uppercase;">
+                    <a href="{{ route('student.announcements') }}" style="text-decoration:none; padding:1.1rem; border-radius:12px; background:#f8fafc; border:1px solid #e2e8f0; display:flex; flex-direction:column; gap:0.55rem; transition:all 0.2s ease;"
+                       onmouseover="this.style.borderColor='#cbd5e1';this.style.background='#ffffff';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.06)';this.style.transform='translateY(-1px)';"
+                       onmouseout="this.style.borderColor='#e2e8f0';this.style.background='#f8fafc';this.style.boxShadow='none';this.style.transform='none';">
+                        <div style="display:flex; align-items:center; justify-content:space-between; gap:0.5rem; flex-wrap:nowrap;">
+                            <div style="display:flex; align-items:center; gap:0.35rem; flex-shrink:0;">
+                                <span style="font-size:0.68rem; font-weight:800; color:{{ $tc[0] }}; background:{{ $tc[1] }}; border:1px solid {{ $tc[2] }}; padding:0.15rem 0.5rem; border-radius:6px; text-transform:uppercase; letter-spacing:0.03em;">
                                     {{ $announcement['type'] }}
                                 </span>
                                 @if(!$announcement['is_read'])
-                                    <span style="font-size: 0.65rem; font-weight: 850; color: white; background: #ef4444; padding: 0.15rem 0.4rem; border-radius: 5px; text-transform: uppercase; letter-spacing: 0.03em;">
-                                        New
+                                    <span style="font-size:0.62rem; font-weight:900; color:white; background:#ef4444; padding:0.12rem 0.4rem; border-radius:5px; text-transform:uppercase; letter-spacing:0.03em;">
+                                        NEW
                                     </span>
                                 @endif
                             </div>
-                            <span style="font-size: 0.75rem; font-weight: 700; color: #64748b; display:inline-flex; align-items:center; gap:0.375rem;">
+                            <div style="font-size:0.72rem; font-weight:700; color:#64748b; display:inline-flex; align-items:center; gap:0.45rem; flex-shrink:0; white-space:nowrap;">
                                 <span>{{ $announcement['date'] }}</span>
-                                <span style="display:inline-flex; align-items:center; gap:0.15rem;">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:#94a3b8; vertical-align:middle;"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                                <span style="display:inline-flex; align-items:center; gap:0.15rem; color:#94a3b8;">
+                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
                                     {{ $announcement['total_views'] }}
                                 </span>
-                            </span>
+                            </div>
                         </div>
-                        <h4 style="font-size: 0.95rem; font-weight: 850; color: #0f172a; margin: 0; line-height: 1.3;">
+                        <h4 style="font-size:0.9rem; font-weight:800; color:#0f172a; margin:0; line-height:1.35; letter-spacing:-0.01em;">
                             {{ $announcement['title'] }}
                         </h4>
-                        <p style="font-size: 0.85rem; font-weight: 650; color: #475569; margin: 0; line-height: 1.5;">
+                        <p style="font-size:0.78rem; font-weight:500; color:#475569; margin:0; line-height:1.5;">
                             {{ $announcement['summary'] }}
                         </p>
-                    </div>
+                    </a>
                 @empty
-                    <div style="text-align:center;padding:1.5rem;color:#475569;font-weight:700;font-size:0.9rem;">
+                    <div style="text-align:center;padding:2rem 1rem;color:#64748b;font-weight:600;font-size:0.85rem;background:#f8fafc;border-radius:12px;border:1px dashed #cbd5e1;">
                         No announcements yet.
                     </div>
                 @endforelse
             </div>
-        </div>
-
-        {{-- Digital Student ID Card --}}
-        <div class="s-quick-actions-card" style="background: linear-gradient(135deg, #0d9488 0%, #115e59 100%); color: white; border: none; padding: 1.5rem; position: relative; overflow: hidden; border-radius: 20px; box-shadow: 0 10px 25px -5px rgba(13, 148, 136, 0.3);">
-            {{-- Subtle background decoration --}}
-            <div style="position: absolute; right: -20px; bottom: -20px; width: 120px; height: 120px; border-radius: 50%; background: rgba(255, 255, 255, 0.08); pointer-events: none;"></div>
-            
-            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
-                <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(255, 255, 255, 0.15); display: flex; align-items: center; justify-content: center; color: white;">
-                    <i data-lucide="contact" style="width: 20px; height: 20px;"></i>
-                </div>
-                <h3 style="font-size: 1.15rem; font-weight: 850; color: white; margin: 0; letter-spacing: -0.01em;">Digital Student ID</h3>
-            </div>
-            
-            <p style="font-size: 0.85rem; font-weight: 600; line-height: 1.5; color: rgba(255, 255, 255, 0.9); margin: 0 0 1.25rem;">
-                Use Digital ID? Can't find your physical ID card? Instantly access your official digital student ID.
-            </p>
-            
-            <a href="{{ route('student.digital-id') }}"
-               style="display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem; font-size: 0.75rem; font-weight: 850; color: #0f766e; background: white; border: none; padding: 0.55rem 1.15rem; border-radius: 10px; text-decoration: none; width: 100%; text-align: center; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); transition: all 0.2s; cursor: pointer;"
-               onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 15px rgba(0, 0, 0, 0.15)';"
-               onmouseout="this.style.transform='none';this.style.boxShadow='0 4px 12px rgba(0, 0, 0, 0.1)';">
-                <i data-lucide="qr-code" style="width: 14px; height: 14px;"></i>
-                <span>View Verified Digital ID</span>
-            </a>
         </div>
 
     </div>
