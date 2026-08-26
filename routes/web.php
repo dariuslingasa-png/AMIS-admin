@@ -38,12 +38,14 @@ Route::middleware(['auth', 'student'])->group(function () {
     })->name('student.tester-override-section');
 
     Route::get('/dashboard', [StudentDashboardController::class, 'index'])->name('student.dashboard');
+    Route::get('/digital-id', [StudentDashboardController::class, 'digitalId'])->name('student.digital-id');
     Route::post('/dashboard/sync-teams', [StudentDashboardController::class, 'syncTeams'])->name('student.sync-teams');
     Route::get('/soa',       [StudentPaymentController::class, 'billing'])->name('student.billing');
     Route::post('/soa/pay',  [StudentPaymentController::class, 'submitPayment'])->name('student.billing.pay');
     Route::post('/soa/ocr-scan', [StudentPaymentController::class, 'ocrScan'])->name('student.billing.ocr');
     
     Route::get('/announcements', [StudentDashboardController::class, 'announcements'])->name('student.announcements');
+    Route::get('/calendar',      [StudentScheduleController::class, 'schedule'])->name('student.calendar');
     Route::get('/schedule',      [StudentScheduleController::class, 'schedule'])->name('student.schedule');
     Route::get('/teachers',      [StudentTeacherController::class, 'teachers'])->name('student.teachers');
     Route::get('/grades',        [StudentDashboardController::class, 'grades'])->name('student.grades');

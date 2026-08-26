@@ -1,244 +1,311 @@
 <x-student-layout title="Statement of Account">
-<div class="space-y-8" x-data="paymentWizard()" x-cloak>
+@php
+    $soaTotal = (float) ($account->total_balance ?? 0);
+    $soaPaid = (float) ($account->amount_paid ?? 0);
+    $soaRemaining = (float) ($account->remaining_balance ?? 0);
+    $soaProgress = $soaTotal > 0 ? min(100, max(0, ($soaPaid / $soaTotal) * 100)) : 0;
+    $soaPaidInstallments = $billings->where('status', 'paid')->count();
+    $soaUnpaidInstallments = $billings->where('status', 'unpaid');
+    $soaOverdueCount = $soaUnpaidInstallments->filter(fn ($billing) => $billing->due_date->isPast())->count();
+    $soaNextBilling = $soaUnpaidInstallments->sortBy('due_date')->first();
+    $soaAccountStatus = !$account
+        ? 'Unavailable'
+        : ($soaRemaining <= 0 ? 'Fully paid' : ($soaPaid > 0 ? 'Payment ongoing' : 'Payment due'));
+@endphp
+
+<div class="soa-page"
+     x-data="paymentWizard()"
+     x-init="$watch('openPaymentModal', value => document.body.classList.toggle('student-modal-open', value)); initializeModal()">
     <!-- Validation Errors Display -->
     @if ($errors->any())
-        <div class="bg-rose-50 border border-rose-100 rounded-xl p-4 text-xs text-rose-700 font-semibold space-y-1">
-            <p class="font-extrabold uppercase tracking-wider mb-1">Payment Submission Failed:</p>
-            <ul class="list-disc pl-4 space-y-1">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
+        <div class="soa-alert soa-alert--error" role="alert">
+            <span class="soa-alert__icon"><i data-lucide="circle-alert"></i></span>
+            <div>
+                <strong>Payment submission needs attention</strong>
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
         </div>
     @endif
 
-    <!-- Top Summary Banner -->
-    <div class="student-panel flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
-        <div class="space-y-2 relative z-10">
-            <span class="student-status-pill">
-                <i data-lucide="credit-card" class="w-3.5 h-3.5 mr-1 text-emerald-600"></i> Statement of Account
-            </span>
-            <h2 class="text-2xl font-black text-gray-900" style="margin: 8px 0 4px;">Tuition & School Fees Overview</h2>
-            <p class="text-gray-500 text-sm font-semibold">Keep track of school dues, review monthly plans, and upload new payment screenshots.</p>
-        </div>
-
-        <div class="flex gap-4 relative z-10">
-            <!-- Outstanding Box -->
-            <div class="bg-emerald-50 border border-emerald-100 p-4 rounded-xl text-center min-w-[150px]">
-                <p class="text-[10px] text-emerald-800 font-bold uppercase tracking-wider">Remaining Balance</p>
-                <p class="text-xl font-black text-gray-900 mt-1">
-                    PHP {{ number_format((float) ($account->remaining_balance ?? 0), 2) }}
-                </p>
-            </div>
-
-            <!-- Paid Box -->
-            <div class="bg-emerald-50 border border-emerald-100 p-4 rounded-xl text-center min-w-[150px]">
-                <p class="text-[10px] text-emerald-800 font-bold uppercase tracking-wider">Total Amount Paid</p>
-                <p class="text-xl font-black text-emerald-700 mt-1">
-                    PHP {{ number_format((float) ($account->amount_paid ?? 0), 2) }}
-                </p>
+    @unless($account)
+        <div class="soa-alert soa-alert--warning" role="status">
+            <span class="soa-alert__icon"><i data-lucide="clock-3"></i></span>
+            <div>
+                <strong>Your Statement of Account is still being prepared</strong>
+                <p>Please contact the Finance Office before submitting a payment proof.</p>
             </div>
         </div>
-    </div>
+    @endunless
 
-    <!-- Main Grid Layout -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Column 1 & 2: Billing details, Monthly schedule, History -->
-        <div class="lg:col-span-2 space-y-8">
-            <!-- Fee Breakdown card -->
+    <!-- Financial overview -->
+    <section class="soa-hero" aria-labelledby="soa-page-title">
+        <span class="soa-hero__orb soa-hero__orb--one" aria-hidden="true"></span>
+        <span class="soa-hero__orb soa-hero__orb--two" aria-hidden="true"></span>
+
+        <div class="soa-hero__content">
+            <div class="soa-hero__eyebrow">
+                <span><i data-lucide="shield-check"></i></span>
+                Official student finance record
+            </div>
+            <h2 id="soa-page-title">Your school finances,<br><em>made clear.</em></h2>
+            <p>Review tuition charges, follow your installment schedule, and submit receipts securely for Finance Office verification.</p>
+
+            <div class="soa-hero__meta">
+                <span><i data-lucide="graduation-cap"></i> {{ $student?->student_number ?? 'Student account' }}</span>
+                @if($student?->school_year)
+                    <span><i data-lucide="calendar-days"></i> School Year {{ $student->school_year }}</span>
+                @endif
+            </div>
+
+            <div class="soa-hero__actions">
+                @if($account)
+                    <button type="button" @click="openModal()" class="soa-button soa-button--light">
+                        <i data-lucide="upload-cloud"></i>
+                        Upload payment proof
+                    </button>
+                @else
+                    <button type="button" disabled class="soa-button soa-button--disabled">
+                        <i data-lucide="lock-keyhole"></i>
+                        Awaiting SOA
+                    </button>
+                @endif
+                <button type="button" onclick="window.print()" class="soa-button soa-button--ghost">
+                    <i data-lucide="printer"></i>
+                    Print statement
+                </button>
+            </div>
+        </div>
+
+        <div class="soa-balance-card">
+            <div class="soa-balance-card__top">
+                <span>Remaining balance</span>
+                <span class="soa-account-state {{ $soaRemaining <= 0 && $account ? 'is-settled' : '' }}">
+                    <i></i>{{ $soaAccountStatus }}
+                </span>
+            </div>
+            <strong><small>PHP</small> {{ number_format($soaRemaining, 2) }}</strong>
+            <div class="soa-progress" role="progressbar" aria-label="Payment progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ round($soaProgress) }}">
+                <span style="width: {{ $soaProgress }}%"></span>
+            </div>
+            <div class="soa-balance-card__footer">
+                <span><b>{{ number_format($soaProgress, 0) }}%</b> paid</span>
+                <span>PHP {{ number_format($soaPaid, 2) }} of PHP {{ number_format($soaTotal, 2) }}</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Account snapshot -->
+    <section class="soa-metrics" aria-label="Account summary">
+        <article class="soa-metric">
+            <span class="soa-metric__icon is-emerald"><i data-lucide="receipt-text"></i></span>
+            <div><small>Total billed</small><strong>PHP {{ number_format($soaTotal, 2) }}</strong><span>Tuition and school fees</span></div>
+        </article>
+        <article class="soa-metric">
+            <span class="soa-metric__icon is-blue"><i data-lucide="badge-check"></i></span>
+            <div><small>Verified payments</small><strong>PHP {{ number_format($soaPaid, 2) }}</strong><span>Posted to your account</span></div>
+        </article>
+        <article class="soa-metric">
+            <span class="soa-metric__icon is-violet"><i data-lucide="calendar-range"></i></span>
+            <div><small>Installments</small><strong>{{ $soaPaidInstallments }} <i>of</i> {{ $billings->count() }}</strong><span>{{ $soaOverdueCount > 0 ? $soaOverdueCount.' overdue' : 'No overdue schedule' }}</span></div>
+        </article>
+        <article class="soa-metric">
+            <span class="soa-metric__icon is-amber"><i data-lucide="calendar-clock"></i></span>
+            <div><small>Next due date</small><strong>{{ $soaNextBilling ? $soaNextBilling->due_date->format('M d, Y') : ($account && $soaRemaining <= 0 ? 'All settled' : 'Not scheduled') }}</strong><span>{{ $soaNextBilling?->month_name ?? 'Account schedule' }}</span></div>
+        </article>
+    </section>
+
+    <div class="soa-content-grid">
+        <div class="soa-main-column">
+            <!-- Fee Breakdown -->
             @if($account)
-                <div class="student-panel">
-                    <div class="student-panel-header">
-                        <h2>Detailed Fee Breakdown</h2>
-                    </div>
-                    
-                    <div class="student-table-scroll mt-4">
-                        <table>
+                <section class="soa-card soa-fees">
+                    <header class="soa-card__header">
+                        <div>
+                            <span class="soa-section-kicker">Account charges</span>
+                            <h3>Detailed fee breakdown</h3>
+                            <p>A transparent summary of charges applied to this school year.</p>
+                        </div>
+                        <span class="soa-card__header-icon"><i data-lucide="landmark"></i></span>
+                    </header>
+
+                    <div class="soa-table-wrap">
+                        <table class="soa-table">
                             <thead>
                                 <tr>
                                     <th>Fee Item</th>
-                                    <th class="text-right">Amount</th>
+                                    <th>Amount</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td>Base Tuition Fee</td>
-                                    <td class="text-right font-semibold text-gray-700">PHP {{ number_format((float) $account->tuition_fee, 2) }}</td>
+                                    <td><span class="soa-fee-icon"><i data-lucide="graduation-cap"></i></span><div><strong>Base Tuition Fee</strong><small>Core academic instruction</small></div></td>
+                                    <td>PHP {{ number_format((float) $account->tuition_fee, 2) }}</td>
                                 </tr>
                                 <tr>
-                                    <td>Books & Learning Materials</td>
-                                    <td class="text-right font-semibold text-gray-700">PHP {{ number_format((float) $account->books_fee, 2) }}</td>
+                                    <td><span class="soa-fee-icon"><i data-lucide="book-open"></i></span><div><strong>Books &amp; Learning Materials</strong><small>Required instructional resources</small></div></td>
+                                    <td>PHP {{ number_format((float) $account->books_fee, 2) }}</td>
                                 </tr>
                                 <tr>
-                                    <td>Miscellaneous Fees</td>
-                                    <td class="text-right font-semibold text-gray-700">PHP {{ number_format((float) $account->miscellaneous_fee, 2) }}</td>
+                                    <td><span class="soa-fee-icon"><i data-lucide="shapes"></i></span><div><strong>Miscellaneous Fees</strong><small>School services and activities</small></div></td>
+                                    <td>PHP {{ number_format((float) $account->miscellaneous_fee, 2) }}</td>
                                 </tr>
                                 @if($account->discount_amount > 0)
-                                    <tr class="text-emerald-700 bg-emerald-50 font-bold">
-                                        <td>Sibling Discount ({{ $account->discount_type }})</td>
-                                        <td class="text-right">- PHP {{ number_format((float) $account->discount_amount, 2) }}</td>
+                                    <tr class="soa-table__discount">
+                                        <td><span class="soa-fee-icon"><i data-lucide="badge-percent"></i></span><div><strong>Sibling Discount</strong><small>{{ $account->discount_type }}</small></div></td>
+                                        <td>− PHP {{ number_format((float) $account->discount_amount, 2) }}</td>
                                     </tr>
                                 @endif
-                                <tr class="bg-emerald-50/50 text-emerald-950 font-extrabold text-base border-t border-emerald-100/50">
-                                    <td>Gross Total Balance</td>
-                                    <td class="text-right text-emerald-700">PHP {{ number_format((float) $account->total_balance, 2) }}</td>
+                                <tr class="soa-table__total">
+                                    <td><strong>Gross Total Balance</strong><small>Net charges after applicable discounts</small></td>
+                                    <td>PHP {{ number_format((float) $account->total_balance, 2) }}</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
-                </div>
+                </section>
             @endif
 
-            <!-- Monthly Statement waterfall -->
-            <div class="student-panel">
-                <div class="student-panel-header">
-                    <h2>Monthly Billing Schedule</h2>
-                </div>
+            <!-- Monthly statement -->
+            <section class="soa-card">
+                <header class="soa-card__header">
+                    <div>
+                        <span class="soa-section-kicker">Payment plan</span>
+                        <h3>Monthly billing schedule</h3>
+                        <p>Track each installment and its current posting status.</p>
+                    </div>
+                    <span class="soa-count-pill">{{ $billings->count() }} installments</span>
+                </header>
 
                 @if($billings->isNotEmpty())
-                    <div class="space-y-4 pt-4">
+                    <div class="soa-installment-list">
                         @foreach($billings as $billing)
                             @php 
                                 $isOverdue = $billing->status === 'unpaid' && $billing->due_date->isPast();
+                                $billingState = $billing->status === 'paid' ? 'is-paid' : ($isOverdue ? 'is-overdue' : 'is-upcoming');
                             @endphp
-                            <div class="p-4 rounded-xl border border-gray-150 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-gray-50/50 transition duration-300">
-                                <div class="flex items-center gap-4">
-                                    <div class="w-12 h-12 rounded-xl flex items-center justify-center font-black text-sm shadow-sm shrink-0 {{ $billing->status === 'paid' ? 'bg-emerald-100 text-emerald-700' : ($isOverdue ? 'bg-rose-100 text-rose-700 animate-pulse' : 'bg-emerald-50 text-emerald-700') }}">
+                            <article class="soa-installment {{ $billingState }}">
+                                <span class="soa-installment__line" aria-hidden="true"></span>
+                                <div class="soa-installment__month">
+                                    <span>{{ str_pad((string) $loop->iteration, 2, '0', STR_PAD_LEFT) }}</span>
+                                    <strong>
                                         {{ mb_substr($billing->month_name, 0, 3) }}
-                                    </div>
-                                    <div>
-                                        <h5 class="font-extrabold text-gray-900 text-sm sm:text-base" style="margin:0;">
-                                            {{ $billing->month_name }} Dues
-                                        </h5>
-                                        <p class="text-xs font-semibold text-gray-500 mt-0.5">Due on {{ $billing->due_date->format('F d, Y') }}</p>
-                                    </div>
+                                    </strong>
                                 </div>
-
-                                <div class="flex items-center justify-between sm:justify-end gap-6">
-                                    <div class="text-left sm:text-right">
-                                        <p class="text-[10px] font-bold text-gray-400 uppercase">Amount Due</p>
-                                        <p class="font-extrabold text-sm sm:text-base text-gray-800 mt-0.5">PHP {{ number_format((float) $billing->amount_due, 2) }}</p>
-                                    </div>
-
-                                    <div>
-                                        @if($billing->status === 'paid')
-                                            <span class="student-status-pill">
-                                                <i data-lucide="check" class="w-3 h-3 mr-1"></i> Paid
-                                            </span>
-                                        @elseif($isOverdue)
-                                            <span class="student-status-pill bg-rose-105 text-rose-700 border-rose-200">
-                                                <i data-lucide="alert-circle" class="w-3 h-3 mr-1"></i> Overdue
-                                            </span>
-                                        @else
-                                            <span class="student-status-pill bg-sky-50 text-sky-700 border-sky-100">
-                                                <i data-lucide="clock" class="w-3 h-3 mr-1"></i> Upcoming
-                                            </span>
-                                        @endif
-                                    </div>
+                                <div class="soa-installment__details">
+                                    <strong>{{ $billing->month_name }} dues</strong>
+                                    <span>Due {{ $billing->due_date->format('F d, Y') }}</span>
                                 </div>
-                            </div>
+                                <div class="soa-installment__amount"><small>Amount due</small><strong>PHP {{ number_format((float) $billing->amount_due, 2) }}</strong></div>
+                                <span class="soa-status-badge">
+                                    @if($billing->status === 'paid')
+                                        <i data-lucide="check"></i> Paid
+                                    @elseif($isOverdue)
+                                        <i data-lucide="circle-alert"></i> Overdue
+                                    @else
+                                        <i data-lucide="clock-3"></i> Upcoming
+                                    @endif
+                                </span>
+                            </article>
                         @endforeach
                     </div>
                 @else
-                    <div class="dash-empty">
-                        <i data-lucide="calendar"></i>
-                        <p>No monthly installments configured</p>
+                    <div class="soa-empty">
+                        <span><i data-lucide="calendar-x-2"></i></span>
+                        <strong>No installment schedule yet</strong>
+                        <p>Your monthly billing plan will appear here once configured by the Finance Office.</p>
                     </div>
                 @endif
-            </div>
-
-            <!-- Uploaded history list (Moved to Right Column sidebar) -->
+            </section>
         </div>
 
-        <!-- Column 3: Finance Actions & History -->
-        <div class="lg:col-span-1 space-y-8">
-            <!-- CTA Upload Box -->
-            <div class="student-panel text-center p-6 space-y-4">
-                <div class="w-14 h-14 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 mx-auto">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-upload-cloud"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><polyline points="16 16 12 12 8 16"/></svg>
-                </div>
-                <div class="space-y-1.5">
-                    <h3 class="font-black text-gray-900 text-base" style="margin: 0;">Submit Payment Proof</h3>
-                    <p class="text-[11px] text-gray-500 font-semibold leading-relaxed">Have you paid? Upload your transaction receipt (GCash, Maya, Bank or Remittance) to submit to finance for verification.</p>
-                </div>
-                <button type="button" @click="openPaymentModal = true; resetWizard();" class="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase tracking-wider py-3.5 text-xs cursor-pointer shadow-md shadow-emerald-600/10 hover:shadow-lg hover:shadow-emerald-600/20 transition-all duration-300">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus-circle"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
-                    Upload Payment Proof
-                </button>
-            </div>
+        <!-- Payment action and history -->
+        <aside class="soa-side-column">
+            <section class="soa-upload-card">
+                <span class="soa-upload-card__icon"><i data-lucide="scan-line"></i></span>
+                <span class="soa-section-kicker">Payment verification</span>
+                <h3>Already paid?</h3>
+                <p>Upload a clear transaction receipt. AMIS will scan the details and send it securely to Finance for review.</p>
+                @if($account)
+                    <button type="button" @click="openModal()" class="soa-button soa-button--primary soa-button--full">
+                        <i data-lucide="upload-cloud"></i>
+                        Upload payment proof
+                    </button>
+                @else
+                    <button type="button" disabled class="soa-button soa-button--disabled soa-button--full">
+                        <i data-lucide="lock-keyhole"></i>
+                        SOA required before payment
+                    </button>
+                @endif
+                <div class="soa-secure-note"><i data-lucide="shield-check"></i><span><strong>Secure submission</strong>Your proof is reviewed before it is posted.</span></div>
+            </section>
 
-            <!-- Uploaded history list -->
-            <div class="student-panel">
-                <div class="student-panel-header">
-                    <h2>Previous Payments</h2>
-                </div>
+            <section class="soa-card soa-history">
+                <header class="soa-card__header soa-card__header--compact">
+                    <div>
+                        <span class="soa-section-kicker">Recent activity</span>
+                        <h3>Previous payments</h3>
+                    </div>
+                    <span class="soa-count-pill">{{ $payments->count() }}</span>
+                </header>
 
                 @if($payments->isNotEmpty())
-                    <div class="space-y-4 pt-4">
+                    <div class="soa-payment-list">
                         @foreach($payments as $pay)
-                            <div class="p-4 rounded-xl border border-gray-150 bg-gray-50/20 hover:bg-gray-50/40 transition duration-300">
-                                <div class="flex flex-col gap-3">
-                                    <div class="flex items-start justify-between gap-3">
-                                        <div class="min-w-0 flex-1">
-                                            <div class="flex items-center gap-2 flex-wrap">
-                                                <h5 class="font-extrabold text-sm text-gray-900 capitalize" style="margin:0;">
-                                                    {{ $pay->method }}
-                                                </h5>
-                                                @if($pay->receipt_url)
-                                                    <a href="{{ asset('storage/' . $pay->receipt_url) }}" target="_blank" class="text-[9px] bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold px-2 py-0.5 rounded transition duration-300">
-                                                        View Receipt
-                                                    </a>
-                                                @endif
-                                            </div>
-                                            <p class="text-[11px] text-gray-500 font-semibold mt-1">
-                                                Ref: <span class="font-bold text-gray-700">{{ $pay->reference_no }}</span>
-                                            </p>
-                                        </div>
-                                        <div class="text-right shrink-0">
-                                            <p class="font-black text-sm text-gray-900">PHP {{ number_format((float) $pay->amount, 2) }}</p>
-                                        </div>
-                                    </div>
-
-                                    <div class="flex items-center justify-between border-t border-gray-100 pt-2 text-[11px] font-semibold text-gray-500">
+                            <article class="soa-payment">
+                                <div class="soa-payment__top">
+                                    <span class="soa-payment__method"><i data-lucide="wallet-cards"></i></span>
+                                    <div class="soa-payment__details">
+                                        <strong>{{ ucfirst($pay->method) }}</strong>
                                         <span>{{ $pay->paid_at ? $pay->paid_at->format('M d, Y') : $pay->created_at->format('M d, Y') }}</span>
-                                        <div>
-                                            @if($pay->status === 'verified')
-                                                <span class="student-status-pill text-[10px] px-2 py-0.5">
-                                                    Verified
-                                                </span>
-                                            @elseif($pay->status === 'rejected')
-                                                <span class="student-status-pill bg-rose-50 text-rose-700 border-rose-200 text-[10px] px-2 py-0.5" title="Remarks: {{ $pay->remarks ?? 'None' }}">
-                                                    Rejected
-                                                </span>
-                                            @else
-                                                <span class="student-status-pill bg-amber-50 text-amber-700 border-amber-100 text-[10px] px-2 py-0.5">
-                                                    Pending
-                                                </span>
-                                            @endif
-                                        </div>
                                     </div>
+                                    <strong class="soa-payment__amount">PHP {{ number_format((float) $pay->amount, 2) }}</strong>
                                 </div>
-                                @if($pay->status === 'rejected' && $pay->remarks)
-                                    <div class="mt-2 text-[11px] font-bold text-rose-600 border-t border-rose-100/50 pt-2">
-                                        Remarks: <span class="font-normal text-rose-500">{{ $pay->remarks }}</span>
-                                    </div>
+                                <div class="soa-payment__meta">
+                                    <span>Ref: <b>{{ $pay->reference_no ?: 'Not provided' }}</b></span>
+                                    @if($pay->status === 'verified')
+                                        <span class="soa-payment-state is-verified"><i data-lucide="check"></i> Verified</span>
+                                    @elseif($pay->status === 'rejected')
+                                        <span class="soa-payment-state is-rejected" title="Remarks: {{ $pay->remarks ?? 'None' }}"><i data-lucide="x"></i> Rejected</span>
+                                    @else
+                                        <span class="soa-payment-state is-pending"><i data-lucide="clock-3"></i> Pending</span>
+                                    @endif
+                                </div>
+                                @if($pay->receipt_url)
+                                    <a href="{{ asset('storage/' . $pay->receipt_url) }}" target="_blank" rel="noopener" class="soa-receipt-link">
+                                        View receipt <i data-lucide="arrow-up-right"></i>
+                                    </a>
                                 @endif
-                            </div>
+                                @if($pay->status === 'rejected' && $pay->remarks)
+                                    <div class="soa-payment__remarks"><strong>Finance remarks</strong><span>{{ $pay->remarks }}</span></div>
+                                @endif
+                            </article>
                         @endforeach
                     </div>
                 @else
-                    <div class="dash-empty py-8 text-center text-gray-400">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-history mx-auto mb-2 text-gray-300"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
-                        <p class="text-xs">No payment history recorded</p>
+                    <div class="soa-empty soa-empty--compact">
+                        <span><i data-lucide="history"></i></span>
+                        <strong>No payment history</strong>
+                        <p>Your submitted payments will appear here.</p>
                     </div>
                 @endif
-            </div>
-        </div>
+            </section>
+        </aside>
     </div>
 
     <!-- Payment Wizard Modal Backdrop -->
     <div x-show="openPaymentModal" 
          class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+         x-ref="paymentModal"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="payment-dialog-title"
+         @click.self="closeModal()"
+         @keydown.escape.window="closeModal()"
+         @keydown.tab="trapModalFocus($event)"
          x-transition:enter="transition ease-out duration-300"
          x-transition:enter-start="opacity-0"
          x-transition:enter-end="opacity-100"
@@ -248,7 +315,7 @@
          x-cloak>
         
         <!-- Modal Card Container -->
-        <div class="bg-white rounded-3xl shadow-2xl border border-gray-150 w-full max-w-xl overflow-hidden relative"
+        <div class="soa-payment-modal bg-white rounded-3xl shadow-2xl border border-gray-150 w-full max-w-xl overflow-hidden relative"
              x-transition:enter="transition ease-out duration-300"
              x-transition:enter-start="opacity-0 scale-95"
              x-transition:enter-end="opacity-100 scale-100"
@@ -257,7 +324,7 @@
              x-transition:leave-end="opacity-0 scale-95">
              
              <!-- Close Button -->
-             <button type="button" @click="openPaymentModal = false" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 cursor-pointer p-1.5 rounded-full hover:bg-gray-100 transition duration-200 z-10" style="position: absolute; top: 16px; right: 16px;">
+             <button type="button" @click="closeModal()" aria-label="Close payment dialog" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 cursor-pointer p-1.5 rounded-full hover:bg-gray-100 transition duration-200 z-10" style="position: absolute; top: 16px; right: 16px;">
                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
              </button>
 
@@ -294,7 +361,7 @@
                  <div class="border-b border-gray-150 pb-4 mb-4 flex items-center justify-between">
                      <div>
                          <span class="student-status-pill">Payment Gateway</span>
-                         <h3 class="font-black text-gray-900 text-lg mt-1" style="margin: 4px 0 2px;">Submit Payment</h3>
+                         <h3 id="payment-dialog-title" class="font-black text-gray-900 text-lg mt-1" style="margin: 4px 0 2px;">Submit Payment</h3>
                      </div>
                      <span class="text-[10px] font-black text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-full px-2.5 py-1 uppercase tracking-wider">
                          Step <span x-text="step"></span> of 4
@@ -393,8 +460,8 @@
 
                       <!-- Manual Dropdown select method -->
                       <div class="space-y-1.5 bg-slate-50 border border-gray-150 p-4 rounded-2xl">
-                          <label class="text-[11px] font-extrabold text-gray-500 uppercase block">Payment Channel / Method</label>
-                          <select x-model="method" class="w-full rounded-xl border-gray-200 bg-white text-xs font-bold py-2.5 shadow-sm focus:border-emerald-500 focus:ring-emerald-500/20">
+                          <label for="payment-channel" class="text-[11px] font-extrabold text-gray-500 uppercase block">Payment Channel / Method</label>
+                          <select id="payment-channel" x-model="method" aria-describedby="payment-channel-hint" class="w-full rounded-xl border-gray-200 bg-white text-xs font-bold py-2.5 shadow-sm focus:border-emerald-500 focus:ring-emerald-500/20">
                               <option value="gcash">GCash</option>
                               <option value="maya">Maya</option>
                               <option value="bdo">BDO Bank Transfer</option>
@@ -402,21 +469,20 @@
                               <option value="remittance">Remittance (STC, Baqr, Al Rajhi, Tahweel, WU, etc.)</option>
                               <option value="other">Other Bank / Channel</option>
                           </select>
-                          <p class="text-[9px] text-gray-400 font-semibold">AI scan will automatically update this dropdown on scan success.</p>
+                          <p id="payment-channel-hint" class="text-[9px] text-gray-400 font-semibold">AI scan will automatically update this dropdown on scan success.</p>
                       </div>
 
                       <!-- Drag and Drop Box -->
                       <div class="space-y-2">
-                          <label class="text-xs font-bold text-gray-700 block">Upload Receipt Image</label>
-                          <div class="border-2 border-dashed border-gray-200 hover:border-emerald-500/50 rounded-2xl p-6 text-center cursor-pointer bg-white transition duration-200 relative group"
-                               @click="$refs.fileInput.click()"
+                          <label for="payment-receipt-upload" class="text-xs font-bold text-gray-700 block">Upload Receipt Image</label>
+                          <div class="border-2 border-dashed border-gray-200 hover:border-emerald-500/50 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20 rounded-2xl text-center bg-white transition duration-200 relative group"
                                @dragover.prevent
                                @drop.prevent="handleFileDrop">
                                
-                              <input type="file" x-ref="fileInput" class="hidden" accept="image/*" @change="handleFileSelect">
+                              <input id="payment-receipt-upload" type="file" x-ref="fileInput" class="sr-only" accept="image/*" @change="handleFileSelect">
                               
                               <template x-if="!receiptFile">
-                                  <div class="space-y-3">
+                                  <label for="payment-receipt-upload" class="block space-y-3 p-6 cursor-pointer rounded-2xl">
                                       <div class="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 mx-auto group-hover:scale-105 transition duration-200">
                                           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-image"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
                                       </div>
@@ -424,11 +490,11 @@
                                           <span class="font-extrabold text-emerald-600 hover:text-emerald-700">Click to upload</span> or drag and drop
                                           <p class="text-[10px] text-gray-400 font-semibold mt-1">PNG, JPG, JPEG up to 10MB</p>
                                       </div>
-                                  </div>
+                                  </label>
                               </template>
 
                               <template x-if="receiptFile">
-                                  <div class="space-y-2">
+                                  <div class="space-y-2 p-6">
                                       <div class="w-16 h-16 rounded-lg overflow-hidden mx-auto border border-gray-200 shadow-sm">
                                           <img :src="receiptPreview" class="w-full h-full object-cover">
                                       </div>
@@ -484,8 +550,8 @@
                           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                               <!-- Payment Provider (Editable) -->
                               <div class="space-y-1.5">
-                                  <label class="text-[11px] font-bold text-gray-400 uppercase">Payment Method</label>
-                                  <select x-model="method" class="w-full rounded-xl border-gray-200 bg-white text-xs font-semibold py-2.5 shadow-sm focus:border-emerald-500 focus:ring-emerald-500/20">
+                                  <label for="review-payment-method" class="text-[11px] font-bold text-gray-400 uppercase">Payment Method</label>
+                                  <select id="review-payment-method" x-model="method" class="w-full rounded-xl border-gray-200 bg-white text-xs font-semibold py-2.5 shadow-sm focus:border-emerald-500 focus:ring-emerald-500/20">
                                       <option value="gcash">GCash</option>
                                       <option value="maya">Maya</option>
                                       <option value="bdo">BDO Bank Transfer</option>
@@ -497,38 +563,38 @@
 
                               <!-- Amount (Editable) -->
                               <div class="space-y-1.5">
-                                  <label class="text-[11px] font-bold text-gray-400 uppercase">Amount (PHP)</label>
-                                  <input type="number" step="any" x-model="amount" class="w-full rounded-xl border-gray-200 bg-white text-xs font-semibold py-2 focus:border-emerald-500 focus:ring-emerald-500/20" placeholder="Enter amount (PHP)">
+                                  <label for="review-payment-amount" class="text-[11px] font-bold text-gray-400 uppercase">Amount (PHP)</label>
+                                  <input id="review-payment-amount" type="number" step="any" x-model="amount" class="w-full rounded-xl border-gray-200 bg-white text-xs font-semibold py-2 focus:border-emerald-500 focus:ring-emerald-500/20" placeholder="Enter amount (PHP)">
                               </div>
 
                               <!-- Reference Number (Editable) -->
                               <div class="space-y-1.5 sm:col-span-2">
-                                  <label class="text-[11px] font-bold text-gray-400 uppercase">Transaction Reference Number</label>
-                                  <input type="text" x-model="referenceNo" class="w-full rounded-xl border-gray-200 bg-white text-xs font-semibold py-2 focus:border-emerald-500 focus:ring-emerald-500/20" placeholder="Enter reference number">
+                                  <label for="review-reference-number" class="text-[11px] font-bold text-gray-400 uppercase">Transaction Reference Number</label>
+                                  <input id="review-reference-number" type="text" x-model="referenceNo" class="w-full rounded-xl border-gray-200 bg-white text-xs font-semibold py-2 focus:border-emerald-500 focus:ring-emerald-500/20" placeholder="Enter reference number">
                               </div>
 
                               <!-- Sender Name (Editable) -->
                               <div class="space-y-1.5">
-                                  <label class="text-[11px] font-bold text-gray-400 uppercase">Sender Name (from Receipt)</label>
-                                  <input type="text" x-model="senderName" class="w-full rounded-xl border-gray-200 bg-white text-xs font-semibold py-2 focus:border-emerald-500 focus:ring-emerald-500/20" placeholder="Sender name">
+                                  <label for="review-sender-name" class="text-[11px] font-bold text-gray-400 uppercase">Sender Name (from Receipt)</label>
+                                  <input id="review-sender-name" type="text" x-model="senderName" class="w-full rounded-xl border-gray-200 bg-white text-xs font-semibold py-2 focus:border-emerald-500 focus:ring-emerald-500/20" placeholder="Sender name">
                               </div>
 
                               <!-- Receiver Name (Editable) -->
                               <div class="space-y-1.5">
-                                  <label class="text-[11px] font-bold text-gray-400 uppercase">Receiver Name (Optional)</label>
-                                  <input type="text" x-model="receiverName" class="w-full rounded-xl border-gray-200 bg-white text-xs font-semibold py-2 focus:border-emerald-500 focus:ring-emerald-500/20" placeholder="Receiver name">
+                                  <label for="review-receiver-name" class="text-[11px] font-bold text-gray-400 uppercase">Receiver Name (Optional)</label>
+                                  <input id="review-receiver-name" type="text" x-model="receiverName" class="w-full rounded-xl border-gray-200 bg-white text-xs font-semibold py-2 focus:border-emerald-500 focus:ring-emerald-500/20" placeholder="Receiver name">
                               </div>
 
                               <!-- Payment Date (Editable) -->
                               <div class="space-y-1.5 sm:col-span-2">
-                                  <label class="text-[11px] font-bold text-gray-400 uppercase">Payment Date (from Receipt)</label>
-                                  <input type="date" x-model="dateTime" class="w-full rounded-xl border-gray-200 bg-white text-xs font-semibold py-2 focus:border-emerald-500 focus:ring-emerald-500/20">
+                                  <label for="review-payment-date" class="text-[11px] font-bold text-gray-400 uppercase">Payment Date (from Receipt)</label>
+                                  <input id="review-payment-date" type="date" x-model="dateTime" class="w-full rounded-xl border-gray-200 bg-white text-xs font-semibold py-2 focus:border-emerald-500 focus:ring-emerald-500/20">
                               </div>
 
                               <!-- Custom Remarks Textbox (Optional) -->
                               <div class="space-y-1.5 sm:col-span-2">
-                                  <label class="text-[11px] font-bold text-gray-400 uppercase">Add More Remarks / Comments</label>
-                                  <textarea x-model="customRemarks" rows="2" class="w-full rounded-xl border-gray-200 bg-white text-xs font-semibold py-2 focus:border-emerald-500 focus:ring-emerald-500/20" placeholder="Enter additional details (e.g. Reservation balance, notes for finance office)"></textarea>
+                                  <label for="review-payment-remarks" class="text-[11px] font-bold text-gray-400 uppercase">Add More Remarks / Comments</label>
+                                  <textarea id="review-payment-remarks" x-model="customRemarks" rows="2" class="w-full rounded-xl border-gray-200 bg-white text-xs font-semibold py-2 focus:border-emerald-500 focus:ring-emerald-500/20" placeholder="Enter additional details (e.g. Reservation balance, notes for finance office)"></textarea>
                               </div>
                           </div>
 
@@ -591,7 +657,9 @@
                                                   <!-- Allocation input field -->
                                                   <div class="flex items-center gap-1.5">
                                                       <span class="text-gray-400 font-bold">₱</span>
-                                                      <input type="number" 
+                                                      <label class="sr-only" :for="'allocation-' + b.id" x-text="'Allocation amount for ' + b.month_name"></label>
+                                                      <input type="number"
+                                                             :id="'allocation-' + b.id"
                                                              step="0.01" 
                                                              x-model="allocations[b.id]"
                                                              placeholder="0.00"
@@ -709,6 +777,68 @@
             checkedBillings: [],
             allocations: {},
             confirmAuthentic: false,
+            lastFocusedElement: null,
+
+            initializeModal() {
+                document.body.classList.toggle('student-modal-open', this.openPaymentModal);
+
+                if (this.openPaymentModal) {
+                    this.$nextTick(() => this.focusModal());
+                }
+            },
+
+            openModal() {
+                this.lastFocusedElement = document.activeElement;
+                this.resetWizard();
+                this.openPaymentModal = true;
+                this.$nextTick(() => this.focusModal());
+            },
+
+            closeModal() {
+                if (!this.openPaymentModal) return;
+
+                const focusTarget = this.lastFocusedElement;
+                this.openPaymentModal = false;
+                this.$nextTick(() => {
+                    if (focusTarget && typeof focusTarget.focus === 'function') {
+                        focusTarget.focus();
+                    }
+                });
+            },
+
+            focusModal() {
+                const focusable = this.getModalFocusable();
+                if (focusable.length > 0) focusable[0].focus();
+            },
+
+            getModalFocusable() {
+                if (!this.$refs.paymentModal) return [];
+
+                return Array.from(this.$refs.paymentModal.querySelectorAll(
+                    'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+                )).filter(element => element.offsetParent !== null);
+            },
+
+            trapModalFocus(event) {
+                if (!this.openPaymentModal) return;
+
+                const focusable = this.getModalFocusable();
+                if (focusable.length === 0) return;
+
+                const first = focusable[0];
+                const last = focusable[focusable.length - 1];
+
+                if (event.shiftKey && document.activeElement === first) {
+                    event.preventDefault();
+                    last.focus();
+                } else if (!event.shiftKey && document.activeElement === last) {
+                    event.preventDefault();
+                    first.focus();
+                } else if (!focusable.includes(document.activeElement)) {
+                    event.preventDefault();
+                    first.focus();
+                }
+            },
 
             resetWizard() {
                 this.step = 1;

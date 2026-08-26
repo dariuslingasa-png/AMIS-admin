@@ -52,6 +52,7 @@
     $menu = [
         ['route' => 'student.dashboard', 'icon' => 'layout-dashboard', 'label' => 'Dashboard', 'tone' => 'emerald'],
         ['route' => 'student.schedule', 'icon' => 'calendar', 'label' => 'My Schedule', 'tone' => 'sky'],
+        ['route' => 'student.calendar', 'icon' => 'calendar-days', 'label' => 'Calendar', 'tone' => 'sky'],
         ['route' => 'student.subjects', 'icon' => 'book-open-check', 'label' => 'Subjects', 'tone' => 'emerald'],
         ['href' => config('services.ebook.url'), 'icon' => 'book-open', 'label' => 'eBook', 'tone' => 'indigo'],
         ['route' => 'student.grades', 'icon' => 'chart-no-axes-combined', 'label' => 'Grades', 'tone' => 'violet'],
@@ -194,18 +195,19 @@
                             @endif
                         </span>
                     </button>
-                    <div x-cloak x-show="profileOpen" x-transition.origin.top.right.duration.150ms @click.outside="profileOpen = false" class="absolute right-0 mt-3 w-72 list-none divide-y divide-gray-150 rounded-xl bg-white text-base shadow-xl border border-gray-150 z-50">
-                        <div class="px-4 py-3 text-left">
-                            <p class="truncate text-sm font-bold text-gray-900">{{ $layoutName }}</p>
-                            <p class="truncate text-xs font-semibold text-gray-500 mt-0.5">{{ $layoutEmail ?: $layoutStudentNo }}</p>
+                    <div x-cloak x-show="profileOpen" x-transition.origin.top.right.duration.150ms @click.outside="profileOpen = false" class="absolute right-0 mt-4 w-80 max-w-[calc(100vw-1.5rem)] list-none overflow-hidden divide-y divide-gray-150 rounded-2xl bg-white text-base shadow-xl border border-gray-150 z-50">
+                        <div class="px-5 py-4 text-left">
+                            <p class="text-sm font-extrabold leading-5 text-gray-900 break-words">{{ $layoutName }}</p>
+                            <p class="mt-1 text-xs font-semibold leading-5 text-gray-500 break-all">{{ $layoutEmail ?: $layoutStudentNo }}</p>
+                            <p class="mt-2 text-[11px] font-extrabold text-emerald-600">{{ $layoutStudentNo }}</p>
                         </div>
-                        <ul class="py-1">
-                            <li><a href="{{ route('student.dashboard') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-semibold text-left">Dashboard</a></li>
-                            <li><a href="{{ route('student.profile') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-semibold text-left">My Profile</a></li>
+                        <ul class="p-2 space-y-1">
+                            <li><a href="{{ route('student.dashboard') }}" class="block rounded-xl px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 font-semibold text-left">Dashboard</a></li>
+                            <li><a href="{{ route('student.profile') }}" class="block rounded-xl px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 font-semibold text-left">My Profile</a></li>
                             <li>
                                 <form method="POST" action="{{ route('student.logout') }}" class="m-0">
                                     @csrf
-                                    <button type="submit" class="block w-full px-4 py-2 text-left text-sm text-rose-600 hover:bg-rose-50 font-semibold">Sign out</button>
+                                    <button type="submit" class="block w-full rounded-xl px-4 py-3 text-left text-sm text-rose-600 hover:bg-rose-50 font-semibold">Sign out</button>
                                 </form>
                             </li>
                         </ul>

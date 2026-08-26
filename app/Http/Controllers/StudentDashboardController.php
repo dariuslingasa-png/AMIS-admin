@@ -144,6 +144,29 @@ class StudentDashboardController extends Controller
         return view('student.announcements', compact('user', 'student', 'announcements'));
     }
 
+    public function digitalId()
+    {
+        $user = Auth::user();
+        $student = $user->student?->load('applicant');
+        abort_unless($student, 404, 'Student profile not found.');
+
+        $fullName = trim(implode(' ', array_filter([
+            $student->applicant?->first_name,
+            $student->applicant?->middle_name,
+            $student->applicant?->last_name,
+        ]))) ?: $user->name;
+
+        $idUrl = 'https://amis.edu.ph/id?'.http_build_query([
+            'student_id' => $student->student_number,
+            'full_name' => $fullName,
+            'school_year' => $student->school_year,
+            'auto' => 1,
+            'embed' => 1,
+        ]);
+
+        return view('student.digital-id', compact('user', 'student', 'idUrl'));
+    }
+
     public function grades()
     {
         $user    = Auth::user();

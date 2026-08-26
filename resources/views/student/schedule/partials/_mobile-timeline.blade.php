@@ -96,21 +96,6 @@
                                         </p>
                                     </div>
 
-                                    @if($s->ms_channel_id)
-                                         @if($s->is_joinable)
-                                             <a href="{{ $s->team_url ?? 'https://teams.microsoft.com/' }}" onclick="event.preventDefault(); window.joinTeams('{{ $s->team_url ?? 'https://teams.microsoft.com/' }}');" style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem; font-weight: 900; color: white; background: {{ $style['icon_color'] }}; padding: 0.35rem 0.75rem; border-radius: 10px; text-decoration: none; cursor: pointer;"
-                                                onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
-                                                 <i data-lucide="video" style="width: 12px; height: 12px;"></i>
-                                                 <span>Join Room</span>
-                                             </a>
-                                         @else
-                                             <button type="button" disabled style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem; font-weight: 900; color: #94a3b8; background: #cbd5e1; border: none; padding: 0.35rem 0.75rem; border-radius: 10px; cursor: not-allowed; opacity: 0.85;"
-                                                title="{{ $s->membership_status_label }}">
-                                                 <i data-lucide="lock" style="width: 12px; height: 12px;"></i>
-                                                 <span>Join Room</span>
-                                             </button>
-                                         @endif
-                                     @endif
                                 </div>
                             </div>
                         @endif
