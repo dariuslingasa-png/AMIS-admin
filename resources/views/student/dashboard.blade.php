@@ -390,23 +390,25 @@
         </div>
     @endif
 
-    {{-- ── 1. Modern School Cover Banner Card ────────────────────────── --}}
+    {{-- ── 1. Centered Student Profile Header Card ──────────────────── --}}
     <div class="fade-up" style="
         background: #ffffff;
         border: 1px solid #e2e8f0;
         border-radius: 24px;
         overflow: hidden;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03), 0 8px 24px -4px rgba(15, 23, 42, 0.04);
+        display: flex;
+        flex-direction: column;
     ">
         {{-- Cover Photo Background --}}
         <div style="
             position: relative;
-            height: 125px;
+            height: 130px;
             background: linear-gradient(135deg, #064e3b 0%, #065f46 35%, #047857 70%, #0d9488 100%);
             overflow: hidden;
         ">
             {{-- Abstract Campus Architecture / Academic Geometric Mesh --}}
-            <svg style="position: absolute; right: 0; top: 0; height: 100%; width: 45%; opacity: 0.12; pointer-events: none;" viewBox="0 0 400 150" fill="none" preserveAspectRatio="none">
+            <svg style="position: absolute; right: 0; top: 0; height: 100%; width: 50%; opacity: 0.12; pointer-events: none;" viewBox="0 0 400 150" fill="none" preserveAspectRatio="none">
                 <path d="M0 150L120 40L240 100L360 20L400 40V150H0Z" fill="#ffffff"/>
                 <circle cx="320" cy="40" r="60" stroke="#ffffff" stroke-width="2"/>
                 <circle cx="200" cy="80" r="40" stroke="#ffffff" stroke-width="1.5"/>
@@ -414,7 +416,7 @@
             {{-- Subtle Dot Pattern Overlay --}}
             <div style="position: absolute; inset: 0; background-image: radial-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px); background-size: 16px 16px; pointer-events: none;"></div>
             {{-- Ambient Glowing Orb --}}
-            <div style="position: absolute; left: 10%; top: -30px; width: 160px; height: 160px; border-radius: 50%; background: radial-gradient(circle, rgba(52, 211, 153, 0.3), transparent 70%); pointer-events: none;"></div>
+            <div style="position: absolute; left: 15%; top: -30px; width: 180px; height: 180px; border-radius: 50%; background: radial-gradient(circle, rgba(52, 211, 153, 0.3), transparent 70%); pointer-events: none;"></div>
             
             {{-- Subtle School Brand Tag on Cover --}}
             <div style="position: absolute; top: 1rem; right: 1.25rem; display: flex; align-items: center; gap: 0.4rem; background: rgba(0, 0, 0, 0.22); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); padding: 0.25rem 0.65rem; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.15);">
@@ -423,83 +425,84 @@
             </div>
         </div>
 
-        {{-- Profile Details Area (Below Cover) --}}
-        <div class="s-dash-cover-header" style="
-            padding: 0 1.75rem 1.5rem 1.75rem;
-            position: relative;
+        {{-- Centered Profile Details Section --}}
+        <div style="
+            padding: 0 1.5rem 1.75rem 1.5rem;
             display: flex;
-            align-items: flex-end;
-            justify-content: space-between;
-            gap: 1.5rem;
-            flex-wrap: wrap;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            position: relative;
         ">
-            {{-- Left: Overlapping Centered Avatar + Student Info --}}
-            <div class="s-dash-cover-info" style="display: flex; align-items: flex-end; gap: 1.35rem; min-width: 280px; flex: 1;">
-                
-                {{-- Centered Overlapping Avatar (76px) --}}
-                <div class="s-dash-cover-avatar" style="position: relative; width: 76px; height: 76px; margin-top: -38px; flex-shrink: 0; z-index: 2;">
-                    @if ($photoUrl)
-                        <img src="{{ $photoUrl }}" alt="{{ $fullName }}"
-                             onerror="if (!this.dataset.fallback) { this.dataset.fallback='1'; this.src='{{ $fallbackPhoto }}'; } else { this.style.display='none'; this.nextElementSibling.style.display='flex'; }"
-                             style="width: 76px; height: 76px; object-fit: cover; border-radius: 50%; border: 4px solid #ffffff; box-shadow: 0 4px 14px rgba(0,0,0,0.12); display: block; background: #ffffff;"
-                             loading="eager" decoding="async">
-                        <div style="width: 76px; height: 76px; border-radius: 50%; background: linear-gradient(135deg, #059669 0%, #047857 100%); border: 4px solid #ffffff; box-shadow: 0 4px 14px rgba(5,150,105,0.25); display: none; align-items: center; justify-content: center; color: #ffffff; font-weight: 800; font-size: 1.5rem; letter-spacing: -0.02em;">
-                            {{ $initials }}
-                        </div>
-                    @else
-                        <div style="width: 76px; height: 76px; border-radius: 50%; background: linear-gradient(135deg, #059669 0%, #047857 100%); border: 4px solid #ffffff; box-shadow: 0 4px 14px rgba(5,150,105,0.25); display: flex; align-items: center; justify-content: center; color: #ffffff; font-weight: 800; font-size: 1.5rem; letter-spacing: -0.02em;">
-                            {{ $initials }}
-                        </div>
-                    @endif
-                    <span style="position: absolute; bottom: 2px; right: 2px; width: 15px; height: 15px; border-radius: 50%; background: #10b981; border: 3px solid #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"></span>
-                </div>
-
-                {{-- Information Block --}}
-                <div style="display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; padding-top: 0.5rem;">
-                    
-                    {{-- Plain Greeting Label --}}
-                    <span style="font-size: 0.72rem; font-weight: 700; color: #059669; text-transform: uppercase; letter-spacing: 0.06em;">
-                        Assalamu Alaikum
-                    </span>
-
-                    {{-- Student Full Name (Main Focus) --}}
-                    <h1 style="font-family: 'Plus Jakarta Sans', sans-serif !important; font-size: 1.6rem; font-weight: 800; color: #0f172a; margin: 0; line-height: 1.2; letter-spacing: -0.025em;">
-                        {{ $fullName }}
-                    </h1>
-
-                    {{-- Single Metadata Row: Grade • Section • 1 Status Chip --}}
-                    <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; font-size: 0.85rem; font-weight: 600; color: #475569; margin-top: 0.15rem;">
-                        <span>{{ $student?->grade_level ?: 'Grade 1' }}</span>
-                        <span style="color: #cbd5e1;">•</span>
-                        <span>{{ $section?->name ?? 'G1-AL-MUNAWWARA' }}</span>
-                        <span style="color: #cbd5e1;">•</span>
-                        <span style="font-size: 0.72rem; font-weight: 700; color: #047857; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 0.15rem 0.55rem; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.04em; display: inline-flex; align-items: center; gap: 0.3rem;">
-                            <span style="width: 5px; height: 5px; border-radius: 50%; background: #10b981;"></span>
-                            {{ ucfirst($student?->applicant?->student_type ?? 'Continuing') }}
-                        </span>
+            {{-- 1. Centered Overlapping Avatar (92px) --}}
+            <div style="position: relative; width: 92px; height: 92px; margin-top: -46px; margin-bottom: 0.85rem; flex-shrink: 0; z-index: 2;">
+                @if ($photoUrl)
+                    <img src="{{ $photoUrl }}" alt="{{ $fullName }}"
+                         onerror="if (!this.dataset.fallback) { this.dataset.fallback='1'; this.src='{{ $fallbackPhoto }}'; } else { this.style.display='none'; this.nextElementSibling.style.display='flex'; }"
+                         style="width: 92px; height: 92px; object-fit: cover; border-radius: 50%; border: 4px solid #ffffff; box-shadow: 0 6px 20px rgba(0,0,0,0.12); display: block; background: #ffffff;"
+                         loading="eager" decoding="async">
+                    <div style="width: 92px; height: 92px; border-radius: 50%; background: linear-gradient(135deg, #059669 0%, #047857 100%); border: 4px solid #ffffff; box-shadow: 0 6px 20px rgba(5,150,105,0.25); display: none; align-items: center; justify-content: center; color: #ffffff; font-weight: 800; font-size: 1.85rem; letter-spacing: -0.02em;">
+                        {{ $initials }}
                     </div>
-
-                    {{-- Secondary Info Row: ID & Email with simple icons --}}
-                    <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; font-size: 0.8rem; font-weight: 500; color: #64748b; margin-top: 0.1rem;">
-                        <span style="display: inline-flex; align-items: center; gap: 0.35rem;">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 7h.01"/><path d="M17 7h.01"/><path d="M7 17h.01"/><path d="M17 17h.01"/></svg>
-                            <span>ID: <strong style="color: #1e293b; font-weight: 700;">{{ $student?->student_number ?? '260000' }}</strong></span>
-                        </span>
-                        <span style="color: #cbd5e1;">•</span>
-                        <span style="display: inline-flex; align-items: center; gap: 0.35rem;">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-                            <span style="color: #334155; font-weight: 600;">{{ $student?->school_email ?? Auth::user()->email }}</span>
-                        </span>
+                @else
+                    <div style="width: 92px; height: 92px; border-radius: 50%; background: linear-gradient(135deg, #059669 0%, #047857 100%); border: 4px solid #ffffff; box-shadow: 0 6px 20px rgba(5,150,105,0.25); display: flex; align-items: center; justify-content: center; color: #ffffff; font-weight: 800; font-size: 1.85rem; letter-spacing: -0.02em;">
+                        {{ $initials }}
                     </div>
-
-                </div>
+                @endif
+                <span style="position: absolute; bottom: 3px; right: 3px; width: 17px; height: 17px; border-radius: 50%; background: #10b981; border: 3.5px solid #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.12);"></span>
             </div>
 
-            {{-- Right: Integrated Academic Year & Schedule Button --}}
-            <div class="s-dash-academic-side" style="display: flex; align-items: center; gap: 1.25rem; flex-shrink: 0; padding-top: 0.5rem;">
-                <div style="display: flex; flex-direction: column; text-align: right;">
-                    <span style="font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: #94a3b8;">Academic Year</span>
-                    <span style="font-family: 'Plus Jakarta Sans', sans-serif !important; font-size: 1.1rem; font-weight: 800; color: #0f172a; margin-top: 0.1rem; line-height: 1.2;">
+            {{-- 2. Greeting --}}
+            <span style="font-size: 0.72rem; font-weight: 700; color: #059669; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.25rem;">
+                Assalamu Alaikum
+            </span>
+
+            {{-- 3. Student Full Name (Main Focus) --}}
+            <h1 style="font-family: 'Plus Jakarta Sans', sans-serif !important; font-size: 1.75rem; font-weight: 800; color: #0f172a; margin: 0 0 0.4rem 0; line-height: 1.2; letter-spacing: -0.025em;">
+                {{ $fullName }}
+            </h1>
+
+            {{-- 4. Primary Metadata Row: Grade • Section • 1 Status Chip --}}
+            <div style="display: flex; align-items: center; justify-content: center; gap: 0.55rem; flex-wrap: wrap; font-size: 0.875rem; font-weight: 600; color: #475569; margin-bottom: 0.35rem;">
+                <span>{{ $student?->grade_level ?: 'Grade 1' }}</span>
+                <span style="color: #cbd5e1;">•</span>
+                <span>{{ $section?->name ?? 'G1-AL-MUNAWWARA' }}</span>
+                <span style="color: #cbd5e1;">•</span>
+                <span style="font-size: 0.72rem; font-weight: 700; color: #047857; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 0.15rem 0.55rem; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.04em; display: inline-flex; align-items: center; gap: 0.3rem;">
+                    <span style="width: 5px; height: 5px; border-radius: 50%; background: #10b981;"></span>
+                    {{ ucfirst($student?->applicant?->student_type ?? 'Continuing') }}
+                </span>
+            </div>
+
+            {{-- 5. Secondary Info Row: ID & Email with simple icons --}}
+            <div style="display: flex; align-items: center; justify-content: center; gap: 0.75rem; flex-wrap: wrap; font-size: 0.825rem; font-weight: 500; color: #64748b;">
+                <span style="display: inline-flex; align-items: center; gap: 0.35rem;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 7h.01"/><path d="M17 7h.01"/><path d="M7 17h.01"/><path d="M17 17h.01"/></svg>
+                    <span>ID: <strong style="color: #1e293b; font-weight: 700;">{{ $student?->student_number ?? '260000' }}</strong></span>
+                </span>
+                <span style="color: #cbd5e1;">•</span>
+                <span style="display: inline-flex; align-items: center; gap: 0.35rem;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                    <span style="color: #334155; font-weight: 600;">{{ $student?->school_email ?? Auth::user()->email }}</span>
+                </span>
+            </div>
+
+            {{-- 6. Academic Year & My Schedule Button Row --}}
+            <div style="
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 1.25rem;
+                flex-wrap: wrap;
+                margin-top: 1.15rem;
+                padding-top: 1rem;
+                border-top: 1px solid #f1f5f9;
+                width: 100%;
+                max-width: 480px;
+            ">
+                <div style="display: flex; align-items: center; gap: 0.45rem;">
+                    <span style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8;">Academic Year:</span>
+                    <span style="font-family: 'Plus Jakarta Sans', sans-serif !important; font-size: 0.95rem; font-weight: 800; color: #0f172a;">
                         SY {{ $student?->school_year ?? '2026–2027' }}
                     </span>
                 </div>
@@ -508,22 +511,23 @@
                     display: inline-flex;
                     align-items: center;
                     gap: 0.45rem;
-                    padding: 0.6rem 1.15rem;
-                    border-radius: 12px;
+                    padding: 0.5rem 1.15rem;
+                    border-radius: 10px;
                     background: linear-gradient(135deg, #059669 0%, #047857 100%);
                     color: #ffffff;
                     font-size: 0.8125rem;
                     font-weight: 700;
                     border: none;
                     cursor: pointer;
-                    box-shadow: 0 4px 14px rgba(5, 150, 105, 0.22);
+                    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.2);
                     transition: all 0.15s ease;
-                " onmouseover="this.style.boxShadow='0 6px 20px rgba(5, 150, 105, 0.35)'; this.style.transform='translateY(-1px)'" onmouseout="this.style.boxShadow='0 4px 14px rgba(5, 150, 105, 0.22)'; this.style.transform='none'">
+                " onmouseover="this.style.boxShadow='0 6px 18px rgba(5, 150, 105, 0.32)'; this.style.transform='translateY(-1px)'" onmouseout="this.style.boxShadow='0 4px 12px rgba(5, 150, 105, 0.2)'; this.style.transform='none'">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                     <span>My Schedule</span>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                 </button>
             </div>
+
         </div>
     </div>
 
@@ -584,23 +588,6 @@
             box-shadow: 0 1px 3px rgba(5, 150, 105, 0.08);
         }
         @media(max-width: 640px) {
-            .s-dash-cover-header {
-                padding: 0 1rem 1.25rem 1rem !important;
-            }
-            .s-dash-cover-info {
-                flex-direction: column !important;
-                align-items: flex-start !important;
-                gap: 0.75rem !important;
-            }
-            .s-dash-cover-avatar {
-                margin-top: -35px !important;
-            }
-            .s-dash-academic-side {
-                width: 100% !important;
-                justify-content: space-between !important;
-                border-top: 1px solid #f1f5f9 !important;
-                padding-top: 0.85rem !important;
-            }
             .portal-tab-pill {
                 padding: 0.65rem 0.5rem !important;
                 font-size: 0.825rem !important;
