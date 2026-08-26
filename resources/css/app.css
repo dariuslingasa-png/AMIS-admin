@@ -1,5 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800;900&display=swap");
 @import "tailwindcss";
 @import "flowbite/src/themes/default";
 
@@ -100,7 +99,7 @@ h1, h2, h3, h4, h5, h6,
 .student-nav-item,
 .student-nav-label,
 .student-nav a {
-  font-family: "Outfit", "Inter", sans-serif !important;
+  font-family: "Plus Jakarta Sans", "Inter", sans-serif !important;
 }
 .student-body *, .student-login-body * { box-sizing: border-box; }
 

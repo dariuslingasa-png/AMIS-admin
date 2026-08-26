@@ -402,135 +402,113 @@
             @media(max-width:640px){.class-countdown-banner{grid-template-columns:auto minmax(0,1fr);padding:1rem}.class-countdown-clock{grid-column:1/-1;width:100%}.class-countdown-copy h2{font-size:1rem}}
         </style>
 
-        {{-- Modern Minimal SaaS Student Header --}}
-        <div class="s-dash-profile-header fade-up">
-            <style>
-                .s-dash-profile-header {
-                    background: #ffffff;
-                    border: 1px solid #e2e8f0;
-                    border-radius: 18px;
-                    padding: 1.35rem 1.75rem;
-                    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                    gap: 1.5rem;
-                    flex-wrap: wrap;
-                }
-                .s-dash-profile-left {
-                    display: flex;
-                    align-items: center;
-                    gap: 1.25rem;
-                    min-width: 280px;
-                    flex: 1;
-                }
-                .s-dash-profile-right {
-                    display: flex;
-                    align-items: center;
-                    gap: 1.5rem;
-                    border-left: 1px solid #f1f5f9;
-                    padding-left: 1.5rem;
-                    flex-shrink: 0;
-                }
-                @media (max-width: 640px) {
-                    .s-dash-profile-header {
-                        padding: 1.2rem;
-                        gap: 1rem;
-                    }
-                    .s-dash-profile-left {
-                        gap: 1rem;
-                        width: 100%;
-                    }
-                    .s-dash-profile-right {
-                        border-left: none;
-                        border-top: 1px solid #f1f5f9;
-                        padding-left: 0;
-                        padding-top: 0.85rem;
-                        width: 100%;
-                        justify-content: space-between;
-                    }
-                }
-            </style>
+        {{-- Executive SaaS Student Header --}}
+        <div class="s-dash-profile-header fade-up" style="
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            padding: 1.5rem 1.85rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03), 0 8px 24px -4px rgba(15, 23, 42, 0.04);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.75rem;
+            flex-wrap: wrap;
+            position: relative;
+            overflow: hidden;
+        ">
+            {{-- Subtle Ambient Accent --}}
+            <div style="position: absolute; right: 0; top: 0; width: 240px; height: 100%; background: linear-gradient(135deg, transparent 30%, rgba(240, 253, 244, 0.8) 100%); pointer-events: none;"></div>
 
             {{-- Left Side: Avatar + Student Info --}}
-            <div class="s-dash-profile-left">
+            <div style="display: flex; align-items: center; gap: 1.35rem; min-width: 280px; flex: 1; position: relative; z-index: 1;">
                 
-                {{-- Avatar (around 60px) --}}
-                <div style="position: relative; width: 60px; height: 60px; flex-shrink: 0;">
+                {{-- Circular Avatar (64px) --}}
+                <div style="position: relative; width: 64px; height: 64px; flex-shrink: 0;">
                     @if ($photoUrl)
                         <img src="{{ $photoUrl }}" alt="{{ $fullName }}"
                              onerror="if (!this.dataset.fallback) { this.dataset.fallback='1'; this.src='{{ $fallbackPhoto }}'; } else { this.style.display='none'; this.nextElementSibling.style.display='flex'; }"
-                             style="width: 60px; height: 60px; object-fit: cover; border-radius: 16px; border: 1.5px solid #e2e8f0; display: block;"
+                             style="width: 64px; height: 64px; object-fit: cover; border-radius: 50%; border: 3px solid #ffffff; box-shadow: 0 4px 14px rgba(0,0,0,0.08); display: block;"
                              loading="eager" decoding="async">
-                        <div style="width: 60px; height: 60px; border-radius: 16px; background: #ecfdf5; border: 1.5px solid #a7f3d0; display: none; align-items: center; justify-content: center; color: #059669; font-weight: 800; font-size: 1.25rem;">
+                        <div style="width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, #059669 0%, #047857 100%); border: 3px solid #ffffff; box-shadow: 0 4px 14px rgba(5,150,105,0.25); display: none; align-items: center; justify-content: center; color: #ffffff; font-weight: 800; font-size: 1.35rem; letter-spacing: -0.02em;">
                             {{ $initials }}
                         </div>
                     @else
-                        <div style="width: 60px; height: 60px; border-radius: 16px; background: #ecfdf5; border: 1.5px solid #a7f3d0; display: flex; align-items: center; justify-content: center; color: #059669; font-weight: 800; font-size: 1.25rem;">
+                        <div style="width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, #059669 0%, #047857 100%); border: 3px solid #ffffff; box-shadow: 0 4px 14px rgba(5,150,105,0.25); display: flex; align-items: center; justify-content: center; color: #ffffff; font-weight: 800; font-size: 1.35rem; letter-spacing: -0.02em;">
                             {{ $initials }}
                         </div>
                     @endif
-                    {{-- Small green online indicator --}}
-                    <span style="position: absolute; bottom: -2px; right: -2px; width: 13px; height: 13px; border-radius: 50%; background: #10b981; border: 2.5px solid #ffffff;"></span>
+                    <span style="position: absolute; bottom: 1px; right: 1px; width: 14px; height: 14px; border-radius: 50%; background: #10b981; border: 2.5px solid #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"></span>
                 </div>
 
-                {{-- Beside Avatar --}}
-                <div style="display: flex; flex-direction: column; gap: 0.15rem; min-width: 0;">
+                {{-- Information Block --}}
+                <div style="display: flex; flex-direction: column; gap: 0.25rem; min-width: 0;">
                     
-                    {{-- Small greeting --}}
-                    <span style="font-size: 0.78rem; font-weight: 700; color: #059669; text-transform: uppercase; letter-spacing: 0.05em;">
-                        Assalamu Alaikum
-                    </span>
+                    {{-- Badges Row --}}
+                    <div style="display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap;">
+                        <span style="font-size: 0.72rem; font-weight: 800; color: #047857; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 0.15rem 0.55rem; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.04em; display: inline-flex; align-items: center; gap: 0.25rem;">
+                            <span>Assalamu Alaikum</span>
+                        </span>
+                        <span style="font-size: 0.72rem; font-weight: 700; color: #0284c7; background: #f0f9ff; border: 1px solid #bae6fd; padding: 0.15rem 0.55rem; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.04em;">
+                            {{ $student?->grade_level ?: 'Grade 1' }}
+                        </span>
+                        @if($section?->name)
+                            <span style="font-size: 0.72rem; font-weight: 700; color: #475569; background: #f8fafc; border: 1px solid #e2e8f0; padding: 0.15rem 0.55rem; border-radius: 6px;">
+                                {{ $section->name }}
+                            </span>
+                        @endif
+                        <span style="font-size: 0.72rem; font-weight: 700; color: #0f766e; background: #f0fdfa; border: 1px solid #ccfbf1; padding: 0.15rem 0.55rem; border-radius: 6px;">
+                            {{ ucfirst($student?->applicant?->student_type ?? 'Continuing') }}
+                        </span>
+                    </div>
 
-                    {{-- Large student name --}}
-                    <h1 style="font-size: 1.45rem; font-weight: 800; color: #0f172a; margin: 0; line-height: 1.2; letter-spacing: -0.02em;">
+                    {{-- Student Full Name --}}
+                    <h1 style="font-family: 'Plus Jakarta Sans', sans-serif !important; font-size: 1.6rem; font-weight: 800; color: #0f172a; margin: 0; line-height: 1.25; letter-spacing: -0.025em;">
                         {{ $fullName }}
                     </h1>
 
-                    {{-- Metadata Row 1: Grade • Section • Status --}}
-                    <div style="font-size: 0.8125rem; font-weight: 600; color: #475569; display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.15rem;">
-                        <span>{{ $student?->grade_level ?: 'Grade 1' }}</span>
+                    {{-- Identifiers Meta Row --}}
+                    <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; font-size: 0.8rem; font-weight: 500; color: #64748b; margin-top: 0.05rem;">
+                        <span style="display: inline-flex; align-items: center; gap: 0.35rem;">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 7h.01"/><path d="M17 7h.01"/><path d="M7 17h.01"/><path d="M17 17h.01"/></svg>
+                            <span>ID: <strong style="color: #1e293b; font-weight: 700;">{{ $student?->student_number ?? '260000' }}</strong></span>
+                        </span>
                         <span style="color: #cbd5e1;">•</span>
-                        <span>{{ $section?->name ?? 'G1-Al-Munawwara' }}</span>
-                        <span style="color: #cbd5e1;">•</span>
-                        <span style="color: #059669; font-weight: 700;">{{ ucfirst($student?->applicant?->student_type ?? 'Continuing') }}</span>
-                    </div>
-
-                    {{-- Metadata Row 2: ID • Email --}}
-                    <div style="font-size: 0.775rem; font-weight: 500; color: #64748b; display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.1rem;">
-                        <span>ID: <strong style="color: #334155; font-weight: 700;">{{ $student?->student_number ?? '260000' }}</strong></span>
-                        <span style="color: #cbd5e1;">•</span>
-                        <span>Email: <span style="color: #334155;">{{ $student?->school_email ?? Auth::user()->email }}</span></span>
+                        <span style="display: inline-flex; align-items: center; gap: 0.35rem;">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                            <span style="color: #334155; font-weight: 600;">{{ $student?->school_email ?? Auth::user()->email }}</span>
+                        </span>
                     </div>
 
                 </div>
             </div>
 
-            {{-- Right Side: Compact Integrated Academic Area --}}
-            <div class="s-dash-profile-right">
-                <div style="display: flex; flex-direction: column;">
-                    <span style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8;">School Year</span>
-                    <span style="font-size: 1.05rem; font-weight: 800; color: #0f172a; margin-top: 0.1rem;">
-                        {{ $student?->school_year ?? '2026–2027' }}
+            {{-- Right Side: Integrated Academic & Timetable Action --}}
+            <div style="display: flex; align-items: center; gap: 1.35rem; border-left: 1px solid #f1f5f9; padding-left: 1.35rem; flex-shrink: 0; position: relative; z-index: 1;">
+                <div style="display: flex; flex-direction: column; text-align: right;">
+                    <span style="font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: #94a3b8;">Academic Year</span>
+                    <span style="font-family: 'Plus Jakarta Sans', sans-serif !important; font-size: 1.1rem; font-weight: 800; color: #0f172a; margin-top: 0.1rem; line-height: 1.2;">
+                        SY {{ $student?->school_year ?? '2026–2027' }}
                     </span>
                 </div>
 
                 <a href="{{ route('student.schedule') }}" style="
                     display: inline-flex;
                     align-items: center;
-                    gap: 0.35rem;
-                    padding: 0.5rem 0.95rem;
-                    border-radius: 10px;
-                    background: #059669;
+                    gap: 0.45rem;
+                    padding: 0.6rem 1.1rem;
+                    border-radius: 12px;
+                    background: linear-gradient(135deg, #059669 0%, #047857 100%);
                     color: #ffffff;
                     font-size: 0.8125rem;
                     font-weight: 700;
                     text-decoration: none;
-                    box-shadow: 0 1px 2px rgba(5, 150, 105, 0.2);
+                    box-shadow: 0 4px 14px rgba(5, 150, 105, 0.22);
                     transition: all 0.15s ease;
-                " onmouseover="this.style.background='#047857'; this.style.transform='translateY(-1px)'" onmouseout="this.style.background='#059669'; this.style.transform='none'">
-                    <span>View Timetable</span>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                " onmouseover="this.style.boxShadow='0 6px 20px rgba(5, 150, 105, 0.35)'; this.style.transform='translateY(-1px)'" onmouseout="this.style.boxShadow='0 4px 14px rgba(5, 150, 105, 0.22)'; this.style.transform='none'">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    <span>My Schedule</span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                 </a>
             </div>
         </div>
