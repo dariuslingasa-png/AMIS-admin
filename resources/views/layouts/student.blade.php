@@ -760,25 +760,15 @@
                     Teachers
                 </a>
 
-                <a href="{{ route('student.ebooks') }}"
-                   class="student-nav-item s-nav-rose {{ request()->routeIs('student.ebooks*') ? 'active' : '' }}">
-                    {{-- Lucide: BookOpen --}}
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" style="color: #ec4899;">
-                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                <a href="{{ route('student.grades') }}"
+                   class="student-nav-item s-nav-purple {{ request()->routeIs('student.grades*') ? 'active' : '' }}">
+                    {{-- Lucide: GraduationCap --}}
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" style="color: #8b5cf6;">
+                        <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                        <path d="M6 12v5c3 3 9 3 12 0v-5"/>
                     </svg>
-                    Ebooks
+                    Grades & Report Card
                 </a>
-
-                <div class="student-nav-item disabled">
-                    {{-- Lucide: BookOpen --}}
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-                    </svg>
-                    Grades
-                    <span class="student-nav-soon">Soon</span>
-                </div>
 
                 <a href="{{ route('student.profile') }}"
                    class="student-nav-item s-nav-purple {{ request()->routeIs('student.profile*') ? 'active' : '' }}">
