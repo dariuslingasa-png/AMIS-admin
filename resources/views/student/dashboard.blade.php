@@ -633,6 +633,37 @@
                 grid-template-columns: 1fr !important;
             }
         }
+        .profile-info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.25rem 2.5rem;
+        }
+        .profile-info-row {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            padding-bottom: 0.85rem;
+            border-bottom: 1px dashed #f1f5f9;
+        }
+        .profile-info-label {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .profile-info-value {
+            font-size: 0.925rem;
+            font-weight: 600;
+            color: #0f172a;
+            word-break: break-word;
+        }
+        @media(max-width: 768px) {
+            .profile-info-grid {
+                grid-template-columns: 1fr !important;
+                gap: 0.85rem !important;
+            }
+        }
     </style>
 
     {{-- ── TAB 1: STUDENT OVERVIEW CONTENT ────────────────────────────── --}}
@@ -1032,180 +1063,230 @@
 
     </div>
 
-    {{-- ── TAB 2: PERSONAL INFORMATION CONTENT ────────────────────────── --}}
-    <div x-show="activeTab === 'profile'" x-cloak x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" style="display: flex; flex-direction: column; gap: 1.5rem; width: 100%;">
+    {{-- ── TAB 2: PERSONAL INFORMATION CONTENT (Single Continuous Panel) ────────── --}}
+    <div x-show="activeTab === 'profile'" x-cloak x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" style="width: 100%;">
         
-        {{-- Responsive 2-Column Info Grid --}}
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem;">
-            
-            {{-- 1. Student Personal Information Card --}}
-            <div style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 20px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-                <div style="display: flex; align-items: center; gap: 0.55rem; margin-bottom: 1.25rem; padding-bottom: 0.75rem; border-bottom: 1px solid #f1f5f9;">
-                    <div style="width: 32px; height: 32px; border-radius: 8px; background: #f0f9ff; display: flex; align-items: center; justify-content: center; color: #0284c7;">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    </div>
-                    <h3 style="font-size: 1.05rem; font-weight: 800; color: #0f172a; margin: 0;">Personal Details</h3>
-                </div>
+        {{-- Single Primary Content Surface --}}
+        <div class="fade-up" style="
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 24px;
+            padding: 2.25rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02), 0 8px 24px -4px rgba(15, 23, 42, 0.03);
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            width: 100%;
+        ">
 
-                <div style="display: flex; flex-direction: column; gap: 0.85rem;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.75rem; border-bottom: 1px dashed #f1f5f9;">
-                        <span style="font-size: 0.825rem; font-weight: 600; color: #64748b;">Full Name</span>
-                        <span style="font-size: 0.875rem; font-weight: 800; color: #0f172a;">{{ $fullName }}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.75rem; border-bottom: 1px dashed #f1f5f9;">
-                        <span style="font-size: 0.825rem; font-weight: 600; color: #64748b;">Student ID / LRN</span>
-                        <span style="font-size: 0.875rem; font-weight: 800; color: #0f172a; font-family: monospace;">{{ $student?->student_number ?? '260000' }}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.75rem; border-bottom: 1px dashed #f1f5f9;">
-                        <span style="font-size: 0.825rem; font-weight: 600; color: #64748b;">Gender</span>
-                        <span style="font-size: 0.875rem; font-weight: 800; color: #0f172a;">{{ $student?->applicant?->gender ?: '—' }}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.75rem; border-bottom: 1px dashed #f1f5f9;">
-                        <span style="font-size: 0.825rem; font-weight: 600; color: #64748b;">Date of Birth</span>
-                        <span style="font-size: 0.875rem; font-weight: 800; color: #0f172a;">{{ $student?->applicant?->date_of_birth ? $student->applicant->date_of_birth->format('M d, Y') : '—' }}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.75rem; border-bottom: 1px dashed #f1f5f9;">
-                        <span style="font-size: 0.825rem; font-weight: 600; color: #64748b;">Place of Birth</span>
-                        <span style="font-size: 0.875rem; font-weight: 800; color: #0f172a;">{{ $student?->applicant?->place_of_birth ?: '—' }}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-size: 0.825rem; font-weight: 600; color: #64748b;">Religion</span>
-                        <span style="font-size: 0.875rem; font-weight: 800; color: #0f172a;">{{ $student?->applicant?->religion ?: 'Islam' }}</span>
-                    </div>
-                </div>
-            </div>
-
-            {{-- 2. Academic Information Card --}}
-            <div style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 20px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-                <div style="display: flex; align-items: center; gap: 0.55rem; margin-bottom: 1.25rem; padding-bottom: 0.75rem; border-bottom: 1px solid #f1f5f9;">
-                    <div style="width: 32px; height: 32px; border-radius: 8px; background: #ecfdf5; display: flex; align-items: center; justify-content: center; color: #059669;">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-                    </div>
-                    <h3 style="font-size: 1.05rem; font-weight: 800; color: #0f172a; margin: 0;">Academic Information</h3>
-                </div>
-
-                <div style="display: flex; flex-direction: column; gap: 0.85rem;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.75rem; border-bottom: 1px dashed #f1f5f9;">
-                        <span style="font-size: 0.825rem; font-weight: 600; color: #64748b;">Grade Level</span>
-                        <span style="font-size: 0.875rem; font-weight: 800; color: #0f172a;">{{ $student?->grade_level ?: 'Grade 1' }}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.75rem; border-bottom: 1px dashed #f1f5f9;">
-                        <span style="font-size: 0.825rem; font-weight: 600; color: #64748b;">Class Section</span>
-                        <span style="font-size: 0.875rem; font-weight: 800; color: #0f172a;">{{ $section?->name ?? 'G1-AL-MUNAWWARA' }}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.75rem; border-bottom: 1px dashed #f1f5f9;">
-                        <span style="font-size: 0.825rem; font-weight: 600; color: #64748b;">School Year</span>
-                        <span style="font-size: 0.875rem; font-weight: 800; color: #0f172a;">{{ $student?->school_year ?? '2026–2027' }}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.75rem; border-bottom: 1px dashed #f1f5f9;">
-                        <span style="font-size: 0.825rem; font-weight: 600; color: #64748b;">Enrollment Status</span>
-                        <span style="font-size: 0.72rem; font-weight: 800; color: #047857; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 0.15rem 0.55rem; border-radius: 6px; text-transform: uppercase;">
-                            {{ ucfirst($student?->applicant?->student_type ?? 'Continuing') }}
-                        </span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.75rem; border-bottom: 1px dashed #f1f5f9;">
-                        <span style="font-size: 0.825rem; font-weight: 600; color: #64748b;">Learning Modality</span>
-                        <span style="font-size: 0.875rem; font-weight: 800; color: #0f172a;">{{ $learningMode ?: 'Online Learning' }}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-size: 0.825rem; font-weight: 600; color: #64748b;">Official Section Name</span>
-                        <span style="font-size: 0.875rem; font-weight: 800; color: #0f172a;">{{ $section?->official_name ?? ($section?->name ?? 'General') }}</span>
-                    </div>
-                </div>
-            </div>
-
-            {{-- 3. Contact & Guardian Card --}}
-            <div style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 20px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-                <div style="display: flex; align-items: center; gap: 0.55rem; margin-bottom: 1.25rem; padding-bottom: 0.75rem; border-bottom: 1px solid #f1f5f9;">
-                    <div style="width: 32px; height: 32px; border-radius: 8px; background: #fdf2f8; display: flex; align-items: center; justify-content: center; color: #db2777;">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                    </div>
-                    <h3 style="font-size: 1.05rem; font-weight: 800; color: #0f172a; margin: 0;">Contact & Guardian</h3>
-                </div>
-
-                <div style="display: flex; flex-direction: column; gap: 0.85rem;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.75rem; border-bottom: 1px dashed #f1f5f9;">
-                        <span style="font-size: 0.825rem; font-weight: 600; color: #64748b;">Father's Name</span>
-                        <span style="font-size: 0.875rem; font-weight: 800; color: #0f172a;">{{ $father ?: '—' }}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.75rem; border-bottom: 1px dashed #f1f5f9;">
-                        <span style="font-size: 0.825rem; font-weight: 600; color: #64748b;">Mother's Name</span>
-                        <span style="font-size: 0.875rem; font-weight: 800; color: #0f172a;">{{ $mother ?: '—' }}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.75rem; border-bottom: 1px dashed #f1f5f9;">
-                        <span style="font-size: 0.825rem; font-weight: 600; color: #64748b;">Parent Contact</span>
-                        <span style="font-size: 0.875rem; font-weight: 800; color: #0f172a;">{{ $contactNo ?: '—' }}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.75rem; border-bottom: 1px dashed #f1f5f9;">
-                        <span style="font-size: 0.825rem; font-weight: 600; color: #64748b;">Parent Email</span>
-                        <span style="font-size: 0.875rem; font-weight: 700; color: #0f172a;">{{ $student?->applicant?->parent_email ?: '—' }}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.75rem; border-bottom: 1px dashed #f1f5f9;">
-                        <span style="font-size: 0.825rem; font-weight: 600; color: #64748b;">Emergency Contact</span>
-                        <span style="font-size: 0.875rem; font-weight: 800; color: #0f172a;">{{ $student?->applicant?->emergency_name ?: '—' }}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                        <span style="font-size: 0.825rem; font-weight: 600; color: #64748b;">Home Address</span>
-                        <span style="font-size: 0.825rem; font-weight: 700; color: #0f172a; text-align: right; max-width: 60%;">{{ $student?->applicant?->street_address ?: ($student?->applicant?->address ?: '—') }}</span>
-                    </div>
-                </div>
-            </div>
-
-            {{-- 4. Microsoft 365 Account Card --}}
-            <div style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 20px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.02);" x-data="{ copied: false }">
-                <div style="display: flex; align-items: center; gap: 0.55rem; margin-bottom: 1.25rem; padding-bottom: 0.75rem; border-bottom: 1px solid #f1f5f9;">
-                    <div style="width: 32px; height: 32px; border-radius: 8px; background: #e0e7ff; display: flex; align-items: center; justify-content: center; color: #4338ca;">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 7h.01"/><path d="M17 7h.01"/><path d="M7 17h.01"/><path d="M17 17h.01"/></svg>
-                    </div>
-                    <h3 style="font-size: 1.05rem; font-weight: 800; color: #0f172a; margin: 0;">Microsoft 365 Account</h3>
-                </div>
-
-                <div style="display: flex; flex-direction: column; gap: 0.85rem;">
-                    @php
-                        $m365Email = $student?->school_email ?? ($student?->ms_email ?? Auth::user()->email);
-                    @endphp
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.75rem; border-bottom: 1px dashed #f1f5f9;">
-                        <span style="font-size: 0.825rem; font-weight: 600; color: #64748b;">M365 Username</span>
-                        <span style="font-size: 0.875rem; font-weight: 800; color: #047857;">{{ $m365Email }}</span>
-                    </div>
-
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.75rem; border-bottom: 1px dashed #f1f5f9;">
-                        <span style="font-size: 0.825rem; font-weight: 600; color: #64748b;">Account Status</span>
-                        <span style="font-size: 0.72rem; font-weight: 800; color: #047857; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 0.15rem 0.55rem; border-radius: 6px; text-transform: uppercase; display: inline-flex; align-items: center; gap: 0.3rem;">
-                            <span style="width: 5px; height: 5px; border-radius: 50%; background: #10b981;"></span>
-                            Active
-                        </span>
-                    </div>
-
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.75rem; border-bottom: 1px dashed #f1f5f9;">
-                        <span style="font-size: 0.825rem; font-weight: 600; color: #64748b;">Password</span>
-                        <span style="font-size: 0.825rem; font-weight: 700; color: #64748b; font-family: monospace;">Password managed through Microsoft 365</span>
-                    </div>
-
-                    {{-- Actions --}}
-                    <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem;">
-                        <button type="button" 
-                                @click="navigator.clipboard.writeText('{{ $m365Email }}'); copied = true; setTimeout(() => copied = false, 2000)"
-                                style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.45rem; padding: 0.6rem; border-radius: 10px; border: 1px solid #e2e8f0; background: #f8fafc; font-size: 0.8125rem; font-weight: 700; color: #334155; cursor: pointer; transition: all 0.15s ease;"
-                                onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#f8fafc'">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-                            <span x-text="copied ? 'Copied to Clipboard!' : 'Copy Username / Email'">Copy Username / Email</span>
-                        </button>
-
-                        <div style="display: flex; gap: 0.5rem;">
-                            <a href="https://login.microsoftonline.com/" target="_blank" rel="noopener noreferrer" 
-                               style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.35rem; padding: 0.6rem; border-radius: 10px; background: #059669; color: white; font-size: 0.8125rem; font-weight: 700; text-decoration: none; box-shadow: 0 2px 6px rgba(5,150,105,0.15);">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                                <span>Open M365</span>
-                            </a>
-
-                            <a href="https://account.activedirectory.windowsazure.com/ChangePassword.aspx" target="_blank" rel="noopener noreferrer"
-                               style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.35rem; padding: 0.6rem; border-radius: 10px; border: 1px solid #e2e8f0; background: white; color: #475569; font-size: 0.8125rem; font-weight: 700; text-decoration: none;">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                                <span>Change Password</span>
-                            </a>
+            {{-- ── 1. PERSONAL DETAILS SECTION ──────────────────────── --}}
+            <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+                {{-- Section Header --}}
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding-bottom: 0.85rem; border-bottom: 1px solid #f1f5f9;">
+                    <div style="display: flex; align-items: center; gap: 0.6rem;">
+                        <div style="width: 32px; height: 32px; border-radius: 9px; background: #f0f9ff; display: flex; align-items: center; justify-content: center; color: #0284c7; flex-shrink: 0;">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        </div>
+                        <div>
+                            <h3 style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin: 0; line-height: 1.2;">Personal Details</h3>
+                            <p style="font-size: 0.78rem; color: #64748b; margin: 0.15rem 0 0 0; font-weight: 500;">Basic identification and demographic information</p>
                         </div>
                     </div>
+                </div>
+
+                {{-- 2-Column Key-Value Grid --}}
+                <div class="profile-info-grid">
+                    <div class="profile-info-row">
+                        <span class="profile-info-label">Full Name</span>
+                        <span class="profile-info-value">{{ $fullName ?: '—' }}</span>
+                    </div>
+                    <div class="profile-info-row">
+                        <span class="profile-info-label">Student ID / LRN</span>
+                        <span class="profile-info-value" style="font-family: monospace; font-size: 0.95rem;">{{ $student?->student_number ?? '260000' }}</span>
+                    </div>
+                    <div class="profile-info-row">
+                        <span class="profile-info-label">Gender</span>
+                        <span class="profile-info-value">{{ $student?->applicant?->gender ?: '—' }}</span>
+                    </div>
+                    <div class="profile-info-row">
+                        <span class="profile-info-label">Date of Birth</span>
+                        <span class="profile-info-value">{{ $student?->applicant?->date_of_birth ? $student->applicant->date_of_birth->format('F d, Y') : '—' }}</span>
+                    </div>
+                    <div class="profile-info-row">
+                        <span class="profile-info-label">Place of Birth</span>
+                        <span class="profile-info-value">{{ $student?->applicant?->place_of_birth ?: '—' }}</span>
+                    </div>
+                    <div class="profile-info-row">
+                        <span class="profile-info-label">Religion</span>
+                        <span class="profile-info-value">{{ $student?->applicant?->religion ?: 'Islam' }}</span>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Subtle Horizontal Divider --}}
+            <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 0;">
+
+            {{-- ── 2. ACADEMIC INFORMATION SECTION ──────────────────── --}}
+            <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+                {{-- Section Header --}}
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding-bottom: 0.85rem; border-bottom: 1px solid #f1f5f9;">
+                    <div style="display: flex; align-items: center; gap: 0.6rem;">
+                        <div style="width: 32px; height: 32px; border-radius: 9px; background: #ecfdf5; display: flex; align-items: center; justify-content: center; color: #059669; flex-shrink: 0;">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                        </div>
+                        <div>
+                            <h3 style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin: 0; line-height: 1.2;">Academic Information</h3>
+                            <p style="font-size: 0.78rem; color: #64748b; margin: 0.15rem 0 0 0; font-weight: 500;">Current enrollment, grade level, and section assignment</p>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- 2-Column Key-Value Grid --}}
+                <div class="profile-info-grid">
+                    <div class="profile-info-row">
+                        <span class="profile-info-label">Grade Level</span>
+                        <span class="profile-info-value">{{ $student?->grade_level ?: 'Grade 1' }}</span>
+                    </div>
+                    <div class="profile-info-row">
+                        <span class="profile-info-label">Class Section</span>
+                        <span class="profile-info-value">{{ $section?->name ?? 'G1-AL-MUNAWWARA' }}</span>
+                    </div>
+                    <div class="profile-info-row">
+                        <span class="profile-info-label">School Year</span>
+                        <span class="profile-info-value">SY {{ $student?->school_year ?? '2026–2027' }}</span>
+                    </div>
+                    <div class="profile-info-row">
+                        <span class="profile-info-label">Enrollment Status</span>
+                        <span class="profile-info-value">
+                            <span style="font-size: 0.75rem; font-weight: 700; color: #047857; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 0.15rem 0.6rem; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.04em; display: inline-flex; align-items: center; gap: 0.3rem;">
+                                <span style="width: 5px; height: 5px; border-radius: 50%; background: #10b981;"></span>
+                                {{ ucfirst($student?->applicant?->student_type ?? 'Continuing') }}
+                            </span>
+                        </span>
+                    </div>
+                    <div class="profile-info-row">
+                        <span class="profile-info-label">Learning Modality</span>
+                        <span class="profile-info-value">{{ $learningMode ?: 'Online Learning' }}</span>
+                    </div>
+                    <div class="profile-info-row">
+                        <span class="profile-info-label">Official Section Name</span>
+                        <span class="profile-info-value">{{ $section?->official_name ?? ($section?->name ?? 'General') }}</span>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Subtle Horizontal Divider --}}
+            <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 0;">
+
+            {{-- ── 3. CONTACT & GUARDIAN SECTION ─────────────────────── --}}
+            <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+                {{-- Section Header --}}
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding-bottom: 0.85rem; border-bottom: 1px solid #f1f5f9;">
+                    <div style="display: flex; align-items: center; gap: 0.6rem;">
+                        <div style="width: 32px; height: 32px; border-radius: 9px; background: #fdf2f8; display: flex; align-items: center; justify-content: center; color: #db2777; flex-shrink: 0;">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        </div>
+                        <div>
+                            <h3 style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin: 0; line-height: 1.2;">Contact & Guardian</h3>
+                            <p style="font-size: 0.78rem; color: #64748b; margin: 0.15rem 0 0 0; font-weight: 500;">Parent, guardian, and emergency contact details</p>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- 2-Column Key-Value Grid --}}
+                <div class="profile-info-grid">
+                    <div class="profile-info-row">
+                        <span class="profile-info-label">Father's Name</span>
+                        <span class="profile-info-value">{{ $father ?: '—' }}</span>
+                    </div>
+                    <div class="profile-info-row">
+                        <span class="profile-info-label">Mother's Name</span>
+                        <span class="profile-info-value">{{ $mother ?: '—' }}</span>
+                    </div>
+                    <div class="profile-info-row">
+                        <span class="profile-info-label">Parent Contact Number</span>
+                        <span class="profile-info-value">{{ $contactNo ?: '—' }}</span>
+                    </div>
+                    <div class="profile-info-row">
+                        <span class="profile-info-label">Parent Email Address</span>
+                        <span class="profile-info-value">{{ $student?->applicant?->parent_email ?: '—' }}</span>
+                    </div>
+                    <div class="profile-info-row">
+                        <span class="profile-info-label">Emergency Contact</span>
+                        <span class="profile-info-value">{{ $student?->applicant?->emergency_name ?: '—' }}</span>
+                    </div>
+                    <div class="profile-info-row">
+                        <span class="profile-info-label">Home Address</span>
+                        <span class="profile-info-value">{{ $student?->applicant?->street_address ?: ($student?->applicant?->address ?: '—') }}</span>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Subtle Horizontal Divider --}}
+            <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 0;">
+
+            {{-- ── 4. MICROSOFT 365 ACCOUNT SECTION ─────────────────── --}}
+            <div style="display: flex; flex-direction: column; gap: 1.25rem;" x-data="{ copied: false }">
+                {{-- Section Header --}}
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding-bottom: 0.85rem; border-bottom: 1px solid #f1f5f9;">
+                    <div style="display: flex; align-items: center; gap: 0.6rem;">
+                        <div style="width: 32px; height: 32px; border-radius: 9px; background: #e0e7ff; display: flex; align-items: center; justify-content: center; color: #4338ca; flex-shrink: 0;">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 7h.01"/><path d="M17 7h.01"/><path d="M7 17h.01"/><path d="M17 17h.01"/></svg>
+                        </div>
+                        <div>
+                            <h3 style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin: 0; line-height: 1.2;">Microsoft 365 Account</h3>
+                            <p style="font-size: 0.78rem; color: #64748b; margin: 0.15rem 0 0 0; font-weight: 500;">Institutional credentials for MS Teams, Outlook, and online apps</p>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- 2-Column Key-Value Grid --}}
+                @php
+                    $m365Email = $student?->school_email ?? ($student?->ms_email ?? Auth::user()->email);
+                @endphp
+                <div class="profile-info-grid">
+                    <div class="profile-info-row">
+                        <span class="profile-info-label">M365 Username / Email</span>
+                        <span class="profile-info-value" style="color: #047857; font-weight: 700;">{{ $m365Email }}</span>
+                    </div>
+                    <div class="profile-info-row">
+                        <span class="profile-info-label">Account Status</span>
+                        <span class="profile-info-value">
+                            <span style="font-size: 0.75rem; font-weight: 700; color: #047857; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 0.15rem 0.6rem; border-radius: 6px; text-transform: uppercase; display: inline-flex; align-items: center; gap: 0.3rem;">
+                                <span style="width: 5px; height: 5px; border-radius: 50%; background: #10b981;"></span>
+                                Active
+                            </span>
+                        </span>
+                    </div>
+                    <div class="profile-info-row" style="grid-column: 1 / -1;">
+                        <span class="profile-info-label">Password</span>
+                        <span class="profile-info-value" style="color: #64748b; font-family: monospace; font-size: 0.875rem;">Password managed through Microsoft 365</span>
+                    </div>
+                </div>
+
+                {{-- Actions in a compact row --}}
+                <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.5rem;">
+                    <button type="button" 
+                            @click="navigator.clipboard.writeText('{{ $m365Email }}'); copied = true; setTimeout(() => copied = false, 2000)"
+                            style="display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; padding: 0.6rem 1.15rem; border-radius: 10px; border: 1px solid #e2e8f0; background: #f8fafc; font-size: 0.8125rem; font-weight: 700; color: #334155; cursor: pointer; transition: all 0.15s ease;"
+                            onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#f8fafc'">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                        <span x-text="copied ? 'Copied to Clipboard!' : 'Copy Username / Email'">Copy Username / Email</span>
+                    </button>
+
+                    <a href="https://login.microsoftonline.com/" target="_blank" rel="noopener noreferrer" 
+                       style="display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; padding: 0.6rem 1.15rem; border-radius: 10px; background: #059669; color: white; font-size: 0.8125rem; font-weight: 700; text-decoration: none; box-shadow: 0 2px 6px rgba(5,150,105,0.15); transition: all 0.15s ease;"
+                       onmouseover="this.style.background='#047857'" onmouseout="this.style.background='#059669'">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                        <span>Open Microsoft 365</span>
+                    </a>
+
+                    <a href="https://account.activedirectory.windowsazure.com/ChangePassword.aspx" target="_blank" rel="noopener noreferrer"
+                       style="display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; padding: 0.6rem 1.15rem; border-radius: 10px; border: 1px solid #e2e8f0; background: white; color: #475569; font-size: 0.8125rem; font-weight: 700; text-decoration: none; transition: all 0.15s ease;"
+                       onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        <span>Change Password</span>
+                    </a>
                 </div>
             </div>
 
