@@ -407,6 +407,14 @@
         </div>
     @endif
 
+    {{-- Page Greeting (Subtle, clean, above profile card) --}}
+    <div class="fade-up" style="display: flex; align-items: center; justify-content: space-between; padding: 0 0.25rem; margin-bottom: -0.5rem;">
+        <span style="font-size: 0.78rem; font-weight: 700; color: #059669; text-transform: uppercase; letter-spacing: 0.08em; display: inline-flex; align-items: center; gap: 0.4rem;">
+            <span style="width: 6px; height: 6px; border-radius: 50%; background: #10b981;"></span>
+            Assalamu Alaikum
+        </span>
+    </div>
+
     {{-- ── 1. Centered Student Profile Header Card ──────────────────── --}}
     <div class="fade-up" style="
         background: #ffffff;
@@ -469,29 +477,19 @@
                 <span style="position: absolute; bottom: 3px; right: 3px; width: 17px; height: 17px; border-radius: 50%; background: #10b981; border: 3.5px solid #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.12);"></span>
             </div>
 
-            {{-- 2. Greeting --}}
-            <span style="font-size: 0.72rem; font-weight: 700; color: #059669; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.25rem;">
-                Assalamu Alaikum
-            </span>
-
-            {{-- 3. Student Full Name (Main Focus) --}}
-            <h1 style="font-family: 'Plus Jakarta Sans', sans-serif !important; font-size: 1.75rem; font-weight: 800; color: #0f172a; margin: 0 0 0.4rem 0; line-height: 1.2; letter-spacing: -0.025em;">
+            {{-- 2. Student Full Name (Main Focus) --}}
+            <h1 style="font-family: 'Plus Jakarta Sans', sans-serif !important; font-size: 1.75rem; font-weight: 800; color: #0f172a; margin: 0 0 0.45rem 0; line-height: 1.2; letter-spacing: -0.025em;">
                 {{ $fullName }}
             </h1>
 
-            {{-- 4. Primary Metadata Row: Grade • Section • 1 Status Chip --}}
-            <div style="display: flex; align-items: center; justify-content: center; gap: 0.55rem; flex-wrap: wrap; font-size: 0.875rem; font-weight: 600; color: #475569; margin-bottom: 0.35rem;">
+            {{-- 3. Primary Metadata Row: Grade • Section --}}
+            <div style="display: flex; align-items: center; justify-content: center; gap: 0.55rem; flex-wrap: wrap; font-size: 0.9rem; font-weight: 600; color: #475569; margin-bottom: 0.4rem;">
                 <span>{{ $student?->grade_level ?: 'Grade 1' }}</span>
                 <span style="color: #cbd5e1;">•</span>
                 <span>{{ $section?->name ?? 'G1-AL-MUNAWWARA' }}</span>
-                <span style="color: #cbd5e1;">•</span>
-                <span style="font-size: 0.72rem; font-weight: 700; color: #047857; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 0.15rem 0.55rem; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.04em; display: inline-flex; align-items: center; gap: 0.3rem;">
-                    <span style="width: 5px; height: 5px; border-radius: 50%; background: #10b981;"></span>
-                    {{ ucfirst($student?->applicant?->student_type ?? 'Continuing') }}
-                </span>
             </div>
 
-            {{-- 5. Secondary Info Row: ID & Email with simple icons --}}
+            {{-- 4. Secondary Info Row: ID & Email with simple icons --}}
             <div style="display: flex; align-items: center; justify-content: center; gap: 0.75rem; flex-wrap: wrap; font-size: 0.825rem; font-weight: 500; color: #64748b;">
                 <span style="display: inline-flex; align-items: center; gap: 0.35rem;">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 7h.01"/><path d="M17 7h.01"/><path d="M7 17h.01"/><path d="M17 17h.01"/></svg>
@@ -504,32 +502,14 @@
                 </span>
             </div>
 
-            {{-- 6. Academic Year & My Schedule Button Row --}}
-            <div style="
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 1.25rem;
-                flex-wrap: wrap;
-                margin-top: 1.15rem;
-                padding-top: 1rem;
-                border-top: 1px solid #f1f5f9;
-                width: 100%;
-                max-width: 480px;
-            ">
-                <div style="display: flex; align-items: center; gap: 0.45rem;">
-                    <span style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8;">Academic Year:</span>
-                    <span style="font-family: 'Plus Jakarta Sans', sans-serif !important; font-size: 0.95rem; font-weight: 800; color: #0f172a;">
-                        SY {{ $student?->school_year ?? '2026–2027' }}
-                    </span>
-                </div>
-
+            {{-- 5. My Schedule Primary Action Button --}}
+            <div style="margin-top: 1.15rem; display: flex; justify-content: center;">
                 <button type="button" @click="activeTab = 'overview'" style="
                     display: inline-flex;
                     align-items: center;
                     gap: 0.45rem;
-                    padding: 0.5rem 1.15rem;
-                    border-radius: 10px;
+                    padding: 0.55rem 1.25rem;
+                    border-radius: 12px;
                     background: linear-gradient(135deg, #059669 0%, #047857 100%);
                     color: #ffffff;
                     font-size: 0.8125rem;
