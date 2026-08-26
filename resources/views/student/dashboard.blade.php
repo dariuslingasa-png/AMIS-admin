@@ -330,6 +330,7 @@
 <script>
     window.scheduleCountdown = function(items) {
         return {
+            activeTab: 'schedule',
             viewMode: '{{ $defaultViewMode }}', showIdModal: false, isFlipped: false, showEnded: false, countdownOpen: true,
             items, activeClass: null, nextClass: null, phase: 'loading', remaining: '--:--', timer: null,
             init() {
@@ -373,431 +374,411 @@
 </script>
 @endonce
 
-{{-- ── 2-col layout: main + right panel ──────────────────────────── --}}
-<div class="s-two-col-grid" x-data="scheduleCountdown(@js($countdownItems))">
+{{-- ── Main Dashboard Container with Alpine State ────────────────── --}}
+<div x-data="scheduleCountdown(@js($countdownItems))" style="display: flex; flex-direction: column; gap: 1.5rem; width: 100%;">
 
-    {{-- ── LEFT COLUMN ──────────────────────────────────────────────── --}}
-    <div style="display:flex;flex-direction:column;gap:1.5rem;min-width:0;width:100%;">
+    @if (session('success'))
+        <div class="student-alert fade-up" style="margin-bottom: 0;">
+            <i data-lucide="check-circle" style="width: 18px; height: 18px; flex-shrink: 0;"></i>
+            <span>{{ session('success') }}</span>
+        </div>
+    @endif
+    @if ($errors->any())
+        <div class="student-error fade-up" style="margin-bottom: 0;">
+            <i data-lucide="alert-circle" style="width: 18px; height: 18px; flex-shrink: 0;"></i>
+            <span>{{ $errors->first() }}</span>
+        </div>
+    @endif
 
-        @if (session('success'))
-            <div class="student-alert fade-up" style="margin-bottom: 0;">
-                <i data-lucide="check-circle" style="width: 18px; height: 18px; flex-shrink: 0;"></i>
-                <span>{{ session('success') }}</span>
+    {{-- Clean Executive Student Header --}}
+    <div class="s-dash-profile-header fade-up" style="
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 20px;
+        padding: 1.5rem 1.85rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03), 0 8px 24px -4px rgba(15, 23, 42, 0.04);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1.75rem;
+        flex-wrap: wrap;
+    ">
+        {{-- Left Side: Avatar + Student Info --}}
+        <div style="display: flex; align-items: center; gap: 1.35rem; min-width: 280px; flex: 1;">
+            
+            {{-- Circular Avatar (64px) --}}
+            <div style="position: relative; width: 64px; height: 64px; flex-shrink: 0;">
+                @if ($photoUrl)
+                    <img src="{{ $photoUrl }}" alt="{{ $fullName }}"
+                         onerror="if (!this.dataset.fallback) { this.dataset.fallback='1'; this.src='{{ $fallbackPhoto }}'; } else { this.style.display='none'; this.nextElementSibling.style.display='flex'; }"
+                         style="width: 64px; height: 64px; object-fit: cover; border-radius: 50%; border: 3px solid #ffffff; box-shadow: 0 4px 14px rgba(0,0,0,0.08); display: block;"
+                         loading="eager" decoding="async">
+                    <div style="width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, #059669 0%, #047857 100%); border: 3px solid #ffffff; box-shadow: 0 4px 14px rgba(5,150,105,0.25); display: none; align-items: center; justify-content: center; color: #ffffff; font-weight: 800; font-size: 1.35rem; letter-spacing: -0.02em;">
+                        {{ $initials }}
+                    </div>
+                @else
+                    <div style="width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, #059669 0%, #047857 100%); border: 3px solid #ffffff; box-shadow: 0 4px 14px rgba(5,150,105,0.25); display: flex; align-items: center; justify-content: center; color: #ffffff; font-weight: 800; font-size: 1.35rem; letter-spacing: -0.02em;">
+                        {{ $initials }}
+                    </div>
+                @endif
+                <span style="position: absolute; bottom: 1px; right: 1px; width: 14px; height: 14px; border-radius: 50%; background: #10b981; border: 2.5px solid #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"></span>
             </div>
-        @endif
-        @if ($errors->any())
-            <div class="student-error fade-up" style="margin-bottom: 0;">
-                <i data-lucide="alert-circle" style="width: 18px; height: 18px; flex-shrink: 0;"></i>
-                <span>{{ $errors->first() }}</span>
-            </div>
-        @endif
 
-        <style>
-            .class-countdown-banner{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:1rem;overflow:hidden;border:1px solid #a7f3d0;border-radius:20px;background:linear-gradient(135deg,#064e3b 0%,#047857 55%,#0d9488 100%);padding:1.25rem 1.4rem;color:#fff;box-shadow:0 12px 28px rgba(5,150,105,.14)}
-            .class-countdown-banner:after{content:'';position:absolute;right:-35px;top:-55px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.08)}
-            .class-countdown-icon{display:flex;width:48px;height:48px;align-items:center;justify-content:center;border-radius:14px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.18)}.class-countdown-icon svg{width:24px;height:24px}
-            .class-countdown-copy{position:relative;z-index:1;min-width:0}.class-countdown-copy h2{margin:.12rem 0;color:#fff;font-size:1.15rem;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.class-countdown-copy p{margin:0;color:#d1fae5;font-size:.78rem;font-weight:700}.class-countdown-copy .class-countdown-label{color:#a7f3d0;font-size:.65rem;font-weight:900;text-transform:uppercase;letter-spacing:.1em}
-            .class-countdown-clock{position:relative;z-index:1;min-width:120px;border-radius:15px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);padding:.7rem 1rem;text-align:center}.class-countdown-clock strong{display:block;font-variant-numeric:tabular-nums;font-size:1.45rem;font-weight:950;letter-spacing:.03em}.class-countdown-clock span{display:block;margin-top:.1rem;color:#a7f3d0;font-size:.6rem;font-weight:850;text-transform:uppercase;letter-spacing:.08em}
-            .class-countdown-inline{border-width:0 0 1px;border-radius:0;padding:1rem 1.25rem;box-shadow:inset 4px 0 0 #34d399}
-            @media(max-width:640px){.class-countdown-banner{grid-template-columns:auto minmax(0,1fr);padding:1rem}.class-countdown-clock{grid-column:1/-1;width:100%}.class-countdown-copy h2{font-size:1rem}}
-        </style>
-
-        {{-- Clean Executive Student Header --}}
-        <div class="s-dash-profile-header fade-up" style="
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 20px;
-            padding: 1.5rem 1.85rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03), 0 8px 24px -4px rgba(15, 23, 42, 0.04);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1.75rem;
-            flex-wrap: wrap;
-        ">
-            {{-- Left Side: Avatar + Student Info --}}
-            <div style="display: flex; align-items: center; gap: 1.35rem; min-width: 280px; flex: 1;">
+            {{-- Information Block --}}
+            <div style="display: flex; flex-direction: column; gap: 0.2rem; min-width: 0;">
                 
-                {{-- Circular Avatar (64px) --}}
-                <div style="position: relative; width: 64px; height: 64px; flex-shrink: 0;">
-                    @if ($photoUrl)
-                        <img src="{{ $photoUrl }}" alt="{{ $fullName }}"
-                             onerror="if (!this.dataset.fallback) { this.dataset.fallback='1'; this.src='{{ $fallbackPhoto }}'; } else { this.style.display='none'; this.nextElementSibling.style.display='flex'; }"
-                             style="width: 64px; height: 64px; object-fit: cover; border-radius: 50%; border: 3px solid #ffffff; box-shadow: 0 4px 14px rgba(0,0,0,0.08); display: block;"
-                             loading="eager" decoding="async">
-                        <div style="width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, #059669 0%, #047857 100%); border: 3px solid #ffffff; box-shadow: 0 4px 14px rgba(5,150,105,0.25); display: none; align-items: center; justify-content: center; color: #ffffff; font-weight: 800; font-size: 1.35rem; letter-spacing: -0.02em;">
-                            {{ $initials }}
-                        </div>
-                    @else
-                        <div style="width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, #059669 0%, #047857 100%); border: 3px solid #ffffff; box-shadow: 0 4px 14px rgba(5,150,105,0.25); display: flex; align-items: center; justify-content: center; color: #ffffff; font-weight: 800; font-size: 1.35rem; letter-spacing: -0.02em;">
-                            {{ $initials }}
-                        </div>
-                    @endif
-                    <span style="position: absolute; bottom: 1px; right: 1px; width: 14px; height: 14px; border-radius: 50%; background: #10b981; border: 2.5px solid #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"></span>
-                </div>
+                {{-- Plain Greeting Label --}}
+                <span style="font-size: 0.75rem; font-weight: 700; color: #059669; text-transform: uppercase; letter-spacing: 0.06em;">
+                    Assalamu Alaikum
+                </span>
 
-                {{-- Information Block --}}
-                <div style="display: flex; flex-direction: column; gap: 0.2rem; min-width: 0;">
-                    
-                    {{-- Plain Greeting Label --}}
-                    <span style="font-size: 0.75rem; font-weight: 700; color: #059669; text-transform: uppercase; letter-spacing: 0.06em;">
-                        Assalamu Alaikum
-                    </span>
+                {{-- Student Full Name (Main Focus) --}}
+                <h1 style="font-family: 'Plus Jakarta Sans', sans-serif !important; font-size: 1.6rem; font-weight: 800; color: #0f172a; margin: 0; line-height: 1.25; letter-spacing: -0.025em;">
+                    {{ $fullName }}
+                </h1>
 
-                    {{-- Student Full Name (Main Focus) --}}
-                    <h1 style="font-family: 'Plus Jakarta Sans', sans-serif !important; font-size: 1.6rem; font-weight: 800; color: #0f172a; margin: 0; line-height: 1.25; letter-spacing: -0.025em;">
-                        {{ $fullName }}
-                    </h1>
-
-                    {{-- Single Metadata Row: Grade • Section • 1 Status Chip --}}
-                    <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; font-size: 0.85rem; font-weight: 600; color: #475569; margin-top: 0.1rem;">
-                        <span>{{ $student?->grade_level ?: 'Grade 1' }}</span>
-                        <span style="color: #cbd5e1;">•</span>
-                        <span>{{ $section?->name ?? 'G1-AL-MUNAWWARA' }}</span>
-                        <span style="color: #cbd5e1;">•</span>
-                        <span style="font-size: 0.72rem; font-weight: 700; color: #047857; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 0.15rem 0.55rem; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.04em; display: inline-flex; align-items: center; gap: 0.3rem;">
-                            <span style="width: 5px; height: 5px; border-radius: 50%; background: #10b981;"></span>
-                            {{ ucfirst($student?->applicant?->student_type ?? 'Continuing') }}
-                        </span>
-                    </div>
-
-                    {{-- Secondary Info Row: ID & Email with simple icons --}}
-                    <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; font-size: 0.8rem; font-weight: 500; color: #64748b; margin-top: 0.1rem;">
-                        <span style="display: inline-flex; align-items: center; gap: 0.35rem;">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 7h.01"/><path d="M17 7h.01"/><path d="M7 17h.01"/><path d="M17 17h.01"/></svg>
-                            <span>ID: <strong style="color: #1e293b; font-weight: 700;">{{ $student?->student_number ?? '260000' }}</strong></span>
-                        </span>
-                        <span style="color: #cbd5e1;">•</span>
-                        <span style="display: inline-flex; align-items: center; gap: 0.35rem;">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-                            <span style="color: #334155; font-weight: 600;">{{ $student?->school_email ?? Auth::user()->email }}</span>
-                        </span>
-                    </div>
-
-                </div>
-            </div>
-
-            {{-- Right Side: Academic Year Block + My Schedule Button --}}
-            <div style="display: flex; align-items: center; gap: 1.35rem; border-left: 1px solid #f1f5f9; padding-left: 1.35rem; flex-shrink: 0;">
-                <div style="display: flex; flex-direction: column; text-align: right;">
-                    <span style="font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: #94a3b8;">Academic Year</span>
-                    <span style="font-family: 'Plus Jakarta Sans', sans-serif !important; font-size: 1.1rem; font-weight: 800; color: #0f172a; margin-top: 0.1rem; line-height: 1.2;">
-                        SY {{ $student?->school_year ?? '2026–2027' }}
+                {{-- Single Metadata Row: Grade • Section • 1 Status Chip --}}
+                <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; font-size: 0.85rem; font-weight: 600; color: #475569; margin-top: 0.1rem;">
+                    <span>{{ $student?->grade_level ?: 'Grade 1' }}</span>
+                    <span style="color: #cbd5e1;">•</span>
+                    <span>{{ $section?->name ?? 'G1-AL-MUNAWWARA' }}</span>
+                    <span style="color: #cbd5e1;">•</span>
+                    <span style="font-size: 0.72rem; font-weight: 700; color: #047857; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 0.15rem 0.55rem; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.04em; display: inline-flex; align-items: center; gap: 0.3rem;">
+                        <span style="width: 5px; height: 5px; border-radius: 50%; background: #10b981;"></span>
+                        {{ ucfirst($student?->applicant?->student_type ?? 'Continuing') }}
                     </span>
                 </div>
 
-                <a href="{{ route('student.schedule') }}" style="
-                    display: inline-flex;
-                    align-items: center;
-                    gap: 0.45rem;
-                    padding: 0.6rem 1.15rem;
-                    border-radius: 12px;
-                    background: linear-gradient(135deg, #059669 0%, #047857 100%);
-                    color: #ffffff;
-                    font-size: 0.8125rem;
-                    font-weight: 700;
-                    text-decoration: none;
-                    box-shadow: 0 4px 14px rgba(5, 150, 105, 0.22);
-                    transition: all 0.15s ease;
-                " onmouseover="this.style.boxShadow='0 6px 20px rgba(5, 150, 105, 0.35)'; this.style.transform='translateY(-1px)'" onmouseout="this.style.boxShadow='0 4px 14px rgba(5, 150, 105, 0.22)'; this.style.transform='none'">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                    <span>My Schedule</span>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                </a>
-            </div>
-        </div>
-
-        {{-- ── COMING SOON BANNER — F2F Students (Old & New) ─────────── --}}
-        @php
-            $isF2F = str_contains(strtolower($student?->applicant?->learning_mode ?? ''), 'face');
-        @endphp
-        @if($isF2F)
-        <div class="fade-up" style="
-            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 60%, #fde68a 100%);
-            border: 1.5px solid #f59e0b;
-            border-radius: 20px;
-            padding: 1.75rem 2rem;
-            display: flex;
-            align-items: flex-start;
-            gap: 1.25rem;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 4px 20px rgba(245,158,11,0.12);
-        ">
-            {{-- Background decoration --}}
-            <div style="position:absolute;right:-20px;bottom:-20px;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,rgba(245,158,11,0.15),transparent 70%);pointer-events:none;"></div>
-
-            {{-- Icon --}}
-            <div style="
-                width: 52px; height: 52px; border-radius: 14px;
-                background: #f59e0b;
-                display: flex; align-items: center; justify-content: center;
-                flex-shrink: 0;
-                box-shadow: 0 4px 12px rgba(245,158,11,0.35);
-            ">
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"/>
-                    <polyline points="12 6 12 12 16 14"/>
-                </svg>
-            </div>
-
-            {{-- Text content --}}
-            <div style="flex:1; position:relative;">
-                <div style="display:flex; align-items:center; gap:0.625rem; margin-bottom:0.5rem; flex-wrap:wrap;">
-                    <span style="font-size:0.7rem; font-weight:800; color:#92400e; background:#fde68a; border:1.5px solid #f59e0b; padding:0.2rem 0.6rem; border-radius:999px; text-transform:uppercase; letter-spacing:0.08em;">
-                        Face-to-Face
+                {{-- Secondary Info Row: ID & Email with simple icons --}}
+                <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; font-size: 0.8rem; font-weight: 500; color: #64748b; margin-top: 0.1rem;">
+                    <span style="display: inline-flex; align-items: center; gap: 0.35rem;">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 7h.01"/><path d="M17 7h.01"/><path d="M7 17h.01"/><path d="M17 17h.01"/></svg>
+                        <span>ID: <strong style="color: #1e293b; font-weight: 700;">{{ $student?->student_number ?? '260000' }}</strong></span>
                     </span>
-                    <span style="font-size:0.7rem; font-weight:800; color:#ffffff; background:#f59e0b; padding:0.2rem 0.6rem; border-radius:999px; text-transform:uppercase; letter-spacing:0.08em;">
-                        {{ strtoupper($student?->applicant?->student_type ?? 'student') }}
+                    <span style="color: #cbd5e1;">•</span>
+                    <span style="display: inline-flex; align-items: center; gap: 0.35rem;">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                        <span style="color: #334155; font-weight: 600;">{{ $student?->school_email ?? Auth::user()->email }}</span>
                     </span>
-                </div>
-                <h3 style="font-size:1.2rem; font-weight:800; color:#78350f; margin:0 0 0.5rem; letter-spacing:-0.02em;">
-                    🚧 Portal Coming Soon for F2F Students!
-                </h3>
-                <p style="font-size:0.92rem; font-weight:500; color:#92400e; margin:0; line-height:1.7;">
-                    We are currently preparing the online portal for <strong>Face-to-Face</strong> students.
-                    Your schedule, subjects, grades, and other features will be available here very soon.
-                    In the meantime, please coordinate with your class adviser for any concerns.
-                </p>
-                <div style="margin-top:1rem; display:flex; align-items:center; gap:0.5rem;">
-                    <div style="width:8px; height:8px; border-radius:50%; background:#f59e0b; animation: pulse-dot 1.5s infinite;"></div>
-                    <span style="font-size:0.8rem; font-weight:700; color:#b45309;">We'll notify you once your portal is ready.</span>
-                </div>
-            </div>
-        </div>
-        <style>
-            @keyframes pulse-dot {
-                0%, 100% { opacity:1; transform:scale(1); }
-                50% { opacity:0.5; transform:scale(1.4); }
-            }
-        </style>
-        @endif
-
-
-
-        {{-- Schedule Table Section --}}
-        <div class="fade-up" style="display:flex;flex-direction:column;gap:0.85rem;">
-            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;">
-                <div>
-                    <h2 style="font-size:1.35rem;font-weight:900;color:#0f172a;margin:0;letter-spacing:-0.02em;">
-                        {{ $todayLabel }}
-                    </h2>
-                    <div style="font-size:0.95rem;color:#475569;margin-top:4px;font-weight:700;">
-                        {{ $todaySub }}
-                    </div>
-                </div>
-
-                <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
-                    @if($student && $student->ms_user_id && str_ends_with(strtolower($student->school_email), '@amis.edu.ph'))
-                        <form method="POST" action="{{ route('student.sync-teams') }}" style="margin: 0; display: inline-block;">
-                            @csrf
-                            <button type="submit" class="sched-tab-btn" style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem !important; padding: 0.45rem 0.85rem !important; background: #059669 !important; color: white !important; border-radius: 8px !important; box-shadow: 0 2px 4px rgba(5,150,105,0.15) !important; cursor: pointer;">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
-                                Sync MS Teams
-                            </button>
-                        </form>
-                    @endif
-                </div>
-            </div>
-
-            {{-- Table card --}}
-            <div class="s-table-card" style="background:white; border: 1.5px solid #e2e8f0; border-radius: 20px; overflow:hidden;">
-
-                {{-- TODAY'S CLASSES VIEW --}}
-                <div>
-                    @php
-                        $todaySchedules = $schedules->filter(fn($cs) => strcasecmp($cs->day, $targetDayName) === 0)->sortBy('start_time');
-                        $nowForCollapse = \Carbon\Carbon::now('Asia/Manila');
-                        $endedCount = $isSchoolDay
-                            ? $todaySchedules->filter(function ($item) use ($nowForCollapse) {
-                                $end = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $nowForCollapse->format('Y-m-d').' '.$item->end_time, 'Asia/Manila');
-                                return $nowForCollapse->greaterThanOrEqualTo($end);
-                            })->count()
-                            : 0;
-                    @endphp
-
-                    @if($todaySchedules->isNotEmpty())
-                        @if($endedCount > 0)
-                            <button type="button" @click="showEnded = !showEnded" class="completed-subjects-toggle">
-                                <span class="completed-subjects-toggle-icon"><i data-lucide="circle-check-big"></i></span>
-                                <span class="completed-subjects-toggle-copy">
-                                    <strong>{{ $endedCount }} completed {{ \Illuminate\Support\Str::plural('subject', $endedCount) }}</strong>
-                                    <small x-text="showEnded ? 'Hide completed classes' : 'Tap to review completed classes'"></small>
-                                </span>
-                                <i data-lucide="chevron-down" class="completed-subjects-chevron" :class="showEnded ? 'is-open' : ''"></i>
-                            </button>
-                        @endif
-                        {{-- Table header --}}
-                        <div class="s-table-header" style="grid-template-columns: 1.8fr 1.2fr 1.3fr; padding: 0.75rem 1.25rem;">
-                            <div class="s-table-header-label">Subject Name</div>
-                            <div class="s-table-header-label">Teacher</div>
-                            <div class="s-table-header-label">Class Time</div>
-                        </div>
-
-                        @php
-                            $colors = ['#059669','#0ea5e9','#8b5cf6','#f59e0b','#ec4899','#14b8a6','#ef4444','#f97316'];
-                            $bgs    = ['#ecfdf5','#eff6ff','#f5f3ff','#fffbeb','#fdf2f8','#f0fdfa','#fef2f2','#fff7ed'];
-                        @endphp
-                        @foreach ($todaySchedules as $i => $sched)
-                            @php
-                                $c = $colors[$i % count($colors)];
-                                $bg = $bgs[$i % count($bgs)];
-                                // Find associated subject to get details
-                                $subj = $subjects->firstWhere('subject_name', $sched->subject_name);
-                                $isSpecial = str_contains(strtolower($sched->subject_name), 'transition') || 
-                                             str_contains(strtolower($sched->subject_name), 'recess') || 
-                                             str_contains(strtolower($sched->subject_name), 'break') || 
-                                             str_contains(strtolower($sched->subject_name), 'general assembly') ||
-                                             str_contains(strtolower($sched->subject_name), 'homeroom');
-                                $rawTeacher = $isSpecial ? '—' : (!empty($sched->teacher_display) ? $sched->teacher_display : ($subj ? $subj->teacher_name : null));
-                                $currentTeacherName = $formatTeacherName($rawTeacher);
-                                $timeStr = date('g:i A', strtotime($sched->start_time)) . ' - ' . date('g:i A', strtotime($sched->end_time));
-                                $teamUrl = $subj->team_url ?? 'https://teams.microsoft.com/';
-                                $isLive = false;
-                                $isEnded = false;
-                                if ($isSchoolDay) {
-                                    $nowManila = \Carbon\Carbon::now('Asia/Manila');
-                                    $startTime = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $nowManila->format('Y-m-d') . ' ' . $sched->start_time, 'Asia/Manila');
-                                    $endTime = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $nowManila->format('Y-m-d') . ' ' . $sched->end_time, 'Asia/Manila');
-                                    if ($nowManila->between($startTime, $endTime)) {
-                                        $isLive = true;
-                                    } elseif ($nowManila->greaterThan($endTime)) {
-                                        $isEnded = true;
-                                    }
-                                }
-                            @endphp
-                            <div class="s-table-row" @if($isEnded) x-show="showEnded" x-transition.opacity.duration.150ms @endif @if($isLive) @click="countdownOpen = !countdownOpen" @endif style="grid-template-columns: 1.8fr 1.2fr 1.3fr; padding: 1rem 1.25rem; align-items: center; border-bottom: 1px solid #f1f5f9; position: relative; {{ $isEnded ? 'opacity: 0.55; background: #f8fafc;' : '' }} {{ $isLive ? 'cursor:pointer;' : '' }}">
-                                @if($isLive)
-                                    <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: #10b981; border-top-left-radius: 4px; border-bottom-left-radius: 4px;"></div>
-                                @endif
-                                <div style="display:flex;align-items:center;gap:0.75rem;min-width:0;">
-                                    <div style="width:8px;height:8px;border-radius:50%;background:{{ $isEnded ? '#94a3b8' : $c }};flex-shrink:0;box-shadow: 0 0 0 3px {{ $isEnded ? '#f1f5f9' : $bg }};"></div>
-                                    <span class="s-table-cell-subject" style="font-weight: 800; color: {{ $isEnded ? '#64748b' : '#0f172a' }}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; {{ $isEnded ? 'text-decoration: line-through;' : '' }}">
-                                        {{ $sched->subject_name }}
-                                        @if($isEnded)
-                                            <span style="font-size:0.6rem;font-weight:850;color:#64748b;background:#f1f5f9;border:1px solid #cbd5e1;padding:0.1rem 0.35rem;border-radius:5px;text-transform:uppercase;margin-left:0.35rem;display:inline-block;">Ended</span>
-                                        @endif
-                                    </span>
-                                    @if($isLive)
-                                        <i data-lucide="chevron-down" style="width:15px;height:15px;color:#059669;flex-shrink:0;transition:transform .2s;" :style="countdownOpen ? 'transform:rotate(180deg)' : ''"></i>
-                                    @endif
-                                </div>
-                                <div style="display:flex;align-items:center;gap:0.5rem;min-width:0;">
-                                    <span class="s-table-cell-teacher" style="font-weight: 750; color: {{ $isEnded ? '#94a3b8' : '#475569' }}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $currentTeacherName }}</span>
-                                </div>
-                                
-                                <div class="s-table-cell-schedule" style="color:{{ $isEnded ? '#94a3b8' : '#0d9488' }}; font-weight:800; white-space: nowrap; font-size: 0.78rem;">
-                                    <div style="display:flex;align-items:center;gap:0.3rem;">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                                        <span style="letter-spacing: -0.01em;">{{ $timeStr }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            @if($isLive)
-                                <section x-show="countdownOpen" x-transition.opacity.duration.150ms class="class-countdown-banner class-countdown-inline" aria-live="polite">
-                                    <div class="class-countdown-icon"><i data-lucide="timer"></i></div>
-                                    <div class="class-countdown-copy">
-                                        <p class="class-countdown-label">Class in progress · ends in</p>
-                                        <h2 x-text="activeClass?.subject ?? @js($sched->subject_name)"></h2>
-                                        <p><span x-text="activeClass?.teacher ?? @js($currentTeacherName)"></span> · {{ $timeStr }}</p>
-                                    </div>
-                                    <div class="class-countdown-clock"><strong x-text="remaining">--:--</strong><span>remaining</span></div>
-                                </section>
-                            @endif
-                        @endforeach
-                    @else
-                        <div class="s-empty-card" style="padding: 4rem 1.5rem; text-align:center;">
-                            <div class="s-empty-icon-wrapper" style="background: #f0fdfa; display:inline-flex; align-items:center; justify-content:center; width:48px; height:48px; border-radius:50%; margin-bottom: 0.75rem;">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0d9488" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-                            </div>
-                            <h3 class="s-empty-title" style="font-size: 1.15rem; font-weight:800; color:#1e293b; margin:0 0 0.25rem;">No Classes Scheduled Today</h3>
-                            <p class="s-empty-text" style="font-size: 0.85rem; color:#64748b; max-width: 340px; margin: 0 auto; line-height: 1.5;">
-                                @if(in_array($todayName, ['Friday', 'Saturday']))
-                                    Happy weekend! Enjoy your rest and recharge time. ☀️
-                                @else
-                                    You have no classes scheduled for today. Happy studying! 🎈
-                                @endif
-                            </p>
-                        </div>
-                    @endif
                 </div>
 
             </div>
         </div>
 
-        <style>
-            .completed-subjects-toggle{display:flex;width:100%;align-items:center;gap:.75rem;border:0;border-bottom:1px solid #e2e8f0;background:#f8fafc;padding:.8rem 1.25rem;text-align:left;color:#475569;cursor:pointer;transition:background .15s ease}.completed-subjects-toggle:hover{background:#f1f5f9}.completed-subjects-toggle-icon{display:flex;width:32px;height:32px;flex:0 0 32px;align-items:center;justify-content:center;border-radius:10px;background:#dcfce7;color:#16a34a}.completed-subjects-toggle-icon svg{width:16px;height:16px}.completed-subjects-toggle-copy{display:flex;min-width:0;flex:1;flex-direction:column}.completed-subjects-toggle-copy strong{font-size:.78rem;font-weight:900;color:#334155}.completed-subjects-toggle-copy small{margin-top:1px;font-size:.66rem;font-weight:700;color:#94a3b8}.completed-subjects-chevron{width:16px;height:16px;transition:transform .2s ease}.completed-subjects-chevron.is-open{transform:rotate(180deg)}
-        </style>
+        {{-- Right Side: Academic Year Block + My Schedule Button --}}
+        <div style="display: flex; align-items: center; gap: 1.35rem; border-left: 1px solid #f1f5f9; padding-left: 1.35rem; flex-shrink: 0;">
+            <div style="display: flex; flex-direction: column; text-align: right;">
+                <span style="font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: #94a3b8;">Academic Year</span>
+                <span style="font-family: 'Plus Jakarta Sans', sans-serif !important; font-size: 1.1rem; font-weight: 800; color: #0f172a; margin-top: 0.1rem; line-height: 1.2;">
+                    SY {{ $student?->school_year ?? '2026–2027' }}
+                </span>
+            </div>
 
+            <button type="button" @click="activeTab = 'schedule'" style="
+                display: inline-flex;
+                align-items: center;
+                gap: 0.45rem;
+                padding: 0.6rem 1.15rem;
+                border-radius: 12px;
+                background: linear-gradient(135deg, #059669 0%, #047857 100%);
+                color: #ffffff;
+                font-size: 0.8125rem;
+                font-weight: 700;
+                border: none;
+                cursor: pointer;
+                box-shadow: 0 4px 14px rgba(5, 150, 105, 0.22);
+                transition: all 0.15s ease;
+            " onmouseover="this.style.boxShadow='0 6px 20px rgba(5, 150, 105, 0.35)'; this.style.transform='translateY(-1px)'" onmouseout="this.style.boxShadow='0 4px 14px rgba(5, 150, 105, 0.22)'; this.style.transform='none'">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <span>My Schedule</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </button>
+        </div>
     </div>
 
-    {{-- ── RIGHT PANEL ───────────────────────────────────────────────── --}}
-    <div style="display:flex;flex-direction:column;gap:1.5rem;" class="fade-up">
+    {{-- ── TWO MAIN TABS NAVIGATION ───────────────────────────────────── --}}
+    <div class="fade-up" style="display: flex; align-items: center; gap: 0.5rem; border-bottom: 1.5px solid #e2e8f0; padding-bottom: 0;">
+        <button type="button" 
+                @click="activeTab = 'schedule'" 
+                :class="activeTab === 'schedule' ? 'portal-nav-tab active' : 'portal-nav-tab'">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <span>Class Schedule</span>
+        </button>
 
-        {{-- Announcement Card --}}
-        <div class="s-quick-actions-card" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:1.15rem; box-shadow:0 1px 4px rgba(0,0,0,0.04);">
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;margin-bottom:1rem;padding-bottom:0.65rem;border-bottom:1px solid #f1f5f9;">
-                <div style="display:flex;align-items:center;gap:0.5rem;">
-                    <div style="width:30px;height:30px;border-radius:8px;background:#fef3c7;display:flex;align-items:center;justify-content:center;color:#d97706;flex-shrink:0;">
-                        <i data-lucide="megaphone" style="width:15px;height:15px;"></i>
-                    </div>
-                    <span style="font-size:0.95rem;font-weight:700;color:#0f172a;letter-spacing:0;">Announcements</span>
+        <button type="button" 
+                @click="activeTab = 'profile'" 
+                :class="activeTab === 'profile' ? 'portal-nav-tab active' : 'portal-nav-tab'">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span>Personal Information</span>
+        </button>
+    </div>
+
+    <style>
+        .portal-nav-tab {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.25rem;
+            font-size: 0.925rem;
+            background: transparent;
+            border: none;
+            border-bottom: 2.5px solid transparent;
+            color: #64748b;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            margin-bottom: -1.5px;
+            font-family: inherit;
+        }
+        .portal-nav-tab:hover {
+            color: #0f172a;
+        }
+        .portal-nav-tab.active {
+            color: #047857 !important;
+            border-bottom-color: #059669 !important;
+            font-weight: 800 !important;
+        }
+        .class-countdown-banner{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:1rem;overflow:hidden;border:1px solid #a7f3d0;border-radius:20px;background:linear-gradient(135deg,#064e3b 0%,#047857 55%,#0d9488 100%);padding:1.25rem 1.4rem;color:#fff;box-shadow:0 12px 28px rgba(5,150,105,.14)}
+        .class-countdown-banner:after{content:'';position:absolute;right:-35px;top:-55px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.08)}
+        .class-countdown-icon{display:flex;width:48px;height:48px;align-items:center;justify-content:center;border-radius:14px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.18)}.class-countdown-icon svg{width:24px;height:24px}
+        .class-countdown-copy{position:relative;z-index:1;min-width:0}.class-countdown-copy h2{margin:.12rem 0;color:#fff;font-size:1.15rem;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.class-countdown-copy p{margin:0;color:#d1fae5;font-size:.78rem;font-weight:700}.class-countdown-copy .class-countdown-label{color:#a7f3d0;font-size:.65rem;font-weight:900;text-transform:uppercase;letter-spacing:.1em}
+        .class-countdown-clock{position:relative;z-index:1;min-width:120px;border-radius:15px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);padding:.7rem 1rem;text-align:center}.class-countdown-clock strong{display:block;font-variant-numeric:tabular-nums;font-size:1.45rem;font-weight:950;letter-spacing:.03em}.class-countdown-clock span{display:block;margin-top:.1rem;color:#a7f3d0;font-size:.6rem;font-weight:850;text-transform:uppercase;letter-spacing:.08em}
+        .class-countdown-inline{border-width:0 0 1px;border-radius:0;padding:1rem 1.25rem;box-shadow:inset 4px 0 0 #34d399}
+        @media(max-width:640px){.class-countdown-banner{grid-template-columns:auto minmax(0,1fr);padding:1rem}.class-countdown-clock{grid-column:1/-1;width:100%}.class-countdown-copy h2{font-size:1rem}}
+    </style>
+
+    {{-- ── TAB 1: CLASS SCHEDULE CONTENT ──────────────────────────────── --}}
+    <div x-show="activeTab === 'schedule'" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" class="s-two-col-grid" style="width: 100%;">
+
+        {{-- LEFT COLUMN --}}
+        <div style="display:flex;flex-direction:column;gap:1.5rem;min-width:0;width:100%;">
+
+            {{-- ── COMING SOON BANNER — F2F Students (Old & New) ─────────── --}}
+            @php
+                $isF2F = str_contains(strtolower($student?->applicant?->learning_mode ?? ''), 'face');
+            @endphp
+            @if($isF2F)
+            <div class="fade-up" style="
+                background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 60%, #fde68a 100%);
+                border: 1.5px solid #f59e0b;
+                border-radius: 20px;
+                padding: 1.75rem 2rem;
+                display: flex;
+                align-items: flex-start;
+                gap: 1.25rem;
+                position: relative;
+                overflow: hidden;
+                box-shadow: 0 4px 20px rgba(245,158,11,0.12);
+            ">
+                <div style="position:absolute;right:-20px;bottom:-20px;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,rgba(245,158,11,0.15),transparent 70%);pointer-events:none;"></div>
+                <div style="
+                    width: 52px; height: 52px; border-radius: 14px;
+                    background: #f59e0b;
+                    display: flex; align-items: center; justify-content: center;
+                    flex-shrink: 0;
+                    box-shadow: 0 4px 12px rgba(245,158,11,0.35);
+                ">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                    </svg>
                 </div>
-                <a href="{{ route('student.announcements') }}" style="font-size:0.72rem;font-weight:700;color:#059669;text-decoration:none;display:inline-flex;align-items:center;gap:0.2rem;flex-shrink:0;">
-                    <span>View all</span>
-                    <i data-lucide="arrow-right" style="width:11px;height:11px;"></i>
-                </a>
-            </div>
-            
-            <div style="display:flex;flex-direction:column;gap:0.75rem;">
-                @forelse(array_slice($announcements, 0, 4) as $announcement)
-                    @php
-                        $toneColors = [
-                            'emerald' => ['#059669', '#ecfdf5', '#a7f3d0'],
-                            'sky' => ['#0284c7', '#f0f9ff', '#bae6fd'],
-                            'amber' => ['#d97706', '#fffbeb', '#fde68a']
-                        ];
-                        $tc = $toneColors[$announcement['tone']] ?? $toneColors['emerald'];
-                    @endphp
-                    <a href="{{ route('student.announcements') }}" style="text-decoration:none; padding:0.9rem; border-radius:12px; background:#f8fafc; border:1px solid #e2e8f0; display:flex; flex-direction:column; gap:0.45rem; transition:all 0.2s ease;"
-                       onmouseover="this.style.borderColor='#cbd5e1';this.style.background='#ffffff';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.05)';"
-                       onmouseout="this.style.borderColor='#e2e8f0';this.style.background='#f8fafc';this.style.boxShadow='none';">
-                        <div style="display:flex; align-items:center; justify-content:space-between; gap:0.5rem;">
-                            <div style="display:flex; align-items:center; gap:0.3rem;">
-                                <span style="font-size:0.62rem; font-weight:700; color:{{ $tc[0] }}; background:{{ $tc[1] }}; border:1px solid {{ $tc[2] }}; padding:0.12rem 0.45rem; border-radius:4px; text-transform:uppercase; letter-spacing:0.03em;">
-                                    {{ $announcement['type'] }}
-                                </span>
-                                @if(!$announcement['is_read'])
-                                    <span style="font-size:0.58rem; font-weight:800; color:white; background:#ef4444; padding:0.1rem 0.35rem; border-radius:4px; text-transform:uppercase; letter-spacing:0.03em;">
-                                        NEW
-                                    </span>
-                                @endif
-                            </div>
-                            <span style="font-size:0.68rem; font-weight:600; color:#64748b; white-space:nowrap;">
-                                {{ $announcement['date'] }}
-                            </span>
-                        </div>
-                        <h4 style="font-size:0.86rem; font-weight:700; color:#0f172a; margin:0; line-height:1.35; letter-spacing:0;">
-                            {{ $announcement['title'] }}
-                        </h4>
-                        <p style="font-size:0.75rem; font-weight:400; color:#475569; margin:0; line-height:1.45;">
-                            {{ $announcement['summary'] }}
-                        </p>
-                        <div style="display:flex; align-items:center; justify-content:flex-end; font-size:0.65rem; font-weight:600; color:#94a3b8; margin-top:0.1rem;">
-                            <span style="display:inline-flex; align-items:center; gap:0.2rem;">
-                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                                <span>{{ $announcement['total_views'] }} views</span>
-                            </span>
-                        </div>
-                    </a>
-                @empty
-                    <div style="text-align:center;padding:1.5rem 1rem;color:#64748b;font-weight:600;font-size:0.8rem;background:#f8fafc;border-radius:12px;border:1px dashed #cbd5e1;">
-                        No announcements yet.
+                <div style="flex:1; position:relative;">
+                    <div style="display:flex; align-items:center; gap:0.625rem; margin-bottom:0.5rem; flex-wrap:wrap;">
+                        <span style="font-size:0.7rem; font-weight:800; color:#92400e; background:#fde68a; border:1.5px solid #f59e0b; padding:0.2rem 0.6rem; border-radius:999px; text-transform:uppercase; letter-spacing:0.08em;">
+                            Face-to-Face
+                        </span>
+                        <span style="font-size:0.7rem; font-weight:800; color:#ffffff; background:#f59e0b; padding:0.2rem 0.6rem; border-radius:999px; text-transform:uppercase; letter-spacing:0.08em;">
+                            {{ strtoupper($student?->applicant?->student_type ?? 'student') }}
+                        </span>
                     </div>
-                @endforelse
+                    <h3 style="font-size:1.2rem; font-weight:800; color:#78350f; margin:0 0 0.5rem; letter-spacing:-0.02em;">
+                        🚧 Portal Coming Soon for F2F Students!
+                    </h3>
+                    <p style="font-size:0.92rem; font-weight:500; color:#92400e; margin:0; line-height:1.7;">
+                        We are currently preparing the online portal for <strong>Face-to-Face</strong> students.
+                        Your schedule, subjects, grades, and other features will be available here very soon.
+                        In the meantime, please coordinate with your class adviser for any concerns.
+                    </p>
+                    <div style="margin-top:1rem; display:flex; align-items:center; gap:0.5rem;">
+                        <div style="width:8px; height:8px; border-radius:50%; background:#f59e0b; animation: pulse-dot 1.5s infinite;"></div>
+                        <span style="font-size:0.8rem; font-weight:700; color:#b45309;">We'll notify you once your portal is ready.</span>
+                    </div>
+                </div>
             </div>
+            <style>
+                @keyframes pulse-dot {
+                    0%, 100% { opacity:1; transform:scale(1); }
+                    50% { opacity:0.5; transform:scale(1.4); }
+                }
+            </style>
+            @endif
+
+            {{-- Schedule Table Section --}}
+            <div class="fade-up" style="display:flex;flex-direction:column;gap:0.85rem;">
+                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;">
+                    <div>
+                        <h2 style="font-size:1.35rem;font-weight:900;color:#0f172a;margin:0;letter-spacing:-0.02em;">
+                            {{ $todayLabel }}
+                        </h2>
+                        <div style="font-size:0.95rem;color:#475569;margin-top:4px;font-weight:700;">
+                            {{ $todaySub }}
+                        </div>
+                    </div>
+
+                    <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+                        @if($student && $student->ms_user_id && str_ends_with(strtolower($student->school_email), '@amis.edu.ph'))
+                            <form method="POST" action="{{ route('student.sync-teams') }}" style="margin: 0; display: inline-block;">
+                                @csrf
+                                <button type="submit" class="sched-tab-btn" style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem !important; padding: 0.45rem 0.85rem !important; background: #059669 !important; color: white !important; border-radius: 8px !important; box-shadow: 0 2px 4px rgba(5,150,105,0.15) !important; cursor: pointer;">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                                    Sync MS Teams
+                                </button>
+                            </form>
+                        @endif
+                    </div>
+                </div>
+
+                {{-- Table card --}}
+                <div class="s-table-card" style="background:white; border: 1.5px solid #e2e8f0; border-radius: 20px; overflow:hidden;">
+                    <div>
+                        @php
+                            $todaySchedules = $schedules->filter(fn($cs) => strcasecmp($cs->day, $targetDayName) === 0)->sortBy('start_time');
+                            $nowForCollapse = \Carbon\Carbon::now('Asia/Manila');
+                            $endedCount = $isSchoolDay
+                                ? $todaySchedules->filter(function ($item) use ($nowForCollapse) {
+                                    $end = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $nowForCollapse->format('Y-m-d').' '.$item->end_time, 'Asia/Manila');
+                                    return $nowForCollapse->greaterThanOrEqualTo($end);
+                                })->count()
+                                : 0;
+                        @endphp
+
+                        @if($todaySchedules->isNotEmpty())
+                            @if($endedCount > 0)
+                                <button type="button" @click="showEnded = !showEnded" class="completed-subjects-toggle">
+                                    <span class="completed-subjects-toggle-icon"><i data-lucide="circle-check-big"></i></span>
+                                    <span class="completed-subjects-toggle-copy">
+                                        <strong>{{ $endedCount }} completed {{ \Illuminate\Support\Str::plural('subject', $endedCount) }}</strong>
+                                        <small x-text="showEnded ? 'Hide completed classes' : 'Tap to review completed classes'"></small>
+                                    </span>
+                                    <i data-lucide="chevron-down" class="completed-subjects-chevron" :class="showEnded ? 'is-open' : ''"></i>
+                                </button>
+                            @endif
+                            <div class="s-table-header" style="grid-template-columns: 1.8fr 1.2fr 1.3fr; padding: 0.75rem 1.25rem;">
+                                <div class="s-table-header-label">Subject Name</div>
+                                <div class="s-table-header-label">Teacher</div>
+                                <div class="s-table-header-label">Class Time</div>
+                            </div>
+
+                            @php
+                                $colors = ['#059669','#0ea5e9','#8b5cf6','#f59e0b','#ec4899','#14b8a6','#ef4444','#f97316'];
+                                $bgs    = ['#ecfdf5','#eff6ff','#f5f3ff','#fffbeb','#fdf2f8','#f0fdfa','#fef2f2','#fff7ed'];
+                            @endphp
+                            @foreach ($todaySchedules as $i => $sched)
+                                @php
+                                    $c = $colors[$i % count($colors)];
+                                    $bg = $bgs[$i % count($bgs)];
+                                    $subj = $subjects->firstWhere('subject_name', $sched->subject_name);
+                                    $isSpecial = str_contains(strtolower($sched->subject_name), 'transition') || 
+                                                 str_contains(strtolower($sched->subject_name), 'recess') || 
+                                                 str_contains(strtolower($sched->subject_name), 'break') || 
+                                                 str_contains(strtolower($sched->subject_name), 'general assembly') ||
+                                                 str_contains(strtolower($sched->subject_name), 'homeroom');
+                                    $rawTeacher = $isSpecial ? '—' : (!empty($sched->teacher_display) ? $sched->teacher_display : ($subj ? $subj->teacher_name : null));
+                                    $currentTeacherName = $formatTeacherName($rawTeacher);
+                                    $timeStr = date('g:i A', strtotime($sched->start_time)) . ' - ' . date('g:i A', strtotime($sched->end_time));
+                                    $teamUrl = $subj->team_url ?? 'https://teams.microsoft.com/';
+                                    $isLive = false;
+                                    $isEnded = false;
+                                    if ($isSchoolDay) {
+                                        $nowManila = \Carbon\Carbon::now('Asia/Manila');
+                                        $startTime = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $nowManila->format('Y-m-d') . ' ' . $sched->start_time, 'Asia/Manila');
+                                        $endTime = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $nowManila->format('Y-m-d') . ' ' . $sched->end_time, 'Asia/Manila');
+                                        if ($nowManila->between($startTime, $endTime)) {
+                                            $isLive = true;
+                                        } elseif ($nowManila->greaterThan($endTime)) {
+                                            $isEnded = true;
+                                        }
+                                    }
+                                @endphp
+                                <div class="s-table-row" @if($isEnded) x-show="showEnded" x-transition.opacity.duration.150ms @endif @if($isLive) @click="countdownOpen = !countdownOpen" @endif style="grid-template-columns: 1.8fr 1.2fr 1.3fr; padding: 1rem 1.25rem; align-items: center; border-bottom: 1px solid #f1f5f9; position: relative; {{ $isEnded ? 'opacity: 0.55; background: #f8fafc;' : '' }} {{ $isLive ? 'cursor:pointer;' : '' }}">
+                                    @if($isLive)
+                                        <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: #10b981; border-top-left-radius: 4px; border-bottom-left-radius: 4px;"></div>
+                                    @endif
+                                    <div style="display:flex;align-items:center;gap:0.75rem;min-width:0;">
+                                        <div style="width:8px;height:8px;border-radius:50%;background:{{ $isEnded ? '#94a3b8' : $c }};flex-shrink:0;box-shadow: 0 0 0 3px {{ $isEnded ? '#f1f5f9' : $bg }};"></div>
+                                        <span class="s-table-cell-subject" style="font-weight: 800; color: {{ $isEnded ? '#64748b' : '#0f172a' }}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; {{ $isEnded ? 'text-decoration: line-through;' : '' }}">
+                                            {{ $sched->subject_name }}
+                                            @if($isEnded)
+                                                <span style="font-size:0.6rem;font-weight:850;color:#64748b;background:#f1f5f9;border:1px solid #cbd5e1;padding:0.1rem 0.35rem;border-radius:5px;text-transform:uppercase;margin-left:0.35rem;display:inline-block;">Ended</span>
+                                            @endif
+                                        </span>
+                                        @if($isLive)
+                                            <i data-lucide="chevron-down" style="width:15px;height:15px;color:#059669;flex-shrink:0;transition:transform .2s;" :style="countdownOpen ? 'transform:rotate(180deg)' : ''"></i>
+                                        @endif
+                                    </div>
+                                    <div style="display:flex;align-items:center;gap:0.5rem;min-width:0;">
+                                        <span class="s-table-cell-teacher" style="font-weight: 750; color: {{ $isEnded ? '#94a3b8' : '#475569' }}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $currentTeacherName }}</span>
+                                    </div>
+                                    
+                                    <div class="s-table-cell-schedule" style="color:{{ $isEnded ? '#94a3b8' : '#0d9488' }}; font-weight:800; white-space: nowrap; font-size: 0.78rem;">
+                                        <div style="display:flex;align-items:center;gap:0.3rem;">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                            <span style="letter-spacing: -0.01em;">{{ $timeStr }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                @if($isLive)
+                                    <section x-show="countdownOpen" x-transition.opacity.duration.150ms class="class-countdown-banner class-countdown-inline" aria-live="polite">
+                                        <div class="class-countdown-icon"><i data-lucide="timer"></i></div>
+                                        <div class="class-countdown-copy">
+                                            <p class="class-countdown-label">Class in progress · ends in</p>
+                                            <h2 x-text="activeClass?.subject ?? @js($sched->subject_name)"></h2>
+                                            <p><span x-text="activeClass?.teacher ?? @js($currentTeacherName)"></span> · {{ $timeStr }}</p>
+                                        </div>
+                                        <div class="class-countdown-clock"><strong x-text="remaining">--:--</strong><span>remaining</span></div>
+                                    </section>
+                                @endif
+                            @endforeach
+                        @else
+                            <div class="s-empty-card" style="padding: 4rem 1.5rem; text-align:center;">
+                                <div class="s-empty-icon-wrapper" style="background: #f0fdfa; display:inline-flex; align-items:center; justify-content:center; width:48px; height:48px; border-radius:50%; margin-bottom: 0.75rem;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0d9488" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                </div>
+                                <h3 class="s-empty-title" style="font-size: 1.15rem; font-weight:800; color:#1e293b; margin:0 0 0.25rem;">No Classes Scheduled Today</h3>
+                                <p class="s-empty-text" style="font-size: 0.85rem; color:#64748b; max-width: 340px; margin: 0 auto; line-height: 1.5;">
+                                    @if(in_array($todayName, ['Friday', 'Saturday']))
+                                        Happy weekend! Enjoy your rest and recharge time. ☀️
+                                    @else
+                                        You have no classes scheduled for today. Happy studying! 🎈
+                                    @endif
+                                </p>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            <style>
+                .completed-subjects-toggle{display:flex;width:100%;align-items:center;gap:.75rem;border:0;border-bottom:1px solid #e2e8f0;background:#f8fafc;padding:.8rem 1.25rem;text-align:left;color:#475569;cursor:pointer;transition:background .15s ease}.completed-subjects-toggle:hover{background:#f1f5f9}.completed-subjects-toggle-icon{display:flex;width:32px;height:32px;flex:0 0 32px;align-items:center;justify-content:center;border-radius:10px;background:#dcfce7;color:#16a34a}.completed-subjects-toggle-icon svg{width:16px;height:16px}.completed-subjects-toggle-copy{display:flex;min-width:0;flex:1;flex-direction:column}.completed-subjects-toggle-copy strong{font-size:.78rem;font-weight:900;color:#334155}.completed-subjects-toggle-copy small{margin-top:1px;font-size:.66rem;font-weight:700;color:#94a3b8}.completed-subjects-chevron{width:16px;height:16px;transition:transform .2s ease}.completed-subjects-chevron.is-open{transform:rotate(180deg)}
+            </style>
+
         </div>
 
+        {{-- RIGHT PANEL: Announcements --}}
+        <div style="display:flex;flex-direction:column;gap:1.5rem;" class="fade-up">
+            <div class="s-quick-actions-card" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:1.15rem; box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;margin-bottom:1rem;padding-bottom:0.65rem;border-bottom:1px solid #f1f5f9;">
+                    <div style="display:flex;align-items:center;gap:0.5rem;">
+                        <div style="width:30px;height:30px;border-radius:8px;background:#fef3c7;display:flex;align-items:center;justify-content:center;color:#d97706;flex-shrink:0;">
+                            <i data-lucide="megaphone" style="width:15px;height:15px;"></i>
+                        </div>
+                        <span style="font-size:0.95rem;font-weight:700;color:#0f172a;letter-spacing:0;">Announcements</span>
+                    </div>
+                    <a href="{{ route('student.announcements') }}" style="font-size:0.72rem;font-weight:700;color:#059669;text-decoration:none;display:inline-flex;align-items:center;gap:0.2rem;flex-shrink:0;">
+                        <span>View all</span>
+                        <i data-lucide="arrow-right" style="width:11px;height:11px;"></i>
+                    </a>
     </div>
 
 {{-- Legacy in-page ID preview disabled: the verified public ID route is faster and authoritative. --}}
