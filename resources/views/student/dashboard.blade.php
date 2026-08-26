@@ -402,7 +402,7 @@
             @media(max-width:640px){.class-countdown-banner{grid-template-columns:auto minmax(0,1fr);padding:1rem}.class-countdown-clock{grid-column:1/-1;width:100%}.class-countdown-copy h2{font-size:1rem}}
         </style>
 
-        {{-- Executive SaaS Student Header --}}
+        {{-- Clean Executive Student Header --}}
         <div class="s-dash-profile-header fade-up" style="
             background: #ffffff;
             border: 1px solid #e2e8f0;
@@ -414,14 +414,9 @@
             justify-content: space-between;
             gap: 1.75rem;
             flex-wrap: wrap;
-            position: relative;
-            overflow: hidden;
         ">
-            {{-- Subtle Ambient Accent --}}
-            <div style="position: absolute; right: 0; top: 0; width: 240px; height: 100%; background: linear-gradient(135deg, transparent 30%, rgba(240, 253, 244, 0.8) 100%); pointer-events: none;"></div>
-
             {{-- Left Side: Avatar + Student Info --}}
-            <div style="display: flex; align-items: center; gap: 1.35rem; min-width: 280px; flex: 1; position: relative; z-index: 1;">
+            <div style="display: flex; align-items: center; gap: 1.35rem; min-width: 280px; flex: 1;">
                 
                 {{-- Circular Avatar (64px) --}}
                 <div style="position: relative; width: 64px; height: 64px; flex-shrink: 0;">
@@ -442,33 +437,32 @@
                 </div>
 
                 {{-- Information Block --}}
-                <div style="display: flex; flex-direction: column; gap: 0.25rem; min-width: 0;">
+                <div style="display: flex; flex-direction: column; gap: 0.2rem; min-width: 0;">
                     
-                    {{-- Badges Row --}}
-                    <div style="display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap;">
-                        <span style="font-size: 0.72rem; font-weight: 800; color: #047857; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 0.15rem 0.55rem; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.04em; display: inline-flex; align-items: center; gap: 0.25rem;">
-                            <span>Assalamu Alaikum</span>
-                        </span>
-                        <span style="font-size: 0.72rem; font-weight: 700; color: #0284c7; background: #f0f9ff; border: 1px solid #bae6fd; padding: 0.15rem 0.55rem; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.04em;">
-                            {{ $student?->grade_level ?: 'Grade 1' }}
-                        </span>
-                        @if($section?->name)
-                            <span style="font-size: 0.72rem; font-weight: 700; color: #475569; background: #f8fafc; border: 1px solid #e2e8f0; padding: 0.15rem 0.55rem; border-radius: 6px;">
-                                {{ $section->name }}
-                            </span>
-                        @endif
-                        <span style="font-size: 0.72rem; font-weight: 700; color: #0f766e; background: #f0fdfa; border: 1px solid #ccfbf1; padding: 0.15rem 0.55rem; border-radius: 6px;">
-                            {{ ucfirst($student?->applicant?->student_type ?? 'Continuing') }}
-                        </span>
-                    </div>
+                    {{-- Plain Greeting Label --}}
+                    <span style="font-size: 0.75rem; font-weight: 700; color: #059669; text-transform: uppercase; letter-spacing: 0.06em;">
+                        Assalamu Alaikum
+                    </span>
 
-                    {{-- Student Full Name --}}
+                    {{-- Student Full Name (Main Focus) --}}
                     <h1 style="font-family: 'Plus Jakarta Sans', sans-serif !important; font-size: 1.6rem; font-weight: 800; color: #0f172a; margin: 0; line-height: 1.25; letter-spacing: -0.025em;">
                         {{ $fullName }}
                     </h1>
 
-                    {{-- Identifiers Meta Row --}}
-                    <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; font-size: 0.8rem; font-weight: 500; color: #64748b; margin-top: 0.05rem;">
+                    {{-- Single Metadata Row: Grade • Section • 1 Status Chip --}}
+                    <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; font-size: 0.85rem; font-weight: 600; color: #475569; margin-top: 0.1rem;">
+                        <span>{{ $student?->grade_level ?: 'Grade 1' }}</span>
+                        <span style="color: #cbd5e1;">•</span>
+                        <span>{{ $section?->name ?? 'G1-AL-MUNAWWARA' }}</span>
+                        <span style="color: #cbd5e1;">•</span>
+                        <span style="font-size: 0.72rem; font-weight: 700; color: #047857; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 0.15rem 0.55rem; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.04em; display: inline-flex; align-items: center; gap: 0.3rem;">
+                            <span style="width: 5px; height: 5px; border-radius: 50%; background: #10b981;"></span>
+                            {{ ucfirst($student?->applicant?->student_type ?? 'Continuing') }}
+                        </span>
+                    </div>
+
+                    {{-- Secondary Info Row: ID & Email with simple icons --}}
+                    <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; font-size: 0.8rem; font-weight: 500; color: #64748b; margin-top: 0.1rem;">
                         <span style="display: inline-flex; align-items: center; gap: 0.35rem;">
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 7h.01"/><path d="M17 7h.01"/><path d="M7 17h.01"/><path d="M17 17h.01"/></svg>
                             <span>ID: <strong style="color: #1e293b; font-weight: 700;">{{ $student?->student_number ?? '260000' }}</strong></span>
@@ -483,8 +477,8 @@
                 </div>
             </div>
 
-            {{-- Right Side: Integrated Academic & Timetable Action --}}
-            <div style="display: flex; align-items: center; gap: 1.35rem; border-left: 1px solid #f1f5f9; padding-left: 1.35rem; flex-shrink: 0; position: relative; z-index: 1;">
+            {{-- Right Side: Academic Year Block + My Schedule Button --}}
+            <div style="display: flex; align-items: center; gap: 1.35rem; border-left: 1px solid #f1f5f9; padding-left: 1.35rem; flex-shrink: 0;">
                 <div style="display: flex; flex-direction: column; text-align: right;">
                     <span style="font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: #94a3b8;">Academic Year</span>
                     <span style="font-family: 'Plus Jakarta Sans', sans-serif !important; font-size: 1.1rem; font-weight: 800; color: #0f172a; margin-top: 0.1rem; line-height: 1.2;">
@@ -496,7 +490,7 @@
                     display: inline-flex;
                     align-items: center;
                     gap: 0.45rem;
-                    padding: 0.6rem 1.1rem;
+                    padding: 0.6rem 1.15rem;
                     border-radius: 12px;
                     background: linear-gradient(135deg, #059669 0%, #047857 100%);
                     color: #ffffff;
