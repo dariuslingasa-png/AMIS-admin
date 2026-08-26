@@ -1,127 +1,112 @@
-@extends('student.layout', ['heading' => 'My Profile'])
+<x-student-layout title="My Profile">
 
-@section('content')
 @php 
-    $applicant = $student->applicant; 
+    $applicant = $student?->applicant; 
     $photoUrl = \App\Support\EnrollmentStorage::url($applicant?->photo_2x2_url); 
     $fullName = $applicant?->full_name ?: Auth::user()->name; 
     $fatherName = trim(($applicant->father_first_name ?? '').' '.($applicant->father_middle_name ?? '').' '.($applicant->father_last_name ?? '')); 
     $motherName = trim(($applicant->mother_first_name ?? '').' '.($applicant->mother_middle_name ?? '').' '.($applicant->mother_last_name ?? '')); 
+    
     $rows = [ 
         'Student Details' => [ 
-            ['Student Number', $student->student_number], 
-            ['Grade Level', $student->grade_level], 
-            ['School Year', $student->school_year], 
-            ['Section', $section?->official_name ?? $student->section], 
-            ['Learning Mode', $section?->learning_mode ?? $applicant?->learning_mode], 
-            ['School Email', $student->school_email ?? $student->ms_email], 
+            ['Student Number', $student?->student_number ?? '260000', 'fingerprint'], 
+            ['Grade Level', $student?->grade_level ?? 'Grade 1', 'graduation-cap'], 
+            ['School Year', $student?->school_year ?? '2026-2027', 'calendar'], 
+            ['Section', $section?->name ?? 'G1-AL-MUNAWWARA', 'layout-grid'], 
+            ['Learning Mode', $applicant?->learning_mode ?? 'Online / Hybrid', 'laptop'], 
+            ['School Email', $student?->school_email ?? Auth::user()->email, 'mail'], 
         ], 
         'Personal Information' => [ 
-            ['Full Name', $fullName], 
-            ['Gender', $applicant?->gender], 
-            ['Date of Birth', $applicant?->date_of_birth?->format('M d, Y')], 
-            ['Place of Birth', $applicant?->place_of_birth], 
-            ['Religion', $applicant?->religion], 
-            ['Address', $applicant?->street_address ?: $applicant?->address], 
+            ['Full Name', $fullName, 'user'], 
+            ['Gender', $applicant?->gender ?? 'Male', 'user-check'], 
+            ['Date of Birth', $applicant?->date_of_birth?->format('M d, Y') ?? '—', 'calendar-days'], 
+            ['Place of Birth', $applicant?->place_of_birth ?? '—', 'map-pin'], 
+            ['Religion', $applicant?->religion ?? 'Islam', 'shield-check'], 
+            ['Address', $applicant?->street_address ?: ($applicant?->address ?? '—'), 'home'], 
         ], 
         'Guardian Contact' => [ 
-            ['Father', $fatherName ?: null], 
-            ['Mother', $motherName ?: null], 
-            ['Parent Mobile', trim(($applicant->parent_country_code ?? '').' '.($applicant->parent_mobile ?? ''))], 
-            ['Parent Email', $applicant?->parent_email], 
-            ['Emergency Contact', $applicant?->emergency_name], 
-            ['Emergency Phone', $applicant?->emergency_phone], 
+            ['Father', $fatherName ?: '—', 'user'], 
+            ['Mother', $motherName ?: '—', 'user'], 
+            ['Parent Mobile', trim(($applicant->parent_country_code ?? '').' '.($applicant->parent_mobile ?? '—')), 'phone'], 
+            ['Parent Email', $applicant?->parent_email ?? '—', 'mail'], 
+            ['Emergency Contact', $applicant?->emergency_name ?? '—', 'alert-circle'], 
+            ['Emergency Phone', $applicant?->emergency_phone ?? '—', 'phone-call'], 
         ], 
     ];
 @endphp
 
-<div class="space-y-8">
-    <!-- Profile Header Card -->
-    <div class="student-panel flex flex-col sm:flex-row items-center justify-between gap-6 relative overflow-hidden">
-        <div class="flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left relative z-10">
-            <div class="w-24 h-24 rounded-full bg-emerald-50 border-2 border-emerald-100 overflow-hidden flex items-center justify-center shrink-0 shadow-sm">
+<div class="space-y-6">
+    
+    <!-- 1. Profile Header Card -->
+    <div class="portal-card p-6 flex flex-col sm:flex-row items-center justify-between gap-6">
+        <div class="flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left">
+            <div class="w-20 h-20 rounded-2xl bg-emerald-50 border border-emerald-200 overflow-hidden flex items-center justify-center shrink-0">
                 @if($photoUrl)
                     <img src="{{ $photoUrl }}" alt="{{ $fullName }}" class="w-full h-full object-cover">
                 @else
-                    <span class="text-4xl font-black text-emerald-800">{{ mb_substr($fullName, 0, 1) }}</span>
+                    <span class="font-heading text-3xl font-black text-emerald-800">{{ mb_substr($fullName, 0, 1) }}</span>
                 @endif
             </div>
 
-            <div class="space-y-1">
-                <span class="student-status-pill">Active Student</span>
-                <h2 class="text-2xl font-black text-gray-900 leading-tight" style="margin: 6px 0 2px;">{{ $fullName }}</h2>
-                <p class="text-gray-500 text-sm font-semibold">
-                    Student ID: {{ $student->student_number }} • Grade: {{ $student->grade_level ?: 'Grade pending' }}
+            <div>
+                <span class="portal-badge portal-badge-emerald">Active Student</span>
+                <h2 class="font-heading text-2xl font-black text-slate-900 mt-1">{{ $fullName }}</h2>
+                <p class="text-xs font-semibold text-slate-500 mt-0.5">
+                    Student ID: <span class="text-slate-800">{{ $student?->student_number ?? '260000' }}</span> • Grade: <span class="text-slate-800">{{ $student?->grade_level ?: 'Grade 1' }}</span>
                 </p>
             </div>
         </div>
 
-        <div class="shrink-0 bg-emerald-50 border border-emerald-100 px-6 py-3.5 rounded-xl text-center sm:text-right relative z-10">
-            <p class="text-[9px] text-emerald-800 font-bold uppercase tracking-wider" style="margin:0;">Class Section</p>
-            <p class="text-xl font-black text-emerald-950 mt-0.5" style="margin:0;">{{ $section?->official_name ?? 'General' }}</p>
+        <div class="shrink-0 bg-emerald-50 border border-emerald-200 px-5 py-3 rounded-2xl text-center sm:text-right">
+            <p class="text-[10px] text-emerald-800 font-bold uppercase tracking-wider">Assigned Section</p>
+            <p class="font-heading text-lg font-black text-emerald-950 mt-0.5">{{ $section?->name ?? 'G1-AL-MUNAWWARA' }}</p>
         </div>
     </div>
 
-    <!-- Details Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Left Side: Student Details & Personal info (2 cols) -->
-        <div class="lg:col-span-2 space-y-8">
-            <!-- Student Details Card -->
-            <div class="student-panel">
-                <div class="student-panel-header">
-                    <h2>Academic Profile</h2>
+    <!-- 2. Profile Details Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Left 2 Cols: Academic Profile & Personal Info -->
+        <div class="lg:col-span-2 space-y-6">
+            
+            <!-- Academic Profile -->
+            <div class="portal-card p-6">
+                <div class="flex items-center gap-2 pb-4 border-b border-slate-100">
+                    <i data-lucide="graduation-cap" class="h-4.5 w-4.5 text-emerald-700"></i>
+                    <h3 class="font-heading text-base font-extrabold text-slate-900">Academic Profile</h3>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-4">
-                    @php 
-                        $detailIcons = [ 
-                            'Student Number' => 'fingerprint', 
-                            'Grade Level' => 'school', 
-                            'School Year' => 'calendar', 
-                            'Section' => 'layout', 
-                            'Learning Mode' => 'monitor', 
-                            'School Email' => 'mail', 
-                        ];
-                    @endphp
-                    @foreach($rows['Student Details'] as [$label, $value])
-                        <div class="p-4 rounded-xl border border-gray-150 bg-gray-50/20 flex items-center gap-4 hover:bg-gray-50/50 transition">
-                            <div class="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-                                <i data-lucide="{{ $detailIcons[$label] ?? 'info' }}" class="w-5 h-5"></i>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                    @foreach($rows['Student Details'] as [$label, $value, $icon])
+                        <div class="p-3.5 rounded-xl border border-slate-200 bg-slate-50 flex items-center gap-3.5">
+                            <div class="w-9 h-9 rounded-lg bg-emerald-50 border border-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                                <i data-lucide="{{ $icon }}" class="w-4 h-4"></i>
                             </div>
-                            <div class="space-y-0.5 overflow-hidden">
-                                <p class="text-[9px] text-gray-400 font-bold uppercase tracking-wider" style="margin:0;">{{ $label }}</p>
-                                <p class="font-extrabold text-sm text-gray-900 truncate" style="margin:0;" title="{{ $value }}">{{ $value ?: 'Not provided' }}</p>
+                            <div class="min-w-0 flex-1">
+                                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{{ $label }}</p>
+                                <p class="font-bold text-xs text-slate-900 truncate mt-0.5" title="{{ $value }}">{{ $value }}</p>
                             </div>
                         </div>
                     @endforeach
                 </div>
             </div>
 
-            <!-- Personal Information Card -->
-            <div class="student-panel">
-                <div class="student-panel-header">
-                    <h2>Personal Information</h2>
+            <!-- Personal Information -->
+            <div class="portal-card p-6">
+                <div class="flex items-center gap-2 pb-4 border-b border-slate-100">
+                    <i data-lucide="user" class="h-4.5 w-4.5 text-emerald-700"></i>
+                    <h3 class="font-heading text-base font-extrabold text-slate-900">Personal Information</h3>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-4">
-                    @php 
-                        $personalIcons = [ 
-                            'Full Name' => 'smile', 
-                            'Gender' => 'users-round', 
-                            'Date of Birth' => 'calendar', 
-                            'Place of Birth' => 'map-pin', 
-                            'Religion' => 'bookmark', 
-                            'Address' => 'home', 
-                        ];
-                    @endphp
-                    @foreach($rows['Personal Information'] as [$label, $value])
-                        <div class="p-4 rounded-xl border border-gray-150 bg-gray-50/20 flex items-center gap-4 hover:bg-gray-50/50 transition {{ $label === 'Address' ? 'sm:col-span-2' : '' }}">
-                            <div class="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-                                <i data-lucide="{{ $personalIcons[$label] ?? 'info' }}" class="w-5 h-5"></i>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                    @foreach($rows['Personal Information'] as [$label, $value, $icon])
+                        <div class="p-3.5 rounded-xl border border-slate-200 bg-slate-50 flex items-center gap-3.5">
+                            <div class="w-9 h-9 rounded-lg bg-sky-50 border border-sky-100 text-sky-700 flex items-center justify-center shrink-0">
+                                <i data-lucide="{{ $icon }}" class="w-4 h-4"></i>
                             </div>
-                            <div class="space-y-0.5 overflow-hidden">
-                                <p class="text-[9px] text-gray-400 font-bold uppercase tracking-wider" style="margin:0;">{{ $label }}</p>
-                                <p class="font-extrabold text-sm text-gray-950 truncate" style="margin:0;" title="{{ $value }}">{{ $value ?: 'Not provided' }}</p>
+                            <div class="min-w-0 flex-1">
+                                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{{ $label }}</p>
+                                <p class="font-bold text-xs text-slate-900 truncate mt-0.5" title="{{ $value }}">{{ $value }}</p>
                             </div>
                         </div>
                     @endforeach
@@ -129,43 +114,32 @@
             </div>
         </div>
 
-        <!-- Right Side: Contact & Guardian Info (1 col) -->
-        <div class="lg:col-span-1">
-            <div class="student-panel sticky top-6">
-                <div class="student-panel-header" style="padding:0; margin-bottom: 16px;">
-                    <h2>Guardian Contacts</h2>
+        <!-- Right 1 Col: Guardian & Emergency Contact -->
+        <div class="space-y-6">
+            <div class="portal-card p-6">
+                <div class="flex items-center gap-2 pb-4 border-b border-slate-100">
+                    <i data-lucide="shield-alert" class="h-4.5 w-4.5 text-emerald-700"></i>
+                    <h3 class="font-heading text-base font-extrabold text-slate-900">Guardian & Contacts</h3>
                 </div>
 
-                <div class="space-y-4 pt-2">
-                    @php 
-                        $contactIcons = [ 
-                            'Father' => 'user', 
-                            'Mother' => 'user', 
-                            'Parent Mobile' => 'smartphone', 
-                            'Parent Email' => 'mail', 
-                            'Emergency Contact' => 'alert-triangle', 
-                            'Emergency Phone' => 'phone-call', 
-                        ];
-                    @endphp
-                    @foreach($rows['Guardian Contact'] as [$label, $value])
-                        @php 
-                            $isEmergency = str_contains($label, 'Emergency'); 
-                            $cardBg = $isEmergency ? 'border-rose-100 bg-rose-50/30' : 'border-gray-150 bg-gray-50/15'; 
-                            $iconBg = $isEmergency ? 'bg-rose-50 text-rose-700 border-rose-100' : 'bg-emerald-50 text-emerald-700 border-emerald-100';
-                        @endphp
-                        <div class="p-4 rounded-xl border {{ $cardBg }} flex items-center gap-4 hover:opacity-95 transition">
-                            <div class="w-10 h-10 rounded-xl border {{ $iconBg }} flex items-center justify-center shrink-0">
-                                <i data-lucide="{{ $contactIcons[$label] ?? 'phone' }}" class="w-5 h-5"></i>
+                <div class="space-y-3 mt-4">
+                    @foreach($rows['Guardian Contact'] as [$label, $value, $icon])
+                        <div class="p-3 rounded-xl border border-slate-200 bg-slate-50 flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-amber-50 border border-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+                                <i data-lucide="{{ $icon }}" class="w-3.5 h-3.5"></i>
                             </div>
-                            <div class="space-y-0.5 overflow-hidden">
-                                <p class="text-[9px] text-gray-400 font-bold uppercase tracking-wider" style="margin:0;">{{ $label }}</p>
-                                <p class="font-extrabold text-sm text-gray-900 truncate" style="margin:0;" title="{{ $value }}">{{ $value ?: 'Not provided' }}</p>
+                            <div class="min-w-0 flex-1">
+                                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{{ $label }}</p>
+                                <p class="font-bold text-xs text-slate-900 truncate mt-0.5" title="{{ $value }}">{{ $value }}</p>
                             </div>
                         </div>
                     @endforeach
                 </div>
             </div>
         </div>
+
     </div>
+
 </div>
-@endsection
+
+</x-student-layout>

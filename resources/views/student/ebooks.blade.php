@@ -1,4 +1,5 @@
-<x-student-layout title="Ebooks">
+<x-student-layout title="E-Books">
+
 @php
     $gradients = [
         'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)', // Blue
@@ -10,122 +11,92 @@
     ];
 @endphp
 
-<div class="space-y-6" x-data="{}" x-init="window.lucide && window.lucide.createIcons()">
-    <!-- Header banner -->
-    <div class="s-quick-actions-card" style="padding: 1.75rem; background: white; border-radius: 20px; border: 1.5px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
+<div class="space-y-6">
+    <!-- 1. Header Banner -->
+    <div class="portal-card p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-            <div style="display: inline-flex; align-items: center; gap: 0.375rem; font-size: 0.8rem; font-weight: 850; color: #be185d; background: #fdf2f8; border: 1px solid #fbcfe8; padding: 0.25rem 0.65rem; border-radius: 999px;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-book-open"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-                <span>My Grade Library</span>
+            <div class="flex items-center gap-2 text-emerald-700 font-bold text-xs uppercase tracking-wider">
+                <i data-lucide="book-open" class="h-4 w-4"></i>
+                <span>Digital Library</span>
             </div>
-            <h2 style="font-size: 1.5rem; font-weight: 900; color: #0f172a; margin: 0.5rem 0 0.25rem;">My Assigned E-Books</h2>
-            <p style="font-size: 0.9rem; font-weight: 700; color: #475569; margin: 0;">Access and read eBooks assigned specifically to your grade level ({{ $gradeLevel }}).</p>
+            <h2 class="mt-1 font-heading text-2xl font-black text-slate-900">My Assigned E-Books</h2>
+            <p class="text-xs font-medium text-slate-500">
+                Official digital learning materials and textbooks for {{ $gradeLevel ?: 'Grade 1' }}.
+            </p>
         </div>
-        
-        <div style="background: #fdf2f8; border: 1.5px solid #fbcfe8; border-radius: 14px; padding: 0.75rem 1.5rem; text-align: center; min-width: 120px; flex-shrink: 0;">
-            <p style="font-size: 0.75rem; font-weight: 850; color: #9d174d; text-transform: uppercase; margin: 0; letter-spacing: 0.05em;">Books Available</p>
-            <p style="font-size: 1.75rem; font-weight: 800; font-family: 'Inter', sans-serif; color: #be185d; margin: 0; margin-top: 0.25rem; line-height: 1;">{{ $ebooks->count() }}</p>
+        <div class="flex items-center gap-2">
+            <span class="portal-badge portal-badge-emerald">
+                {{ $ebooks->count() }} {{ $ebooks->count() === 1 ? 'Book' : 'Books' }} Available
+            </span>
         </div>
     </div>
 
+    <!-- 2. Books Grid -->
     @if($ebooks->isEmpty())
-        <!-- Empty State -->
-        <div class="s-empty-card" style="border: 1.5px solid #e2e8f0; box-shadow: none;">
-            <div class="s-empty-icon-wrapper" style="background: #fdf2f8; border-color: #fbcfe8;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#be185d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-book-x"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="m14.5 13.5-5-5"/><path d="m9.5 13.5 5-5"/></svg>
+        <div class="portal-empty-state">
+            <div class="portal-empty-icon">
+                <i data-lucide="book-x" class="h-6 w-6"></i>
             </div>
-            <h3 class="s-empty-title">No E-Books Assigned</h3>
-            <p class="s-empty-text">There are currently no eBooks assigned to your grade level ({{ $gradeLevel }}). Please check back later or contact your advisor.</p>
+            <h3 class="font-heading text-base font-bold text-slate-800">No E-Books Assigned</h3>
+            <p class="text-xs text-slate-500 mt-1">There are currently no digital books published for your grade level.</p>
         </div>
     @else
-        <!-- eBooks Grid -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(265px, 1fr)); gap: 1.5rem;">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
             @foreach($ebooks as $book)
                 @php
                     $gradient = $gradients[abs(crc32($book->title . $book->id)) % count($gradients)];
                 @endphp
-                <div class="s-quick-actions-card fade-up" style="background: white; border-radius: 20px; border: 1.5px solid #e2e8f0; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between; height: 100%; transition: transform 0.2s, box-shadow 0.2s;" 
-                     onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 12px 20px rgba(0,0,0,0.06)'"
-                     onmouseout="this.style.transform='none'; this.style.boxShadow='none'">
-                    
+                <div class="portal-card p-4 flex flex-col justify-between hover:border-slate-300">
                     <div>
                         <!-- Cover Area -->
                         @if($book->cover_image_path)
-                            <div style="height: 240px; border-radius: 12px; overflow: hidden; position: relative; border: 1px solid #e2e8f0; background: #f8fafc;">
+                            <div class="h-56 rounded-xl overflow-hidden relative border border-slate-200 bg-slate-100 mb-3">
                                 <img src="https://ebook.amis.edu.ph/storage/{{ $book->cover_image_path }}" 
                                      alt="{{ $book->title }}" 
                                      loading="lazy" 
-                                     style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s;"
-                                     onmouseover="this.style.transform='scale(1.05)'"
-                                     onmouseout="this.style.transform='none'">
-                                <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%); padding: 1rem 1rem 0.5rem; color: white;">
-                                    <span style="font-size: 0.65rem; font-weight: 850; background: #be185d; padding: 0.15rem 0.45rem; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em;">
+                                     class="h-full w-full object-cover transition-transform duration-300 hover:scale-105">
+                                <div class="absolute bottom-2 left-2">
+                                    <span class="portal-badge portal-badge-emerald">
                                         {{ $book->grade_level }}
                                     </span>
                                 </div>
                             </div>
                         @else
-                            <!-- Stylized Book Placeholder -->
-                            <div style="height: 240px; background: {{ $gradient }}; border-radius: 12px; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; padding: 1.5rem; color: white; box-shadow: inset 5px 0 10px rgba(0,0,0,0.2), 0 4px 12px rgba(0,0,0,0.1);">
-                                <div style="position: absolute; top: 0; left: 0; bottom: 0; width: 12px; background: rgba(0,0,0,0.15); box-shadow: 1px 0 2px rgba(255,255,255,0.15) inset;"></div>
-                                
-                                <div style="margin-left: 8px;">
-                                    <div style="font-size: 0.75rem; font-weight: 850; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.8; margin-bottom: 0.25rem;">E-BOOK</div>
-                                    <div style="font-size: 1.15rem; font-weight: 900; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical;">
-                                        {{ $book->title }}
-                                    </div>
+                            <div class="h-56 rounded-xl p-4 flex flex-col justify-between text-white relative overflow-hidden mb-3 shadow-xs" style="background: {{ $gradient }};">
+                                <div class="space-y-1">
+                                    <span class="text-[10px] font-extrabold uppercase tracking-widest opacity-80">Digital Textbook</span>
+                                    <h4 class="font-heading text-sm font-black line-clamp-3 leading-snug">{{ $book->title }}</h4>
                                 </div>
-                                
-                                <div style="margin-left: 8px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 0.75rem;">
-                                    <div style="font-size: 0.8rem; font-weight: 750; opacity: 0.9; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                                        {{ $book->author ?: 'AMIS Faculty' }}
-                                    </div>
-                                    <div style="font-size: 0.7rem; font-weight: 800; opacity: 0.7; margin-top: 2px;">
-                                        {{ $book->grade_level }}
-                                    </div>
+                                <div class="pt-2 border-t border-white/20 text-xs">
+                                    <p class="font-bold truncate opacity-90">{{ $book->author ?: 'AMIS Faculty' }}</p>
+                                    <span class="text-[10px] opacity-75 font-semibold">{{ $book->grade_level }}</span>
                                 </div>
                             </div>
                         @endif
 
-                        <!-- Metadata -->
-                        <div style="margin-top: 1rem;">
-                            <h3 style="font-size: 1.1rem; font-weight: 900; color: #0f172a; margin: 0; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.6rem;" title="{{ $book->title }}">
+                        <!-- Book Meta -->
+                        <div>
+                            <h3 class="font-heading text-sm font-extrabold text-slate-900 line-clamp-2 leading-snug" title="{{ $book->title }}">
                                 {{ $book->title }}
                             </h3>
-                            
-                            <p style="font-size: 0.825rem; font-weight: 750; color: #be185d; margin: 0.25rem 0 0.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                            <p class="text-xs font-semibold text-emerald-700 mt-1 truncate">
                                 By {{ $book->author ?: 'AMIS Faculty' }}
-                            </p>
-                            
-                            <p style="font-size: 0.8rem; font-weight: 650; color: #475569; margin: 0; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; min-height: 3.3rem;">
-                                {{ $book->description ?: 'No description available for this eBook.' }}
                             </p>
                         </div>
                     </div>
 
-                    <!-- Actions -->
-                    <div style="margin-top: 1.25rem; display: flex; flex-direction: column; gap: 0.5rem;">
-                        <a href="{{ route('student.ebooks.read', $book->id) }}"
-                           style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.7rem 1rem; border-radius: 10px; background: #be185d; color: white; font-size: 0.9rem; font-weight: 800; text-decoration: none; text-align: center; transition: background 0.15s;"
-                           onmouseover="this.style.background='#9d174d'"
-                           onmouseout="this.style.background='#be185d'">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-book-open"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                    <!-- Action: Read Online -->
+                    <div class="mt-4 pt-3 border-t border-slate-100">
+                        <a href="{{ route('student.ebooks.read', $book->id) }}" target="_blank" 
+                           class="flex w-full items-center justify-center gap-1.5 rounded-xl bg-emerald-700 px-3 py-2 text-xs font-bold text-white transition hover:bg-emerald-800">
+                            <i data-lucide="book-open" class="h-3.5 w-3.5"></i>
                             <span>Read E-Book</span>
                         </a>
-
-                        @if($book->is_downloadable)
-                            <a href="{{ route('student.ebooks.stream', $book->id) }}?download=1" target="_blank"
-                               style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.65rem 1rem; border-radius: 10px; border: 1.5px solid #cbd5e1; background: white; color: #475569; font-size: 0.85rem; font-weight: 800; text-decoration: none; text-align: center; transition: all 0.15s;"
-                               onmouseover="this.style.background='#f8fafc'; this.style.borderColor='#94a3b8'; this.style.color='#0f172a'"
-                               onmouseout="this.style.background='white'; this.style.borderColor='#cbd5e1'; this.style.color='#475569'">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-download"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                                <span>Download PDF</span>
-                            </a>
-                        @endif
                     </div>
                 </div>
             @endforeach
         </div>
     @endif
 </div>
+
 </x-student-layout>

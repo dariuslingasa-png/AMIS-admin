@@ -186,6 +186,25 @@ class StudentDashboardController extends Controller
         return view('student.grades', compact('user', 'student', 'section', 'subjects'));
     }
 
+    public function subjects()
+    {
+        $user    = Auth::user();
+        $student = $user->student?->load('applicant');
+        $subjects = collect();
+        $section = null;
+        if ($student) {
+            $studentSection = StudentSection::where('student_id', $student->id)
+                ->with(['section.subjects.meetings', 'section.subjects.materials'])
+                ->first();
+
+            if ($studentSection?->section) {
+                $section = $studentSection->section;
+                $subjects = $studentSection->section->subjects;
+            }
+        }
+        return view('student.subjects', compact('user', 'student', 'section', 'subjects'));
+    }
+
     public function profile()
     {
         $user    = Auth::user();
