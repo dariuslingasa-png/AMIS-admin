@@ -7,7 +7,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Login - AMIS Student Portal</title>
+    <title>Student Sign In - AMIS Student Portal</title>
     <link rel="icon" type="image/png" href="{{ asset('images/AMIS_Logo.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -32,44 +32,21 @@
             <div class="student-login-panel">
                 <div class="student-login-brand">
                     <div>
-                        <h2>Sign in</h2>
-                        <p>Sign in with your Student ID / Username or Microsoft account to continue.</p>
+                        <h2>Student Sign In</h2>
+                        <p>Sign in using your official school Microsoft 365 student account.</p>
                     </div>
                 </div>
 
                 @if ($errors->any())
-                    <div class="student-error">
+                    <div class="student-error" style="margin-bottom: 1.5rem;">
                         <span>{{ $errors->first() }}</span>
                     </div>
                 @endif
 
-                <!-- Form using ONLY native global CSS classes from app.css -->
-                <form method="POST" action="{{ route('student.login.store') }}" class="student-form">
-                    @csrf
-                    <label>
-                        <span>Student ID / Username / Email</span>
-                        <input type="text" name="login_id" value="{{ old('login_id', 'shammy') }}" required placeholder="e.g. shammy or email">
-                    </label>
-
-                    <label>
-                        <span>Password</span>
-                        <input type="password" name="password" value="123sham" required placeholder="Enter password">
-                    </label>
-
-
-                    <button type="submit" class="student-primary-btn" style="width: 100%;">
-                        Sign In To Student Portal
-                    </button>
-                </form>
-
-                <div class="student-divider">
-                    <span>Or Continue With</span>
-                </div>
-
-                <div>
+                <div style="margin-top: 1.5rem;">
                     @if($microsoftConfigured)
-                        <a href="{{ route('student.microsoft.redirect') }}" class="student-primary-btn" style="width: 100%; background: linear-gradient(135deg, #059669 0%, #10b981 100%); font-weight: 700; gap: 10px;">
-                            <svg width="18" height="18" viewBox="0 0 23 23" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <a href="{{ route('student.microsoft.redirect') }}" class="student-primary-btn" style="width: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #059669 0%, #10b981 100%); font-weight: 800; font-size: 15px; padding: 14px 20px; border-radius: 14px; gap: 12px; box-shadow: 0 4px 14px rgba(5, 150, 105, 0.25); text-decoration: none; color: #ffffff;">
+                            <svg width="20" height="20" viewBox="0 0 23 23" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M0 0h11v11H0z" fill="#f25022"/>
                                 <path d="M12 0h11v11H12z" fill="#7fba00"/>
                                 <path d="M0 12h11v11H0z" fill="#00a4ef"/>
@@ -78,18 +55,26 @@
                             <span>Sign in with Microsoft</span>
                         </a>
                     @else
-                        <button type="button" disabled class="student-outline-btn" style="width: 100%; opacity: 0.5; cursor: not-allowed; gap: 10px;">
-                            <svg width="18" height="18" viewBox="0 0 23 23" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M0 0h11v11H0z" fill="#888"/><path d="M12 0h11v11H12z" fill="#888"/>
-                                <path d="M0 12h11v11H0z" fill="#888"/><path d="M12 12h11v11H12z" fill="#888"/>
+                        <a href="{{ route('student.microsoft.redirect') }}" class="student-primary-btn" style="width: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #059669 0%, #10b981 100%); font-weight: 800; font-size: 15px; padding: 14px 20px; border-radius: 14px; gap: 12px; box-shadow: 0 4px 14px rgba(5, 150, 105, 0.25); text-decoration: none; color: #ffffff;">
+                            <svg width="20" height="20" viewBox="0 0 23 23" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M0 0h11v11H0z" fill="#f25022"/>
+                                <path d="M12 0h11v11H12z" fill="#7fba00"/>
+                                <path d="M0 12h11v11H0z" fill="#00a4ef"/>
+                                <path d="M12 12h11v11H12z" fill="#ffb900"/>
                             </svg>
-                            <span>Microsoft sign-in not configured</span>
-                        </button>
+                            <span>Sign in with Microsoft</span>
+                        </a>
                     @endif
                 </div>
 
+                <div style="margin-top: 2rem; padding: 12px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; text-align: center;">
+                    <p style="margin: 0; font-size: 12px; color: #64748b; font-weight: 600;">
+                        Use your <strong>@amis.edu.ph</strong> school account to log in.
+                    </p>
+                </div>
+
                 <p style="margin-top: 1.75rem; text-align: center; font-size: 12px; color: var(--t-tertiary);">
-                    Need help logging in? Please contact the registrar or school support.
+                    Need help with your account? Please contact the registrar or IT support.
                 </p>
             </div>
         </section>
