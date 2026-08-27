@@ -11,6 +11,7 @@ use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Mail\Mailables\Headers;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Str;
+use Symfony\Component\Mime\Email;
 
 class FinalPaymentAdvisoryMail extends Mailable
 {
@@ -25,7 +26,7 @@ class FinalPaymentAdvisoryMail extends Mailable
     ) {
         $this->fromAddress = (string) config('mail.from.address');
 
-        $this->withSymfonyMessage(function (\Symfony\Component\Mime\Email $message): void {
+        $this->withSymfonyMessage(function (Email $message): void {
             $message->embedFromPath($this->logoPath(), 'amis-logo', 'image/png');
             $message->embedFromPath($this->pageOnePreviewPath(), 'advisory-page-1', 'image/jpeg');
             $message->embedFromPath($this->pageTwoPreviewPath(), 'advisory-page-2', 'image/jpeg');
@@ -74,6 +75,63 @@ class FinalPaymentAdvisoryMail extends Mailable
                 ->as('AMIS-Advisory-SM-2627-018-Page-2.jpg')
                 ->withMime('image/jpeg'),
         ];
+    }
+
+    /**
+     * Build the Microsoft Graph message while preserving the same inline
+     * previews and original downloadable files used by the SMTP version.
+     */
+    public function microsoftGraphMessage(): array
+    {
+        return [
+            'subject' => $this->envelope()->subject,
+            'body' => [
+                'contentType' => 'HTML',
+                'content' => $this->htmlBody(),
+            ],
+            'replyTo' => [[
+                'emailAddress' => [
+                    'address' => 'amisfinance2324@gmail.com',
+                    'name' => 'AMIS Finance',
+                ],
+            ]],
+            'internetMessageHeaders' => [
+                [
+                    'name' => 'X-AMIS-Advisory-ID',
+                    'value' => $this->dispatchRef ?: (string) Str::uuid(),
+                ],
+            ],
+            'attachments' => [
+                $this->graphAttachment($this->logoPath(), 'AMIS_Logo_email.png', 'image/png', true, 'amis-logo'),
+                $this->graphAttachment($this->pageOnePreviewPath(), 'AMIS-Advisory-Preview-Page-1.jpg', 'image/jpeg', true, 'advisory-page-1'),
+                $this->graphAttachment($this->pageTwoPreviewPath(), 'AMIS-Advisory-Preview-Page-2.jpg', 'image/jpeg', true, 'advisory-page-2'),
+                $this->graphAttachment($this->pageOneOriginalPath(), 'AMIS-Advisory-SM-2627-018-Page-1.png', 'image/png'),
+                $this->graphAttachment($this->pageTwoOriginalPath(), 'AMIS-Advisory-SM-2627-018-Page-2.jpg', 'image/jpeg'),
+            ],
+        ];
+    }
+
+    private function graphAttachment(
+        string $path,
+        string $name,
+        string $contentType,
+        bool $inline = false,
+        ?string $contentId = null,
+    ): array {
+        $content = file_get_contents($path);
+
+        if ($content === false) {
+            throw new \RuntimeException("Unable to read advisory attachment: {$path}");
+        }
+
+        return array_filter([
+            '@odata.type' => '#microsoft.graph.fileAttachment',
+            'name' => $name,
+            'contentType' => $contentType,
+            'contentBytes' => base64_encode($content),
+            'isInline' => $inline,
+            'contentId' => $contentId,
+        ], static fn (mixed $value): bool => $value !== null);
     }
 
     private function htmlBody(): string

@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Mail\FinalPaymentAdvisoryMail;
 use App\Models\MonthlyPaymentReminder;
+use App\Services\System\MicrosoftGraphMailService;
 use App\Services\System\SmartSmtpRotatorService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -20,16 +21,16 @@ class SendFinalPaymentAdvisoryJob implements ShouldQueue
 
     public const REMINDER_TYPE = 'final_payment_advisory';
 
-    public int $tries = 10;
+    public int $tries = 100;
 
     public int $timeout = 120;
 
-    public function __construct(public int $reminderId)
-    {
-    }
+    public function __construct(public int $reminderId) {}
 
-    public function handle(SmartSmtpRotatorService $rotator): void
-    {
+    public function handle(
+        SmartSmtpRotatorService $rotator,
+        MicrosoftGraphMailService $microsoftGraph,
+    ): void {
         $reminder = DB::transaction(function () {
             $record = MonthlyPaymentReminder::query()
                 ->whereKey($this->reminderId)
@@ -73,7 +74,26 @@ class SendFinalPaymentAdvisoryJob implements ShouldQueue
             $name = preg_replace('/\s*\([^)]*\)/', '', $name) ?: 'Valued Family';
             $name = trim(explode(',', $name)[0]);
             $dispatchRef = 'ADV-'.$reminder->id.'-'.now()->format('Ymd');
-            $result = $rotator->sendMail($email, new FinalPaymentAdvisoryMail($name, $dispatchRef));
+            $mail = new FinalPaymentAdvisoryMail($name, $dispatchRef);
+
+            if ($microsoftGraph->enabled()) {
+                try {
+                    $result = $microsoftGraph->send($email, $mail->microsoftGraphMessage());
+                } catch (Throwable $graphException) {
+                    Log::warning("FinalPaymentAdvisory: Microsoft Graph unavailable for #{$reminder->id}; trying SMTP pool: {$graphException->getMessage()}");
+
+                    try {
+                        $result = $rotator->sendMail($email, $mail);
+                    } catch (Throwable $smtpException) {
+                        throw new \RuntimeException(
+                            $graphException->getMessage().'; SMTP fallback: '.$smtpException->getMessage(),
+                            previous: $smtpException,
+                        );
+                    }
+                }
+            } else {
+                $result = $rotator->sendMail($email, $mail);
+            }
 
             $reminder->update([
                 'status' => MonthlyPaymentReminder::STATUS_SENT,
@@ -99,6 +119,9 @@ class SendFinalPaymentAdvisoryJob implements ShouldQueue
         if (str_contains($lower, 'daily limit') || str_contains($lower, 'daily quota')) {
             $nextRetryAt = now()->addDay()->startOfDay()->addMinutes(10);
             $delaySeconds = max(60, now()->diffInSeconds($nextRetryAt));
+        } elseif (str_contains($lower, 'microsoft graph per-minute')) {
+            $nextRetryAt = now()->addSeconds(70);
+            $delaySeconds = 70;
         } elseif (str_contains($lower, 'max emails per hour') || str_contains($lower, 'hourly sending limit')) {
             $nextRetryAt = now()->addHour()->addMinutes(10);
             $delaySeconds = 4200;

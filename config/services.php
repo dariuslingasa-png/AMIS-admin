@@ -50,6 +50,20 @@ return [
         'student_sku_id' => env('AZURE_STUDENT_SKU_ID', '314c4481-f395-4525-be8b-2ec4bb1e9d91'),
     ],
 
+    'microsoft_graph_mail' => [
+        'enabled' => filter_var(env('MICROSOFT_GRAPH_ENABLED', false), FILTER_VALIDATE_BOOL),
+        'tenant_id' => env('MICROSOFT_GRAPH_TENANT_ID'),
+        'client_id' => env('MICROSOFT_GRAPH_CLIENT_ID'),
+        'client_secret' => env('MICROSOFT_GRAPH_CLIENT_SECRET'),
+        'senders' => array_values(array_filter([
+            env('MICROSOFT_GRAPH_PRIMARY_SENDER'),
+            env('MICROSOFT_GRAPH_SECONDARY_SENDER'),
+        ])),
+        // Exchange Online allows 30 messages/minute. Keep headroom for manual mail.
+        'per_minute_limit' => (int) env('MICROSOFT_GRAPH_PER_MINUTE_LIMIT', 25),
+        'daily_limit' => (int) env('MICROSOFT_GRAPH_DAILY_LIMIT', 9000),
+    ],
+
     'enrollment_storage_url' => env('ENROLLMENT_STORAGE_URL'),
     'student_portal_url' => env('STUDENT_PORTAL_URL', env('APP_URL')),
 
