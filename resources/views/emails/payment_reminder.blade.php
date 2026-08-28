@@ -61,9 +61,10 @@
 <body style="margin: 0; padding: 24px 0; background-color: #f1f5f9; -webkit-font-smoothing: antialiased;">
 
   @php
-    $embedImage = function($path, $fallbackUrl) use ($message) {
-      if (isset($message) && is_object($message) && method_exists($message, 'embed') && file_exists($path)) {
-        return $message->embed($path);
+    $msgObj = isset($message) ? $message : null;
+    $embedImage = function($path, $fallbackUrl) use ($msgObj) {
+      if (isset($msgObj) && is_object($msgObj) && method_exists($msgObj, 'embed') && file_exists($path)) {
+        return $msgObj->embed($path);
       }
       return $fallbackUrl;
     };
@@ -216,18 +217,6 @@
           <p style="margin: 0 0 16px 0; font-size: 16px; font-weight: 800; color: #166534;">
             Jazakumullahu Khairan.
           </p>
-
-          <div style="border-top: 1px solid #f1f5f9; padding-top: 14px;">
-            <p style="margin: 0; font-size: 14px; font-weight: 900; color: #14532d; letter-spacing: 0.5px; text-transform: uppercase;">
-              AMIS SUPPORT STAFF
-            </p>
-            <p style="margin: 3px 0 0 0; font-size: 13px; font-weight: 600; color: #475569;">
-              Al Munawwara Islamic School
-            </p>
-            <p style="margin: 3px 0 0 0; font-size: 13px; color: #15803d; font-weight: 700;">
-              <a href="mailto:amisfinance2324@gmail.com" style="color: #15803d; text-decoration: none;">amisfinance2324@gmail.com</a>
-            </p>
-          </div>
 
         </td>
       </tr>
