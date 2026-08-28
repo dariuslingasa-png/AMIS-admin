@@ -119,6 +119,7 @@
                                 if ($accounts->isEmpty() && $directStudents->isNotEmpty()) {
                                     $accounts = $directStudents->map(fn($st) => $st->account)->filter();
                                 }
+                                $hasAccounts = $accounts->isNotEmpty();
                                 $openCount = $accounts->filter(fn($a) => (float)($a->remaining_balance ?? 0) > 0.01)->count();
                                 $totalRemaining = (float) $accounts->sum(fn($a) => (float)($a->remaining_balance ?? 0));
                                 $familyId = $family->id ?? ($family->user_id ?? 999001);
@@ -169,7 +170,12 @@
 
                                 <!-- 4. Account Status -->
                                 <td class="px-5 py-4 whitespace-nowrap">
-                                    @if($openCount > 0)
+                                    @if(! $hasAccounts)
+                                        <span class="inline-flex items-center gap-1.5 rounded-full bg-slate-100 border border-slate-200 px-2.5 py-1 text-xs font-bold text-slate-600">
+                                            <span class="h-1.5 w-1.5 rounded-full bg-slate-400"></span>
+                                            Draft Application
+                                        </span>
+                                    @elseif($openCount > 0)
                                         <span class="inline-flex items-center gap-1.5 rounded-full bg-amber-50 border border-amber-200 px-2.5 py-1 text-xs font-bold text-amber-800">
                                             <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
                                             {{ $openCount }} Open Account{{ $openCount > 1 ? 's' : '' }}
@@ -184,9 +190,13 @@
 
                                 <!-- 5. Consolidated Remaining -->
                                 <td class="px-5 py-4 text-right whitespace-nowrap">
-                                    <span class="text-base font-black tracking-tight {{ $totalRemaining > 0.01 ? 'text-slate-900' : 'text-emerald-700' }}">
-                                        ₱{{ number_format($totalRemaining, 2) }}
-                                    </span>
+                                    @if(! $hasAccounts)
+                                        <span class="text-xs font-bold text-slate-400 italic">No Assessment</span>
+                                    @else
+                                        <span class="text-base font-black tracking-tight {{ $totalRemaining > 0.01 ? 'text-slate-900' : 'text-emerald-700' }}">
+                                            ₱{{ number_format($totalRemaining, 2) }}
+                                        </span>
+                                    @endif
                                 </td>
 
                                 <!-- 6. Actions -->

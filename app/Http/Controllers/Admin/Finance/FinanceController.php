@@ -783,8 +783,8 @@ class FinanceController extends Controller
 
         $families = User::query()
             ->where(function ($q) {
-                $q->whereHas('enrollmentApplicants')
-                  ->orWhereHas('students');
+                $q->whereHas('students')
+                  ->orWhereHas('enrollmentApplicants', fn ($app) => $app->where('status', 'approved'));
             })
             ->with([
                 'enrollmentApplicants.student.account.monthlyBillings.payments',
