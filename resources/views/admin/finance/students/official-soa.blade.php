@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
         @page {
             size: A4 portrait;
@@ -449,8 +450,19 @@
             .shukran-bar,
             .legal-footer {
                 break-inside: avoid;
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <style>
+                page-break-inside: avoid;
+            }
+
+            .no-print-bar,
+            .edit-modal-overlay {
+                display: none !important;
+            }
+        }
+
+        [x-cloak] {
+            display: none !important;
+        }
+
         .btn-edit {
             background: #4338ca;
             color: #ffffff;
