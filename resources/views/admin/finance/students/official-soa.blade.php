@@ -449,19 +449,146 @@
             .shukran-bar,
             .legal-footer {
                 break-inside: avoid;
-                page-break-inside: avoid;
-            }
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        .btn-edit {
+            background: #4338ca;
+            color: #ffffff;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 12px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            transition: background 0.15s;
+        }
+        .btn-edit:hover {
+            background: #3730a3;
+        }
+        .edit-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.7);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        .edit-modal-box {
+            background: #ffffff;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 24px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .form-label {
+            display: block;
+            font-size: 11px;
+            font-weight: bold;
+            color: #334155;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+        .form-input {
+            width: 100%;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            font-size: 12px;
+            font-weight: 600;
+            color: #0f172a;
+            box-sizing: border-box;
+        }
+        .form-input:focus {
+            outline: 2px solid #065f46;
+            border-color: #065f46;
         }
     </style>
 </head>
-<body>
+<body x-data="{ showEditModal: false }">
 
     <div class="no-print-bar">
-        <a href="javascript:history.back()" class="btn-back">← Back</a>
-        <button type="button" onclick="window.print()" class="btn-print">
-            <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-            Print / Save to PDF
-        </button>
+        <a href="{{ isset($soaData['family_id']) ? route('admin.finance.families.show', $soaData['family_id']) : 'javascript:history.back()' }}" class="btn-back">
+            ← Back to Family Account
+        </a>
+        <div style="display: flex; gap: 8px; align-items: center;">
+            <button type="button" @click="showEditModal = true" class="btn-edit">
+                <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                ✏️ Edit SOA Values / Schedule
+            </button>
+            <button type="button" onclick="window.print()" class="btn-print">
+                <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                Print / Save to PDF
+            </button>
+        </div>
+    </div>
+
+    @if (session('success'))
+        <div style="width: 210mm; max-width: 100%; margin: 10px auto 0; padding: 10px 16px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; color: #065f46; font-weight: bold; font-size: 12px; box-sizing: border-box;">
+            ✓ {{ session('success') }}
+        </div>
+    @endif
+
+    {{-- EDIT SOA MODAL --}}
+    <div x-show="showEditModal" x-cloak class="edit-modal-overlay" @click.self="showEditModal = false">
+        <div class="edit-modal-box">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 16px;">
+                <div>
+                    <h3 style="margin: 0; font-size: 16px; font-weight: 900; color: #0f172a;">Edit Statement of Account Values</h3>
+                    <p style="margin: 2px 0 0; font-size: 11px; color: #64748b;">{{ $soaData['student_name'] }} ({{ $soaData['grade_level'] }})</p>
+                </div>
+                <button type="button" @click="showEditModal = false" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #64748b;">✕</button>
+            </div>
+
+            <form action="{{ route('admin.finance.students.update-soa', ['studentIdentifier' => $soaData['student_number'] ?? $soaData['student_id']]) }}" method="POST">
+                @csrf
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                    <div>
+                        <label class="form-label">Tuition Fee (₱)</label>
+                        <input type="number" step="0.01" name="tuition_fee" value="{{ $soaData['tuition_fee'] }}" required class="form-input">
+                    </div>
+                    <div>
+                        <label class="form-label">Miscellaneous Fee (₱)</label>
+                        <input type="number" step="0.01" name="misc_fee" value="{{ $soaData['misc_fee'] }}" required class="form-input">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                    <div>
+                        <label class="form-label">Books &amp; Programs Fee (₱)</label>
+                        <input type="number" step="0.01" name="books_fee" value="{{ $soaData['books_fee'] }}" required class="form-input">
+                    </div>
+                    <div>
+                        <label class="form-label">Sibling Discount (%)</label>
+                        <input type="number" step="0.01" name="discount_percentage" value="{{ str_replace('%', '', $soaData['discount_privilege']) }}" class="form-input">
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 12px;">
+                    <label class="form-label">Enrollment Downpayment Paid (₱)</label>
+                    <input type="number" step="0.01" name="enrollment_paid" value="{{ $soaData['enrollment_paid'] }}" required class="form-input">
+                </div>
+
+                <div style="margin-bottom: 16px;">
+                    <label class="form-label">Reason for SOA Adjustment <span style="color: #e11d48;">*</span></label>
+                    <textarea name="reason" required rows="2" placeholder="e.g. Sibling discount correction / adjusted tuition schedule per approved concession." class="form-input" style="font-family: inherit; font-weight: normal;"></textarea>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid #e2e8f0; padding-top: 14px;">
+                    <button type="button" @click="showEditModal = false" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px;">Cancel</button>
+                    <button type="submit" style="background: #065f46; color: #ffffff; border: none; padding: 8px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px;">Save &amp; Recalculate SOA</button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <div class="soa-viewport">

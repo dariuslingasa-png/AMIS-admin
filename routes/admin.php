@@ -272,6 +272,7 @@ Route::name('admin.')->group(function () {
 
             // Official Generated Statement of Account
             Route::get('/students/{studentIdentifier}/official-soa', [FinanceController::class, 'officialStudentSoa'])->name('students.official-soa');
+            Route::post('/students/{studentIdentifier}/update-soa', [FinanceController::class, 'updateStudentSoa'])->name('students.update-soa');
             Route::post('/students/{studentIdentifier}/adjust-schedule', [FinanceController::class, 'adjustSchedule'])->name('students.adjust-schedule');
 
             Route::get('/official-receipts', [FinanceController::class, 'receiptsIndex'])->name('receipts.index');

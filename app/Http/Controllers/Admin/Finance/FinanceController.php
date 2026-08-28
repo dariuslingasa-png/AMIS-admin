@@ -11,7 +11,9 @@ use App\Models\FinanceTransaction;
 use App\Models\ReceiptAuditLog;
 use App\Models\ReceiptOcrResult;
 use App\Models\ReceiptSubmission;
+use App\Models\EnrollmentApplicant;
 use App\Models\SoaMonthlyBilling;
+use App\Models\Student;
 use App\Models\StudentAccount;
 use App\Models\StudentManualSoa;
 use App\Models\User;
@@ -1110,10 +1112,88 @@ class FinanceController extends Controller
     {
         $this->authorizeFinance($request);
 
+        // 1. Try resolving official database student first
+        $student = Student::with(['account.monthlyBillings.payments', 'applicant', 'user'])
+            ->where('student_number', $studentIdentifier)
+            ->orWhere('id', $studentIdentifier)
+            ->orWhereHas('applicant', fn ($q) => $q->where('amis_student_id', $studentIdentifier)->orWhere('lrn', $studentIdentifier))
+            ->first();
+
+        if ($student) {
+            $account = $student->account ?: $this->historicalPayment->ensureStudentAccount($student);
+            $applicant = $student->applicant;
+            $family = $student->user ?: ($applicant?->user ?: null);
+            $studentName = mb_strtoupper($applicant?->full_name ?? ($student->full_name ?: trim("{$student->first_name} {$student->last_name}")));
+            $tuition = (float) ($account->tuition_fee ?? 0);
+            $misc = (float) ($account->miscellaneous_fee ?? 0);
+            $booksFee = (float) ($account->books_fee ?? 0);
+            $totalFees = (float) ($account->gross_total ?? ($tuition + $misc + $booksFee));
+            $discountPercent = (float) ($account->discount_percentage ?? 0);
+            $discountAmount = (float) ($account->discount_amount ?? 0);
+            $finalFees = (float) ($account->total_balance ?? max(0, $totalFees - $discountAmount));
+            $enrollmentPaid = (float) ($account->enrollment_fee_paid ?? 4000.00);
+
+            $monthlySchedule = $account->monthlyBillings
+                ->filter(fn ($b) => (int) $b->month_number > 0)
+                ->sortBy(fn ($b) => $b->due_date?->timestamp ?? $b->month_number)
+                ->map(function ($billing) {
+                    $original = (float) $billing->amount_due;
+                    $paid = $billing->status === 'paid' ? $original : min($original, (float) $billing->payments->where('status', 'verified')->sum('amount'));
+                    $repPayment = $billing->payments->where('status', 'verified')->first();
+
+                    return (object) [
+                        'id' => $billing->id,
+                        'month' => $billing->due_date ? strtoupper($billing->due_date->format('F Y')) : strtoupper((string) ($billing->month_name ?: 'Month')),
+                        'fee' => $original,
+                        'paid' => $paid,
+                        'remaining' => max(0, $original - $paid),
+                        'status' => $billing->status,
+                        'payment_date' => $repPayment?->paid_at ? $repPayment->paid_at->format('d-M-y') : ($paid > 0 ? now()->format('d-M-y') : null),
+                        'or_number' => $repPayment?->or_number ?: null,
+                        'payment_id' => $repPayment?->reference_no ?: null,
+                    ];
+                })->values();
+
+            $soaData = [
+                'is_official' => true,
+                'student_id' => $student->id,
+                'student_number' => $student->student_number ?: (string) $student->id,
+                'student_name' => $studentName,
+                'address' => strtoupper($applicant?->address ?? ($student->address ?? 'DAVAO CITY')),
+                'email' => $family?->email ?? ($applicant?->email ?? 'info@amis.edu.ph'),
+                'lrn' => $applicant?->lrn ?? ($student->lrn ?? '123456789012'),
+                'category' => (str_contains($student->grade_level ?? '', 'Grade 7') || str_contains($student->grade_level ?? '', 'Grade 8') || str_contains($student->grade_level ?? '', 'Grade 9') || str_contains($student->grade_level ?? '', 'Grade 10')) ? 'Junior High' : (str_contains($student->grade_level ?? '', 'Grade 11') || str_contains($student->grade_level ?? '', 'Grade 12') ? 'Senior High' : 'Elementary'),
+                'grade_level' => $student->grade_level ?? 'Grade 1',
+                'discount_privilege' => $discountPercent > 0 ? "{$discountPercent}%" : '0%',
+                'discount_status' => $discountPercent > 0 ? 'Active (Sibling Discount)' : 'No Sibling Discount',
+                'tuition_fee' => $tuition,
+                'misc_fee' => $misc,
+                'total_fees' => $totalFees,
+                'discount_amount' => $discountAmount,
+                'final_fees' => $finalFees,
+                'enrollment_paid' => $enrollmentPaid,
+                'enrollment_date' => '5-May-26',
+                'enrollment_account' => '10539',
+                'books_fee' => $booksFee,
+                'books_paid' => 0.00,
+                'books_date' => null,
+                'books_account' => null,
+                'monthly_schedule' => $monthlySchedule,
+                'monthly_rate' => (float) ($account->monthly_tuition ?? ($monthlySchedule->first()?->fee ?? 0)),
+                'total_remaining' => (float) ($account->remaining_balance ?? $monthlySchedule->sum('remaining')),
+                'school_year' => $student->school_year ?? ($account->school_year ?? '2026-2027'),
+                'family_id' => $family?->id,
+            ];
+
+            return view('admin.finance.students.official-soa', compact('soaData'));
+        }
+
+        // 2. Demo fallback
         if ($this->demoData->isEnabled()) {
             $allFamilies = $this->demoData->allDemoFamilies();
 
             $foundChild = null;
+            $foundFamily = null;
             $cleanId = Str::upper(trim($studentIdentifier));
             preg_match('/(?:^|[^0-9])0*(1|2|3|4|5|6|7|8|9)(?:[^0-9]|$)/', preg_replace('/202[0-9]/', '', $cleanId), $mId);
             $targetSeq = $mId[1] ?? null;
@@ -1192,7 +1272,9 @@ class FinanceController extends Controller
                         $fee = 4400.00;
                         $paidNow = min($fee, $remAlloc);
                         $remAlloc = max(0, $remAlloc - $paidNow);
-                        return (object)[
+
+                        return (object) [
+                            'id' => null,
                             'month' => $mName,
                             'fee' => $fee,
                             'paid' => $paidNow,
@@ -1211,6 +1293,9 @@ class FinanceController extends Controller
                 $remainingBalance = (float) $monthlySchedule->sum('remaining');
 
                 $soaData = [
+                    'is_official' => false,
+                    'student_id' => $foundChild['student_id'],
+                    'student_number' => $foundChild['student_id'],
                     'student_name' => $foundChild['name'],
                     'address' => 'DAVAO CITY',
                     'email' => $foundFamily['email'],
@@ -1235,10 +1320,103 @@ class FinanceController extends Controller
                     'monthly_rate' => $monthlyRate,
                     'total_remaining' => $remainingBalance,
                     'school_year' => '2026-2027',
+                    'family_id' => $foundFamily['id'],
                 ];
 
                 return view('admin.finance.students.official-soa', compact('soaData'));
             }
+        }
+
+        abort(404, 'Student account not found.');
+    }
+
+    public function updateStudentSoa(Request $request, string $studentIdentifier)
+    {
+        $this->authorizeFinance($request);
+
+        $validated = $request->validate([
+            'tuition_fee' => 'required|numeric|min:0|max:999999.99',
+            'misc_fee' => 'required|numeric|min:0|max:999999.99',
+            'books_fee' => 'required|numeric|min:0|max:999999.99',
+            'discount_percentage' => 'nullable|numeric|min:0|max:100',
+            'discount_amount' => 'nullable|numeric|min:0|max:999999.99',
+            'enrollment_paid' => 'required|numeric|min:0|max:999999.99',
+            'monthly_schedule' => 'nullable|array',
+            'reason' => 'required|string|min:4|max:1000',
+        ]);
+
+        $student = Student::with(['account.monthlyBillings', 'applicant', 'user'])
+            ->where('student_number', $studentIdentifier)
+            ->orWhere('id', $studentIdentifier)
+            ->orWhereHas('applicant', fn ($q) => $q->where('amis_student_id', $studentIdentifier)->orWhere('lrn', $studentIdentifier))
+            ->first();
+
+        if ($student) {
+            $account = $student->account ?: $this->historicalPayment->ensureStudentAccount($student);
+            $gross = (float) $validated['tuition_fee'] + (float) $validated['misc_fee'] + (float) $validated['books_fee'];
+            $discAmount = (float) ($validated['discount_amount'] ?? round((float) $validated['tuition_fee'] * ((float) ($validated['discount_percentage'] ?? 0) / 100), 2));
+            $totalBalance = max(0, $gross - $discAmount);
+            $enrollPaid = (float) $validated['enrollment_paid'];
+            $remaining = max(0, $totalBalance - $enrollPaid);
+            $monthlyTuition = round($remaining / 9, 2);
+
+            $oldValues = $account->only(['tuition_fee', 'miscellaneous_fee', 'books_fee', 'discount_percentage', 'discount_amount', 'gross_total', 'enrollment_fee_paid', 'total_balance', 'remaining_balance']);
+
+            $account->update([
+                'tuition_fee' => $validated['tuition_fee'],
+                'miscellaneous_fee' => $validated['misc_fee'],
+                'books_fee' => $validated['books_fee'],
+                'discount_percentage' => $validated['discount_percentage'] ?? 0,
+                'discount_amount' => $discAmount,
+                'gross_total' => $gross,
+                'enrollment_fee_paid' => $enrollPaid,
+                'total_balance' => $totalBalance,
+                'amount_paid' => $enrollPaid,
+                'remaining_balance' => $remaining,
+                'monthly_tuition' => $monthlyTuition,
+                'status' => $remaining > 0 ? 'partial' : 'fully_paid',
+            ]);
+
+            // Update monthly billings if provided
+            if (! empty($validated['monthly_schedule']) && is_array($validated['monthly_schedule'])) {
+                foreach ($validated['monthly_schedule'] as $billingId => $bData) {
+                    if (is_numeric($billingId)) {
+                        $billing = SoaMonthlyBilling::find($billingId);
+                        if ($billing && $billing->student_account_id === $account->id) {
+                            $billing->update([
+                                'amount_due' => (float) ($bData['amount_due'] ?? $monthlyTuition),
+                                'status' => $bData['status'] ?? $billing->status,
+                            ]);
+                        }
+                    }
+                }
+            }
+
+            // Recalculate ledger running balance
+            $account->recalculate();
+
+            // Write audit log
+            FinanceAuditLog::create([
+                'student_id' => $student->id,
+                'actor_id' => $request->user()->id,
+                'event' => 'soa_template_customized',
+                'academic_year' => $account->school_year ?? '2026-2027',
+                'amount' => $totalBalance,
+                'changes' => [
+                    'old' => $oldValues,
+                    'new' => $account->fresh()->only(['tuition_fee', 'miscellaneous_fee', 'books_fee', 'discount_percentage', 'discount_amount', 'gross_total', 'enrollment_fee_paid', 'total_balance', 'remaining_balance']),
+                ],
+                'reason' => $validated['reason'],
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
+
+            return back()->with('success', 'Official SOA values and billing schedule updated successfully.');
+        }
+
+        // Demo fallback
+        if ($this->demoData->isEnabled()) {
+            return back()->with('success', 'Demo SOA values updated for this session.');
         }
 
         abort(404, 'Student account not found.');

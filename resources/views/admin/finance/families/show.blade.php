@@ -460,7 +460,7 @@
                                 <h5 class="mt-1 text-sm font-black text-slate-900">Official Generated Statement of Account</h5>
                                 <p class="text-xs text-slate-500 mt-1 mb-3">Computed assessment with official school branding, Arabic letterhead, DepED permit, and full payment breakdown.</p>
                                 <a
-                                    href="{{ route('admin.finance.students.official-soa', ['studentIdentifier' => $stData['student_number']]) }}"
+                                    href="{{ route('admin.finance.students.official-soa', ['studentIdentifier' => $stData['student_number'] ?: $stData['id']]) }}"
                                     target="_blank"
                                     class="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-800 shadow-sm transition"
                                 >
