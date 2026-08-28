@@ -340,14 +340,23 @@
             border: 1px solid #475569;
         }
 
-        /* INTERACTIVE CLICKABLE HOVER STYLING */
-        .interactive-table {
+        /* CLICKABLE INTERACTIVE ROWS & CELLS */
+        .clickable-row {
             cursor: pointer;
-            transition: outline 0.15s ease-in-out;
+            transition: background-color 0.12s ease-in-out;
         }
-        .interactive-table:hover {
-            outline: 2px dashed #4338ca;
-            outline-offset: 2px;
+        .clickable-row:hover {
+            background-color: #ecfdf5 !important;
+        }
+        .clickable-row:hover td {
+            color: #065f46;
+        }
+        .clickable-table {
+            cursor: pointer;
+            transition: box-shadow 0.15s ease-in-out;
+        }
+        .clickable-table:hover {
+            box-shadow: 0 0 0 2px #4338ca;
         }
 
         .th-center, .cell-center { text-align: center; }
@@ -393,8 +402,8 @@
             display: none !important;
         }
 
-        /* MODAL POPUP */
-        .edit-modal-overlay {
+        /* MODAL POPUPS */
+        .modal-overlay {
             position: fixed;
             inset: 0;
             background: rgba(15, 23, 42, 0.75);
@@ -405,11 +414,11 @@
             justify-content: center;
             padding: 16px;
         }
-        .edit-modal-box {
+        .modal-box {
             background: #ffffff;
             border-radius: 16px;
             width: 100%;
-            max-width: 620px;
+            max-width: 540px;
             max-height: 90vh;
             overflow-y: auto;
             padding: 24px;
@@ -445,12 +454,13 @@
                 margin: 0 !important;
             }
             .no-print-bar,
-            .edit-modal-overlay,
-            .edit-badge {
+            .modal-overlay {
                 display: none !important;
             }
-            .interactive-table:hover {
-                outline: none !important;
+            .clickable-table:hover,
+            .clickable-row:hover {
+                box-shadow: none !important;
+                background-color: transparent !important;
             }
             .soa-viewport {
                 padding: 0 !important;
@@ -477,9 +487,9 @@
             ← Back to Family Account
         </a>
         <div style="display: flex; gap: 8px; align-items: center;">
-            <button type="button" @click="showModal = true" class="btn-edit" title="Click to open edit modal">
+            <button type="button" @click="openFeeModal()" class="btn-edit" title="Edit assessment and fees">
                 <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                ✏️ Edit SOA Values / Schedule
+                ✏️ Edit Fees &amp; Discounts
             </button>
             <button type="button" onclick="window.print()" class="btn-print">
                 <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
@@ -494,15 +504,85 @@
         </div>
     @endif
 
-    {{-- EDIT MODAL POPUP --}}
-    <div x-show="showModal" x-cloak class="edit-modal-overlay" @click.self="showModal = false">
-        <div class="edit-modal-box">
+    {{-- MODAL 1: EDIT SPECIFIC MONTH PAYMENT RECORD --}}
+    <div x-show="showMonthModal" x-cloak class="modal-overlay" @click.self="showMonthModal = false">
+        <div class="modal-box">
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 16px;">
                 <div>
-                    <h3 style="margin: 0; font-size: 16px; font-weight: 900; color: #0f172a;">Edit Statement of Account Values</h3>
+                    <span style="display: inline-block; background: #ecfdf5; color: #065f46; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px; text-transform: uppercase; margin-bottom: 3px;">Monthly Installment Editor</span>
+                    <h3 style="margin: 0; font-size: 16px; font-weight: 900; color: #0f172a;" x-text="activeMonth.month + ' Billing Record'"></h3>
                     <p style="margin: 2px 0 0; font-size: 11px; color: #64748b;">{{ $soaData['student_name'] }} ({{ $soaData['grade_level'] }})</p>
                 </div>
-                <button type="button" @click="showModal = false" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #64748b;">✕</button>
+                <button type="button" @click="showMonthModal = false" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #64748b;">✕</button>
+            </div>
+
+            <form action="{{ route('admin.finance.students.update-month-billing', ['studentIdentifier' => $soaData['student_number'] ?? $soaData['student_id']]) }}" method="POST">
+                @csrf
+                <input type="hidden" name="billing_month" :value="activeMonth.month">
+
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 14px; font-size: 12px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                        <span style="color: #64748b;">Assessed Monthly Due:</span>
+                        <strong style="color: #0f172a;" x-text="'₱' + formatMoney(activeMonth.fee)"></strong>
+                    </div>
+                </div>
+
+                {{-- QUICK STATUS TOGGLE BUTTONS --}}
+                <div style="margin-bottom: 12px;">
+                    <label class="form-label">Payment Status</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+                        <button type="button" @click="setMonthStatus('paid')" :style="activeMonth.status === 'paid' ? 'background:#065f46; color:#ffffff;' : 'background:#f1f5f9; color:#334155;'" style="padding: 8px; border-radius: 8px; border: 1px solid #cbd5e1; font-weight: bold; font-size: 11px; cursor: pointer;">
+                            ✓ Paid Full (₱<span x-text="formatMoney(activeMonth.fee)"></span>)
+                        </button>
+                        <button type="button" @click="setMonthStatus('partial')" :style="activeMonth.status === 'partial' ? 'background:#d97706; color:#ffffff;' : 'background:#f1f5f9; color:#334155;'" style="padding: 8px; border-radius: 8px; border: 1px solid #cbd5e1; font-weight: bold; font-size: 11px; cursor: pointer;">
+                            Partial Amount
+                        </button>
+                        <button type="button" @click="setMonthStatus('unpaid')" :style="activeMonth.status === 'unpaid' ? 'background:#e11d48; color:#ffffff;' : 'background:#f1f5f9; color:#334155;'" style="padding: 8px; border-radius: 8px; border: 1px solid #cbd5e1; font-weight: bold; font-size: 11px; cursor: pointer;">
+                            Unpaid (₱0.00)
+                        </button>
+                    </div>
+                    <input type="hidden" name="status" :value="activeMonth.status">
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                    <div>
+                        <label class="form-label">Amount Paid (₱)</label>
+                        <input type="number" step="0.01" name="amount_paid" x-model.number="activeMonth.paid" required class="form-input">
+                    </div>
+                    <div>
+                        <label class="form-label">Payment Date</label>
+                        <input type="text" name="payment_date" x-model="activeMonth.payment_date" placeholder="e.g. 15-Aug-26" class="form-input">
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 12px;">
+                    <label class="form-label">Official Receipt / Account No.</label>
+                    <input type="text" name="or_number" x-model="activeMonth.or_number" placeholder="e.g. 10539 or OR-2026-008" class="form-input">
+                </div>
+
+                <div style="margin-bottom: 16px;">
+                    <label class="form-label">Reason for Adjustment <span style="color: #e11d48;">*</span></label>
+                    <textarea name="reason" required rows="2" placeholder="e.g. Encoded historical official receipt / cleared payment per parent receipt." class="form-input" style="font-family: inherit; font-weight: normal;"></textarea>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid #e2e8f0; padding-top: 14px;">
+                    <button type="button" @click="showMonthModal = false" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px;">Cancel</button>
+                    <button type="submit" style="background: #065f46; color: #ffffff; border: none; padding: 8px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px;">Save Month Payment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- MODAL 2: EDIT GENERAL FEES & DISCOUNTS --}}
+    <div x-show="showFeeModal" x-cloak class="modal-overlay" @click.self="showFeeModal = false">
+        <div class="modal-box">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 16px;">
+                <div>
+                    <span style="display: inline-block; background: #e0e7ff; color: #3730a3; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px; text-transform: uppercase; margin-bottom: 3px;">Assessment &amp; Fee Studio</span>
+                    <h3 style="margin: 0; font-size: 16px; font-weight: 900; color: #0f172a;">Edit Statement Assessment</h3>
+                    <p style="margin: 2px 0 0; font-size: 11px; color: #64748b;">{{ $soaData['student_name'] }} ({{ $soaData['grade_level'] }})</p>
+                </div>
+                <button type="button" @click="showFeeModal = false" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #64748b;">✕</button>
             </div>
 
             <form action="{{ route('admin.finance.students.update-soa', ['studentIdentifier' => $soaData['student_number'] ?? $soaData['student_id']]) }}" method="POST">
@@ -511,47 +591,47 @@
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
                     <div>
                         <label class="form-label">Tuition Fee (₱)</label>
-                        <input type="number" step="0.01" name="tuition_fee" x-model.number="tuitionFee" required class="form-input">
+                        <input type="number" step="0.01" name="tuition_fee" x-model.number="feeData.tuition" required class="form-input">
                     </div>
                     <div>
                         <label class="form-label">Miscellaneous Fee (₱)</label>
-                        <input type="number" step="0.01" name="misc_fee" x-model.number="miscFee" required class="form-input">
+                        <input type="number" step="0.01" name="misc_fee" x-model.number="feeData.misc" required class="form-input">
                     </div>
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
                     <div>
                         <label class="form-label">Books &amp; Programs Fee (₱)</label>
-                        <input type="number" step="0.01" name="books_fee" x-model.number="booksFee" required class="form-input">
+                        <input type="number" step="0.01" name="books_fee" x-model.number="feeData.books" required class="form-input">
                     </div>
                     <div>
                         <label class="form-label">Sibling Discount (%)</label>
-                        <input type="number" step="0.01" name="discount_percentage" x-model.number="discountPercent" class="form-input" placeholder="0">
+                        <input type="number" step="0.01" name="discount_percentage" x-model.number="feeData.discountPercent" class="form-input" placeholder="0">
                     </div>
                 </div>
 
                 <div style="margin-bottom: 14px;">
                     <label class="form-label">Enrollment Downpayment Paid (₱)</label>
-                    <input type="number" step="0.01" name="enrollment_paid" x-model.number="enrollmentPaid" required class="form-input">
+                    <input type="number" step="0.01" name="enrollment_paid" x-model.number="feeData.enrollmentPaid" required class="form-input">
                 </div>
 
                 {{-- LIVE RECALCULATION SUMMARY PREVIEW --}}
                 <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 14px; font-size: 11.5px;">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
                         <span style="color: #64748b;">Total Fees:</span>
-                        <strong style="color: #0f172a;" x-text="'₱' + formatMoney(totalFees)"></strong>
+                        <strong style="color: #0f172a;" x-text="'₱' + formatMoney(calcTotalFees)"></strong>
                     </div>
                     <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                        <span style="color: #64748b;">Sibling Discount (<span x-text="discountPercent + '%'"></span>):</span>
-                        <strong style="color: #e11d48;" x-text="'- ₱' + formatMoney(discountAmount)"></strong>
+                        <span style="color: #64748b;">Sibling Discount (<span x-text="feeData.discountPercent + '%'"></span>):</span>
+                        <strong style="color: #e11d48;" x-text="'- ₱' + formatMoney(calcDiscountAmount)"></strong>
                     </div>
                     <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
                         <span style="color: #64748b;">Final Assessed Balance:</span>
-                        <strong style="color: #0f172a;" x-text="'₱' + formatMoney(finalFees)"></strong>
+                        <strong style="color: #0f172a;" x-text="'₱' + formatMoney(calcFinalFees)"></strong>
                     </div>
                     <div style="display: flex; justify-content: space-between; border-top: 1px dashed #cbd5e1; padding-top: 4px; margin-top: 4px;">
                         <span style="color: #065f46; font-weight: bold;">Monthly Rate (9 mos):</span>
-                        <strong style="color: #065f46;" x-text="'₱' + formatMoney(autoMonthlyRate)"></strong>
+                        <strong style="color: #065f46;" x-text="'₱' + formatMoney(calcMonthlyRate)"></strong>
                     </div>
                 </div>
 
@@ -561,14 +641,14 @@
                 </div>
 
                 <div style="display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid #e2e8f0; padding-top: 14px;">
-                    <button type="button" @click="showModal = false" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px;">Cancel</button>
+                    <button type="button" @click="showFeeModal = false" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px;">Cancel</button>
                     <button type="submit" style="background: #065f46; color: #ffffff; border: none; padding: 8px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px;">Save &amp; Recalculate SOA</button>
                 </div>
             </form>
         </div>
     </div>
 
-    {{-- CLEAN OFFICIAL STATEMENT OF ACCOUNT PAGE (CLICK ANYWHERE ON TABLE TO OPEN MODAL) --}}
+    {{-- CLEAN OFFICIAL STATEMENT OF ACCOUNT PAGE --}}
     <div class="soa-viewport">
         <div class="soa-page">
             {{-- TOP SCHOOL HEADER --}}
@@ -659,9 +739,9 @@
                     </table>
                 </div>
 
-                {{-- COLUMN 3: FEE BREAKDOWN TABLE (CLICKABLE) --}}
+                {{-- COLUMN 3: FEE BREAKDOWN TABLE (CLICK TO OPEN FEE MODAL) --}}
                 <div class="upper-right">
-                    <table class="fee-table interactive-table" @click="showModal = true" title="Click to edit fees">
+                    <table class="fee-table clickable-table" @click="openFeeModal()" title="Click to edit Tuition, Misc, and Sibling Discounts">
                         <thead>
                             <tr>
                                 <th rowspan="2">DESCRIPTION</th>
@@ -708,8 +788,8 @@
                 </div>
             </div>
 
-            {{-- MAIN STATEMENT & PAYMENT LEDGER TABLE (CLICKABLE) --}}
-            <table class="main-ledger-table interactive-table" @click="showModal = true" title="Click to edit fees and schedule">
+            {{-- MAIN STATEMENT & PAYMENT LEDGER TABLE --}}
+            <table class="main-ledger-table">
                 <thead>
                     <tr>
                         <th style="width: 26%;">Description</th>
@@ -726,7 +806,7 @@
                         $runningBalance = (float) $soaData['final_fees'];
                         $runningBalance -= (float) $soaData['enrollment_paid'];
                     @endphp
-                    <tr>
+                    <tr class="clickable-row" @click="openFeeModal()" title="Click to edit Enrollment Downpayment">
                         <td>Paid Enrollment Fee</td>
                         <td></td>
                         <td class="cell-right"></td>
@@ -738,7 +818,7 @@
                     @php
                         $runningBalance += (float) $soaData['books_fee'];
                     @endphp
-                    <tr>
+                    <tr class="clickable-row" @click="openFeeModal()" title="Click to edit Books & Programs">
                         <td>Books and programs</td>
                         <td></td>
                         <td class="cell-right">{{ number_format($soaData['books_fee'], 2) }}</td>
@@ -750,7 +830,7 @@
                     @php
                         $runningBalance -= (float) $soaData['books_paid'];
                     @endphp
-                    <tr>
+                    <tr class="clickable-row" @click="openFeeModal()" title="Click to edit Paid Books">
                         <td>Paid Books</td>
                         <td></td>
                         <td class="cell-right"></td>
@@ -799,8 +879,17 @@
                                 }
                                 $txAccountDisplay = $txAccount;
                             }
+
+                            $monthPayload = [
+                                'month' => $monthName . ' 2026',
+                                'fee' => $mFee,
+                                'paid' => $mPaid,
+                                'status' => $isPaidMonth ? ($mPaid >= $mFee ? 'paid' : 'partial') : 'unpaid',
+                                'payment_date' => $txDateDisplay ?: now()->format('d-M-y'),
+                                'or_number' => $txAccountDisplay ?: '',
+                            ];
                         @endphp
-                        <tr>
+                        <tr class="clickable-row" @click="openMonthModal({{ Js::from($monthPayload) }})" title="Click to edit {{ $monthName }} 2026 payment">
                             <td></td>
                             <td>{{ $monthName }}</td>
                             <td class="cell-right {{ ($monthName === 'July' && ! $isPaidMonth) ? 'highlight-yellow' : '' }}">{{ number_format($mFee, 2) }}</td>
@@ -842,8 +931,17 @@
                                 }
                                 $txAccountDisplay = $txAccount;
                             }
+
+                            $monthPayload = [
+                                'month' => $monthName . ' 2027',
+                                'fee' => $mFee,
+                                'paid' => $mPaid,
+                                'status' => $isPaidMonth ? ($mPaid >= $mFee ? 'paid' : 'partial') : 'unpaid',
+                                'payment_date' => $txDateDisplay ?: now()->format('d-M-y'),
+                                'or_number' => $txAccountDisplay ?: '',
+                            ];
                         @endphp
-                        <tr>
+                        <tr class="clickable-row" @click="openMonthModal({{ Js::from($monthPayload) }})" title="Click to edit {{ $monthName }} 2027 payment">
                             <td></td>
                             <td>{{ $monthName }}</td>
                             <td class="cell-right">{{ number_format($mFee, 2) }}</td>
@@ -903,24 +1001,53 @@
     <script>
         function soaStudio(initialData) {
             return {
-                showModal: false,
-                tuitionFee: Number(initialData.tuition_fee || 0),
-                miscFee: Number(initialData.misc_fee || 0),
-                booksFee: Number(initialData.books_fee || 0),
-                discountPercent: Number((initialData.discount_privilege || '0').replace('%', '')) || 0,
-                enrollmentPaid: Number(initialData.enrollment_paid || 0),
+                showMonthModal: false,
+                showFeeModal: false,
+                activeMonth: {
+                    month: '',
+                    fee: 0,
+                    paid: 0,
+                    status: 'unpaid',
+                    payment_date: '',
+                    or_number: ''
+                },
+                feeData: {
+                    tuition: Number(initialData.tuition_fee || 0),
+                    misc: Number(initialData.misc_fee || 0),
+                    books: Number(initialData.books_fee || 0),
+                    discountPercent: Number((initialData.discount_privilege || '0').replace('%', '')) || 0,
+                    enrollmentPaid: Number(initialData.enrollment_paid || 0),
+                },
 
-                get totalFees() {
-                    return Number(this.tuitionFee || 0) + Number(this.miscFee || 0);
+                openMonthModal(monthData) {
+                    this.activeMonth = Object.assign({}, monthData);
+                    this.showMonthModal = true;
                 },
-                get discountAmount() {
-                    return Math.round(Number(this.tuitionFee || 0) * (Number(this.discountPercent || 0) / 100) * 100) / 100;
+
+                setMonthStatus(status) {
+                    this.activeMonth.status = status;
+                    if (status === 'paid') {
+                        this.activeMonth.paid = this.activeMonth.fee;
+                    } else if (status === 'unpaid') {
+                        this.activeMonth.paid = 0;
+                    }
                 },
-                get finalFees() {
-                    return Math.max(0, this.totalFees - this.discountAmount);
+
+                openFeeModal() {
+                    this.showFeeModal = true;
                 },
-                get autoMonthlyRate() {
-                    let netAfterDown = Math.max(0, this.finalFees - Number(this.enrollmentPaid || 0));
+
+                get calcTotalFees() {
+                    return Number(this.feeData.tuition || 0) + Number(this.feeData.misc || 0);
+                },
+                get calcDiscountAmount() {
+                    return Math.round(Number(this.feeData.tuition || 0) * (Number(this.feeData.discountPercent || 0) / 100) * 100) / 100;
+                },
+                get calcFinalFees() {
+                    return Math.max(0, this.calcTotalFees - this.calcDiscountAmount);
+                },
+                get calcMonthlyRate() {
+                    let netAfterDown = Math.max(0, this.calcFinalFees - Number(this.feeData.enrollmentPaid || 0));
                     return Math.round((netAfterDown / 9) * 100) / 100;
                 },
                 formatMoney(val) {

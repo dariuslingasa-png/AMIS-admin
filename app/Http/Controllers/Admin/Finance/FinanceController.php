@@ -1422,6 +1422,106 @@ class FinanceController extends Controller
         abort(404, 'Student account not found.');
     }
 
+    public function updateMonthBilling(Request $request, string $studentIdentifier)
+    {
+        $this->authorizeFinance($request);
+
+        $validated = $request->validate([
+            'billing_month' => 'required|string',
+            'amount_due' => 'nullable|numeric|min:0',
+            'amount_paid' => 'required|numeric|min:0',
+            'payment_date' => 'nullable|string',
+            'or_number' => 'nullable|string|max:100',
+            'status' => 'required|string|in:paid,partial,unpaid',
+            'reason' => 'required|string|min:4|max:1000',
+        ]);
+
+        $student = Student::with(['account.monthlyBillings.payments', 'applicant', 'user'])
+            ->where('student_number', $studentIdentifier)
+            ->orWhere('id', $studentIdentifier)
+            ->orWhereHas('applicant', fn ($q) => $q->where('amis_student_id', $studentIdentifier)->orWhere('lrn', $studentIdentifier))
+            ->first();
+
+        if ($student) {
+            $account = $student->account ?: $this->historicalPayment->ensureStudentAccount($student);
+            $monthName = strtoupper(trim($validated['billing_month']));
+
+            $billing = $account->monthlyBillings->first(function ($b) use ($monthName) {
+                return str_contains(strtoupper((string) $b->month_name), $monthName)
+                    || ($b->due_date && str_contains(strtoupper($b->due_date->format('F Y')), $monthName));
+            });
+
+            if ($billing) {
+                if (isset($validated['amount_due'])) {
+                    $billing->amount_due = (float) $validated['amount_due'];
+                }
+
+                $paidAmt = (float) $validated['amount_paid'];
+                if ($paidAmt > 0) {
+                    $txDate = null;
+                    if (! empty($validated['payment_date'])) {
+                        try {
+                            $txDate = \Carbon\Carbon::parse($validated['payment_date']);
+                        } catch (\Throwable $e) {
+                            $txDate = now();
+                        }
+                    } else {
+                        $txDate = now();
+                    }
+
+                    $this->historicalPayment->recordHistoricalPayment([
+                        'student_id' => $student->id,
+                        'family_id' => $student->user_id,
+                        'amount' => $paidAmt,
+                        'academic_year' => $account->school_year ?: '2026-2027',
+                        'payment_date' => $txDate->format('Y-m-d'),
+                        'fee_category' => 'TUITION',
+                        'target_billing_id' => $billing->id,
+                        'or_number' => $validated['or_number'] ?: null,
+                        'payment_method' => 'CASH',
+                        'remarks' => "Payment updated for {$billing->month_name} via SOA editor: {$validated['reason']}",
+                    ], $request->user());
+                }
+
+                if ($paidAmt >= (float) $billing->amount_due && (float) $billing->amount_due > 0) {
+                    $billing->status = 'paid';
+                } elseif ($paidAmt > 0) {
+                    $billing->status = 'partial';
+                } else {
+                    $billing->status = $validated['status'];
+                }
+                $billing->save();
+
+                $account->recalculate();
+
+                FinanceAuditLog::create([
+                    'student_id' => $student->id,
+                    'actor_id' => $request->user()->id,
+                    'event' => 'soa_month_billing_updated',
+                    'academic_year' => $account->school_year ?? '2026-2027',
+                    'amount' => $billing->amount_due,
+                    'changes' => [
+                        'month' => $billing->month_name,
+                        'status' => $billing->status,
+                        'amount_paid' => $validated['amount_paid'],
+                        'or_number' => $validated['or_number'],
+                    ],
+                    'reason' => $validated['reason'],
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->userAgent(),
+                ]);
+
+                return back()->with('success', "Billing record for {$billing->month_name} updated successfully.");
+            }
+        }
+
+        if ($this->demoData->isEnabled()) {
+            return back()->with('success', "Demo billing for {$validated['billing_month']} updated successfully.");
+        }
+
+        abort(404, 'Student billing record not found.');
+    }
+
     public function adjustSchedule(Request $request, string $studentIdentifier)
     {
         $this->authorizeFinance($request);
