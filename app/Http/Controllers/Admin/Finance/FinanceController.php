@@ -18,6 +18,7 @@ use App\Models\User;
 use App\Services\Finance\FamilyPaymentReceiptService;
 use App\Services\Finance\FinanceAllocationService;
 use App\Services\Finance\FinanceDemoDataService;
+use App\Services\Finance\FinanceHistoricalPaymentService;
 use App\Services\Payment\UnifiedPaymentDuplicateService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
@@ -33,6 +34,7 @@ class FinanceController extends Controller
         private readonly FamilyPaymentReceiptService $familyReceipts,
         private readonly UnifiedPaymentDuplicateService $duplicates,
         private readonly FinanceDemoDataService $demoData,
+        private readonly FinanceHistoricalPaymentService $historicalPayment,
     ) {}
 
     public function dashboard(Request $request)
@@ -79,7 +81,7 @@ class FinanceController extends Controller
                 ->whereDate('transaction_at', $today);
             $metrics['approved_today'] = (clone $approvedToday)->where('source', 'ONLINE')->count();
             $metrics['onsite_today'] = (clone $approvedToday)->where('source', 'ONSITE')->count();
-            $metrics['total_today'] = (float) $approvedToday->sum('amount');
+            $metrics['total_today'] = (float) (clone $approvedToday)->whereIn('source', ['ONLINE', 'ONSITE'])->sum('amount');
             $recent = FinanceTransaction::query()
                 ->with(['family', 'officialReceipt'])
                 ->where('status', 'APPROVED')
@@ -740,8 +742,9 @@ class FinanceController extends Controller
     {
         $this->authorizeFinance($request);
 
-        if ($this->demoData->isEnabled()) {
-            $term = $request->string('q')->trim()->value();
+        $term = $request->string('q')->trim()->value();
+
+        if ($this->demoData->isEnabled() && ! $request->boolean('official_only') && (empty($term) || $this->demoData->searchFamilies($term)->isNotEmpty())) {
             $demoFamilies = filled($term)
                 ? $this->demoData->searchFamilies($term)
                 : $this->demoData->getDemoFamiliesList();
@@ -760,13 +763,31 @@ class FinanceController extends Controller
         }
 
         $families = User::query()
-            ->whereHas('enrollmentApplicants.student.account')
-            ->with(['enrollmentApplicants.student.account'])
-            ->when($request->filled('q'), function ($q) use ($request) {
-                $term = '%'.$request->string('q').'%';
-                $q->where(fn ($nested) => $nested->where('name', 'like', $term)
-                    ->orWhere('email', 'like', $term)
-                    ->orWhereHas('enrollmentApplicants', fn ($students) => $students->where('first_name', 'like', $term)->orWhere('last_name', 'like', $term)->orWhere('amis_student_id', 'like', $term)));
+            ->where(function ($q) {
+                $q->whereHas('enrollmentApplicants')
+                  ->orWhereHas('students');
+            })
+            ->with([
+                'enrollmentApplicants.student.account.monthlyBillings.payments',
+                'students.account.monthlyBillings.payments',
+            ])
+            ->when(filled($term), function ($q) use ($term) {
+                $searchTerm = '%'.$term.'%';
+                $q->where(function ($nested) use ($searchTerm) {
+                    $nested->where('name', 'like', $searchTerm)
+                        ->orWhere('email', 'like', $searchTerm)
+                        ->orWhereHas('enrollmentApplicants', fn ($app) => $app->where('first_name', 'like', $searchTerm)
+                            ->orWhere('last_name', 'like', $searchTerm)
+                            ->orWhere('middle_name', 'like', $searchTerm)
+                            ->orWhere('lrn', 'like', $searchTerm)
+                            ->orWhere('amis_student_id', 'like', $searchTerm)
+                            ->orWhere('student_type', 'like', $searchTerm)
+                        )
+                        ->orWhereHas('students', fn ($st) => $st->where('student_number', 'like', $searchTerm)
+                            ->orWhere('school_email', 'like', $searchTerm)
+                            ->orWhere('grade_level', 'like', $searchTerm)
+                        );
+                });
             })
             ->orderBy('name')
             ->paginate(20)
@@ -782,11 +803,11 @@ class FinanceController extends Controller
             $family = $this->demoData->getFamily($familyId);
             $userId = $family->user_id ?? $familyId;
             $transactions = FinanceTransaction::query()
-                ->with('officialReceipt')
+                ->with(['officialReceipt', 'processor'])
                 ->where('user_id', $userId)
                 ->where('status', 'APPROVED')
                 ->latest('transaction_at')
-                ->paginate(15);
+                ->paginate(25);
             $outstanding = $this->demoData->getBalances($familyId);
             $advanceCredit = 0.00;
 
@@ -797,19 +818,32 @@ class FinanceController extends Controller
             return view('admin.finance.families.show', compact('family', 'transactions', 'outstanding', 'advanceCredit', 'manualSoas'));
         }
 
-        if ($this->demoData->isEnabled()) {
-            abort(404, 'Official family accounts are hidden while demo mode is active.');
-        }
-
         $family = User::query()->findOrFail($familyId);
-        $family->load(['enrollmentApplicants.student.account.monthlyBillings.payments']);
+        $family->load([
+            'enrollmentApplicants.student.account.monthlyBillings.payments',
+            'students.account.monthlyBillings.payments',
+        ]);
+
+        // Auto ensure accounts exist for all students in this family
+        foreach ($family->students as $student) {
+            $this->historicalPayment->ensureStudentAccount($student);
+        }
+        foreach ($family->enrollmentApplicants as $applicant) {
+            if ($applicant->student) {
+                $this->historicalPayment->ensureStudentAccount($applicant->student);
+            }
+        }
+        $family->load([
+            'enrollmentApplicants.student.account.monthlyBillings.payments',
+            'students.account.monthlyBillings.payments',
+        ]);
 
         foreach ($family->enrollmentApplicants as $applicant) {
             if ($applicant->student?->account) {
                 $billings = $applicant->student->account->monthlyBillings ?? collect();
                 $childRows = $billings->map(function ($b) {
                     $orig = (float) ($b->original_amount ?? $b->amount_due ?? 0);
-                    $paid = (float) ($b->payments ? $b->payments->sum('amount') : 0);
+                    $paid = (float) ($b->payments ? $b->payments->where('status', 'verified')->sum('amount') : 0);
                     $rem = max(0.0, round($orig - $paid, 2));
                     $status = 'UPCOMING';
                     if ($rem <= 0.001) {
@@ -821,6 +855,7 @@ class FinanceController extends Controller
                     }
 
                     return (object) [
+                        'id' => $b->id,
                         'month' => $b->month_name ?: ($b->due_date ? strtoupper($b->due_date->format('F Y')) : 'MONTH'),
                         'due_date' => $b->due_date,
                         'original' => $orig,
@@ -841,11 +876,11 @@ class FinanceController extends Controller
         }
 
         $transactions = FinanceTransaction::query()
-            ->with('officialReceipt')
+            ->with(['officialReceipt', 'processor', 'allocations.student.applicant'])
             ->where('user_id', $family->id)
-            ->where('status', 'APPROVED')
             ->latest('transaction_at')
-            ->paginate(15);
+            ->paginate(25);
+
         $outstanding = $this->allocation->outstandingBalances($family->id);
         $onlineCredit = Schema::hasTable('family_advance_credits')
             ? (float) FamilyAdvanceCredit::query()->where('user_id', $family->id)->where('status', 'active')->sum('remaining_amount') : 0;
@@ -858,6 +893,92 @@ class FinanceController extends Controller
             : collect();
 
         return view('admin.finance.families.show', compact('family', 'transactions', 'outstanding', 'advanceCredit', 'manualSoas'));
+    }
+
+    public function storeHistoricalPayment(Request $request, string $familyId)
+    {
+        $this->authorizeFinance($request);
+
+        $validated = $request->validate([
+            'student_id' => ['required'],
+            'amount' => ['required', 'numeric', 'min:0.01'],
+            'payment_date' => ['required', 'date'],
+            'fee_category' => ['required', 'string', 'max:50'],
+            'payment_method' => ['required', 'string', 'max:50'],
+            'academic_year' => ['nullable', 'string', 'max:20'],
+            'target_billing_id' => ['nullable'],
+            'or_number' => ['nullable', 'string', 'max:100'],
+            'reference_number' => ['nullable', 'string', 'max:150'],
+            'remarks' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $validated['family_id'] = $familyId;
+
+        try {
+            $transaction = $this->historicalPayment->recordHistoricalPayment($validated, $request->user());
+
+            return back()->with('success', "Historical payment of ₱" . number_format($transaction->amount, 2) . " successfully encoded (OR# {$transaction->official_receipt_number}). Balance recalculated.");
+        } catch (\Throwable $e) {
+            return back()->withErrors(['historical_payment' => 'Failed to record historical payment: ' . $e->getMessage()])->withInput();
+        }
+    }
+
+    public function updatePaymentRecord(Request $request, FinanceTransaction $transaction)
+    {
+        $this->authorizeFinance($request);
+
+        $validated = $request->validate([
+            'reason' => ['required', 'string', 'min:4', 'max:1000'],
+            'amount' => ['required', 'numeric', 'min:0.01'],
+            'payment_date' => ['required', 'date'],
+            'fee_category' => ['nullable', 'string', 'max:50'],
+            'payment_method' => ['required', 'string', 'max:50'],
+            'academic_year' => ['nullable', 'string', 'max:20'],
+            'or_number' => ['nullable', 'string', 'max:100'],
+            'reference_number' => ['nullable', 'string', 'max:150'],
+            'remarks' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        try {
+            $updated = $this->historicalPayment->updateHistoricalPayment($transaction, $validated, $request->user());
+
+            return back()->with('success', "SOA payment record TX# {$updated->transaction_number} updated successfully. Audit trail and recalculated balance saved.");
+        } catch (\Throwable $e) {
+            return back()->withErrors(['update_record' => 'Failed to update SOA record: ' . $e->getMessage()])->withInput();
+        }
+    }
+
+    public function voidPaymentRecord(Request $request, FinanceTransaction $transaction)
+    {
+        $this->authorizeFinance($request);
+
+        $validated = $request->validate([
+            'reason' => ['required', 'string', 'min:4', 'max:1000'],
+        ]);
+
+        try {
+            $voided = $this->historicalPayment->voidHistoricalPayment($transaction, $validated['reason'], $request->user());
+
+            return back()->with('success', "Transaction TX# {$voided->transaction_number} has been VOIDED. Ledger balances automatically recalculated.");
+        } catch (\Throwable $e) {
+            return back()->withErrors(['void_record' => 'Failed to void transaction: ' . $e->getMessage()])->withInput();
+        }
+    }
+
+    public function getPaymentRecordDetails(Request $request, FinanceTransaction $transaction)
+    {
+        $this->authorizeFinance($request);
+
+        $transaction->load(['family', 'processor', 'officialReceipt', 'allocations.student']);
+        $auditLogs = FinanceAuditLog::query()
+            ->where('finance_transaction_id', $transaction->id)
+            ->latest('created_at')
+            ->get();
+
+        return response()->json([
+            'transaction' => $transaction,
+            'audit_logs' => $auditLogs,
+        ]);
     }
 
     public function uploadManualSoa(Request $request, string $studentIdentifier)

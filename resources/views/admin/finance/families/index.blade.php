@@ -123,25 +123,37 @@
                                 <!-- 2. Linked Students -->
                                 <td class="px-6 py-4">
                                     <div class="space-y-1.5">
-                                        @forelse($applicants as $applicant)
-                                            @php
-                                                $student = is_object($applicant) ? ($applicant->student ?? $applicant) : null;
-                                                $studentName = is_object($applicant) && isset($applicant->full_name) 
-                                                    ? $applicant->full_name 
-                                                    : (is_object($applicant) && isset($applicant->first_name) ? trim("{$applicant->first_name} {$applicant->last_name}") : 'Student');
-                                                $gradeLevel = $applicant->grade_level ?? ($student->grade_level ?? '');
-                                                $studentId = $applicant->amis_student_id ?? ($student->student_number ?? '');
-                                                $studentAccount = is_object($applicant) ? ($applicant->student?->account ?? ($applicant->account ?? null)) : null;
-                                                $studentBal = (float)($studentAccount->remaining_balance ?? 0);
-                                            @endphp
+                                        @php
+                                            $allChildren = collect();
+                                            foreach ($applicants as $app) {
+                                                $st = is_object($app) ? ($app->student ?? null) : null;
+                                                $allChildren->push([
+                                                    'name' => is_object($app) && isset($app->full_name) ? $app->full_name : (is_object($app) && isset($app->first_name) ? trim("{$app->first_name} {$app->last_name}") : 'Student'),
+                                                    'grade' => $app->grade_level ?? ($st?->grade_level ?? ''),
+                                                    'id' => $app->amis_student_id ?? ($st?->student_number ?? ''),
+                                                    'balance' => (float) ($st?->account?->remaining_balance ?? 0),
+                                                ]);
+                                            }
+                                            if ($allChildren->isEmpty() && isset($family->students)) {
+                                                foreach ($family->students as $st) {
+                                                    $allChildren->push([
+                                                        'name' => $st->full_name ?: 'Student',
+                                                        'grade' => $st->grade_level ?? '',
+                                                        'id' => $st->student_number ?? '',
+                                                        'balance' => (float) ($st->account?->remaining_balance ?? 0),
+                                                    ]);
+                                                }
+                                            }
+                                        @endphp
+                                        @forelse($allChildren as $child)
                                             <div class="flex items-center gap-2 text-xs">
                                                 <i data-lucide="circle-user" class="h-3.5 w-3.5 text-emerald-500 shrink-0"></i>
-                                                <span class="font-bold text-slate-800 uppercase">{{ $studentName }}</span>
-                                                @if($gradeLevel)
-                                                    <span class="text-slate-400 font-medium">({{ $gradeLevel }})</span>
+                                                <span class="font-bold text-slate-800 uppercase">{{ $child['name'] }}</span>
+                                                @if($child['grade'])
+                                                    <span class="text-slate-400 font-medium">({{ $child['grade'] }})</span>
                                                 @endif
-                                                @if($studentBal > 0.01)
-                                                    <span class="text-[11px] font-bold text-amber-700 ml-1">₱{{ number_format($studentBal, 2) }}</span>
+                                                @if($child['balance'] > 0.01)
+                                                    <span class="text-[11px] font-bold text-rose-700 ml-1">₱{{ number_format($child['balance'], 2) }}</span>
                                                 @else
                                                     <span class="text-[11px] font-bold text-emerald-700 ml-1">Settled</span>
                                                 @endif

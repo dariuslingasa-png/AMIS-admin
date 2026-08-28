@@ -257,6 +257,12 @@ Route::name('admin.')->group(function () {
             Route::get('/family-accounts', [FinanceController::class, 'familiesIndex'])->name('families.index');
             Route::get('/family-accounts/{family}', [FinanceController::class, 'familiesShow'])->name('families.show');
             Route::post('/family-accounts/{family}/reset-demo', [FinanceController::class, 'resetDemoData'])->name('families.reset-demo');
+            Route::post('/family-accounts/{family}/historical-payment', [FinanceController::class, 'storeHistoricalPayment'])->name('families.historical-payment');
+
+            // Transaction SOA Edit, Void & Audit Details
+            Route::get('/transactions/{transaction}/details', [FinanceController::class, 'getPaymentRecordDetails'])->name('transactions.details');
+            Route::put('/transactions/{transaction}/update-record', [FinanceController::class, 'updatePaymentRecord'])->name('transactions.update-record');
+            Route::post('/transactions/{transaction}/void-record', [FinanceController::class, 'voidPaymentRecord'])->name('transactions.void-record');
 
             // Manual Statement of Account (Finance Uploaded)
             Route::post('/students/{studentIdentifier}/manual-soa', [FinanceController::class, 'uploadManualSoa'])->name('manual-soa.upload');
