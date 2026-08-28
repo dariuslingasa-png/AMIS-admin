@@ -58,8 +58,8 @@
         .btn-print:hover {
             background: #334155;
         }
-        .btn-save {
-            background: #065f46;
+        .btn-edit {
+            background: #4338ca;
             color: #ffffff;
             border: none;
             padding: 8px 18px;
@@ -73,8 +73,8 @@
             box-shadow: 0 2px 6px rgba(0,0,0,0.1);
             transition: background 0.15s;
         }
-        .btn-save:hover {
-            background: #047857;
+        .btn-edit:hover {
+            background: #3730a3;
         }
         .btn-back {
             color: #475569;
@@ -330,7 +330,7 @@
         }
         .main-ledger-table td {
             border: 1px solid #cbd5e1;
-            padding: 3px 4px;
+            padding: 3.5px 4px;
             color: #0f172a;
         }
         .main-ledger-table .row-section-header {
@@ -340,33 +340,14 @@
             border: 1px solid #475569;
         }
 
-        /* INLINE SPREADSHEET INPUTS */
-        .cell-input {
-            width: 100%;
-            border: 1px solid transparent;
-            background: transparent;
-            font-family: inherit;
-            font-size: inherit;
-            font-weight: inherit;
-            color: inherit;
-            text-align: inherit;
-            padding: 1px 3px;
-            margin: 0;
-            box-sizing: border-box;
-            border-radius: 4px;
-            transition: all 0.12s ease-in-out;
-        }
-        .cell-input:hover {
-            background-color: #f0fdf4;
-            border-color: #86efac;
+        /* INTERACTIVE CLICKABLE HOVER STYLING */
+        .interactive-table {
             cursor: pointer;
+            transition: outline 0.15s ease-in-out;
         }
-        .cell-input:focus {
-            background-color: #ffffff;
-            border-color: #059669;
-            outline: 2px solid #10b981;
-            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
-            cursor: text;
+        .interactive-table:hover {
+            outline: 2px dashed #4338ca;
+            outline-offset: 2px;
         }
 
         .th-center, .cell-center { text-align: center; }
@@ -412,24 +393,49 @@
             display: none !important;
         }
 
-        /* MODAL OVERLAY */
-        .modal-overlay {
+        /* MODAL POPUP */
+        .edit-modal-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(15, 23, 42, 0.7);
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(2px);
             z-index: 9999;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 16px;
         }
-        .modal-box {
+        .edit-modal-box {
             background: #ffffff;
             border-radius: 16px;
             width: 100%;
-            max-width: 520px;
+            max-width: 620px;
+            max-height: 90vh;
+            overflow-y: auto;
             padding: 24px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+        .form-label {
+            display: block;
+            font-size: 11px;
+            font-weight: 800;
+            color: #334155;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+        .form-input {
+            width: 100%;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            font-size: 12px;
+            font-weight: 600;
+            color: #0f172a;
+            box-sizing: border-box;
+        }
+        .form-input:focus {
+            outline: 2px solid #065f46;
+            border-color: #065f46;
         }
 
         @media print {
@@ -439,9 +445,12 @@
                 margin: 0 !important;
             }
             .no-print-bar,
-            .modal-overlay,
+            .edit-modal-overlay,
             .edit-badge {
                 display: none !important;
+            }
+            .interactive-table:hover {
+                outline: none !important;
             }
             .soa-viewport {
                 padding: 0 !important;
@@ -457,19 +466,6 @@
                 padding: 0 !important;
                 margin: 0 auto !important;
             }
-            .cell-input {
-                border: none !important;
-                background: transparent !important;
-                outline: none !important;
-                box-shadow: none !important;
-                padding: 0 !important;
-                -moz-appearance: textfield;
-            }
-            .cell-input::-webkit-outer-spin-button,
-            .cell-input::-webkit-inner-spin-button {
-                -webkit-appearance: none;
-                margin: 0;
-            }
         }
     </style>
 </head>
@@ -481,13 +477,9 @@
             ← Back to Family Account
         </a>
         <div style="display: flex; gap: 8px; align-items: center;">
-            <div class="edit-badge" style="display: inline-flex; align-items: center; gap: 5px; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: bold; color: #065f46;">
-                <span style="height: 6px; width: 6px; border-radius: 9999px; background: #10b981;"></span>
-                Click any cell to edit &amp; recalculate
-            </div>
-            <button type="button" @click="openSaveModal()" class="btn-save">
-                <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
-                💾 Save Changes
+            <button type="button" @click="showModal = true" class="btn-edit" title="Click to open edit modal">
+                <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                ✏️ Edit SOA Values / Schedule
             </button>
             <button type="button" onclick="window.print()" class="btn-print">
                 <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
@@ -502,30 +494,52 @@
         </div>
     @endif
 
-    {{-- SAVE CONFIRMATION MODAL --}}
-    <div x-show="showSave" x-cloak class="modal-overlay" @click.self="showSave = false">
-        <div class="modal-box">
+    {{-- EDIT MODAL POPUP --}}
+    <div x-show="showModal" x-cloak class="edit-modal-overlay" @click.self="showModal = false">
+        <div class="edit-modal-box">
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 16px;">
                 <div>
-                    <h3 style="margin: 0; font-size: 16px; font-weight: 900; color: #0f172a;">Save Statement of Account Changes</h3>
+                    <h3 style="margin: 0; font-size: 16px; font-weight: 900; color: #0f172a;">Edit Statement of Account Values</h3>
                     <p style="margin: 2px 0 0; font-size: 11px; color: #64748b;">{{ $soaData['student_name'] }} ({{ $soaData['grade_level'] }})</p>
                 </div>
-                <button type="button" @click="showSave = false" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #64748b;">✕</button>
+                <button type="button" @click="showModal = false" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #64748b;">✕</button>
             </div>
 
             <form action="{{ route('admin.finance.students.update-soa', ['studentIdentifier' => $soaData['student_number'] ?? $soaData['student_id']]) }}" method="POST">
                 @csrf
-                <input type="hidden" name="tuition_fee" :value="tuitionFee">
-                <input type="hidden" name="misc_fee" :value="miscFee">
-                <input type="hidden" name="books_fee" :value="booksFee">
-                <input type="hidden" name="discount_percentage" :value="discountPercent">
-                <input type="hidden" name="discount_amount" :value="discountAmount">
-                <input type="hidden" name="enrollment_paid" :value="enrollmentPaid">
 
-                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 16px; font-size: 12px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                    <div>
+                        <label class="form-label">Tuition Fee (₱)</label>
+                        <input type="number" step="0.01" name="tuition_fee" x-model.number="tuitionFee" required class="form-input">
+                    </div>
+                    <div>
+                        <label class="form-label">Miscellaneous Fee (₱)</label>
+                        <input type="number" step="0.01" name="misc_fee" x-model.number="miscFee" required class="form-input">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                    <div>
+                        <label class="form-label">Books &amp; Programs Fee (₱)</label>
+                        <input type="number" step="0.01" name="books_fee" x-model.number="booksFee" required class="form-input">
+                    </div>
+                    <div>
+                        <label class="form-label">Sibling Discount (%)</label>
+                        <input type="number" step="0.01" name="discount_percentage" x-model.number="discountPercent" class="form-input" placeholder="0">
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 14px;">
+                    <label class="form-label">Enrollment Downpayment Paid (₱)</label>
+                    <input type="number" step="0.01" name="enrollment_paid" x-model.number="enrollmentPaid" required class="form-input">
+                </div>
+
+                {{-- LIVE RECALCULATION SUMMARY PREVIEW --}}
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 14px; font-size: 11.5px;">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                        <span style="color: #64748b;">Tuition Fee:</span>
-                        <strong style="color: #0f172a;" x-text="'₱' + formatMoney(tuitionFee)"></strong>
+                        <span style="color: #64748b;">Total Fees:</span>
+                        <strong style="color: #0f172a;" x-text="'₱' + formatMoney(totalFees)"></strong>
                     </div>
                     <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
                         <span style="color: #64748b;">Sibling Discount (<span x-text="discountPercent + '%'"></span>):</span>
@@ -536,27 +550,25 @@
                         <strong style="color: #0f172a;" x-text="'₱' + formatMoney(finalFees)"></strong>
                     </div>
                     <div style="display: flex; justify-content: space-between; border-top: 1px dashed #cbd5e1; padding-top: 4px; margin-top: 4px;">
-                        <span style="color: #0f172a; font-weight: bold;">New Monthly Rate (9 mos):</span>
+                        <span style="color: #065f46; font-weight: bold;">Monthly Rate (9 mos):</span>
                         <strong style="color: #065f46;" x-text="'₱' + formatMoney(autoMonthlyRate)"></strong>
                     </div>
                 </div>
 
                 <div style="margin-bottom: 16px;">
-                    <label style="display: block; font-size: 11px; font-weight: bold; color: #334155; margin-bottom: 4px; text-transform: uppercase;">
-                        Reason for SOA Adjustment <span style="color: #e11d48;">*</span>
-                    </label>
-                    <textarea name="reason" required rows="2" placeholder="e.g. Adjusted tuition rate / sibling discount per approved request." style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 12px; box-sizing: border-box;"></textarea>
+                    <label class="form-label">Reason for Adjustment <span style="color: #e11d48;">*</span></label>
+                    <textarea name="reason" required rows="2" placeholder="e.g. Sibling discount correction / adjusted tuition schedule per approved concession." class="form-input" style="font-family: inherit; font-weight: normal;"></textarea>
                 </div>
 
                 <div style="display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid #e2e8f0; padding-top: 14px;">
-                    <button type="button" @click="showSave = false" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px;">Cancel</button>
-                    <button type="submit" style="background: #065f46; color: #ffffff; border: none; padding: 8px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px;">Save &amp; Recalculate</button>
+                    <button type="button" @click="showModal = false" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px;">Cancel</button>
+                    <button type="submit" style="background: #065f46; color: #ffffff; border: none; padding: 8px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px;">Save &amp; Recalculate SOA</button>
                 </div>
             </form>
         </div>
     </div>
 
-    {{-- PRINT / A4 PAGE --}}
+    {{-- CLEAN OFFICIAL STATEMENT OF ACCOUNT PAGE (CLICK ANYWHERE ON TABLE TO OPEN MODAL) --}}
     <div class="soa-viewport">
         <div class="soa-page">
             {{-- TOP SCHOOL HEADER --}}
@@ -630,18 +642,26 @@
                             <td class="info-lbl">Grade Level:</td>
                             <td class="info-val">{{ $soaData['grade_level'] }}</td>
                         </tr>
-                        <template x-if="discountPercent > 0">
-                            <tr>
-                                <td class="info-lbl">Discount:</td>
-                                <td class="info-val" x-text="discountPercent + '% Sibling Discount'"></td>
-                            </tr>
-                        </template>
+                        @php
+                            $discVal = (float) str_replace('%', '', (string) ($soaData['discount_privilege'] ?? '0'));
+                            $hasDiscount = $discVal > 0.01 && ((float) ($soaData['discount_amount'] ?? 0)) > 0.01;
+                        @endphp
+                        @if($hasDiscount)
+                        <tr>
+                            <td class="info-lbl">Discount Privilege:</td>
+                            <td class="info-val">{{ $soaData['discount_privilege'] }}</td>
+                        </tr>
+                        <tr>
+                            <td class="info-lbl">Discount Status:</td>
+                            <td class="info-val">{{ $soaData['discount_status'] }}</td>
+                        </tr>
+                        @endif
                     </table>
                 </div>
 
-                {{-- COLUMN 3: FEE BREAKDOWN TABLE (INLINE EDITABLE) --}}
+                {{-- COLUMN 3: FEE BREAKDOWN TABLE (CLICKABLE) --}}
                 <div class="upper-right">
-                    <table class="fee-table">
+                    <table class="fee-table interactive-table" @click="showModal = true" title="Click to edit fees">
                         <thead>
                             <tr>
                                 <th rowspan="2">DESCRIPTION</th>
@@ -657,45 +677,39 @@
                         <tbody>
                             <tr>
                                 <td>Tuition Fees</td>
-                                <td class="cell-right" style="padding:0;">
-                                    <input type="number" step="0.01" x-model.number="tuitionFee" @input="recalculateMonthlyFees()" class="cell-input cell-right" title="Click to edit Tuition Fee">
-                                </td>
-                                <td class="cell-center" style="padding:0; width:35px;">
-                                    <input type="number" step="0.01" x-model.number="discountPercent" @input="recalculateMonthlyFees()" class="cell-input cell-center" title="Click to edit Sibling Discount %" placeholder="0">
-                                </td>
-                                <td class="cell-center" style="font-weight:bold;" x-text="discountAmount > 0 ? formatMoney(discountAmount) : ''"></td>
-                                <td class="cell-right" style="font-weight:bold;" x-text="formatMoney(netTuition)"></td>
+                                <td class="text-right">{{ number_format($soaData['tuition_fee'], 2) }}</td>
+                                <td class="text-center">{{ $hasDiscount ? $soaData['discount_privilege'] : '' }}</td>
+                                <td class="text-center">{{ $hasDiscount ? number_format($soaData['discount_amount'], 2) : '' }}</td>
+                                <td class="text-right">{{ number_format($soaData['tuition_fee'] - ($hasDiscount ? $soaData['discount_amount'] : 0), 2) }}</td>
                             </tr>
                             <tr>
                                 <td>Miscellaneous</td>
-                                <td class="cell-right" style="padding:0;">
-                                    <input type="number" step="0.01" x-model.number="miscFee" class="cell-input cell-right" title="Click to edit Misc Fee">
-                                </td>
+                                <td class="text-right">{{ number_format($soaData['misc_fee'], 2) }}</td>
                                 <td></td>
                                 <td></td>
-                                <td class="cell-right" x-text="formatMoney(miscFee)"></td>
+                                <td class="text-right">{{ number_format($soaData['misc_fee'], 2) }}</td>
                             </tr>
-                            <tr class="font-bold" style="background:#f8fafc;">
+                            <tr class="font-bold">
                                 <td>Total Fees</td>
-                                <td class="cell-right" x-text="formatMoney(totalFees)"></td>
+                                <td class="text-right">{{ number_format($soaData['total_fees'], 2) }}</td>
                                 <td></td>
                                 <td></td>
-                                <td class="cell-right" x-text="formatMoney(totalFees)"></td>
+                                <td class="text-right">{{ number_format($soaData['total_fees'], 2) }}</td>
                             </tr>
                             <tr class="font-bold">
                                 <td>Final Fees</td>
                                 <td></td>
                                 <td></td>
-                                <td class="cell-center" x-text="discountAmount > 0 ? '-' : ''"></td>
-                                <td class="cell-right" style="font-size:10px; font-weight:900;" x-text="formatMoney(finalFees)"></td>
+                                <td class="text-center">{{ $hasDiscount ? '-' : '' }}</td>
+                                <td class="text-right">{{ number_format($soaData['final_fees'], 2) }}</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            {{-- MAIN STATEMENT & PAYMENT LEDGER TABLE (INLINE EDITABLE) --}}
-            <table class="main-ledger-table">
+            {{-- MAIN STATEMENT & PAYMENT LEDGER TABLE (CLICKABLE) --}}
+            <table class="main-ledger-table interactive-table" @click="showModal = true" title="Click to edit fees and schedule">
                 <thead>
                     <tr>
                         <th style="width: 26%;">Description</th>
@@ -708,51 +722,42 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {{-- ROW 1: ENROLLMENT DOWNPAYMENT --}}
+                    @php
+                        $runningBalance = (float) $soaData['final_fees'];
+                        $runningBalance -= (float) $soaData['enrollment_paid'];
+                    @endphp
                     <tr>
                         <td>Paid Enrollment Fee</td>
                         <td></td>
                         <td class="cell-right"></td>
-                        <td class="cell-center" style="padding:0;">
-                            <input type="text" x-model="enrollmentDate" class="cell-input cell-center" title="Click to edit payment date">
-                        </td>
-                        <td class="cell-right highlight-yellow" style="padding:0;" title="Click to edit enrollment payment amount">
-                            <input type="number" step="0.01" x-model.number="enrollmentPaid" @input="recalculateMonthlyFees()" class="cell-input cell-right highlight-yellow">
-                        </td>
-                        <td class="cell-center" style="padding:0;">
-                            <input type="text" x-model="enrollmentAccount" class="cell-input cell-center" title="Click to edit Account / OR number">
-                        </td>
-                        <td class="cell-right" x-text="formatMoney(finalFees - enrollmentPaid)"></td>
+                        <td class="cell-center">{{ $soaData['enrollment_date'] }}</td>
+                        <td class="cell-right highlight-yellow" title="Payment received and applied to this account">{{ number_format($soaData['enrollment_paid'], 2) }}</td>
+                        <td class="cell-center">{{ $soaData['enrollment_account'] }}</td>
+                        <td class="cell-right">{{ number_format($runningBalance, 2) }}</td>
                     </tr>
-
-                    {{-- ROW 2: BOOKS AND PROGRAMS --}}
+                    @php
+                        $runningBalance += (float) $soaData['books_fee'];
+                    @endphp
                     <tr>
                         <td>Books and programs</td>
                         <td></td>
-                        <td class="cell-right" style="padding:0;">
-                            <input type="number" step="0.01" x-model.number="booksFee" class="cell-input cell-right" title="Click to edit Books & Programs Fee">
-                        </td>
+                        <td class="cell-right">{{ number_format($soaData['books_fee'], 2) }}</td>
                         <td class="cell-center"></td>
                         <td class="cell-right"></td>
                         <td class="cell-center"></td>
-                        <td class="cell-right" x-text="formatMoney(finalFees - enrollmentPaid + Number(booksFee || 0))"></td>
+                        <td class="cell-right">{{ number_format($runningBalance, 2) }}</td>
                     </tr>
-
-                    {{-- ROW 3: PAID BOOKS --}}
+                    @php
+                        $runningBalance -= (float) $soaData['books_paid'];
+                    @endphp
                     <tr>
                         <td>Paid Books</td>
                         <td></td>
                         <td class="cell-right"></td>
-                        <td class="cell-center" style="padding:0;">
-                            <input type="text" x-model="booksDate" class="cell-input cell-center" title="Click to edit payment date" placeholder="-">
-                        </td>
-                        <td class="cell-right highlight-yellow" style="padding:0;" title="Click to edit books paid amount">
-                            <input type="number" step="0.01" x-model.number="booksPaid" class="cell-input cell-right highlight-yellow">
-                        </td>
-                        <td class="cell-center" style="padding:0;">
-                            <input type="text" x-model="booksAccount" class="cell-input cell-center" title="Click to edit Account / OR number" placeholder="-">
-                        </td>
-                        <td class="cell-right" x-text="formatMoney(finalFees - enrollmentPaid + Number(booksFee || 0) - Number(booksPaid || 0))"></td>
+                        <td class="cell-center">{{ $soaData['books_date'] ?: '-' }}</td>
+                        <td class="cell-right {{ (float) $soaData['books_paid'] > 0.01 ? 'highlight-yellow' : '' }}">{{ (float) $soaData['books_paid'] > 0.01 ? number_format($soaData['books_paid'], 2) : '-' }}</td>
+                        <td class="cell-center">{{ $soaData['books_account'] ?: '-' }}</td>
+                        <td class="cell-right">{{ number_format($runningBalance, 2) }}</td>
                     </tr>
 
                     {{-- REQUIRED PAYMENT MONTHLY SECTION --}}
@@ -760,53 +765,96 @@
                         <td colspan="7">Required Payment Monthly</td>
                     </tr>
 
-                    {{-- 2026 MONTHS (JULY - DECEMBER) --}}
+                    @php
+                        $sched = collect($soaData['monthly_schedule']);
+                        $seenTxKeys = [];
+                    @endphp
+
                     <tr class="row-section-header" style="background:#ffffff; font-size:10px;">
                         <td colspan="7">Year: 2026</td>
                     </tr>
-                    <template x-for="(m, idx) in months.slice(0, 6)" :key="idx">
+
+                    @foreach (['July', 'August', 'September', 'October', 'November', 'December'] as $monthName)
+                        @php
+                            $mRow = $sched->first(fn($m) => str_contains(strtoupper($m->month ?? ''), strtoupper($monthName)));
+                            $mFee = (float) ($mRow->fee ?? ($mRow->original ?? $soaData['monthly_rate']));
+                            $mPaid = (float) ($mRow->paid ?? ($mRow->verified ?? 0));
+                            $isPaidMonth = $mPaid > 0.01;
+                            if ($isPaidMonth) {
+                                $runningBalance -= $mPaid;
+                            }
+
+                            $txDateDisplay = '';
+                            $txAccountDisplay = '';
+                            if ($isPaidMonth) {
+                                $txDate = $mRow->payment_date ?? '15-Aug-26';
+                                $txAccount = $mRow->or_number ?? $mRow->account_no ?? '10539';
+                                $txKey = ($mRow->payment_id ?? null) ? 'tx_'.$mRow->payment_id : 'tx_10539';
+
+                                if (!in_array($txKey, $seenTxKeys, true)) {
+                                    $txDateDisplay = $txDate;
+                                    $seenTxKeys[] = $txKey;
+                                } else {
+                                    $txDateDisplay = '';
+                                }
+                                $txAccountDisplay = $txAccount;
+                            }
+                        @endphp
                         <tr>
                             <td></td>
-                            <td x-text="m.month"></td>
-                            <td class="cell-right" style="padding:0;">
-                                <input type="number" step="0.01" x-model.number="m.fee" class="cell-input cell-right" title="Click to edit monthly fee">
+                            <td>{{ $monthName }}</td>
+                            <td class="cell-right {{ ($monthName === 'July' && ! $isPaidMonth) ? 'highlight-yellow' : '' }}">{{ number_format($mFee, 2) }}</td>
+                            <td class="cell-center">{{ $txDateDisplay ?: '-' }}</td>
+                            <td class="cell-right {{ $isPaidMonth ? 'highlight-yellow' : '' }}">
+                                {{ $isPaidMonth ? number_format($mPaid, 2) : '-' }}
                             </td>
-                            <td class="cell-center" style="padding:0;">
-                                <input type="text" x-model="m.payment_date" class="cell-input cell-center" placeholder="-">
-                            </td>
-                            <td class="cell-right" :class="Number(m.paid || 0) > 0 ? 'highlight-yellow' : ''" style="padding:0;">
-                                <input type="number" step="0.01" x-model.number="m.paid" class="cell-input cell-right" :class="Number(m.paid || 0) > 0 ? 'highlight-yellow' : ''" placeholder="-">
-                            </td>
-                            <td class="cell-center" style="padding:0;">
-                                <input type="text" x-model="m.or_number" class="cell-input cell-center" placeholder="-">
-                            </td>
-                            <td class="cell-right" x-text="calculateRowBalance(idx)"></td>
+                            <td class="cell-center">{{ $isPaidMonth ? $txAccountDisplay : '-' }}</td>
+                            <td class="cell-right">{{ $isPaidMonth ? number_format($runningBalance, 2) : '' }}</td>
                         </tr>
-                    </template>
+                    @endforeach
 
-                    {{-- 2027 MONTHS (JANUARY - MARCH) --}}
                     <tr class="row-section-header" style="background:#ffffff; font-size:10px;">
                         <td colspan="7">Year: 2027</td>
                     </tr>
-                    <template x-for="(m, idx) in months.slice(6, 9)" :key="idx + 6">
+
+                    @foreach (['January', 'February', 'March'] as $monthName)
+                        @php
+                            $mRow = $sched->first(fn($m) => str_contains(strtoupper($m->month ?? ''), strtoupper($monthName)));
+                            $mFee = (float) ($mRow->fee ?? ($mRow->original ?? $soaData['monthly_rate']));
+                            $mPaid = (float) ($mRow->paid ?? ($mRow->verified ?? 0));
+                            $isPaidMonth = $mPaid > 0.01;
+                            if ($isPaidMonth) {
+                                $runningBalance -= $mPaid;
+                            }
+
+                            $txDateDisplay = '';
+                            $txAccountDisplay = '';
+                            if ($isPaidMonth) {
+                                $txDate = $mRow->payment_date ?? '15-Jan-27';
+                                $txAccount = $mRow->or_number ?? $mRow->account_no ?? '10539';
+                                $txKey = ($mRow->payment_id ?? null) ? 'tx_'.$mRow->payment_id : 'tx_2027_block';
+
+                                if (!in_array($txKey, $seenTxKeys, true)) {
+                                    $txDateDisplay = $txDate;
+                                    $seenTxKeys[] = $txKey;
+                                } else {
+                                    $txDateDisplay = '';
+                                }
+                                $txAccountDisplay = $txAccount;
+                            }
+                        @endphp
                         <tr>
                             <td></td>
-                            <td x-text="m.month"></td>
-                            <td class="cell-right" style="padding:0;">
-                                <input type="number" step="0.01" x-model.number="m.fee" class="cell-input cell-right" title="Click to edit monthly fee">
+                            <td>{{ $monthName }}</td>
+                            <td class="cell-right">{{ number_format($mFee, 2) }}</td>
+                            <td class="cell-center">{{ $txDateDisplay ?: '-' }}</td>
+                            <td class="cell-right {{ $isPaidMonth ? 'highlight-yellow' : '' }}">
+                                {{ $isPaidMonth ? number_format($mPaid, 2) : '-' }}
                             </td>
-                            <td class="cell-center" style="padding:0;">
-                                <input type="text" x-model="m.payment_date" class="cell-input cell-center" placeholder="-">
-                            </td>
-                            <td class="cell-right" :class="Number(m.paid || 0) > 0 ? 'highlight-yellow' : ''" style="padding:0;">
-                                <input type="number" step="0.01" x-model.number="m.paid" class="cell-input cell-right" :class="Number(m.paid || 0) > 0 ? 'highlight-yellow' : ''" placeholder="-">
-                            </td>
-                            <td class="cell-center" style="padding:0;">
-                                <input type="text" x-model="m.or_number" class="cell-input cell-center" placeholder="-">
-                            </td>
-                            <td class="cell-right" x-text="calculateRowBalance(idx + 6)"></td>
+                            <td class="cell-center">{{ $isPaidMonth ? $txAccountDisplay : '-' }}</td>
+                            <td class="cell-right">{{ $isPaidMonth ? number_format($runningBalance, 2) : '' }}</td>
                         </tr>
-                    </template>
+                    @endforeach
 
                     {{-- TO BE PAID / PAID LABEL ROW --}}
                     <tr style="border-top: 2px solid #475569;">
@@ -817,11 +865,11 @@
                     </tr>
                     <tr>
                         <td colspan="6" style="font-weight:bold; border-right:none;">Total Amount to pay</td>
-                        <td class="cell-right highlight-blue" style="font-size:11px;" x-text="formatMoney(calculateFinalTotalToPay())"></td>
+                        <td class="cell-right highlight-blue" style="font-size:11px;">{{ number_format($runningBalance, 2) }}</td>
                     </tr>
                     <tr>
                         <td colspan="2" style="font-weight:bold; border-right:none;">Due Monthly Payment (9 Months)</td>
-                        <td class="cell-right highlight-yellow" style="border-left:none;" title="Monthly amount due for this student" x-text="formatMoney(autoMonthlyRate)"></td>
+                        <td class="cell-right highlight-yellow" style="border-left:none;" title="Monthly amount due for this student">{{ number_format($soaData['monthly_rate'], 2) }}</td>
                         <td colspan="4" style="border-left:none;"></td>
                     </tr>
                 </tbody>
@@ -854,36 +902,13 @@
 
     <script>
         function soaStudio(initialData) {
-            const allMonthNames = ['July', 'August', 'September', 'October', 'November', 'December', 'January', 'February', 'March'];
-            
-            // Normalize 9 months
-            let existingSchedule = initialData.monthly_schedule || [];
-            let normalizedMonths = allMonthNames.map((name, i) => {
-                let match = existingSchedule.find(m => (m.month || '').toUpperCase().includes(name.toUpperCase())) || {};
-                let defRate = Number(initialData.monthly_rate || 0);
-                return {
-                    id: match.id || null,
-                    month: name,
-                    fee: match.fee !== undefined ? Number(match.fee) : defRate,
-                    paid: match.paid !== undefined ? Number(match.paid) : 0,
-                    payment_date: match.payment_date || '',
-                    or_number: match.or_number || '',
-                };
-            });
-
             return {
-                showSave: false,
+                showModal: false,
                 tuitionFee: Number(initialData.tuition_fee || 0),
                 miscFee: Number(initialData.misc_fee || 0),
                 booksFee: Number(initialData.books_fee || 0),
                 discountPercent: Number((initialData.discount_privilege || '0').replace('%', '')) || 0,
                 enrollmentPaid: Number(initialData.enrollment_paid || 0),
-                enrollmentDate: initialData.enrollment_date || '5-May-26',
-                enrollmentAccount: initialData.enrollment_account || '10539',
-                booksPaid: Number(initialData.books_paid || 0),
-                booksDate: initialData.books_date || '',
-                booksAccount: initialData.books_account || '',
-                months: normalizedMonths,
 
                 get totalFees() {
                     return Number(this.tuitionFee || 0) + Number(this.miscFee || 0);
@@ -894,51 +919,13 @@
                 get finalFees() {
                     return Math.max(0, this.totalFees - this.discountAmount);
                 },
-                get netTuition() {
-                    return Math.max(0, Number(this.tuitionFee || 0) - this.discountAmount);
-                },
                 get autoMonthlyRate() {
                     let netAfterDown = Math.max(0, this.finalFees - Number(this.enrollmentPaid || 0));
                     return Math.round((netAfterDown / 9) * 100) / 100;
                 },
-
-                recalculateMonthlyFees() {
-                    const rate = this.autoMonthlyRate;
-                    this.months.forEach(m => {
-                        m.fee = rate;
-                    });
-                },
-
-                calculateRowBalance(monthIdx) {
-                    let currentBal = this.finalFees - Number(this.enrollmentPaid || 0) + Number(this.booksFee || 0) - Number(this.booksPaid || 0);
-                    for (let i = 0; i <= monthIdx; i++) {
-                        let p = Number(this.months[i].paid || 0);
-                        if (p > 0) {
-                            currentBal -= p;
-                        }
-                    }
-                    let currentMonthPaid = Number(this.months[monthIdx].paid || 0);
-                    return currentMonthPaid > 0 ? this.formatMoney(Math.max(0, currentBal)) : '';
-                },
-
-                calculateFinalTotalToPay() {
-                    let currentBal = this.finalFees - Number(this.enrollmentPaid || 0) + Number(this.booksFee || 0) - Number(this.booksPaid || 0);
-                    for (let i = 0; i < this.months.length; i++) {
-                        let p = Number(this.months[i].paid || 0);
-                        if (p > 0) {
-                            currentBal -= p;
-                        }
-                    }
-                    return Math.max(0, currentBal);
-                },
-
                 formatMoney(val) {
                     let n = Number(val || 0);
                     return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                },
-
-                openSaveModal() {
-                    this.showSave = true;
                 }
             };
         }
