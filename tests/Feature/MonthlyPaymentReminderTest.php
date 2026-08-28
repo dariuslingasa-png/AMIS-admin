@@ -5,8 +5,8 @@ namespace Tests\Feature;
 use App\Jobs\SendMonthlyPaymentReminderJob;
 use App\Mail\PaymentReminderMail;
 use App\Models\EnrollmentApplicant;
-use App\Models\MonthlyPaymentReminder;
 use App\Models\Role;
+use App\Models\Student;
 use App\Models\User;
 use App\Services\Finance\MonthlyPaymentReminderService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -22,8 +22,8 @@ class MonthlyPaymentReminderTest extends TestCase
     protected function migrateFreshUsing(): array
     {
         return [
-            '--path'       => 'database/migrations/testing',
-            '--realpath'   => false,
+            '--path' => 'database/migrations/testing',
+            '--realpath' => false,
             '--drop-views' => false,
             '--drop-types' => false,
         ];
@@ -32,13 +32,14 @@ class MonthlyPaymentReminderTest extends TestCase
     private function createAdmin(): User
     {
         $admin = User::factory()->create([
-            'role'           => 'finance',
+            'role' => 'finance',
             'account_status' => 'verified',
         ]);
         $roleId = Role::where('slug', 'finance')->value('id');
         if ($roleId) {
             $admin->roles()->sync([$roleId]);
         }
+
         return $admin;
     }
 
@@ -62,42 +63,42 @@ class MonthlyPaymentReminderTest extends TestCase
 
         // Child 1
         EnrollmentApplicant::create([
-            'user_id'           => 1,
-            'student_type'      => 'Old',
-            'first_name'        => 'ChildOne',
-            'last_name'         => 'FamilyTest',
-            'grade_level'       => 'Grade 2',
-            'gender'            => 'Male',
-            'date_of_birth'     => '2018-05-10',
-            'place_of_birth'    => 'Doha',
-            'religion'          => 'Islam',
-            'country'           => 'Qatar',
-            'address'           => 'Doha, Qatar',
-            'mobile_number'     => '12345678',
-            'parent_mobile'     => '12345678',
-            'parent_email'      => $parentEmail,
-            'status'            => 'approved',
-            'school_year'       => '2026-2027',
+            'user_id' => 1,
+            'student_type' => 'Old',
+            'first_name' => 'ChildOne',
+            'last_name' => 'FamilyTest',
+            'grade_level' => 'Grade 2',
+            'gender' => 'Male',
+            'date_of_birth' => '2018-05-10',
+            'place_of_birth' => 'Doha',
+            'religion' => 'Islam',
+            'country' => 'Qatar',
+            'address' => 'Doha, Qatar',
+            'mobile_number' => '12345678',
+            'parent_mobile' => '12345678',
+            'parent_email' => $parentEmail,
+            'status' => 'approved',
+            'school_year' => '2026-2027',
         ]);
 
         // Child 2 (Same parent email)
         EnrollmentApplicant::create([
-            'user_id'           => 1,
-            'student_type'      => 'Old',
-            'first_name'        => 'ChildTwo',
-            'last_name'         => 'FamilyTest',
-            'grade_level'       => 'Grade 5',
-            'gender'            => 'Female',
-            'date_of_birth'     => '2015-09-20',
-            'place_of_birth'    => 'Doha',
-            'religion'          => 'Islam',
-            'country'           => 'Qatar',
-            'address'           => 'Doha, Qatar',
-            'mobile_number'     => '12345678',
-            'parent_mobile'     => '12345678',
-            'parent_email'      => $parentEmail,
-            'status'            => 'approved',
-            'school_year'       => '2026-2027',
+            'user_id' => 1,
+            'student_type' => 'Old',
+            'first_name' => 'ChildTwo',
+            'last_name' => 'FamilyTest',
+            'grade_level' => 'Grade 5',
+            'gender' => 'Female',
+            'date_of_birth' => '2015-09-20',
+            'place_of_birth' => 'Doha',
+            'religion' => 'Islam',
+            'country' => 'Qatar',
+            'address' => 'Doha, Qatar',
+            'mobile_number' => '12345678',
+            'parent_mobile' => '12345678',
+            'parent_email' => $parentEmail,
+            'status' => 'approved',
+            'school_year' => '2026-2027',
         ]);
 
         $service = app(MonthlyPaymentReminderService::class);
@@ -109,6 +110,42 @@ class MonthlyPaymentReminderTest extends TestCase
         $this->assertEquals(2, $family->student_count);
         $this->assertStringContainsString('CHILDONE FAMILYTEST', $family->student_names);
         $this->assertStringContainsString('CHILDTWO FAMILYTEST', $family->student_names);
+    }
+
+    #[Test]
+    public function service_includes_parent_and_student_school_emails_once_each(): void
+    {
+        $applicant = EnrollmentApplicant::create([
+            'student_type' => 'Old',
+            'first_name' => 'Student',
+            'last_name' => 'Recipient',
+            'grade_level' => 'Grade 4',
+            'gender' => 'Female',
+            'date_of_birth' => '2016-01-01',
+            'place_of_birth' => 'Doha',
+            'religion' => 'Islam',
+            'country' => 'Qatar',
+            'address' => 'Doha, Qatar',
+            'mobile_number' => '12345678',
+            'parent_mobile' => '12345678',
+            'parent_email' => 'parent.recipient@example.com',
+            'status' => 'approved',
+            'school_year' => '2026-2027',
+        ]);
+
+        Student::create([
+            'enrollment_applicant_id' => $applicant->id,
+            'student_number' => '260999',
+            'school_email' => 'student.recipient@amis.edu.ph',
+            'grade_level' => 'Grade 4',
+            'school_year' => '2026-2027',
+        ]);
+
+        $recipients = app(MonthlyPaymentReminderService::class)
+            ->getFamiliesCollection('2026-08');
+
+        $this->assertSame(1, $recipients->where('email', 'parent.recipient@example.com')->count());
+        $this->assertSame(1, $recipients->where('email', 'student.recipient@amis.edu.ph')->count());
     }
 
     #[Test]
@@ -136,22 +173,22 @@ class MonthlyPaymentReminderTest extends TestCase
         $admin = $this->createAdmin();
 
         EnrollmentApplicant::create([
-            'user_id'           => 1,
-            'student_type'      => 'Old',
-            'first_name'        => 'TestStudent',
-            'last_name'         => 'Recipient',
-            'grade_level'       => 'Grade 3',
-            'gender'            => 'Male',
-            'date_of_birth'     => '2017-01-01',
-            'place_of_birth'    => 'Doha',
-            'religion'          => 'Islam',
-            'country'           => 'Qatar',
-            'address'           => 'Doha, Qatar',
-            'mobile_number'     => '12345678',
-            'parent_mobile'     => '12345678',
-            'parent_email'      => 'unique.parent.batch@example.com',
-            'status'            => 'approved',
-            'school_year'       => '2026-2027',
+            'user_id' => 1,
+            'student_type' => 'Old',
+            'first_name' => 'TestStudent',
+            'last_name' => 'Recipient',
+            'grade_level' => 'Grade 3',
+            'gender' => 'Male',
+            'date_of_birth' => '2017-01-01',
+            'place_of_birth' => 'Doha',
+            'religion' => 'Islam',
+            'country' => 'Qatar',
+            'address' => 'Doha, Qatar',
+            'mobile_number' => '12345678',
+            'parent_mobile' => '12345678',
+            'parent_email' => 'unique.parent.batch@example.com',
+            'status' => 'approved',
+            'school_year' => '2026-2027',
         ]);
 
         $response = $this->actingAs($admin)->post(route('admin.finance.monthly-reminders.send'), [
@@ -165,7 +202,7 @@ class MonthlyPaymentReminderTest extends TestCase
         // Verify reminder record exists with PENDING status
         $this->assertDatabaseHas('monthly_payment_reminders', [
             'billing_month' => '2026-08',
-            'parent_email'  => 'unique.parent.batch@example.com',
+            'parent_email' => 'unique.parent.batch@example.com',
         ]);
     }
 

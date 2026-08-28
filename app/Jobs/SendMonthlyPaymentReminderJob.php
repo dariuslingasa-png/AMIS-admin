@@ -126,6 +126,55 @@ class SendMonthlyPaymentReminderJob implements ShouldQueue
             $errorMsg = substr($e->getMessage(), 0, 500);
             Log::error("SendMonthlyPaymentReminderJob: Failed to send to {$email} (Attempt #{$reminder->attempts}): {$errorMsg}");
 
+            // All configured accounts are healthy but have reached today's
+            // guarded quotas. Keep this recipient queued until the counters
+            // reset instead of consuming the normal failure retry schedule.
+            if (str_contains($errorMsg, 'reached their daily limit')) {
+                $nextRetry = now()->addDay()->startOfDay()->addMinutes(5);
+
+                $reminder->update([
+                    'status'        => MonthlyPaymentReminder::STATUS_RETRY,
+                    'last_error'    => 'All SMTP accounts reached their guarded daily quota; automatically deferred.',
+                    'next_retry_at' => $nextRetry,
+                ]);
+
+                $this->release(max(60, now()->diffInSeconds($nextRetry)));
+
+                return;
+            }
+
+            // Shared-host SMTP can also impose a rolling domain-wide hourly
+            // limit after transport failover. Resume after that window instead
+            // of burning through the job's normal retry attempts.
+            if (str_contains($errorMsg, 'max emails per hour') ||
+                str_contains($errorMsg, 'hourly sending limit')) {
+                $nextRetry = now()->addHour()->addMinutes(5);
+
+                $reminder->update([
+                    'status'        => MonthlyPaymentReminder::STATUS_RETRY,
+                    'last_error'    => 'SMTP domain hourly quota reached; automatically deferred.',
+                    'next_retry_at' => $nextRetry,
+                ]);
+
+                $this->release(max(60, now()->diffInSeconds($nextRetry)));
+
+                return;
+            }
+
+            if (str_contains($errorMsg, 'too many messages in this connection')) {
+                $nextRetry = now()->addMinutes(10);
+
+                $reminder->update([
+                    'status'        => MonthlyPaymentReminder::STATUS_RETRY,
+                    'last_error'    => 'SMTP connection throttled; automatically deferred.',
+                    'next_retry_at' => $nextRetry,
+                ]);
+
+                $this->release(max(60, now()->diffInSeconds($nextRetry)));
+
+                return;
+            }
+
             $isTerminal = $this->attempts() >= $this->tries;
 
             $nextRetry = null;
