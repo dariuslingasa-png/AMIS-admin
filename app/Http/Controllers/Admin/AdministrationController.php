@@ -51,12 +51,19 @@ class AdministrationController extends Controller
 
         $users = $query->latest()->paginate(20)->withQueryString();
 
+        $adminRolesQuery = function ($q) {
+            $q->whereIn('role', User::ADMIN_PORTAL_ROLE_SLUGS)
+                ->orWhereHas('roles', function ($r) {
+                    $r->whereIn('slug', User::ADMIN_PORTAL_ROLE_SLUGS);
+                });
+        };
+
         // Calculate stats
         $stats = [
-            'total' => User::whereIn('role', User::ADMIN_PORTAL_ROLES)->count(),
-            'verified' => User::whereIn('role', User::ADMIN_PORTAL_ROLES)->where('account_status', 'verified')->count(),
-            'pending' => User::whereIn('role', User::ADMIN_PORTAL_ROLES)->where('account_status', 'pending')->count(),
-            'disabled' => User::whereIn('role', User::ADMIN_PORTAL_ROLES)->where('account_status', 'disabled')->count(),
+            'total' => User::where($adminRolesQuery)->count(),
+            'verified' => User::where($adminRolesQuery)->where('account_status', 'verified')->count(),
+            'pending' => User::where($adminRolesQuery)->where('account_status', 'pending')->count(),
+            'disabled' => User::where($adminRolesQuery)->where('account_status', 'disabled')->count(),
         ];
 
         return view('admin.administration.users.index', compact('users', 'search', 'status', 'stats'));
@@ -76,34 +83,64 @@ class AdministrationController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
+            'email' => 'required|email',
             'role_id' => 'required|exists:roles,id',
             'password' => 'required|string|min:8|confirmed',
         ]);
 
+        $email = strtolower(trim((string) $validated['email']));
         $role = Role::findOrFail($validated['role_id']);
 
         // Super admin protection: Only super admins can assign super admin role
         if ($role->slug === 'super_admin' && ! auth()->user()->hasRole('super_admin')) {
-            return back()->withErrors(['role_id' => 'Only Super Administrators can create Super Admin accounts.'])->withInput();
+            return back()->withErrors(['role_id' => 'Only Super Administrators can create or assign Super Admin accounts.'])->withInput();
+        }
+
+        // Check if user already exists in database
+        $existingUser = User::where('email', $email)->first();
+
+        if ($existingUser) {
+            // Hierarchy check: Non-super_admin cannot overwrite a user with equal or higher hierarchy
+            $currentUserMaxHierarchy = auth()->user()->roles()->max('hierarchy_level') ?: 80;
+            $targetUserMaxHierarchy = $existingUser->roles()->max('hierarchy_level') ?: 10;
+
+            if ($targetUserMaxHierarchy >= $currentUserMaxHierarchy && ! auth()->user()->hasRole('super_admin') && $existingUser->id !== auth()->id()) {
+                return back()->withErrors(['email' => 'An account with this email already exists with equal or higher administrative privileges.'])->withInput();
+            }
+
+            DB::transaction(function () use ($existingUser, $validated, $role) {
+                $existingUser->update([
+                    'name' => $validated['name'],
+                    'password' => Hash::make($validated['password']),
+                    'role' => in_array($role->slug, ['admin', 'finance', 'staff', 'teacher'], true) ? $role->slug : 'staff',
+                    'account_status' => 'verified',
+                    'email_verified_at' => $existingUser->email_verified_at ?: now(),
+                ]);
+
+                $existingUser->roles()->sync([$role->id]);
+            });
+
+            AdminAuditLog::record('administration_user_upgraded', true, "Assigned administrative role {$role->name} to existing account: {$email} ({$validated['name']})");
+
+            return redirect()->route('admin.administration.users.index')->with('success', "Existing account {$email} has been updated and granted administrative access as {$role->name}.");
         }
 
         // Create username
         $baseUsername = Str::slug($validated['name'], '');
-        $username = $baseUsername;
+        $username = $baseUsername ?: 'admin';
         $counter = 1;
         while (User::where('username', $username)->exists()) {
             $username = $baseUsername.$counter;
             $counter++;
         }
 
-        DB::transaction(function () use ($validated, $role, $username) {
+        DB::transaction(function () use ($validated, $role, $username, $email) {
             $user = User::create([
                 'name' => $validated['name'],
-                'email' => $validated['email'],
+                'email' => $email,
                 'username' => $username,
                 'password' => Hash::make($validated['password']),
-                'role' => in_array($role->slug, ['admin', 'finance', 'staff'], true) ? $role->slug : 'staff', // Sync for backward compatibility
+                'role' => in_array($role->slug, ['admin', 'finance', 'staff', 'teacher'], true) ? $role->slug : 'staff', // Sync for backward compatibility
                 'account_status' => 'verified',
                 'email_verified_at' => now(),
             ]);
@@ -111,7 +148,7 @@ class AdministrationController extends Controller
             $user->roles()->sync([$role->id]);
         });
 
-        AdminAuditLog::record('administration_user_created', true, "Created administrative account: {$validated['email']} with role: {$role->name}");
+        AdminAuditLog::record('administration_user_created', true, "Created administrative account: {$email} with role: {$role->name}");
 
         return redirect()->route('admin.administration.users.index')->with('success', "Administrative user {$validated['name']} created successfully.");
     }
