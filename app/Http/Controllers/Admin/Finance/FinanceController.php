@@ -1154,6 +1154,69 @@ class FinanceController extends Controller
                     ];
                 })->values();
 
+            // Gather linked siblings in this family
+            $siblings = collect();
+            $familyName = '';
+            if ($family) {
+                $rawSiblings = Student::where('user_id', $family->id)
+                    ->orWhereHas('applicant', fn ($q) => $q->where('user_id', $family->id))
+                    ->with(['account', 'applicant'])
+                    ->get();
+
+                if ($rawSiblings->isEmpty()) {
+                    $rawSiblings = collect([$student]);
+                }
+
+                $lastNames = $rawSiblings->map(function ($s) {
+                    $app = $s->applicant;
+                    if ($app && filled($app->last_name)) {
+                        return mb_strtoupper(trim($app->last_name));
+                    }
+                    if (filled($s->last_name)) {
+                        return mb_strtoupper(trim($s->last_name));
+                    }
+                    $nameParts = preg_split('/\s+/', trim((string) ($app?->full_name ?: $s->full_name)));
+                    return mb_strtoupper(end($nameParts) ?: '');
+                })->filter()->unique()->values();
+
+                if ($lastNames->isNotEmpty()) {
+                    $familyName = $lastNames->join(' / ') . ' FAMILY';
+                } else {
+                    $familyName = ($family->name ?: 'STUDENT') . ' FAMILY';
+                }
+
+                $siblings = $rawSiblings->map(function ($sib) use ($student) {
+                    $sibName = mb_strtoupper($sib->applicant?->full_name ?? ($sib->full_name ?: trim("{$sib->first_name} {$sib->last_name}")));
+                    $sibAcc = $sib->account;
+                    $remBal = (float) ($sibAcc?->remaining_balance ?? 0);
+
+                    return [
+                        'id' => $sib->id,
+                        'student_number' => $sib->student_number ?: (string) $sib->id,
+                        'name' => $sibName,
+                        'grade_level' => $sib->grade_level ?? 'Student',
+                        'lrn' => $sib->applicant?->lrn ?? ($sib->lrn ?? '-'),
+                        'remaining_balance' => $remBal,
+                        'status' => $remBal <= 0 ? 'Fully Settled' : 'Open Balance',
+                        'is_current' => (string) $sib->id === (string) $student->id || (string) $sib->student_number === (string) $student->student_number,
+                        'url' => route('admin.finance.students.official-soa', $sib->student_number ?: $sib->id),
+                    ];
+                });
+            } else {
+                $siblings = collect([[
+                    'id' => $student->id,
+                    'student_number' => $student->student_number ?: (string) $student->id,
+                    'name' => $studentName,
+                    'grade_level' => $student->grade_level ?? 'Student',
+                    'lrn' => $applicant?->lrn ?? ($student->lrn ?? '-'),
+                    'remaining_balance' => (float) ($account->remaining_balance ?? 0),
+                    'status' => ((float) ($account->remaining_balance ?? 0)) <= 0 ? 'Fully Settled' : 'Open Balance',
+                    'is_current' => true,
+                    'url' => '#',
+                ]]);
+                $familyName = $studentName;
+            }
+
             $soaData = [
                 'is_official' => true,
                 'student_id' => $student->id,
@@ -1183,6 +1246,9 @@ class FinanceController extends Controller
                 'total_remaining' => (float) ($account->remaining_balance ?? $monthlySchedule->sum('remaining')),
                 'school_year' => $student->school_year ?? ($account->school_year ?? '2026-2027'),
                 'family_id' => $family?->id,
+                'family_name' => $familyName,
+                'siblings' => $siblings,
+                'siblings_count' => $siblings->count(),
             ];
 
             return view('admin.finance.students.official-soa', compact('soaData'));
@@ -1292,6 +1358,20 @@ class FinanceController extends Controller
                 $monthlyRate = 4400.00;
                 $remainingBalance = (float) $monthlySchedule->sum('remaining');
 
+                $siblings = collect($foundFamily['children'])->map(function ($c) use ($foundChild) {
+                    return [
+                        'id' => $c['student_id'],
+                        'student_number' => $c['student_id'],
+                        'name' => $c['name'],
+                        'grade_level' => $c['grade_level'] ?? 'Student',
+                        'lrn' => '123456789012',
+                        'remaining_balance' => 38890.00,
+                        'status' => 'Open Balance',
+                        'is_current' => $c['student_id'] === $foundChild['student_id'],
+                        'url' => route('admin.finance.students.official-soa', $c['student_id']),
+                    ];
+                });
+
                 $soaData = [
                     'is_official' => false,
                     'student_id' => $foundChild['student_id'],
@@ -1321,6 +1401,9 @@ class FinanceController extends Controller
                     'total_remaining' => $remainingBalance,
                     'school_year' => '2026-2027',
                     'family_id' => $foundFamily['id'],
+                    'family_name' => ($foundFamily['name'] ?? 'DEMO') . ' FAMILY',
+                    'siblings' => $siblings,
+                    'siblings_count' => $siblings->count(),
                 ];
 
                 return view('admin.finance.students.official-soa', compact('soaData'));

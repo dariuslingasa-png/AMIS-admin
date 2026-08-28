@@ -31,8 +31,8 @@
         }
 
         .no-print-bar {
-            width: 210mm;
-            max-width: 100%;
+            width: 100%;
+            max-width: 1240px;
             margin: 14px auto 0;
             padding: 0 16px;
             display: flex;
@@ -88,13 +88,130 @@
             text-decoration: underline;
         }
 
+        /* WORKSPACE LAYOUT (SIDEBAR + SOA SHEET) */
+        .soa-workspace {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            align-items: flex-start;
+            max-width: 1240px;
+            margin: 14px auto 36px;
+            padding: 0 16px;
+            box-sizing: border-box;
+        }
+
+        /* LINKED CHILDREN SIDEBAR */
+        .linked-children-sidebar {
+            width: 280px;
+            flex-shrink: 0;
+            position: sticky;
+            top: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .sidebar-card {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .sidebar-header {
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 10px;
+            margin-bottom: 12px;
+        }
+        .sidebar-title {
+            font-size: 12.5px;
+            font-weight: 900;
+            color: #0f172a;
+            margin: 0 0 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .badge-count {
+            display: inline-block;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 9999px;
+        }
+        .badge-multi {
+            background: #ecfdf5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+        .badge-solo {
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid #cbd5e1;
+        }
+
+        .sibling-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .sibling-card {
+            display: block;
+            text-decoration: none;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            transition: all 0.15s ease-in-out;
+        }
+        .sibling-card:hover {
+            border-color: #4338ca;
+            background: #f8fafc;
+            transform: translateX(2px);
+        }
+        .sibling-card.active-student {
+            background: #ecfdf5;
+            border-color: #059669;
+            box-shadow: 0 0 0 1.5px #059669;
+        }
+        .sib-name {
+            font-weight: 900;
+            font-size: 11.5px;
+            color: #0f172a;
+            margin-bottom: 2px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .sibling-card.active-student .sib-name {
+            color: #065f46;
+        }
+        .sib-meta {
+            font-size: 10px;
+            color: #64748b;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .sib-balance {
+            font-weight: 800;
+            color: #0f172a;
+        }
+        .sib-active-badge {
+            background: #065f46;
+            color: #ffffff;
+            font-size: 8.5px;
+            font-weight: 800;
+            padding: 1.5px 5px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
         /* SOA VIEWPORT */
         .soa-viewport {
-            width: 100%;
+            flex-grow: 1;
             overflow: auto;
             -webkit-overflow-scrolling: touch;
             touch-action: pan-x pan-y pinch-zoom;
-            padding: 12px 16px 36px;
             box-sizing: border-box;
         }
 
@@ -113,11 +230,23 @@
             position: relative;
         }
 
+        @media screen and (max-width: 1024px) {
+            .soa-workspace {
+                flex-direction: column;
+                align-items: center;
+            }
+            .linked-children-sidebar {
+                width: 100%;
+                max-width: 210mm;
+                position: static;
+            }
+        }
+
         @media screen and (max-width: 768px) {
             .soa-viewport {
+                width: 100%;
                 overflow-x: auto;
                 overflow-y: auto;
-                padding: 10px 8px 24px;
             }
             .soa-page {
                 width: 210mm;
@@ -330,7 +459,7 @@
         }
         .main-ledger-table td {
             border: 1px solid #cbd5e1;
-            padding: 3.5px 4px;
+            padding: 3px 4px;
             color: #0f172a;
         }
         .main-ledger-table .row-section-header {
@@ -454,8 +583,14 @@
                 margin: 0 !important;
             }
             .no-print-bar,
+            .linked-children-sidebar,
             .modal-overlay {
                 display: none !important;
+            }
+            .soa-workspace {
+                padding: 0 !important;
+                margin: 0 !important;
+                display: block !important;
             }
             .clickable-table:hover,
             .clickable-row:hover {
@@ -499,10 +634,424 @@
     </div>
 
     @if (session('success'))
-        <div style="width: 210mm; max-width: 100%; margin: 10px auto 0; padding: 10px 16px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; color: #065f46; font-weight: bold; font-size: 12px; box-sizing: border-box;">
+        <div style="width: 100%; max-width: 1240px; margin: 10px auto 0; padding: 10px 16px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; color: #065f46; font-weight: bold; font-size: 12px; box-sizing: border-box;">
             ✓ {{ session('success') }}
         </div>
     @endif
+
+    {{-- MAIN WORKSPACE (SIDEBAR + SOA SHEET) --}}
+    <div class="soa-workspace">
+        
+        {{-- LEFT SIDEBAR: LINKED CHILDREN & SIBLING SWITCHER --}}
+        <aside class="linked-children-sidebar">
+            <div class="sidebar-card">
+                <div class="sidebar-header">
+                    <div class="sidebar-title">
+                        <span>👨‍👩‍👧‍👦</span>
+                        <span>{{ $soaData['family_name'] ?? 'Family Account' }}</span>
+                    </div>
+                    <div>
+                        @if(($soaData['siblings_count'] ?? 1) > 1)
+                            <span class="badge-count badge-multi">{{ $soaData['siblings_count'] }} Linked Children</span>
+                            <span style="font-size: 10px; color: #059669; font-weight: bold; margin-left: 4px;">
+                                ({{ $soaData['discount_privilege'] }} Sibling Discount)
+                            </span>
+                        @else
+                            <span class="badge-count badge-solo">Solo Student (1 Child)</span>
+                        @endif
+                    </div>
+                </div>
+
+                @if(($soaData['siblings_count'] ?? 1) > 1)
+                    <div style="font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 6px;">
+                        Switch Student SOA:
+                    </div>
+                    <div class="sibling-list">
+                        @foreach(($soaData['siblings'] ?? []) as $sib)
+                            <a href="{{ $sib['url'] }}" class="sibling-card {{ $sib['is_current'] ? 'active-student' : '' }}" title="View SOA for {{ $sib['name'] }}">
+                                <div class="sib-name">
+                                    <span>{{ $sib['name'] }}</span>
+                                    @if($sib['is_current'])
+                                        <span class="sib-active-badge">Viewing</span>
+                                    @else
+                                        <span style="font-size: 12px; color: #94a3b8;">→</span>
+                                    @endif
+                                </div>
+                                <div class="sib-meta">
+                                    <span>{{ $sib['grade_level'] }}</span>
+                                    <span class="sib-balance">Bal: ₱{{ number_format($sib['remaining_balance'], 2) }}</span>
+                                </div>
+                            </a>
+                        @endforeach
+                    </div>
+                @else
+                    <div style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 10px; text-align: center; color: #64748b; font-size: 11px;">
+                        <div style="font-size: 18px; margin-bottom: 2px;">👤</div>
+                        <strong>Solo Student in Family</strong>
+                        <p style="margin: 4px 0 0; font-size: 10px; color: #94a3b8;">Standard tuition assessment applies (No sibling discount).</p>
+                    </div>
+                @endif
+
+                @if(isset($soaData['family_id']))
+                    <div style="margin-top: 14px; border-top: 1px solid #e2e8f0; padding-top: 10px;">
+                        <a href="{{ route('admin.finance.families.show', $soaData['family_id']) }}" style="display: flex; align-items: center; justify-content: center; gap: 5px; background: #f1f5f9; color: #334155; text-decoration: none; padding: 7px 12px; border-radius: 8px; font-weight: bold; font-size: 11px; transition: background 0.15s;">
+                            <span>📊</span> Full Family Financial Ledger
+                        </a>
+                    </div>
+                @endif
+            </div>
+        </aside>
+
+        {{-- RIGHT COLUMN: OFFICIAL STATEMENT OF ACCOUNT PAGE --}}
+        <div class="soa-viewport">
+            <div class="soa-page">
+                {{-- TOP SCHOOL HEADER --}}
+                <div class="school-header">
+                    <div class="school-header-cell header-english">
+                        AL MUNAWWARA ISLAMIC SCHOOL
+                    </div>
+                    <div class="school-header-cell header-logo">
+                        <img src="/images/AMIS_Logo.png" alt="AMIS Logo" onerror="this.src='/images/AMIS_Logo_receipt.jpg'">
+                    </div>
+                    <div class="school-header-cell header-arabic">
+                        <span dir="rtl">المدرسة المنورة الإسلامية</span>
+                    </div>
+                </div>
+
+                {{-- STATEMENT OF ACCOUNT BANNER --}}
+                <div class="title-banner">
+                    STATEMENT OF ACCOUNT SY {{ $soaData['school_year'] }}
+                </div>
+
+                {{-- UPPER GRID --}}
+                <div class="upper-grid">
+                    {{-- COLUMN 1: SCHOOL INFO & QURANIC QUOTE --}}
+                    <div class="upper-left">
+                        <div><strong>Address:</strong></div>
+                        <div>Bugac Ma-a Road, Davao City</div>
+                        <div style="margin-top: 6px;"><strong>Email Add:</strong></div>
+                        <div>almunawwaraislamicschool@gmail.com</div>
+
+                        <div class="ayah-quote">
+                            <strong>Sahih International</strong><br>
+                            "Whoever does righteousness, whether male or female, while he is a believer - We will surely cause him to live a good life, and We will surely give them their reward [in the Hereafter] according to the best of what they do."
+                            <span class="ayah-source">Qur'an 16:97</span>
+                        </div>
+                    </div>
+
+                    {{-- COLUMN 2: STUDENT DETAILS --}}
+                    <div class="upper-mid">
+                        @php
+                            $sName = strtoupper(trim($soaData['student_name'] ?? ''));
+                            $sLen = mb_strlen($sName);
+                            $nameSize = $sLen > 48 ? '10.5px' : ($sLen > 36 ? '11.5px' : ($sLen > 24 ? '12px' : '12.5px'));
+                            $nameLineHeight = $sLen > 36 ? '1.15' : '1.18';
+                        @endphp
+                        
+                        <div class="student-header-block">
+                            <div class="student-header-label">NAME OF STUDENT:</div>
+                            <div class="student-header-name" style="font-size: {{ $nameSize }}; line-height: {{ $nameLineHeight }};">
+                                {{ $sName }}
+                            </div>
+                        </div>
+
+                        <table class="student-info-table">
+                            <tr>
+                                <td class="info-lbl">Address:</td>
+                                <td class="info-val">{{ strtoupper($soaData['address']) }}</td>
+                            </tr>
+                            <tr>
+                                <td class="info-lbl">Email:</td>
+                                <td class="info-val" style="font-size:10px;">{{ $soaData['email'] }}</td>
+                            </tr>
+                            <tr>
+                                <td class="info-lbl">LRN:</td>
+                                <td class="info-val">{{ $soaData['lrn'] }}</td>
+                            </tr>
+                            <tr>
+                                <td class="info-lbl">Category:</td>
+                                <td class="info-val">{{ $soaData['category'] }}</td>
+                            </tr>
+                            <tr>
+                                <td class="info-lbl">Grade Level:</td>
+                                <td class="info-val">{{ $soaData['grade_level'] }}</td>
+                            </tr>
+                            @php
+                                $discVal = (float) str_replace('%', '', (string) ($soaData['discount_privilege'] ?? '0'));
+                                $hasDiscount = $discVal > 0.01 && ((float) ($soaData['discount_amount'] ?? 0)) > 0.01;
+                            @endphp
+                            @if($hasDiscount)
+                            <tr>
+                                <td class="info-lbl">Discount Privilege:</td>
+                                <td class="info-val">{{ $soaData['discount_privilege'] }}</td>
+                            </tr>
+                            <tr>
+                                <td class="info-lbl">Discount Status:</td>
+                                <td class="info-val">{{ $soaData['discount_status'] }}</td>
+                            </tr>
+                            @endif
+                        </table>
+                    </div>
+
+                    {{-- COLUMN 3: FEE BREAKDOWN TABLE (CLICK TO OPEN FEE MODAL) --}}
+                    <div class="upper-right">
+                        <table class="fee-table clickable-table" @click="openFeeModal()" title="Click to edit Tuition, Misc, and Sibling Discounts">
+                            <thead>
+                                <tr>
+                                    <th rowspan="2">DESCRIPTION</th>
+                                    <th rowspan="2">AMOUNT</th>
+                                    <th colspan="2">DISCOUNT</th>
+                                    <th rowspan="2">NET</th>
+                                </tr>
+                                <tr>
+                                    <th>%</th>
+                                    <th>AMOUNT</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Tuition Fees</td>
+                                    <td class="text-right">{{ number_format($soaData['tuition_fee'], 2) }}</td>
+                                    <td class="text-center">{{ $hasDiscount ? $soaData['discount_privilege'] : '' }}</td>
+                                    <td class="text-center">{{ $hasDiscount ? number_format($soaData['discount_amount'], 2) : '' }}</td>
+                                    <td class="text-right">{{ number_format($soaData['tuition_fee'] - ($hasDiscount ? $soaData['discount_amount'] : 0), 2) }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Miscellaneous</td>
+                                    <td class="text-right">{{ number_format($soaData['misc_fee'], 2) }}</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td class="text-right">{{ number_format($soaData['misc_fee'], 2) }}</td>
+                                </tr>
+                                <tr class="font-bold">
+                                    <td>Total Fees</td>
+                                    <td class="text-right">{{ number_format($soaData['total_fees'], 2) }}</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td class="text-right">{{ number_format($soaData['total_fees'], 2) }}</td>
+                                </tr>
+                                <tr class="font-bold">
+                                    <td>Final Fees</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td class="text-center">{{ $hasDiscount ? '-' : '' }}</td>
+                                    <td class="text-right">{{ number_format($soaData['final_fees'], 2) }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {{-- MAIN STATEMENT & PAYMENT LEDGER TABLE --}}
+                <table class="main-ledger-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 26%;">Description</th>
+                            <th style="width: 14%;">Month</th>
+                            <th class="th-right" style="width: 12%;">Amount</th>
+                            <th class="th-center" style="width: 12%;">Date</th>
+                            <th class="th-right" style="width: 12%;">Amount Paid</th>
+                            <th class="th-center" style="width: 10%;">Account</th>
+                            <th class="th-right" style="width: 14%;">Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @php
+                            $runningBalance = (float) $soaData['final_fees'];
+                            $runningBalance -= (float) $soaData['enrollment_paid'];
+                        @endphp
+                        <tr class="clickable-row" @click="openFeeModal()" title="Click to edit Enrollment Downpayment">
+                            <td>Paid Enrollment Fee</td>
+                            <td></td>
+                            <td class="cell-right"></td>
+                            <td class="cell-center">{{ $soaData['enrollment_date'] }}</td>
+                            <td class="cell-right highlight-yellow" title="Payment received and applied to this account">{{ number_format($soaData['enrollment_paid'], 2) }}</td>
+                            <td class="cell-center">{{ $soaData['enrollment_account'] }}</td>
+                            <td class="cell-right">{{ number_format($runningBalance, 2) }}</td>
+                        </tr>
+                        @php
+                            $runningBalance += (float) $soaData['books_fee'];
+                        @endphp
+                        <tr class="clickable-row" @click="openFeeModal()" title="Click to edit Books & Programs">
+                            <td>Books and programs</td>
+                            <td></td>
+                            <td class="cell-right">{{ number_format($soaData['books_fee'], 2) }}</td>
+                            <td class="cell-center"></td>
+                            <td class="cell-right"></td>
+                            <td class="cell-center"></td>
+                            <td class="cell-right">{{ number_format($runningBalance, 2) }}</td>
+                        </tr>
+                        @php
+                            $runningBalance -= (float) $soaData['books_paid'];
+                        @endphp
+                        <tr class="clickable-row" @click="openFeeModal()" title="Click to edit Paid Books">
+                            <td>Paid Books</td>
+                            <td></td>
+                            <td class="cell-right"></td>
+                            <td class="cell-center">{{ $soaData['books_date'] ?: '-' }}</td>
+                            <td class="cell-right {{ (float) $soaData['books_paid'] > 0.01 ? 'highlight-yellow' : '' }}">{{ (float) $soaData['books_paid'] > 0.01 ? number_format($soaData['books_paid'], 2) : '-' }}</td>
+                            <td class="cell-center">{{ $soaData['books_account'] ?: '-' }}</td>
+                            <td class="cell-right">{{ number_format($runningBalance, 2) }}</td>
+                        </tr>
+
+                        {{-- REQUIRED PAYMENT MONTHLY SECTION --}}
+                        <tr class="row-section-header">
+                            <td colspan="7">Required Payment Monthly</td>
+                        </tr>
+
+                        @php
+                            $sched = collect($soaData['monthly_schedule']);
+                            $seenTxKeys = [];
+                        @endphp
+
+                        <tr class="row-section-header" style="background:#ffffff; font-size:10px;">
+                            <td colspan="7">Year: 2026</td>
+                        </tr>
+
+                        @foreach (['July', 'August', 'September', 'October', 'November', 'December'] as $monthName)
+                            @php
+                                $mRow = $sched->first(fn($m) => str_contains(strtoupper($m->month ?? ''), strtoupper($monthName)));
+                                $mFee = (float) ($mRow->fee ?? ($mRow->original ?? $soaData['monthly_rate']));
+                                $mPaid = (float) ($mRow->paid ?? ($mRow->verified ?? 0));
+                                $isPaidMonth = $mPaid > 0.01;
+                                if ($isPaidMonth) {
+                                    $runningBalance -= $mPaid;
+                                }
+
+                                $txDateDisplay = '';
+                                $txAccountDisplay = '';
+                                if ($isPaidMonth) {
+                                    $txDate = $mRow->payment_date ?? '15-Aug-26';
+                                    $txAccount = $mRow->or_number ?? $mRow->account_no ?? '10539';
+                                    $txKey = ($mRow->payment_id ?? null) ? 'tx_'.$mRow->payment_id : 'tx_10539';
+
+                                if (!in_array($txKey, $seenTxKeys, true)) {
+                                    $txDateDisplay = $txDate;
+                                    $seenTxKeys[] = $txKey;
+                                } else {
+                                    $txDateDisplay = '';
+                                }
+                                $txAccountDisplay = $txAccount;
+                            }
+
+                            $monthPayload = [
+                                'month' => $monthName . ' 2026',
+                                'fee' => $mFee,
+                                'paid' => $mPaid,
+                                'status' => $isPaidMonth ? ($mPaid >= $mFee ? 'paid' : 'partial') : 'unpaid',
+                                'payment_date' => $txDateDisplay ?: now()->format('d-M-y'),
+                                'or_number' => $txAccountDisplay ?: '',
+                            ];
+                        @endphp
+                        <tr class="clickable-row" @click="openMonthModal({{ Js::from($monthPayload) }})" title="Click to edit {{ $monthName }} 2026 payment">
+                            <td></td>
+                            <td>{{ $monthName }}</td>
+                            <td class="cell-right {{ ($monthName === 'July' && ! $isPaidMonth) ? 'highlight-yellow' : '' }}">{{ number_format($mFee, 2) }}</td>
+                            <td class="cell-center">{{ $txDateDisplay ?: '-' }}</td>
+                            <td class="cell-right {{ $isPaidMonth ? 'highlight-yellow' : '' }}">
+                                {{ $isPaidMonth ? number_format($mPaid, 2) : '-' }}
+                            </td>
+                            <td class="cell-center">{{ $isPaidMonth ? $txAccountDisplay : '-' }}</td>
+                            <td class="cell-right">{{ $isPaidMonth ? number_format($runningBalance, 2) : '' }}</td>
+                        </tr>
+                    @endforeach
+
+                    <tr class="row-section-header" style="background:#ffffff; font-size:10px;">
+                        <td colspan="7">Year: 2027</td>
+                    </tr>
+
+                    @foreach (['January', 'February', 'March'] as $monthName)
+                        @php
+                            $mRow = $sched->first(fn($m) => str_contains(strtoupper($m->month ?? ''), strtoupper($monthName)));
+                            $mFee = (float) ($mRow->fee ?? ($mRow->original ?? $soaData['monthly_rate']));
+                            $mPaid = (float) ($mRow->paid ?? ($mRow->verified ?? 0));
+                            $isPaidMonth = $mPaid > 0.01;
+                            if ($isPaidMonth) {
+                                $runningBalance -= $mPaid;
+                            }
+
+                            $txDateDisplay = '';
+                            $txAccountDisplay = '';
+                            if ($isPaidMonth) {
+                                $txDate = $mRow->payment_date ?? '15-Jan-27';
+                                $txAccount = $mRow->or_number ?? $mRow->account_no ?? '10539';
+                                $txKey = ($mRow->payment_id ?? null) ? 'tx_'.$mRow->payment_id : 'tx_2027_block';
+
+                                if (!in_array($txKey, $seenTxKeys, true)) {
+                                    $txDateDisplay = $txDate;
+                                    $seenTxKeys[] = $txKey;
+                                } else {
+                                    $txDateDisplay = '';
+                                }
+                                $txAccountDisplay = $txAccount;
+                            }
+
+                            $monthPayload = [
+                                'month' => $monthName . ' 2027',
+                                'fee' => $mFee,
+                                'paid' => $mPaid,
+                                'status' => $isPaidMonth ? ($mPaid >= $mFee ? 'paid' : 'partial') : 'unpaid',
+                                'payment_date' => $txDateDisplay ?: now()->format('d-M-y'),
+                                'or_number' => $txAccountDisplay ?: '',
+                            ];
+                        @endphp
+                        <tr class="clickable-row" @click="openMonthModal({{ Js::from($monthPayload) }})" title="Click to edit {{ $monthName }} 2027 payment">
+                            <td></td>
+                            <td>{{ $monthName }}</td>
+                            <td class="cell-right">{{ number_format($mFee, 2) }}</td>
+                            <td class="cell-center">{{ $txDateDisplay ?: '-' }}</td>
+                            <td class="cell-right {{ $isPaidMonth ? 'highlight-yellow' : '' }}">
+                                {{ $isPaidMonth ? number_format($mPaid, 2) : '-' }}
+                            </td>
+                            <td class="cell-center">{{ $isPaidMonth ? $txAccountDisplay : '-' }}</td>
+                            <td class="cell-right">{{ $isPaidMonth ? number_format($runningBalance, 2) : '' }}</td>
+                        </tr>
+                    @endforeach
+
+                    {{-- TO BE PAID / PAID LABEL ROW --}}
+                    <tr style="border-top: 2px solid #475569;">
+                        <td colspan="4" style="border:none;"></td>
+                        <td class="cell-center" style="font-weight:bold; font-size:10px; border: 1px solid #475569;">TO BE PAID</td>
+                        <td class="cell-center highlight-yellow" style="font-weight:bold; font-size:10px; border: 1px solid #475569;">PAID</td>
+                        <td style="border:none;"></td>
+                    </tr>
+                    <tr>
+                        <td colspan="6" style="font-weight:bold; border-right:none;">Total Amount to pay</td>
+                        <td class="cell-right highlight-blue" style="font-size:11px;">{{ number_format($runningBalance, 2) }}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" style="font-weight:bold; border-right:none;">Due Monthly Payment (9 Months)</td>
+                        <td class="cell-right highlight-yellow" style="border-left:none;" title="Monthly amount due for this student">{{ number_format($soaData['monthly_rate'], 2) }}</td>
+                        <td colspan="4" style="border-left:none;"></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            {{-- DISCREPANCY NOTE --}}
+            <div class="discrepancy-note">
+                Note: Any discrepancies please inform the office. &nbsp;
+                <span class="discrepancy-red">ANY DISCREPANCY PLEASE INFORM, WE WILL CORRECT</span>
+            </div>
+
+            {{-- SHUKRAN BAR --}}
+            <div class="shukran-bar">
+                Shukran. JazakAllahu khayran
+            </div>
+
+            {{-- LEGAL FOOTER --}}
+            <div class="legal-footer">
+                <div class="legal-left">
+                    Mayor's Permit No. B-86418-8<br>
+                    SEC Registration No. CN200826457
+                </div>
+                <div class="legal-right">
+                    DepED Recognition No. R-XI-019, s. 2016<br>
+                    DepED Recognition No. R-XI-005, s. 2016
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
     {{-- MODAL 1: EDIT SPECIFIC MONTH PAYMENT RECORD --}}
     <div x-show="showMonthModal" x-cloak class="modal-overlay" @click.self="showMonthModal = false">
@@ -645,356 +1194,6 @@
                     <button type="submit" style="background: #065f46; color: #ffffff; border: none; padding: 8px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px;">Save &amp; Recalculate SOA</button>
                 </div>
             </form>
-        </div>
-    </div>
-
-    {{-- CLEAN OFFICIAL STATEMENT OF ACCOUNT PAGE --}}
-    <div class="soa-viewport">
-        <div class="soa-page">
-            {{-- TOP SCHOOL HEADER --}}
-            <div class="school-header">
-                <div class="school-header-cell header-english">
-                    AL MUNAWWARA ISLAMIC SCHOOL
-                </div>
-                <div class="school-header-cell header-logo">
-                    <img src="/images/AMIS_Logo.png" alt="AMIS Logo" onerror="this.src='/images/AMIS_Logo_receipt.jpg'">
-                </div>
-                <div class="school-header-cell header-arabic">
-                    <span dir="rtl">المدرسة المنورة الإسلامية</span>
-                </div>
-            </div>
-
-            {{-- STATEMENT OF ACCOUNT BANNER --}}
-            <div class="title-banner">
-                STATEMENT OF ACCOUNT SY {{ $soaData['school_year'] }}
-            </div>
-
-            {{-- UPPER GRID --}}
-            <div class="upper-grid">
-                {{-- COLUMN 1: SCHOOL INFO & QURANIC QUOTE --}}
-                <div class="upper-left">
-                    <div><strong>Address:</strong></div>
-                    <div>Bugac Ma-a Road, Davao City</div>
-                    <div style="margin-top: 6px;"><strong>Email Add:</strong></div>
-                    <div>almunawwaraislamicschool@gmail.com</div>
-
-                    <div class="ayah-quote">
-                        <strong>Sahih International</strong><br>
-                        "Whoever does righteousness, whether male or female, while he is a believer - We will surely cause him to live a good life, and We will surely give them their reward [in the Hereafter] according to the best of what they do."
-                        <span class="ayah-source">Qur'an 16:97</span>
-                    </div>
-                </div>
-
-                {{-- COLUMN 2: STUDENT DETAILS --}}
-                <div class="upper-mid">
-                    @php
-                        $sName = strtoupper(trim($soaData['student_name'] ?? ''));
-                        $sLen = mb_strlen($sName);
-                        $nameSize = $sLen > 48 ? '10.5px' : ($sLen > 36 ? '11.5px' : ($sLen > 24 ? '12px' : '12.5px'));
-                        $nameLineHeight = $sLen > 36 ? '1.15' : '1.18';
-                    @endphp
-                    
-                    <div class="student-header-block">
-                        <div class="student-header-label">NAME OF STUDENT:</div>
-                        <div class="student-header-name" style="font-size: {{ $nameSize }}; line-height: {{ $nameLineHeight }};">
-                            {{ $sName }}
-                        </div>
-                    </div>
-
-                    <table class="student-info-table">
-                        <tr>
-                            <td class="info-lbl">Address:</td>
-                            <td class="info-val">{{ strtoupper($soaData['address']) }}</td>
-                        </tr>
-                        <tr>
-                            <td class="info-lbl">Email:</td>
-                            <td class="info-val" style="font-size:10px;">{{ $soaData['email'] }}</td>
-                        </tr>
-                        <tr>
-                            <td class="info-lbl">LRN:</td>
-                            <td class="info-val">{{ $soaData['lrn'] }}</td>
-                        </tr>
-                        <tr>
-                            <td class="info-lbl">Category:</td>
-                            <td class="info-val">{{ $soaData['category'] }}</td>
-                        </tr>
-                        <tr>
-                            <td class="info-lbl">Grade Level:</td>
-                            <td class="info-val">{{ $soaData['grade_level'] }}</td>
-                        </tr>
-                        @php
-                            $discVal = (float) str_replace('%', '', (string) ($soaData['discount_privilege'] ?? '0'));
-                            $hasDiscount = $discVal > 0.01 && ((float) ($soaData['discount_amount'] ?? 0)) > 0.01;
-                        @endphp
-                        @if($hasDiscount)
-                        <tr>
-                            <td class="info-lbl">Discount Privilege:</td>
-                            <td class="info-val">{{ $soaData['discount_privilege'] }}</td>
-                        </tr>
-                        <tr>
-                            <td class="info-lbl">Discount Status:</td>
-                            <td class="info-val">{{ $soaData['discount_status'] }}</td>
-                        </tr>
-                        @endif
-                    </table>
-                </div>
-
-                {{-- COLUMN 3: FEE BREAKDOWN TABLE (CLICK TO OPEN FEE MODAL) --}}
-                <div class="upper-right">
-                    <table class="fee-table clickable-table" @click="openFeeModal()" title="Click to edit Tuition, Misc, and Sibling Discounts">
-                        <thead>
-                            <tr>
-                                <th rowspan="2">DESCRIPTION</th>
-                                <th rowspan="2">AMOUNT</th>
-                                <th colspan="2">DISCOUNT</th>
-                                <th rowspan="2">NET</th>
-                            </tr>
-                            <tr>
-                                <th>%</th>
-                                <th>AMOUNT</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Tuition Fees</td>
-                                <td class="text-right">{{ number_format($soaData['tuition_fee'], 2) }}</td>
-                                <td class="text-center">{{ $hasDiscount ? $soaData['discount_privilege'] : '' }}</td>
-                                <td class="text-center">{{ $hasDiscount ? number_format($soaData['discount_amount'], 2) : '' }}</td>
-                                <td class="text-right">{{ number_format($soaData['tuition_fee'] - ($hasDiscount ? $soaData['discount_amount'] : 0), 2) }}</td>
-                            </tr>
-                            <tr>
-                                <td>Miscellaneous</td>
-                                <td class="text-right">{{ number_format($soaData['misc_fee'], 2) }}</td>
-                                <td></td>
-                                <td></td>
-                                <td class="text-right">{{ number_format($soaData['misc_fee'], 2) }}</td>
-                            </tr>
-                            <tr class="font-bold">
-                                <td>Total Fees</td>
-                                <td class="text-right">{{ number_format($soaData['total_fees'], 2) }}</td>
-                                <td></td>
-                                <td></td>
-                                <td class="text-right">{{ number_format($soaData['total_fees'], 2) }}</td>
-                            </tr>
-                            <tr class="font-bold">
-                                <td>Final Fees</td>
-                                <td></td>
-                                <td></td>
-                                <td class="text-center">{{ $hasDiscount ? '-' : '' }}</td>
-                                <td class="text-right">{{ number_format($soaData['final_fees'], 2) }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            {{-- MAIN STATEMENT & PAYMENT LEDGER TABLE --}}
-            <table class="main-ledger-table">
-                <thead>
-                    <tr>
-                        <th style="width: 26%;">Description</th>
-                        <th style="width: 14%;">Month</th>
-                        <th class="th-right" style="width: 12%;">Amount</th>
-                        <th class="th-center" style="width: 12%;">Date</th>
-                        <th class="th-right" style="width: 12%;">Amount Paid</th>
-                        <th class="th-center" style="width: 10%;">Account</th>
-                        <th class="th-right" style="width: 14%;">Balance</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @php
-                        $runningBalance = (float) $soaData['final_fees'];
-                        $runningBalance -= (float) $soaData['enrollment_paid'];
-                    @endphp
-                    <tr class="clickable-row" @click="openFeeModal()" title="Click to edit Enrollment Downpayment">
-                        <td>Paid Enrollment Fee</td>
-                        <td></td>
-                        <td class="cell-right"></td>
-                        <td class="cell-center">{{ $soaData['enrollment_date'] }}</td>
-                        <td class="cell-right highlight-yellow" title="Payment received and applied to this account">{{ number_format($soaData['enrollment_paid'], 2) }}</td>
-                        <td class="cell-center">{{ $soaData['enrollment_account'] }}</td>
-                        <td class="cell-right">{{ number_format($runningBalance, 2) }}</td>
-                    </tr>
-                    @php
-                        $runningBalance += (float) $soaData['books_fee'];
-                    @endphp
-                    <tr class="clickable-row" @click="openFeeModal()" title="Click to edit Books & Programs">
-                        <td>Books and programs</td>
-                        <td></td>
-                        <td class="cell-right">{{ number_format($soaData['books_fee'], 2) }}</td>
-                        <td class="cell-center"></td>
-                        <td class="cell-right"></td>
-                        <td class="cell-center"></td>
-                        <td class="cell-right">{{ number_format($runningBalance, 2) }}</td>
-                    </tr>
-                    @php
-                        $runningBalance -= (float) $soaData['books_paid'];
-                    @endphp
-                    <tr class="clickable-row" @click="openFeeModal()" title="Click to edit Paid Books">
-                        <td>Paid Books</td>
-                        <td></td>
-                        <td class="cell-right"></td>
-                        <td class="cell-center">{{ $soaData['books_date'] ?: '-' }}</td>
-                        <td class="cell-right {{ (float) $soaData['books_paid'] > 0.01 ? 'highlight-yellow' : '' }}">{{ (float) $soaData['books_paid'] > 0.01 ? number_format($soaData['books_paid'], 2) : '-' }}</td>
-                        <td class="cell-center">{{ $soaData['books_account'] ?: '-' }}</td>
-                        <td class="cell-right">{{ number_format($runningBalance, 2) }}</td>
-                    </tr>
-
-                    {{-- REQUIRED PAYMENT MONTHLY SECTION --}}
-                    <tr class="row-section-header">
-                        <td colspan="7">Required Payment Monthly</td>
-                    </tr>
-
-                    @php
-                        $sched = collect($soaData['monthly_schedule']);
-                        $seenTxKeys = [];
-                    @endphp
-
-                    <tr class="row-section-header" style="background:#ffffff; font-size:10px;">
-                        <td colspan="7">Year: 2026</td>
-                    </tr>
-
-                    @foreach (['July', 'August', 'September', 'October', 'November', 'December'] as $monthName)
-                        @php
-                            $mRow = $sched->first(fn($m) => str_contains(strtoupper($m->month ?? ''), strtoupper($monthName)));
-                            $mFee = (float) ($mRow->fee ?? ($mRow->original ?? $soaData['monthly_rate']));
-                            $mPaid = (float) ($mRow->paid ?? ($mRow->verified ?? 0));
-                            $isPaidMonth = $mPaid > 0.01;
-                            if ($isPaidMonth) {
-                                $runningBalance -= $mPaid;
-                            }
-
-                            $txDateDisplay = '';
-                            $txAccountDisplay = '';
-                            if ($isPaidMonth) {
-                                $txDate = $mRow->payment_date ?? '15-Aug-26';
-                                $txAccount = $mRow->or_number ?? $mRow->account_no ?? '10539';
-                                $txKey = ($mRow->payment_id ?? null) ? 'tx_'.$mRow->payment_id : 'tx_10539';
-
-                                if (!in_array($txKey, $seenTxKeys, true)) {
-                                    $txDateDisplay = $txDate;
-                                    $seenTxKeys[] = $txKey;
-                                } else {
-                                    $txDateDisplay = '';
-                                }
-                                $txAccountDisplay = $txAccount;
-                            }
-
-                            $monthPayload = [
-                                'month' => $monthName . ' 2026',
-                                'fee' => $mFee,
-                                'paid' => $mPaid,
-                                'status' => $isPaidMonth ? ($mPaid >= $mFee ? 'paid' : 'partial') : 'unpaid',
-                                'payment_date' => $txDateDisplay ?: now()->format('d-M-y'),
-                                'or_number' => $txAccountDisplay ?: '',
-                            ];
-                        @endphp
-                        <tr class="clickable-row" @click="openMonthModal({{ Js::from($monthPayload) }})" title="Click to edit {{ $monthName }} 2026 payment">
-                            <td></td>
-                            <td>{{ $monthName }}</td>
-                            <td class="cell-right {{ ($monthName === 'July' && ! $isPaidMonth) ? 'highlight-yellow' : '' }}">{{ number_format($mFee, 2) }}</td>
-                            <td class="cell-center">{{ $txDateDisplay ?: '-' }}</td>
-                            <td class="cell-right {{ $isPaidMonth ? 'highlight-yellow' : '' }}">
-                                {{ $isPaidMonth ? number_format($mPaid, 2) : '-' }}
-                            </td>
-                            <td class="cell-center">{{ $isPaidMonth ? $txAccountDisplay : '-' }}</td>
-                            <td class="cell-right">{{ $isPaidMonth ? number_format($runningBalance, 2) : '' }}</td>
-                        </tr>
-                    @endforeach
-
-                    <tr class="row-section-header" style="background:#ffffff; font-size:10px;">
-                        <td colspan="7">Year: 2027</td>
-                    </tr>
-
-                    @foreach (['January', 'February', 'March'] as $monthName)
-                        @php
-                            $mRow = $sched->first(fn($m) => str_contains(strtoupper($m->month ?? ''), strtoupper($monthName)));
-                            $mFee = (float) ($mRow->fee ?? ($mRow->original ?? $soaData['monthly_rate']));
-                            $mPaid = (float) ($mRow->paid ?? ($mRow->verified ?? 0));
-                            $isPaidMonth = $mPaid > 0.01;
-                            if ($isPaidMonth) {
-                                $runningBalance -= $mPaid;
-                            }
-
-                            $txDateDisplay = '';
-                            $txAccountDisplay = '';
-                            if ($isPaidMonth) {
-                                $txDate = $mRow->payment_date ?? '15-Jan-27';
-                                $txAccount = $mRow->or_number ?? $mRow->account_no ?? '10539';
-                                $txKey = ($mRow->payment_id ?? null) ? 'tx_'.$mRow->payment_id : 'tx_2027_block';
-
-                                if (!in_array($txKey, $seenTxKeys, true)) {
-                                    $txDateDisplay = $txDate;
-                                    $seenTxKeys[] = $txKey;
-                                } else {
-                                    $txDateDisplay = '';
-                                }
-                                $txAccountDisplay = $txAccount;
-                            }
-
-                            $monthPayload = [
-                                'month' => $monthName . ' 2027',
-                                'fee' => $mFee,
-                                'paid' => $mPaid,
-                                'status' => $isPaidMonth ? ($mPaid >= $mFee ? 'paid' : 'partial') : 'unpaid',
-                                'payment_date' => $txDateDisplay ?: now()->format('d-M-y'),
-                                'or_number' => $txAccountDisplay ?: '',
-                            ];
-                        @endphp
-                        <tr class="clickable-row" @click="openMonthModal({{ Js::from($monthPayload) }})" title="Click to edit {{ $monthName }} 2027 payment">
-                            <td></td>
-                            <td>{{ $monthName }}</td>
-                            <td class="cell-right">{{ number_format($mFee, 2) }}</td>
-                            <td class="cell-center">{{ $txDateDisplay ?: '-' }}</td>
-                            <td class="cell-right {{ $isPaidMonth ? 'highlight-yellow' : '' }}">
-                                {{ $isPaidMonth ? number_format($mPaid, 2) : '-' }}
-                            </td>
-                            <td class="cell-center">{{ $isPaidMonth ? $txAccountDisplay : '-' }}</td>
-                            <td class="cell-right">{{ $isPaidMonth ? number_format($runningBalance, 2) : '' }}</td>
-                        </tr>
-                    @endforeach
-
-                    {{-- TO BE PAID / PAID LABEL ROW --}}
-                    <tr style="border-top: 2px solid #475569;">
-                        <td colspan="4" style="border:none;"></td>
-                        <td class="cell-center" style="font-weight:bold; font-size:10px; border: 1px solid #475569;">TO BE PAID</td>
-                        <td class="cell-center highlight-yellow" style="font-weight:bold; font-size:10px; border: 1px solid #475569;">PAID</td>
-                        <td style="border:none;"></td>
-                    </tr>
-                    <tr>
-                        <td colspan="6" style="font-weight:bold; border-right:none;">Total Amount to pay</td>
-                        <td class="cell-right highlight-blue" style="font-size:11px;">{{ number_format($runningBalance, 2) }}</td>
-                    </tr>
-                    <tr>
-                        <td colspan="2" style="font-weight:bold; border-right:none;">Due Monthly Payment (9 Months)</td>
-                        <td class="cell-right highlight-yellow" style="border-left:none;" title="Monthly amount due for this student">{{ number_format($soaData['monthly_rate'], 2) }}</td>
-                        <td colspan="4" style="border-left:none;"></td>
-                    </tr>
-                </tbody>
-            </table>
-
-            {{-- DISCREPANCY NOTE --}}
-            <div class="discrepancy-note">
-                Note: Any discrepancies please inform the office. &nbsp;
-                <span class="discrepancy-red">ANY DISCREPANCY PLEASE INFORM, WE WILL CORRECT</span>
-            </div>
-
-            {{-- SHUKRAN BAR --}}
-            <div class="shukran-bar">
-                Shukran. JazakAllahu khayran
-            </div>
-
-            {{-- LEGAL FOOTER --}}
-            <div class="legal-footer">
-                <div class="legal-left">
-                    Mayor's Permit No. B-86418-8<br>
-                    SEC Registration No. CN200826457
-                </div>
-                <div class="legal-right">
-                    DepED Recognition No. R-XI-019, s. 2016<br>
-                    DepED Recognition No. R-XI-005, s. 2016
-                </div>
-            </div>
         </div>
     </div>
 
