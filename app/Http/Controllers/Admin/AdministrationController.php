@@ -30,8 +30,7 @@ class AdministrationController extends Controller
 
         $query = User::with('roles')
             ->where(function ($q) {
-                // Only load admin/portal roles or users that have admin/portal roles
-                $q->whereIn('role', User::ADMIN_PORTAL_ROLES)
+                $q->whereIn('role', User::ADMIN_PORTAL_ROLE_SLUGS)
                     ->orWhereHas('roles', function ($r) {
                         $r->whereIn('slug', User::ADMIN_PORTAL_ROLE_SLUGS);
                     });

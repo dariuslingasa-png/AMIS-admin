@@ -278,14 +278,32 @@ class AdminUserController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
+            'email' => 'required|email',
             'role' => 'required|in:admin,finance,staff',
             'password' => 'required|string|min:8|confirmed',
         ]);
 
+        $email = strtolower(trim((string) $request->email));
+        $existingUser = User::where('email', $email)->first();
+
+        if ($existingUser) {
+            $existingUser->update([
+                'name' => $request->name,
+                'password' => Hash::make($request->password),
+                'role' => $request->role,
+                'access_permissions' => $this->defaultPermissionsForRole($request->role),
+                'account_status' => 'verified',
+                'email_verified_at' => $existingUser->email_verified_at ?: now(),
+            ]);
+
+            AdminAuditLog::record('admin_account_upgraded', true, "Updated and granted {$request->role} access to {$email}");
+
+            return back()->with('success', "Existing account for {$email} was successfully updated with {$request->role} access.");
+        }
+
         User::create([
             'name' => $request->name,
-            'email' => $request->email,
+            'email' => $email,
             'username' => $this->uniqueUsername($request->name),
             'password' => Hash::make($request->password),
             'role' => $request->role,
@@ -293,6 +311,8 @@ class AdminUserController extends Controller
             'account_status' => 'verified',
             'email_verified_at' => now(),
         ]);
+
+        AdminAuditLog::record('admin_account_created', true, "Created admin portal account for {$email} ({$request->role})");
 
         return back()->with('success', "Portal account created for {$request->name}.");
     }
