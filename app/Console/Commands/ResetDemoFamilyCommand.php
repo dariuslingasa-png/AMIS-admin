@@ -29,7 +29,12 @@ class ResetDemoFamilyCommand extends Command
         $familiesToReset = [];
 
         if ($this->option('all')) {
-            $familiesToReset = ['zhairel.lingasa@gmail.com', 'wcamsar.amis@gmail.com'];
+            $familiesToReset = [
+                'zhairel.lingasa@gmail.com',
+                'darius.lingasa@gmail.com',
+                'mon.lingasa@gmail.com',
+                'wcamsar.amis@gmail.com',
+            ];
         } else {
             $familiesToReset = [$this->argument('family')];
         }
