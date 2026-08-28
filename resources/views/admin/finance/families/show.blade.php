@@ -1,46 +1,73 @@
 @php
     $familyStudents = collect();
-    foreach ($family->enrollmentApplicants ?? [] as $app) {
-        $st = $app->student;
-        $name = $app->full_name ?: ($st?->full_name ?: 'Student');
-        $sId = $st?->id ?: $app->id;
-        $sNumber = $st?->student_number ?: ($app->amis_student_id ?: "STU-{$app->id}");
-        $grade = $app->grade_level ?: ($st?->grade_level ?: 'Grade 1');
-        $billings = $st?->account?->monthlyBillings ?? collect();
+    $rawApplicants = is_iterable($family->enrollmentApplicants ?? null) ? collect($family->enrollmentApplicants) : collect();
+
+    foreach ($rawApplicants as $app) {
+        $st = is_object($app) ? ($app->student ?? $app) : null;
+        $name = is_object($app) && isset($app->full_name) 
+            ? $app->full_name 
+            : (is_object($app) && isset($app->first_name) ? trim("{$app->first_name} {$app->last_name}") : 'Student');
+        $sNumber = is_object($app) && isset($app->amis_student_id) && filled($app->amis_student_id)
+            ? $app->amis_student_id
+            : (is_object($st) && isset($st->student_number) && filled($st->student_number)
+                ? $st->student_number
+                : (is_object($app) && isset($app->id) ? (string)$app->id : 'STU-001'));
+        $sId = is_object($st) && isset($st->id) ? $st->id : (is_object($app) && isset($app->id) ? $app->id : $sNumber);
+        $grade = is_object($app) && isset($app->grade_level) ? $app->grade_level : (is_object($st) && isset($st->grade_level) ? $st->grade_level : 'Grade 1');
+        
+        $account = is_object($app) ? ($app->student?->account ?? ($app->account ?? null)) : null;
+        $billings = collect();
+        if ($account) {
+            if (isset($account->monthlyBillings) && is_iterable($account->monthlyBillings)) {
+                $billings = collect($account->monthlyBillings)->map(fn($b) => [
+                    'id' => $b->id,
+                    'month' => $b->month_name ?: ($b->due_date ? (is_object($b->due_date) ? $b->due_date->format('F Y') : (string)$b->due_date) : 'Month'),
+                    'due' => (float) ($b->amount_due ?? 0),
+                    'status' => (string) ($b->status ?? 'unpaid'),
+                ]);
+            } elseif (isset($account->monthly_schedule) && is_iterable($account->monthly_schedule)) {
+                $billings = collect($account->monthly_schedule)->map(fn($b) => [
+                    'id' => $b->id ?? $b->month,
+                    'month' => $b->month ?? 'Month',
+                    'due' => (float) ($b->fee ?? ($b->original ?? 0)),
+                    'status' => (string) ($b->status ?? 'unpaid'),
+                ]);
+            }
+        }
+        
         $familyStudents->push([
             'id' => $sId,
-            'student_id' => $st?->id ?: $sId,
+            'student_id' => $sId,
             'student_number' => $sNumber,
             'name' => $name,
             'grade' => $grade,
-            'school_year' => $st?->account?->school_year ?: '2026-2027',
-            'remaining_balance' => (float) ($st?->account?->remaining_balance ?? 0),
-            'billings' => $billings->map(fn($b) => [
-                'id' => $b->id,
-                'month' => $b->month_name ?: ($b->due_date ? $b->due_date->format('F Y') : 'Month'),
-                'due' => (float) $b->amount_due,
-                'status' => $b->status,
-            ])->values()->all(),
+            'school_year' => is_object($account) && isset($account->school_year) ? $account->school_year : '2026-2027',
+            'remaining_balance' => (float) ($account->remaining_balance ?? 0),
+            'billings' => $billings->values()->all(),
         ]);
     }
-    if ($familyStudents->isEmpty() && isset($family->students)) {
+
+    if ($familyStudents->isEmpty() && isset($family->students) && is_iterable($family->students)) {
         foreach ($family->students as $st) {
             $name = $st->full_name ?: 'Student';
-            $billings = $st->account?->monthlyBillings ?? collect();
-            $familyStudents->push([
-                'id' => $st->id,
-                'student_id' => $st->id,
-                'student_number' => $st->student_number,
-                'name' => $name,
-                'grade' => $st->grade_level,
-                'school_year' => $st->account?->school_year ?: '2026-2027',
-                'remaining_balance' => (float) ($st->account?->remaining_balance ?? 0),
-                'billings' => $billings->map(fn($b) => [
+            $billings = collect();
+            if ($st->account && $st->account->monthlyBillings) {
+                $billings = collect($st->account->monthlyBillings)->map(fn($b) => [
                     'id' => $b->id,
                     'month' => $b->month_name ?: ($b->due_date ? $b->due_date->format('F Y') : 'Month'),
                     'due' => (float) $b->amount_due,
-                    'status' => $b->status,
-                ])->values()->all(),
+                    'status' => (string) $b->status,
+                ]);
+            }
+            $familyStudents->push([
+                'id' => $st->id,
+                'student_id' => $st->id,
+                'student_number' => $st->student_number ?? (string)$st->id,
+                'name' => $name,
+                'grade' => $st->grade_level ?? 'Grade 1',
+                'school_year' => $st->account?->school_year ?: '2026-2027',
+                'remaining_balance' => (float) ($st->account?->remaining_balance ?? 0),
+                'billings' => $billings->values()->all(),
             ]);
         }
     }

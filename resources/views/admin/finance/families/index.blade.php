@@ -21,7 +21,7 @@
                         Monitor consolidated family ledgers, student fee allocations, official statements of account, and payment records.
                     </p>
                 </div>
-                <div class="flex items-center gap-2.5 shrink-0">
+                <div class="flex items-center gap-2.5 shrink-0 flex-wrap">
                     <a href="{{ route('admin.finance.onsite.create') }}" class="inline-flex items-center gap-2 rounded-xl bg-white text-emerald-950 px-4 py-2.5 text-xs font-black shadow-sm hover:bg-emerald-50 transition">
                         <i data-lucide="plus-circle" class="w-4 h-4 text-emerald-700"></i>
                         <span>Record Onsite Payment</span>
