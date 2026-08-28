@@ -260,8 +260,12 @@ class FinanceController extends Controller
                     'review_reason' => null,
                 ]);
 
+                $familyName = is_object($transaction->family ?? null)
+                    ? ($transaction->family->name ?? ($transaction->family->family_name ?? 'Family account'))
+                    : (is_array($transaction->family ?? null) ? ($transaction->family['name'] ?? ($transaction->family['family_name'] ?? 'Family account')) : 'Family account');
+
                 return redirect()->route('admin.finance.verification.index')
-                    ->with('success', 'DEMO Payment approved and allocated oldest-first for '.$transaction->family->name.'.');
+                    ->with('success', 'DEMO Payment approved and allocated oldest-first for '.$familyName.'.');
             }
 
             $transaction = $this->allocation->post($receipt->user, [
