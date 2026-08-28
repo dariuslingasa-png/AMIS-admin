@@ -72,14 +72,30 @@
         }
     }
     $firstStudent = $familyStudents->first();
+
+    // Extract child surnames for Family Name banner
+    $childSurnames = collect();
+    foreach ($familyStudents as $st) {
+        $parts = explode(' ', trim($st['name'] ?? ''));
+        if (count($parts) > 1) {
+            $childSurnames->push(trim(strtoupper(end($parts))));
+        }
+    }
+    $uniqueSurnames = $childSurnames->filter()->unique()->values();
+    if ($uniqueSurnames->isNotEmpty()) {
+        $familyDisplayName = $uniqueSurnames->join(' / ') . ' Family';
+    } else {
+        $cleanName = trim(preg_replace('/[0-9_.-]+/', ' ', $family->name ?: 'Family'));
+        $familyDisplayName = (mb_strlen($cleanName) > 2 ? strtoupper($cleanName) : strtoupper($family->name)) . ' Family';
+    }
 @endphp
 
 <x-admin-layout
-    title="Family SOA — {{ $family->name }}"
+    title="Family SOA — {{ $familyDisplayName }}"
     :breadcrumbs="[
         ['label' => 'Finance', 'href' => route('admin.finance.dashboard')],
         ['label' => 'Family Accounts', 'href' => route('admin.finance.families.index')],
-        ['label' => $family->name, 'href' => null],
+        ['label' => $familyDisplayName, 'href' => null],
     ]"
 >
     <div class="finance-page mx-auto max-w-[1440px] space-y-6" x-data="{
@@ -216,15 +232,15 @@
                         Back to Family Accounts
                     </a>
                     <div class="flex items-center gap-2.5 flex-wrap">
-                        <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-white">
-                            {{ $family->name }}
+                        <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-white uppercase">
+                            {{ $familyDisplayName }}
                         </h1>
                         @if ($family->is_demo ?? false)
                             <span class="inline-flex items-center rounded-full bg-amber-400/20 border border-amber-300/40 px-2.5 py-0.5 text-xs font-black uppercase tracking-wider text-amber-200">DEMO ACCOUNT</span>
                         @endif
                     </div>
-                    <p class="text-xs sm:text-sm text-emerald-100/90 mt-1 font-light">
-                        Official Statement of Account, Historical Payment Encoding &amp; Student Ledger Studio.
+                    <p class="text-xs sm:text-sm text-emerald-100/90 mt-1">
+                        Representative: <strong class="font-bold text-white">{{ $family->name }}</strong> &middot; <span class="text-emerald-200">{{ $family->email }}</span>
                     </p>
                 </div>
                 <div class="flex items-center gap-2.5 flex-wrap shrink-0">

@@ -103,7 +103,7 @@
                     <thead class="bg-slate-50 text-xs font-extrabold uppercase tracking-wider text-slate-700 border-b border-slate-200">
                         <tr>
                             <th class="px-5 py-4">Family ID</th>
-                            <th class="px-5 py-4">Family Representative</th>
+                            <th class="px-5 py-4">Family Name / Representative</th>
                             <th class="px-5 py-4 text-center">Child / Children</th>
                             <th class="px-5 py-4">Account Status</th>
                             <th class="px-5 py-4 text-right">Consolidated Remaining</th>
@@ -123,7 +123,37 @@
                                 $openCount = $accounts->filter(fn($a) => (float)($a->remaining_balance ?? 0) > 0.01)->count();
                                 $totalRemaining = (float) $accounts->sum(fn($a) => (float)($a->remaining_balance ?? 0));
                                 $familyId = $family->id ?? ($family->user_id ?? 999001);
-                                $familyInitials = collect(explode(' ', $family->name))->filter()->map(fn($part) => mb_substr($part, 0, 1))->take(2)->join('');
+
+                                // Extract and build Family Surname(s)
+                                $childSurnames = collect();
+                                foreach ($applicants as $app) {
+                                    if (!empty($app->last_name)) {
+                                        $childSurnames->push(trim(strtoupper($app->last_name)));
+                                    } elseif (!empty($app->full_name)) {
+                                        $parts = explode(' ', trim($app->full_name));
+                                        $childSurnames->push(trim(strtoupper(end($parts))));
+                                    }
+                                }
+                                if ($childSurnames->isEmpty()) {
+                                    foreach ($directStudents as $st) {
+                                        if (!empty($st->last_name)) {
+                                            $childSurnames->push(trim(strtoupper($st->last_name)));
+                                        } elseif (!empty($st->full_name)) {
+                                            $parts = explode(' ', trim($st->full_name));
+                                            $childSurnames->push(trim(strtoupper(end($parts))));
+                                        }
+                                    }
+                                }
+                                $uniqueSurnames = $childSurnames->filter()->unique()->values();
+                                if ($uniqueSurnames->isNotEmpty()) {
+                                    $familyDisplayName = $uniqueSurnames->join(' / ') . ' Family';
+                                    $avatarInitials = mb_substr($uniqueSurnames->first(), 0, 2);
+                                } else {
+                                    $cleanName = trim(preg_replace('/[0-9_.-]+/', ' ', $family->name ?: 'Family'));
+                                    $familyDisplayName = (mb_strlen($cleanName) > 2 ? strtoupper($cleanName) : strtoupper($family->name)) . ' Family';
+                                    $avatarInitials = mb_substr(preg_replace('/[^A-Za-z]/', '', $family->name) ?: 'FA', 0, 2);
+                                }
+
                                 $totalChildrenCount = $applicants->isNotEmpty() ? $applicants->count() : $directStudents->count();
                                 if ($totalChildrenCount === 0 && isset($family->children_count)) {
                                     $totalChildrenCount = (int) $family->children_count;
@@ -138,16 +168,16 @@
                                     </span>
                                 </td>
 
-                                <!-- 2. Family Representative -->
+                                <!-- 2. Family Name & Representative -->
                                 <td class="px-5 py-4">
                                     <div class="flex items-center gap-3">
                                         <div class="h-10 w-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-200/80 font-black text-xs shrink-0 shadow-2xs">
-                                            {{ $familyInitials ?: 'FA' }}
+                                            {{ strtoupper($avatarInitials ?: 'FA') }}
                                         </div>
                                         <div class="min-w-0">
                                             <div class="flex items-center gap-2">
-                                                <a href="{{ route('admin.finance.families.show', $familyId) }}" class="font-extrabold text-slate-900 uppercase tracking-tight group-hover:text-emerald-700 hover:underline transition">
-                                                    {{ $family->name }}
+                                                <a href="{{ route('admin.finance.families.show', $familyId) }}" class="font-black text-slate-900 uppercase tracking-tight group-hover:text-emerald-700 hover:underline transition text-sm">
+                                                    {{ $familyDisplayName }}
                                                 </a>
                                                 @if ($family->is_demo ?? false)
                                                     <span class="inline-flex items-center rounded-md bg-amber-100 border border-amber-200 px-1.5 py-0.5 text-[10px] font-black uppercase text-amber-800">
@@ -155,7 +185,11 @@
                                                     </span>
                                                 @endif
                                             </div>
-                                            <div class="text-xs text-slate-400 mt-0.5">{{ $family->email }}</div>
+                                            <div class="text-xs text-slate-400 mt-0.5 flex items-center gap-1.5 truncate">
+                                                <span class="font-bold text-slate-600 truncate max-w-[140px]">{{ $family->name }}</span>
+                                                <span>·</span>
+                                                <span class="text-slate-400 truncate">{{ $family->email }}</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </td>
