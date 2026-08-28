@@ -587,6 +587,14 @@
             box-sizing: border-box;
             transition: all 0.15s ease-in-out;
         }
+        .form-input[type="number"]::-webkit-outer-spin-button,
+        .form-input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none !important;
+            margin: 0 !important;
+        }
+        .form-input[type="number"] {
+            -moz-appearance: textfield !important;
+        }
         .form-input:focus {
             outline: none;
             border-color: #059669;
@@ -955,20 +963,27 @@
                     </thead>
                     <tbody>
                         @php
+                            $hasEnrollmentPaid = (float) ($soaData['enrollment_paid'] ?? 0) > 0.01;
                             $runningBalance = (float) $soaData['final_fees'];
-                            $runningBalance -= (float) $soaData['enrollment_paid'];
+                            if ($hasEnrollmentPaid) {
+                                $runningBalance -= (float) $soaData['enrollment_paid'];
+                            }
                         @endphp
                         <tr class="clickable-row" @click="openFeeModal()" title="Click to edit Enrollment Downpayment">
                             <td>Paid Enrollment Fee</td>
                             <td></td>
                             <td class="cell-right"></td>
-                            <td class="cell-center">{{ $soaData['enrollment_date'] }}</td>
-                            <td class="cell-right highlight-yellow" title="Payment received and applied to this account">{{ number_format($soaData['enrollment_paid'], 2) }}</td>
-                            <td class="cell-center">{{ $soaData['enrollment_account'] }}</td>
+                            <td class="cell-center">{{ $hasEnrollmentPaid ? $soaData['enrollment_date'] : '-' }}</td>
+                            <td class="cell-right {{ $hasEnrollmentPaid ? 'highlight-yellow' : '' }}">{{ $hasEnrollmentPaid ? number_format($soaData['enrollment_paid'], 2) : '0.00' }}</td>
+                            <td class="cell-center">{{ $hasEnrollmentPaid ? $soaData['enrollment_account'] : '-' }}</td>
                             <td class="cell-right">{{ number_format($runningBalance, 2) }}</td>
                         </tr>
                         @php
                             $runningBalance += (float) $soaData['books_fee'];
+                            $hasBooksPaid = (float) ($soaData['books_paid'] ?? 0) > 0.01;
+                            if ($hasBooksPaid) {
+                                $runningBalance -= (float) $soaData['books_paid'];
+                            }
                         @endphp
                         <tr class="clickable-row" @click="openFeeModal()" title="Click to edit Books & Programs">
                             <td>Books and programs</td>
@@ -977,18 +992,15 @@
                             <td class="cell-center"></td>
                             <td class="cell-right"></td>
                             <td class="cell-center"></td>
-                            <td class="cell-right">{{ number_format($runningBalance, 2) }}</td>
+                            <td class="cell-right">{{ number_format($runningBalance + ($hasBooksPaid ? (float) $soaData['books_paid'] : 0), 2) }}</td>
                         </tr>
-                        @php
-                            $runningBalance -= (float) $soaData['books_paid'];
-                        @endphp
                         <tr class="clickable-row" @click="openFeeModal()" title="Click to edit Paid Books">
                             <td>Paid Books</td>
                             <td></td>
                             <td class="cell-right"></td>
-                            <td class="cell-center">{{ $soaData['books_date'] ?: '-' }}</td>
-                            <td class="cell-right {{ (float) $soaData['books_paid'] > 0.01 ? 'highlight-yellow' : '' }}">{{ (float) $soaData['books_paid'] > 0.01 ? number_format($soaData['books_paid'], 2) : '-' }}</td>
-                            <td class="cell-center">{{ $soaData['books_account'] ?: '-' }}</td>
+                            <td class="cell-center">{{ $hasBooksPaid ? $soaData['books_date'] : '-' }}</td>
+                            <td class="cell-right {{ $hasBooksPaid ? 'highlight-yellow' : '' }}">{{ $hasBooksPaid ? number_format($soaData['books_paid'], 2) : '-' }}</td>
+                            <td class="cell-center">{{ $hasBooksPaid ? $soaData['books_account'] : '-' }}</td>
                             <td class="cell-right">{{ number_format($runningBalance, 2) }}</td>
                         </tr>
 
@@ -1262,7 +1274,7 @@
 
                 <div style="margin-bottom: 16px;">
                     <label class="form-label">Enrollment Downpayment Paid (₱)</label>
-                    <input type="number" step="0.01" name="enrollment_paid" x-model.number="feeData.enrollmentPaid" required class="form-input">
+                    <input type="number" step="0.01" name="enrollment_paid" x-model.number="feeData.enrollmentPaid" required class="form-input" placeholder="0.00">
                 </div>
 
                 {{-- LIVE RECALCULATION SUMMARY PREVIEW --}}

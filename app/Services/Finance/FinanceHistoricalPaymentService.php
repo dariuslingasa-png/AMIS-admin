@@ -421,7 +421,7 @@ class FinanceHistoricalPaymentService
         $misc = $fee ? (float) $fee->misc_fee : 1900.00;
         $books = $fee ? (float) $fee->books_fee : 5900.00;
         $gross = $tuition + $misc + $books;
-        $enrollmentPaid = 4000.00;
+        $enrollmentPaid = 0.00;
         $installmentMonths = 9;
         $remainingAfterEnrollment = max(0, $gross - $enrollmentPaid);
         $monthlyTuition = round($remainingAfterEnrollment / $installmentMonths, 2);
@@ -442,9 +442,9 @@ class FinanceHistoricalPaymentService
             'gross_total' => $gross,
             'enrollment_fee_paid' => $enrollmentPaid,
             'total_balance' => $gross,
-            'amount_paid' => $enrollmentPaid,
-            'remaining_balance' => $remainingAfterEnrollment,
-            'status' => $remainingAfterEnrollment > 0 ? 'partial' : 'fully_paid',
+            'amount_paid' => 0.00,
+            'remaining_balance' => $gross,
+            'status' => 'unpaid',
         ]);
 
         // Generate 9 monthly billing rows

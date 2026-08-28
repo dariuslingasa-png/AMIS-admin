@@ -1130,8 +1130,7 @@ class FinanceController extends Controller
             $totalFees = (float) ($account->gross_total ?? ($tuition + $misc + $booksFee));
             $discountPercent = (float) ($account->discount_percentage ?? 0);
             $discountAmount = (float) ($account->discount_amount ?? 0);
-            $finalFees = (float) ($account->total_balance ?? max(0, $totalFees - $discountAmount));
-            $enrollmentPaid = (float) ($account->enrollment_fee_paid ?? 4000.00);
+            $enrollmentPaid = (float) ($account->enrollment_fee_paid ?? 0.00);
 
             $monthlySchedule = $account->monthlyBillings
                 ->filter(fn ($b) => (int) $b->month_number > 0)
@@ -1326,37 +1325,27 @@ class FinanceController extends Controller
                 $discountAmount = round($tuition * ($discountPercent / 100), 2);
                 $finalFees = $totalFees - $discountAmount;
 
-                $enrollmentPaid = 4000.00;
+                $enrollmentPaid = 0.00;
                 $booksFee = 5900.00;
-                $booksPaid = 1000.00;
+                $booksPaid = 0.00;
 
-                $rawSchedule = $applicant->student->account->monthly_schedule ?? collect();
-                if ($rawSchedule->isEmpty() || $rawSchedule->sum('paid') < 0.01) {
-                    $allMonths = ['JULY 2026', 'AUGUST 2026', 'SEPTEMBER 2026', 'OCTOBER 2026', 'NOVEMBER 2026', 'DECEMBER 2026', 'JANUARY 2027', 'FEBRUARY 2027', 'MARCH 2027'];
-                    $remAlloc = 16000.00;
-                    $monthlySchedule = collect($allMonths)->map(function ($mName) use (&$remAlloc) {
-                        $fee = 4400.00;
-                        $paidNow = min($fee, $remAlloc);
-                        $remAlloc = max(0, $remAlloc - $paidNow);
+                $monthlyRate = round($finalFees / 9, 2);
+                $allMonths = ['JULY 2026', 'AUGUST 2026', 'SEPTEMBER 2026', 'OCTOBER 2026', 'NOVEMBER 2026', 'DECEMBER 2026', 'JANUARY 2027', 'FEBRUARY 2027', 'MARCH 2027'];
+                $monthlySchedule = collect($allMonths)->map(function ($mName) use ($monthlyRate) {
+                    return (object) [
+                        'id' => null,
+                        'month' => $mName,
+                        'fee' => $monthlyRate,
+                        'paid' => 0.00,
+                        'remaining' => $monthlyRate,
+                        'status' => 'unpaid',
+                        'payment_date' => null,
+                        'or_number' => null,
+                        'payment_id' => null,
+                    ];
+                });
 
-                        return (object) [
-                            'id' => null,
-                            'month' => $mName,
-                            'fee' => $fee,
-                            'paid' => $paidNow,
-                            'remaining' => max(0, $fee - $paidNow),
-                            'status' => $paidNow >= $fee ? 'paid' : ($paidNow > 0 ? 'partial' : 'unpaid'),
-                            'payment_date' => $paidNow > 0 ? '15-Aug-26' : null,
-                            'or_number' => $paidNow > 0 ? '10539' : null,
-                            'payment_id' => $paidNow > 0 ? 'ps_10539' : null,
-                        ];
-                    });
-                } else {
-                    $monthlySchedule = $rawSchedule;
-                }
-
-                $monthlyRate = 4400.00;
-                $remainingBalance = (float) $monthlySchedule->sum('remaining');
+                $remainingBalance = (float) ($finalFees + $booksFee);
 
                 $siblings = collect($foundFamily['children'])->map(function ($c) use ($foundChild) {
                     return [
