@@ -6,7 +6,7 @@
     <title>Official Statement of Account - {{ $soaData['student_name'] }} (SY {{ $soaData['school_year'] }})</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Amiri:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
         @page {
@@ -21,10 +21,10 @@
         html, body {
             margin: 0;
             padding: 0;
-            background: #f1f5f9;
+            background: #f8fafc;
         }
         body {
-            font-family: Arial, Helvetica, sans-serif;
+            font-family: 'Plus Jakarta Sans', Arial, Helvetica, sans-serif;
             color: #0f172a;
             font-size: 11px;
             line-height: 1.35;
@@ -41,57 +41,70 @@
             box-sizing: border-box;
         }
         .btn-print {
-            background: #0f172a;
+            background: #1e293b;
             color: #ffffff;
-            border: none;
-            padding: 8px 18px;
-            border-radius: 8px;
-            font-weight: bold;
+            border: 1px solid #334155;
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-weight: 700;
             font-size: 12px;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-            transition: background 0.15s;
+            gap: 7px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            transition: all 0.15s ease-in-out;
         }
         .btn-print:hover {
-            background: #334155;
+            background: #0f172a;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.12);
         }
         .btn-edit {
-            background: #4338ca;
+            background: #4f46e5;
             color: #ffffff;
-            border: none;
-            padding: 8px 18px;
-            border-radius: 8px;
-            font-weight: bold;
+            border: 1px solid #4338ca;
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-weight: 700;
             font-size: 12px;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-            transition: background 0.15s;
+            gap: 7px;
+            box-shadow: 0 1px 3px rgba(79, 70, 229, 0.25);
+            transition: all 0.15s ease-in-out;
         }
         .btn-edit:hover {
-            background: #3730a3;
+            background: #4338ca;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(79, 70, 229, 0.35);
         }
         .btn-back {
             color: #475569;
             text-decoration: none;
             font-size: 12px;
-            font-weight: 600;
-            padding: 6px 0;
+            font-weight: 700;
+            padding: 7px 12px;
+            border-radius: 8px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.15s;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
         }
         .btn-back:hover {
             color: #0f172a;
-            text-decoration: underline;
+            border-color: #cbd5e1;
+            background: #f8fafc;
         }
 
         /* WORKSPACE LAYOUT (SIDEBAR + SOA SHEET) */
         .soa-workspace {
             display: flex;
-            gap: 20px;
+            gap: 22px;
             justify-content: center;
             align-items: flex-start;
             max-width: 1240px;
@@ -112,21 +125,21 @@
         }
         .sidebar-card {
             background: #ffffff;
-            border: 1px solid #cbd5e1;
-            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
             padding: 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.03), 0 2px 4px -2px rgba(0,0,0,0.02);
         }
         .sidebar-header {
-            border-bottom: 1px solid #e2e8f0;
-            padding-bottom: 10px;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 12px;
             margin-bottom: 12px;
         }
         .sidebar-title {
-            font-size: 12.5px;
-            font-weight: 900;
+            font-size: 13px;
+            font-weight: 800;
             color: #0f172a;
-            margin: 0 0 4px;
+            margin: 0 0 5px;
             display: flex;
             align-items: center;
             gap: 6px;
@@ -135,7 +148,7 @@
             display: inline-block;
             font-size: 10px;
             font-weight: 800;
-            padding: 2px 8px;
+            padding: 3px 8px;
             border-radius: 9999px;
         }
         .badge-multi {
@@ -159,22 +172,22 @@
             text-decoration: none;
             padding: 10px 12px;
             border-radius: 10px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid #f1f5f9;
             background: #ffffff;
             transition: all 0.15s ease-in-out;
         }
         .sibling-card:hover {
-            border-color: #4338ca;
+            border-color: #cbd5e1;
             background: #f8fafc;
             transform: translateX(2px);
         }
         .sibling-card.active-student {
-            background: #ecfdf5;
-            border-color: #059669;
-            box-shadow: 0 0 0 1.5px #059669;
+            background: #f0fdf4;
+            border-color: #10b981;
+            box-shadow: 0 0 0 1.5px #10b981;
         }
         .sib-name {
-            font-weight: 900;
+            font-weight: 800;
             font-size: 11.5px;
             color: #0f172a;
             margin-bottom: 2px;
@@ -197,11 +210,11 @@
             color: #0f172a;
         }
         .sib-active-badge {
-            background: #065f46;
+            background: #059669;
             color: #ffffff;
             font-size: 8.5px;
             font-weight: 800;
-            padding: 1.5px 5px;
+            padding: 1.5px 6px;
             border-radius: 4px;
             text-transform: uppercase;
         }
@@ -225,7 +238,7 @@
             background: #ffffff;
             border: 1px solid #cbd5e1;
             padding: 16px 20px;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+            box-shadow: 0 4px 14px rgba(0,0,0,0.06);
             box-sizing: border-box;
             position: relative;
         }
@@ -272,7 +285,7 @@
         }
         .header-english {
             width: 42%;
-            font-size: 14.5px;
+            font-size: 14px;
             font-weight: 900;
             color: #0f172a;
             letter-spacing: 0.2px;
@@ -485,7 +498,7 @@
             transition: box-shadow 0.15s ease-in-out;
         }
         .clickable-table:hover {
-            box-shadow: 0 0 0 2px #4338ca;
+            box-shadow: 0 0 0 2px #4f46e5;
         }
 
         .th-center, .cell-center { text-align: center; }
@@ -531,12 +544,12 @@
             display: none !important;
         }
 
-        /* MODAL POPUPS */
+        /* MODERN POPUP MODAL STYLES */
         .modal-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(15, 23, 42, 0.75);
-            backdrop-filter: blur(2px);
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(4px);
             z-index: 9999;
             display: flex;
             align-items: center;
@@ -545,35 +558,118 @@
         }
         .modal-box {
             background: #ffffff;
-            border-radius: 16px;
+            border-radius: 20px;
             width: 100%;
-            max-width: 540px;
+            max-width: 520px;
             max-height: 90vh;
             overflow-y: auto;
-            padding: 24px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            padding: 24px 28px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05);
         }
         .form-label {
             display: block;
             font-size: 11px;
             font-weight: 800;
-            color: #334155;
-            margin-bottom: 4px;
+            color: #475569;
+            margin-bottom: 6px;
+            letter-spacing: 0.2px;
             text-transform: uppercase;
         }
         .form-input {
             width: 100%;
-            padding: 8px 12px;
-            border-radius: 8px;
-            border: 1px solid #cbd5e1;
-            font-size: 12px;
+            padding: 10px 14px;
+            border-radius: 12px;
+            border: 1.5px solid #e2e8f0;
+            font-size: 13px;
             font-weight: 600;
             color: #0f172a;
+            background: #ffffff;
             box-sizing: border-box;
+            transition: all 0.15s ease-in-out;
         }
         .form-input:focus {
-            outline: 2px solid #065f46;
-            border-color: #065f46;
+            outline: none;
+            border-color: #059669;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+        }
+
+        /* SEGMENTED BUTTON TOGGLES */
+        .segment-container {
+            display: flex;
+            background: #f1f5f9;
+            padding: 4px;
+            border-radius: 12px;
+            gap: 4px;
+        }
+        .segment-btn {
+            flex: 1;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 9px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s ease-in-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            color: #64748b;
+            background: transparent;
+        }
+        .segment-btn:hover {
+            color: #0f172a;
+        }
+        .segment-btn.active-paid {
+            background: #059669;
+            color: #ffffff;
+            box-shadow: 0 2px 4px rgba(5, 150, 105, 0.25);
+        }
+        .segment-btn.active-partial {
+            background: #d97706;
+            color: #ffffff;
+            box-shadow: 0 2px 4px rgba(217, 119, 6, 0.25);
+        }
+        .segment-btn.active-unpaid {
+            background: #e11d48;
+            color: #ffffff;
+            box-shadow: 0 2px 4px rgba(225, 29, 72, 0.25);
+        }
+
+        .btn-modal-cancel {
+            background: #f1f5f9;
+            color: #475569;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 12.5px;
+            cursor: pointer;
+            transition: all 0.15s ease-in-out;
+        }
+        .btn-modal-cancel:hover {
+            background: #e2e8f0;
+            color: #0f172a;
+        }
+        .btn-modal-submit {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            color: #ffffff;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 12.5px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 6px -1px rgba(5, 150, 105, 0.3), 0 2px 4px -2px rgba(5, 150, 105, 0.2);
+            transition: all 0.15s ease-in-out;
+        }
+        .btn-modal-submit:hover {
+            background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 12px -2px rgba(5, 150, 105, 0.35);
         }
 
         @media print {
@@ -619,23 +715,25 @@
     {{-- TOP ACTION BAR --}}
     <div class="no-print-bar">
         <a href="{{ isset($soaData['family_id']) ? route('admin.finance.families.show', $soaData['family_id']) : 'javascript:history.back()' }}" class="btn-back">
-            ← Back to Family Account
+            <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+            Back to Family Account
         </a>
-        <div style="display: flex; gap: 8px; align-items: center;">
+        <div style="display: flex; gap: 10px; align-items: center;">
             <button type="button" @click="openFeeModal()" class="btn-edit" title="Edit assessment and fees">
                 <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                ✏️ Edit Fees &amp; Discounts
+                Edit Fees &amp; Discounts
             </button>
             <button type="button" onclick="window.print()" class="btn-print">
                 <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-                Print / Save to PDF
+                Print / Save PDF
             </button>
         </div>
     </div>
 
     @if (session('success'))
-        <div style="width: 100%; max-width: 1240px; margin: 10px auto 0; padding: 10px 16px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; color: #065f46; font-weight: bold; font-size: 12px; box-sizing: border-box;">
-            ✓ {{ session('success') }}
+        <div style="width: 100%; max-width: 1240px; margin: 12px auto 0; padding: 12px 18px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; color: #065f46; font-weight: 700; font-size: 12.5px; box-sizing: border-box; display: flex; align-items: center; gap: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+            <span style="background:#059669; color:#fff; width:18px; height:18px; border-radius:9999px; display:inline-flex; align-items:center; justify-content:center; font-size:10px;">✓</span>
+            {{ session('success') }}
         </div>
     @endif
 
@@ -653,8 +751,8 @@
                     <div>
                         @if(($soaData['siblings_count'] ?? 1) > 1)
                             <span class="badge-count badge-multi">{{ $soaData['siblings_count'] }} Linked Children</span>
-                            <span style="font-size: 10px; color: #059669; font-weight: bold; margin-left: 4px;">
-                                ({{ $soaData['discount_privilege'] }} Sibling Discount)
+                            <span style="font-size: 10px; color: #059669; font-weight: 700; margin-left: 4px;">
+                                ({{ $soaData['discount_privilege'] }} Sibling Disc.)
                             </span>
                         @else
                             <span class="badge-count badge-solo">Solo Student (1 Child)</span>
@@ -663,7 +761,7 @@
                 </div>
 
                 @if(($soaData['siblings_count'] ?? 1) > 1)
-                    <div style="font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 6px;">
+                    <div style="font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.3px;">
                         Switch Student SOA:
                     </div>
                     <div class="sibling-list">
@@ -685,16 +783,16 @@
                         @endforeach
                     </div>
                 @else
-                    <div style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 10px; text-align: center; color: #64748b; font-size: 11px;">
-                        <div style="font-size: 18px; margin-bottom: 2px;">👤</div>
-                        <strong>Solo Student in Family</strong>
+                    <div style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 10px; padding: 12px; text-align: center; color: #64748b; font-size: 11px;">
+                        <div style="font-size: 20px; margin-bottom: 2px;">👤</div>
+                        <strong style="color:#334155;">Solo Student in Family</strong>
                         <p style="margin: 4px 0 0; font-size: 10px; color: #94a3b8;">Standard tuition assessment applies (No sibling discount).</p>
                     </div>
                 @endif
 
                 @if(isset($soaData['family_id']))
-                    <div style="margin-top: 14px; border-top: 1px solid #e2e8f0; padding-top: 10px;">
-                        <a href="{{ route('admin.finance.families.show', $soaData['family_id']) }}" style="display: flex; align-items: center; justify-content: center; gap: 5px; background: #f1f5f9; color: #334155; text-decoration: none; padding: 7px 12px; border-radius: 8px; font-weight: bold; font-size: 11px; transition: background 0.15s;">
+                    <div style="margin-top: 14px; border-top: 1px solid #f1f5f9; padding-top: 12px;">
+                        <a href="{{ route('admin.finance.families.show', $soaData['family_id']) }}" style="display: flex; align-items: center; justify-content: center; gap: 6px; background: #f8fafc; color: #334155; text-decoration: none; padding: 9px 12px; border-radius: 10px; font-weight: 700; font-size: 11.5px; border: 1px solid #e2e8f0; transition: all 0.15s;">
                             <span>📊</span> Full Family Financial Ledger
                         </a>
                     </div>
@@ -1056,44 +1154,44 @@
     {{-- MODAL 1: EDIT SPECIFIC MONTH PAYMENT RECORD --}}
     <div x-show="showMonthModal" x-cloak class="modal-overlay" @click.self="showMonthModal = false">
         <div class="modal-box">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #f1f5f9; padding-bottom: 14px; margin-bottom: 18px;">
                 <div>
-                    <span style="display: inline-block; background: #ecfdf5; color: #065f46; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px; text-transform: uppercase; margin-bottom: 3px;">Monthly Installment Editor</span>
-                    <h3 style="margin: 0; font-size: 16px; font-weight: 900; color: #0f172a;" x-text="activeMonth.month + ' Billing Record'"></h3>
-                    <p style="margin: 2px 0 0; font-size: 11px; color: #64748b;">{{ $soaData['student_name'] }} ({{ $soaData['grade_level'] }})</p>
+                    <span style="display: inline-block; background: #ecfdf5; color: #059669; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 6px; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.3px;">Monthly Installment Editor</span>
+                    <h3 style="margin: 0; font-size: 17px; font-weight: 900; color: #0f172a;" x-text="activeMonth.month + ' Billing Record'"></h3>
+                    <p style="margin: 2px 0 0; font-size: 11.5px; color: #64748b;">{{ $soaData['student_name'] }} ({{ $soaData['grade_level'] }})</p>
                 </div>
-                <button type="button" @click="showMonthModal = false" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #64748b;">✕</button>
+                <button type="button" @click="showMonthModal = false" style="background: #f8fafc; border: 1px solid #e2e8f0; width: 32px; height: 32px; border-radius: 10px; font-size: 14px; cursor: pointer; color: #64748b; display: flex; align-items: center; justify-content: center; transition: all 0.15s;">✕</button>
             </div>
 
             <form action="{{ route('admin.finance.students.update-month-billing', ['studentIdentifier' => $soaData['student_number'] ?? $soaData['student_id']]) }}" method="POST">
                 @csrf
                 <input type="hidden" name="billing_month" :value="activeMonth.month">
 
-                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 14px; font-size: 12px;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                        <span style="color: #64748b;">Assessed Monthly Due:</span>
-                        <strong style="color: #0f172a;" x-text="'₱' + formatMoney(activeMonth.fee)"></strong>
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-bottom: 16px; font-size: 12.5px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: #64748b; font-weight: 600;">Assessed Monthly Due:</span>
+                        <strong style="color: #0f172a; font-size: 14px;" x-text="'₱' + formatMoney(activeMonth.fee)"></strong>
                     </div>
                 </div>
 
-                {{-- QUICK STATUS TOGGLE BUTTONS --}}
-                <div style="margin-bottom: 12px;">
+                {{-- MODERN SEGMENTED PAYMENT STATUS TOGGLES --}}
+                <div style="margin-bottom: 16px;">
                     <label class="form-label">Payment Status</label>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
-                        <button type="button" @click="setMonthStatus('paid')" :style="activeMonth.status === 'paid' ? 'background:#065f46; color:#ffffff;' : 'background:#f1f5f9; color:#334155;'" style="padding: 8px; border-radius: 8px; border: 1px solid #cbd5e1; font-weight: bold; font-size: 11px; cursor: pointer;">
-                            ✓ Paid Full (₱<span x-text="formatMoney(activeMonth.fee)"></span>)
+                    <div class="segment-container">
+                        <button type="button" @click="setMonthStatus('paid')" class="segment-btn" :class="activeMonth.status === 'paid' ? 'active-paid' : ''">
+                            <span>✓</span> Paid Full (₱<span x-text="formatMoney(activeMonth.fee)"></span>)
                         </button>
-                        <button type="button" @click="setMonthStatus('partial')" :style="activeMonth.status === 'partial' ? 'background:#d97706; color:#ffffff;' : 'background:#f1f5f9; color:#334155;'" style="padding: 8px; border-radius: 8px; border: 1px solid #cbd5e1; font-weight: bold; font-size: 11px; cursor: pointer;">
-                            Partial Amount
+                        <button type="button" @click="setMonthStatus('partial')" class="segment-btn" :class="activeMonth.status === 'partial' ? 'active-partial' : ''">
+                            <span>◐</span> Partial
                         </button>
-                        <button type="button" @click="setMonthStatus('unpaid')" :style="activeMonth.status === 'unpaid' ? 'background:#e11d48; color:#ffffff;' : 'background:#f1f5f9; color:#334155;'" style="padding: 8px; border-radius: 8px; border: 1px solid #cbd5e1; font-weight: bold; font-size: 11px; cursor: pointer;">
-                            Unpaid (₱0.00)
+                        <button type="button" @click="setMonthStatus('unpaid')" class="segment-btn" :class="activeMonth.status === 'unpaid' ? 'active-unpaid' : ''">
+                            <span>✕</span> Unpaid (₱0.00)
                         </button>
                     </div>
                     <input type="hidden" name="status" :value="activeMonth.status">
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
                     <div>
                         <label class="form-label">Amount Paid (₱)</label>
                         <input type="number" step="0.01" name="amount_paid" x-model.number="activeMonth.paid" required class="form-input">
@@ -1104,19 +1202,22 @@
                     </div>
                 </div>
 
-                <div style="margin-bottom: 12px;">
+                <div style="margin-bottom: 14px;">
                     <label class="form-label">Official Receipt / Account No.</label>
                     <input type="text" name="or_number" x-model="activeMonth.or_number" placeholder="e.g. 10539 or OR-2026-008" class="form-input">
                 </div>
 
-                <div style="margin-bottom: 16px;">
+                <div style="margin-bottom: 18px;">
                     <label class="form-label">Reason for Adjustment <span style="color: #e11d48;">*</span></label>
-                    <textarea name="reason" required rows="2" placeholder="e.g. Encoded historical official receipt / cleared payment per parent receipt." class="form-input" style="font-family: inherit; font-weight: normal;"></textarea>
+                    <textarea name="reason" required rows="2" placeholder="e.g. Encoded historical official receipt / cleared payment per parent receipt." class="form-input" style="font-family: inherit; font-weight: normal; resize: vertical;"></textarea>
                 </div>
 
-                <div style="display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid #e2e8f0; padding-top: 14px;">
-                    <button type="button" @click="showMonthModal = false" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px;">Cancel</button>
-                    <button type="submit" style="background: #065f46; color: #ffffff; border: none; padding: 8px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px;">Save Month Payment</button>
+                <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #f1f5f9; padding-top: 16px;">
+                    <button type="button" @click="showMonthModal = false" class="btn-modal-cancel">Cancel</button>
+                    <button type="submit" class="btn-modal-submit">
+                        <svg style="width:15px;height:15px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        Save Month Payment
+                    </button>
                 </div>
             </form>
         </div>
@@ -1125,19 +1226,19 @@
     {{-- MODAL 2: EDIT GENERAL FEES & DISCOUNTS --}}
     <div x-show="showFeeModal" x-cloak class="modal-overlay" @click.self="showFeeModal = false">
         <div class="modal-box">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #f1f5f9; padding-bottom: 14px; margin-bottom: 18px;">
                 <div>
-                    <span style="display: inline-block; background: #e0e7ff; color: #3730a3; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px; text-transform: uppercase; margin-bottom: 3px;">Assessment &amp; Fee Studio</span>
-                    <h3 style="margin: 0; font-size: 16px; font-weight: 900; color: #0f172a;">Edit Statement Assessment</h3>
-                    <p style="margin: 2px 0 0; font-size: 11px; color: #64748b;">{{ $soaData['student_name'] }} ({{ $soaData['grade_level'] }})</p>
+                    <span style="display: inline-block; background: #e0e7ff; color: #4338ca; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 6px; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.3px;">Assessment &amp; Fee Studio</span>
+                    <h3 style="margin: 0; font-size: 17px; font-weight: 900; color: #0f172a;">Edit Statement Assessment</h3>
+                    <p style="margin: 2px 0 0; font-size: 11.5px; color: #64748b;">{{ $soaData['student_name'] }} ({{ $soaData['grade_level'] }})</p>
                 </div>
-                <button type="button" @click="showFeeModal = false" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #64748b;">✕</button>
+                <button type="button" @click="showFeeModal = false" style="background: #f8fafc; border: 1px solid #e2e8f0; width: 32px; height: 32px; border-radius: 10px; font-size: 14px; cursor: pointer; color: #64748b; display: flex; align-items: center; justify-content: center; transition: all 0.15s;">✕</button>
             </div>
 
             <form action="{{ route('admin.finance.students.update-soa', ['studentIdentifier' => $soaData['student_number'] ?? $soaData['student_id']]) }}" method="POST">
                 @csrf
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
                     <div>
                         <label class="form-label">Tuition Fee (₱)</label>
                         <input type="number" step="0.01" name="tuition_fee" x-model.number="feeData.tuition" required class="form-input">
@@ -1148,7 +1249,7 @@
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
                     <div>
                         <label class="form-label">Books &amp; Programs Fee (₱)</label>
                         <input type="number" step="0.01" name="books_fee" x-model.number="feeData.books" required class="form-input">
@@ -1159,39 +1260,42 @@
                     </div>
                 </div>
 
-                <div style="margin-bottom: 14px;">
+                <div style="margin-bottom: 16px;">
                     <label class="form-label">Enrollment Downpayment Paid (₱)</label>
                     <input type="number" step="0.01" name="enrollment_paid" x-model.number="feeData.enrollmentPaid" required class="form-input">
                 </div>
 
                 {{-- LIVE RECALCULATION SUMMARY PREVIEW --}}
-                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 14px; font-size: 11.5px;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-bottom: 16px; font-size: 12px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
                         <span style="color: #64748b;">Total Fees:</span>
                         <strong style="color: #0f172a;" x-text="'₱' + formatMoney(calcTotalFees)"></strong>
                     </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
                         <span style="color: #64748b;">Sibling Discount (<span x-text="feeData.discountPercent + '%'"></span>):</span>
                         <strong style="color: #e11d48;" x-text="'- ₱' + formatMoney(calcDiscountAmount)"></strong>
                     </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
                         <span style="color: #64748b;">Final Assessed Balance:</span>
-                        <strong style="color: #0f172a;" x-text="'₱' + formatMoney(calcFinalFees)"></strong>
+                        <strong style="color: #0f172a; font-size: 13px;" x-text="'₱' + formatMoney(calcFinalFees)"></strong>
                     </div>
-                    <div style="display: flex; justify-content: space-between; border-top: 1px dashed #cbd5e1; padding-top: 4px; margin-top: 4px;">
-                        <span style="color: #065f46; font-weight: bold;">Monthly Rate (9 mos):</span>
-                        <strong style="color: #065f46;" x-text="'₱' + formatMoney(calcMonthlyRate)"></strong>
+                    <div style="display: flex; justify-content: space-between; border-top: 1px dashed #cbd5e1; padding-top: 6px; margin-top: 6px;">
+                        <span style="color: #059669; font-weight: 700;">Monthly Rate (9 mos):</span>
+                        <strong style="color: #059669; font-size: 13px;" x-text="'₱' + formatMoney(calcMonthlyRate)"></strong>
                     </div>
                 </div>
 
-                <div style="margin-bottom: 16px;">
+                <div style="margin-bottom: 18px;">
                     <label class="form-label">Reason for Adjustment <span style="color: #e11d48;">*</span></label>
-                    <textarea name="reason" required rows="2" placeholder="e.g. Sibling discount correction / adjusted tuition schedule per approved concession." class="form-input" style="font-family: inherit; font-weight: normal;"></textarea>
+                    <textarea name="reason" required rows="2" placeholder="e.g. Sibling discount correction / adjusted tuition schedule per approved concession." class="form-input" style="font-family: inherit; font-weight: normal; resize: vertical;"></textarea>
                 </div>
 
-                <div style="display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid #e2e8f0; padding-top: 14px;">
-                    <button type="button" @click="showFeeModal = false" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px;">Cancel</button>
-                    <button type="submit" style="background: #065f46; color: #ffffff; border: none; padding: 8px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px;">Save &amp; Recalculate SOA</button>
+                <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #f1f5f9; padding-top: 16px;">
+                    <button type="button" @click="showFeeModal = false" class="btn-modal-cancel">Cancel</button>
+                    <button type="submit" class="btn-modal-submit">
+                        <svg style="width:15px;height:15px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        Save &amp; Recalculate SOA
+                    </button>
                 </div>
             </form>
         </div>
