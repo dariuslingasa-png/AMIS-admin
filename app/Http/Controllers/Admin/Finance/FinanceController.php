@@ -743,8 +743,20 @@ class FinanceController extends Controller
         $this->authorizeFinance($request);
 
         $term = $request->string('q')->trim()->value();
+        $tab = $request->string('tab', 'official')->trim()->lower()->value();
+        if (! in_array($tab, ['official', 'demo'], true)) {
+            $tab = 'official';
+        }
 
-        if ($this->demoData->isEnabled() && ! $request->boolean('official_only') && (empty($term) || $this->demoData->searchFamilies($term)->isNotEmpty())) {
+        $demoCount = $this->demoData->isEnabled() ? $this->demoData->getDemoFamiliesList()->count() : 0;
+        $officialCount = User::query()
+            ->where(function ($q) {
+                $q->whereHas('enrollmentApplicants')
+                  ->orWhereHas('students');
+            })
+            ->count();
+
+        if ($tab === 'demo' && $this->demoData->isEnabled()) {
             $demoFamilies = filled($term)
                 ? $this->demoData->searchFamilies($term)
                 : $this->demoData->getDemoFamiliesList();
@@ -759,7 +771,12 @@ class FinanceController extends Controller
                 ['path' => $request->url(), 'query' => $request->query()]
             );
 
-            return view('admin.finance.families.index', ['families' => $paginated]);
+            return view('admin.finance.families.index', [
+                'families' => $paginated,
+                'activeTab' => 'demo',
+                'demoCount' => $demoCount,
+                'officialCount' => $officialCount,
+            ]);
         }
 
         $families = User::query()
@@ -793,7 +810,12 @@ class FinanceController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        return view('admin.finance.families.index', compact('families'));
+        return view('admin.finance.families.index', [
+            'families' => $families,
+            'activeTab' => 'official',
+            'demoCount' => $demoCount,
+            'officialCount' => $officialCount,
+        ]);
     }
 
     public function familiesShow(Request $request, string $familyId)
