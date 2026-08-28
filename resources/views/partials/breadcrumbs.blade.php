@@ -18,7 +18,7 @@
 
 <nav class="admin-breadcrumbs mb-4" aria-label="Breadcrumb">
     <div class="admin-breadcrumb-item">
-        <a href="{{ route(Auth::user()->adminHomeRouteName()) }}" class="admin-breadcrumb-link inline-flex items-center gap-2" title="Home">
+        <a href="{{ route(Auth::user()?->adminHomeRouteName() ?? 'admin.finance.dashboard') }}" class="admin-breadcrumb-link inline-flex items-center gap-2" title="Home">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                 <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
                 <polyline points="9 22 9 12 15 12 15 22"/>
