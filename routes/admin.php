@@ -334,6 +334,7 @@ Route::name('admin.')->group(function () {
         Route::patch('/administration/users/{user}/status', [AdministrationController::class, 'usersStatus'])->name('administration.users.status');
         Route::get('/administration/users/{user}/security', [AdministrationController::class, 'usersSecurity'])->name('administration.users.security');
         Route::patch('/administration/users/{user}/security', [AdministrationController::class, 'usersSecurityUpdate'])->name('administration.users.security.update');
+        Route::delete('/administration/users/{user}', [AdministrationController::class, 'usersDestroy'])->name('administration.users.destroy');
 
         Route::get('/website/announcements', [AdminAnnouncementController::class, 'index'])->name('website.announcements.index');
         Route::get('/website/announcements/create', [AdminAnnouncementController::class, 'create'])->name('website.announcements.create');

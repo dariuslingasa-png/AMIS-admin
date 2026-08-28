@@ -183,7 +183,7 @@
                                                 @method('PATCH')
                                                 @if ($user->account_status !== 'disabled')
                                                     <input type="hidden" name="account_status" value="disabled">
-                                                    <button type="submit" class="inline-flex h-8 items-center justify-center rounded-lg bg-rose-50 px-3 text-xs font-black uppercase tracking-wider text-rose-700 hover:bg-rose-100 transition cursor-pointer" onclick="return confirm('Suspend administrative access for {{ addslashes($user->name) }}?')">
+                                                    <button type="submit" class="inline-flex h-8 items-center justify-center rounded-lg bg-rose-50 px-3 text-xs font-black uppercase tracking-wider text-rose-700 hover:bg-rose-100 transition cursor-pointer" onclick="return confirm('Suspend administrative access for {{ addslashes($user->name ?: $user->email) }}?')">
                                                         Suspend
                                                     </button>
                                                 @else
@@ -192,6 +192,14 @@
                                                         Activate
                                                     </button>
                                                 @endif
+                                            </form>
+
+                                            <form method="POST" action="{{ route('admin.administration.users.destroy', $user) }}" class="inline-block" onsubmit="return confirm('Are you sure you want to permanently delete the administrative user {{ addslashes($user->name ?: $user->email) }}? This action cannot be undone.');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="inline-flex h-8 items-center justify-center gap-1 rounded-lg bg-rose-600 px-3 text-xs font-black uppercase tracking-wider text-white hover:bg-rose-700 transition cursor-pointer shadow-sm">
+                                                    Delete
+                                                </button>
                                             </form>
                                         @endif
                                     </div>

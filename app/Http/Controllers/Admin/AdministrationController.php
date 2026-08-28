@@ -196,4 +196,38 @@ class AdministrationController extends Controller
 
         return back()->with('success', "Password credential for {$user->name} has been updated.");
     }
+
+    public function usersDestroy(Request $request, User $user)
+    {
+        $this->ensureSuperOrAdmin();
+
+        // Prevent deleting self
+        if ($user->id === auth()->id()) {
+            return back()->withErrors(['error' => 'You cannot delete your own account.']);
+        }
+
+        // Hierarchy check: Non-super_admin cannot delete equal or higher ranking user
+        $currentUserMaxHierarchy = auth()->user()->roles()->max('hierarchy_level') ?: 80;
+        $targetUserMaxHierarchy = $user->roles()->max('hierarchy_level') ?: 10;
+
+        if ($targetUserMaxHierarchy >= $currentUserMaxHierarchy && ! auth()->user()->hasRole('super_admin')) {
+            return back()->withErrors(['error' => 'Permission denied. You cannot delete an administrator with equal or higher role ranking.']);
+        }
+
+        $userName = $user->name ?: $user->email;
+        $userEmail = $user->email;
+
+        DB::transaction(function () use ($user) {
+            // Detach roles
+            $user->roles()->detach();
+            // Delete active sessions
+            DB::table('sessions')->where('user_id', $user->id)->delete();
+            // Delete the user record
+            $user->delete();
+        });
+
+        AdminAuditLog::record('administration_user_deleted', true, "Permanently deleted administrative account: {$userEmail} ({$userName})");
+
+        return redirect()->route('admin.administration.users.index')->with('success', "User {$userName} has been successfully deleted.");
+    }
 }
