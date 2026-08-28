@@ -102,26 +102,43 @@
                 <table class="w-full border-collapse text-left text-sm text-slate-500">
                     <thead class="bg-slate-50 text-xs font-extrabold uppercase tracking-wider text-slate-700 border-b border-slate-200">
                         <tr>
-                            <th class="px-6 py-4">Family Representative</th>
-                            <th class="px-6 py-4">Linked Students</th>
-                            <th class="px-6 py-4">Account Status</th>
-                            <th class="px-6 py-4 text-right">Consolidated Remaining</th>
-                            <th class="px-6 py-4 text-center">Actions</th>
+                            <th class="px-5 py-4">Family ID</th>
+                            <th class="px-5 py-4">Family Representative</th>
+                            <th class="px-5 py-4 text-center">Child / Children</th>
+                            <th class="px-5 py-4">Account Status</th>
+                            <th class="px-5 py-4 text-right">Consolidated Remaining</th>
+                            <th class="px-5 py-4 text-center">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
                         @forelse($families as $family)
                             @php
                                 $applicants = is_iterable($family->enrollmentApplicants ?? null) ? collect($family->enrollmentApplicants) : collect();
+                                $directStudents = is_iterable($family->students ?? null) ? collect($family->students) : collect();
                                 $accounts = $applicants->map(fn($applicant) => is_object($applicant) ? ($applicant->student?->account ?? ($applicant->account ?? null)) : null)->filter();
+                                if ($accounts->isEmpty() && $directStudents->isNotEmpty()) {
+                                    $accounts = $directStudents->map(fn($st) => $st->account)->filter();
+                                }
                                 $openCount = $accounts->filter(fn($a) => (float)($a->remaining_balance ?? 0) > 0.01)->count();
                                 $totalRemaining = (float) $accounts->sum(fn($a) => (float)($a->remaining_balance ?? 0));
                                 $familyId = $family->id ?? ($family->user_id ?? 999001);
                                 $familyInitials = collect(explode(' ', $family->name))->filter()->map(fn($part) => mb_substr($part, 0, 1))->take(2)->join('');
+                                $totalChildrenCount = $applicants->isNotEmpty() ? $applicants->count() : $directStudents->count();
+                                if ($totalChildrenCount === 0 && isset($family->children_count)) {
+                                    $totalChildrenCount = (int) $family->children_count;
+                                }
+                                $totalChildrenCount = max(1, $totalChildrenCount);
                             @endphp
                             <tr class="hover:bg-slate-50/60 transition group">
-                                <!-- 1. Family Representative -->
-                                <td class="px-6 py-4">
+                                <!-- 1. Family ID -->
+                                <td class="px-5 py-4 whitespace-nowrap">
+                                    <span class="inline-flex items-center gap-1 font-mono text-xs font-black text-slate-700 bg-slate-100 border border-slate-200/80 px-2.5 py-1 rounded-lg">
+                                        #{{ $familyId }}
+                                    </span>
+                                </td>
+
+                                <!-- 2. Family Representative -->
+                                <td class="px-5 py-4">
                                     <div class="flex items-center gap-3">
                                         <div class="h-10 w-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-200/80 font-black text-xs shrink-0 shadow-2xs">
                                             {{ $familyInitials ?: 'FA' }}
@@ -142,52 +159,16 @@
                                     </div>
                                 </td>
 
-                                <!-- 2. Linked Students -->
-                                <td class="px-6 py-4">
-                                    <div class="space-y-1.5">
-                                        @php
-                                            $allChildren = collect();
-                                            foreach ($applicants as $app) {
-                                                $st = is_object($app) ? ($app->student ?? null) : null;
-                                                $allChildren->push([
-                                                    'name' => is_object($app) && isset($app->full_name) ? $app->full_name : (is_object($app) && isset($app->first_name) ? trim("{$app->first_name} {$app->last_name}") : 'Student'),
-                                                    'grade' => $app->grade_level ?? ($st?->grade_level ?? ''),
-                                                    'id' => $app->amis_student_id ?? ($st?->student_number ?? ''),
-                                                    'balance' => (float) ($st?->account?->remaining_balance ?? 0),
-                                                ]);
-                                            }
-                                            if ($allChildren->isEmpty() && isset($family->students)) {
-                                                foreach ($family->students as $st) {
-                                                    $allChildren->push([
-                                                        'name' => $st->full_name ?: 'Student',
-                                                        'grade' => $st->grade_level ?? '',
-                                                        'id' => $st->student_number ?? '',
-                                                        'balance' => (float) ($st->account?->remaining_balance ?? 0),
-                                                    ]);
-                                                }
-                                            }
-                                        @endphp
-                                        @forelse($allChildren as $child)
-                                            <div class="flex items-center gap-2 text-xs">
-                                                <i data-lucide="circle-user" class="h-3.5 w-3.5 text-emerald-500 shrink-0"></i>
-                                                <span class="font-bold text-slate-800 uppercase">{{ $child['name'] }}</span>
-                                                @if($child['grade'])
-                                                    <span class="text-slate-400 font-medium">({{ $child['grade'] }})</span>
-                                                @endif
-                                                @if($child['balance'] > 0.01)
-                                                    <span class="text-[11px] font-bold text-rose-700 ml-1">₱{{ number_format($child['balance'], 2) }}</span>
-                                                @else
-                                                    <span class="text-[11px] font-bold text-emerald-700 ml-1">Settled</span>
-                                                @endif
-                                            </div>
-                                        @empty
-                                            <span class="text-xs text-slate-400 italic">No linked students</span>
-                                        @endforelse
-                                    </div>
+                                <!-- 3. Child / Children (Total Count only) -->
+                                <td class="px-5 py-4 text-center whitespace-nowrap">
+                                    <span class="inline-flex items-center gap-1.5 rounded-xl bg-indigo-50 border border-indigo-200/80 px-3 py-1.5 text-xs font-bold text-indigo-900 shadow-2xs">
+                                        <i data-lucide="users" class="h-3.5 w-3.5 text-indigo-600"></i>
+                                        <span>{{ $totalChildrenCount }} {{ \Illuminate\Support\Str::plural('Child', $totalChildrenCount) }}</span>
+                                    </span>
                                 </td>
 
-                                <!-- 3. Account Status -->
-                                <td class="px-6 py-4">
+                                <!-- 4. Account Status -->
+                                <td class="px-5 py-4 whitespace-nowrap">
                                     @if($openCount > 0)
                                         <span class="inline-flex items-center gap-1.5 rounded-full bg-amber-50 border border-amber-200 px-2.5 py-1 text-xs font-bold text-amber-800">
                                             <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
@@ -201,16 +182,16 @@
                                     @endif
                                 </td>
 
-                                <!-- 4. Consolidated Remaining -->
-                                <td class="px-6 py-4 text-right">
+                                <!-- 5. Consolidated Remaining -->
+                                <td class="px-5 py-4 text-right whitespace-nowrap">
                                     <span class="text-base font-black tracking-tight {{ $totalRemaining > 0.01 ? 'text-slate-900' : 'text-emerald-700' }}">
                                         ₱{{ number_format($totalRemaining, 2) }}
                                     </span>
                                 </td>
 
-                                <!-- 5. Actions -->
-                                <td class="px-6 py-4 text-center">
-                                    <a href="{{ route('admin.finance.families.show', $familyId) }}" class="inline-flex items-center gap-1.5 rounded-xl bg-emerald-700 px-3.5 py-2 text-xs font-bold text-white shadow-xs hover:bg-emerald-800 transition">
+                                <!-- 6. Actions -->
+                                <td class="px-5 py-4 text-center whitespace-nowrap">
+                                    <a href="{{ route('admin.finance.families.show', $familyId) }}" class="inline-flex items-center gap-1.5 rounded-xl bg-emerald-700 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-emerald-800 transition">
                                         <i data-lucide="file-text" class="h-3.5 w-3.5"></i>
                                         <span>View SOA</span>
                                     </a>
