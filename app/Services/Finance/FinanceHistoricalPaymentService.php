@@ -356,9 +356,9 @@ class FinanceHistoricalPaymentService
                 ]);
             }
 
-            // Mark linked Student Account Payments as voided
+            // Mark linked Student Account Payments as reversed
             StudentAccountPayment::where('finance_transaction_id', $transaction->id)->update([
-                'status' => 'voided',
+                'status' => 'reversed',
                 'remarks' => DB::raw("CONCAT(COALESCE(remarks, ''), ' [VOIDED by {$actor->name}: {$reason}]')"),
             ]);
 
@@ -423,7 +423,8 @@ class FinanceHistoricalPaymentService
         $gross = $tuition + $misc + $books;
         $enrollmentPaid = 4000.00;
         $installmentMonths = 9;
-        $monthlyTuition = round(max(0, $gross - $enrollmentPaid) / $installmentMonths, 2);
+        $remainingAfterEnrollment = max(0, $gross - $enrollmentPaid);
+        $monthlyTuition = round($remainingAfterEnrollment / $installmentMonths, 2);
 
         $account = StudentAccount::create([
             'student_id' => $student->id,
@@ -441,9 +442,9 @@ class FinanceHistoricalPaymentService
             'gross_total' => $gross,
             'enrollment_fee_paid' => $enrollmentPaid,
             'total_balance' => $gross,
-            'amount_paid' => 0.00,
-            'remaining_balance' => $gross,
-            'status' => 'unpaid',
+            'amount_paid' => $enrollmentPaid,
+            'remaining_balance' => $remainingAfterEnrollment,
+            'status' => $remainingAfterEnrollment > 0 ? 'partial' : 'fully_paid',
         ]);
 
         // Generate 9 monthly billing rows
