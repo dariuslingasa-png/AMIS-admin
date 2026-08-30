@@ -1254,14 +1254,14 @@
                             $lastNameFontSize = '17px';
                             $lastNameStyle = 'white-space: nowrap;';
                         } elseif ($lastNameLen <= 21) {
-                            $lastNameFontSize = '12.5px';
+                            $lastNameFontSize = '14px';
                             $lastNameStyle = 'white-space: nowrap;';
                         } elseif ($lastNameLen <= 25) {
-                            $lastNameFontSize = '11px';
+                            $lastNameFontSize = '12.5px';
                             $lastNameStyle = 'white-space: nowrap;';
                         } else {
-                            $lastNameFontSize = '9.5px';
-                            $lastNameStyle = 'white-space: nowrap;';
+                            $lastNameFontSize = '13.5px';
+                            $lastNameStyle = 'white-space: normal; line-height: 1.05; word-break: normal; overflow-wrap: break-word; text-wrap: balance;';
                         }
                     @endphp
 

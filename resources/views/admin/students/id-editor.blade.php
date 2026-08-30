@@ -81,6 +81,7 @@
              firstNameFontSize: {{ number_format($student->id_first_name_font_size ?: $displayFirstNameFontSize, 1, '.', '') }},
              gradeFontSize: {{ number_format($student->id_grade_font_size ?: 25, 1, '.', '') }},
              idFontSize: {{ number_format($student->id_num_font_size ?: 10, 1, '.', '') }},
+             wrapLastName: {{ (strlen($lastName) > 20 || (str_contains($lastName, ' ') && strlen($lastName) > 15)) ? 'true' : 'false' }},
              saveFontSizes() { idEditorSaveFontSizes(this); }
          }"
     >
@@ -175,7 +176,16 @@
                             <div class="absolute text-white font-black tracking-wide text-center uppercase" style="left: 0; top: 325px; width: 340px; height: 15px; z-index: 20; line-height: 15px;" :style="{ fontSize: idFontSize + 'px' }">{{ $studentNumber }}</div>
 
                             <!-- Last Name -->
-                            <div class="absolute text-center font-black text-[#0f172a] uppercase tracking-tight flex flex-col justify-center items-center" style="left: 15px; top: 352px; width: 310px; height: 32px; z-index: 20; padding: 0 16px; {{ $lastNameStyle }} line-height: 1; letter-spacing: -0.5px;" :style="{ fontSize: lastNameFontSize + 'px' }">{{ $lastName }}</div>
+                            <div class="absolute text-center font-black text-[#0f172a] uppercase tracking-tight flex flex-col justify-center items-center"
+                                 style="left: 15px; top: 352px; width: 310px; height: 32px; z-index: 20; padding: 0 14px; letter-spacing: -0.5px;"
+                                 :style="{
+                                     fontSize: lastNameFontSize + 'px',
+                                     whiteSpace: wrapLastName ? 'normal' : 'nowrap',
+                                     lineHeight: wrapLastName ? '1.05' : '1',
+                                     wordBreak: wrapLastName ? 'normal' : 'keep-all',
+                                     overflowWrap: wrapLastName ? 'break-word' : 'normal',
+                                     textWrap: wrapLastName ? 'balance' : 'nowrap'
+                                 }">{{ $lastName }}</div>
 
                             <!-- First Name -->
                             <div class="absolute text-center font-bold text-[#334155] uppercase leading-none flex flex-col justify-center items-center" style="left: 15px; top: 386px; width: 310px; height: 22px; z-index: 20; padding: 0 16px; line-height: 1;" :style="{ fontSize: firstNameFontSize + 'px' }">{{ $displayFirstName }}</div>
@@ -287,45 +297,62 @@
                     </div>
 
                     <!-- Sliders Grid (Vertical Stack) -->
-                    <div class="flex flex-col gap-5 w-full">
-                        <!-- Last Name Slider (UNLOCKED) -->
-                        <div class="space-y-2">
-                            <div class="flex justify-between items-center text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                <span>Last Name</span>
-                                <span class="text-slate-900 dark:text-white font-black" x-text="lastNameFontSize + 'px'"></span>
+                    <div class="flex flex-col gap-4 w-full">
+                        <!-- Last Name Controls Card -->
+                        <div class="space-y-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800">
+                            <div class="space-y-2">
+                                <div class="flex justify-between items-center text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                    <span>Last Name Size</span>
+                                    <span class="text-slate-900 dark:text-white font-black" x-text="lastNameFontSize + 'px'"></span>
+                                </div>
+                                <input type="range" min="8" max="45" step="0.5" x-model="lastNameFontSize" 
+                                       class="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-600">
                             </div>
-                            <input type="range" min="10" max="45" step="0.5" x-model="lastNameFontSize" 
+
+                            <!-- Wrap Toggle -->
+                            <div class="flex items-center justify-between pt-2 border-t border-slate-200/60 dark:border-slate-700/60">
+                                <div class="flex flex-col">
+                                    <span class="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                                        <i data-lucide="wrap-text" class="w-3.5 h-3.5 text-emerald-600"></i>
+                                        <span>Wrap Last Name</span>
+                                    </span>
+                                    <span class="text-[10px] text-slate-400">Multi-line break for long names</span>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" x-model="wrapLastName" class="sr-only peer">
+                                    <div class="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-emerald-600"></div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- First Name Slider -->
+                        <div class="space-y-2 px-1">
+                            <div class="flex justify-between items-center text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                <span>First Name</span>
+                                <span class="text-slate-900 dark:text-white font-black" x-text="firstNameFontSize + 'px'"></span>
+                            </div>
+                            <input type="range" min="8" max="25" step="0.5" x-model="firstNameFontSize" 
                                    class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-600">
                         </div>
 
-                        <!-- First Name Slider (LOCKED) -->
-                        <div class="space-y-2 opacity-60">
-                            <div class="flex justify-between items-center text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                                <span>First Name 🔒</span>
-                                <span class="text-slate-400 dark:text-slate-500 font-bold" x-text="firstNameFontSize + 'px'"></span>
+                        <!-- Grade Level Slider -->
+                        <div class="space-y-2 px-1">
+                            <div class="flex justify-between items-center text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                <span>Grade Level</span>
+                                <span class="text-slate-900 dark:text-white font-black" x-text="gradeFontSize + 'px'"></span>
                             </div>
-                            <input type="range" min="8" max="25" step="0.5" x-model="firstNameFontSize" disabled
-                                   class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg appearance-none cursor-not-allowed">
+                            <input type="range" min="12" max="35" step="0.5" x-model="gradeFontSize" 
+                                   class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-600">
                         </div>
 
-                        <!-- Grade Level Slider (LOCKED) -->
-                        <div class="space-y-2 opacity-60">
-                            <div class="flex justify-between items-center text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                                <span>Grade Level 🔒</span>
-                                <span class="text-slate-400 dark:text-slate-500 font-bold" x-text="gradeFontSize + 'px'"></span>
+                        <!-- Student ID Slider -->
+                        <div class="space-y-2 px-1">
+                            <div class="flex justify-between items-center text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                <span>Student ID</span>
+                                <span class="text-slate-900 dark:text-white font-black" x-text="idFontSize + 'px'"></span>
                             </div>
-                            <input type="range" min="12" max="35" step="0.5" x-model="gradeFontSize" disabled
-                                   class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg appearance-none cursor-not-allowed">
-                        </div>
-
-                        <!-- Student ID Slider (LOCKED) -->
-                        <div class="space-y-2 opacity-60">
-                            <div class="flex justify-between items-center text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                                <span>Student ID 🔒</span>
-                                <span class="text-slate-400 dark:text-slate-500 font-bold" x-text="idFontSize + 'px'"></span>
-                            </div>
-                            <input type="range" min="8" max="18" step="0.5" x-model="idFontSize" disabled
-                                   class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg appearance-none cursor-not-allowed">
+                            <input type="range" min="8" max="18" step="0.5" x-model="idFontSize" 
+                                   class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-600">
                         </div>
                     </div>
 

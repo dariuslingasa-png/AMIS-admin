@@ -125,14 +125,14 @@ class StudentIdController extends Controller
             $lastNameFontSize = 17;
             $lastNameStyle = 'white-space: nowrap;';
         } elseif ($lastNameLen <= 21) {
-            $lastNameFontSize = 12.5;
+            $lastNameFontSize = 14;
             $lastNameStyle = 'white-space: nowrap;';
         } elseif ($lastNameLen <= 25) {
-            $lastNameFontSize = 11;
+            $lastNameFontSize = 12.5;
             $lastNameStyle = 'white-space: nowrap;';
         } else {
-            $lastNameFontSize = 9.5;
-            $lastNameStyle = 'white-space: nowrap;';
+            $lastNameFontSize = 13.5;
+            $lastNameStyle = 'white-space: normal; line-height: 1.05; word-break: normal; overflow-wrap: break-word; text-wrap: balance;';
         }
 
         $displayFirstName = trim(implode(' ', array_filter([$firstName, $middleInitial, $suffix])));

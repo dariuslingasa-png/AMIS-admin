@@ -582,11 +582,11 @@
                     } elseif ($lastNameLen <= 18) {
                         $lastNameFontSize = '17px';
                     } elseif ($lastNameLen <= 21) {
-                        $lastNameFontSize = '12.5px';
+                        $lastNameFontSize = '14px';
                     } elseif ($lastNameLen <= 25) {
-                        $lastNameFontSize = '11px';
+                        $lastNameFontSize = '12.5px';
                     } else {
-                        $lastNameFontSize = '9.5px';
+                        $lastNameFontSize = '13.5px';
                     }
                 }
 
@@ -636,7 +636,7 @@
 
                                         <!-- Last Name -->
                                         <div class="student-last-name">
-                                            <h3 style="font-size: {{ $lastNameFontSize }}; white-space: nowrap; margin: 0; line-height: 1; letter-spacing: -0.5px;">{{ $lastName }}</h3>
+                                            <h3 style="font-size: {{ $lastNameFontSize }}; {{ ($student->id_last_name_font_size || $lastNameLen > 22 || (str_contains($lastName, ' ') && $lastNameLen > 15)) ? 'white-space: normal; line-height: 1.05; word-break: normal; overflow-wrap: break-word; text-wrap: balance;' : 'white-space: nowrap; line-height: 1;' }} margin: 0; letter-spacing: -0.5px;">{{ $lastName }}</h3>
                                         </div>
 
                                         <!-- First Name -->
