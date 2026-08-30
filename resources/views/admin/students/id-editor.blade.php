@@ -100,11 +100,13 @@
             </div>
             
             <div class="flex items-center gap-2.5">
-                <a href="{{ route('admin.students.id-roster-print', $student->studentSection->section ?? -1) }}" target="_blank"
-                   class="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 dark:border-slate-850 bg-white dark:bg-slate-900 px-4 text-xs font-bold text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98] transition cursor-pointer">
-                    <i data-lucide="layers" class="w-4 h-4 text-slate-500"></i>
-                    <span>Section Print Sheet</span>
-                </a>
+                @if($student->studentSection?->section)
+                    <a href="{{ route('admin.students.id-roster-print', $student->studentSection->section) }}" target="_blank"
+                       class="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 dark:border-slate-850 bg-white dark:bg-slate-900 px-4 text-xs font-bold text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98] transition cursor-pointer">
+                        <i data-lucide="layers" class="w-4 h-4 text-slate-500"></i>
+                        <span>Section Print Sheet</span>
+                    </a>
+                @endif
             </div>
         </div>
 

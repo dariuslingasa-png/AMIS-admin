@@ -106,4 +106,14 @@ class SectionController extends Controller
 
         return view('admin.students.grade-id-print', compact('students', 'grade'));
     }
+
+    public function idRosterPrint(Request $request, Section $section)
+    {
+        $section->load([
+            'students.student.applicant',
+            'activeAdvisory.user',
+        ]);
+
+        return view('admin.students.section-id-roster-print', compact('section'));
+    }
 }

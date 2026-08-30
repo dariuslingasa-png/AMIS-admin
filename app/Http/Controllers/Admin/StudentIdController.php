@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\EnrollmentApplicant;
 use App\Models\Student;
 use App\Support\EnrollmentStorage;
 use Illuminate\Http\Request;
@@ -28,7 +29,7 @@ class StudentIdController extends Controller
         $displayGrade = $student->grade_level;
         if ($student->studentSection?->section) {
             $sec = $student->studentSection->section;
-            if (str_contains(strtolower($sec->learning_mode), 'online') || str_contains(strtolower($sec->learning_mode), 'odl')) {
+            if (str_contains(strtolower($sec->learning_mode ?? ''), 'online') || str_contains(strtolower($sec->learning_mode ?? ''), 'odl')) {
                 $displayGrade = $student->grade_level.' - '.($sec->official_name ?: $sec->name);
             }
         }
@@ -36,7 +37,8 @@ class StudentIdController extends Controller
         $studentNumber = $student->student_number;
         $hash = base64_encode((int) $studentNumber + 987654);
 
-        $photoUrl = $student->photo_2x2_url ? route('public.student.photo', ['hash' => $hash]) : ($applicant?->photo_2x2_url ? EnrollmentStorage::url($applicant->photo_2x2_url) : '');
+        $photoRaw = $student->photo_2x2_url ?: ($student->photo_url ?: ($applicant?->photo_2x2_url ?: ($applicant?->photo_url ?: null)));
+        $photoUrl = $photoRaw ? EnrollmentStorage::url($photoRaw) : '';
         $qrCodeUrl = 'https://quickchart.io/qr?text='.urlencode('https://amis.edu.ph/v/'.$hash).'&dark=000000&light=ffffff&margin=1&format=png&size=300';
 
         $emergencyName = $applicant?->emergency_name ?: 'Emergency Contact';
@@ -63,16 +65,20 @@ class StudentIdController extends Controller
                 return '';
             }
             try {
-                if (str_starts_with($url, 'http')) {
+                if (str_starts_with($url, 'http://') || str_starts_with($url, 'https://')) {
                     $arrContextOptions = [
                         'ssl' => [
                             'verify_peer' => false,
                             'verify_peer_name' => false,
                         ],
+                        'http' => [
+                            'timeout' => 3,
+                        ],
                     ];
-                    $data = file_get_contents($url, false, stream_context_create($arrContextOptions));
+                    $data = @file_get_contents($url, false, stream_context_create($arrContextOptions));
                 } else {
-                    $data = file_get_contents(public_path(ltrim($url, '/')));
+                    $localPath = public_path(ltrim($url, '/'));
+                    $data = file_exists($localPath) ? @file_get_contents($localPath) : null;
                 }
                 if ($data) {
                     $type = 'image/png';
@@ -89,7 +95,18 @@ class StudentIdController extends Controller
         };
 
         $qrCodeBase64 = $getInlineBase64($qrCodeUrl);
-        $photoBase64 = $photoUrl ? $getInlineBase64($photoUrl) : '';
+
+        $photoBase64 = '';
+        if ($photoRaw) {
+            $state = EnrollmentStorage::getFileState($photoRaw);
+            if ($state['exists_on_disk'] && !empty($state['absolute_path']) && file_exists($state['absolute_path'])) {
+                $abs = $state['absolute_path'];
+                $mime = @mime_content_type($abs) ?: 'image/jpeg';
+                $photoBase64 = 'data:'.$mime.';base64,'.base64_encode(file_get_contents($abs));
+            } elseif ($photoUrl) {
+                $photoBase64 = $getInlineBase64($photoUrl);
+            }
+        }
 
         $signatureRawUrl = 'https://quickchart.io/qr?text='.urlencode('https://amis.edu.ph/signature').'&dark=000000&light=ffffff&margin=1&format=png&size=200';
         $signatureQrBase64 = $getInlineBase64($signatureRawUrl);
