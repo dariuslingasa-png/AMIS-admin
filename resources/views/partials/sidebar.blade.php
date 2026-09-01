@@ -11,7 +11,7 @@
         ],
         [
             'active' => (request()->routeIs('admin.applications.*') || request()->routeIs('admin.applicants.*') || request()->routeIs('admin.enrollment.index') || request()->routeIs('admin.enrollment.masters-list')) && request('workspace') !== 'reports',
-            'icon' => 'clipboard-check', 'iconClass' => 'text-violet-600', 'headerClass' => 'text-violet-700', 'activeClass' => 'sidebar-link-active-violet', 'title' => 'Applications',
+            'icon' => 'clipboard-check', 'iconClass' => 'text-violet-600', 'headerClass' => 'text-violet-700', 'activeClass' => 'sidebar-link-active-violet', 'title' => 'Enrollment Applications',
             'links' => [
                 ['Dashboard', 'layout-dashboard', route('admin.applications.dashboard'), request()->routeIs('admin.applications.dashboard')],
                 ['Enrollment Applications', 'file-text', route('admin.applications.enrollment'), request()->routeIs('admin.applications.enrollment') || request()->routeIs('admin.applicants.index')],
@@ -24,7 +24,7 @@
         ],
         [
             'active' => request()->routeIs('admin.students.*') && !request()->routeIs('admin.students.families'),
-            'icon' => 'users', 'iconClass' => 'text-emerald-600', 'headerClass' => 'text-emerald-700', 'activeClass' => 'sidebar-link-active-emerald', 'title' => 'Students',
+            'icon' => 'users', 'iconClass' => 'text-emerald-600', 'headerClass' => 'text-emerald-700', 'activeClass' => 'sidebar-link-active-emerald', 'title' => 'Student Records',
             'links' => [
                 ['Dashboard', 'layout-dashboard', route('admin.students.dashboard'), request()->routeIs('admin.students.dashboard')],
                 ['Student Records', 'user-check', route('admin.students.index'), (request()->routeIs('admin.students.index') || request()->routeIs('admin.students.show')) && !request()->routeIs('admin.students.families')],
@@ -39,7 +39,7 @@
         ],
         [
             'active' => request()->routeIs('admin.ms-teams.*') || request()->routeIs('admin.academic.*'),
-            'icon' => 'book-open-check', 'iconClass' => 'text-sky-600', 'headerClass' => 'text-sky-700', 'activeClass' => 'sidebar-link-active-sky', 'title' => 'Academic',
+            'icon' => 'book-open-check', 'iconClass' => 'text-sky-600', 'headerClass' => 'text-sky-700', 'activeClass' => 'sidebar-link-active-sky', 'title' => 'Academic Affairs',
             'links' => [
                 ['Dashboard', 'layout-dashboard', route('admin.academic.dashboard'), request()->routeIs('admin.academic.dashboard') || request()->routeIs('admin.academic.dashboard.index')],
                 ['Existing SY Schedule', 'calendar-clock', route('admin.academic.schedule-copy'), request()->routeIs('admin.academic.schedule-copy')],
@@ -65,7 +65,7 @@
         ],
         [
             'active' => request()->routeIs('admin.ebook.*'),
-            'icon' => 'book-open', 'iconClass' => 'text-teal-600', 'headerClass' => 'text-teal-700', 'activeClass' => 'sidebar-link-active-teal', 'title' => 'eBook',
+            'icon' => 'book-open', 'iconClass' => 'text-teal-600', 'headerClass' => 'text-teal-700', 'activeClass' => 'sidebar-link-active-teal', 'title' => 'eBook Library',
             'links' => [
                 ['Library Dashboard', 'layout-dashboard', route('admin.ebook.index'), request()->routeIs('admin.ebook.index')],
                 ['Upload eBook', 'upload-cloud', route('admin.ebook.create'), request()->routeIs('admin.ebook.create')],
@@ -74,16 +74,14 @@
         ],
         [
             'active' => request()->routeIs('admin.finance.*'),
-            'icon' => 'wallet', 'iconClass' => 'text-amber-600', 'headerClass' => 'text-amber-700', 'activeClass' => 'sidebar-link-active-amber', 'title' => 'Finance',
+            'icon' => 'wallet', 'iconClass' => 'text-amber-600', 'headerClass' => 'text-amber-700', 'activeClass' => 'sidebar-link-active-amber', 'title' => 'Finance & Cashier',
             'links' => [
-                ['Dashboard', 'layout-dashboard', route('admin.finance.dashboard'), request()->routeIs('admin.finance.dashboard')],
-                ['Monthly Payment Reminder', 'bell-ring', route('admin.finance.monthly-reminders.index'), request()->routeIs('admin.finance.monthly-reminders.*')],
-                ['Payment Verification', 'badge-check', route('admin.finance.verification.index'), request()->routeIs('admin.finance.verification.*')],
-                ['Record Onsite Payment', 'hand-coins', route('admin.finance.onsite.create'), request()->routeIs('admin.finance.onsite.*')],
-                ['Transactions', 'arrow-left-right', route('admin.finance.transactions.index'), request()->routeIs('admin.finance.transactions.*')],
-                ['Family Accounts / SOA', 'users', route('admin.finance.families.index'), request()->routeIs('admin.finance.families.*')],
-                ['Official Receipts', 'receipt-text', route('admin.finance.receipts.index'), request()->routeIs('admin.finance.receipts.*')],
-                ['Reports', 'chart-no-axes-combined', route('admin.finance.reports.index'), request()->routeIs('admin.finance.reports.*')],
+                ['Finance Dashboard', 'layout-dashboard', route('admin.finance.dashboard'), request()->routeIs('admin.finance.dashboard')],
+                ['Student Accounts & SOA', 'users', route('admin.finance.families.index'), request()->routeIs('admin.finance.families.*', 'admin.finance.students.*', 'admin.finance.manual-soa.*')],
+                ['Online Payment Review', 'badge-check', route('admin.finance.verification.index'), request()->routeIs('admin.finance.verification.*')],
+                ['Payment Records', 'receipt-text', route('admin.finance.transactions.index'), request()->routeIs('admin.finance.transactions.*', 'admin.finance.onsite.*', 'admin.finance.receipts.*')],
+                ['Reports', 'chart-no-axes-combined', route('admin.finance.reports.index'), request()->routeIs('admin.finance.reports.*', 'admin.finance.monthly-reminders.*')],
+                ['Audit Log', 'history', route('admin.finance.audit.index'), request()->routeIs('admin.finance.audit.*')],
             ],
         ],
         [
@@ -130,7 +128,7 @@
         ],
         [
             'active' => request()->routeIs('admin.registrations.*'),
-            'icon' => 'user-plus', 'iconClass' => 'text-emerald-600', 'headerClass' => 'text-emerald-700', 'activeClass' => 'sidebar-link-active-emerald', 'title' => 'Registrations',
+            'icon' => 'user-plus', 'iconClass' => 'text-emerald-600', 'headerClass' => 'text-emerald-700', 'activeClass' => 'sidebar-link-active-emerald', 'title' => 'Special Registrations',
             'links' => [
                 ['Halaqah Online', 'check-square', route('admin.registrations.halaqah'), request()->routeIs('admin.registrations.halaqah')],
                 ['Halaqah Parents', 'users', route('admin.registrations.halaqah-parents'), request()->routeIs('admin.registrations.halaqah-parents')],

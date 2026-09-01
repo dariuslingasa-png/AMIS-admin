@@ -49,8 +49,8 @@
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            <x-dashboard.module-card :href="route('admin.students.dashboard')" icon="users" name="Students" owner="Records Office" summary="Dashboard, records, profiles, history, documents" accent="emerald" shape="arch" />
-            <x-dashboard.module-card :href="route('admin.applications.dashboard')" icon="clipboard-check" name="Applications" owner="Registrar Office" summary="Enrollment, review, requirements, approvals ({{ $totalApplications }} applied)" accent="violet" shape="soft" />
+            <x-dashboard.module-card :href="route('admin.students.dashboard')" icon="users" name="Student Records" owner="Registrar & Records Office" summary="Official student master list, profiles, ID cards, sectioning" accent="emerald" shape="arch" />
+            <x-dashboard.module-card :href="route('admin.applications.dashboard')" icon="clipboard-check" name="Enrollment Applications" owner="Admissions & Registrar" summary="Online admissions, document review, requirements, approvals ({{ $totalApplications }} applied)" accent="violet" shape="soft" />
             @php
                 $academicMaintenance = config('services.school.academic_maintenance', false) 
                     && !auth()->user()->hasRole(['super_admin', 'admin']);
@@ -58,31 +58,31 @@
             <x-dashboard.module-card 
                 :href="$academicMaintenance ? null : route('admin.academic.dashboard')" 
                 icon="book-open-check" 
-                name="Academic" 
-                owner="Academic Office" 
-                summary="Subjects, curriculum, sections, schedules" 
+                name="Academic Affairs" 
+                owner="Academic Affairs Office" 
+                summary="Curriculum, subjects, sections, class schedules, faculty load" 
                 accent="sky" 
                 shape="soft" 
                 :status="$academicMaintenance ? 'Maintenance' : null" 
                 :disabled="$academicMaintenance" 
             />
             @can('manage-microsoft-rosters')
-                <x-dashboard.module-card :href="route('admin.microsoft-roster.index')" icon="cloud-cog" name="Microsoft Integration" owner="IT / System Admin" summary="Microsoft accounts, Teams rosters, section mappings, unmatched accounts, and sync history" accent="indigo" shape="soft" />
+                <x-dashboard.module-card :href="route('admin.microsoft-roster.index')" icon="cloud-cog" name="Microsoft 365 & Teams" owner="IT & Systems Admin" summary="Microsoft accounts, Teams rosters sync, section mappings, and sync history" accent="indigo" shape="soft" />
             @endcan
-            <x-dashboard.module-card :href="route('admin.ebook.index')" icon="book-open" name="eBook Library" owner="LMS" summary="Manage digital textbooks, uploads, grade assignment, and public catalog access" accent="teal" shape="soft" />
-            <x-dashboard.module-card :href="route('admin.attendance.index')" icon="calendar-check" name="Attendance" owner="Academic Office" summary="QR, manual attendance, reports" accent="cyan" shape="circle" />
-            <x-dashboard.module-card icon="graduation-cap" name="Grades" owner="Faculty Office" summary="Encoding, assessment, report cards" accent="blue" shape="arch" status="Coming Soon" disabled />
-            <x-dashboard.module-card :href="route('admin.finance.dashboard')" icon="wallet" name="Finance Management" :owner="config('services.school.finance_reviewer_name', 'Finance Office')" summary="Enrollment payment review, SOA, fees, and receipts" accent="amber" shape="soft" />
-            <x-dashboard.module-card icon="chart-no-axes-combined" name="Analytics" owner="Admin Analytics" summary="Charts, insights, performance reports" accent="orange" shape="circle" status="Coming Soon" disabled />
-            <x-dashboard.module-card icon="file-down" name="Reports" owner="Registrar / Finance" summary="PDF, Excel, registrar and finance exports" accent="pink" shape="arch" status="Coming Soon" disabled />
-            <x-dashboard.module-card :href="route('admin.administration.users.index')" icon="users" name="Administration" owner="System Admin" summary="User directories, verification status, and credentials security" accent="fuchsia" shape="soft" />
-            <x-dashboard.module-card :href="route('admin.support.index')" icon="message-square" name="Support Center" owner="IT / Support" summary="Manage student and parent inquiries, concerns, and support tickets" accent="rose" shape="soft" />
-            <x-dashboard.module-card :href="route('admin.website.announcements.index')" icon="globe" name="Website CMS" owner="Public Relations" summary="Manage announcements, news, events, and school website public posts" accent="teal" shape="soft" />
-            <x-dashboard.module-card :href="route('admin.registrations.halaqah')" icon="user-plus" name="Registrations" owner="Registrar Office" summary="Halaqah Online, study circles, public inquiry registrations" accent="purple" shape="soft" />
-            <x-dashboard.module-card :href="route('admin.access-control.roles.index')" icon="key" name="Access Control" owner="Security Officer" summary="Roles, permissions matrix, and access policy definitions" accent="indigo" shape="soft" />
-            <x-dashboard.module-card :href="route('admin.security-workspace.login-activity')" icon="shield-check" name="Security Workspace" owner="Security Auditing" summary="Session tracking, login attempts, force revokes, and alerts" accent="rose" shape="soft" />
-            <x-dashboard.module-card :href="route('admin.system-management.backups.index')" icon="settings-2" name="System Management" owner="DevOps Admin" summary="Backup Center, restore dumps, health status, and API sync" accent="slate" shape="soft" />
-            <x-dashboard.module-card :href="route('admin.settings.discounts')" icon="settings" name="Settings" owner="System Admin" summary="School profile, MS365 sync, integrations" accent="lime" shape="circle" />
+            <x-dashboard.module-card :href="route('admin.ebook.index')" icon="book-open" name="Digital Library (eBooks)" owner="Learning Resource Center" summary="Digital textbooks, uploads, grade-level reading access, and catalog" accent="teal" shape="soft" />
+            <x-dashboard.module-card :href="route('admin.attendance.index')" icon="calendar-check" name="Attendance Tracking" owner="Prefect & Academic Office" summary="QR code scanner, manual attendance, daily logs & reports" accent="cyan" shape="circle" />
+            <x-dashboard.module-card icon="graduation-cap" name="Grading & Assessment" owner="Faculty & Academic Office" summary="Grade encoding, assessment, report cards" accent="blue" shape="arch" status="Coming Soon" disabled />
+            <x-dashboard.module-card :href="route('admin.finance.dashboard')" icon="wallet" name="Finance & Tuition" :owner="config('services.school.finance_reviewer_name', 'Finance & Cashier Office')" summary="Tuition SOA, online payment review, fees, and receipts" accent="amber" shape="soft" />
+            <x-dashboard.module-card icon="chart-no-axes-combined" name="Enrollment Analytics" owner="Institutional Analytics" summary="Admissions growth, capacity trends, cohort distribution insights" accent="orange" shape="circle" status="Coming Soon" disabled />
+            <x-dashboard.module-card icon="file-down" name="Official Reports & Exports" owner="Registrar & Finance" summary="DepEd reports, master lists, PDF & Excel exports" accent="pink" shape="arch" status="Coming Soon" disabled />
+            <x-dashboard.module-card :href="route('admin.administration.users.index')" icon="users" name="User Directory & Staff" owner="System Administrator" summary="User directories, verification status, and credentials security" accent="fuchsia" shape="soft" />
+            <x-dashboard.module-card :href="route('admin.support.index')" icon="message-square" name="Help Desk & Inquiries" owner="IT & Support Desk" summary="Manage student & parent inquiries, concerns, support tickets" accent="rose" shape="soft" />
+            <x-dashboard.module-card :href="route('admin.website.announcements.index')" icon="globe" name="School Portal & CMS" owner="Public Relations & Media" summary="Manage announcements, news, events, and public school bulletins" accent="teal" shape="soft" />
+            <x-dashboard.module-card :href="route('admin.registrations.halaqah')" icon="user-plus" name="Special Registrations" owner="Registrar & Madrasah" summary="Halaqah Online, study circles, public inquiry registrations" accent="purple" shape="soft" />
+            <x-dashboard.module-card :href="route('admin.access-control.roles.index')" icon="key" name="Roles & Permissions" owner="Security Administrator" summary="Roles, permissions matrix, and access policy definitions" accent="indigo" shape="soft" />
+            <x-dashboard.module-card :href="route('admin.security-workspace.login-activity')" icon="shield-check" name="Security & Audit" owner="Security Auditing" summary="Session tracking, login attempts, force revokes, and alerts" accent="rose" shape="soft" />
+            <x-dashboard.module-card :href="route('admin.system-management.backups.index')" icon="settings-2" name="System Operations" owner="DevOps & Systems Admin" summary="Backup Center, restore dumps, health status, and API sync" accent="slate" shape="soft" />
+            <x-dashboard.module-card :href="route('admin.settings.discounts')" icon="settings" name="School Settings & Config" owner="System Administrator" summary="School profile, MS365 sync, discounts, integrations" accent="lime" shape="circle" />
         </div>
     </section>
 
