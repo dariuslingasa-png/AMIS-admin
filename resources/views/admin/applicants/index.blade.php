@@ -118,6 +118,11 @@
         openQuickReview(data) {
             this.reviewChild = data;
             this.quickReviewModal = true;
+            this.$nextTick(() => {
+                if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                    window.lucide.createIcons();
+                }
+            });
         },
         emailModalOpen: false,
         isSendingEmail: false,
@@ -624,31 +629,35 @@
                                     </td>
                                     <td class="px-5 py-4 text-right align-middle whitespace-nowrap">
                                         <div class="inline-flex items-center justify-end gap-2 whitespace-nowrap">
+                                            @php
+                                                $quickReviewPayload = [
+                                                    'id' => (string) $child->id,
+                                                    'formatted_id' => str_pad($child->id, 4, '0', STR_PAD_LEFT),
+                                                    'name' => (string) $childName,
+                                                    'grade' => (string) ($child->grade_abbr ?? 'N/A'),
+                                                    'type' => (string) $studentType,
+                                                    'status' => (string) $child->status,
+                                                    'status_label' => (string) $statusLabel,
+                                                    'photo_url' => (string) ($photoUrl ?: ''),
+                                                    'birth_cert_url' => (string) ($child->birth_cert_url ? \App\Support\EnrollmentStorage::url($child->birth_cert_url) : ''),
+                                                    'report_card_url' => (string) ($child->report_card_url ? \App\Support\EnrollmentStorage::url($child->report_card_url) : ''),
+                                                    'affidavit_url' => (string) ($child->affidavit_url ? \App\Support\EnrollmentStorage::url($child->affidavit_url) : ''),
+                                                    'receipt_url' => (string) ($receiptUrl ?: ''),
+                                                    'facebook' => (string) ($child->facebook ?? ''),
+                                                    'whatsapp' => (string) ($child->whatsapp ?? ''),
+                                                    'facebook_screenshot_url' => (string) ($child->facebook_screenshot_url ? \App\Support\EnrollmentStorage::url($child->facebook_screenshot_url) : ''),
+                                                    'payment_remarks' => (string) ($paymentObj?->remarks ?? ''),
+                                                    'parent_name' => (string) ($family['parent_name'] ?? ''),
+                                                    'parent_email' => (string) ($family['parent_email'] ?? ''),
+                                                    'parent_mobile' => (string) ($family['parent_mobile'] ?? ''),
+                                                    'show_url' => route('admin.applicants.show', $child),
+                                                    'destroy_url' => route('admin.applicants.destroy', $child),
+                                                ];
+                                            @endphp
+
                                             <!-- Quick View Icon Button -->
                                             <button type="button" 
-                                                @click="openQuickReview({
-                                                    id: '{{ $child->id }}',
-                                                    formatted_id: '{{ str_pad($child->id, 4, '0', STR_PAD_LEFT) }}',
-                                                    name: '{{ e($childName) }}',
-                                                    grade: '{{ e($child->grade_abbr ?? 'N/A') }}',
-                                                    type: '{{ e($studentType) }}',
-                                                    status: '{{ e($child->status) }}',
-                                                    status_label: '{{ e($statusLabel) }}',
-                                                    photo_url: '{{ $photoUrl }}',
-                                                    birth_cert_url: '{{ $child->birth_cert_url ? \App\Support\EnrollmentStorage::url($child->birth_cert_url) : '' }}',
-                                                    report_card_url: '{{ $child->report_card_url ? \App\Support\EnrollmentStorage::url($child->report_card_url) : '' }}',
-                                                    affidavit_url: '{{ $child->affidavit_url ? \App\Support\EnrollmentStorage::url($child->affidavit_url) : '' }}',
-                                                    receipt_url: '{{ $receiptUrl ?: '' }}',
-                                                    facebook: '{{ e($child->facebook) }}',
-                                                    whatsapp: '{{ e($child->whatsapp) }}',
-                                                    facebook_screenshot_url: '{{ $child->facebook_screenshot_url ? \App\Support\EnrollmentStorage::url($child->facebook_screenshot_url) : '' }}',
-                                                    payment_remarks: '{{ e($paymentObj?->remarks ?? "") }}',
-                                                    parent_name: '{{ e($family['parent_name']) }}',
-                                                    parent_email: '{{ e($family['parent_email']) }}',
-                                                    parent_mobile: '{{ e($family['parent_mobile']) }}',
-                                                    show_url: '{{ route('admin.applicants.show', $child) }}',
-                                                    destroy_url: '{{ route('admin.applicants.destroy', $child) }}'
-                                                })" 
+                                                @click="openQuickReview(@js($quickReviewPayload))" 
                                                 class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-indigo-600 shadow-3xs transition hover:border-indigo-300 hover:bg-indigo-50 hover:scale-105 cursor-pointer"
                                                 title="Quick View Application">
                                                 <i data-lucide="scan-eye" class="h-4 w-4"></i>
@@ -665,7 +674,7 @@
                                                 @if ($child->status !== 'approved')
                                                     <!-- Delete Icon Button (Only visible if not approved) -->
                                                     <button type="button"
-                                                        @click="confirmDelete('{{ str_pad($child->id, 4, '0', STR_PAD_LEFT) }}', '{{ e($childName) }}', '{{ route('admin.applicants.destroy', $child) }}')"
+                                                        @click="confirmDelete('{{ str_pad($child->id, 4, '0', STR_PAD_LEFT) }}', @js($childName), '{{ route('admin.applicants.destroy', $child) }}')"
                                                         class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-rose-200 bg-rose-50 text-rose-600 shadow-3xs transition hover:bg-rose-600 hover:text-white hover:scale-105 cursor-pointer"
                                                         title="Delete Application">
                                                         <i data-lucide="trash-2" class="h-4 w-4"></i>
@@ -871,7 +880,7 @@
         </div>
         <!-- Quick Review Modal -->
         <div class="admin-modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-xs"
-             x-show="quickReviewModal" x-cloak x-transition>
+             x-show="quickReviewModal" x-cloak x-transition @click.self="quickReviewModal = false">
             <div class="w-full max-w-2xl rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl space-y-5">
                 <!-- Header -->
                 <div class="flex items-center justify-between border-b border-slate-100 pb-4">
