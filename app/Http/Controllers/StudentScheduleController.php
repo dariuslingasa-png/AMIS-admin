@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Section;
+use App\Models\Student;
 use App\Models\StudentSection;
 use App\Services\OfficialClassScheduleService;
 use Illuminate\Http\Request;
@@ -21,30 +22,88 @@ class StudentScheduleController extends Controller
             return redirect()->route('student.login');
         }
 
+        $isTester = in_array(strtolower((string)$user->email), [
+            'mon.lingasa@amis.edu.ph',
+            'sir_monlingasa@amis.edu.ph',
+            'mon.lingasa@gmail.com'
+        ]) || in_array(strtolower((string)$user->username), [
+            '260000',
+            'mon.lingasa_260000',
+            'teacher-mon',
+            'sir_monlingasa'
+        ]);
+
         $student = $user->student?->load('applicant');
+        if (!$student && $isTester) {
+            $student = Student::where('student_number', '260000')->first() ?? Student::first();
+        }
+
         if (!$student) {
             return redirect()->route('student.dashboard')->with('error', 'Student profile not found.');
         }
 
-        // Retrieve student's enrolled section (Model boot hook respects tester override for tester accounts)
+        $gradesAndSections = $isTester ? $this->scheduleService->getAvailableGradesAndSections() : [];
+
+        // Handle tester section switching
+        $selectedSectionId = null;
+        if ($isTester) {
+            if ($request->has('reset_section')) {
+                session()->forget('tester_selected_section_id');
+            } elseif ($request->filled('section_id')) {
+                session(['tester_selected_section_id' => $request->input('section_id')]);
+                $selectedSectionId = $request->input('section_id');
+            } else {
+                $selectedSectionId = session('tester_selected_section_id');
+            }
+        }
+
+        // Student's real enrolled section
         $studentSection = StudentSection::where('student_id', $student->id)
             ->with(['section.subjects'])
             ->first();
-
         $section = $studentSection?->section;
 
-        // Retrieve official schedule payload from the official schedule system
-        $schedulePayload = $this->scheduleService->getStudentSchedulePayload(
-            $student,
-            $section,
-            $student->applicant
-        );
+        if ($isTester && $selectedSectionId) {
+            $schedulePayload = $this->scheduleService->getSchedulePayloadBySectionId($selectedSectionId, $student);
+        } else {
+            $schedulePayload = $this->scheduleService->getStudentSchedulePayload(
+                $student,
+                $section,
+                $student->applicant
+            );
+        }
 
-        // Allow tester accounts to switch sections for verification
-        $isTester = ($user->email === 'mon.lingasa@amis.edu.ph' || $user->username === '260000');
-        $allSections = $isTester ? Section::orderBy('grade_level')->orderBy('name')->get() : collect();
+        // Determine current grade and section for tester indicator and connected dropdowns
+        $currentSectionId = $schedulePayload['student_info']['official_section_id'] ?? $selectedSectionId;
+        $currentGrade = null;
+        $currentSectionName = $schedulePayload['student_info']['official_section_name'] ?? $schedulePayload['student_info']['section'];
 
-        return view('student.schedule', [
+        if ($isTester && !empty($gradesAndSections)) {
+            foreach ($gradesAndSections as $grade => $secs) {
+                foreach ($secs as $sc) {
+                    if ($sc['id'] === $currentSectionId) {
+                        $currentGrade = $grade;
+                        $currentSectionName = $sc['name'];
+                        break 2;
+                    }
+                }
+            }
+            if (!$currentGrade) {
+                // If not found directly, try matching by clean grade
+                $scGrade = $schedulePayload['student_info']['grade_level'] ?? '';
+                foreach ($gradesAndSections as $grade => $secs) {
+                    if (strcasecmp($grade, $scGrade) === 0) {
+                        $currentGrade = $grade;
+                        break;
+                    }
+                }
+                if (!$currentGrade) {
+                    $currentGrade = array_key_first($gradesAndSections);
+                }
+            }
+        }
+
+        $viewData = [
             'user' => $user,
             'student' => $student,
             'section' => $section,
@@ -57,7 +116,25 @@ class StudentScheduleController extends Controller
             'todayName' => $schedulePayload['today_name'],
             'isWeekend' => $schedulePayload['is_weekend'],
             'isTester' => $isTester,
-            'allSections' => $allSections,
-        ]);
+            'gradesAndSections' => $gradesAndSections,
+            'currentGrade' => $currentGrade,
+            'currentSectionId' => $currentSectionId,
+            'currentSectionName' => $currentSectionName,
+        ];
+
+        // Return dynamic JSON response for instant AJAX section switching without full page refresh
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'currentGrade' => $currentGrade,
+                'currentSectionId' => $currentSectionId,
+                'currentSectionName' => $currentSectionName,
+                'studentInfo' => $schedulePayload['student_info'],
+                'hasSchedule' => $schedulePayload['has_schedule'],
+                'html' => view('student.schedule.partials._schedule_content', $viewData)->render(),
+            ]);
+        }
+
+        return view('student.schedule', $viewData);
     }
 }

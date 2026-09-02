@@ -339,23 +339,158 @@ class OfficialClassScheduleService
      * @param EnrollmentApplicant|null $applicant
      * @return array
      */
+    /**
+     * Build the structured class schedule payload for a student.
+     *
+     * @param Student $student
+     * @param Section|null $section
+     * @param EnrollmentApplicant|null $applicant
+     * @return array
+     */
     public function getStudentSchedulePayload(Student $student, ?Section $section = null, ?EnrollmentApplicant $applicant = null): array
     {
         $matchingSection = $this->findMatchingSection($student, $section, $applicant);
 
-        $studentName = $student->user?->name ?: trim(($applicant?->first_name ?? '') . ' ' . ($applicant?->last_name ?? ''));
-        if (empty($studentName)) {
-            $studentName = 'Student #' . ($student->student_number ?? $student->id);
+        if (!$matchingSection) {
+            $studentName = $student->user?->name ?: trim(($applicant?->first_name ?? '') . ' ' . ($applicant?->last_name ?? ''));
+            if (empty($studentName)) {
+                $studentName = 'Student #' . ($student->student_number ?? $student->id);
+            }
+            $gradeDisplay = $section?->grade_level ?: ($student->grade_level ?: '—');
+            $sectionDisplay = $section?->official_name ?: ($section?->name ?: ($student->section ?: '—'));
+            return [
+                'has_schedule' => false,
+                'student_info' => [
+                    'name' => $studentName,
+                    'student_number' => $student->student_number,
+                    'grade_level' => $gradeDisplay,
+                    'section' => $sectionDisplay,
+                    'modality' => 'Flexible Online Learning (ODL)',
+                    'shift' => '1st Shift',
+                    'school_year' => $student->school_year ?: 'S.Y. 2026–2027',
+                    'is_f2f' => false,
+                    'official_section_id' => null,
+                    'official_section_name' => null
+                ],
+                'today_classes' => collect(),
+                'weekly_schedule' => [],
+                'matrix' => [],
+                'today_name' => Carbon::now('Asia/Manila')->format('l'),
+                'is_weekend' => !in_array(Carbon::now('Asia/Manila')->format('l'), self::SCHOOL_DAYS)
+            ];
         }
 
-        $gradeDisplay = $matchingSection['grade_level'] ?? ($section?->grade_level ?: ($student->grade_level ?: '—'));
-        $sectionDisplay = $matchingSection ? $this->cleanSectionDisplayName($matchingSection['section_name']) : ($section?->official_name ?: ($section?->name ?: ($student->section ?: '—')));
+        $fallbackName = trim(($applicant?->first_name ?? '') . ' ' . ($applicant?->last_name ?? ''));
+        return $this->buildPayloadFromSection($matchingSection, $student, $fallbackName);
+    }
+
+    /**
+     * Get all official grades and their sections grouped and ordered educationally.
+     *
+     * @return array
+     */
+    public function getAvailableGradesAndSections(): array
+    {
+        $allSections = $this->getIntegratedSchedules();
+        $grouped = [];
+
+        foreach ($allSections as $s) {
+            $grade = $s['grade_level'] ?? 'Other';
+            if (!isset($grouped[$grade])) {
+                $grouped[$grade] = [];
+            }
+            $grouped[$grade][] = [
+                'id' => $s['id'] ?? ($s['section_id'] ?? ''),
+                'name' => $s['section_name'] ?? '',
+                'clean_name' => $this->cleanSectionDisplayName($s['section_name'] ?? ''),
+                'shift' => $s['shift'] ?? 'F2F',
+            ];
+        }
+
+        // Sort grades in educational progression order
+        $order = [
+            'Kinder 1', 'Kinder 2', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4',
+            'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 7 & 8',
+            'Grade 9', 'Grade 10', 'Grade 9 & 10', 'Grade 11', 'Grade 12'
+        ];
+
+        uksort($grouped, function ($a, $b) use ($order) {
+            $posA = array_search($a, $order);
+            $posB = array_search($b, $order);
+            if ($posA === false && $posB === false) return strcmp($a, $b);
+            if ($posA === false) return 1;
+            if ($posB === false) return -1;
+            return $posA <=> $posB;
+        });
+
+        return $grouped;
+    }
+
+    /**
+     * Build schedule payload for a specific official section ID (used by tester/admin).
+     *
+     * @param string $sectionId
+     * @param Student $student
+     * @return array
+     */
+    public function getSchedulePayloadBySectionId(string $sectionId, Student $student): array
+    {
+        $allSections = $this->getIntegratedSchedules();
+        $matchingSection = null;
+
+        foreach ($allSections as $s) {
+            if (($s['id'] ?? '') === $sectionId || ($s['section_id'] ?? '') === $sectionId || ($s['section_name'] ?? '') === $sectionId) {
+                $matchingSection = $s;
+                break;
+            }
+        }
+
+        if (!$matchingSection) {
+            return [
+                'has_schedule' => false,
+                'student_info' => [
+                    'name' => $student->user?->name ?: 'Tester',
+                    'student_number' => $student->student_number,
+                    'grade_level' => 'Unknown',
+                    'section' => $sectionId,
+                    'modality' => 'Unknown',
+                    'shift' => 'Unknown',
+                    'school_year' => $student->school_year ?: 'S.Y. 2026–2027',
+                    'is_f2f' => false,
+                    'official_section_id' => $sectionId,
+                    'official_section_name' => $sectionId,
+                ],
+                'today_classes' => collect(),
+                'weekly_schedule' => [],
+                'matrix' => [],
+                'today_name' => Carbon::now('Asia/Manila')->format('l'),
+                'is_weekend' => !in_array(Carbon::now('Asia/Manila')->format('l'), self::SCHOOL_DAYS)
+            ];
+        }
+
+        return $this->buildPayloadFromSection($matchingSection, $student);
+    }
+
+    /**
+     * Build the structured class schedule payload for a student from a matching section.
+     *
+     * @param array $matchingSection
+     * @param Student $student
+     * @param string|null $fallbackName
+     * @return array
+     */
+    public function buildPayloadFromSection(array $matchingSection, Student $student, ?string $fallbackName = null): array
+    {
+        $studentName = $student->user?->name ?: ($fallbackName ?: ('Student #' . ($student->student_number ?? $student->id)));
+
+        $gradeDisplay = $matchingSection['grade_level'] ?? ($student->grade_level ?: '—');
+        $sectionDisplay = $this->cleanSectionDisplayName($matchingSection['section_name'] ?? '');
         
-        $shiftVal = $matchingSection['shift'] ?? ($section?->shift ?: 'F2F');
-        $isF2f = str_contains(strtoupper($shiftVal), 'F2F') || str_contains(strtoupper($section?->learning_mode ?? ''), 'FACE');
+        $shiftVal = $matchingSection['shift'] ?? 'F2F';
+        $isF2f = str_contains(strtoupper($shiftVal), 'F2F');
         
         $modalityDisplay = $isF2f ? 'Face-to-Face' : 'Flexible Online Learning (ODL)';
-        $shiftDisplay = $isF2f ? 'Face-to-Face' : ($matchingSection['shift'] ?? ($section?->shift ?: '1st Shift'));
+        $shiftDisplay = $isF2f ? 'Face-to-Face' : ($matchingSection['shift'] ?? '1st Shift');
         $schoolYearDisplay = $student->school_year ?: 'S.Y. 2026–2027';
 
         $studentInfo = [
