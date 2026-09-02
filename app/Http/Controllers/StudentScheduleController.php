@@ -156,7 +156,8 @@ class StudentScheduleController extends Controller
                 'currentSectionName' => $currentSectionName,
                 'studentInfo' => $schedulePayload['student_info'],
                 'hasSchedule' => $schedulePayload['has_schedule'],
-                'html' => view('student.schedule.partials._schedule_content', $viewData)->render(),
+                'gridHtml' => view('student.schedule.partials._schedule_grid_content', $viewData)->render(),
+                'listHtml' => view('student.schedule.partials._schedule_list_content', $viewData)->render(),
             ]);
         }
 

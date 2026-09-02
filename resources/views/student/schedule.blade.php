@@ -45,12 +45,18 @@
     <!-- Tab switcher bar & Tester Filter (ORIGINAL AMIS LAYOUT) -->
     <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid #e2e8f0; padding-bottom: 0.85rem; flex-wrap: wrap; gap: 1rem;">
         <div style="display: flex; background: #e2e8f0; padding: 0.25rem; border-radius: 12px; gap: 0.25rem;">
-            <button type="button" @click="currentTab = 'grid'; $nextTick(() => window.lucide && window.lucide.createIcons())" class="sched-tab-btn" :class="currentTab === 'grid' ? 'active' : ''">
+            <button type="button" 
+                    @click="currentTab = 'grid'; $nextTick(() => window.lucide && window.lucide.createIcons())" 
+                    class="sched-tab-btn" 
+                    :class="(!currentTab || currentTab === 'grid') ? 'active' : ''">
                 <i data-lucide="calendar-range" style="width: 14px; height: 14px; flex-shrink: 0;"></i>
                 <span>Timetable Calendar</span>
             </button>
 
-            <button type="button" @click="currentTab = 'list'; $nextTick(() => window.lucide && window.lucide.createIcons())" class="sched-tab-btn" :class="currentTab === 'list' ? 'active' : ''">
+            <button type="button" 
+                    @click="currentTab = 'list'; $nextTick(() => window.lucide && window.lucide.createIcons())" 
+                    class="sched-tab-btn" 
+                    :class="currentTab === 'list' ? 'active' : ''">
                 <i data-lucide="list" style="width: 14px; height: 14px; flex-shrink: 0;"></i>
                 <span>Daily Classes</span>
             </button>
@@ -114,9 +120,19 @@
         </span>
     </div>
 
-    <!-- DYNAMIC SCHEDULE CONTENT CONTAINER -->
-    <div id="schedule-content-container" :style="loading ? 'opacity: 0.4; pointer-events: none; transition: opacity 0.15s ease;' : 'transition: opacity 0.15s ease;'">
-        @include('student.schedule.partials._schedule_content')
+    <!-- DYNAMIC TIMETABLE CONTENT -->
+    <!-- Tab 1: Timetable Calendar Grid -->
+    <div x-show="!currentTab || currentTab === 'grid'" class="space-y-4" :style="loading ? 'opacity: 0.4; pointer-events: none; transition: opacity 0.15s ease;' : 'transition: opacity 0.15s ease;'">
+        <div id="schedule-grid-container">
+            @include('student.schedule.partials._schedule_grid_content')
+        </div>
+    </div>
+
+    <!-- Tab 2: Daily Classes List -->
+    <div x-show="currentTab === 'list'" class="space-y-4" style="display: none;" :style="loading ? 'opacity: 0.4; pointer-events: none; transition: opacity 0.15s ease;' : 'transition: opacity 0.15s ease;'">
+        <div id="schedule-list-container">
+            @include('student.schedule.partials._schedule_list_content')
+        </div>
     </div>
 
     @include('student.schedule.partials._preview-modal')
@@ -131,6 +147,10 @@ function testerScheduleSwitcher(config) {
         selectedSectionId: config.initialSectionId || '',
         currentGrade: config.initialGrade || '',
         currentSectionName: config.initialSectionName || '',
+        currentTab: 'grid',
+        activeDay: 'Sunday',
+        isFullscreen: false,
+        previewPhoto: null,
         loading: false,
 
         init() {
@@ -202,10 +222,18 @@ function testerScheduleSwitcher(config) {
                         mStat.textContent = data.studentInfo.modality + (data.studentInfo.shift ? ' • ' + data.studentInfo.shift : '');
                     }
 
-                    const container = document.getElementById('schedule-content-container');
-                    if (container && data.html) {
-                        container.innerHTML = data.html;
+                    const gridContainer = document.getElementById('schedule-grid-container');
+                    if (gridContainer && data.gridHtml) {
+                        gridContainer.innerHTML = data.gridHtml;
+                        if (window.Alpine && window.Alpine.initTree) window.Alpine.initTree(gridContainer);
                     }
+
+                    const listContainer = document.getElementById('schedule-list-container');
+                    if (listContainer && data.listHtml) {
+                        listContainer.innerHTML = data.listHtml;
+                        if (window.Alpine && window.Alpine.initTree) window.Alpine.initTree(listContainer);
+                    }
+
                     window.history.pushState(null, '', '{{ route("student.class-schedule") }}');
                     if (window.lucide) window.lucide.createIcons();
                 }
@@ -245,9 +273,16 @@ function testerScheduleSwitcher(config) {
                         mStat.textContent = data.studentInfo.modality + (data.studentInfo.shift ? ' • ' + data.studentInfo.shift : '');
                     }
 
-                    const container = document.getElementById('schedule-content-container');
-                    if (container && data.html) {
-                        container.innerHTML = data.html;
+                    const gridContainer = document.getElementById('schedule-grid-container');
+                    if (gridContainer && data.gridHtml) {
+                        gridContainer.innerHTML = data.gridHtml;
+                        if (window.Alpine && window.Alpine.initTree) window.Alpine.initTree(gridContainer);
+                    }
+
+                    const listContainer = document.getElementById('schedule-list-container');
+                    if (listContainer && data.listHtml) {
+                        listContainer.innerHTML = data.listHtml;
+                        if (window.Alpine && window.Alpine.initTree) window.Alpine.initTree(listContainer);
                     }
 
                     window.history.pushState(null, '', url);
