@@ -735,8 +735,8 @@
 
                 <div class="student-sidebar-section" style="margin-top:0.5rem;">Academic</div>
 
-                <a href="{{ route('student.schedule') }}"
-                   class="student-nav-item s-nav-teal {{ request()->routeIs('student.schedule') ? 'active' : '' }}">
+                <a href="{{ route('student.class-schedule') }}"
+                   class="student-nav-item s-nav-teal {{ request()->routeIs('student.class-schedule', 'student.schedule', 'student.calendar') ? 'active' : '' }}">
                     {{-- Lucide: CalendarDays --}}
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" style="color: #0d9488;">
                         <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
@@ -745,7 +745,7 @@
                         <path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/>
                         <path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/>
                     </svg>
-                    Schedule
+                    Class Schedule
                 </a>
 
                 <a href="{{ route('student.teachers') }}"

@@ -45,9 +45,10 @@ Route::middleware(['auth', 'student'])->group(function () {
     Route::post('/soa/ocr-scan', [StudentPaymentController::class, 'ocrScan'])->name('student.billing.ocr');
     
     Route::get('/announcements', [StudentDashboardController::class, 'announcements'])->name('student.announcements');
-    Route::get('/calendar',      [StudentScheduleController::class, 'schedule'])->name('student.calendar');
-    Route::get('/schedule',      [StudentScheduleController::class, 'schedule'])->name('student.schedule');
-    Route::get('/subjects',      [StudentDashboardController::class, 'subjects'])->name('student.subjects');
+    Route::get('/calendar',       [StudentScheduleController::class, 'schedule'])->name('student.calendar');
+    Route::get('/schedule',       [StudentScheduleController::class, 'schedule'])->name('student.schedule');
+    Route::get('/class-schedule', [StudentScheduleController::class, 'schedule'])->name('student.class-schedule');
+    Route::get('/subjects',       [StudentDashboardController::class, 'subjects'])->name('student.subjects');
     Route::get('/teachers',      [StudentTeacherController::class, 'teachers'])->name('student.teachers');
     Route::get('/grades',        [StudentDashboardController::class, 'grades'])->name('student.grades');
     Route::get('/profile',       [StudentDashboardController::class, 'profile'])->name('student.profile');
