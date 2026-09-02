@@ -11,91 +11,108 @@
      })"
      x-init="init()">
 
-    @if($isTester)
-        <!-- TESTER GRADE & SECTION FILTER / SWITCHER TOOLBAR -->
-        <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-radius: 20px; padding: 1.25rem 1.5rem; color: white; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.25); border: 1.5px solid #334155; position: relative; overflow: hidden;">
-            <!-- Ambient Glow -->
-            <div style="position: absolute; right: -40px; top: -40px; width: 140px; height: 140px; background: radial-gradient(circle, rgba(13, 148, 136, 0.35) 0%, transparent 70%); border-radius: 50%; pointer-events: none;"></div>
+    <!-- Header card (EXACT ORIGINAL AMIS STUDENT PORTAL DESIGN) -->
+    <div class="s-quick-actions-card" style="padding: 1.75rem; background: white; border-radius: 20px; border: 1.5px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; flex-wrap: wrap; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.03);">
+        <div>
+            <div style="display: inline-flex; align-items: center; gap: 0.375rem; font-size: 12px; font-weight: 600; line-height: 16px; color: #0d9488; background: #f0fdfa; border: 1px solid #ccfbf1; padding: 0.25rem 0.65rem; border-radius: 999px;">
+                <i data-lucide="calendar-days" style="width: 14px; height: 14px; flex-shrink: 0;"></i>
+                <span>Weekly Timetable</span>
+            </div>
+            <h1 style="font-size: 30px; font-weight: 700; line-height: 38px; color: #0f172a; margin: 0.5rem 0 0.25rem;">Class Schedule</h1>
+            <p style="font-size: 15px; font-weight: 400; line-height: 24px; color: #475569; margin: 0;">Official weekly class timetable and daily schedule for your enrolled section.</p>
+        </div>
 
-            <div style="display: flex; flex-direction: column; gap: 1rem;">
-                
-                <!-- Top Row: Badge & Current Viewing Indicator -->
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
-                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                        <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; background: #0d9488; color: white; padding: 0.25rem 0.6rem; border-radius: 999px; display: inline-flex; align-items: center; gap: 0.35rem;">
-                            <i data-lucide="flask-conical" style="width: 13px; height: 13px;"></i>
-                            Tester Portal Inspector
-                        </span>
-                        <span style="font-size: 12px; color: #94a3b8; font-weight: 500;">
-                            (Account: mon.lingasa@amis.edu.ph)
-                        </span>
-                    </div>
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap; flex-shrink: 0;">
+            <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 0.75rem 1.25rem; text-align: center; min-width: 130px;">
+                <p style="font-size: 12px; font-weight: 600; line-height: 16px; color: #64748b; text-transform: uppercase; margin: 0; letter-spacing: 0.05em;">Student</p>
+                <p id="student-name-stat" style="font-size: 15px; font-weight: 700; color: #0f172a; margin: 0; margin-top: 0.25rem;">{{ $studentInfo['name'] }}</p>
+            </div>
 
-                    <!-- Clear Indicator -->
-                    <div style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 12px; padding: 0.35rem 0.85rem; display: flex; align-items: center; gap: 0.45rem;">
-                        <span style="width: 8px; height: 8px; border-radius: 50%; background: #10b981; box-shadow: 0 0 10px #10b981;"></span>
-                        <span style="font-size: 13px; font-weight: 750; color: #f8fafc;">
-                            Viewing: <span style="color: #5eead4;" x-text="currentGrade + ' — ' + currentSectionName">Viewing: {{ $currentGrade }} — {{ $currentSectionName }}</span>
-                        </span>
-                    </div>
-                </div>
+            <div style="background: #f0fdfa; border: 1.5px solid #ccfbf1; border-radius: 14px; padding: 0.75rem 1.25rem; text-align: center; min-width: 150px;">
+                <p style="font-size: 12px; font-weight: 600; line-height: 16px; color: #0f766e; text-transform: uppercase; margin: 0; letter-spacing: 0.05em;">Class Section</p>
+                <p id="student-section-stat" style="font-size: 15px; font-weight: 700; color: #0d9488; margin: 0; margin-top: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ $studentInfo['section'] }}">
+                    {{ $studentInfo['grade_level'] }} — {{ $studentInfo['section'] }}
+                </p>
+            </div>
 
-                <!-- Bottom Row: Connected Grade and Section Selectors -->
-                <div style="display: flex; align-items: center; gap: 0.85rem; flex-wrap: wrap;">
-                    
-                    <!-- 1. Select Grade Level -->
-                    <div style="flex: 1; min-width: 180px;">
-                        <label style="font-size: 11px; font-weight: 750; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.3rem;">
-                            1. Select Grade Level
-                        </label>
-                        <select x-model="selectedGrade"
-                                @change="onGradeChange()"
-                                style="width: 100%; font-size: 13px; font-weight: 700; padding: 0.55rem 0.75rem; border-radius: 10px; border: 1.5px solid #475569; background: #0f172a; color: white; cursor: pointer; outline: none;">
-                            <template x-for="grade in Object.keys(gradesAndSections)" :key="grade">
-                                <option :value="grade" x-text="grade" :selected="grade === selectedGrade"></option>
-                            </template>
-                        </select>
-                    </div>
-
-                    <!-- 2. Select Section (connected to Grade) -->
-                    <div style="flex: 2; min-width: 260px;">
-                        <label style="font-size: 11px; font-weight: 750; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.3rem;">
-                            2. Select Section (<span x-text="availableSections.length"></span> available)
-                        </label>
-                        <div style="position: relative;">
-                            <select x-model="selectedSectionId"
-                                    @change="onSectionChange()"
-                                    :disabled="loading"
-                                    style="width: 100%; font-size: 13px; font-weight: 700; padding: 0.55rem 0.75rem; border-radius: 10px; border: 1.5px solid #0d9488; background: #0f172a; color: #5eead4; cursor: pointer; outline: none;">
-                                <template x-for="sec in availableSections" :key="sec.id">
-                                    <option :value="sec.id" x-text="sec.name + ' (' + sec.shift + ')'" :selected="sec.id === selectedSectionId"></option>
-                                </template>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Reset Button -->
-                    <div style="align-self: flex-end;">
-                        <button type="button"
-                                @click="resetToMySection()"
-                                :disabled="loading"
-                                style="font-size: 12px; font-weight: 750; color: #94a3b8; background: rgba(255,255,255,0.05); border: 1px solid #475569; border-radius: 10px; padding: 0.55rem 0.95rem; cursor: pointer; transition: all 0.15s ease; display: inline-flex; align-items: center; gap: 0.35rem;">
-                            <i data-lucide="rotate-ccw" style="width: 13px; height: 13px;"></i>
-                            <span>Reset</span>
-                        </button>
-                    </div>
-
-                    <!-- Real-time Loading Indicator -->
-                    <div x-show="loading" style="display: flex; align-items: center; gap: 0.4rem; font-size: 12px; font-weight: 700; color: #5eead4; align-self: flex-end; padding-bottom: 0.5rem;">
-                        <span style="width: 14px; height: 14px; border: 2px solid #5eead4; border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite; display: inline-block;"></span>
-                        <span>Updating schedule...</span>
-                    </div>
-
-                </div>
-
+            <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 0.75rem 1.25rem; text-align: center; min-width: 130px;">
+                <p style="font-size: 12px; font-weight: 600; line-height: 16px; color: #64748b; text-transform: uppercase; margin: 0; letter-spacing: 0.05em;">Modality / Shift</p>
+                <p id="student-modality-stat" style="font-size: 13.5px; font-weight: 700; color: #0f172a; margin: 0; margin-top: 0.25rem;">{{ $studentInfo['modality'] }}</p>
             </div>
         </div>
-    @endif
+    </div>
+
+    <!-- Tab switcher bar & Tester Filter (ORIGINAL AMIS LAYOUT) -->
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid #e2e8f0; padding-bottom: 0.85rem; flex-wrap: wrap; gap: 1rem;">
+        <div style="display: flex; background: #e2e8f0; padding: 0.25rem; border-radius: 12px; gap: 0.25rem;">
+            <button type="button" @click="currentTab = 'grid'; $nextTick(() => window.lucide && window.lucide.createIcons())" class="sched-tab-btn" :class="currentTab === 'grid' ? 'active' : ''">
+                <i data-lucide="calendar-range" style="width: 14px; height: 14px; flex-shrink: 0;"></i>
+                <span>Timetable Calendar</span>
+            </button>
+
+            <button type="button" @click="currentTab = 'list'; $nextTick(() => window.lucide && window.lucide.createIcons())" class="sched-tab-btn" :class="currentTab === 'list' ? 'active' : ''">
+                <i data-lucide="list" style="width: 14px; height: 14px; flex-shrink: 0;"></i>
+                <span>Daily Classes</span>
+            </button>
+        </div>
+
+        @if($isTester)
+            <!-- Connected Grade & Section Filter (Clean, compact, matching class-schedule.html) -->
+            <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; background: #ffffff; border: 1.5px solid #0d9488; border-radius: 12px; padding: 0.35rem 0.75rem; box-shadow: 0 2px 6px rgba(13,148,136,0.1);">
+                <span style="font-size: 11px; font-weight: 800; color: #0f766e; text-transform: uppercase; display: inline-flex; align-items: center; gap: 0.3rem;">
+                    <i data-lucide="flask-conical" style="width: 13px; height: 13px; color: #0d9488;"></i>
+                    Grade:
+                </span>
+                <select id="testerGradeSelect" x-model="selectedGrade" @change="onGradeChange()"
+                        style="font-size: 12.5px; font-weight: 700; color: #0f172a; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0.35rem 0.6rem; cursor: pointer; outline: none;">
+                    @foreach($gradesAndSections as $gradeName => $secs)
+                        <option value="{{ $gradeName }}" {{ $currentGrade === $gradeName ? 'selected' : '' }}>
+                            {{ $gradeName }}
+                        </option>
+                    @endforeach
+                </select>
+
+                <span style="font-size: 11px; font-weight: 800; color: #0f766e; text-transform: uppercase; margin-left: 0.25rem;">
+                    Section:
+                </span>
+                <select id="testerSectionSelect" x-model="selectedSectionId" @change="onSectionChange()"
+                        style="font-size: 12.5px; font-weight: 700; color: #0f172a; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0.35rem 0.6rem; cursor: pointer; outline: none; max-width: 260px;">
+                    @foreach($gradesAndSections[$currentGrade] ?? [] as $secOpt)
+                        <option value="{{ $secOpt['id'] }}" {{ $currentSectionId === $secOpt['id'] ? 'selected' : '' }}>
+                            {{ $secOpt['name'] }}
+                        </option>
+                    @endforeach
+                </select>
+
+                <button type="button" @click="resetToMySection()" title="Reset to default section"
+                        style="background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0.35rem 0.65rem; font-size: 11px; font-weight: 750; color: #475569; cursor: pointer; display: inline-flex; align-items: center; gap: 0.25rem;">
+                    <i data-lucide="rotate-ccw" style="width: 12px; height: 12px;"></i>
+                    Reset
+                </button>
+
+                <span x-show="loading" style="font-size: 11px; font-weight: 700; color: #0d9488; display: inline-flex; align-items: center; gap: 0.25rem;">
+                    <span style="width: 12px; height: 12px; border: 2px solid #0d9488; border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite;"></span>
+                </span>
+            </div>
+        @endif
+
+        <div style="font-size: 12px; font-weight: 600; line-height: 16px; color: #64748b;">
+            School Year {{ $studentInfo['school_year'] }}
+        </div>
+    </div>
+
+    <!-- Active Indicator Banner -->
+    <div style="display: flex; justify-content: space-between; align-items: center; background: #f0fdfa; border: 1.5px solid #ccfbf1; border-left: 5px solid #0d9488; border-radius: 12px; padding: 0.75rem 1.25rem; flex-wrap: wrap; gap: 0.5rem;">
+        <div style="display: flex; align-items: center; gap: 0.65rem;">
+            <span style="width: 9px; height: 9px; border-radius: 50%; background: #10b981; box-shadow: 0 0 10px #10b981;"></span>
+            <span style="font-size: 14px; font-weight: 750; color: #0f766e;">
+                Viewing: <strong id="indicator-viewing-text" x-text="currentGrade + ' — ' + currentSectionName">{{ $currentGrade }} — {{ $currentSectionName }}</strong>
+            </span>
+        </div>
+        <span style="font-size: 11px; font-weight: 800; color: #059669; background: white; border: 1px solid #a7f3d0; padding: 0.25rem 0.65rem; border-radius: 999px; text-transform: uppercase;">
+            Official Class Schedule
+        </span>
+    </div>
 
     <!-- DYNAMIC SCHEDULE CONTENT CONTAINER -->
     <div id="schedule-content-container" :style="loading ? 'opacity: 0.4; pointer-events: none; transition: opacity 0.15s ease;' : 'transition: opacity 0.15s ease;'">
@@ -114,32 +131,43 @@ function testerScheduleSwitcher(config) {
         selectedSectionId: config.initialSectionId || '',
         currentGrade: config.initialGrade || '',
         currentSectionName: config.initialSectionName || '',
-        availableSections: [],
         loading: false,
 
         init() {
             if (!this.isTester) return;
-            this.updateAvailableSections();
+            this.syncSectionSelect();
         },
 
-        updateAvailableSections() {
-            if (this.gradesAndSections && this.gradesAndSections[this.selectedGrade]) {
-                this.availableSections = this.gradesAndSections[this.selectedGrade];
-            } else {
-                this.availableSections = [];
-            }
+        syncSectionSelect() {
+            const select = document.getElementById('testerSectionSelect');
+            if (!select) return;
+            select.innerHTML = '';
+            const secs = this.gradesAndSections[this.selectedGrade] || [];
+            secs.forEach(sec => {
+                const opt = document.createElement('option');
+                opt.value = sec.id;
+                opt.textContent = sec.name + ' (' + sec.shift + ')';
+                if (sec.id === this.selectedSectionId) opt.selected = true;
+                select.appendChild(opt);
+            });
         },
 
         onGradeChange() {
-            this.updateAvailableSections();
-            if (this.availableSections.length > 0) {
-                // Automatically select first section of this grade and refresh
-                this.selectedSectionId = this.availableSections[0].id;
+            this.syncSectionSelect();
+            const secs = this.gradesAndSections[this.selectedGrade] || [];
+            if (secs.length > 0) {
+                this.selectedSectionId = secs[0].id;
+                const select = document.getElementById('testerSectionSelect');
+                if (select) select.value = this.selectedSectionId;
                 this.fetchSchedule(this.selectedSectionId);
             }
         },
 
         onSectionChange() {
+            const select = document.getElementById('testerSectionSelect');
+            if (select) {
+                this.selectedSectionId = select.value;
+            }
             if (!this.selectedSectionId) return;
             this.fetchSchedule(this.selectedSectionId);
         },
@@ -159,8 +187,21 @@ function testerScheduleSwitcher(config) {
                     this.selectedSectionId = data.currentSectionId;
                     this.currentGrade = data.currentGrade;
                     this.currentSectionName = data.currentSectionName;
-                    this.updateAvailableSections();
                     
+                    const gSelect = document.getElementById('testerGradeSelect');
+                    if (gSelect) gSelect.value = this.selectedGrade;
+                    this.syncSectionSelect();
+
+                    const sStat = document.getElementById('student-section-stat');
+                    if (sStat && data.studentInfo) {
+                        sStat.textContent = data.studentInfo.grade_level + ' — ' + data.studentInfo.section;
+                    }
+
+                    const mStat = document.getElementById('student-modality-stat');
+                    if (mStat && data.studentInfo) {
+                        mStat.textContent = data.studentInfo.modality + (data.studentInfo.shift ? ' • ' + data.studentInfo.shift : '');
+                    }
+
                     const container = document.getElementById('schedule-content-container');
                     if (container && data.html) {
                         container.innerHTML = data.html;
@@ -194,21 +235,27 @@ function testerScheduleSwitcher(config) {
                     this.currentGrade = data.currentGrade;
                     this.currentSectionName = data.currentSectionName;
                     
+                    const sStat = document.getElementById('student-section-stat');
+                    if (sStat && data.studentInfo) {
+                        sStat.textContent = data.studentInfo.grade_level + ' — ' + data.studentInfo.section;
+                    }
+
+                    const mStat = document.getElementById('student-modality-stat');
+                    if (mStat && data.studentInfo) {
+                        mStat.textContent = data.studentInfo.modality + (data.studentInfo.shift ? ' • ' + data.studentInfo.shift : '');
+                    }
+
                     const container = document.getElementById('schedule-content-container');
                     if (container && data.html) {
                         container.innerHTML = data.html;
                     }
 
-                    // Update URL without reloading page
                     window.history.pushState(null, '', url);
-
-                    // Reinitialize Lucide icons
                     if (window.lucide) window.lucide.createIcons();
                 }
             })
             .catch(err => {
                 console.error('Failed to switch schedule:', err);
-                // Fallback to regular navigation if fetch fails
                 window.location.href = url;
             })
             .finally(() => {

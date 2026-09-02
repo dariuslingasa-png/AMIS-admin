@@ -63,8 +63,33 @@ class StudentScheduleController extends Controller
             ->first();
         $section = $studentSection?->section;
 
-        if ($isTester && $selectedSectionId) {
-            $schedulePayload = $this->scheduleService->getSchedulePayloadBySectionId($selectedSectionId, $student);
+        if ($isTester) {
+            if ($selectedSectionId) {
+                $schedulePayload = $this->scheduleService->getSchedulePayloadBySectionId($selectedSectionId, $student);
+            } else {
+                $schedulePayload = $this->scheduleService->getStudentSchedulePayload(
+                    $student,
+                    $section,
+                    $student->applicant
+                );
+                // If tester default section has no schedule, default to a published official section so tester can inspect right away
+                if (!$schedulePayload['has_schedule'] && !empty($gradesAndSections)) {
+                    $firstGrade = array_key_first($gradesAndSections);
+                    $firstSec = $gradesAndSections[$firstGrade][0] ?? null;
+                    if (isset($gradesAndSections['Grade 6'])) {
+                        foreach ($gradesAndSections['Grade 6'] as $g6Sec) {
+                            if (str_contains($g6Sec['id'], 'khaleed')) {
+                                $firstSec = $g6Sec;
+                                break;
+                            }
+                        }
+                    }
+                    if ($firstSec) {
+                        $selectedSectionId = $firstSec['id'];
+                        $schedulePayload = $this->scheduleService->getSchedulePayloadBySectionId($selectedSectionId, $student);
+                    }
+                }
+            }
         } else {
             $schedulePayload = $this->scheduleService->getStudentSchedulePayload(
                 $student,
