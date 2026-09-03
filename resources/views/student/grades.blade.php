@@ -14,10 +14,10 @@
     $rawSection = $section?->name ?? ($student?->section ?? 'Al-Munawwara');
     $cleanSection = preg_replace('/^(?:G\d+|Grade\s*\d+|K(?:inder)?\s*\d*)\s*[-_:]\s*/i', '', $rawSection);
     $cleanSection = trim(str_replace(['_', '-'], ' ', $cleanSection));
-    if (strcasecmp($cleanSection, 'AL MUNAWWARA') === 0 || str_contains(strtolower($cleanSection), 'munawwara')) {
-        $sectionName = 'Al-Munawwara';
+    if (strcasecmp($cleanSection, 'AL MUNAWWARA') === 0 || strcasecmp($cleanSection, 'AL-MUNAWWARA') === 0 || str_contains(strtolower($cleanSection), 'munawwara')) {
+        $sectionName = 'Al Munawwara';
     } else {
-        $sectionName = ucwords(strtolower($cleanSection)) ?: 'Al-Munawwara';
+        $sectionName = ucwords(strtolower($cleanSection)) ?: 'Al Munawwara';
     }
 
     $schoolYear = $student?->school_year ?? '2026–2027';
@@ -147,7 +147,7 @@
                         المدرسة المنورة الإسلامية
                     </div>
                     <h2 style="font-family: 'Plus Jakarta Sans', sans-serif !important; font-size: 1.25rem; font-weight: 900; color: #0f172a; margin: 0; line-height: 1.2; letter-spacing: -0.01em;">
-                        AL–MUNAWWARA ISLAMIC SCHOOL
+                        AL MUNAWWARA ISLAMIC SCHOOL
                     </h2>
                     <p style="font-size: 0.85rem; font-weight: 800; color: #475569; margin: 0.25rem 0 0 0; letter-spacing: 0.02em;">
                         SY {{ preg_replace('/\s*[-–]\s*/u', ' - ', $schoolYear) }}

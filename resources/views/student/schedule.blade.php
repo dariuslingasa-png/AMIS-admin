@@ -189,7 +189,7 @@
                         المدرسة المنورة الإسلامية
                     </div>
                     <h2 style="font-family: 'Plus Jakarta Sans', sans-serif !important; font-size: 1.25rem; font-weight: 900; color: #0f172a; margin: 0; line-height: 1.2; letter-spacing: -0.01em;">
-                        AL–MUNAWWARA ISLAMIC SCHOOL
+                        AL MUNAWWARA ISLAMIC SCHOOL
                     </h2>
                     <p style="font-size: 0.78rem; font-weight: 600; color: #64748b; margin: 0.15rem 0 0 0;">
                         Official Class Schedule & Weekly Timetable · School Year {{ $studentInfo['school_year'] }}
