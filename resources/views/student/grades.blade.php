@@ -157,18 +157,22 @@
         </div>
 
         {{-- Student Information Banner --}}
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 1.25rem;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.25rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 1.25rem;">
             <div>
-                <span style="font-size: 0.72rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; display: block;">Learner Name</span>
+                <span style="font-size: 0.72rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; display: block;">Student Name</span>
                 <span style="font-size: 0.95rem; font-weight: 900; color: #0f172a;">{{ $fullName }}</span>
             </div>
             <div>
-                <span style="font-size: 0.72rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; display: block;">Student ID / LRN</span>
+                <span style="font-size: 0.72rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; display: block;">Student ID & LRN</span>
                 <span style="font-size: 0.95rem; font-weight: 800; color: #0f172a; font-family: monospace;">{{ $lrn }}</span>
             </div>
             <div>
                 <span style="font-size: 0.72rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; display: block;">Grade & Section</span>
                 <span style="font-size: 0.95rem; font-weight: 800; color: #0f172a;">{{ $gradeLevel }} — {{ $sectionName }}</span>
+            </div>
+            <div>
+                <span style="font-size: 0.72rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; display: block;">School Year</span>
+                <span style="font-size: 0.95rem; font-weight: 800; color: #059669;">SY {{ preg_replace('/\s*[-–]\s*/u', ' - ', $schoolYear) }}</span>
             </div>
         </div>
 
@@ -185,7 +189,7 @@
                 <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.875rem;">
                     <thead>
                         <tr style="background: #f8fafc; border-bottom: 1.5px solid #e2e8f0; font-size: 0.75rem; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.05em;">
-                            <th style="padding: 0.85rem 1.25rem; min-width: 200px;">Learning Areas</th>
+                            <th style="padding: 0.85rem 1.25rem; min-width: 200px;">Subject</th>
                             <th style="padding: 0.85rem 1rem; min-width: 160px;">Subject Teacher</th>
                             <th style="padding: 0.85rem 0.75rem; text-align: center; width: 85px;">1st Term</th>
                             <th style="padding: 0.85rem 0.75rem; text-align: center; width: 85px;">2nd Term</th>

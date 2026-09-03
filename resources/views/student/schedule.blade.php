@@ -199,13 +199,13 @@
         </div>
 
         {{-- Student Information Banner --}}
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 1.25rem;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.25rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 1.25rem;">
             <div>
-                <span style="font-size: 0.72rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; display: block;">Learner Name</span>
+                <span style="font-size: 0.72rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; display: block;">Student Name</span>
                 <span style="font-size: 0.95rem; font-weight: 900; color: #0f172a;">{{ $studentInfo['name'] }}</span>
             </div>
             <div>
-                <span style="font-size: 0.72rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; display: block;">Student ID / LRN</span>
+                <span style="font-size: 0.72rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; display: block;">Student ID & LRN</span>
                 <span style="font-size: 0.95rem; font-weight: 800; color: #0f172a; font-family: monospace;">{{ $student->student_number ?? '260000' }}</span>
             </div>
             <div>
@@ -213,8 +213,8 @@
                 <span id="banner-grade-sec" style="font-size: 0.95rem; font-weight: 800; color: #0f172a;" x-text="currentGrade + ' — ' + currentSectionName">{{ $currentGrade }} — {{ $currentSectionName }}</span>
             </div>
             <div>
-                <span style="font-size: 0.72rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; display: block;">Shift & Modality</span>
-                <span id="banner-curriculum" style="font-size: 0.925rem; font-weight: 700; color: #059669;">{{ $studentInfo['modality'] }} {{ $studentInfo['shift'] ? '• ' . $studentInfo['shift'] : '' }}</span>
+                <span style="font-size: 0.72rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; display: block;">School Year</span>
+                <span id="banner-school-year" style="font-size: 0.95rem; font-weight: 800; color: #059669;">SY {{ $studentInfo['school_year'] }}</span>
             </div>
         </div>
 
