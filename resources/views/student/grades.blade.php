@@ -53,15 +53,17 @@
             ];
         });
 
-    // Compute Q1 General Weighted Average
-    $q1Average = $gradeRecords->isNotEmpty() ? round($gradeRecords->avg('q1'), 1) : 92.5;
-    $gwaDescriptor = match(true) {
-        $q1Average >= 90 => 'Outstanding',
-        $q1Average >= 85 => 'Very Satisfactory',
-        $q1Average >= 80 => 'Satisfactory',
-        $q1Average >= 75 => 'Fairly Satisfactory',
-        default => 'Did Not Meet Expectations'
-    };
+    // Compute Term Averages
+    $term1Avg = $gradeRecords->whereNotNull('q1')->isNotEmpty() ? round($gradeRecords->avg('q1'), 1) : null;
+    $term2Avg = $gradeRecords->whereNotNull('q2')->isNotEmpty() ? round($gradeRecords->avg('q2'), 1) : null;
+    $term3Avg = $gradeRecords->whereNotNull('q3')->isNotEmpty() ? round($gradeRecords->avg('q3'), 1) : null;
+
+    // Check if all 3 terms are complete before calculating final average
+    $isCompleteTerms = $gradeRecords->isNotEmpty() && $gradeRecords->every(function($r) {
+        return !is_null($r['q1']) && !is_null($r['q2']) && !is_null($r['q3']);
+    });
+
+    $finalAverage = $isCompleteTerms ? round(($term1Avg + $term2Avg + $term3Avg) / 3, 1) : null;
 @endphp
 
 <style>
@@ -236,21 +238,38 @@
                         {{-- General Average Summary Row --}}
                         <tr style="background: #f8fafc; border-top: 2px solid #e2e8f0; font-weight: 900;">
                             <td colspan="2" style="padding: 1.1rem 1.25rem; color: #0f172a; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.04em;">
-                                General Average (1st Term)
+                                General Average
                             </td>
                             <td style="padding: 1.1rem 0.75rem; text-align: center; color: #047857; font-size: 1.15rem; font-weight: 950;">
-                                {{ number_format($q1Average, 1) }}
+                                {{ $term1Avg ? number_format($term1Avg, 1) : '—' }}
                             </td>
-                            <td colspan="2" style="padding: 1.1rem 0.75rem; text-align: center; color: #94a3b8; font-weight: 600;">
-                                —
+                            <td style="padding: 1.1rem 0.75rem; text-align: center; color: {{ $term2Avg ? '#047857' : '#94a3b8' }}; font-size: {{ $term2Avg ? '1.15rem' : '0.9rem' }}; font-weight: {{ $term2Avg ? '950' : '600' }};">
+                                {{ $term2Avg ? number_format($term2Avg, 1) : '—' }}
                             </td>
-                            <td style="padding: 1.1rem 1rem; text-align: center; color: #047857; font-weight: 900;">
-                                {{ number_format($q1Average, 1) }}
+                            <td style="padding: 1.1rem 0.75rem; text-align: center; color: {{ $term3Avg ? '#047857' : '#94a3b8' }}; font-size: {{ $term3Avg ? '1.15rem' : '0.9rem' }}; font-weight: {{ $term3Avg ? '950' : '600' }};">
+                                {{ $term3Avg ? number_format($term3Avg, 1) : '—' }}
+                            </td>
+                            <td style="padding: 1.1rem 1rem; text-align: center;">
+                                @if($finalAverage)
+                                    <span style="color: #047857; font-weight: 950; font-size: 1.15rem;">
+                                        {{ number_format($finalAverage, 1) }}
+                                    </span>
+                                @else
+                                    <span style="font-size: 0.75rem; font-weight: 700; color: #64748b; background: #f1f5f9; padding: 0.2rem 0.55rem; border-radius: 6px;">
+                                        Ongoing
+                                    </span>
+                                @endif
                             </td>
                             <td style="padding: 1.1rem 1.25rem; text-align: center;">
-                                <span style="font-size: 0.75rem; font-weight: 900; color: #ffffff; background: #059669; padding: 0.25rem 0.75rem; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.04em;">
-                                    PASSED
-                                </span>
+                                @if($finalAverage)
+                                    <span style="font-size: 0.75rem; font-weight: 900; color: #ffffff; background: {{ $finalAverage >= 75 ? '#059669' : '#dc2626' }}; padding: 0.25rem 0.75rem; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.04em;">
+                                        {{ $finalAverage >= 75 ? 'PASSED' : 'FAILED' }}
+                                    </span>
+                                @else
+                                    <span style="font-size: 0.75rem; font-weight: 700; color: #64748b; background: #f1f5f9; padding: 0.2rem 0.55rem; border-radius: 6px;">
+                                        Ongoing
+                                    </span>
+                                @endif
                             </td>
                         </tr>
                     </tbody>
