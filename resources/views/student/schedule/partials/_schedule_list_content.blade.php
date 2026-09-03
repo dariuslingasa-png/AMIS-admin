@@ -76,7 +76,7 @@
                         @php
                             $style = $getSubjectStyle($entry->subject_name);
                         @endphp
-                        <div style="background: {{ $style['bg'] }}; border: 1.5px solid {{ $style['border'] }}; border-left: 5px solid {{ $style['accent'] }}; border-radius: 16px; padding: 1.15rem; display: flex; flex-direction: column; justify-content: space-between; gap: 0.85rem; box-shadow: 0 2px 4px rgba(0,0,0,0.03);">
+                        <div style="background: {{ $style['bg'] }}; border: 1.5px solid {{ $style['border'] }}; border-radius: 16px; padding: 1.15rem; display: flex; flex-direction: column; justify-content: space-between; gap: 0.85rem; box-shadow: 0 2px 4px rgba(0,0,0,0.03);">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <span style="font-size: 11.5px; font-weight: 850; color: {{ $style['accent'] }}; text-transform: uppercase; background: {{ $style['badge_bg'] }}; padding: 0.15rem 0.5rem; border-radius: 6px;">
                                     {{ $entry->day }}

@@ -92,11 +92,11 @@
                                 $style = $getSubjectStyle($s->subject_name);
                             @endphp
                             <div class="calendar-class-card {{ $classState === 'completed' ? 'class-completed' : ($classState === 'live' ? 'class-live' : '') }}" 
-                                 style="min-height: 85px; background: {{ $style['bg'] }} !important; border: 1.5px solid {{ $style['border'] }} !important; border-left: 5px solid {{ $style['accent'] }} !important; color: {{ $style['text'] }} !important; display: flex; flex-direction: row; gap: 0.65rem; align-items: center; border-radius: 14px; padding: 0.65rem 0.75rem;">
+                                 style="min-height: 85px; background: {{ $style['bg'] }} !important; border: 1.5px solid {{ $style['border'] }} !important; color: {{ $style['text'] }} !important; display: flex; flex-direction: row; gap: 0.65rem; align-items: center; border-radius: 14px; padding: 0.65rem 0.75rem;">
                                 
-                                <!-- Left: Teacher photo in circle with accent ring -->
+                                <!-- Left: Teacher photo in circle -->
                                 <div @if($photoUrl) @click="previewPhoto = { url: '{{ $photoUrl }}', name: '{{ $currentTeacherName }}', role: 'Official Teacher', subject: '{{ $s->subject_name }}', time: '{{ date('g:i A', strtotime($s->start_time)) }} - {{ date('g:i A', strtotime($s->end_time)) }}', day: '{{ $dayName }}' }" @endif
-                                     style="width: 40px; height: 40px; border-radius: 50%; background: white; border: 2.5px solid {{ $style['accent'] }} !important; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.06);">
+                                     style="width: 40px; height: 40px; border-radius: 50%; background: white; border: 1.5px solid {{ $style['border'] }} !important; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
                                     @if($photoUrl)
                                         <img src="{{ $photoUrl }}" alt="{{ $currentTeacherName }}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
                                     @else

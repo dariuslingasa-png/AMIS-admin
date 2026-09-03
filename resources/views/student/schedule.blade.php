@@ -108,7 +108,7 @@
     </div>
 
     <!-- Active Indicator Banner -->
-    <div style="display: flex; justify-content: space-between; align-items: center; background: #f0fdfa; border: 1.5px solid #ccfbf1; border-left: 5px solid #0d9488; border-radius: 12px; padding: 0.75rem 1.25rem; flex-wrap: wrap; gap: 0.5rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; background: #f0fdfa; border: 1.5px solid #ccfbf1; border-radius: 12px; padding: 0.75rem 1.25rem; flex-wrap: wrap; gap: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
         <div style="display: flex; align-items: center; gap: 0.65rem;">
             <span style="width: 9px; height: 9px; border-radius: 50%; background: #10b981; box-shadow: 0 0 10px #10b981;"></span>
             <span style="font-size: 14px; font-weight: 750; color: #0f766e;">
