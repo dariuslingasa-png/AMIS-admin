@@ -39,17 +39,23 @@
             $name = $subj->subject_name;
             $q1Grades = [90, 94, 91, 95, 93, 89, 92, 91, 93, 90, 92];
             $q1 = $q1Grades[$idx % count($q1Grades)];
+            $q2 = null;
+            $q3 = null;
+            
+            $isComplete = !is_null($q1) && !is_null($q2) && !is_null($q3);
+            $final = $isComplete ? round(($q1 + $q2 + $q3) / 3, 1) : null;
+            $remarks = $isComplete ? ($final >= 75 ? 'Passed' : 'Failed') : 'Ongoing';
             
             return [
                 'id' => $subj->id,
                 'subject_name' => $name,
                 'teacher_name' => $subj->teacher_name ?: 'Assigned Faculty',
                 'q1' => $q1,
-                'q2' => null,
-                'q3' => null,
-                'final' => null,
-                'remarks' => 'Passed',
-                'status' => 'Ongoing'
+                'q2' => $q2,
+                'q3' => $q3,
+                'final' => $final,
+                'remarks' => $remarks,
+                'status' => $isComplete ? 'Completed' : 'Ongoing'
             ];
         });
 
@@ -219,12 +225,24 @@
                                     —
                                 </td>
                                 <td style="padding: 0.95rem 1rem; text-align: center; font-weight: 800; color: #0f172a;">
-                                    <span style="font-size: 0.75rem; font-weight: 700; color: #64748b; background: #f1f5f9; padding: 0.2rem 0.55rem; border-radius: 6px;">Ongoing</span>
+                                    @if($row['final'])
+                                        <span style="color: #047857; font-weight: 900; font-size: 0.95rem;">
+                                            {{ number_format($row['final'], 1) }}
+                                        </span>
+                                    @else
+                                        <span style="font-size: 0.75rem; font-weight: 700; color: #64748b; background: #f1f5f9; padding: 0.2rem 0.55rem; border-radius: 6px;">Ongoing</span>
+                                    @endif
                                 </td>
                                 <td style="padding: 0.95rem 1.25rem; text-align: center;">
-                                    <span style="font-size: 0.72rem; font-weight: 800; color: #047857; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 0.2rem 0.6rem; border-radius: 999px; text-transform: uppercase;">
-                                        Passed
-                                    </span>
+                                    @if($row['final'])
+                                        <span style="font-size: 0.72rem; font-weight: 800; color: {{ $row['final'] >= 75 ? '#047857' : '#dc2626' }}; background: {{ $row['final'] >= 75 ? '#ecfdf5' : '#fef2f2' }}; border: 1px solid {{ $row['final'] >= 75 ? '#a7f3d0' : '#fecaca' }}; padding: 0.2rem 0.6rem; border-radius: 999px; text-transform: uppercase;">
+                                            {{ $row['remarks'] }}
+                                        </span>
+                                    @else
+                                        <span style="font-size: 0.75rem; font-weight: 700; color: #64748b; background: #f1f5f9; padding: 0.2rem 0.55rem; border-radius: 6px;">
+                                            Ongoing
+                                        </span>
+                                    @endif
                                 </td>
                             </tr>
                         @empty
