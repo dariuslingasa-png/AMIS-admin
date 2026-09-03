@@ -9,57 +9,54 @@
     $subjectIcon = function (?string $subjectName): string {
         $subjectLower = mb_strtolower((string) $subjectName);
         if (str_contains($subjectLower, 'math')) { return 'binary'; }
-        if (str_contains($subjectLower, 'science')) { return 'beaker'; }
-        if (str_contains($subjectLower, 'english') || str_contains($subjectLower, 'reading')) { return 'book-open'; }
-        if (str_contains($subjectLower, 'arabic') || str_contains($subjectLower, 'qur') || str_contains($subjectLower, 'islamic') || str_contains($subjectLower, 'shaf')) { return 'book'; }
-        if (str_contains($subjectLower, 'computer') || str_contains($subjectLower, 'ict')) { return 'monitor'; }
-        if (str_contains($subjectLower, 'pe') || str_contains($subjectLower, 'physical')) { return 'activity'; }
+        if (str_contains($subjectLower, 'science') || str_contains($subjectLower, 'sci') || str_contains($subjectLower, 'bio') || str_contains($subjectLower, 'phys')) { return 'flask-conical'; }
+        if (str_contains($subjectLower, 'english') || str_contains($subjectLower, 'reading') || str_contains($subjectLower, 'lit')) { return 'book-open'; }
+        if (str_contains($subjectLower, 'arabic') || str_contains($subjectLower, 'qur') || str_contains($subjectLower, 'islamic') || str_contains($subjectLower, 'shaf') || str_contains($subjectLower, 'hadith')) { return 'book-text'; }
+        if (str_contains($subjectLower, 'computer') || str_contains($subjectLower, 'ict') || str_contains($subjectLower, 'tle')) { return 'monitor'; }
+        if (str_contains($subjectLower, 'pe') || str_contains($subjectLower, 'physical') || str_contains($subjectLower, 'mapeh')) { return 'activity'; }
         if (str_contains($subjectLower, 'art') || str_contains($subjectLower, 'drawing')) { return 'palette'; }
         return 'file-text';
     };
 
     $getSubjectStyle = function ($subjectName) {
-        $subjectLower = mb_strtolower((string) $subjectName);
-        if (str_contains($subjectLower, 'math')) {
-            return ['bg' => '#e0e7ff', 'border' => '#c7d2fe', 'text' => '#312e81', 'badge' => '#4338ca'];
+        $s = mb_strtolower(trim((string) $subjectName));
+        if (str_contains($s, 'qur') || str_contains($s, 'arab') || str_contains($s, 'shaf') || str_contains($s, 'hadith') || str_contains($s, 'islam')) {
+            return ['cat' => 'Islamic & Arabic', 'accent' => '#059669', 'bg' => '#ecfdf5', 'border' => '#a7f3d0', 'text' => '#064e3b', 'badge_bg' => '#d1fae5', 'badge_text' => '#065f46'];
         }
-        if (str_contains($subjectLower, 'science')) {
-            return ['bg' => '#f3e8ff', 'border' => '#e9d5ff', 'text' => '#581c87', 'badge' => '#7e22ce'];
+        if (str_contains($s, 'math')) {
+            return ['cat' => 'Mathematics', 'accent' => '#4f46e5', 'bg' => '#eef2ff', 'border' => '#c7d2fe', 'text' => '#1e1b4b', 'badge_bg' => '#e0e7ff', 'badge_text' => '#3730a3'];
         }
-        if (str_contains($subjectLower, 'english') || str_contains($subjectLower, 'reading')) {
-            return ['bg' => '#e0f2fe', 'border' => '#bae6fd', 'text' => '#0c4a6e', 'badge' => '#0284c7'];
+        if (str_contains($s, 'sci') || str_contains($s, 'bio') || str_contains($s, 'phys') || str_contains($s, 'res')) {
+            return ['cat' => 'Science', 'accent' => '#9333ea', 'bg' => '#faf5ff', 'border' => '#e9d5ff', 'text' => '#3b0764', 'badge_bg' => '#f3e8ff', 'badge_text' => '#6b21a8'];
         }
-        if (str_contains($subjectLower, 'quran') || str_contains($subjectLower, 'qur')) {
-            return ['bg' => '#ecfdf5', 'border' => '#a7f3d0', 'text' => '#064e3b', 'badge' => '#059669'];
+        if (str_contains($s, 'eng') || str_contains($s, 'read') || str_contains($s, 'lit') || str_contains($s, 'lang') || $s === 'r & l' || $s === 'lcs' || $s === 'mil') {
+            return ['cat' => 'English & Reading', 'accent' => '#0284c7', 'bg' => '#f0f9ff', 'border' => '#bae6fd', 'text' => '#0c4a6e', 'badge_bg' => '#e0f2fe', 'badge_text' => '#0369a1'];
         }
-        if (str_contains($subjectLower, 'arabic')) {
-            return ['bg' => '#ecfdf5', 'border' => '#6ee7b7', 'text' => '#064e3b', 'badge' => '#047857'];
+        if (str_contains($s, 'fili') || str_contains($s, 'makabansa') || str_contains($s, 'gmrc') || str_contains($s, 'esp')) {
+            return ['cat' => 'Filipino & Values', 'accent' => '#d97706', 'bg' => '#fffbeb', 'border' => '#fde68a', 'text' => '#78350f', 'badge_bg' => '#fef3c7', 'badge_text' => '#92400e'];
         }
-        if (str_contains($subjectLower, 'hadith') || str_contains($subjectLower, 'islamic') || str_contains($subjectLower, 'shaf')) {
-            return ['bg' => '#f0fdf4', 'border' => '#bbf7d0', 'text' => '#166534', 'badge' => '#15803d'];
+        if (str_contains($s, 'ap') || str_contains($s, 'araling') || str_contains($s, 'soc')) {
+            return ['cat' => 'Araling Panlipunan', 'accent' => '#ea580c', 'bg' => '#fff7ed', 'border' => '#fed7aa', 'text' => '#7c2d12', 'badge_bg' => '#ffedd5', 'badge_text' => '#c2410c'];
         }
-        if (str_contains($subjectLower, 'circle time') || str_contains($subjectLower, 'circle')) {
-            return ['bg' => '#f0fdfa', 'border' => '#99f6e4', 'text' => '#134e4a', 'badge' => '#0f766e'];
+        if (str_contains($s, 'mapeh') || str_contains($s, 'music') || str_contains($s, 'art') || str_contains($s, 'pe') || str_contains($s, 'phys')) {
+            return ['cat' => 'MAPEH & Arts', 'accent' => '#e11d48', 'bg' => '#fff1f2', 'border' => '#fecdd3', 'text' => '#881337', 'badge_bg' => '#ffe4e6', 'badge_text' => '#be123c'];
         }
-        if (str_contains($subjectLower, 'meeting time') || str_contains($subjectLower, 'wrap-up')) {
-            return ['bg' => '#f8fafc', 'border' => '#e2e8f0', 'text' => '#334155', 'badge' => '#475569'];
+        if (str_contains($s, 'tle') || str_contains($s, 'comp') || str_contains($s, 'ict') || $s === 'ec') {
+            return ['cat' => 'TLE & ICT', 'accent' => '#0d9488', 'bg' => '#f0fdfa', 'border' => '#99f6e4', 'text' => '#134e4a', 'badge_bg' => '#ccfbf1', 'badge_text' => '#0f766e'];
         }
-        if (str_contains($subjectLower, 'filipino')) {
-            return ['bg' => '#fef3c7', 'border' => '#fde68a', 'text' => '#78350f', 'badge' => '#b45309'];
+        if (str_contains($s, 'circle') || str_starts_with($s, 'ct ') || $s === 'ct 1' || $s === 'ct 2') {
+            return ['cat' => 'Circle Time', 'accent' => '#db2777', 'bg' => '#fdf2f8', 'border' => '#fbcfe8', 'text' => '#831843', 'badge_bg' => '#fce7f3', 'badge_text' => '#be185d'];
         }
-        if (str_contains($subjectLower, 'mapeh')) {
-            return ['bg' => '#ffe4e6', 'border' => '#fecdd3', 'text' => '#881337', 'badge' => '#be123c'];
+        if (str_contains($s, 'meeting')) {
+            return ['cat' => 'Meeting Time', 'accent' => '#2563eb', 'bg' => '#eff6ff', 'border' => '#bfdbfe', 'text' => '#1e3a8a', 'badge_bg' => '#dbeafe', 'badge_text' => '#1d4ed8'];
         }
-        if (str_contains($subjectLower, 'ap') || str_contains($subjectLower, 'araling')) {
-            return ['bg' => '#fff7ed', 'border' => '#fed7aa', 'text' => '#7c2d12', 'badge' => '#c2410c'];
+        if (str_contains($s, 'wrap-up')) {
+            return ['cat' => 'Wrap-Up Time', 'accent' => '#ca8a04', 'bg' => '#fefce8', 'border' => '#fef08a', 'text' => '#713f12', 'badge_bg' => '#fef9c3', 'badge_text' => '#854d0e'];
         }
-        if (str_contains($subjectLower, 'tle') || str_contains($subjectLower, 'computer') || str_contains($subjectLower, 'ict')) {
-            return ['bg' => '#f0fdfa', 'border' => '#ccfbf1', 'text' => '#115e59', 'badge' => '#0f766e'];
+        if (str_contains($s, 'homeroom') || $s === 'hg') {
+            return ['cat' => 'Homeroom Guidance', 'accent' => '#0891b2', 'bg' => '#ecfeff', 'border' => '#a5f3fc', 'text' => '#164e63', 'badge_bg' => '#cffafe', 'badge_text' => '#0e7490'];
         }
-        if (str_contains($subjectLower, 'assembly') || str_contains($subjectLower, 'transition') || str_contains($subjectLower, 'break') || str_contains($subjectLower, 'recess')) {
-            return ['bg' => '#f8fafc', 'border' => '#e2e8f0', 'text' => '#475569', 'badge' => '#64748b'];
-        }
-        return ['bg' => '#f8fafc', 'border' => '#e2e8f0', 'text' => '#334155', 'badge' => '#475569'];
+        return ['cat' => 'General', 'accent' => '#64748b', 'bg' => '#f8fafc', 'border' => '#e2e8f0', 'text' => '#334155', 'badge_bg' => '#f1f5f9', 'badge_text' => '#475569'];
     };
 
     $teacherName = function ($s): string {
