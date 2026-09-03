@@ -185,7 +185,7 @@
             <div style="display: flex; align-items: center; gap: 1.15rem;">
                 <img src="{{ asset('images/AMIS_Logo.png') }}" alt="AMIS Logo" style="width: 62px; height: 62px; object-fit: contain;">
                 <div>
-                    <div style="font-family: 'Amiri', 'Traditional Arabic', serif; font-size: 1.2rem; font-weight: 700; color: #047857; line-height: 1.25; direction: rtl; text-align: left;" dir="rtl">
+                    <div class="arabic-school-title" style="font-family: 'Scheherazade New', 'Amiri', 'Traditional Arabic', serif !important; font-size: 1.55rem; font-weight: 700; color: #047857; line-height: 1.15; margin-bottom: 0.15rem; direction: rtl; text-align: left;" dir="rtl" lang="ar">
                         المدرسة المنورة الإسلامية
                     </div>
                     <h2 style="font-family: 'Plus Jakarta Sans', sans-serif !important; font-size: 1.25rem; font-weight: 900; color: #0f172a; margin: 0; line-height: 1.2; letter-spacing: -0.01em;">
