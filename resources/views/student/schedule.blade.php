@@ -155,7 +155,7 @@
                         SY {{ $studentInfo['school_year'] }}
                     </div>
                     <span style="font-size: 0.78rem; font-weight: 600; color: #d97706; background: #fef3c7; padding: 0.15rem 0.55rem; border-radius: 6px; display: inline-block;">
-                        Quarter 1 Ongoing
+                        1st Term Ongoing
                     </span>
                 </div>
                 <div style="margin-top: 0.75rem; padding-top: 0.65rem; border-top: 1px dashed #f1f5f9; display: flex; justify-content: space-between; font-size: 0.75rem;">

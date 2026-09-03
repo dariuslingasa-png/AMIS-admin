@@ -157,7 +157,7 @@
                 <div style="position: absolute; right: -15px; bottom: -15px; width: 90px; height: 90px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,0.12), transparent 70%); pointer-events: none;"></div>
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.6rem;">
                     <span style="font-size: 0.72rem; font-weight: 800; color: #a7f3d0; text-transform: uppercase; letter-spacing: 0.08em;">General Weighted Average</span>
-                    <span style="font-size: 0.68rem; font-weight: 800; background: rgba(255,255,255,0.22); color: #ffffff; padding: 0.15rem 0.55rem; border-radius: 999px;">Q1 Active</span>
+                    <span style="font-size: 0.68rem; font-weight: 800; background: rgba(255,255,255,0.22); color: #ffffff; padding: 0.15rem 0.55rem; border-radius: 999px;">1st Term Active</span>
                 </div>
                 <div style="display: flex; align-items: baseline; gap: 0.5rem; margin-bottom: 0.25rem;">
                     <span style="font-size: 2.15rem; font-weight: 950; line-height: 1; letter-spacing: -0.03em;">{{ number_format($q1Average, 1) }}</span>
@@ -198,7 +198,7 @@
                 </div>
                 <div style="margin-top: 0.75rem; padding-top: 0.65rem; border-top: 1px dashed #f1f5f9; display: flex; justify-content: space-between; font-size: 0.75rem;">
                     <span style="color: #64748b; font-weight: 600;">Grading System:</span>
-                    <strong style="color: #059669; font-weight: 800;">Quarterly / DepEd</strong>
+                    <strong style="color: #059669; font-weight: 800;">Trimester (3 Terms)</strong>
                 </div>
             </div>
 
@@ -210,7 +210,7 @@
                         SY {{ $schoolYear }}
                     </div>
                     <span style="font-size: 0.78rem; font-weight: 600; color: #d97706; background: #fef3c7; padding: 0.15rem 0.55rem; border-radius: 6px; display: inline-block;">
-                        Quarter 1 Ongoing
+                        1st Term Ongoing
                     </span>
                 </div>
                 <div style="margin-top: 0.75rem; padding-top: 0.65rem; border-top: 1px dashed #f1f5f9; display: flex; justify-content: space-between; font-size: 0.75rem;">
@@ -289,7 +289,7 @@
 
                 <div class="no-print" style="display: flex; align-items: center; gap: 0.35rem; font-size: 0.75rem; font-weight: 700; color: #64748b;">
                     <span>Grading Period:</span>
-                    <span style="color: #059669; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 0.15rem 0.55rem; border-radius: 6px;">Quarter 1</span>
+                    <span style="color: #059669; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 0.15rem 0.55rem; border-radius: 6px;">1st Term</span>
                 </div>
             </div>
 
@@ -299,10 +299,9 @@
                         <tr style="background: #f8fafc; border-bottom: 1.5px solid #e2e8f0; font-size: 0.75rem; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.05em;">
                             <th style="padding: 0.85rem 1.25rem; min-width: 200px;">Learning Areas</th>
                             <th style="padding: 0.85rem 1rem; min-width: 160px;">Subject Teacher</th>
-                            <th style="padding: 0.85rem 0.75rem; text-align: center; width: 70px;">Q1</th>
-                            <th style="padding: 0.85rem 0.75rem; text-align: center; width: 70px;">Q2</th>
-                            <th style="padding: 0.85rem 0.75rem; text-align: center; width: 70px;">Q3</th>
-                            <th style="padding: 0.85rem 0.75rem; text-align: center; width: 70px;">Q4</th>
+                            <th style="padding: 0.85rem 0.75rem; text-align: center; width: 85px;">1st Term</th>
+                            <th style="padding: 0.85rem 0.75rem; text-align: center; width: 85px;">2nd Term</th>
+                            <th style="padding: 0.85rem 0.75rem; text-align: center; width: 85px;">3rd Term</th>
                             <th style="padding: 0.85rem 1rem; text-align: center; width: 100px;">Final Rating</th>
                             <th style="padding: 0.85rem 1.25rem; text-align: center; width: 110px;">Remarks</th>
                         </tr>
@@ -328,9 +327,6 @@
                                 <td style="padding: 0.95rem 0.75rem; text-align: center; color: #94a3b8; font-weight: 600; font-size: 0.85rem;">
                                     —
                                 </td>
-                                <td style="padding: 0.95rem 0.75rem; text-align: center; color: #94a3b8; font-weight: 600; font-size: 0.85rem;">
-                                    —
-                                </td>
                                 <td style="padding: 0.95rem 1rem; text-align: center; font-weight: 800; color: #0f172a;">
                                     <span style="font-size: 0.75rem; font-weight: 700; color: #64748b; background: #f1f5f9; padding: 0.2rem 0.55rem; border-radius: 6px;">Ongoing</span>
                                 </td>
@@ -342,7 +338,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" style="text-align: center; padding: 3rem 1.5rem; color: #64748b; font-weight: 600;">
+                                <td colspan="7" style="text-align: center; padding: 3rem 1.5rem; color: #64748b; font-weight: 600;">
                                     No subjects currently registered for grading evaluation.
                                 </td>
                             </tr>
@@ -351,12 +347,12 @@
                         {{-- General Average Summary Row --}}
                         <tr style="background: #f8fafc; border-top: 2px solid #e2e8f0; font-weight: 900;">
                             <td colspan="2" style="padding: 1.1rem 1.25rem; color: #0f172a; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.04em;">
-                                General Average (Quarter 1)
+                                General Average (1st Term)
                             </td>
                             <td style="padding: 1.1rem 0.75rem; text-align: center; color: #047857; font-size: 1.15rem; font-weight: 950;">
                                 {{ number_format($q1Average, 1) }}
                             </td>
-                            <td colspan="3" style="padding: 1.1rem 0.75rem; text-align: center; color: #94a3b8; font-weight: 600;">
+                            <td colspan="2" style="padding: 1.1rem 0.75rem; text-align: center; color: #94a3b8; font-weight: 600;">
                                 —
                             </td>
                             <td style="padding: 1.1rem 1rem; text-align: center; color: #047857; font-weight: 900;">
@@ -387,11 +383,10 @@
                     <thead>
                         <tr style="background: #f8fafc; border-bottom: 1.5px solid #e2e8f0; font-size: 0.75rem; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.05em;">
                             <th style="padding: 0.85rem 1.25rem; width: 22%;">Core Values</th>
-                            <th style="padding: 0.85rem 1.25rem; width: 50%;">Behavior Statements</th>
-                            <th style="padding: 0.85rem 0.5rem; text-align: center; width: 7%;">Q1</th>
-                            <th style="padding: 0.85rem 0.5rem; text-align: center; width: 7%;">Q2</th>
-                            <th style="padding: 0.85rem 0.5rem; text-align: center; width: 7%;">Q3</th>
-                            <th style="padding: 0.85rem 0.5rem; text-align: center; width: 7%;">Q4</th>
+                            <th style="padding: 0.85rem 1.25rem; width: 51%;">Behavior Statements</th>
+                            <th style="padding: 0.85rem 0.5rem; text-align: center; width: 9%;">1st Term</th>
+                            <th style="padding: 0.85rem 0.5rem; text-align: center; width: 9%;">2nd Term</th>
+                            <th style="padding: 0.85rem 0.5rem; text-align: center; width: 9%;">3rd Term</th>
                         </tr>
                     </thead>
                     <tbody style="divide-y: 1px solid #f1f5f9;">
@@ -401,13 +396,11 @@
                             <td style="padding: 0.85rem 0.5rem; text-align: center; font-weight: 800; color: #047857;">AO</td>
                             <td style="padding: 0.85rem 0.5rem; text-align: center; color: #94a3b8;">—</td>
                             <td style="padding: 0.85rem 0.5rem; text-align: center; color: #94a3b8;">—</td>
-                            <td style="padding: 0.85rem 0.5rem; text-align: center; color: #94a3b8;">—</td>
                         </tr>
                         <tr style="border-bottom: 1px solid #f1f5f9;">
                             <td style="padding: 0.85rem 1.25rem; font-weight: 800; color: #0f172a;">2. Makatao</td>
                             <td style="padding: 0.85rem 1.25rem; color: #475569;">Shows kindness, compassion, humility, and willingness to help classmates and teachers.</td>
                             <td style="padding: 0.85rem 0.5rem; text-align: center; font-weight: 800; color: #047857;">AO</td>
-                            <td style="padding: 0.85rem 0.5rem; text-align: center; color: #94a3b8;">—</td>
                             <td style="padding: 0.85rem 0.5rem; text-align: center; color: #94a3b8;">—</td>
                             <td style="padding: 0.85rem 0.5rem; text-align: center; color: #94a3b8;">—</td>
                         </tr>
@@ -417,13 +410,11 @@
                             <td style="padding: 0.85rem 0.5rem; text-align: center; font-weight: 800; color: #047857;">AO</td>
                             <td style="padding: 0.85rem 0.5rem; text-align: center; color: #94a3b8;">—</td>
                             <td style="padding: 0.85rem 0.5rem; text-align: center; color: #94a3b8;">—</td>
-                            <td style="padding: 0.85rem 0.5rem; text-align: center; color: #94a3b8;">—</td>
                         </tr>
                         <tr>
                             <td style="padding: 0.85rem 1.25rem; font-weight: 800; color: #0f172a;">4. Makabansa</td>
                             <td style="padding: 0.85rem 1.25rem; color: #475569;">Demonstrates pride in being a Filipino; exercises the rights and responsibilities of a Filipino citizen.</td>
                             <td style="padding: 0.85rem 0.5rem; text-align: center; font-weight: 800; color: #047857;">AO</td>
-                            <td style="padding: 0.85rem 0.5rem; text-align: center; color: #94a3b8;">—</td>
                             <td style="padding: 0.85rem 0.5rem; text-align: center; color: #94a3b8;">—</td>
                             <td style="padding: 0.85rem 0.5rem; text-align: center; color: #94a3b8;">—</td>
                         </tr>
