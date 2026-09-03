@@ -91,7 +91,7 @@
                                 $photoUrl = $getPhotoUrl($s->teacher_photo ?? null, $s->teacher_key ?? null, $s->teacher_display ?: ($s->teacher_name ?? ''));
                                 $style = $getSubjectStyle($s->subject_name);
                             @endphp
-                            <div class="calendar-class-card {{ $classState === 'completed' ? 'class-completed' : ($classState === 'live' ? 'class-live' : '') }}" 
+                            <div class="calendar-class-card" 
                                  style="min-height: 80px; background: {{ $style['bg'] }} !important; border: 1.5px solid {{ $style['border'] }} !important; color: {{ $style['text'] }} !important; display: flex; flex-direction: row; gap: 0.45rem; align-items: center; border-radius: 12px; padding: 0.5rem 0.65rem; width: 100%; box-sizing: border-box; overflow: hidden;">
                                 
                                 <!-- Left: Teacher photo in circle -->

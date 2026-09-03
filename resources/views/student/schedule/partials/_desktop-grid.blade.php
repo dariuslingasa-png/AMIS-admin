@@ -207,7 +207,7 @@
                                      $photoUrl = $getPhotoUrl($s->teacher_photo ?? null, $s->teacher_key ?? null, $s->teacher_display ?: ($s->teacher_name ?? ''));
                                      $style = $getSubjectStyle($s->subject_name);
                                  @endphp
-                                 <div class="calendar-class-card {{ $classState === 'completed' ? 'class-completed' : ($classState === 'live' ? 'class-live' : '') }}"
+                                 <div class="calendar-class-card"
                                       style="background: {{ $style['bg'] }} !important; 
                                              border: 1.5px solid {{ $style['border'] }} !important; 
                                              color: {{ $style['text'] }} !important; 

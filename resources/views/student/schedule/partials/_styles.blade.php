@@ -103,23 +103,7 @@
         box-shadow: 0 8px 16px rgba(0, 0, 0, 0.04);
     }
     
-    /* Live Glow Alert */
-    .class-live {
-        animation: pulse-border 2s infinite alternate;
-        position: relative;
-    }
-    .class-live::before {
-        content: '';
-        position: absolute;
-        top: 6px;
-        right: 6px;
-        width: 8px;
-        height: 8px;
-        background-color: #ef4444;
-        border-radius: 50%;
-        animation: pulse-live 1.8s infinite;
-        z-index: 10;
-    }
+
     
     /* Completed State */
     .class-completed {
@@ -206,16 +190,7 @@
         }
     }
     
-    /* Animations */
-    @keyframes pulse-live {
-        0% { transform: scale(0.9); opacity: 1; }
-        50% { transform: scale(1.3); opacity: 0.4; }
-        100% { transform: scale(0.9); opacity: 1; }
-    }
-    @keyframes pulse-border {
-        from { box-shadow: 0 0 4px rgba(16,185,129,0.1); }
-        to { box-shadow: 0 0 12px rgba(16,185,129,0.3); }
-    }
+
     
     /* Style tab switcher buttons */
     .day-tab-btn {
