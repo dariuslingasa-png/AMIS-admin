@@ -9,7 +9,17 @@
 
     $initials = collect(explode(' ', $fullName))->map(fn($n) => mb_substr($n, 0, 1))->take(2)->join('');
     $gradeLevel = $student?->grade_level ?: 'Grade 1';
-    $sectionName = $section?->name ?? ($student?->section ?? 'G1-AL-MUNAWWARA');
+    
+    // Clean section name: G1-AL-MUNAWWARA -> Al-Munawwara
+    $rawSection = $section?->name ?? ($student?->section ?? 'Al-Munawwara');
+    $cleanSection = preg_replace('/^(?:G\d+|Grade\s*\d+|K(?:inder)?\s*\d*)\s*[-_:]\s*/i', '', $rawSection);
+    $cleanSection = trim(str_replace(['_', '-'], ' ', $cleanSection));
+    if (strcasecmp($cleanSection, 'AL MUNAWWARA') === 0 || str_contains(strtolower($cleanSection), 'munawwara')) {
+        $sectionName = 'Al-Munawwara';
+    } else {
+        $sectionName = ucwords(strtolower($cleanSection)) ?: 'Al-Munawwara';
+    }
+
     $schoolYear = $student?->school_year ?? '2026–2027';
     $lrn = $student?->student_number ?? '260000';
     $learningMode = $student?->applicant?->learning_mode ?? 'Flexible Online Learning';
@@ -199,12 +209,9 @@
                     <div style="font-size: 1.55rem; font-weight: 950; color: #0f172a; margin-bottom: 0.2rem;">
                         {{ $gradeRecords->count() }} <small style="font-size: 0.85rem; font-weight: 700; color: #64748b;">Subjects</small>
                     </div>
-                    <span style="font-size: 0.78rem; font-weight: 600; color: #64748b;">
-                        DepEd K-12 MATATAG Curriculum
-                    </span>
                 </div>
                 <div style="margin-top: 0.75rem; padding-top: 0.65rem; border-top: 1px dashed #f1f5f9; display: flex; justify-content: space-between; font-size: 0.75rem;">
-                    <span style="color: #64748b; font-weight: 600;">Grading System:</span>
+                    <span style="color: #64748b; font-weight: 600;">Grade System:</span>
                     <strong style="color: #059669; font-weight: 800;">Trimester (3 Terms)</strong>
                 </div>
             </div>
@@ -245,27 +252,24 @@
 
         {{-- Printable Official Header --}}
         <div style="display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; padding-bottom: 1.5rem; border-bottom: 2px solid #0f172a;">
-            <div style="display: flex; align-items: center; gap: 1rem;">
-                <img src="{{ asset('images/AMIS_Logo.png') }}" alt="AMIS Logo" style="width: 58px; height: 58px; object-fit: contain;">
+            <div style="display: flex; align-items: center; gap: 1.15rem;">
+                <img src="{{ asset('images/AMIS_Logo.png') }}" alt="AMIS Logo" style="width: 62px; height: 62px; object-fit: contain;">
                 <div>
-                    <h2 style="font-family: 'Plus Jakarta Sans', sans-serif !important; font-size: 1.25rem; font-weight: 900; color: #0f172a; margin: 0; line-height: 1.2;">
-                        AL-MUNAWWARA ISLAMIC SCHOOL
+                    <div style="font-family: 'Amiri', 'Traditional Arabic', serif; font-size: 1.2rem; font-weight: 700; color: #047857; line-height: 1.25; direction: rtl; text-align: left;" dir="rtl">
+                        المدرسة المنورة الإسلامية
+                    </div>
+                    <h2 style="font-family: 'Plus Jakarta Sans', sans-serif !important; font-size: 1.25rem; font-weight: 900; color: #0f172a; margin: 0; line-height: 1.2; letter-spacing: -0.01em;">
+                        AL–MUNAWWARA ISLAMIC SCHOOL
                     </h2>
                     <p style="font-size: 0.78rem; font-weight: 600; color: #64748b; margin: 0.15rem 0 0 0;">
                         Official Progress Report Card (Form 138-E) · School Year {{ $schoolYear }}
                     </p>
                 </div>
             </div>
-            
-            <div style="text-align: right;">
-                <span style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: #059669; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 0.25rem 0.65rem; border-radius: 8px;">
-                    DepEd Recognized
-                </span>
-            </div>
         </div>
 
         {{-- Student Information Banner --}}
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 1.25rem;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 1.25rem;">
             <div>
                 <span style="font-size: 0.72rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; display: block;">Learner Name</span>
                 <span style="font-size: 0.95rem; font-weight: 900; color: #0f172a;">{{ $fullName }}</span>
@@ -277,10 +281,6 @@
             <div>
                 <span style="font-size: 0.72rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; display: block;">Grade & Section</span>
                 <span style="font-size: 0.95rem; font-weight: 800; color: #0f172a;">{{ $gradeLevel }} — {{ $sectionName }}</span>
-            </div>
-            <div>
-                <span style="font-size: 0.72rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; display: block;">Curriculum</span>
-                <span style="font-size: 0.925rem; font-weight: 700; color: #059669;">K-12 Enhanced / MATATAG</span>
             </div>
         </div>
 

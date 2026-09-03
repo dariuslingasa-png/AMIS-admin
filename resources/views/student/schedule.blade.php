@@ -182,22 +182,19 @@
 
         {{-- Printable Official Header --}}
         <div style="display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; padding-bottom: 1.5rem; border-bottom: 2px solid #0f172a;">
-            <div style="display: flex; align-items: center; gap: 1rem;">
-                <img src="{{ asset('images/AMIS_Logo.png') }}" alt="AMIS Logo" style="width: 58px; height: 58px; object-fit: contain;">
+            <div style="display: flex; align-items: center; gap: 1.15rem;">
+                <img src="{{ asset('images/AMIS_Logo.png') }}" alt="AMIS Logo" style="width: 62px; height: 62px; object-fit: contain;">
                 <div>
-                    <h2 style="font-family: 'Plus Jakarta Sans', sans-serif !important; font-size: 1.25rem; font-weight: 900; color: #0f172a; margin: 0; line-height: 1.2;">
-                        AL-MUNAWWARA ISLAMIC SCHOOL
+                    <div style="font-family: 'Amiri', 'Traditional Arabic', serif; font-size: 1.2rem; font-weight: 700; color: #047857; line-height: 1.25; direction: rtl; text-align: left;" dir="rtl">
+                        المدرسة المنورة الإسلامية
+                    </div>
+                    <h2 style="font-family: 'Plus Jakarta Sans', sans-serif !important; font-size: 1.25rem; font-weight: 900; color: #0f172a; margin: 0; line-height: 1.2; letter-spacing: -0.01em;">
+                        AL–MUNAWWARA ISLAMIC SCHOOL
                     </h2>
                     <p style="font-size: 0.78rem; font-weight: 600; color: #64748b; margin: 0.15rem 0 0 0;">
                         Official Class Schedule & Weekly Timetable · School Year {{ $studentInfo['school_year'] }}
                     </p>
                 </div>
-            </div>
-            
-            <div style="text-align: right;">
-                <span style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: #059669; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 0.25rem 0.65rem; border-radius: 8px;">
-                    DepEd Recognized
-                </span>
             </div>
         </div>
 
@@ -216,7 +213,7 @@
                 <span id="banner-grade-sec" style="font-size: 0.95rem; font-weight: 800; color: #0f172a;" x-text="currentGrade + ' — ' + currentSectionName">{{ $currentGrade }} — {{ $currentSectionName }}</span>
             </div>
             <div>
-                <span style="font-size: 0.72rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; display: block;">Curriculum / Shift</span>
+                <span style="font-size: 0.72rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; display: block;">Shift & Modality</span>
                 <span id="banner-curriculum" style="font-size: 0.925rem; font-weight: 700; color: #059669;">{{ $studentInfo['modality'] }} {{ $studentInfo['shift'] ? '• ' . $studentInfo['shift'] : '' }}</span>
             </div>
         </div>
