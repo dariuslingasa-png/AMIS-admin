@@ -1,4 +1,4 @@
-<x-student-layout title="Academic Grades & Report Card">
+<x-student-layout title="Grades">
 
 @php
     $fullName = trim(implode(' ', array_filter([
