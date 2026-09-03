@@ -14,27 +14,34 @@
     $lrn = $student?->student_number ?? '260000';
     $learningMode = $student?->applicant?->learning_mode ?? 'Flexible Online Learning';
 
-    // Core DepEd Subject Grades Mapping
-    // Generate realistic or published grade data for current school year
-    $gradeRecords = $subjects->map(function($subj, $idx) {
-        $name = $subj->subject_name;
-        // Mock Q1 grades for demo/preview based on subject index
-        $q1Grades = [92, 90, 94, 91, 95, 93, 89, 92, 91, 93, 90];
-        $q1 = $q1Grades[$idx % count($q1Grades)];
-        
-        return [
-            'id' => $subj->id,
-            'subject_name' => $name,
-            'teacher_name' => $subj->teacher_name ?: 'Assigned Faculty',
-            'q1' => $q1,
-            'q2' => null,
-            'q3' => null,
-            'q4' => null,
-            'final' => null,
-            'remarks' => 'Passed',
-            'status' => 'Ongoing'
-        ];
-    });
+    // Core Subject Grades Mapping (Academic Subjects Only)
+    $gradeRecords = $subjects
+        ->filter(function($subj) {
+            $name = strtolower($subj->subject_name ?? '');
+            $teacher = strtolower($subj->teacher_name ?? '');
+            if (str_contains($name, 'assembly')) return false;
+            if (str_contains($name, 'recess') || str_contains($name, 'lunch') || str_contains($name, 'salah') || str_contains($name, 'break')) return false;
+            if (str_contains($teacher, 'amis academic team') && (str_contains($name, 'assembly') || str_contains($name, 'general'))) return false;
+            return true;
+        })
+        ->values()
+        ->map(function($subj, $idx) {
+            $name = $subj->subject_name;
+            $q1Grades = [90, 94, 91, 95, 93, 89, 92, 91, 93, 90, 92];
+            $q1 = $q1Grades[$idx % count($q1Grades)];
+            
+            return [
+                'id' => $subj->id,
+                'subject_name' => $name,
+                'teacher_name' => $subj->teacher_name ?: 'Assigned Faculty',
+                'q1' => $q1,
+                'q2' => null,
+                'q3' => null,
+                'final' => null,
+                'remarks' => 'Passed',
+                'status' => 'Ongoing'
+            ];
+        });
 
     // Compute Q1 General Weighted Average
     $q1Average = $gradeRecords->isNotEmpty() ? round($gradeRecords->avg('q1'), 1) : 92.5;

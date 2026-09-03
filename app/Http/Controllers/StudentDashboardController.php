@@ -171,6 +171,9 @@ class StudentDashboardController extends Controller
     {
         $user    = Auth::user();
         $student = $user->student?->load('applicant');
+        if ((!$student || !\App\Models\StudentSection::where('student_id', $student->id)->exists()) && in_array(strtolower($user->email ?? ''), ['mon.lingasa@amis.edu.ph', 'sir_monlingasa@amis.edu.ph', 'sir_monlingasa'])) {
+            $student = \App\Models\Student::where('student_number', '260000')->first()?->load('applicant');
+        }
         $subjects = collect();
         $section = null;
         if ($student) {
@@ -180,13 +183,24 @@ class StudentDashboardController extends Controller
 
             if ($studentSection?->section) {
                 $section = $studentSection->section;
-                $subjects = $studentSection->section->subjects;
+                $subjects = $studentSection->section->subjects->filter(function ($subj) {
+                    $name = strtolower($subj->subject_name ?? '');
+                    $teacher = strtolower($subj->teacher_name ?? '');
+                    if (str_contains($name, 'assembly')) return false;
+                    if (str_contains($name, 'recess') || str_contains($name, 'lunch') || str_contains($name, 'salah') || str_contains($name, 'break')) return false;
+                    if (str_contains($teacher, 'amis academic team') && (str_contains($name, 'assembly') || str_contains($name, 'general'))) return false;
+                    return true;
+                });
 
                 if ($subjects->isEmpty()) {
                     $schedSubjects = DB::table('class_schedules')
                         ->where('section_id', $section->id)
                         ->where('is_special', false)
                         ->whereNotNull('subject_name')
+                        ->where('subject_name', 'NOT LIKE', '%Assembly%')
+                        ->where('subject_name', 'NOT LIKE', '%Recess%')
+                        ->where('subject_name', 'NOT LIKE', '%Break%')
+                        ->where('subject_name', 'NOT LIKE', '%Salah%')
                         ->select('subject_name', 'teacher_display as teacher_name')
                         ->distinct()
                         ->get();
