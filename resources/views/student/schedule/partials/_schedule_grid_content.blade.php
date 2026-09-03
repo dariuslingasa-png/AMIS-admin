@@ -20,43 +20,31 @@
 
     $getSubjectStyle = function ($subjectName) {
         $s = mb_strtolower(trim((string) $subjectName));
-        if (str_contains($s, 'qur') || str_contains($s, 'arab') || str_contains($s, 'shaf') || str_contains($s, 'hadith') || str_contains($s, 'islam')) {
-            return ['cat' => 'Islamic & Arabic', 'accent' => '#059669', 'bg' => '#ecfdf5', 'border' => '#a7f3d0', 'text' => '#064e3b', 'badge_bg' => '#d1fae5', 'badge_text' => '#065f46'];
+        if (str_contains($s, 'qur') || str_contains($s, 'arab') || str_contains($s, 'shaf') || str_contains($s, 'hadith') || str_contains($s, 'islam') || str_contains($s, 'tajweed') || str_contains($s, 'aqeedah') || str_contains($s, 'seerah') || str_contains($s, 'fiqh')) {
+            return ['cat' => 'Arabic / Qur\'an / Islamic', 'accent' => '#9333ea', 'bg' => '#f3e8ff', 'border' => '#d8b4fe', 'text' => '#6b21a8', 'teacher' => '#7e22ce', 'badge_bg' => '#f3e8ff', 'badge_text' => '#6b21a8'];
         }
-        if (str_contains($s, 'math')) {
-            return ['cat' => 'Mathematics', 'accent' => '#4f46e5', 'bg' => '#eef2ff', 'border' => '#c7d2fe', 'text' => '#1e1b4b', 'badge_bg' => '#e0e7ff', 'badge_text' => '#3730a3'];
+        if (str_contains($s, 'math') || str_contains($s, 'algebra') || str_contains($s, 'geometry') || str_contains($s, 'calculus') || str_contains($s, 'stats') || str_contains($s, 'physics')) {
+            return ['cat' => 'Math / Physics', 'accent' => '#4f46e5', 'bg' => '#e0e7ff', 'border' => '#a5b4fc', 'text' => '#3730a3', 'teacher' => '#4338ca', 'badge_bg' => '#e0e7ff', 'badge_text' => '#3730a3'];
         }
-        if (str_contains($s, 'sci') || str_contains($s, 'bio') || str_contains($s, 'phys') || str_contains($s, 'res')) {
-            return ['cat' => 'Science', 'accent' => '#9333ea', 'bg' => '#faf5ff', 'border' => '#e9d5ff', 'text' => '#3b0764', 'badge_bg' => '#f3e8ff', 'badge_text' => '#6b21a8'];
+        if (str_contains($s, 'sci') || str_contains($s, 'bio') || str_contains($s, 'chem') || str_contains($s, 'res')) {
+            return ['cat' => 'Science / Biology', 'accent' => '#0d9488', 'bg' => '#ccfbf1', 'border' => '#5eead4', 'text' => '#0f766e', 'teacher' => '#0f766e', 'badge_bg' => '#ccfbf1', 'badge_text' => '#0f766e'];
         }
-        if (str_contains($s, 'eng') || str_contains($s, 'read') || str_contains($s, 'lit') || str_contains($s, 'lang') || $s === 'r & l' || $s === 'lcs' || $s === 'mil') {
-            return ['cat' => 'English & Reading', 'accent' => '#0284c7', 'bg' => '#f0f9ff', 'border' => '#bae6fd', 'text' => '#0c4a6e', 'badge_bg' => '#e0f2fe', 'badge_text' => '#0369a1'];
+        if (str_contains($s, 'gmrc') || str_contains($s, 'esp') || str_contains($s, 'values')) {
+            return ['cat' => 'GMRC / Values / ESP', 'accent' => '#16a34a', 'bg' => '#dcfce7', 'border' => '#86efac', 'text' => '#166534', 'teacher' => '#15803d', 'badge_bg' => '#dcfce7', 'badge_text' => '#166534'];
         }
-        if (str_contains($s, 'fili') || str_contains($s, 'makabansa') || str_contains($s, 'gmrc') || str_contains($s, 'esp')) {
-            return ['cat' => 'Filipino & Values', 'accent' => '#d97706', 'bg' => '#fffbeb', 'border' => '#fde68a', 'text' => '#78350f', 'badge_bg' => '#fef3c7', 'badge_text' => '#92400e'];
+        if (str_contains($s, 'ap') || str_contains($s, 'araling') || str_contains($s, 'soc') || str_contains($s, 'fili') || str_contains($s, 'makabansa')) {
+            return ['cat' => 'AP / Social / Filipino', 'accent' => '#ea580c', 'bg' => '#ffedd5', 'border' => '#fdba74', 'text' => '#9a3412', 'teacher' => '#c2410c', 'badge_bg' => '#ffedd5', 'badge_text' => '#9a3412'];
         }
-        if (str_contains($s, 'ap') || str_contains($s, 'araling') || str_contains($s, 'soc')) {
-            return ['cat' => 'Araling Panlipunan', 'accent' => '#ea580c', 'bg' => '#fff7ed', 'border' => '#fed7aa', 'text' => '#7c2d12', 'badge_bg' => '#ffedd5', 'badge_text' => '#c2410c'];
+        if (str_contains($s, 'mapeh') || str_contains($s, 'music') || str_contains($s, 'art') || str_contains($s, 'pe') || str_contains($s, 'tle') || str_contains($s, 'comp') || str_contains($s, 'ict')) {
+            return ['cat' => 'MAPEH / TLE', 'accent' => '#db2777', 'bg' => '#fce7f3', 'border' => '#f472b6', 'text' => '#9d174d', 'teacher' => '#be185d', 'badge_bg' => '#fce7f3', 'badge_text' => '#9d174d'];
         }
-        if (str_contains($s, 'mapeh') || str_contains($s, 'music') || str_contains($s, 'art') || str_contains($s, 'pe') || str_contains($s, 'phys')) {
-            return ['cat' => 'MAPEH & Arts', 'accent' => '#e11d48', 'bg' => '#fff1f2', 'border' => '#fecdd3', 'text' => '#881337', 'badge_bg' => '#ffe4e6', 'badge_text' => '#be123c'];
+        if (str_contains($s, 'eng') || str_contains($s, 'read') || str_contains($s, 'lit') || str_contains($s, 'lang') || str_contains($s, 'circle') || str_starts_with($s, 'ct ') || $s === 'ct 1' || $s === 'ct 2' || str_contains($s, 'wrap-up') || str_contains($s, 'meeting')) {
+            return ['cat' => 'English / Reading', 'accent' => '#ca8a04', 'bg' => '#fef9c3', 'border' => '#fde047', 'text' => '#854d0e', 'teacher' => '#a16207', 'badge_bg' => '#fef9c3', 'badge_text' => '#854d0e'];
         }
-        if (str_contains($s, 'tle') || str_contains($s, 'comp') || str_contains($s, 'ict') || $s === 'ec') {
-            return ['cat' => 'TLE & ICT', 'accent' => '#0d9488', 'bg' => '#f0fdfa', 'border' => '#99f6e4', 'text' => '#134e4a', 'badge_bg' => '#ccfbf1', 'badge_text' => '#0f766e'];
+        if (str_contains($s, 'assembly') || str_contains($s, 'recess') || str_contains($s, 'salah') || str_contains($s, 'departure') || str_contains($s, 'transition') || str_contains($s, 'break') || str_contains($s, 'homeroom')) {
+            return ['cat' => 'Special Activity', 'accent' => '#d97706', 'bg' => '#fffbeb', 'border' => '#fde68a', 'text' => '#b45309', 'teacher' => '#b45309', 'badge_bg' => '#fef3c7', 'badge_text' => '#92400e'];
         }
-        if (str_contains($s, 'circle') || str_starts_with($s, 'ct ') || $s === 'ct 1' || $s === 'ct 2') {
-            return ['cat' => 'Circle Time', 'accent' => '#db2777', 'bg' => '#fdf2f8', 'border' => '#fbcfe8', 'text' => '#831843', 'badge_bg' => '#fce7f3', 'badge_text' => '#be185d'];
-        }
-        if (str_contains($s, 'meeting')) {
-            return ['cat' => 'Meeting Time', 'accent' => '#2563eb', 'bg' => '#eff6ff', 'border' => '#bfdbfe', 'text' => '#1e3a8a', 'badge_bg' => '#dbeafe', 'badge_text' => '#1d4ed8'];
-        }
-        if (str_contains($s, 'wrap-up')) {
-            return ['cat' => 'Wrap-Up Time', 'accent' => '#ca8a04', 'bg' => '#fefce8', 'border' => '#fef08a', 'text' => '#713f12', 'badge_bg' => '#fef9c3', 'badge_text' => '#854d0e'];
-        }
-        if (str_contains($s, 'homeroom') || $s === 'hg') {
-            return ['cat' => 'Homeroom Guidance', 'accent' => '#0891b2', 'bg' => '#ecfeff', 'border' => '#a5f3fc', 'text' => '#164e63', 'badge_bg' => '#cffafe', 'badge_text' => '#0e7490'];
-        }
-        return ['cat' => 'General', 'accent' => '#64748b', 'bg' => '#f8fafc', 'border' => '#e2e8f0', 'text' => '#334155', 'badge_bg' => '#f1f5f9', 'badge_text' => '#475569'];
+        return ['cat' => 'General', 'accent' => '#64748b', 'bg' => '#f8fafc', 'border' => '#e2e8f0', 'text' => '#334155', 'teacher' => '#64748b', 'badge_bg' => '#f1f5f9', 'badge_text' => '#475569'];
     };
 
     $teacherName = function ($subject): string {

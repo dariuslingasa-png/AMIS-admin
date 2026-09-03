@@ -93,8 +93,8 @@
                                         {{ $s->subject_name }}
                                     </h4>
                                     
-                                    <div style="display: inline-flex; align-items: center; gap: 0.25rem; font-size: 11px; font-weight: 750; color: {{ $style['badge_text'] }}; background: {{ $style['badge_bg'] }}; border: 1px solid {{ $style['border'] }}; border-radius: 5px; padding: 0.1rem 0.4rem; margin-top: 0.2rem; max-width: 100%; box-sizing: border-box; overflow: hidden; width: fit-content;">
-                                        <i data-lucide="user" style="width: 10px; height: 10px; flex-shrink: 0; color: {{ $style['accent'] }};"></i>
+                                    <div style="display: inline-flex; align-items: center; gap: 0.25rem; font-size: 11px; font-weight: 750; color: {{ $style['badge_text'] ?? '#475569' }}; background: {{ $style['badge_bg'] ?? '#f8fafc' }}; border: 1px solid {{ $style['border'] ?? '#e2e8f0' }}; border-radius: 5px; padding: 0.1rem 0.4rem; margin-top: 0.2rem; max-width: 100%; box-sizing: border-box; overflow: hidden; width: fit-content;">
+                                        <i data-lucide="user" style="width: 10px; height: 10px; flex-shrink: 0; color: {{ $style['accent'] ?? '#059669' }};"></i>
                                         <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;">{{ $currentTeacherName }}</span>
                                     </div>
                                 </div>

@@ -538,6 +538,11 @@ class OfficialClassScheduleService
 
             $slotKey = sprintf('%04d-%04d', $parsedRange['start'], $parsedRange['end']);
             if (!isset($timeSlots[$slotKey])) {
+                $isPoint = $parsedRange['start'] === $parsedRange['end'];
+                $label = $isPoint 
+                    ? $this->formatMinutesToClock($parsedRange['start']) 
+                    : ($this->formatMinutesToClock($parsedRange['start']) . ' – ' . $this->formatMinutesToClock($parsedRange['end']));
+
                 $timeSlots[$slotKey] = [
                     'start' => $this->formatMinutesToClock($parsedRange['start']),
                     'end' => $this->formatMinutesToClock($parsedRange['end']),
@@ -545,7 +550,7 @@ class OfficialClassScheduleService
                     'end_minutes' => $parsedRange['end'],
                     'start_time' => $this->formatMinutesToClock($parsedRange['start']),
                     'end_time' => $this->formatMinutesToClock($parsedRange['end']),
-                    'label' => $this->formatMinutesToClock($parsedRange['start']) . ' – ' . $this->formatMinutesToClock($parsedRange['end']),
+                    'label' => $label,
                     'is_break' => (bool)($period['is_break'] ?? false)
                 ];
             }
@@ -705,13 +710,21 @@ class OfficialClassScheduleService
     private function parseClock(?string $value, ?string $fallbackMeridiem = null): ?int
     {
         $text = strtoupper(trim(str_replace('.', '', (string)$value)));
-        if (!preg_match('/^(\d{1,2}):(\d{2})(?:\s*(AM|PM))?$/', $text, $match)) {
+        
+        // Strip seconds if present like 12:00:00 or 03:30:00
+        $text = preg_replace('/^(\d{1,2}:\d{2}):\d{2}/', '$1', $text);
+
+        if (preg_match('/^(\d{1,2}):(\d{2})(?:\s*(AM|PM))?$/', $text, $match)) {
+            $hour = (int)$match[1];
+            $minute = (int)$match[2];
+            $meridiem = $match[3] ?? $fallbackMeridiem;
+        } elseif (preg_match('/^(\d{1,2})(?:\s*(AM|PM))?$/', $text, $match)) {
+            $hour = (int)$match[1];
+            $minute = 0;
+            $meridiem = $match[2] ?? $fallbackMeridiem;
+        } else {
             return null;
         }
-
-        $hour = (int)$match[1];
-        $minute = (int)$match[2];
-        $meridiem = $match[3] ?? $fallbackMeridiem;
 
         if ($minute > 59 || $hour > 23) {
             return null;
@@ -740,19 +753,25 @@ class OfficialClassScheduleService
     public function parseTimeRange(?string $value): ?array
     {
         $text = trim((string)$value);
-        $text = preg_replace('/:00(?=\s*(?:–|—|-|\s|AM|PM|$))/i', '', $text);
+        // Normalize dashes
+        $text = str_replace(['–', '—'], '-', $text);
+        
+        // Remove trailing seconds like 03:00:00 -> 03:00
+        $text = preg_replace('/(\d{1,2}:\d{2}):00\b/', '$1', $text);
 
-        if (preg_match('/^(\d{1,2}:\d{2}(?:\s*[AP]M)?)\s*(?:–|—|-|:)\s*(\d{1,2}:\d{2}(?:\s*[AP]M)?)$/i', $text, $m)) {
-            $part1 = trim($m[1]);
-            $part2 = trim($m[2]);
-        } else {
-            $parts = preg_split('/\s*(?:–|—|-)\s*/u', $text);
-            if (count($parts) !== 2) {
-                return null;
+        $parts = preg_split('/\s*-\s*/', $text);
+        if (count($parts) !== 2) {
+            $single = $this->parseClock($text);
+            if ($single !== null) {
+                return [
+                    'start' => $single,
+                    'end' => $single
+                ];
             }
-            $part1 = $parts[0];
-            $part2 = $parts[1];
+            return null;
         }
+        $part1 = trim($parts[0]);
+        $part2 = trim($parts[1]);
 
         preg_match('/\b(AM|PM)\b/i', $part1, $m1);
         preg_match('/\b(AM|PM)\b/i', $part2, $m2);

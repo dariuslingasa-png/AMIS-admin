@@ -1,221 +1,199 @@
-<!-- DESKTOP TIMETABLE VIEW -->
-<div :class="isFullscreen ? 'calendar-wrapper is-fullscreen' : 'calendar-wrapper'">
-     <!-- Top Controls (Legend + Full Screen) -->
-     <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.85rem;">
-         <!-- Color Coding Legend -->
-         <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-             <span style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">Color Legend:</span>
-             <span style="display: inline-flex; align-items: center; gap: 0.3rem; font-size: 11px; font-weight: 700; color: #064e3b; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 0.15rem 0.45rem; border-radius: 6px;">
-                 <span style="width: 7px; height: 7px; border-radius: 50%; background: #059669;"></span> Islamic & Arabic
-             </span>
-             <span style="display: inline-flex; align-items: center; gap: 0.3rem; font-size: 11px; font-weight: 700; color: #1e1b4b; background: #eef2ff; border: 1px solid #c7d2fe; padding: 0.15rem 0.45rem; border-radius: 6px;">
-                 <span style="width: 7px; height: 7px; border-radius: 50%; background: #4f46e5;"></span> Mathematics
-             </span>
-             <span style="display: inline-flex; align-items: center; gap: 0.3rem; font-size: 11px; font-weight: 700; color: #0c4a6e; background: #f0f9ff; border: 1px solid #bae6fd; padding: 0.15rem 0.45rem; border-radius: 6px;">
-                 <span style="width: 7px; height: 7px; border-radius: 50%; background: #0284c7;"></span> English & Reading
-             </span>
-             <span style="display: inline-flex; align-items: center; gap: 0.3rem; font-size: 11px; font-weight: 700; color: #78350f; background: #fffbeb; border: 1px solid #fde68a; padding: 0.15rem 0.45rem; border-radius: 6px;">
-                 <span style="width: 7px; height: 7px; border-radius: 50%; background: #d97706;"></span> Values & Makabansa
-             </span>
-             <span style="display: inline-flex; align-items: center; gap: 0.3rem; font-size: 11px; font-weight: 700; color: #164e63; background: #ecfeff; border: 1px solid #a5f3fc; padding: 0.15rem 0.45rem; border-radius: 6px;">
-                 <span style="width: 7px; height: 7px; border-radius: 50%; background: #0891b2;"></span> Homeroom & Others
-             </span>
-         </div>
+<!-- DESKTOP TIMETABLE VIEW (Official AMIS Layout) -->
+<div :class="isFullscreen ? 'calendar-wrapper is-fullscreen' : 'calendar-wrapper'" style="background: transparent; border: none; padding: 0; box-shadow: none;">
+    
+    <!-- Top Green Section Banner Header (Matches Reference Design) -->
+    <div style="background: #064e3b; color: #ffffff; padding: 0.85rem 1.25rem; border-radius: 16px 16px 0 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
+        <div style="display: flex; align-items: center; gap: 0.65rem;">
+            <h3 style="margin: 0; font-size: 1.05rem; font-weight: 900; letter-spacing: 0.02em; text-transform: uppercase; color: #ffffff;">
+                {{ strtoupper($studentInfo['official_section_name'] ?: $studentInfo['section']) }}
+            </h3>
+        </div>
+        
+        <div style="display: flex; align-items: center; gap: 0.65rem;">
+            <span style="font-size: 0.75rem; font-weight: 750; background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.25); color: #ffffff; padding: 0.25rem 0.85rem; border-radius: 999px; letter-spacing: 0.02em;">
+                {{ $studentInfo['grade_level'] }} • {{ $studentInfo['shift'] ?: $studentInfo['modality'] }}
+            </span>
+            <button type="button" @click="isFullscreen = !isFullscreen; $nextTick(() => window.lucide && window.lucide.createIcons())" 
+                    style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); color: #ffffff; padding: 0.35rem 0.65rem; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.75rem; font-weight: 700; transition: all 0.15s ease;">
+                <template x-if="!isFullscreen">
+                    <span style="display: inline-flex; align-items: center; gap: 0.3rem;"><i data-lucide="maximize-2" style="width: 13px; height: 13px;"></i> Full Screen</span>
+                </template>
+                <template x-if="isFullscreen">
+                    <span style="display: inline-flex; align-items: center; gap: 0.3rem;"><i data-lucide="minimize-2" style="width: 13px; height: 13px;"></i> Exit</span>
+                </template>
+            </button>
+        </div>
+    </div>
 
-         <!-- Fullscreen Toggle Button -->
-         <button type="button" @click="isFullscreen = !isFullscreen; $nextTick(() => window.lucide && window.lucide.createIcons())" 
-                 class="inline-flex items-center gap-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 px-3.5 py-1.5 rounded-xl transition cursor-pointer shadow-3xs"
-                 style="font-size: 13px; font-weight: 700; line-height: 18px;">
-             <template x-if="!isFullscreen">
-                 <span style="display: inline-flex; align-items: center; gap: 0.35rem;">
-                     <i data-lucide="maximize-2" style="width: 14px; height: 14px;"></i> Full Screen
-                 </span>
-             </template>
-             <template x-if="isFullscreen">
-                 <span style="display: inline-flex; align-items: center; gap: 0.35rem;">
-                     <i data-lucide="minimize-2" style="width: 14px; height: 14px;"></i> Exit Full Screen
-                 </span>
-             </template>
-         </button>
-     </div>
+    <!-- Official Timetable Grid Table -->
+    <div style="overflow-x: auto; border: 1.5px solid #064e3b; border-top: none; background: #ffffff;">
+        <table style="width: 100%; border-collapse: collapse; min-width: 900px; text-align: left;">
+            <thead>
+                <tr style="background: #064e3b; color: #ffffff; font-size: 0.82rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em;">
+                    <th style="padding: 0.8rem 0.6rem; border: 1px solid rgba(255,255,255,0.2); width: 145px; text-align: center;">Time</th>
+                    <th style="padding: 0.8rem 0.5rem; border: 1px solid rgba(255,255,255,0.2); width: 85px; text-align: center;">Minutes</th>
+                    <th style="padding: 0.8rem 0.5rem; border: 1px solid rgba(255,255,255,0.2); text-align: center;">Sunday</th>
+                    <th style="padding: 0.8rem 0.5rem; border: 1px solid rgba(255,255,255,0.2); text-align: center;">Monday</th>
+                    <th style="padding: 0.8rem 0.5rem; border: 1px solid rgba(255,255,255,0.2); text-align: center;">Tuesday</th>
+                    <th style="padding: 0.8rem 0.5rem; border: 1px solid rgba(255,255,255,0.2); text-align: center;">Wednesday</th>
+                    <th style="padding: 0.8rem 0.5rem; border: 1px solid rgba(255,255,255,0.2); text-align: center;">Thursday</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($matrix as $timeKey => $row)
+                    @php
+                        $start = $row['slot']['start'];
+                        $end = $row['slot']['end'];
+                        $duration = (strtotime($end) - strtotime($start)) / 60;
+                        $durationText = $duration > 0 ? "{$duration} min." : "—";
+                        $daysList = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
 
-    <div class="calendar-grid">
-        <!-- Headers -->
-        <div class="calendar-grid-header calendar-time-header">Time Block</div>
-        <div class="calendar-grid-header">Sunday</div>
-        <div class="calendar-grid-header">Monday</div>
-        <div class="calendar-grid-header">Tuesday</div>
-        <div class="calendar-grid-header">Wednesday</div>
-        <div class="calendar-grid-header">Thursday</div>
+                        // Check if all 5 days have the exact same special title or break
+                        $firstEntry = $row['days']['Sunday'];
+                        $isAllSameSpecial = false;
+                        $specialTitle = '';
+                        if ($firstEntry) {
+                            $rawFirst = strtolower($firstEntry->subject_name);
+                            $isSpecialType = str_contains($rawFirst, 'recess') || str_contains($rawFirst, 'assembly') || str_contains($rawFirst, 'salah') || str_contains($rawFirst, 'departure') || str_contains($rawFirst, 'transition') || str_contains($rawFirst, 'break') || str_contains($rawFirst, 'homeroom');
+                            
+                            $allSame = true;
+                            foreach ($daysList as $d) {
+                                if (!$row['days'][$d] || $row['days'][$d]->subject_name !== $firstEntry->subject_name) {
+                                    $allSame = false;
+                                    break;
+                                }
+                            }
+                            if ($allSame && $isSpecialType) {
+                                $isAllSameSpecial = true;
+                                $specialTitle = $firstEntry->subject_name;
+                            }
+                        }
+                    @endphp
 
-        <!-- Matrix Rows -->
-        @foreach($matrix as $timeKey => $row)
-            @php
-                $startMin = $row['slot']['start'];
-                $endMin = $row['slot']['end'];
-                $duration = (strtotime($endMin) - strtotime($startMin)) / 60;
-                $daysList = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
-            @endphp
-            <div class="calendar-grid-row">
-                <!-- Time column cell -->
-                <div class="calendar-time-block" style="background: #f8fafc; border-right: 2px solid #e2e8f0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0.65rem 0.35rem;">
-                     <span style="font-size: 14px; font-weight: 850; color: #0f172a; line-height: 1.2;">{{ date('g:i A', strtotime($row['slot']['start'])) }}</span>
-                     <span style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin: 0.15rem 0; letter-spacing: 0.05em;">to</span>
-                     <span style="font-size: 14px; font-weight: 850; color: #0f172a; line-height: 1.2;">{{ date('g:i A', strtotime($row['slot']['end'])) }}</span>
-                 </div>
+                    <tr style="border-bottom: 1px solid #cbd5e1;">
+                        <!-- Time Column -->
+                        <td style="padding: 0.75rem 0.5rem; text-align: center; font-weight: 850; font-size: 0.85rem; color: #0f172a; border: 1px solid #cbd5e1; background: #ffffff; white-space: nowrap;">
+                            @if($start === $end)
+                                {{ date('h:i A', strtotime($start)) }}
+                            @else
+                                {{ date('h:i', strtotime($start)) }} – {{ date('h:i A', strtotime($end)) }}
+                            @endif
+                        </td>
 
-                 @php
-                     $groups = [];
-                     $i = 0;
-                     while ($i < 5) {
-                         $day = $daysList[$i];
-                         $class = $row['days'][$day];
-                         
-                         if (!$class) {
-                             $span = 1;
-                             $groups[] = [
-                                 'day' => $day,
-                                 'span' => $span,
-                                 'class' => null
-                             ];
-                             $i++;
-                             continue;
-                         }
-                         
-                         $span = 1;
-                         $j = $i + 1;
-                         while ($j < 5) {
-                             $nextDay = $daysList[$j];
-                             $nextClass = $row['days'][$nextDay];
-                             
-                             if ($nextClass) {
-                                 $sameSubject = $nextClass->subject_name === $class->subject_name;
-                                 $teacher1 = !empty($class->teacher_display) ? $class->teacher_display : ($class->teacher_name ?? '');
-                                 $teacher2 = !empty($nextClass->teacher_display) ? $nextClass->teacher_display : ($nextClass->teacher_name ?? '');
-                                 $sameTeacher = $teacher1 === $teacher2;
-                                 
-                                 if ($sameSubject && $sameTeacher) {
-                                     $span++;
-                                     $j++;
-                                 } else {
-                                     break;
-                                 }
-                             } else {
-                                 break;
-                             }
-                         }
-                         
-                         $groups[] = [
-                             'day' => $day,
-                             'span' => $span,
-                             'class' => $class
-                         ];
-                         
-                         $i = $j;
-                     }
-                 @endphp
+                        <!-- Minutes Column -->
+                        <td style="padding: 0.75rem 0.5rem; text-align: center; font-weight: 700; font-size: 0.8rem; color: #475569; border: 1px solid #cbd5e1; background: #f8fafc; white-space: nowrap;">
+                            {{ $durationText }}
+                        </td>
 
-                 @foreach($groups as $group)
-                     @php
-                         $span = $group['span'];
-                         $s = $group['class'];
-                         $day = $group['day'];
-                         
-                         $dayLabel = $day;
-                         if ($span > 1) {
-                             $startIndex = array_search($day, $daysList);
-                             $endDay = $daysList[$startIndex + $span - 1];
-                             $dayLabel = $day . ' - ' . $endDay;
-                         }
-                         
-                         $rawSubj = $s ? strtolower($s->subject_name) : '';
-                         $isRecess = str_contains($rawSubj, 'recess');
-                         $isAssembly = str_contains($rawSubj, 'assembly');
-                         $isSalah = str_contains($rawSubj, 'salah') || str_contains($rawSubj, 'departure') || str_contains($rawSubj, 'lunch');
-                         $isTransition = str_contains($rawSubj, 'transition') || str_contains($rawSubj, 'short break') || str_contains($rawSubj, 'break');
-                         $isSpecialWord = $s && ($isRecess || $isAssembly || $isSalah || $isTransition);
-                     @endphp
+                        @if($isAllSameSpecial)
+                            <!-- Merged Special Activity Row (Homeroom Guidance, General Assembly, Transition, Salah, etc.) -->
+                            @php
+                                $specStyle = $getSubjectStyle($specialTitle);
+                            @endphp
+                            <td colspan="5" style="padding: 0.75rem 1rem; text-align: center; font-weight: 900; font-size: 0.85rem; color: {{ $specStyle['text'] }}; background: {{ $specStyle['bg'] }}; border: 1px solid #cbd5e1; text-transform: uppercase; letter-spacing: 0.05em;">
+                                {{ strtoupper($specialTitle) }}
+                            </td>
+                        @else
+                            <!-- Day Columns (Sunday to Thursday) -->
+                            @php
+                                $groups = [];
+                                $i = 0;
+                                while ($i < 5) {
+                                    $day = $daysList[$i];
+                                    $entry = $row['days'][$day];
+                                    if (!$entry) {
+                                        $groups[] = ['day' => $day, 'span' => 1, 'entry' => null];
+                                        $i++;
+                                        continue;
+                                    }
+                                    $span = 1;
+                                    $j = $i + 1;
+                                    while ($j < 5) {
+                                        $nextDay = $daysList[$j];
+                                        $nextEntry = $row['days'][$nextDay];
+                                        if ($nextEntry && $nextEntry->subject_name === $entry->subject_name && $nextEntry->teacher_name === $entry->teacher_name) {
+                                            $span++;
+                                            $j++;
+                                        } else {
+                                            break;
+                                        }
+                                    }
+                                    $groups[] = ['day' => $day, 'span' => $span, 'entry' => $entry];
+                                    $i = $j;
+                                }
+                            @endphp
 
-                     <div class="calendar-cell" style="{{ $span > 1 ? 'grid-column: span ' . $span . ';' : '' }}">
-                         @if($s)
-                             @if($isSpecialWord)
-                                 @php
-                                     $specialBg = '#f8fafc';
-                                     $specialBorder = '#cbd5e1';
-                                     $specialText = '#475569';
-                                     $specialIcon = 'coffee';
-                                     if ($isRecess) {
-                                         $specialIcon = 'coffee';
-                                     } elseif ($isAssembly) {
-                                         $specialIcon = 'flag';
-                                         $specialText = '#0f172a';
-                                     } elseif ($isSalah) {
-                                         $specialIcon = 'sun';
-                                         $specialText = '#065f46';
-                                     }
-                                 @endphp
-                                 <div class="calendar-class-card" 
-                                      style="width: 100%; min-height: 80px; background: {{ $specialBg }} !important; border: 1.5px dashed {{ $specialBorder }} !important; color: {{ $specialText }} !important; display: flex; align-items: center; justify-content: center; text-align: center; border-radius: 12px;" 
-                                      title="{{ $s->subject_name }}">
-                                     <div style="display: flex; align-items: center; gap: 0.4rem; justify-content: center; text-align: center; width: 100%; padding: 0.5rem;">
-                                         <i data-lucide="{{ $specialIcon }}" style="width: 15px; height: 15px; flex-shrink: 0;"></i>
-                                         <p style="font-size: 13px !important; font-weight: 800 !important; line-height: 1.25 !important; margin: 0; text-transform: uppercase;">{{ $s->subject_name }}</p>
-                                     </div>
-                                 </div>
-                             @else
-                                 @php
-                                      $style = $getSubjectStyle($s->subject_name);
-                                      $currentTeacherName = $teacherName($s);
-                                      $photoUrl = $getPhotoUrl($s->teacher_photo ?? null, $s->teacher_key ?? null, $s->teacher_display ?: ($s->teacher_name ?? ''));
-                                  @endphp
-                                  <div class="calendar-class-card"
-                                       style="background: {{ $style['bg'] }} !important; 
-                                              border: 1.5px solid {{ $style['border'] }} !important; 
-                                              border-left: 4.5px solid {{ $style['accent'] }} !important;
-                                              box-shadow: 0 1px 3px rgba(0,0,0,0.03); 
-                                              display: flex; flex-direction: row; gap: 0.45rem; align-items: center; 
-                                              border-radius: 12px;
-                                              box-sizing: border-box;
-                                              width: 100%;
-                                              overflow: hidden;
-                                              transition: all 0.15s ease;
-                                              {{ $span > 1 ? 'justify-content: center; text-align: center; padding: 0.65rem 1.25rem;' : 'padding: 0.5rem 0.65rem;' }}">
-                                      
-                                      <!-- Left: Teacher photo -->
-                                      <div @if($photoUrl) @click="previewPhoto = { url: '{{ $photoUrl }}', name: '{{ $currentTeacherName }}', role: 'Official Teacher', subject: '{{ $s->subject_name }}', time: '{{ date('g:i A', strtotime($s->start_time)) }} - {{ date('g:i A', strtotime($s->end_time)) }}', day: '{{ $dayLabel }}' }" @endif
-                                           style="width: 34px; height: 34px; border-radius: 50%; background: #ffffff; border: 2px solid {{ $style['accent'] }} !important; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.04);"
-                                           title="Click to view teacher details">
-                                          @if($photoUrl)
-                                              <img src="{{ $photoUrl }}" alt="{{ $currentTeacherName }}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
-                                          @else
-                                              @php
-                                                  $initials = collect(explode(' ', str_ireplace(['TEACHER ', 'TCHR. ', 'USTADH ', 'USTADZ ', 'USTADHA ', 'ALIM '], '', $currentTeacherName)))
-                                                      ->filter()->map(fn($part) => strtoupper(substr($part, 0, 1)))->take(2)->implode('');
-                                              @endphp
-                                              <span style="font-size: 0.7rem; font-weight: 850; color: {{ $style['accent'] }};">{{ $initials ?: '?' }}</span>
-                                          @endif
-                                      </div>
+                            @foreach($groups as $group)
+                                @php
+                                    $entry = $group['entry'];
+                                    $span = $group['span'];
+                                @endphp
 
-                                      <!-- Middle / Right: Subject and Teacher Details -->
-                                      <div style="{{ $span > 1 ? 'display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;' : 'flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; overflow: hidden;' }}">
-                                          <h4 style="font-size: 13.5px; font-weight: 850; line-height: 1.2; color: {{ $style['text'] }} !important; margin: 0; letter-spacing: -0.01em; {{ $span > 1 ? 'text-align: center;' : 'overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left;' }}" title="{{ $s->subject_name }}">
-                                               {{ $s->subject_name }}
-                                          </h4>
-                                          
-                                          <!-- Teacher Badge -->
-                                          <div style="display: inline-flex; align-items: center; gap: 0.25rem; font-size: 11px; font-weight: 700; color: {{ $style['badge_text'] }}; background: {{ $style['badge_bg'] }}; border: 1px solid {{ $style['border'] }}; border-radius: 5px; padding: 0.1rem 0.4rem; margin-top: 0.2rem; max-width: 100%; box-sizing: border-box; overflow: hidden; {{ $span > 1 ? 'margin: 0.25rem auto 0;' : 'width: fit-content;' }}" title="Teacher: {{ $currentTeacherName }}">
-                                              <i data-lucide="user" style="width: 10px; height: 10px; flex-shrink: 0; color: {{ $style['accent'] }};"></i>
-                                              <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;">{{ $currentTeacherName }}</span>
-                                          </div>
-                                      </div>
-                                  </div>
-                             @endif
-                         @else
-                             <div style="flex: 1; border: 1px dashed #cbd5e1; border-radius: 12px; background: #fafbfc; min-height: 80px;"></div>
-                         @endif
-                     </div>
-                 @endforeach
-            </div>
-        @endforeach
+                                @if($entry)
+                                    @php
+                                        $style = $getSubjectStyle($entry->subject_name);
+                                        $tName = $teacherName($entry);
+                                        $photoUrl = $getPhotoUrl($entry->teacher_photo ?? null, $entry->teacher_key ?? null, $entry->teacher_display ?: ($entry->teacher_name ?? ''));
+                                    @endphp
+                                    <td colspan="{{ $span }}" 
+                                        style="padding: 0.65rem 0.75rem; text-align: center; background: {{ $style['bg'] }}; border: 1px solid #cbd5e1; vertical-align: middle;">
+                                        <div style="font-weight: 900; font-size: 0.875rem; color: {{ $style['text'] }}; line-height: 1.25;">
+                                            {{ $entry->subject_name }}
+                                        </div>
+                                        @if($tName && $tName !== '—')
+                                            <div style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; color: {{ $style['teacher'] }}; margin-top: 0.2rem; letter-spacing: 0.03em;">
+                                                {{ strtoupper($tName) }}
+                                            </div>
+                                        @endif
+                                    </td>
+                                @else
+                                    <td colspan="{{ $span }}" style="padding: 0.65rem 0.5rem; text-align: center; background: #ffffff; border: 1px solid #cbd5e1; color: #cbd5e1;">
+                                        —
+                                    </td>
+                                @endif
+                            @endforeach
+                        @endif
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Official Subject Keys (Legend) & School Footer Note (Matches Reference) -->
+    <div style="margin-top: 1rem; padding: 0.85rem 1.25rem; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; display: flex; flex-direction: column; gap: 0.65rem; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+        <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; font-size: 0.78rem;">
+            <strong style="color: #0f172a; font-weight: 850;">Subject Keys:</strong>
+            <span style="display: inline-flex; align-items: center; gap: 0.35rem; color: #6b21a8; font-weight: 700;">
+                <span style="width: 14px; height: 14px; border-radius: 3px; background: #f3e8ff; border: 1.5px solid #d8b4fe;"></span>
+                Arabic / Qur'an / Islamic
+            </span>
+            <span style="display: inline-flex; align-items: center; gap: 0.35rem; color: #166534; font-weight: 700;">
+                <span style="width: 14px; height: 14px; border-radius: 3px; background: #dcfce7; border: 1.5px solid #86efac;"></span>
+                GMRC / Values / ESP
+            </span>
+            <span style="display: inline-flex; align-items: center; gap: 0.35rem; color: #3730a3; font-weight: 700;">
+                <span style="width: 14px; height: 14px; border-radius: 3px; background: #e0e7ff; border: 1.5px solid #a5b4fc;"></span>
+                Math / Physics
+            </span>
+            <span style="display: inline-flex; align-items: center; gap: 0.35rem; color: #0f766e; font-weight: 700;">
+                <span style="width: 14px; height: 14px; border-radius: 3px; background: #ccfbf1; border: 1.5px solid #5eead4;"></span>
+                Science / Biology
+            </span>
+            <span style="display: inline-flex; align-items: center; gap: 0.35rem; color: #854d0e; font-weight: 700;">
+                <span style="width: 14px; height: 14px; border-radius: 3px; background: #fef9c3; border: 1.5px solid #fde047;"></span>
+                English / Reading
+            </span>
+            <span style="display: inline-flex; align-items: center; gap: 0.35rem; color: #9a3412; font-weight: 700;">
+                <span style="width: 14px; height: 14px; border-radius: 3px; background: #ffedd5; border: 1.5px solid #fdba74;"></span>
+                AP / Social / Filipino
+            </span>
+            <span style="display: inline-flex; align-items: center; gap: 0.35rem; color: #9d174d; font-weight: 700;">
+                <span style="width: 14px; height: 14px; border-radius: 3px; background: #fce7f3; border: 1.5px solid #f472b6;"></span>
+                MAPEH / TLE
+            </span>
+        </div>
+        <div style="font-size: 0.72rem; color: #64748b; font-weight: 600; border-top: 1px dashed #e2e8f0; padding-top: 0.4rem;">
+            Al Munawwara Islamic School • Generated on {{ now()->format('F j, Y') }}
+        </div>
     </div>
 </div>
