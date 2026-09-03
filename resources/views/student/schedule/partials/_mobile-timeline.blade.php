@@ -92,33 +92,31 @@
                                 $style = $getSubjectStyle($s->subject_name);
                             @endphp
                             <div class="calendar-class-card {{ $classState === 'completed' ? 'class-completed' : ($classState === 'live' ? 'class-live' : '') }}" 
-                                 style="min-height: 85px; background: {{ $style['bg'] }} !important; border: 1.5px solid {{ $style['border'] }} !important; color: {{ $style['text'] }} !important; display: flex; flex-direction: row; gap: 0.65rem; align-items: center; border-radius: 14px; padding: 0.65rem 0.75rem;">
+                                 style="min-height: 80px; background: {{ $style['bg'] }} !important; border: 1.5px solid {{ $style['border'] }} !important; color: {{ $style['text'] }} !important; display: flex; flex-direction: row; gap: 0.45rem; align-items: center; border-radius: 12px; padding: 0.5rem 0.65rem; width: 100%; box-sizing: border-box; overflow: hidden;">
                                 
                                 <!-- Left: Teacher photo in circle -->
                                 <div @if($photoUrl) @click="previewPhoto = { url: '{{ $photoUrl }}', name: '{{ $currentTeacherName }}', role: 'Official Teacher', subject: '{{ $s->subject_name }}', time: '{{ date('g:i A', strtotime($s->start_time)) }} - {{ date('g:i A', strtotime($s->end_time)) }}', day: '{{ $dayName }}' }" @endif
-                                     style="width: 40px; height: 40px; border-radius: 50%; background: white; border: 1.5px solid {{ $style['border'] }} !important; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
+                                     style="width: 34px; height: 34px; border-radius: 50%; background: white; border: 1.5px solid {{ $style['border'] }} !important; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
                                     @if($photoUrl)
                                         <img src="{{ $photoUrl }}" alt="{{ $currentTeacherName }}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
                                     @else
                                         @php
-                                            $initials = collect(explode(' ', str_ireplace(['TEACHER ', 'TCHR. ', 'USTADH ', 'USTADZ ', 'USTADHA '], '', $currentTeacherName)))
-                                                ->map(fn($part) => strtoupper(substr($part, 0, 1)))
-                                                ->take(2)
-                                                ->implode('');
+                                            $initials = collect(explode(' ', str_ireplace(['TEACHER ', 'TCHR. ', 'USTADH ', 'USTADZ ', 'USTADHA ', 'ALIM '], '', $currentTeacherName)))
+                                                ->filter()->map(fn($part) => strtoupper(substr($part, 0, 1)))->take(2)->implode('');
                                         @endphp
-                                        <span style="font-size: 0.75rem; font-weight: 850; color: {{ $style['accent'] }} !important; display: flex; align-items: center; justify-content: center; text-align: center; width: 100%; height: 100%;">{{ $initials ?: '?' }}</span>
+                                        <span style="font-size: 0.7rem; font-weight: 850; color: {{ $style['accent'] }} !important;">{{ $initials ?: '?' }}</span>
                                     @endif
                                 </div>
 
                                 <!-- Right: Subject details -->
-                                <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center;">
-                                    <h4 style="font-size: 14px; font-weight: 850; color: {{ $style['text'] }} !important; margin: 0; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ $s->subject_name }}">
+                                <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; overflow: hidden;">
+                                    <h4 style="font-size: 13.5px; font-weight: 850; color: {{ $style['text'] }} !important; margin: 0; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ $s->subject_name }}">
                                         {{ $s->subject_name }}
                                     </h4>
                                     
-                                    <div style="display: inline-flex; align-items: center; gap: 0.25rem; font-size: 11px; font-weight: 750; color: {{ $style['badge_text'] }}; background: {{ $style['badge_bg'] }}; border: 1px solid {{ $style['border'] }}; border-radius: 6px; padding: 0.1rem 0.45rem; margin-top: 0.25rem; width: fit-content;">
-                                        <i data-lucide="user" style="width: 10px; height: 10px;"></i>
-                                        <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 140px;">{{ $currentTeacherName }}</span>
+                                    <div style="display: inline-flex; align-items: center; gap: 0.25rem; font-size: 11px; font-weight: 750; color: {{ $style['badge_text'] }}; background: {{ $style['badge_bg'] }}; border: 1px solid {{ $style['border'] }}; border-radius: 5px; padding: 0.1rem 0.4rem; margin-top: 0.2rem; max-width: 100%; box-sizing: border-box; overflow: hidden; width: fit-content;">
+                                        <i data-lucide="user" style="width: 10px; height: 10px; flex-shrink: 0; opacity: 0.85;"></i>
+                                        <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;">{{ $currentTeacherName }}</span>
                                     </div>
                                 </div>
                             </div>

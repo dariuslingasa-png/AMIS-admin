@@ -59,9 +59,39 @@
         return ['cat' => 'General', 'accent' => '#64748b', 'bg' => '#f8fafc', 'border' => '#e2e8f0', 'text' => '#334155', 'badge_bg' => '#f1f5f9', 'badge_text' => '#475569'];
     };
 
-    $teacherName = function ($s): string {
-        if (is_string($s)) return $s;
-        return !empty($s->teacher_display) ? $s->teacher_display : (!empty($s->teacher_name) ? $s->teacher_name : '—');
+    $teacherName = function ($subject): string {
+        $raw = is_string($subject) ? $subject : (!empty($subject->teacher_display) ? $subject->teacher_display : ($subject->teacher_name ?? null));
+        if (!$raw) return '—';
+
+        $nameTrimmed = trim($raw);
+        $nameLower = strtolower($nameTrimmed);
+
+        $titleMap = [
+            'teacher '  => 'Tchr.',
+            'tchr. '    => 'Tchr.',
+            'tchr '     => 'Tchr.',
+            'ustadha '  => 'Ustadha',
+            'ustadh '   => 'Ust.',
+            'ustadz '   => 'Ust.',
+            'ust. '     => 'Ust.',
+            'ust '      => 'Ust.',
+            'alimah '   => 'Alimah',
+            'alima '    => 'Alima',
+            'alim '     => 'Alim',
+            'sir '      => 'Sir',
+            'ma\'am '   => 'Ma\'am',
+        ];
+
+        foreach ($titleMap as $prefix => $shortTitle) {
+            if (str_starts_with($nameLower, $prefix)) {
+                $rest = trim(substr($nameTrimmed, strlen($prefix)));
+                $firstName = ucfirst(strtolower(explode(' ', $rest)[0]));
+                return $shortTitle . ' ' . $firstName;
+            }
+        }
+
+        $parts = explode(' ', $nameTrimmed);
+        return ucfirst(strtolower($parts[0]));
     };
 
     $getPhotoUrl = function ($teacherPhoto = null, $teacherKey = null, $teacherName = '') {
