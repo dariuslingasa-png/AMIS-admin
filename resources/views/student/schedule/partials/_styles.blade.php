@@ -18,7 +18,7 @@
     }
     .sched-tab-btn.active {
         background: white !important;
-        color: #0d9488 !important;
+        color: #059669 !important;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04) !important;
     }
 
@@ -39,12 +39,12 @@
         min-width: 1000px;
     }
     .calendar-grid-header {
-        font-size: 15px !important;
+        font-size: 14px !important;
         font-weight: 800 !important;
         line-height: 1.2 !important;
         text-transform: uppercase;
         color: white;
-        background: #0d9488;
+        background: #059669;
         padding: 0.85rem 0.5rem;
         border-radius: 12px;
         letter-spacing: 0.05em;
@@ -52,10 +52,10 @@
         align-items: center !important;
         justify-content: center !important;
         text-align: center !important;
-        min-height: 52px !important;
+        min-height: 50px !important;
     }
     .calendar-time-header {
-        background: #115e59;
+        background: #064e3b;
     }
     .calendar-grid-row {
         display: contents;
@@ -209,9 +209,9 @@
         color: #64748b !important;
     }
     .day-tab-btn.active {
-        background: #0d9488 !important;
+        background: #059669 !important;
         color: white !important;
-        box-shadow: 0 4px 10px rgba(13, 148, 136, 0.15) !important;
+        box-shadow: 0 4px 10px rgba(5, 150, 105, 0.2) !important;
     }
     
     /* Fullscreen Calendar styling */
