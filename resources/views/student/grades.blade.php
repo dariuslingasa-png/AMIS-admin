@@ -174,42 +174,11 @@
 
         {{-- ── 4. Official Scholastic Grades Table ─────────────────────── --}}
         <div>
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
-                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <div style="width: 30px; height: 30px; border-radius: 8px; background: #ecfdf5; display: flex; align-items: center; justify-content: center; color: #059669;">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-                    </div>
-                    <h3 style="font-size: 1.1rem; font-weight: 900; color: #0f172a; margin: 0;">Report on Learning Progress & Achievement</h3>
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.25rem;">
+                <div style="width: 32px; height: 32px; border-radius: 8px; background: #ecfdf5; display: flex; align-items: center; justify-content: center; color: #059669;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
                 </div>
-
-                <!-- Term Switcher Tabs (Matches Excel: 1st Term, 2nd Term, 3rd Term, Final) -->
-                <div class="no-print" style="display: inline-flex; background: #f1f5f9; padding: 0.25rem; border-radius: 12px; gap: 0.25rem; align-items: center;">
-                    <button type="button" @click="activeTerm = 'all'" 
-                            :style="activeTerm === 'all' ? 'background: #ffffff; color: #059669; font-weight: 800; box-shadow: 0 1px 3px rgba(0,0,0,0.08);' : 'background: transparent; color: #64748b; font-weight: 600;'"
-                            style="padding: 0.4rem 0.85rem; border-radius: 8px; font-size: 12.5px; border: none; cursor: pointer; transition: all 0.15s ease;">
-                        All
-                    </button>
-                    <button type="button" @click="activeTerm = '1'" 
-                            :style="activeTerm === '1' ? 'background: #ffffff; color: #059669; font-weight: 800; box-shadow: 0 1px 3px rgba(0,0,0,0.08);' : 'background: transparent; color: #64748b; font-weight: 600;'"
-                            style="padding: 0.4rem 0.85rem; border-radius: 8px; font-size: 12.5px; border: none; cursor: pointer; transition: all 0.15s ease;">
-                        1st Term
-                    </button>
-                    <button type="button" @click="activeTerm = '2'" 
-                            :style="activeTerm === '2' ? 'background: #ffffff; color: #059669; font-weight: 800; box-shadow: 0 1px 3px rgba(0,0,0,0.08);' : 'background: transparent; color: #64748b; font-weight: 600;'"
-                            style="padding: 0.4rem 0.85rem; border-radius: 8px; font-size: 12.5px; border: none; cursor: pointer; transition: all 0.15s ease;">
-                        2nd Term
-                    </button>
-                    <button type="button" @click="activeTerm = '3'" 
-                            :style="activeTerm === '3' ? 'background: #ffffff; color: #059669; font-weight: 800; box-shadow: 0 1px 3px rgba(0,0,0,0.08);' : 'background: transparent; color: #64748b; font-weight: 600;'"
-                            style="padding: 0.4rem 0.85rem; border-radius: 8px; font-size: 12.5px; border: none; cursor: pointer; transition: all 0.15s ease;">
-                        3rd Term
-                    </button>
-                    <button type="button" @click="activeTerm = 'final'" 
-                            :style="activeTerm === 'final' ? 'background: #059669; color: #ffffff; font-weight: 800; box-shadow: 0 2px 6px rgba(5,150,105,0.2);' : 'background: transparent; color: #64748b; font-weight: 600;'"
-                            style="padding: 0.4rem 0.95rem; border-radius: 8px; font-size: 12.5px; border: none; cursor: pointer; transition: all 0.15s ease;">
-                        Final
-                    </button>
-                </div>
+                <h3 style="font-size: 1.15rem; font-weight: 900; color: #0f172a; margin: 0;">e-Grade System</h3>
             </div>
 
             <div style="overflow-x: auto; border: 1.5px solid #e2e8f0; border-radius: 16px;">
@@ -218,10 +187,10 @@
                         <tr style="background: #f8fafc; border-bottom: 1.5px solid #e2e8f0; font-size: 0.75rem; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.05em;">
                             <th style="padding: 0.85rem 1.25rem; min-width: 200px;">Learning Areas</th>
                             <th style="padding: 0.85rem 1rem; min-width: 160px;">Subject Teacher</th>
-                            <th style="padding: 0.85rem 0.75rem; text-align: center; width: 85px;" :style="activeTerm === '1' ? 'background: #ecfdf5; color: #047857;' : ''">1st Term</th>
-                            <th style="padding: 0.85rem 0.75rem; text-align: center; width: 85px;" :style="activeTerm === '2' ? 'background: #ecfdf5; color: #047857;' : ''">2nd Term</th>
-                            <th style="padding: 0.85rem 0.75rem; text-align: center; width: 85px;" :style="activeTerm === '3' ? 'background: #ecfdf5; color: #047857;' : ''">3rd Term</th>
-                            <th style="padding: 0.85rem 1rem; text-align: center; width: 100px;" :style="activeTerm === 'final' ? 'background: #ecfdf5; color: #047857;' : ''">Final</th>
+                            <th style="padding: 0.85rem 0.75rem; text-align: center; width: 85px;">1st Term</th>
+                            <th style="padding: 0.85rem 0.75rem; text-align: center; width: 85px;">2nd Term</th>
+                            <th style="padding: 0.85rem 0.75rem; text-align: center; width: 85px;">3rd Term</th>
+                            <th style="padding: 0.85rem 1rem; text-align: center; width: 100px;">Final</th>
                             <th style="padding: 0.85rem 1.25rem; text-align: center; width: 110px;">Remarks</th>
                         </tr>
                     </thead>
