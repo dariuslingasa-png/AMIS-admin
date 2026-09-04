@@ -149,12 +149,7 @@ class StudentPrintController extends Controller
         }
 
         if ($request->filled('search')) {
-            $s = trim($request->search);
-            $query->where(function ($q) use ($s) {
-                $q->where('students.student_number', 'like', "%{$s}%")
-                    ->orWhere('students.school_email', 'like', "%{$s}%")
-                    ->orWhereHas('applicant', fn ($a) => $a->where('first_name', 'like', "%{$s}%")->orWhere('last_name', 'like', "%{$s}%"));
-            });
+            $query->search($request->search);
         }
 
         if ($request->filled('mode')) {

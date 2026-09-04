@@ -40,21 +40,7 @@ class StudentExportController extends Controller
         }
 
         if ($request->filled('search')) {
-            $s = trim($request->search);
-            $terms = array_filter(explode(' ', $s));
-            $query->where(function ($q) use ($terms) {
-                foreach ($terms as $term) {
-                    $q->where(function ($sub) use ($term) {
-                        $sub->where('students.student_number', 'like', "%{$term}%")
-                            ->orWhere('students.school_email', 'like', "%{$term}%")
-                            ->orWhereHas('applicant', function ($a) use ($term) {
-                                $a->where('first_name', 'like', "%{$term}%")
-                                    ->orWhere('middle_name', 'like', "%{$term}%")
-                                    ->orWhere('last_name', 'like', "%{$term}%");
-                            });
-                    });
-                }
-            });
+            $query->search($request->search);
         }
 
         if ($request->filled('grade')) {

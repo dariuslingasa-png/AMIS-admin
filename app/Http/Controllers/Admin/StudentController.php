@@ -49,44 +49,22 @@ class StudentController extends Controller
                     : $query->where('students.grade_level', $teacherGradeScope);
             }
 
+            if ($request->filled('student_numbers')) {
+                $numbers = array_filter(array_map('trim', explode(',', $request->student_numbers)));
+                if (!empty($numbers)) {
+                    $query->whereIn('students.student_number', $numbers);
+                }
+            }
+
+            if ($request->filled('student_ids')) {
+                $ids = array_filter(array_map('trim', explode(',', $request->student_ids)));
+                if (!empty($ids)) {
+                    $query->whereIn('students.id', $ids);
+                }
+            }
+
             if ($request->filled('search')) {
-                $s = trim($request->search);
-                $terms = array_filter(explode(' ', $s));
-                $query->where(function ($q) use ($terms, $s) {
-                    // Exact 6-digit student number check (e.g. 261132)
-                    if (preg_match('/^26\d{4}$/', $s)) {
-                        $q->where('students.student_number', $s);
-                        return;
-                    }
-
-                    foreach ($terms as $term) {
-                        $q->where(function ($sub) use ($term) {
-                            $sub->where('students.student_number', 'like', "%{$term}%")
-                                ->orWhere('students.school_email', 'like', "%{$term}%")
-                                ->orWhere('students.grade_level', 'like', "%{$term}%")
-                                ->orWhereHas('applicant', function ($a) use ($term) {
-                                    $a->where('first_name', 'like', "%{$term}%")
-                                        ->orWhere('middle_name', 'like', "%{$term}%")
-                                        ->orWhere('last_name', 'like', "%{$term}%")
-                                        ->orWhere('suffix', 'like', "%{$term}%")
-                                        ->orWhere('father_first_name', 'like', "%{$term}%")
-                                        ->orWhere('father_last_name', 'like', "%{$term}%")
-                                        ->orWhere('mother_first_name', 'like', "%{$term}%")
-                                        ->orWhere('mother_last_name', 'like', "%{$term}%")
-                                        ->orWhere('emergency_name', 'like', "%{$term}%");
-
-                                    // For numbers, avoid false-positive collisions with 12-digit LRNs
-                                    if (is_numeric($term) && strlen($term) >= 8) {
-                                        $a->orWhere('lrn', 'like', "{$term}%");
-                                    } elseif (is_numeric($term)) {
-                                        $a->orWhere('lrn', $term);
-                                    } else {
-                                        $a->orWhere('lrn', 'like', "%{$term}%");
-                                    }
-                                });
-                        });
-                    }
-                });
+                $query->search($request->search);
             }
 
             if ($request->filled('grade') && (! $isTeacherAdminViewer || $teacherGradeScope !== null)) {
@@ -134,6 +112,17 @@ class StudentController extends Controller
                         ->whereNotNull('students.ms_user_id');
                 } elseif ($pStatus === 'no_account') {
                     $query->whereNull('students.ms_user_id');
+                }
+            }
+
+            if ($request->filled('section_status') || $request->filled('section')) {
+                $secStatus = $request->input('section_status', $request->input('section'));
+                if ($secStatus === 'unassigned') {
+                    $query->where(function ($q) {
+                        $q->whereNull('students.section')->orWhere('students.section', '');
+                    });
+                } elseif ($secStatus === 'assigned') {
+                    $query->whereNotNull('students.section')->where('students.section', '!=', '');
                 }
             }
 
