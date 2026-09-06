@@ -775,77 +775,7 @@
                 @endif
             </section>
 
-            {{-- 2. Enrolled Academic Subjects Card --}}
-            <section class="soa-card">
-                <header class="soa-card__header">
-                    <div>
-                        <span class="soa-section-kicker">Curriculum &amp; Instruction</span>
-                        <h3>Enrolled Academic Subjects</h3>
-                        <p>Core subjects, specialized courses, and designated faculty instructors.</p>
-                    </div>
-
-                    <a href="{{ route('student.subjects') }}" class="soa-button soa-button--ghost" style="color: var(--soa-green); border-color: var(--soa-border); background: var(--soa-soft); min-height: 36px; padding: 6px 14px; font-size: 11px;">
-                        View All Subjects →
-                    </a>
-                </header>
-
-                <div class="soa-table-wrap">
-                    <table class="soa-table">
-                        <thead>
-                            <tr>
-                                <th>Subject</th>
-                                <th>Assigned Teacher</th>
-                                <th>Schedule Timetable</th>
-                                <th style="text-align: right;">Classroom</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($academicSubjects as $subj)
-                                @php
-                                    $schedStr = $formattedSchedules[$subj->subject_name] ?? 'Schedule arranged per section';
-                                    $teacherDisp = $formatTeacherName($subj->teacher_name);
-                                @endphp
-                                <tr>
-                                    <td>
-                                        <span class="soa-fee-icon">
-                                            <i data-lucide="book-marked"></i>
-                                        </span>
-                                        <div>
-                                            <strong>{{ $subj->subject_name }}</strong>
-                                            <small>{{ $subj->subject_code ?: ($section?->name ?? 'Grade Academic') }}</small>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <strong style="color: #334155; font-weight: 700;">{{ $teacherDisp }}</strong>
-                                        <small style="color: #94a3b8;">Faculty Member</small>
-                                    </td>
-                                    <td>
-                                        <strong style="font-size: 11.5px; color: #475569; font-weight: 700;">{{ $schedStr }}</strong>
-                                        <small style="color: #94a3b8;">Weekly Sessions</small>
-                                    </td>
-                                    <td style="text-align: right;">
-                                        @if(!empty($subj->team_url))
-                                            <a href="{{ $subj->team_url }}" target="_blank" rel="noopener noreferrer" class="soa-button soa-button--ghost" style="min-height: 32px; padding: 4px 11px; font-size: 11px; border-radius: 8px; color: var(--soa-green); border-color: #a7f3d0; background: #ecfdf5;">
-                                                <i data-lucide="video"></i> Teams
-                                            </a>
-                                        @else
-                                            <span style="font-size: 11px; color: #94a3b8; font-weight: 600;">Standard Room</span>
-                                        @endif
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="4" style="text-align: center; padding: 30px; color: var(--soa-muted);">
-                                        No subjects assigned yet for your section.
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-
-            {{-- 3. School Announcements & Advisories Card --}}
+            {{-- 2. School Announcements & Advisories Card --}}
             <section class="soa-card soa-history">
                 <header class="soa-card__header soa-card__header--compact">
                     <div>
