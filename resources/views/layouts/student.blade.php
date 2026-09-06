@@ -753,6 +753,15 @@
                     Class Schedule
                 </a>
 
+                <a href="{{ route('student.subjects') }}"
+                   class="student-nav-item s-nav-emerald {{ request()->routeIs('student.subjects*') ? 'active' : '' }}">
+                    {{-- Lucide: BookOpen --}}
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" style="color: #059669;">
+                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                    </svg>
+                    Subjects
+                </a>
+
                 <a href="{{ route('student.teachers') }}"
                    class="student-nav-item s-nav-amber {{ request()->routeIs('student.teachers') ? 'active' : '' }}">
                     {{-- Lucide: Users --}}

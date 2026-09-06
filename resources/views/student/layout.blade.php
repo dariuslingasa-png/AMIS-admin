@@ -52,8 +52,8 @@
     $menu = [
         ['route' => 'student.dashboard', 'icon' => 'layout-dashboard', 'label' => 'Dashboard', 'tone' => 'emerald'],
         ['route' => 'student.schedule', 'icon' => 'calendar', 'label' => 'My Schedule', 'tone' => 'sky'],
-        ['route' => 'student.calendar', 'icon' => 'calendar-days', 'label' => 'Calendar', 'tone' => 'sky'],
-        ['route' => 'student.subjects', 'icon' => 'book-open-check', 'label' => 'Subjects', 'tone' => 'emerald'],
+        ['route' => 'student.subjects', 'icon' => 'book-open', 'label' => 'Subjects', 'tone' => 'emerald'],
+        ['route' => 'student.teachers', 'icon' => 'users', 'label' => 'Teachers', 'tone' => 'sky'],
         ['route' => 'student.grades', 'icon' => 'chart-no-axes-combined', 'label' => 'Grades', 'tone' => 'violet'],
         ['route' => 'student.announcements', 'icon' => 'megaphone', 'label' => 'Announcements', 'tone' => 'emerald'],
         ['route' => 'student.billing', 'icon' => 'credit-card', 'label' => 'My Billing (SOA)', 'tone' => 'amber'],
