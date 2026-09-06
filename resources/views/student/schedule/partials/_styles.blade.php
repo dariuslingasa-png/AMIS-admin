@@ -3,86 +3,47 @@
     /* Main Timetable Switcher styling */
     .sched-tab-btn {
         border: none !important;
-        border-radius: 10px !important;
-        padding: 0.5rem 1.25rem !important;
-        font-size: 15px !important;
-        font-weight: 600 !important;
-        line-height: 22px !important;
+        border-radius: 8px !important;
+        padding: 0.45rem 1rem !important;
+        font-size: 13.5px !important;
+        font-weight: 700 !important;
+        line-height: 20px !important;
         cursor: pointer !important;
-        transition: all 0.2s ease !important;
+        transition: all 0.15s ease !important;
         display: inline-flex !important;
         align-items: center !important;
-        gap: 0.375rem !important;
+        gap: 0.4rem !important;
         background: transparent !important;
         color: #64748b !important;
     }
     .sched-tab-btn.active {
         background: white !important;
-        color: #059669 !important;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04) !important;
+        color: #047857 !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06) !important;
     }
 
     /* Desktop Calendar Grid UI */
     .calendar-wrapper {
         width: 100%;
         overflow-x: auto;
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        border-radius: 28px;
-        padding: 1.5rem;
-        box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
-    }
-    .calendar-grid {
-        display: grid;
-        grid-template-columns: 8rem repeat(5, minmax(180px, 1fr));
-        gap: 0.65rem;
-        min-width: 1000px;
-    }
-    .calendar-grid-header {
-        font-size: 14px !important;
-        font-weight: 800 !important;
-        line-height: 1.2 !important;
-        text-transform: uppercase;
-        color: white;
-        background: #059669;
-        padding: 0.85rem 0.5rem;
-        border-radius: 12px;
-        letter-spacing: 0.05em;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        text-align: center !important;
-        min-height: 50px !important;
-    }
-    .calendar-time-header {
-        background: #064e3b;
-    }
-    .calendar-grid-row {
-        display: contents;
-    }
-    .calendar-time-block {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        background: white;
-        border: 1px solid #e2e8f0;
-        border-radius: 14px;
-        padding: 0.5rem;
-        font-size: 13px !important;
-        font-weight: 500 !important;
-        line-height: 18px !important;
-        color: #1e293b;
-        text-align: center;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-        min-height: 85px;
-    }
-    .calendar-cell {
-        display: flex;
-        flex-direction: column;
     }
     
     /* Calendar Class Card */
+    .sched-grid-card {
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+    .sched-grid-card:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 16px -2px rgba(15, 23, 42, 0.08) !important;
+    }
+    
+    .sched-special-strip {
+        transition: all 0.2s ease !important;
+    }
+    .sched-special-strip:hover {
+        filter: brightness(0.97);
+    }
+    
     .calendar-class-card {
         flex: 1;
         display: flex;
@@ -101,44 +62,6 @@
     .calendar-class-card:hover {
         transform: translateY(-2px);
         box-shadow: 0 8px 16px rgba(0, 0, 0, 0.04);
-    }
-    
-
-    
-    /* Completed State */
-    .class-completed {
-        opacity: 0.5;
-        background: #f1f5f9 !important;
-        border-color: #cbd5e1 !important;
-        color: #64748b !important;
-        box-shadow: none !important;
-    }
-    .class-completed .icon-small {
-        background: #cbd5e1 !important;
-        color: #64748b !important;
-        border-color: #94a3b8 !important;
-    }
-    
-    /* Special/Break Slots (Assembly, Recess, Homeroom, Transition) */
-    .class-special {
-        background: #f1f5f9 !important;
-        border: 1.5px dashed #cbd5e1 !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        border-radius: 16px !important;
-        box-shadow: none !important;
-        min-height: 85px !important;
-    }
-    .class-special:hover {
-        transform: none !important;
-        box-shadow: none !important;
-    }
-    .class-special-title {
-        font-size: 0.85rem !important;
-        font-weight: 800;
-        color: #64748b;
-        margin: 0;
     }
 
     /* Mobile Timeline View */
@@ -190,8 +113,6 @@
         }
     }
     
-
-    
     /* Style tab switcher buttons */
     .day-tab-btn {
         border: none !important;
@@ -226,7 +147,7 @@
         z-index: 9999 !important;
         background: #ffffff !important;
         border-radius: 0 !important;
-        padding: 2rem !important;
+        padding: 1.5rem !important;
         overflow: auto !important;
         box-shadow: none !important;
     }

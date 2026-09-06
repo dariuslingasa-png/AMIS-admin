@@ -36,66 +36,54 @@
      })"
      x-init="init()">
 
-    {{-- ── 1. Page Header ────────────────────────────────────────────── --}}
-    <div class="no-print" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 0.5rem;">
-        <div>
-            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
-                <span style="font-size: 0.78rem; font-weight: 700; color: #059669; text-transform: uppercase; letter-spacing: 0.08em; display: inline-flex; align-items: center; gap: 0.35rem;">
-                    <span style="width: 6px; height: 6px; border-radius: 50%; background: #10b981;"></span>
-                    Academic Schedule & Timetable
-                </span>
-            </div>
-            <h1 style="font-family: 'Plus Jakarta Sans', sans-serif !important; font-size: 1.75rem; font-weight: 900; color: #0f172a; margin: 0; line-height: 1.2; letter-spacing: -0.025em;">
-                Class Schedule
-            </h1>
-            <p style="font-size: 0.85rem; color: #64748b; margin: 0.25rem 0 0 0; font-weight: 500;">
-                Official weekly timetable for <strong id="banner-grade-sec" style="color: #0f172a;" x-text="currentGrade + ' — ' + currentSectionName">{{ $currentGrade }} — {{ $currentSectionName }}</strong> · School Year {{ $studentInfo['school_year'] }}
-            </p>
-        </div>
-    </div>
-
-    {{-- ── 2. Main Schedule Panel ────────────────────────────────────── --}}
+    {{-- ── Main Schedule Panel ────────────────────────────────────── --}}
     <div class="fade-up report-card-print-box" style="
         background: #ffffff;
         border: 1px solid #e2e8f0;
-        border-radius: 24px;
-        padding: 1.75rem 2rem;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02), 0 8px 24px -4px rgba(15, 23, 42, 0.03);
+        border-radius: 20px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03);
         display: flex;
         flex-direction: column;
-        gap: 1.5rem;
+        gap: 1.25rem;
         width: 100%;
     ">
 
-        {{-- Controls Bar (Tabs + Tester Switcher) --}}
-        <div class="no-print" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid #e2e8f0; padding-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
-            <div style="display: flex; background: #e2e8f0; padding: 0.25rem; border-radius: 12px; gap: 0.25rem;">
-                <button type="button" 
-                        @click="currentTab = 'grid'; $nextTick(() => window.lucide && window.lucide.createIcons())" 
-                        class="sched-tab-btn" 
-                        :class="(!currentTab || currentTab === 'grid') ? 'active' : ''">
-                    <i data-lucide="calendar-range" style="width: 14px; height: 14px; flex-shrink: 0;"></i>
-                    <span>Timetable Calendar</span>
-                </button>
+        {{-- Controls Bar (Tabs + Context + Tester Switcher) --}}
+        <div class="no-print" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eef2f6; padding-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+            <div style="display: flex; align-items: center; gap: 1.25rem; flex-wrap: wrap;">
+                <div style="display: inline-flex; background: #f1f5f9; padding: 4px; border-radius: 12px; border: 1px solid #e2e8f0; gap: 4px;">
+                    <button type="button" 
+                            @click="currentTab = 'grid'; $nextTick(() => window.lucide && window.lucide.createIcons())" 
+                            class="sched-tab-btn" 
+                            :class="(!currentTab || currentTab === 'grid') ? 'active' : ''">
+                        <i data-lucide="calendar-range" style="width: 15px; height: 15px; flex-shrink: 0;"></i>
+                        <span>Timetable Calendar</span>
+                    </button>
 
-                <button type="button" 
-                        @click="currentTab = 'list'; $nextTick(() => window.lucide && window.lucide.createIcons())" 
-                        class="sched-tab-btn" 
-                        :class="currentTab === 'list' ? 'active' : ''">
-                    <i data-lucide="list" style="width: 14px; height: 14px; flex-shrink: 0;"></i>
-                    <span>Daily Classes</span>
-                </button>
+                    <button type="button" 
+                            @click="currentTab = 'list'; $nextTick(() => window.lucide && window.lucide.createIcons())" 
+                            class="sched-tab-btn" 
+                            :class="currentTab === 'list' ? 'active' : ''">
+                        <i data-lucide="list" style="width: 15px; height: 15px; flex-shrink: 0;"></i>
+                        <span>Daily Classes</span>
+                    </button>
+                </div>
+
+                <div style="font-size: 13px; color: #64748b; font-weight: 500;">
+                    Weekly timetable for <strong id="banner-grade-sec" style="color: #0f172a; font-weight: 800;" x-text="currentGrade + ' — ' + currentSectionName">{{ $currentGrade }} — {{ $currentSectionName }}</strong> · School Year {{ $studentInfo['school_year'] }}
+                </div>
             </div>
 
             @if($isTester)
                 <!-- Connected Grade & Section Filter for Tester -->
-                <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; background: #ffffff; border: 1.5px solid #0d9488; border-radius: 12px; padding: 0.35rem 0.75rem; box-shadow: 0 2px 6px rgba(13,148,136,0.1);">
-                    <span style="font-size: 11px; font-weight: 800; color: #0f766e; text-transform: uppercase; display: inline-flex; align-items: center; gap: 0.3rem;">
-                        <i data-lucide="flask-conical" style="width: 13px; height: 13px; color: #0d9488;"></i>
+                <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; padding: 0.35rem 0.75rem;">
+                    <span style="font-size: 11px; font-weight: 800; color: #047857; text-transform: uppercase; display: inline-flex; align-items: center; gap: 0.3rem;">
+                        <i data-lucide="flask-conical" style="width: 13px; height: 13px; color: #059669;"></i>
                         Grade:
                     </span>
                     <select id="testerGradeSelect" x-model="selectedGrade" @change="onGradeChange()"
-                            style="font-size: 12.5px; font-weight: 700; color: #0f172a; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0.35rem 0.6rem; cursor: pointer; outline: none;">
+                            style="font-size: 12px; font-weight: 700; color: #0f172a; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0.35rem 0.6rem; cursor: pointer; outline: none;">
                         @foreach($gradesAndSections as $gradeName => $secs)
                             <option value="{{ $gradeName }}" {{ $currentGrade === $gradeName ? 'selected' : '' }}>
                                 {{ $gradeName }}
@@ -103,11 +91,11 @@
                         @endforeach
                     </select>
 
-                    <span style="font-size: 11px; font-weight: 800; color: #0f766e; text-transform: uppercase; margin-left: 0.25rem;">
+                    <span style="font-size: 11px; font-weight: 800; color: #047857; text-transform: uppercase; margin-left: 0.25rem;">
                         Section:
                     </span>
                     <select id="testerSectionSelect" x-model="selectedSectionId" @change="onSectionChange()"
-                            style="font-size: 12.5px; font-weight: 700; color: #0f172a; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0.35rem 0.6rem; cursor: pointer; outline: none; max-width: 260px;">
+                            style="font-size: 12px; font-weight: 700; color: #0f172a; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0.35rem 0.6rem; cursor: pointer; outline: none; max-width: 260px;">
                         @foreach($gradesAndSections[$currentGrade] ?? [] as $secOpt)
                             <option value="{{ $secOpt['id'] }}" {{ $currentSectionId === $secOpt['id'] ? 'selected' : '' }}>
                                 {{ $secOpt['name'] }}
@@ -116,20 +104,16 @@
                     </select>
 
                     <button type="button" @click="resetToMySection()" title="Reset to default section"
-                            style="background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0.35rem 0.65rem; font-size: 11px; font-weight: 750; color: #475569; cursor: pointer; display: inline-flex; align-items: center; gap: 0.25rem;">
+                            style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0.35rem 0.65rem; font-size: 11px; font-weight: 750; color: #475569; cursor: pointer; display: inline-flex; align-items: center; gap: 0.25rem;">
                         <i data-lucide="rotate-ccw" style="width: 12px; height: 12px;"></i>
                         Reset
                     </button>
 
-                    <span x-show="loading" style="font-size: 11px; font-weight: 700; color: #0d9488; display: inline-flex; align-items: center; gap: 0.25rem;">
-                        <span style="width: 12px; height: 12px; border: 2px solid #0d9488; border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite;"></span>
+                    <span x-show="loading" style="font-size: 11px; font-weight: 700; color: #059669; display: inline-flex; align-items: center; gap: 0.25rem;">
+                        <span style="width: 12px; height: 12px; border: 2px solid #059669; border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite;"></span>
                     </span>
                 </div>
             @endif
-
-            <div style="font-size: 12px; font-weight: 600; line-height: 16px; color: #64748b;">
-                School Year {{ $studentInfo['school_year'] }}
-            </div>
         </div>
 
         {{-- ── 4. Dynamic Timetable Content ────────────────────────────── --}}
