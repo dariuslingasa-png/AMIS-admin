@@ -516,14 +516,14 @@
         <span class="soa-hero__orb soa-hero__orb--two" aria-hidden="true"></span>
 
         <div class="soa-hero__content">
-            <div class="soa-hero__eyebrow" style="flex-wrap: wrap; gap: 8px;">
-                <div style="display: inline-flex; align-items: center; gap: 8px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 18px;">
+                <div class="soa-hero__eyebrow" style="margin-bottom: 0;">
                     <span><i data-lucide="sparkles"></i></span>
                     Assalamu Alaikum · AMIS Student Portal
                 </div>
-                <span class="soa-account-state {{ $isOldStudent ? 'is-settled' : '' }}" style="font-size: 10px; font-weight: 850; letter-spacing: 0.06em; padding: 4px 10px; border-radius: 999px;">
+                <div class="soa-account-state {{ $isOldStudent ? 'is-settled' : '' }}" style="font-size: 10.5px; font-weight: 850; letter-spacing: 0.05em; padding: 5px 12px; border-radius: 999px;">
                     <i></i>{{ $studentTypeDisplay }}
-                </span>
+                </div>
             </div>
 
             <h2 id="dashboard-welcome-title">
