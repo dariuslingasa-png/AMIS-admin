@@ -42,7 +42,7 @@
             <table style="width: 100%; table-layout: fixed; border-collapse: collapse; min-width: 920px; text-align: left;">
                 <colgroup>
                     <col style="width: 135px;">
-                    <col style="width: 85px;">
+                    <col style="width: 75px;">
                     <col style="width: 20%;">
                     <col style="width: 20%;">
                     <col style="width: 20%;">
@@ -58,8 +58,8 @@
                         <th style="padding: 0.9rem 0.5rem; border: 1px solid #cbd5e1; text-align: center; color: #0f172a; font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.04em;">
                             Time
                         </th>
-                        <th style="padding: 0.9rem 0.5rem; border: 1px solid #cbd5e1; text-align: center; color: #0f172a; font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.04em;">
-                            Duration
+                        <th style="padding: 0.9rem 0.4rem; border: 1px solid #cbd5e1; text-align: center; color: #0f172a; font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.04em;">
+                            DUR.
                         </th>
                         @foreach($daysList as $dayHeader)
                             @php
@@ -84,7 +84,7 @@
                             $start = $row['slot']['start'];
                             $end = $row['slot']['end'];
                             $duration = (strtotime($end) - strtotime($start)) / 60;
-                            $durationText = $duration > 0 ? "{$duration} mins" : "—";
+                            $durationText = $duration > 0 ? "{$duration} min" : "—";
 
                             // Check if all 5 days have the exact same special title or break
                             $firstEntry = $row['days']['Sunday'];
