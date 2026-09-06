@@ -7,12 +7,18 @@ use Illuminate\View\Component;
 
 class StudentLayout extends Component
 {
-    public function __construct(public ?string $title = null)
-    {
+    public function __construct(
+        public ?string $title = null,
+        public ?string $heading = null
+    ) {
+        $this->heading = $heading ?? $title ?? 'Student Portal';
     }
 
     public function render(): View
     {
-        return view('layouts.student');
+        return view('student.layout', [
+            'title'   => $this->title,
+            'heading' => $this->heading,
+        ]);
     }
 }

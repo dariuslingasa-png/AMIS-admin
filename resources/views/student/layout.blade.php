@@ -15,8 +15,8 @@
 <body class="student-body">
 @auth
 @php 
-    $layoutStudent = $student ?? null; 
-    $layoutApplicant = $layoutStudent?->applicant; 
+    $layoutStudent = $student ?? Auth::user()->student ?? null; 
+    $layoutApplicant = $layoutStudent?->applicant ?? Auth::user()->student?->applicant; 
     $layoutPhotoUrl = \App\Support\EnrollmentStorage::url($layoutApplicant?->photo_2x2_url); 
     $layoutName = $layoutApplicant?->full_name ?: Auth::user()->name; 
     $layoutFirstName = $layoutApplicant?->first_name ?: Auth::user()->name; 
@@ -228,12 +228,20 @@
             </div>
         @endif
 
-        @yield('content')
+        @if(isset($slot) && trim($slot) !== '')
+            {{ $slot }}
+        @else
+            @yield('content')
+        @endif
         </div>
     </main>
 </div>
 @else
-    @yield('content')
+    @if(isset($slot) && trim($slot) !== '')
+        {{ $slot }}
+    @else
+        @yield('content')
+    @endif
 @endauth
 <script>
     const refreshStudentIcons = () => window.lucide?.createIcons();
