@@ -568,21 +568,15 @@
                         <p>{{ $todaySub }}</p>
                     </div>
 
-                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                        @if($student && $student->ms_user_id && str_ends_with(strtolower($student->school_email), '@amis.edu.ph'))
-                            <form method="POST" action="{{ route('student.sync-teams') }}" style="margin: 0; display: inline-block;">
-                                @csrf
-                                <button type="submit" class="soa-button soa-button--ghost" style="color: var(--soa-green); border-color: #a7f3d0; background: #ecfdf5; min-height: 36px; padding: 6px 13px; font-size: 11px;">
-                                    <i data-lucide="refresh-cw"></i>
-                                    Sync Teams
-                                </button>
-                            </form>
-                        @endif
-
-                        <a href="{{ route('student.schedule') }}" class="soa-button soa-button--ghost" style="color: var(--soa-green); border-color: var(--soa-border); background: var(--soa-soft); min-height: 36px; padding: 6px 13px; font-size: 11px;">
-                            Full Schedule →
-                        </a>
-                    </div>
+                    @if($student && $student->ms_user_id && str_ends_with(strtolower($student->school_email), '@amis.edu.ph'))
+                        <form method="POST" action="{{ route('student.sync-teams') }}" style="margin: 0; display: inline-block;">
+                            @csrf
+                            <button type="submit" class="soa-button soa-button--ghost" style="color: var(--soa-green); border-color: #a7f3d0; background: #ecfdf5; min-height: 36px; padding: 6px 13px; font-size: 11px;">
+                                <i data-lucide="refresh-cw"></i>
+                                Sync Teams
+                            </button>
+                        </form>
+                    @endif
                 </header>
 
                 @php
@@ -624,19 +618,6 @@
                 </template>
 
                 @if($todaySchedules->isNotEmpty())
-                    @if($endedCount > 0)
-                        <button type="button" @click="showEnded = !showEnded" style="display: flex; width: 100%; align-items: center; justify-content: space-between; border: 1px dashed var(--soa-border); border-radius: 12px; background: var(--soa-soft); padding: 10px 14px; margin-bottom: 12px; cursor: pointer; color: var(--soa-muted); font-size: 11.5px; font-weight: 700; transition: background 0.15s ease;">
-                            <span style="display: inline-flex; align-items: center; gap: 8px;">
-                                <i data-lucide="check-circle-2" style="width: 15px; height: 15px; color: var(--soa-green);"></i>
-                                <span>{{ $endedCount }} completed {{ \Illuminate\Support\Str::plural('class', $endedCount) }} today</span>
-                            </span>
-                            <span style="display: inline-flex; align-items: center; gap: 4px; color: var(--soa-green);">
-                                <span x-text="showEnded ? 'Hide completed' : 'Show completed'"></span>
-                                <i data-lucide="chevron-down" style="width: 14px; height: 14px; transition: transform 0.2s ease;" :style="showEnded ? 'transform: rotate(180deg)' : ''"></i>
-                            </span>
-                        </button>
-                    @endif
-
                     <div class="soa-table-wrap">
                         <table class="soa-table">
                             <thead>
@@ -671,7 +652,7 @@
                                             }
                                         }
                                     @endphp
-                                    <tr @if($isEnded) x-show="showEnded" x-cloak x-transition.opacity @endif style="{{ $isEnded ? 'opacity: 0.5; background: #fafafa;' : '' }} {{ $isLive ? 'background: #f0fdf4;' : '' }}">
+                                    <tr style="{{ $isEnded ? 'opacity: 0.75; background: #fafafa;' : '' }} {{ $isLive ? 'background: #f0fdf4;' : '' }}">
                                         <td>
                                             <span class="soa-fee-icon" style="{{ $isLive ? 'background: #d1fae5; color: #047857;' : '' }}">
                                                 <i data-lucide="{{ $isSpecial ? 'coffee' : 'book-open' }}"></i>
