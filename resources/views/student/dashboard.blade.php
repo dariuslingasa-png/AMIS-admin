@@ -511,7 +511,7 @@
     @endif
 
     {{-- ── 1. SOA-STYLE HERO HEADER ──────────────────────────────── --}}
-    <section class="soa-hero" style="grid-template-columns: 1fr; min-height: auto; padding: clamp(26px, 3.5vw, 38px);" aria-labelledby="dashboard-welcome-title">
+    <section class="soa-hero" aria-labelledby="dashboard-welcome-title">
         <span class="soa-hero__orb soa-hero__orb--one" aria-hidden="true"></span>
         <span class="soa-hero__orb soa-hero__orb--two" aria-hidden="true"></span>
 
@@ -530,13 +530,31 @@
                 Welcome back,<br>
                 <em>{{ $firstName }}!</em>
             </h2>
-            <p style="max-width: 680px; margin-top: 14px;">Your unified academic workspace. Follow your live daily classes, view official faculty instructions, monitor your report card, and track school finances.</p>
+            <p style="max-width: 620px; margin-top: 14px;">Your unified academic workspace. Follow your live daily classes, view official faculty instructions, monitor your report card, and track school finances.</p>
 
             <div class="soa-hero__meta" style="margin-top: 20px;">
                 <span><i data-lucide="graduation-cap"></i> {{ $student?->grade_level ?: 'Grade 1' }} • {{ $section?->name ?? 'G1-AL-MUNAWWARA' }}</span>
                 <span><i data-lucide="user-check"></i> {{ $studentTypeDisplay }}</span>
                 <span><i data-lucide="id-card"></i> AMIS ID: <b>{{ $student?->student_number ?? '260000' }}</b></span>
                 <span><i data-lucide="calendar-days"></i> School Year {{ $student?->school_year ?? '2026–2027' }}</span>
+            </div>
+        </div>
+
+        {{-- Hero Right Balance Card --}}
+        <div class="soa-balance-card">
+            <div class="soa-balance-card__top">
+                <span>Remaining balance</span>
+                <span class="soa-account-state {{ $soaRemaining <= 0 && $account ? 'is-settled' : '' }}">
+                    <i></i>{{ $soaAccountStatus }}
+                </span>
+            </div>
+            <strong><small>PHP</small> {{ number_format($soaRemaining, 2) }}</strong>
+            <div class="soa-progress" role="progressbar" aria-label="Payment progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ round($soaProgress) }}">
+                <span style="width: {{ $soaProgress }}%"></span>
+            </div>
+            <div class="soa-balance-card__footer">
+                <span><b>{{ number_format($soaProgress, 0) }}%</b> paid</span>
+                <span>PHP {{ number_format($soaPaid, 2) }} of PHP {{ number_format($soaTotal, 2) }}</span>
             </div>
         </div>
     </section>
@@ -906,104 +924,7 @@
         {{-- ── SIDE / RIGHT COLUMN ───────────────────────────────── --}}
         <aside class="soa-side-column">
 
-            {{-- 1. Digital Student ID Card Widget --}}
-            <section class="soa-card" style="padding: 22px;">
-                <header class="soa-card__header soa-card__header--compact" style="margin-bottom: 14px;">
-                    <div>
-                        <span class="soa-section-kicker">Student Credential</span>
-                        <h3 style="font-size: 16px;">Digital Student ID</h3>
-                    </div>
-                    <span class="soa-card__header-icon" style="width: 36px; height: 36px;"><i data-lucide="badge-check" style="width: 17px; height: 17px;"></i></span>
-                </header>
 
-                {{-- Interactive 3D Card Miniature Preview --}}
-                <div class="perspective-1000" style="width: 100%; height: 180px; margin-bottom: 14px; cursor: pointer;" @click="isFlipped = !isFlipped" title="Click to flip card">
-                    <div class="card-inner holo-card" :class="isFlipped ? 'is-flipped' : ''">
-                        
-                        {{-- Front Miniature --}}
-                        <div class="card-front id-card-front-content" style="padding: 16px; border-radius: 18px;">
-                            <div class="holo-overlay" style="position: absolute; inset: 0; pointer-events: none;"></div>
-                            
-                            <div style="display: flex; justify-content: space-between; align-items: flex-start; z-index: 1;">
-                                <div style="display: flex; align-items: center; gap: 8px;">
-                                    <img src="{{ asset('images/AMIS_Logo.png') }}" alt="AMIS" style="width: 24px; height: 24px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));">
-                                    <div style="text-align: left;">
-                                        <div style="font-size: 9.5px; font-weight: 900; letter-spacing: 0.05em; color: #f4d77d;">AMIS STUDENT ID</div>
-                                        <div style="font-size: 7.5px; color: #a7f3d0; font-weight: 700;">Davao City, Philippines</div>
-                                    </div>
-                                </div>
-                                <span style="font-size: 8px; font-weight: 800; background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 999px;">SY {{ $student?->school_year ?? '2026–2027' }}</span>
-                            </div>
-
-                            <div style="display: flex; align-items: center; gap: 12px; z-index: 1;">
-                                <div style="width: 48px; height: 48px; border-radius: 50%; overflow: hidden; border: 2px solid #ffffff; background: #ffffff; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.18);">
-                                    @if($photoUrl)
-                                        <img src="{{ $photoUrl }}" alt="{{ $fullName }}" style="width: 100%; height: 100%; object-fit: cover;">
-                                    @else
-                                        <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #047857; color: white; font-weight: 900; font-size: 16px;">
-                                            {{ $initials }}
-                                        </div>
-                                    @endif
-                                </div>
-                                <div style="min-width: 0; text-align: left;">
-                                    <div style="font-size: 13px; font-weight: 900; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;">
-                                        {{ $fullName }}
-                                    </div>
-                                    <div style="font-size: 10px; font-weight: 700; color: #f4d77d; margin-top: 2px;">
-                                        {{ $student?->grade_level ?: 'Grade Level' }}
-                                    </div>
-                                    <div style="font-size: 8.5px; font-weight: 600; color: #d1fae5;">
-                                        {{ $section?->name ?? 'General' }}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div style="display: flex; justify-content: space-between; align-items: flex-end; z-index: 1; border-top: 1px solid rgba(255,255,255,0.15); padding-top: 6px;">
-                                <div style="text-align: left;">
-                                    <span style="font-size: 7.5px; color: #a7f3d0; text-transform: uppercase; letter-spacing: 0.05em; display: block;">Student ID No.</span>
-                                    <span style="font-size: 11px; font-weight: 900; letter-spacing: 0.05em; font-family: monospace;">{{ $student?->student_number ?? '260000' }}</span>
-                                </div>
-                                <span style="font-size: 8px; color: #f4d77d; font-weight: 700; display: inline-flex; align-items: center; gap: 3px;">
-                                    <i data-lucide="rotate-cw" style="width: 10px; height: 10px;"></i> Tap to flip
-                                </span>
-                            </div>
-                        </div>
-
-                        {{-- Back Miniature --}}
-                        <div class="card-back id-card-back-content" style="padding: 16px; border-radius: 18px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; z-index: 1;">
-                                <span style="font-size: 8px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">QR Verification</span>
-                                <span style="font-size: 8px; color: #6ee7b7; font-weight: 700;">AMIS Secure</span>
-                            </div>
-
-                            <div style="display: flex; align-items: center; gap: 12px; z-index: 1;">
-                                <div style="background: white; padding: 4px; border-radius: 8px; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
-                                    <img src="{{ $qrCodeUrl }}" alt="QR" style="width: 44px; height: 44px; display: block;">
-                                </div>
-                                <div style="text-align: left; font-size: 8.5px; color: #cbd5e1; line-height: 1.4;">
-                                    <div><strong style="color: white;">Parent:</strong> {{ $parent ?: 'On file' }}</div>
-                                    <div><strong style="color: white;">Contact:</strong> {{ $contactNo ?: 'On file' }}</div>
-                                    <div style="color: #94a3b8; font-size: 7.5px; margin-top: 2px;">Scan to verify credentials</div>
-                                </div>
-                            </div>
-
-                            <div style="display: flex; justify-content: space-between; align-items: center; z-index: 1; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 6px;">
-                                <span style="font-size: 8px; color: #94a3b8; font-family: monospace;">AMIS-VALID-2026</span>
-                                <span style="font-size: 8px; color: #f4d77d; font-weight: 700; display: inline-flex; align-items: center; gap: 3px;">
-                                    <i data-lucide="rotate-cw" style="width: 10px; height: 10px;"></i> Tap to flip
-                                </span>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-
-                {{-- Action Button --}}
-                <button type="button" @click="showIdModal = true" class="soa-button soa-button--primary soa-button--full" style="min-height: 38px; font-size: 11.5px;">
-                    <i data-lucide="expand"></i>
-                    View Full Digital ID
-                </button>
-            </section>
 
             {{-- 2. Statement of Account Financial Widget --}}
             <section class="soa-upload-card" style="padding: 22px;">
@@ -1105,132 +1026,7 @@
 
     </div>
 
-    {{-- ── 4. FULL DIGITAL STUDENT ID MODAL ───────────────────────── --}}
-    <div x-show="showIdModal" 
-         class="id-modal-overlay" 
-         x-cloak 
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="opacity-0"
-         x-transition:enter-end="opacity-100"
-         x-transition:leave="transition ease-in duration-200"
-         x-transition:leave-start="opacity-100"
-         x-transition:leave-end="opacity-0">
-        
-        <div class="id-modal-backdrop" @click="showIdModal = false"></div>
 
-        <div class="id-modal-card" 
-             x-transition:enter="transition ease-out duration-300 transform"
-             x-transition:enter-start="opacity-0 scale-95 translate-y-4"
-             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-             x-transition:leave="transition ease-in duration-200 transform"
-             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
-             x-transition:leave-end="opacity-0 scale-95 translate-y-4"
-             @keydown.escape.window="showIdModal = false">
-            
-            <button type="button" @click="showIdModal = false" class="id-modal-close-btn" aria-label="Close modal">
-                <i data-lucide="x" style="width: 16px; height: 16px;"></i>
-            </button>
-
-            <div style="text-align: center; width: 100%;">
-                <span class="soa-section-kicker" style="margin-bottom: 2px;">Official Student Credential</span>
-                <h3 style="margin: 0; font-size: 1.15rem; font-weight: 800; color: var(--soa-ink);">Digital Student ID</h3>
-            </div>
-
-            {{-- 3D ID Card Container --}}
-            <div class="perspective-1000" style="width: 100%; height: 380px; cursor: pointer;" @click="isFlipped = !isFlipped">
-                <div class="card-inner holo-card" :class="isFlipped ? 'is-flipped' : ''">
-                    
-                    {{-- Front Face --}}
-                    <div class="card-front id-card-front-content">
-                        <div class="holo-overlay" style="position: absolute; inset: 0; pointer-events: none;"></div>
-
-                        <div style="display: flex; align-items: center; justify-content: space-between; z-index: 1;">
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <img src="{{ asset('images/AMIS_Logo.png') }}" alt="AMIS" style="width: 32px; height: 32px; object-fit: contain;">
-                                <div style="text-align: left;">
-                                    <div style="font-size: 11px; font-weight: 900; letter-spacing: 0.04em; color: #f4d77d;">AMIS STUDENT ID</div>
-                                    <div style="font-size: 8.5px; color: #a7f3d0; font-weight: 700;">Asian Muslim Integrated School</div>
-                                </div>
-                            </div>
-                            <span style="font-size: 9px; font-weight: 800; background: rgba(255,255,255,0.18); padding: 3px 8px; border-radius: 999px;">
-                                SY {{ $student?->school_year ?? '2026–2027' }}
-                            </span>
-                        </div>
-
-                        <div style="display: flex; flex-direction: column; align-items: center; text-align: center; z-index: 1; margin: 10px 0;">
-                            <div style="width: 88px; height: 88px; border-radius: 50%; overflow: hidden; border: 3px solid #ffffff; background: #ffffff; box-shadow: 0 8px 20px rgba(0,0,0,0.25); margin-bottom: 10px;">
-                                @if($photoUrl)
-                                    <img src="{{ $photoUrl }}" alt="{{ $fullName }}" style="width: 100%; height: 100%; object-fit: cover;">
-                                @else
-                                    <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #047857; color: white; font-weight: 900; font-size: 28px;">
-                                        {{ $initials }}
-                                    </div>
-                                @endif
-                            </div>
-
-                            <h4 style="margin: 0; font-size: 16px; font-weight: 900; color: #ffffff; line-height: 1.2;">
-                                {{ $fullName }}
-                            </h4>
-                            <div style="font-size: 12px; font-weight: 800; color: #f4d77d; margin-top: 3px;">
-                                {{ $student?->grade_level ?: 'Grade 1' }}
-                            </div>
-                            <div style="font-size: 10.5px; font-weight: 600; color: #d1fae5;">
-                                {{ $section?->name ?? 'G1-AL-MUNAWWARA' }}
-                            </div>
-                        </div>
-
-                        <div style="display: flex; justify-content: space-between; align-items: flex-end; z-index: 1; border-top: 1px solid rgba(255,255,255,0.18); padding-top: 10px;">
-                            <div style="text-align: left;">
-                                <span style="font-size: 8.5px; color: #a7f3d0; text-transform: uppercase; letter-spacing: 0.05em; display: block;">Student Number</span>
-                                <span style="font-size: 13px; font-weight: 900; letter-spacing: 0.05em; font-family: monospace;">{{ $student?->student_number ?? '260000' }}</span>
-                            </div>
-                            <span style="font-size: 9.5px; color: #f4d77d; font-weight: 750; display: inline-flex; align-items: center; gap: 4px;">
-                                <i data-lucide="rotate-cw" style="width: 12px; height: 12px;"></i> Tap to flip
-                            </span>
-                        </div>
-                    </div>
-
-                    {{-- Back Face --}}
-                    <div class="card-back id-card-back-content">
-                        <div style="display: flex; justify-content: space-between; align-items: center; z-index: 1;">
-                            <span style="font-size: 9.5px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">Credential Verification</span>
-                            <span style="font-size: 9.5px; color: #6ee7b7; font-weight: 800;">Official AMIS ID</span>
-                        </div>
-
-                        <div style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; z-index: 1; margin: 10px 0;">
-                            <div style="background: white; padding: 6px; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.3);">
-                                <img src="{{ $qrCodeUrl }}" alt="QR Verification" style="width: 90px; height: 90px; display: block;">
-                            </div>
-                            <span style="font-size: 8.5px; color: #94a3b8;">Scan with smartphone camera to verify authenticity</span>
-
-                            <div style="width: 100%; text-align: left; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 8px 12px; font-size: 9.5px; color: #cbd5e1; line-height: 1.5;">
-                                <div><strong style="color: white;">Parent/Guardian:</strong> {{ $parent ?: 'On official record' }}</div>
-                                <div><strong style="color: white;">Emergency Phone:</strong> {{ $contactNo ?: 'On official record' }}</div>
-                            </div>
-                        </div>
-
-                        <div style="display: flex; justify-content: space-between; align-items: center; z-index: 1; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px;">
-                            <span style="font-size: 9.5px; color: #94a3b8; font-family: monospace;">{{ $displayStudentId }}</span>
-                            <span style="font-size: 9.5px; color: #f4d77d; font-weight: 750; display: inline-flex; align-items: center; gap: 4px;">
-                                <i data-lucide="rotate-cw" style="width: 12px; height: 12px;"></i> Tap to flip
-                            </span>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-
-            <div style="display: flex; gap: 10px; width: 100%;">
-                <button type="button" @click="isFlipped = !isFlipped" class="soa-button soa-button--ghost" style="flex: 1; color: var(--soa-ink); border-color: var(--soa-border); background: var(--soa-soft); min-height: 38px; font-size: 11.5px;">
-                    <i data-lucide="rotate-cw"></i> Flip Card
-                </button>
-                <button type="button" onclick="window.print()" class="soa-button soa-button--light" style="flex: 1; border: 1px solid var(--soa-border); min-height: 38px; font-size: 11.5px;">
-                    <i data-lucide="printer"></i> Print
-                </button>
-            </div>
-
-        </div>
-    </div>
 
 </div>
 </x-student-layout>
