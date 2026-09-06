@@ -1,14 +1,15 @@
 <x-admin-layout
-    title="Payment Verification"
+    title="Online Payment Review"
     :breadcrumbs="[
         ['label' => 'Finance', 'href' => route('admin.finance.dashboard')],
-        ['label' => 'Payment Verification', 'href' => null],
+        ['label' => 'Online Payment Review', 'href' => null],
     ]"
 >
     <div class="space-y-6">
         @include('admin.finance._nav', [
-            'title' => 'Payment Verification',
-            'subtitle' => 'Review original payment proof, OCR extracted fields, duplicate risk, and automatic allocation preview before approval.',
+            'title' => 'Online Payment Review',
+            'subtitle' => 'This queue only contains receipts submitted online for Finance approval. Official students remain in Student Accounts & SOA even when they have no payment record.',
+            'showSearch' => false,
         ])
 
         <!-- Status Filter Tabs & Search Bar -->
@@ -126,15 +127,16 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="py-16 text-center">
+                                <td data-label="" colspan="5" class="py-16 text-center">
                                     <div class="flex flex-col items-center justify-center space-y-4">
                                         <div class="rounded-full bg-slate-50 p-4 text-slate-400 ring-8 ring-slate-50/50">
                                             <i data-lucide="inbox" class="h-10 w-10"></i>
                                         </div>
                                         <div class="space-y-1">
-                                            <h3 class="text-base font-bold text-slate-800">No payment receipts found</h3>
-                                            <p class="text-sm text-slate-500 max-w-sm mx-auto">No verification queue items matched these filters.</p>
+                                            <h3 class="text-base font-bold text-slate-800">No submitted receipts in this queue</h3>
+                                            <p class="text-sm text-slate-500 max-w-lg mx-auto">This does not mean student accounts are missing. All {{ number_format($officialStudentCount) }} approved official students are available in Student Accounts &amp; SOA, including those with no payment recorded yet.</p>
                                         </div>
+                                        <a href="{{ route('admin.finance.families.index') }}" class="inline-flex min-h-11 items-center justify-center rounded-xl bg-emerald-700 px-5 text-sm font-bold text-white hover:bg-emerald-800">Open {{ number_format($officialStudentCount) }} Student Accounts &amp; SOA</a>
                                     </div>
                                 </td>
                             </tr>

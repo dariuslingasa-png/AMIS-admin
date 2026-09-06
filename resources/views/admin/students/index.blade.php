@@ -42,16 +42,26 @@
                         <span>{{ request()->hasAny(['search', 'grade', 'type', 'gender', 'mode', 'ms_status']) ? 'Sync Filtered Licenses' : 'Sync Pending Licenses' }}</span>
                     </button>
                 </form>
+                <!-- Unassigned Students Button -->
+                <a href="{{ route('admin.students.unassigned') }}" class="inline-flex h-10 items-center gap-2 whitespace-nowrap rounded-lg border border-rose-200 bg-rose-50 px-3.5 text-xs font-bold text-rose-800 shadow-sm transition hover:border-rose-300 hover:bg-rose-100" title="View students without an assigned section">
+                    <i data-lucide="user-x" class="h-4 w-4 text-rose-600"></i>
+                    <span>Unassigned Students</span>
+                </a>
+                <!-- Archived Students Button -->
+                <a href="{{ route('admin.students.archive') }}" class="inline-flex h-10 items-center gap-2 whitespace-nowrap rounded-lg border border-slate-200 bg-slate-50 px-3.5 text-xs font-bold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-100" title="View archived / removed student records">
+                    <i data-lucide="archive" class="h-4 w-4 text-slate-500"></i>
+                    <span>Archived</span>
+                </a>
                 <!-- Download Docs ZIP Button -->
                 <a href="{{ route('admin.students.download-docs-zip') }}" onclick="location.href='{{ route('admin.students.download-docs-zip') }}' + window.location.search; return false;" class="inline-flex h-10 items-center gap-2 whitespace-nowrap rounded-lg border border-slate-200 bg-white px-3.5 text-xs font-bold text-slate-700 shadow-sm transition hover:border-sky-300 hover:bg-sky-50 hover:text-sky-800" title="Download ZIP archive of 2x2 Photos, Birth Certificates, Report Cards, and Enrollment Forms for filtered students">
                     <i data-lucide="archive" class="h-4 w-4 text-sky-600"></i>
                     <span>Download Docs ZIP</span>
                 </a>
-                <!-- Print Records Page Link Button -->
-                <a href="{{ route('admin.students.print-export') }}" onclick="location.href='{{ route('admin.students.print-export') }}' + window.location.search; return false;" class="inline-flex h-10 items-center gap-2 whitespace-nowrap rounded-lg bg-emerald-700 px-4 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-800">
+                <!-- Print Records Modal Hub Button -->
+                <button type="button" onclick="openPrintRecordsModal()" class="inline-flex h-10 items-center gap-2 whitespace-nowrap rounded-lg bg-emerald-700 hover:bg-emerald-800 px-4 text-xs font-bold text-white shadow-sm transition active:scale-[0.98] cursor-pointer">
                     <i data-lucide="printer" class="h-4 w-4"></i>
                     <span>Print Records</span>
-                </a>
+                </button>
             </div>
         </div>
 
@@ -562,8 +572,12 @@
             if (e.key === 'Escape') {
                 closeStudentCredentialsModal();
                 closePrintRecordsModal();
+                closeStudentIdCardModal();
             }
         });
     </script>
+
+    @include('admin.students.partials.index.id_card_modal')
+    @include('admin.students.partials.index.print_records_modal')
 </x-admin-layout>
 @endif

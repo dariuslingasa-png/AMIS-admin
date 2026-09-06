@@ -111,6 +111,16 @@ class Student extends Model
         return $this->hasMany(StudentDocument::class);
     }
 
+    public function grades()
+    {
+        return $this->hasMany(Grade::class);
+    }
+
+    public function approvedGrades()
+    {
+        return $this->hasMany(Grade::class)->whereIn('status', ['approved', 'published']);
+    }
+
     public function officialEnrollmentForm()
     {
         return $this->hasOne(StudentDocument::class)

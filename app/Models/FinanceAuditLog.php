@@ -21,4 +21,14 @@ class FinanceAuditLog extends Model
     {
         return $this->belongsTo(FinanceTransaction::class, 'finance_transaction_id');
     }
+
+    public function actor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'actor_id');
+    }
+
+    public function student(): BelongsTo
+    {
+        return $this->belongsTo(Student::class);
+    }
 }

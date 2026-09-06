@@ -1,24 +1,13 @@
 <x-admin-layout title="Reminder Delivery Logs">
     <div class="space-y-6">
 
-        <!-- ── HEADER ─────────────────────────────────────────────────────── -->
-        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-                <div class="flex items-center gap-2 text-xs font-bold text-amber-700 uppercase tracking-wider mb-1">
-                    <a href="{{ route('admin.finance.dashboard') }}" class="hover:underline">Finance</a>
-                    <span>/</span>
-                    <a href="{{ route('admin.finance.monthly-reminders.index', ['month' => $selectedMonth]) }}" class="hover:underline">Monthly Payment Reminder</a>
-                    <span>/</span>
-                    <span>Delivery Logs</span>
-                </div>
-                <h1 class="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
-                    Reminder Delivery Logs
-                </h1>
-                <p class="text-xs font-semibold text-slate-500 mt-0.5">
-                    Full audit history of payment reminder dispatches, timestamps, attempts, and SMTP delivery states.
-                </p>
-            </div>
+        @include('admin.finance._nav', [
+            'title' => 'Reminder Delivery Logs',
+            'subtitle' => 'Review reminder recipients, attempts, timestamps, and delivery status.',
+        ])
 
+        <!-- ── HEADER ─────────────────────────────────────────────────────── -->
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-end">
             <div class="flex items-center gap-3">
                 <a href="{{ route('admin.finance.monthly-reminders.index', ['month' => $selectedMonth]) }}"
                    class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 shadow-xs transition flex items-center gap-1.5">

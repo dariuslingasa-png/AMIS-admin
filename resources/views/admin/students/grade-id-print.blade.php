@@ -480,7 +480,9 @@
         <div class="toolbar-title">
             📋 Grade ID Cards Roster: {{ strtoupper($grade) }}
         </div>
-        <div class="toolbar-actions">
+            <button type="button" class="btn-action" style="background: #059669; font-weight: 800;" onclick="downloadGradeIdCardsZip('front-color-back-mono', this)" title="Download all Front (Color) + Back (Black Only) for Smart ID card printers">
+                🖨️ Download IDs (Front Color + Back Black)
+            </button>
             <button type="button" class="btn-action" style="background: #0284c7;" onclick="downloadGradeIdCardsZip('front', this)" title="Download all FRONT ID cards as PNG ZIP archive">
                 📦 Download FRONT IDs (ZIP)
             </button>
@@ -488,7 +490,7 @@
                 📦 Download BACK IDs (ZIP)
             </button>
             <button type="button" class="btn-action" style="background: #7c3aed;" onclick="downloadGradeIdCardsZip('both', this)" title="Download ALL Front & Back IDs in structured folders inside one ZIP">
-                📁 Download ALL IDs (ZIP)
+                📁 Download ALL IDs (Color)
             </button>
             <button type="button" class="btn-action btn-secondary" onclick="toggleEditor()" id="btn-toggle-editor">
                 ✏️ Font Sizes
@@ -1337,10 +1339,23 @@
                                 scale: 2.5, // 2.5x Ultra HD resolution (850px x 1345px)
                                 useCORS: true,
                                 allowTaint: true,
-                                backgroundColor: null,
+                                backgroundColor: isMonochrome ? '#ffffff' : null,
                                 logging: false,
                                 imageTimeout: 1500
                             });
+                            if (isMonochrome) {
+                                const ctx = canvas.getContext('2d');
+                                const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                                const d = imgData.data;
+                                for (let i = 0; i < d.length; i += 4) {
+                                    const gray = 0.299 * d[i] + 0.587 * d[i+1] + 0.114 * d[i+2];
+                                    const val = gray > 215 ? 255 : (gray < 165 ? 0 : Math.round(gray));
+                                    d[i] = val;
+                                    d[i+1] = val;
+                                    d[i+2] = val;
+                                }
+                                ctx.putImageData(imgData, 0, 0);
+                            }
                             blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png', 1.0));
                         } else if (typeof htmlToImage !== 'undefined') {
                             blob = await htmlToImage.toBlob(clone, { quality: 1.0, pixelRatio: 2.5, cacheBust: false });
@@ -1376,17 +1391,18 @@
                 const frontCard = cards[0] || null;
                 const backCard = cards[1] || null;
 
-                if ((mode === 'front' || mode === 'both') && frontCard) {
-                    const frontBlob = await renderElementToBlob(frontCard);
+                if ((mode === 'front' || mode === 'both' || mode === 'front-color-back-mono') && frontCard) {
+                    const frontBlob = await renderElementToBlob(frontCard, false);
                     if (frontBlob) {
                         targetZipFolder.file(`${fileSeq}_${cleanName}_FRONT.png`, frontBlob);
                     }
                 }
 
-                if ((mode === 'back' || mode === 'both') && backCard) {
-                    const backBlob = await renderElementToBlob(backCard);
+                if ((mode === 'back' || mode === 'both' || mode === 'front-color-back-mono') && backCard) {
+                    const isMono = (mode === 'front-color-back-mono');
+                    const backBlob = await renderElementToBlob(backCard, isMono);
                     if (backBlob) {
-                        targetZipFolder.file(`${fileSeq}_${cleanName}_BACK.png`, backBlob);
+                        targetZipFolder.file(`${fileSeq}_${cleanName}_BACK${isMono ? '-BLACK-ONLY' : ''}.png`, backBlob);
                     }
                 }
 
@@ -1396,7 +1412,7 @@
             btn.innerHTML = '📦 Compressing ZIP Archive...';
             try {
                 const contentBlob = await zip.generateAsync({ type: "blob" });
-                const modeLabel = mode === 'both' ? 'FRONT_and_BACK' : (mode === 'front' ? 'FRONT_IDs' : 'BACK_IDs');
+                const modeLabel = mode === 'front-color-back-mono' ? 'FRONT_COLOR_BACK_BLACK' : (mode === 'both' ? 'FRONT_and_BACK' : (mode === 'front' ? 'FRONT_IDs' : 'BACK_IDs'));
                 const zipFileName = `Student_ID_Cards_${safeGrade}_${modeLabel}_${new Date().toISOString().slice(0,10)}.zip`;
 
                 if (typeof saveAs !== 'undefined') {

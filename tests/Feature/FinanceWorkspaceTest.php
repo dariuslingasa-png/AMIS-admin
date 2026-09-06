@@ -35,9 +35,9 @@ class FinanceWorkspaceTest extends TestCase
             ->get(route('admin.finance.dashboard'))
             ->assertOk()
             ->assertSeeText('Finance Dashboard')
-            ->assertSeeText('Payment Verification')
-            ->assertSeeText('Record Onsite Payment')
-            ->assertSeeText('Family Accounts / SOA')
+            ->assertSeeText('Pending Payment Reviews')
+            ->assertSeeText('Record Payment')
+            ->assertSeeText('Student Accounts & SOA')
             ->assertSeeText('Official Receipts');
     }
 

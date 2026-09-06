@@ -45,15 +45,11 @@ class FinanceController extends Controller
 
         $metrics = [
             'pending' => 0,
-            'needs_review' => 0,
-            'duplicates' => 0,
-            'reupload' => 0,
+            'needs_attention' => 0,
             'approved_today' => 0,
-            'onsite_today' => 0,
             'total_today' => 0,
-            'outstanding' => 0,
+            'historical_payments' => 0,
         ];
-        $recent = collect();
         $reviewQueue = collect();
 
         if ($this->pipelineReady()) {
@@ -63,12 +59,16 @@ class FinanceController extends Controller
                 ReceiptSubmission::OCR_COMPLETED,
                 ReceiptSubmission::PENDING_VERIFICATION,
             ])->count();
-            $metrics['needs_review'] = ReceiptSubmission::query()->whereHas('paymentSubmission')->where('status', ReceiptSubmission::NEEDS_REVIEW)->count();
-            $metrics['duplicates'] = ReceiptSubmission::query()->whereHas('paymentSubmission')->whereNotIn('duplicate_status', ['UNIQUE', 'CLEAR'])->count();
-            $metrics['reupload'] = ReceiptSubmission::query()->whereHas('paymentSubmission')->where('status', ReceiptSubmission::REUPLOAD_REQUIRED)->count();
+            $metrics['needs_attention'] = ReceiptSubmission::query()
+                ->whereHas('paymentSubmission')
+                ->where(function ($query) {
+                    $query->whereIn('status', [ReceiptSubmission::NEEDS_REVIEW, ReceiptSubmission::REUPLOAD_REQUIRED])
+                        ->orWhereNotIn('duplicate_status', ['UNIQUE', 'CLEAR']);
+                })
+                ->count();
 
             $reviewQueue = ReceiptSubmission::query()
-                ->with(['user', 'paymentSubmission'])
+                ->with(['user.students.applicant', 'user.enrollmentApplicants', 'paymentSubmission.payments.student.applicant'])
                 ->whereHas('paymentSubmission')
                 ->whereIn('status', [ReceiptSubmission::OCR_COMPLETED, ReceiptSubmission::PENDING_VERIFICATION, ReceiptSubmission::NEEDS_REVIEW])
                 ->latest()
@@ -81,22 +81,15 @@ class FinanceController extends Controller
             $approvedToday = FinanceTransaction::query()
                 ->where('status', 'APPROVED')
                 ->whereDate('transaction_at', $today);
-            $metrics['approved_today'] = (clone $approvedToday)->where('source', 'ONLINE')->count();
-            $metrics['onsite_today'] = (clone $approvedToday)->where('source', 'ONSITE')->count();
+            $metrics['approved_today'] = (clone $approvedToday)->whereIn('source', ['ONLINE', 'ONSITE'])->count();
             $metrics['total_today'] = (float) (clone $approvedToday)->whereIn('source', ['ONLINE', 'ONSITE'])->sum('amount');
-            $recent = FinanceTransaction::query()
-                ->with(['family', 'officialReceipt'])
+            $metrics['historical_payments'] = FinanceTransaction::query()
                 ->where('status', 'APPROVED')
-                ->latest('transaction_at')
-                ->limit(7)
-                ->get();
+                ->whereIn('source', ['HISTORICAL', 'MANUAL'])
+                ->count();
         }
 
-        if (Schema::hasTable('student_accounts')) {
-            $metrics['outstanding'] = (float) StudentAccount::query()->sum('remaining_balance');
-        }
-
-        return view('admin.finance.dashboard', compact('metrics', 'recent', 'reviewQueue'));
+        return view('admin.finance.dashboard', compact('metrics', 'reviewQueue'));
     }
 
     public function verificationIndex(Request $request)
@@ -147,7 +140,9 @@ class FinanceController extends Controller
 
         $receipts->getCollection()->each(fn (ReceiptSubmission $receipt) => $this->resolveRetryDuplicateBadge($receipt));
 
-        return view('admin.finance.verification.index', compact('receipts', 'statusCounts', 'statusFilter'));
+        $officialStudentCount = EnrollmentApplicant::query()->where('status', 'approved')->count();
+
+        return view('admin.finance.verification.index', compact('receipts', 'statusCounts', 'statusFilter', 'officialStudentCount'));
     }
 
     public function verificationShow(Request $request, ReceiptSubmission $receipt)
@@ -703,8 +698,14 @@ class FinanceController extends Controller
         $this->authorizeFinance($request);
         $transactions = FinanceTransaction::query()
             ->with(['family', 'processor', 'officialReceipt'])
-            ->where('status', 'APPROVED')
-            ->when($request->filled('source'), fn ($q) => $q->where('source', $request->string('source')))
+            ->when($request->filled('status'), fn ($q) => $q->where('status', Str::upper((string) $request->string('status'))))
+            ->when($request->filled('source'), function ($q) use ($request) {
+                $source = Str::upper((string) $request->string('source'));
+                $source === 'HISTORICAL'
+                    ? $q->whereIn('source', ['HISTORICAL', 'MANUAL'])
+                    : $q->where('source', $source);
+            })
+            ->when($request->filled('academic_year'), fn ($q) => $q->where('academic_year', $request->string('academic_year')))
             ->when($request->filled('method'), function ($q) use ($request) {
                 $method = strtoupper((string) $request->string('method'));
 
@@ -751,12 +752,7 @@ class FinanceController extends Controller
         }
 
         $demoCount = $this->demoData->isEnabled() ? $this->demoData->getDemoFamiliesList()->count() : 0;
-        $officialCount = User::query()
-            ->where(function ($q) {
-                $q->whereHas('enrollmentApplicants')
-                  ->orWhereHas('students');
-            })
-            ->count();
+        $officialCount = EnrollmentApplicant::query()->where('status', 'approved')->count();
 
         if ($tab === 'demo' && $this->demoData->isEnabled()) {
             $demoFamilies = filled($term)
@@ -781,35 +777,34 @@ class FinanceController extends Controller
             ]);
         }
 
-        $families = User::query()
-            ->where(function ($q) {
-                $q->whereHas('students')
-                  ->orWhereHas('enrollmentApplicants', fn ($app) => $app->where('status', 'approved'));
-            })
-            ->with([
-                'enrollmentApplicants.student.account.monthlyBillings.payments',
-                'students.account.monthlyBillings.payments',
-            ])
+        $families = EnrollmentApplicant::query()
+            ->where('status', 'approved')
+            ->with(['user', 'student.account'])
             ->when(filled($term), function ($q) use ($term) {
                 $searchTerm = '%'.$term.'%';
                 $q->where(function ($nested) use ($searchTerm) {
-                    $nested->where('name', 'like', $searchTerm)
-                        ->orWhere('email', 'like', $searchTerm)
-                        ->orWhereHas('enrollmentApplicants', fn ($app) => $app->where('first_name', 'like', $searchTerm)
-                            ->orWhere('last_name', 'like', $searchTerm)
-                            ->orWhere('middle_name', 'like', $searchTerm)
-                            ->orWhere('lrn', 'like', $searchTerm)
-                            ->orWhere('amis_student_id', 'like', $searchTerm)
-                            ->orWhere('student_type', 'like', $searchTerm)
-                        )
-                        ->orWhereHas('students', fn ($st) => $st->where('student_number', 'like', $searchTerm)
+                    $nested->where('first_name', 'like', $searchTerm)
+                        ->orWhere('last_name', 'like', $searchTerm)
+                        ->orWhere('middle_name', 'like', $searchTerm)
+                        ->orWhere('lrn', 'like', $searchTerm)
+                        ->orWhere('amis_student_id', 'like', $searchTerm)
+                        ->orWhere('parent_email', 'like', $searchTerm)
+                        ->orWhereHas('student', fn ($st) => $st->where('student_number', 'like', $searchTerm)
                             ->orWhere('school_email', 'like', $searchTerm)
                             ->orWhere('grade_level', 'like', $searchTerm)
-                        );
+                        )
+                        ->orWhereHas('user', fn ($user) => $user
+                            ->where('name', 'like', $searchTerm)
+                            ->orWhere('email', 'like', $searchTerm)
+                            ->orWhereHas('financeTransactions', fn ($transaction) => $transaction
+                                ->where('transaction_number', 'like', $searchTerm)
+                                ->orWhere('official_receipt_number', 'like', $searchTerm)
+                                ->orWhere('reference_number', 'like', $searchTerm)));
                 });
             })
-            ->orderBy('name')
-            ->paginate(20)
+            ->orderBy('last_name')
+            ->orderBy('first_name')
+            ->paginate(30)
             ->withQueryString();
 
         return view('admin.finance.families.index', [
@@ -832,6 +827,7 @@ class FinanceController extends Controller
                 ->where('status', 'APPROVED')
                 ->latest('transaction_at')
                 ->paginate(25);
+            $lastPayment = $transactions->getCollection()->first();
             $outstanding = $this->demoData->getBalances($familyId);
             $advanceCredit = 0.00;
 
@@ -839,7 +835,28 @@ class FinanceController extends Controller
                 ? StudentManualSoa::query()->where('family_email', $family->email)->latest('id')->get()->groupBy('student_identifier')
                 : collect();
 
-            return view('admin.finance.families.show', compact('family', 'transactions', 'outstanding', 'advanceCredit', 'manualSoas'));
+            return view('admin.finance.families.show', compact('family', 'transactions', 'outstanding', 'advanceCredit', 'manualSoas', 'lastPayment'));
+        }
+
+        if ($request->filled('student')) {
+            $studentIdentifier = trim((string) $request->string('student'));
+            $student = Student::query()
+                ->where(function ($query) use ($familyId) {
+                    $query->where('user_id', $familyId)
+                        ->orWhereHas('applicant', fn ($applicant) => $applicant->where('user_id', $familyId));
+                })
+                ->where(function ($query) use ($studentIdentifier) {
+                    $query->where('student_number', $studentIdentifier)
+                        ->orWhere('id', $studentIdentifier)
+                        ->orWhereHas('applicant', fn ($applicant) => $applicant
+                            ->where('amis_student_id', $studentIdentifier)
+                            ->orWhere('lrn', $studentIdentifier));
+                })
+                ->first();
+
+            if ($student) {
+                return redirect()->route('admin.finance.students.official-soa', $student->student_number ?: $student->id);
+            }
         }
 
         $family = User::query()->findOrFail($familyId);
@@ -904,6 +921,11 @@ class FinanceController extends Controller
             ->where('user_id', $family->id)
             ->latest('transaction_at')
             ->paginate(25);
+        $lastPayment = FinanceTransaction::query()
+            ->where('user_id', $family->id)
+            ->where('status', 'APPROVED')
+            ->latest('transaction_at')
+            ->first();
 
         $outstanding = $this->allocation->outstandingBalances($family->id);
         $onlineCredit = Schema::hasTable('family_advance_credits')
@@ -916,7 +938,7 @@ class FinanceController extends Controller
             ? StudentManualSoa::query()->where('family_email', $family->email)->latest('id')->get()->groupBy('student_identifier')
             : collect();
 
-        return view('admin.finance.families.show', compact('family', 'transactions', 'outstanding', 'advanceCredit', 'manualSoas'));
+        return view('admin.finance.families.show', compact('family', 'transactions', 'outstanding', 'advanceCredit', 'manualSoas', 'lastPayment'));
     }
 
     public function storeHistoricalPayment(Request $request, string $familyId)
@@ -1130,6 +1152,7 @@ class FinanceController extends Controller
             $totalFees = (float) ($account->gross_total ?? ($tuition + $misc + $booksFee));
             $discountPercent = (float) ($account->discount_percentage ?? 0);
             $discountAmount = (float) ($account->discount_amount ?? 0);
+            $finalFees = max(0.0, round($totalFees - $discountAmount, 2));
             $enrollmentPaid = (float) ($account->enrollment_fee_paid ?? 0.00);
 
             $monthlySchedule = $account->monthlyBillings
@@ -1764,6 +1787,38 @@ class FinanceController extends Controller
             }
             fclose($handle);
         }, 'amis-finance-transactions-'.now()->format('Ymd').'.csv', ['Content-Type' => 'text/csv']);
+    }
+
+    public function auditIndex(Request $request)
+    {
+        $this->authorizeFinance($request);
+
+        $auditLogs = FinanceAuditLog::query()
+            ->with(['actor', 'student.applicant', 'transaction.family', 'transaction.officialReceipt'])
+            ->when($request->filled('q'), function ($query) use ($request) {
+                $term = '%'.$request->string('q').'%';
+                $query->where(function ($nested) use ($term) {
+                    $nested->where('event', 'like', $term)
+                        ->orWhere('reason', 'like', $term)
+                        ->orWhere('reference_number', 'like', $term)
+                        ->orWhereHas('actor', fn ($actor) => $actor->where('name', 'like', $term)->orWhere('email', 'like', $term))
+                        ->orWhereHas('student', fn ($student) => $student->where('student_number', 'like', $term)
+                            ->orWhereHas('applicant', fn ($applicant) => $applicant->where('first_name', 'like', $term)->orWhere('last_name', 'like', $term)))
+                        ->orWhereHas('transaction', fn ($transaction) => $transaction->where('transaction_number', 'like', $term)
+                            ->orWhere('official_receipt_number', 'like', $term)
+                            ->orWhereHas('family', fn ($family) => $family->where('name', 'like', $term)));
+                });
+            })
+            ->when($request->filled('event'), fn ($query) => $query->where('event', $request->string('event')))
+            ->when($request->filled('from'), fn ($query) => $query->whereDate('created_at', '>=', $request->date('from')))
+            ->when($request->filled('to'), fn ($query) => $query->whereDate('created_at', '<=', $request->date('to')))
+            ->latest('created_at')
+            ->paginate(25)
+            ->withQueryString();
+
+        $events = FinanceAuditLog::query()->distinct()->orderBy('event')->pluck('event');
+
+        return view('admin.finance.audit.index', compact('auditLogs', 'events'));
     }
 
     private function authorizeFinance(Request $request): void

@@ -42,6 +42,9 @@
             'name' => $name,
             'grade' => $grade,
             'school_year' => is_object($account) && isset($account->school_year) ? $account->school_year : '2026-2027',
+            'total_charges' => (float) ($account->total_balance ?? $account->gross_total ?? 0),
+            'valid_payments' => (float) ($account->amount_paid ?? 0),
+            'adjustments' => (float) ($account->discount_amount ?? 0),
             'remaining_balance' => (float) ($account->remaining_balance ?? 0),
             'billings' => $billings->values()->all(),
         ]);
@@ -66,12 +69,28 @@
                 'name' => $name,
                 'grade' => $st->grade_level ?? 'Grade 1',
                 'school_year' => $st->account?->school_year ?: '2026-2027',
+                'total_charges' => (float) ($st->account?->total_balance ?? $st->account?->gross_total ?? 0),
+                'valid_payments' => (float) ($st->account?->amount_paid ?? 0),
+                'adjustments' => (float) ($st->account?->discount_amount ?? 0),
                 'remaining_balance' => (float) ($st->account?->remaining_balance ?? 0),
                 'billings' => $billings->values()->all(),
             ]);
         }
     }
-    $firstStudent = $familyStudents->first();
+    $requestedStudent = (string) request('student', '');
+    $firstStudent = $familyStudents->first(function (array $student) use ($requestedStudent) {
+        return $requestedStudent !== '' && in_array($requestedStudent, [
+            (string) ($student['id'] ?? ''),
+            (string) ($student['student_id'] ?? ''),
+            (string) ($student['student_number'] ?? ''),
+        ], true);
+    }) ?? $familyStudents->first();
+    $profileTotalCharges = (float) $familyStudents->sum('total_charges');
+    $profileValidPayments = (float) $familyStudents->sum('valid_payments');
+    $profileAdjustments = (float) $familyStudents->sum('adjustments');
+    $lastPayment = $lastPayment ?? ($transactions instanceof \Illuminate\Pagination\LengthAwarePaginator
+        ? collect($transactions->items())->first(fn ($transaction) => strtoupper((string) $transaction->status) === 'APPROVED')
+        : collect($transactions)->first(fn ($transaction) => strtoupper((string) $transaction->status) === 'APPROVED'));
 
     // Extract child surnames for Family Name banner
     $childSurnames = collect();
@@ -91,10 +110,10 @@
 @endphp
 
 <x-admin-layout
-    title="Family SOA — {{ $familyDisplayName }}"
+    title="Student Finance Profile — {{ $familyDisplayName }}"
     :breadcrumbs="[
         ['label' => 'Finance', 'href' => route('admin.finance.dashboard')],
-        ['label' => 'Family Accounts', 'href' => route('admin.finance.families.index')],
+        ['label' => 'Student Accounts & SOA', 'href' => route('admin.finance.families.index')],
         ['label' => $familyDisplayName, 'href' => null],
     ]"
 >
@@ -143,6 +162,7 @@
             created_at_fmt: '',
             updated_at_fmt: ''
         },
+        editOriginal: {},
         voidData: {
             id: null,
             transaction_number: '',
@@ -181,6 +201,12 @@
             this.showHistoricalModal = true;
         },
         openEdit(tx) {
+            this.editOriginal = {
+                amount: parseFloat(tx.amount || 0).toFixed(2),
+                payment_date: tx.transaction_at ? tx.transaction_at.substring(0, 10) : 'Not recorded',
+                payment_method: (tx.payment_method || 'CASH').toUpperCase(),
+                official_receipt_number: tx.official_receipt?.official_receipt_number || tx.official_receipt_number || 'Not recorded'
+            };
             this.editData = {
                 id: tx.id,
                 transaction_number: tx.transaction_number || ('TX-' + tx.id),
@@ -205,6 +231,8 @@
                 transaction_number: tx.transaction_number || ('TX-' + tx.id),
                 official_receipt_number: tx.official_receipt?.official_receipt_number || tx.official_receipt_number || '',
                 amount: parseFloat(tx.amount || 0).toFixed(2),
+                payment_date: tx.transaction_at ? new Date(tx.transaction_at).toLocaleDateString() : 'Not recorded',
+                reference_number: tx.reference_number || 'Not recorded',
                 reason: ''
             };
             this.showVoidModal = true;
@@ -221,62 +249,52 @@
                 });
         }
     }">
-        {{-- TOP BANNER HEADER --}}
-        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-800 via-emerald-900 to-teal-950 p-6 sm:p-8 text-white shadow-md">
-            <div class="absolute right-0 top-0 -mr-6 -mt-6 h-48 w-48 rounded-full bg-emerald-500/15 blur-3xl"></div>
-            <div class="absolute left-1/3 bottom-0 -mb-10 h-60 w-60 rounded-full bg-teal-500/15 blur-3xl"></div>
-            <div class="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        @include('admin.finance._nav', [
+            'title' => 'Student Finance Profile',
+            'subtitle' => 'Review balances, statements, payments, corrections, and audit history for this account.',
+        ])
+
+        {{-- STUDENT FINANCE PROFILE HEADER --}}
+        <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs">
+            <div class="flex flex-col gap-5 p-5 sm:p-6 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                    <a href="{{ route('admin.finance.families.index') }}" class="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-200 hover:text-white transition mb-2">
+                    <a href="{{ route('admin.finance.families.index') }}" class="mb-2 inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 hover:text-emerald-900">
                         <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
-                        Back to Family Accounts
+                        Back to Student Accounts &amp; SOA
                     </a>
                     <div class="flex items-center gap-2.5 flex-wrap">
-                        <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-white uppercase">
-                            {{ $familyDisplayName }}
+                        <h1 class="text-2xl font-black tracking-tight text-slate-950">
+                            {{ $firstStudent['name'] ?? $familyDisplayName }}
                         </h1>
                         @if ($family->is_demo ?? false)
-                            <span class="inline-flex items-center rounded-full bg-amber-400/20 border border-amber-300/40 px-2.5 py-0.5 text-xs font-black uppercase tracking-wider text-amber-200">DEMO ACCOUNT</span>
+                            <span class="inline-flex items-center rounded-full border border-amber-300 bg-amber-50 px-2.5 py-0.5 text-xs font-black uppercase tracking-wider text-amber-800">Demo Account</span>
                         @endif
                     </div>
-                    <p class="text-xs sm:text-sm text-emerald-100/90 mt-1">
-                        Representative: <strong class="font-bold text-white">{{ $family->name }}</strong> &middot; <span class="text-emerald-200">{{ $family->email }}</span>
+                    <p class="mt-1 text-sm text-slate-600">
+                        <span class="font-mono font-semibold text-slate-800">{{ $firstStudent['student_number'] ?? 'No student ID' }}</span>
+                        &middot; {{ $firstStudent['grade'] ?? 'Grade not assigned' }}
+                        &middot; AY {{ $firstStudent['school_year'] ?? 'Not assigned' }}
                     </p>
+                    <p class="mt-1 text-xs text-slate-500">Parent / Guardian: <strong class="text-slate-700">{{ $family->name }}</strong> · {{ $family->email }}@if($familyStudents->count() > 1) · {{ $familyStudents->count() }} linked students @endif</p>
                 </div>
-                <div class="flex items-center gap-2.5 flex-wrap shrink-0">
-                    <button type="button" @click="openHistoricalModal()" class="inline-flex items-center gap-2 rounded-xl bg-purple-700 hover:bg-purple-800 text-white px-4 py-2.5 text-xs font-bold shadow-sm transition border border-purple-500/40">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4.5v15m7.5-7.5h-15"/></svg>
-                        + Add Historical Payment
-                    </button>
-                    <a href="{{ route('admin.finance.onsite.create', ['family' => $family->id]) }}" class="inline-flex items-center gap-1.5 rounded-xl bg-white text-emerald-950 px-4 py-2.5 text-xs font-black shadow-sm hover:bg-emerald-50 transition">
-                        <svg class="h-4 w-4 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6v12m6-6H6"/></svg>
-                        Record Onsite Payment
-                    </a>
+                <div class="flex flex-col gap-3 sm:items-end">
+                    <div><p class="text-xs font-bold uppercase tracking-wider text-slate-500">Family Outstanding Balance</p><p class="mt-1 text-3xl font-black tracking-tight text-slate-950">₱{{ number_format($outstanding->sum('remaining'), 2) }}</p></div>
+                    <div class="flex flex-wrap gap-2">
+                        <a href="{{ route('admin.finance.onsite.create', ['family' => $family->id]) }}" class="inline-flex h-10 items-center rounded-xl bg-emerald-700 px-4 text-sm font-bold text-white hover:bg-emerald-800">Record Payment</a>
+                        @if($firstStudent)<a href="{{ route('admin.finance.students.official-soa', ['studentIdentifier' => $firstStudent['student_number'] ?: $firstStudent['id']]) }}#soa-adjustments" class="inline-flex h-10 items-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-bold text-slate-700 hover:bg-slate-50">Add Adjustment</a>@endif
+                        @if($firstStudent)<a href="{{ route('admin.finance.students.official-soa', ['studentIdentifier' => $firstStudent['student_number'] ?: $firstStudent['id']]) }}" class="inline-flex h-10 items-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-bold text-slate-700 hover:bg-slate-50">Manage SOA</a>@endif
+                    </div>
                 </div>
             </div>
+            <nav class="flex gap-1 overflow-x-auto border-t border-slate-200 px-3 py-2" aria-label="Student Finance profile sections">
+                @php
+                    $adjustmentsUrl = $firstStudent
+                        ? route('admin.finance.students.official-soa', ['studentIdentifier' => $firstStudent['student_number'] ?: $firstStudent['id']]).'#soa-adjustments'
+                        : '#statement-of-account';
+                @endphp
+                @foreach([['Overview','#overview'],['Statement of Account','#statement-of-account'],['Payments','#payments'],['Adjustments',$adjustmentsUrl],['Audit Log',route('admin.finance.audit.index', ['q' => $firstStudent['student_number'] ?? $family->name])]] as [$label,$href])<a href="{{ $href }}" class="shrink-0 rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-950">{{ $label }}</a>@endforeach
+            </nav>
         </div>
-
-        {{-- FLASH ALERTS --}}
-        @if (session('success'))
-            <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-900 shadow-sm flex items-start gap-3">
-                <svg class="h-5 w-5 shrink-0 text-emerald-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                <div class="text-xs font-semibold">{{ session('success') }}</div>
-            </div>
-        @endif
-
-        @if (isset($errors) && $errors->any())
-            <div class="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-rose-900 shadow-sm flex items-start gap-3">
-                <svg class="h-5 w-5 shrink-0 text-rose-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                <div>
-                    <h4 class="font-bold text-xs">Action Failed:</h4>
-                    <ul class="mt-1 list-disc pl-4 text-xs space-y-0.5">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            </div>
-        @endif
 
         {{-- DEMO NOTICE (IF APPLICABLE) --}}
         @if ($family->is_demo ?? false)
@@ -298,13 +316,28 @@
         @endif
 
         {{-- TOP STATS ROW --}}
-        <div class="grid gap-5 sm:grid-cols-3">
+        <div id="overview" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 scroll-mt-4">
             <div class="rounded-2xl bg-slate-900 p-5 text-white shadow-sm flex flex-col justify-between">
                 <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Outstanding Balance</span>
                 <div class="mt-3 flex items-baseline justify-between">
                     <p class="text-3xl font-black tracking-tight">₱{{ number_format($outstanding->sum('remaining'), 2) }}</p>
                     <span class="text-xs font-semibold text-slate-400">Family Ledger</span>
                 </div>
+            </div>
+
+            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col justify-between">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Total Charges</span>
+                <div class="mt-3"><p class="text-2xl font-black tracking-tight text-slate-900">₱{{ number_format($profileTotalCharges, 2) }}</p><span class="text-xs text-slate-400">Existing assessed account totals</span></div>
+            </div>
+
+            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col justify-between">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Total Valid Payments</span>
+                <div class="mt-3"><p class="text-2xl font-black tracking-tight text-emerald-700">₱{{ number_format($profileValidPayments, 2) }}</p><span class="text-xs text-slate-400">Verified payments applied</span></div>
+            </div>
+
+            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col justify-between">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Adjustments</span>
+                <div class="mt-3"><p class="text-2xl font-black tracking-tight text-slate-900">₱{{ number_format($profileAdjustments, 2) }}</p><span class="text-xs text-slate-400">Approved discounts and adjustments</span></div>
             </div>
 
             <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col justify-between">
@@ -318,20 +351,16 @@
             </div>
 
             <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col justify-between">
-                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Family Information</span>
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Last Payment</span>
                 <div class="mt-2">
-                    <p class="font-extrabold text-slate-900 truncate text-sm">{{ $family->email }}</p>
-                    <div class="mt-1 flex items-center gap-2 text-xs text-slate-500">
-                        <span>Family ID: <strong class="font-mono text-slate-700">{{ $family->id }}</strong></span>
-                        <span>·</span>
-                        <span>Linked Children: <strong class="text-slate-700">{{ $familyStudents->count() }}</strong></span>
-                    </div>
+                    <p class="text-2xl font-black tracking-tight text-slate-900">{{ $lastPayment ? '₱'.number_format((float)$lastPayment->amount, 2) : '—' }}</p>
+                    <p class="mt-1 text-xs text-slate-500">{{ $lastPayment?->transaction_at?->format('M d, Y · g:i A') ?: 'No payment recorded' }}</p>
                 </div>
             </div>
         </div>
 
         {{-- SECTION 1: STUDENT CARDS (CLEAN 3-GRID) --}}
-        <section>
+        <section id="statement-of-account" class="scroll-mt-4">
             <div class="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <div>
                     <h2 class="text-lg font-black tracking-tight text-slate-900">Student Accounts &amp; SOA Breakdown</h2>
@@ -429,7 +458,7 @@
                         <div class="flex items-center gap-2">
                             <button type="button" @click="openHistoricalModal('{{ $stData['student_id'] }}')" class="rounded-xl bg-purple-700 px-3.5 py-2 text-xs font-bold text-white hover:bg-purple-800 shadow-sm transition inline-flex items-center gap-1.5">
                                 <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4.5v15m7.5-7.5h-15"/></svg>
-                                Encode Payment
+                                Record Payment
                             </button>
                         </div>
                     </div>
@@ -514,7 +543,7 @@
         </section>
 
         {{-- SECTION 2: UNIFIED SOA & PAYMENT TRANSACTION LEDGER --}}
-        <section class="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm">
+        <section id="payments" class="scroll-mt-4 rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm">
             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-100 pb-5">
                 <div>
                     <div class="flex items-center gap-2">
@@ -656,21 +685,16 @@
 
                                 {{-- 9. Actions --}}
                                 <td class="px-4 py-3.5 text-center whitespace-nowrap">
-                                    <div class="flex items-center justify-center gap-1.5">
-                                        <a href="{{ route('admin.finance.transactions.show', $tx) }}" class="rounded-lg border border-slate-200 bg-white p-1.5 text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition" title="View Transaction / OR">
-                                            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                                        </a>
-                                        @if (! $isVoided)
-                                            <button type="button" @click="openEdit({{ Js::from($tx) }})" class="rounded-lg border border-slate-200 bg-white p-1.5 text-slate-600 hover:bg-slate-100 hover:text-emerald-700 transition" title="Edit SOA Record">
-                                                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                                            </button>
-                                            <button type="button" @click="openVoid({{ Js::from($tx) }})" class="rounded-lg border border-rose-200 bg-white p-1.5 text-rose-600 hover:bg-rose-50 transition" title="Void Record">
-                                                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
-                                            </button>
-                                        @endif
-                                        <button type="button" @click="openAuditTrail({{ Js::from($tx) }})" class="rounded-lg border border-slate-200 bg-white p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition" title="Audit Trail">
-                                            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                        </button>
+                                    <div class="flex items-center justify-center gap-2">
+                                        <a href="{{ route('admin.finance.transactions.show', $tx) }}" class="inline-flex h-8 items-center rounded-lg bg-emerald-700 px-3 text-[11px] font-bold text-white hover:bg-emerald-800">View</a>
+                                        <details class="relative text-left">
+                                            <summary class="flex h-8 w-8 cursor-pointer list-none items-center justify-center rounded-lg border border-slate-300 bg-white text-base font-black text-slate-600 hover:bg-slate-50" aria-label="More payment actions">⋮</summary>
+                                            <div class="absolute right-0 z-20 mt-1 w-44 overflow-hidden rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl">
+                                                @if (! $isVoided)<button type="button" @click="openEdit({{ Js::from($tx) }})" class="block w-full rounded-lg px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-100">Edit Payment</button>@endif
+                                                <button type="button" @click="openAuditTrail({{ Js::from($tx) }})" class="block w-full rounded-lg px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-100">View Audit History</button>
+                                                @if (! $isVoided)<button type="button" @click="openVoid({{ Js::from($tx) }})" class="block w-full rounded-lg px-3 py-2 text-left text-xs font-bold text-rose-700 hover:bg-rose-50">Void Payment</button>@endif
+                                            </div>
+                                        </details>
                                     </div>
                                 </td>
                             </tr>
@@ -693,7 +717,7 @@
         </section>
 
         {{-- MODAL 1: ADD HISTORICAL PAYMENT --}}
-        <div x-show="showHistoricalModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4" @click.self="showHistoricalModal = false">
+        <div id="historical-payment-modal" x-show="showHistoricalModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4" @click.self="showHistoricalModal = false">
             <div class="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white p-6 sm:p-8 shadow-2xl transition" role="dialog" aria-modal="true">
                 <div class="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
                     <div>
@@ -710,8 +734,8 @@
                 <div class="mt-4 rounded-2xl border border-purple-200 bg-purple-50/60 p-4 text-xs text-purple-900 flex items-start gap-3">
                     <svg class="h-5 w-5 text-purple-700 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     <div>
-                        <strong class="font-bold">Historical Ledger Notice:</strong>
-                        This transaction will be recorded with source <code class="font-bold text-purple-900 bg-purple-200/60 px-1 py-0.5 rounded">HISTORICAL</code> and will <strong>NOT</strong> inflate today's daily collection metrics. Outstanding balances will automatically be updated according to: <em>Charges - Valid Payments - Adjustments = Outstanding Balance</em>.
+                        <strong class="font-bold">Historical Payment:</strong>
+                        This payment will use the selected payment date and will not be included in today’s collection total. The student’s balance will be recalculated automatically after saving.
                     </div>
                 </div>
 
@@ -843,6 +867,13 @@
                     @csrf
                     @method('PUT')
 
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                        <p class="text-xs font-black uppercase tracking-wider text-slate-600">Original Values</p>
+                        <dl class="mt-3 grid gap-3 text-xs sm:grid-cols-4"><div><dt class="text-slate-500">Amount</dt><dd class="mt-0.5 font-bold text-slate-900" x-text="'₱' + editOriginal.amount"></dd></div><div><dt class="text-slate-500">Payment Date</dt><dd class="mt-0.5 font-bold text-slate-900" x-text="editOriginal.payment_date"></dd></div><div><dt class="text-slate-500">Method</dt><dd class="mt-0.5 font-bold text-slate-900" x-text="editOriginal.payment_method"></dd></div><div><dt class="text-slate-500">OR Number</dt><dd class="mt-0.5 break-all font-bold text-slate-900" x-text="editOriginal.official_receipt_number"></dd></div></dl>
+                    </div>
+
+                    <p class="text-xs font-black uppercase tracking-wider text-slate-600">New Values</p>
+
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {{-- PAYMENT DATE --}}
                         <div>
@@ -936,12 +967,14 @@
                     <div>
                         <span class="inline-flex rounded-full bg-rose-100 text-rose-800 px-3 py-0.5 text-xs font-bold uppercase tracking-wider">Danger Zone</span>
                         <h3 class="mt-1 text-xl font-black text-slate-900">Void Payment Transaction</h3>
-                        <p class="text-xs text-slate-500 mt-0.5">Transaction: <strong class="font-mono text-slate-800" x-text="voidData.transaction_number"></strong> (₱<span x-text="voidData.amount"></span>)</p>
+                        <p class="text-xs text-slate-500 mt-0.5">Transaction: <strong class="font-mono text-slate-800" x-text="voidData.transaction_number"></strong></p>
                     </div>
                     <button type="button" @click="showVoidModal = false" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition">
                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
+
+                <dl class="mt-4 grid gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-xs sm:grid-cols-2"><div><dt class="text-slate-500">Payment Amount</dt><dd class="mt-0.5 font-black text-slate-900" x-text="'₱' + voidData.amount"></dd></div><div><dt class="text-slate-500">Payment Date</dt><dd class="mt-0.5 font-bold text-slate-900" x-text="voidData.payment_date"></dd></div><div><dt class="text-slate-500">OR / Reference</dt><dd class="mt-0.5 font-bold text-slate-900"><span x-text="voidData.official_receipt_number || voidData.reference_number"></span></dd></div><div><dt class="text-slate-500">Student Account</dt><dd class="mt-0.5 font-bold text-slate-900">{{ $firstStudent['name'] ?? $familyDisplayName }}</dd></div></dl>
 
                 <div class="mt-4 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-xs text-rose-900 flex items-start gap-3">
                     <svg class="h-5 w-5 text-rose-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
@@ -994,9 +1027,7 @@
                                 <span class="text-slate-400 text-[11px]" x-text="new Date(log.created_at).toLocaleString()"></span>
                             </div>
                             <p class="mt-1.5 text-slate-700" x-text="'Reason / Notes: ' + (log.reason || 'N/A')"></p>
-                            <div x-show="log.changes" class="mt-2 rounded-xl bg-white border border-slate-200 p-2 font-mono text-[10px] text-slate-600 overflow-x-auto">
-                                <pre x-text="JSON.stringify(log.changes, null, 2)"></pre>
-                            </div>
+                            <details x-show="log.changes" class="mt-2"><summary class="cursor-pointer font-bold text-slate-600">View Technical Details</summary><div class="mt-2 rounded-xl bg-white border border-slate-200 p-2 font-mono text-[10px] text-slate-600 overflow-x-auto"><pre x-text="JSON.stringify(log.changes, null, 2)"></pre></div></details>
                         </div>
                     </template>
                     <div x-show="auditList.length === 0" class="p-6 text-center text-slate-400 text-xs">

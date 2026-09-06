@@ -59,22 +59,13 @@
         }
     }">
 
-        <!-- ── HEADER & BREADCRUMBS ───────────────────────────────────────── -->
-        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-                <div class="flex items-center gap-2 text-xs font-bold text-amber-700 uppercase tracking-wider mb-1">
-                    <a href="{{ route('admin.finance.dashboard') }}" class="hover:underline">Finance</a>
-                    <span>/</span>
-                    <span>Monthly Payment Reminder</span>
-                </div>
-                <h1 class="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
-                    Monthly Payment Reminders
-                </h1>
-                <p class="text-xs font-semibold text-slate-500 mt-0.5">
-                    Official general monthly payment reminder system for AMIS parents and guardians.
-                </p>
-            </div>
+        @include('admin.finance._nav', [
+            'title' => 'Monthly Payment Reminders',
+            'subtitle' => 'Prepare, test, send, and monitor the school’s monthly reminder emails.',
+        ])
 
+        <!-- ── HEADER & BREADCRUMBS ───────────────────────────────────────── -->
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-end">
             <!-- Month Selector & Global Actions -->
             <div class="flex flex-wrap items-center gap-2.5">
                 <form method="GET" action="{{ route('admin.finance.monthly-reminders.index') }}" class="flex items-center">
@@ -122,26 +113,6 @@
                 </button>
             </div>
         </div>
-
-        <!-- ── FLASH NOTIFICATIONS ────────────────────────────────────────── -->
-        @if(session('success'))
-            <div class="flex items-center gap-3 p-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-2xl text-emerald-800 dark:text-emerald-200 text-xs font-bold shadow-xs">
-                <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                </svg>
-                <span>{{ session('success') }}</span>
-            </div>
-        @endif
-
-        @if($errors->any())
-            <div class="p-4 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-2xl text-rose-800 dark:text-rose-200 text-xs font-bold space-y-1 shadow-xs">
-                @foreach($errors->all() as $err)
-                    <p class="flex items-center gap-2">
-                        <span class="text-rose-500">⚠</span> {{ $err }}
-                    </p>
-                @endforeach
-            </div>
-        @endif
 
         <!-- ── REAL-TIME LIVE QUEUE PROGRESS TRACKER ─────────────────────── -->
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs space-y-4">

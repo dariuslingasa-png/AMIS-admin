@@ -25,8 +25,8 @@
                         </a>
                         <span class="hidden print:inline">Student Name</span>
                     </th>
-                    <th class="w-24 px-5 py-4 font-bold">Type</th>
-                    <th class="w-24 px-5 py-4 font-bold">Mode</th>
+                    <th class="w-28 px-5 py-4 font-bold">Type</th>
+                    <th class="w-44 px-5 py-4 font-bold">Mode</th>
                     <th class="w-28 px-5 py-4 font-bold">
                         <a href="{{ $sortUrl('gender') }}" class="flex items-center gap-1 hover:text-slate-600 transition print:hidden">
                             Gender
@@ -34,15 +34,14 @@
                         </a>
                         <span class="hidden print:inline">Gender</span>
                     </th>
-                    <th class="w-28 px-5 py-4 font-bold">
+                    <th class="w-24 px-5 py-4 font-bold">
                         <a href="{{ $sortUrl('grade') }}" class="flex items-center gap-1 hover:text-slate-600 transition print:hidden">
                             Grade
                             <i data-lucide="{{ $sortIcon('grade') }}" class="h-3 w-3"></i>
                         </a>
                         <span class="hidden print:inline">Grade</span>
                     </th>
-                    <th class="w-36 px-5 py-4 font-bold">Section</th>
-                    <th class="w-40 px-5 py-4 font-bold print:hidden">MS Sync State</th>
+                    <th class="w-48 px-5 py-4 font-bold">Section</th>
                     <th class="w-36 px-5 py-4 text-right font-bold print:hidden">Action</th>
                 </tr>
             </thead>
@@ -60,18 +59,33 @@
                         $photoUrl = \App\Support\EnrollmentStorage::url($student->applicant->photo_2x2_url ?? null);
                         $msStatus = $student->studentSection->ms_status ?? ($student->ms_user_id && $student->ms_license_active ? 'enrolled' : 'pending');
                         $gender = strtolower((string) ($student->applicant->gender ?? ''));
-                        $genderLabel = $gender === 'male' ? 'Male' : ($gender === 'female' ? 'Female' : 'Not Set');
+                        $genderLabel = $gender === 'male' ? 'MALE' : ($gender === 'female' ? 'FEMALE' : 'NOT SET');
                         
                         $studentType = $student->applicant ? $student->applicant->student_type : 'New';
                         $learningMode = $student->applicant ? $student->applicant->learning_mode : 'F2F';
-                        $modeAbbr = 'F2F';
                         $lmLower = strtolower($learningMode);
-                        if (str_contains($lmLower, 'online') || str_contains($lmLower, 'flexible') || str_contains($lmLower, 'odl') || str_contains($lmLower, 'shift')) {
-                            $modeAbbr = 'ODL';
+                        $isF2f = str_contains($lmLower, 'face') || str_contains($lmLower, 'f2f');
+                        
+                        if ($isF2f) {
+                            $modeBadge = 'F2F';
+                        } elseif (str_contains($lmLower, '1st')) {
+                            $modeBadge = 'ODL - 1ST SHIFT';
+                        } elseif (str_contains($lmLower, '2nd')) {
+                            $modeBadge = 'ODL - 2ND SHIFT';
+                        } else {
+                            $modeBadge = 'ODL';
                         }
-                        $isHashed = str_starts_with($student->temp_password ?? '', '$');
 
-                        $studentTypeLabel = \Illuminate\Support\Str::headline($studentType ?: 'Not set');
+                        $isHashed = str_starts_with($student->temp_password ?? '', '$');
+                        $studentTypeLabel = strtoupper($studentType ?: 'NEW');
+                        $typeLower = strtolower($studentType ?: '');
+                        $typeBadgeClass = match (true) {
+                            str_contains($typeLower, 'transferee') => 'bg-sky-50 text-sky-700 border-sky-200',
+                            str_contains($typeLower, 'new') => 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                            str_contains($typeLower, 'old') => 'bg-slate-100 text-slate-700 border-slate-200',
+                            str_contains($typeLower, 'returnee') => 'bg-amber-50 text-amber-800 border-amber-200',
+                            default => 'bg-slate-50 text-slate-600 border-slate-200',
+                        };
                     @endphp
                     <tr class="transition-colors duration-100 ease-in-out hover:bg-slate-50">
                         <!-- Student Number -->
@@ -114,32 +128,32 @@
 
                         <!-- Student Type -->
                         <td class="whitespace-nowrap px-5 py-4">
-                            @php
-                                $typeLower = strtolower($studentType ?: '');
-                                $typeBadgeClass = match (true) {
-                                    str_contains($typeLower, 'transferee') => 'bg-sky-50 text-sky-700 border-sky-200',
-                                    str_contains($typeLower, 'new') => 'bg-emerald-50 text-emerald-700 border-emerald-200',
-                                    str_contains($typeLower, 'old') => 'bg-slate-100 text-slate-700 border-slate-200',
-                                    str_contains($typeLower, 'returnee') => 'bg-amber-50 text-amber-800 border-amber-200',
-                                    default => 'bg-slate-50 text-slate-600 border-slate-200',
-                                };
-                            @endphp
-                            <span class="inline-flex items-center rounded-md px-2.5 py-1 text-xs font-bold border {{ $typeBadgeClass }}">
+                            <span class="inline-flex items-center rounded-md px-2.5 py-1 text-xs font-black border uppercase {{ $typeBadgeClass }}">
                                 {{ $studentTypeLabel }}
                             </span>
                         </td>
 
                         <!-- Mode -->
                         <td class="whitespace-nowrap px-5 py-4">
-                            @if ($modeAbbr === 'ODL')
-                                <span class="inline-flex items-center gap-1 rounded-md bg-indigo-50 px-2.5 py-1 text-xs font-bold text-indigo-700 border border-indigo-200" title="Online Distance Learning">
-                                    <i data-lucide="laptop" class="h-3 w-3"></i>
-                                    ODL
+                            @if ($isF2f)
+                                <span class="inline-flex items-center gap-1.5 rounded-md bg-teal-50 px-2.5 py-1 text-xs font-black text-teal-700 border border-teal-200" title="Face to Face">
+                                    <i data-lucide="building-2" class="h-3.5 w-3.5"></i>
+                                    F2F
+                                </span>
+                            @elseif ($modeBadge === 'ODL - 1ST SHIFT')
+                                <span class="inline-flex items-center gap-1.5 rounded-md bg-indigo-50 px-2.5 py-1 text-xs font-black text-indigo-700 border border-indigo-200" title="Online - 1st Shift">
+                                    <i data-lucide="laptop" class="h-3.5 w-3.5"></i>
+                                    ODL - 1ST SHIFT
+                                </span>
+                            @elseif ($modeBadge === 'ODL - 2ND SHIFT')
+                                <span class="inline-flex items-center gap-1.5 rounded-md bg-purple-50 px-2.5 py-1 text-xs font-black text-purple-700 border border-purple-200" title="Online - 2nd Shift">
+                                    <i data-lucide="laptop" class="h-3.5 w-3.5"></i>
+                                    ODL - 2ND SHIFT
                                 </span>
                             @else
-                                <span class="inline-flex items-center gap-1 rounded-md bg-teal-50 px-2.5 py-1 text-xs font-bold text-teal-700 border border-teal-200" title="Face to Face">
-                                    <i data-lucide="building-2" class="h-3 w-3"></i>
-                                    F2F
+                                <span class="inline-flex items-center gap-1.5 rounded-md bg-indigo-50 px-2.5 py-1 text-xs font-black text-indigo-700 border border-indigo-200" title="Online Distance Learning">
+                                    <i data-lucide="laptop" class="h-3.5 w-3.5"></i>
+                                    ODL
                                 </span>
                             @endif
                         </td>
@@ -147,18 +161,18 @@
                         <!-- Gender -->
                         <td class="whitespace-nowrap px-5 py-4">
                             @if ($gender === 'female')
-                                <span class="inline-flex items-center gap-1 rounded-md bg-rose-50 px-2.5 py-1 text-xs font-bold text-rose-700 border border-rose-200">
+                                <span class="inline-flex items-center gap-1.5 rounded-md bg-rose-50 px-2.5 py-1 text-xs font-black text-rose-700 border border-rose-200">
                                     <span class="h-1.5 w-1.5 rounded-full bg-rose-500"></span>
-                                    Female
+                                    FEMALE
                                 </span>
                             @elseif ($gender === 'male')
-                                <span class="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700 border border-blue-200">
+                                <span class="inline-flex items-center gap-1.5 rounded-md bg-blue-50 px-2.5 py-1 text-xs font-black text-blue-700 border border-blue-200">
                                     <span class="h-1.5 w-1.5 rounded-full bg-blue-500"></span>
-                                    Male
+                                    MALE
                                 </span>
                             @else
-                                <span class="inline-flex items-center rounded-md bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-400 border border-slate-200">
-                                    Not Set
+                                <span class="inline-flex items-center rounded-md bg-slate-50 px-2.5 py-1 text-xs font-bold text-slate-400 border border-slate-200">
+                                    NOT SET
                                 </span>
                             @endif
                         </td>
@@ -181,35 +195,83 @@
                         <!-- Section / Class Occupancy -->
                         <td class="whitespace-nowrap px-5 py-4">
                             @if($student->studentSection && $student->studentSection->section)
-                                <span class="inline-flex items-center gap-1 rounded-md bg-white px-2.5 py-1 text-xs font-bold text-slate-800 border border-slate-200 shadow-2xs">
-                                    <i data-lucide="users" class="h-3 w-3 text-slate-400"></i>
+                                <span class="inline-flex items-center gap-1.5 rounded-md bg-white px-2.5 py-1 text-xs font-black text-slate-800 border border-slate-200 shadow-2xs">
+                                    <i data-lucide="users" class="h-3.5 w-3.5 text-slate-400"></i>
                                     {{ $student->studentSection->section->name }}
                                 </span>
+                            @elseif(!empty($student->section))
+                                <span class="inline-flex items-center gap-1.5 rounded-md bg-white px-2.5 py-1 text-xs font-black text-slate-800 border border-slate-200 shadow-2xs">
+                                    <i data-lucide="users" class="h-3.5 w-3.5 text-slate-400"></i>
+                                    {{ $student->section }}
+                                </span>
+                            @elseif($isF2f)
+                                <span class="text-xs text-slate-300 font-mono">—</span>
                             @else
-                                <span class="inline-flex items-center rounded-md bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-400 border border-slate-200/60 italic">
+                                <span class="inline-flex items-center rounded-md bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700 border border-amber-200 italic">
                                     Unassigned
                                 </span>
                             @endif
                         </td>
 
-
-                        <!-- MS Sync status -->
-                        <td class="px-5 py-4 print:hidden">
-                            @if ($student->ms_user_id && $student->ms_license_active === false)
-                                <span class="inline-flex items-center gap-1.5 rounded-md bg-rose-50 px-2.5 py-1 text-xs font-bold text-rose-700 ring-1 ring-rose-100">
-                                    <i data-lucide="shield-alert" class="h-3.5 w-3.5"></i>
-                                    No License
-                                </span>
-                            @else
-                                <x-badge :color="$msSyncColor[$msStatus] ?? 'gray'">
-                                    {{ $msSyncLabel[$msStatus] ?? 'Pending' }}
-                                </x-badge>
-                            @endif
-                        </td>
-
                         <!-- Action -->
                          <td class="whitespace-nowrap px-5 py-4 text-right print:hidden">
+                            @php
+                                $applicant = $student->applicant;
+                                $emergencyName = trim($applicant->emergency_name ?? $applicant->mother_name ?? $applicant->father_name ?? $applicant->guardian_name ?? 'PARENT / GUARDIAN');
+                                $emergencyRelationship = trim($applicant->emergency_relationship ?? ($applicant->emergency_name ? 'PARENT / GUARDIAN' : ($applicant->mother_name ? 'MOTHER' : ($applicant->father_name ? 'FATHER' : 'GUARDIAN'))));
+                                $emergencyPhone = trim($applicant->emergency_phone ?? $applicant->contact_number ?? $applicant->mother_contact ?? $applicant->father_contact ?? $applicant->guardian_contact ?? '-');
+                                $emergencyAddress = trim($applicant->emergency_address ?? $applicant->address ?? $applicant->home_address ?? $applicant->street_address ?? '-');
+
+                                $gradeColors = [
+                                    'kinder 1' => '#f59e0b', 'k1' => '#f59e0b',
+                                    'kinder 2' => '#f97316', 'k2' => '#f97316',
+                                    'grade 1' => '#3b82f6',
+                                    'grade 2' => '#06b6d4',
+                                    'grade 3' => '#10b981',
+                                    'grade 4' => '#8b5cf6',
+                                    'grade 5' => '#ec4899',
+                                    'grade 6' => '#6366f1',
+                                    'grade 7' => '#14b8a6',
+                                    'grade 8' => '#f43f5e',
+                                    'grade 9' => '#84cc16',
+                                    'grade 10' => '#a855f7',
+                                    'grade 11' => '#eab308',
+                                    'grade 12' => '#0284c7',
+                                ];
+                                $gLow = strtolower($student->grade_level ?? '');
+                                $matchedColor = '#10b981';
+                                foreach ($gradeColors as $k => $c) {
+                                    if (str_contains($gLow, $k)) { $matchedColor = $c; break; }
+                                }
+
+                                $hash = base64_encode(((int)($student->student_number ?? 0)) + 987654);
+                                $idCardData = [
+                                    'id' => $student->id,
+                                    'student_number' => $student->student_number ?? '-',
+                                    'first_name' => $firstName,
+                                    'last_name' => $lastName,
+                                    'middle_initial' => $middleInitial,
+                                    'suffix' => $suffix,
+                                    'full_name' => $name,
+                                    'grade' => $student->grade_level ?? 'Grade 1',
+                                    'section' => $student->studentSection?->section?->name ?? 'Unassigned',
+                                    'photo_url' => $photoUrl,
+                                    'lrn' => $applicant?->lrn ?? '',
+                                    'emergency_name' => $emergencyName,
+                                    'emergency_relationship' => $emergencyRelationship,
+                                    'emergency_phone' => $emergencyPhone,
+                                    'emergency_address' => $emergencyAddress,
+                                    'grade_color' => $matchedColor,
+                                    'qr_url' => 'https://quickchart.io/qr?text=' . urlencode('https://amis.edu.ph/v/' . $hash) . '&dark=000000&light=ffffff&margin=1&format=png&size=300',
+                                    'signature_qr' => 'https://quickchart.io/qr?text=' . urlencode('https://amis.edu.ph/signature') . '&dark=000000&light=ffffff&margin=1&format=png&size=300',
+                                    'print_url' => route('admin.students.index', ['search' => $student->student_number, 'print_id' => 1]),
+                                    'edit_layout_url' => route('admin.students.id-editor', $student),
+                                ];
+                            @endphp
                             <div class="flex items-center justify-end gap-1.5">
+                                <button type="button" onclick="openStudentIdCardModal({{ json_encode($idCardData) }})" class="{{ $actionButtonClass }} cursor-pointer" title="Preview & Print Official Student ID Card (Dual-Sided PNG)">
+                                    <i data-lucide="contact-round" class="h-4 w-4 text-emerald-600"></i>
+                                </button>
                                 <button type="button" onclick="openStudentCredentialsModal({{ json_encode([
                                     'id' => $student->id,
                                     'student_number' => $student->student_number ?? '-',
@@ -232,7 +294,7 @@
                                     <i data-lucide="archive" class="h-4 w-4 text-sky-600"></i>
                                 </a>
                                 <a href="{{ route('admin.students.print-enrolment-form', $student) }}" target="_blank" class="{{ $actionButtonClass }}" title="Print Enrollment Application Form">
-                                    <i data-lucide="file-signature" class="h-4 w-4 text-emerald-600"></i>
+                                    <i data-lucide="file-signature" class="h-4 w-4 text-blue-600"></i>
                                 </a>
                                 <a href="{{ route('admin.students.show', $student) }}" class="{{ $actionButtonClass }}" title="{{ $isTeacherAdminViewer ? 'View' : 'Manage' }}">
                                     <i data-lucide="file-search" class="h-4 w-4 text-indigo-600"></i>

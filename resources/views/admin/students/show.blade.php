@@ -1269,7 +1269,7 @@
                     <div class="flex flex-col items-center gap-2">
                         <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Front Side</span>
                         <div style="transform: scale(0.85); transform-origin: top center; margin-bottom: -80px;">
-                        <div id="id-card-front-box" class="relative rounded-3xl overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800" style="width: 340px; height: 538px; background-color: #064e3b;">
+                        <div id="id-card-front-box" class="relative overflow-hidden" style="width: 340px; height: 538px; background-color: #064e3b; border-radius: 24px; border: 1px solid #e2e8f0; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);">
                             <!-- Background template image (Top Layer) -->
                             <img src="{{ asset('images/id/amis_frontid.png') }}?v={{ filemtime(public_path('images/id/amis_frontid.png')) }}" class="absolute inset-0 w-full h-full object-cover" style="z-index: 10; pointer-events: none;" alt="AMIS ID Template">
                             
@@ -1342,7 +1342,7 @@
                     <div class="flex flex-col items-center gap-2">
                         <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Back Side</span>
                         <div style="transform: scale(0.85); transform-origin: top center; margin-bottom: -80px;">
-                        <div id="id-card-back-box" class="relative rounded-3xl overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800" style="width: 340px; height: 538px; background-color: #064e3b;">
+                        <div id="id-card-back-box" class="relative overflow-hidden" style="width: 340px; height: 538px; background-color: #064e3b; border-radius: 24px; border: 1px solid #e2e8f0; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);">
                             <!-- Background template image -->
                             <img src="{{ asset('images/id/amis_backid.png') }}?v=1" class="absolute inset-0 w-full h-full object-cover" style="z-index: 1; pointer-events: none;" alt="AMIS ID Template Back">
 
@@ -1353,6 +1353,9 @@
                                 
                                 $addressLen = strlen($homeAddress);
                                 $addressFontSize = $addressLen > 60 ? '12px' : ($addressLen > 40 ? '13px' : '14px');
+
+                                $phoneLen = strlen($emergencyPhone);
+                                $phoneFontSize = $phoneLen > 22 ? '12px' : ($phoneLen > 16 ? '13px' : '15px');
                             @endphp
                             <div class="emergency-info" style="position: absolute; left: 28px; top: 85px; width: 284px; z-index: 10; display: flex; flex-direction: column; gap: 7px;">
                                 <!-- Contact Name -->
@@ -1380,7 +1383,7 @@
                                     <span class="emerg-icon" style="flex-shrink: 0; width: 14px; height: 14px; color: {{ $emergencyPhone === 'MISSING INFO' ? '#dc2626' : '#047857' }}; margin-top: 1.5px;">
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:100%; height:100%;"><path fill-rule="evenodd" d="M1.5 4.5a3 3 0 0 1 3-3h1.372c.86 0 1.61.586 1.819 1.42l.589 2.356a1.75 1.75 0 0 1-.607 1.89l-1.077.808a12.983 12.983 0 0 0 5.753 5.753l.808-1.077a1.75 1.75 0 0 1 1.89-.607l2.356.589c.834.209 1.42.959 1.42 1.82V19.5a3 3 0 0 1-3 3h-2.25C8.552 22.5 1.5 15.448 1.5 6.75V4.5Z" clip-rule="evenodd" /></svg>
                                     </span>
-                                    <div class="emerg-text" style="text-align: left; font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 800; color: {{ $emergencyPhone === 'MISSING INFO' ? '#dc2626' : '#1e293b' }}; line-height: 1;">
+                                    <div class="emerg-text" style="text-align: left; font-family: 'Outfit', sans-serif; font-size: {{ $phoneFontSize }}; font-weight: 800; color: {{ $emergencyPhone === 'MISSING INFO' ? '#dc2626' : '#1e293b' }}; line-height: 1.1;">
                                         {{ $emergencyPhone }}
                                     </div>
                                 </div>
@@ -1459,11 +1462,16 @@
                                     <i data-lucide="file-badge-2" class="w-4 h-4 text-slate-900 dark:text-slate-100"></i>
                                     <span>Back PNG (Black Only 🖤)</span>
                                 </button>
-                                <div class="my-1 border-t border-slate-100 dark:border-slate-800"></div>
-                                <button type="button" @click="open = false; downloadIdCardPng('front', false, false); setTimeout(() => downloadIdCardPng('back', false, false), 500)" 
+                                <button type="button" @click="open = false; downloadIdCardPng('front', false, false); setTimeout(() => downloadIdCardPng('back', true, false), 500)" 
                                         class="w-full flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition">
                                     <i data-lucide="layers" class="w-4 h-4 text-emerald-600"></i>
-                                    <span>Download Both Sides</span>
+                                    <span>Front Color + Back Black (★ Smart Printer)</span>
+                                </button>
+                                <div class="my-1 border-t border-slate-100 dark:border-slate-800"></div>
+                                <button type="button" @click="open = false; downloadIdCardPng('front', false, false); setTimeout(() => downloadIdCardPng('back', false, false), 500)" 
+                                        class="w-full flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+                                    <i data-lucide="image" class="w-4 h-4 text-slate-500"></i>
+                                    <span>Both Sides Full Color</span>
                                 </button>
                             </div>
                         </div>
@@ -2436,22 +2444,35 @@
         try {
             let dataUrl = '';
             
-            // Primary strategy: html2canvas (most reliable for cross-origin images, templates & QR codes)
-            if (typeof html2canvas !== 'undefined') {
+            // Primary strategy: htmlToImage (supports modern CSS color functions like oklch without crashing)
+            if (typeof htmlToImage !== 'undefined') {
+                try {
+                    dataUrl = await htmlToImage.toPng(cardEl, {
+                        pixelRatio: 3,
+                        cacheBust: true,
+                        backgroundColor: isMonochrome ? '#ffffff' : (side === 'front' ? '#064e3b' : '#ffffff')
+                    });
+                } catch (htmlToImgErr) {
+                    console.warn('htmlToImage attempt failed, trying html2canvas fallback:', htmlToImgErr);
+                }
+            }
+            
+            // Secondary fallback: html2canvas with sanitized clone
+            if (!dataUrl && typeof html2canvas !== 'undefined') {
                 const canvas = await html2canvas(cardEl, { 
                     scale: 3, 
                     useCORS: true, 
                     allowTaint: true, 
                     backgroundColor: isMonochrome ? '#ffffff' : (side === 'front' ? '#064e3b' : '#ffffff'),
-                    logging: false 
+                    logging: false,
+                    onclone: (clonedDoc) => {
+                        const target = clonedDoc.getElementById(boxId);
+                        if (target) {
+                            target.className = 'relative overflow-hidden';
+                        }
+                    }
                 });
                 dataUrl = canvas.toDataURL('image/png', 1.0);
-            } else if (typeof htmlToImage !== 'undefined') {
-                dataUrl = await htmlToImage.toPng(cardEl, {
-                    pixelRatio: 3,
-                    cacheBust: true,
-                    backgroundColor: isMonochrome ? '#ffffff' : (side === 'front' ? '#064e3b' : '#ffffff')
-                });
             }
 
             if (dataUrl) {

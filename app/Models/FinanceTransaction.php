@@ -52,7 +52,11 @@ class FinanceTransaction extends Model
 
     public function getPaymentSourceLabelAttribute(): string
     {
-        return strtoupper((string) $this->source) === 'ONLINE' ? 'Online Payment' : 'Onsite Payment';
+        return match (strtoupper((string) $this->source)) {
+            'ONLINE' => 'Online Payment',
+            'HISTORICAL', 'MANUAL' => 'Historical Payment',
+            default => 'Onsite Payment',
+        };
     }
 
     public function getPaymentMethodLabelAttribute(): string

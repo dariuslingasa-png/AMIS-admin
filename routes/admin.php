@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Academic\GradeLevelController;
 use App\Http\Controllers\Academic\SchoolYearController;
+use App\Http\Controllers\Admin\Academic\SectionTrackingController;
+use App\Http\Controllers\Admin\Academic\TeacherTrackingController;
 use App\Http\Controllers\Admin\AcademicRoomController;
 use App\Http\Controllers\Admin\AcademicSectionController;
 use App\Http\Controllers\Admin\AcademicWorkspaceController;
@@ -33,7 +35,9 @@ use App\Http\Controllers\Admin\StudentExportController;
 use App\Http\Controllers\Admin\StudentIdController;
 use App\Http\Controllers\Admin\StudentPhotoController;
 use App\Http\Controllers\Admin\StudentPrintController;
+use App\Http\Controllers\Admin\StudentArchiveController;
 use App\Http\Controllers\Admin\StudentRosterController;
+use App\Http\Controllers\Admin\StudentUnassignedController;
 use App\Http\Controllers\Admin\System\SystemBackupController;
 use App\Http\Controllers\Admin\System\SystemDevOpsController;
 use App\Http\Controllers\Admin\System\SystemHealthController;
@@ -172,6 +176,16 @@ Route::name('admin.')->group(function () {
         });
 
         Route::get('/students', [StudentController::class, 'index'])->name('students.index');
+        Route::get('/students/unassigned', [StudentUnassignedController::class, 'index'])->name('students.unassigned');
+        Route::post('/students/unassigned/assign', [StudentUnassignedController::class, 'assign'])->name('students.unassigned.assign');
+        Route::post('/students/unassigned/bulk-assign', [StudentUnassignedController::class, 'bulkAssign'])->name('students.unassigned.bulk-assign');
+        Route::get('/students/unassigned/export-csv', [StudentUnassignedController::class, 'exportCsv'])->name('students.unassigned.export-csv');
+        Route::get('/students/archive', [StudentArchiveController::class, 'index'])->name('students.archive');
+        Route::post('/students/{student}/archive', [StudentArchiveController::class, 'archive'])->name('students.archive.store');
+        Route::post('/students/{id}/restore', [StudentArchiveController::class, 'restore'])->name('students.archive.restore');
+        Route::delete('/students/{id}/force-delete', [StudentArchiveController::class, 'forceDelete'])->name('students.archive.force-delete');
+        Route::post('/students/archive/bulk-restore', [StudentArchiveController::class, 'bulkRestore'])->name('students.archive.bulk-restore');
+        Route::post('/students/archive/bulk-archive', [StudentArchiveController::class, 'bulkArchive'])->name('students.archive.bulk-archive');
         Route::get('/students/dashboard', [StudentDashboardController::class, 'dashboard'])->name('students.dashboard');
         Route::get('/students/dashboard/sections/{section}/roster-print', [SectionController::class, 'rosterPrint'])->name('students.roster-print');
         Route::get('/students/dashboard/sections/{section}/id-roster-print', [SectionController::class, 'idRosterPrint'])->name('students.id-roster-print');
@@ -282,6 +296,7 @@ Route::name('admin.')->group(function () {
 
             Route::get('/reports', [FinanceController::class, 'reports'])->name('reports.index');
             Route::get('/reports/export', [FinanceController::class, 'reportsExport'])->name('reports.export');
+            Route::get('/audit-log', [FinanceController::class, 'auditIndex'])->name('audit.index');
 
             // Monthly Payment Reminders (Finance -> Monthly Payment Reminder)
             Route::prefix('monthly-reminders')->name('monthly-reminders.')->group(function () {
@@ -447,6 +462,9 @@ Route::name('admin.')->group(function () {
             Route::get('/calendar', [AdminAcademicController::class, 'calendar'])->name('calendar');
             Route::get('/operations', [AdminAcademicController::class, 'operations'])->name('operations');
             Route::get('/workload', [AcademicWorkspaceController::class, 'workload'])->name('workload');
+            Route::get('/teacher-tracking', [TeacherTrackingController::class, 'index'])->name('teacher-tracking');
+            Route::post('/teacher-tracking/{sectionSubject}/approve-grades', [TeacherTrackingController::class, 'approveGrades'])->name('teacher-tracking.approve');
+            Route::get('/section-tracking', [SectionTrackingController::class, 'index'])->name('section-tracking');
             Route::get('/reports', [AcademicWorkspaceController::class, 'reports'])->name('reports');
             Route::get('/reports/export', [AcademicWorkspaceController::class, 'export'])->name('reports.export');
 

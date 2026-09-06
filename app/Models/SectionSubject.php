@@ -21,4 +21,9 @@ class SectionSubject extends Model
     {
         return $this->belongsTo(Section::class);
     }
+
+    public function grades()
+    {
+        return $this->hasMany(Grade::class);
+    }
 }

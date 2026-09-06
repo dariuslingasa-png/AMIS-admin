@@ -219,7 +219,12 @@
                             x-data="{
                                 method: {{ Js::from($initialMethod) }},
                                 paymentType: {{ Js::from($initialPaymentType) }},
-                                fileName: ''
+                                fileName: '',
+                                transactionAt: '',
+                                get usesPreviousDate() {
+                                    if (!this.transactionAt) return false;
+                                    return this.transactionAt.substring(0, 10) < '{{ now()->toDateString() }}';
+                                }
                             }"
                             @finance-file-cleared.window="fileName = ''"
                             @finance-provider-detected.window="method = $event.detail; paymentType = 'digital'"
@@ -350,10 +355,14 @@
                                             type="datetime-local"
                                             autocomplete="off"
                                             value=""
+                                            x-model="transactionAt"
                                             :required="method !== 'cash'"
                                             :disabled="method === 'cash'"
                                             class="h-11 w-full rounded-xl border border-slate-300 bg-slate-50/50 px-3.5 text-sm text-slate-900 focus:border-emerald-600 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition shadow-2xs"
                                         >
+                                        <div x-show="usesPreviousDate" x-cloak class="rounded-lg border border-violet-200 bg-violet-50 p-3 text-xs leading-5 text-violet-900">
+                                            <strong>Historical Payment:</strong> This payment will use the selected payment date and will not be included in today’s collection total.
+                                        </div>
                                     </div>
 
                                     {{-- Receiving Account / Counter --}}

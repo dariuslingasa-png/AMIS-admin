@@ -1,139 +1,78 @@
-<x-admin-layout
-    title="Finance Dashboard"
-    :breadcrumbs="[
-        ['label' => 'Finance', 'href' => null],
-        ['label' => 'Dashboard', 'href' => null],
-    ]"
->
+<x-admin-layout title="Finance Dashboard" :breadcrumbs="[['label' => 'Finance', 'href' => null], ['label' => 'Dashboard', 'href' => null]]">
     <div class="space-y-6">
         @include('admin.finance._nav', [
             'title' => 'Finance Dashboard',
-            'subtitle' => 'One workspace for online verification, onsite collections, family balances, receipts, and reporting.'
+            'subtitle' => 'Review today’s collections, resolve payment issues, and open any student finance record from one place.',
         ])
 
-        <!-- Telemetry KPI Metrics Grid -->
-        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            @php
-                $metricConfigs = [
-                    ['Pending verification', $metrics['pending'], 'Needs Finance action', 'clock', 'amber'],
-                    ['Needs review', $metrics['needs_review'], 'Low confidence or unclear', 'alert-circle', 'orange'],
-                    ['Possible duplicates', $metrics['duplicates'], 'Review before approval', 'copy', 'rose'],
-                    ['Reupload required', $metrics['reupload'], 'Parent action needed', 'refresh-cw', 'slate'],
-                    ['Approved today', $metrics['approved_today'], 'Online payments', 'check-circle-2', 'emerald'],
-                    ['Onsite today', $metrics['onsite_today'], 'Counter payments', 'hand-coins', 'teal'],
-                    ['Total collected today', '₱'.number_format($metrics['total_today'], 2), 'Approved only', 'wallet', 'emerald'],
-                    ['Family outstanding', '₱'.number_format($metrics['outstanding'], 2), 'Current and overdue', 'credit-card', 'slate'],
-                ];
-            @endphp
+        <section aria-labelledby="finance-summary-heading">
+            <h2 id="finance-summary-heading" class="sr-only">Today’s Finance summary</h2>
+            <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+                <x-finance.summary-card label="Collected Today" :value="'₱'.number_format($metrics['total_today'], 2)" hint="Approved online and onsite" icon="wallet" tone="emerald" :href="route('admin.finance.transactions.index', ['from' => now()->toDateString(), 'to' => now()->toDateString(), 'status' => 'APPROVED'])" />
+                <x-finance.summary-card label="Approved Today" :value="$metrics['approved_today']" hint="Posted transactions" icon="badge-check" tone="emerald" :href="route('admin.finance.transactions.index', ['from' => now()->toDateString(), 'to' => now()->toDateString(), 'status' => 'APPROVED'])" />
+                <x-finance.summary-card label="Pending Verification" :value="$metrics['pending']" hint="Waiting for Finance review" icon="clock-3" tone="amber" :href="route('admin.finance.verification.index', ['status' => 'PENDING'])" />
+                <x-finance.summary-card label="Needs Attention" :value="$metrics['needs_attention']" hint="Review, duplicate, or reupload" icon="triangle-alert" tone="rose" :href="route('admin.finance.verification.index', ['status' => 'PENDING'])" />
+                <x-finance.summary-card label="Historical Payments" :value="$metrics['historical_payments']" hint="All encoded legacy payments" icon="history" tone="violet" :href="route('admin.finance.transactions.index', ['source' => 'HISTORICAL'])" />
+            </div>
+        </section>
 
-            @foreach ($metricConfigs as [$label, $value, $hint, $icon, $tone])
-                @php
-                    $iconBg = match($tone) {
-                        'amber' => 'bg-amber-50 text-amber-700 border-amber-200',
-                        'orange' => 'bg-orange-50 text-orange-700 border-orange-200',
-                        'rose' => 'bg-rose-50 text-rose-700 border-rose-200',
-                        'teal' => 'bg-teal-50 text-teal-700 border-teal-200',
-                        'emerald' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
-                        default => 'bg-slate-100 text-slate-700 border-slate-200',
-                    };
-                @endphp
-                <div class="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-xs transition hover:shadow-md hover:border-slate-300 flex flex-col justify-between">
-                    <div class="flex items-center justify-between gap-3">
-                        <span class="text-xs font-extrabold uppercase tracking-wider text-slate-500">{{ $label }}</span>
-                        <div class="flex h-9 w-9 items-center justify-center rounded-xl border {{ $iconBg }} shrink-0">
-                            <i data-lucide="{{ $icon }}" class="h-4.5 w-4.5"></i>
-                        </div>
-                    </div>
-                    <div class="mt-3">
-                        <p class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">{{ $value }}</p>
-                        <p class="mt-1 text-xs font-medium text-slate-400">{{ $hint }}</p>
-                    </div>
+        <section class="rounded-2xl border border-slate-200 bg-white shadow-xs">
+            <div class="flex flex-col gap-3 border-b border-slate-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <h2 class="text-lg font-black text-slate-950">Pending Payment Reviews</h2>
+                    <p class="mt-0.5 text-sm text-slate-500">Recent submissions that require a Finance decision.</p>
                 </div>
-            @endforeach
-        </div>
+                <a href="{{ route('admin.finance.verification.index', ['status' => 'PENDING']) }}" class="text-sm font-bold text-emerald-700 hover:text-emerald-900">View all pending payments</a>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="finance-mobile-table min-w-full text-left text-sm">
+                    <thead class="border-b border-slate-200 bg-slate-50 text-xs font-bold uppercase tracking-wider text-slate-600">
+                        <tr><th class="px-5 py-3">Student</th><th class="px-5 py-3">Grade / Section</th><th class="px-5 py-3 text-right">Amount</th><th class="px-5 py-3">Method</th><th class="px-5 py-3">Payment Date</th><th class="px-5 py-3">Submitted</th><th class="px-5 py-3">Status</th><th class="px-5 py-3 text-right">Action</th></tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        @forelse ($reviewQueue as $receipt)
+                            @php
+                                $allocatedStudent = $receipt->paymentSubmission?->payments?->first()?->student;
+                                $student = $allocatedStudent ?: $receipt->user?->students?->first();
+                                $applicant = $student?->applicant ?: $receipt->user?->enrollmentApplicants?->first();
+                                $studentName = $applicant?->full_name ?: $student?->full_name ?: $receipt->user?->name ?: 'Student account';
+                                $grade = $student?->grade_level ?: $applicant?->grade_level ?: 'Not assigned';
+                                $section = $student?->section;
+                            @endphp
+                            <tr class="hover:bg-slate-50/70">
+                                <td data-label="Student" class="px-5 py-4"><p class="font-bold text-slate-950">{{ $studentName }}</p><p class="mt-0.5 text-xs text-slate-500">{{ $student?->student_number ?: $applicant?->amis_student_id ?: $receipt->user?->name }}</p></td>
+                                <td data-label="Grade / Section" class="px-5 py-4 text-slate-700">{{ $grade }}{{ $section ? ' / '.$section : '' }}</td>
+                                <td data-label="Amount" class="px-5 py-4 text-right font-black text-slate-950">₱{{ number_format((float) ($receipt->amount ?? $receipt->paymentSubmission?->total_amount), 2) }}</td>
+                                <td data-label="Method" class="px-5 py-4 text-slate-700">{{ $receipt->provider ?: 'Online payment' }}</td>
+                                <td data-label="Payment date" class="px-5 py-4 text-slate-700">{{ $receipt->transaction_date?->format('M d, Y') ?: 'Not detected' }}</td>
+                                <td data-label="Submitted" class="px-5 py-4 text-slate-700">{{ $receipt->paymentSubmission?->submitted_at?->format('M d, Y') ?: $receipt->created_at?->format('M d, Y') }}</td>
+                                <td data-label="Status" class="px-5 py-4"><x-finance.status-badge :status="$receipt->status" /></td>
+                                <td data-label="Action" class="px-5 py-4 text-right"><a href="{{ route('admin.finance.verification.show', $receipt) }}" class="inline-flex min-h-9 items-center justify-center rounded-lg bg-emerald-700 px-3 text-xs font-bold text-white hover:bg-emerald-800">Review Payment</a></td>
+                            </tr>
+                        @empty
+                            <tr><td data-label="" colspan="8" class="px-5 py-12 text-center"><i data-lucide="circle-check-big" class="mx-auto h-8 w-8 text-emerald-600"></i><p class="mt-2 font-bold text-slate-800">No payments are waiting for review.</p><p class="mt-1 text-sm text-slate-500">The verification queue is clear.</p></td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </section>
 
-        <!-- Verification Queue and Recent Transactions -->
-        <div class="grid gap-6 xl:grid-cols-[1.2fr_.8fr]">
-            <!-- Left: Verification Queue -->
-            <section class="rounded-3xl border border-slate-200/80 bg-white shadow-xs overflow-hidden">
-                <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4.5">
-                    <div class="flex items-center gap-3">
-                        <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 text-amber-700 border border-amber-200 shrink-0">
-                            <i data-lucide="badge-check" class="h-4.5 w-4.5"></i>
-                        </div>
-                        <div>
-                            <h2 class="font-extrabold text-slate-900 text-base">Verification Queue</h2>
-                            <p class="text-xs text-slate-500">Newest payment receipts that need Finance verification.</p>
-                        </div>
-                    </div>
-                    <a href="{{ route('admin.finance.verification.index') }}" class="inline-flex items-center gap-1 text-xs font-extrabold text-emerald-700 hover:text-emerald-800 hover:underline">
-                        <span>View all</span>
-                        <i data-lucide="arrow-right" class="h-3.5 w-3.5"></i>
-                    </a>
-                </div>
-                <div class="divide-y divide-slate-100">
-                    @forelse ($reviewQueue as $receipt)
-                        <a href="{{ route('admin.finance.verification.show', $receipt) }}" class="grid gap-2 px-6 py-4 hover:bg-slate-50/70 sm:grid-cols-[1fr_auto] sm:items-center transition group">
-                            <div class="min-w-0">
-                                <p class="font-bold text-slate-900 group-hover:text-emerald-700 transition">{{ $receipt->user?->name ?? 'Family Account' }}</p>
-                                <p class="text-xs text-slate-400 font-mono mt-0.5">{{ $receipt->submission_id }} · {{ $receipt->provider ?: 'Payment Proof' }}</p>
-                            </div>
-                            <div class="sm:text-right">
-                                <p class="font-black text-slate-900 text-base tracking-tight">₱{{ number_format((float) ($receipt->amount ?? $receipt->paymentSubmission?->total_amount), 2) }}</p>
-                                <span class="inline-flex items-center rounded-md bg-amber-50 border border-amber-200 px-2 py-0.5 text-[10px] font-bold uppercase text-amber-800 mt-0.5">
-                                    {{ str_replace('_', ' ', $receipt->status) }}
-                                </span>
-                            </div>
-                        </a>
-                    @empty
-                        <div class="px-6 py-12 text-center">
-                            <div class="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 mb-2">
-                                <i data-lucide="check-check" class="h-5 w-5"></i>
-                            </div>
-                            <p class="text-sm font-bold text-slate-800">The verification queue is clear.</p>
-                            <p class="text-xs text-slate-400 mt-0.5">No pending payment receipts at this moment.</p>
-                        </div>
-                    @endforelse
-                </div>
-            </section>
-
-            <!-- Right: Recent Transactions -->
-            <section class="rounded-3xl border border-slate-200/80 bg-white shadow-xs overflow-hidden">
-                <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4.5">
-                    <div class="flex items-center gap-3">
-                        <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
-                            <i data-lucide="arrow-left-right" class="h-4.5 w-4.5"></i>
-                        </div>
-                        <div>
-                            <h2 class="font-extrabold text-slate-900 text-base">Recent Transactions</h2>
-                            <p class="text-xs text-slate-500">Latest approved online and onsite payments.</p>
-                        </div>
-                    </div>
-                    <a href="{{ route('admin.finance.transactions.index') }}" class="inline-flex items-center gap-1 text-xs font-extrabold text-emerald-700 hover:text-emerald-800 hover:underline">
-                        <span>View all</span>
-                        <i data-lucide="arrow-right" class="h-3.5 w-3.5"></i>
-                    </a>
-                </div>
-                <div class="divide-y divide-slate-100">
-                    @forelse ($recent as $transaction)
-                        <a href="{{ route('admin.finance.transactions.show', $transaction) }}" class="flex items-center justify-between gap-4 px-6 py-3.5 hover:bg-slate-50/70 transition group">
-                            <div class="min-w-0">
-                                <p class="truncate text-sm font-bold text-slate-900 group-hover:text-emerald-700 transition">{{ $transaction->family?->name }}</p>
-                                <p class="text-xs text-slate-400 truncate mt-0.5">OR No. {{ $transaction->officialReceipt?->official_receipt_number ?? $transaction->official_receipt_number }} · {{ $transaction->payment_source_label }} · {{ $transaction->payment_method_label }}</p>
-                            </div>
-                            <p class="whitespace-nowrap font-black text-slate-900 text-sm tracking-tight shrink-0">₱{{ number_format((float) $transaction->amount, 2) }}</p>
-                        </a>
-                    @empty
-                        <div class="px-6 py-12 text-center">
-                            <div class="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-500 mb-2">
-                                <i data-lucide="inbox" class="h-5 w-5"></i>
-                            </div>
-                            <p class="text-sm font-bold text-slate-800">No Finance transactions yet.</p>
-                            <p class="text-xs text-slate-400 mt-0.5">New payments will appear here automatically.</p>
-                        </div>
-                    @endforelse
-                </div>
-            </section>
-        </div>
+        <section aria-labelledby="quick-actions-heading">
+            <div class="mb-3 flex items-center justify-between"><h2 id="quick-actions-heading" class="text-lg font-black text-slate-950">Quick Actions</h2><span class="text-sm text-slate-500">Common Finance tasks</span></div>
+            <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                @foreach ([
+                    ['Search Student', 'search', route('admin.finance.families.index')],
+                    ['Record Payment', 'hand-coins', route('admin.finance.onsite.create')],
+                    ['Student Accounts & SOA', 'users', route('admin.finance.families.index')],
+                    ['Payment Records', 'arrow-left-right', route('admin.finance.transactions.index')],
+                    ['Official Receipts', 'receipt-text', route('admin.finance.receipts.index')],
+                    ['Monthly Reminders', 'bell-ring', route('admin.finance.monthly-reminders.index')],
+                    ['Reports', 'chart-no-axes-combined', route('admin.finance.reports.index')],
+                    ['Audit Log', 'history', route('admin.finance.audit.index')],
+                ] as [$label, $icon, $href])
+                    <a href="{{ $href }}" class="flex min-h-14 items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-800 shadow-xs hover:border-emerald-300 hover:text-emerald-800"><i data-lucide="{{ $icon }}" class="h-4 w-4 text-emerald-700"></i><span>{{ $label }}</span></a>
+                @endforeach
+            </div>
+        </section>
     </div>
 </x-admin-layout>

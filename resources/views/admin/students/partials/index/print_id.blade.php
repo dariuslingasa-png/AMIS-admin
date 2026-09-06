@@ -574,10 +574,10 @@
             $photoUrl = \App\Support\EnrollmentStorage::url($photoPath);
             
             $emergencyAddress = trim($applicant->emergency_address ?? '');
-            if (empty($emergencyAddress)) {
+            if (empty($emergencyAddress) || $emergencyAddress === '-') {
                 $emergencyAddress = implode(', ', array_filter([$applicant->home_street_address, $applicant->home_city, $applicant->home_state_province]));
-                if (empty($emergencyAddress)) {
-                    $emergencyAddress = $applicant->home_address ?: '-';
+                if (empty($emergencyAddress) || $emergencyAddress === '-') {
+                    $emergencyAddress = $applicant->home_address ?: ($applicant->address ?: ($applicant->street_address ?: '-'));
                 }
             }
             
@@ -697,6 +697,9 @@
                                 
                                 $addressLen = strlen($emergencyAddress);
                                 $addressFontSize = $addressLen > 60 ? '12px' : ($addressLen > 40 ? '13px' : '14px');
+
+                                $phoneLen = strlen($emergencyPhone);
+                                $phoneFontSize = $phoneLen > 22 ? '12px' : ($phoneLen > 16 ? '13px' : '15px');
                             @endphp
                             <div class="emergency-info">
                                 <!-- Contact Name -->
@@ -724,7 +727,7 @@
                                     <span class="emerg-icon">
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:100%; height:100%;"><path fill-rule="evenodd" d="M1.5 4.5a3 3 0 0 1 3-3h1.372c.86 0 1.61.586 1.819 1.42l.589 2.356a1.75 1.75 0 0 1-.607 1.89l-1.077.808a12.983 12.983 0 0 0 5.753 5.753l.808-1.077a1.75 1.75 0 0 1 1.89-.607l2.356.589c.834.209 1.42.959 1.42 1.82V19.5a3 3 0 0 1-3 3h-2.25C8.552 22.5 1.5 15.448 1.5 6.75V4.5Z" clip-rule="evenodd" /></svg>
                                     </span>
-                                    <div class="emerg-text" style="font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 800; color: #1e293b; line-height: 1.2;">
+                                    <div class="emerg-text" style="font-family: 'Outfit', sans-serif; font-size: {{ $phoneFontSize }}; font-weight: 800; color: #1e293b; line-height: 1.2;">
                                         {{ $emergencyPhone }}
                                     </div>
                                 </div>

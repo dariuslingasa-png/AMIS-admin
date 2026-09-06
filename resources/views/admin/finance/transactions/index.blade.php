@@ -8,12 +8,12 @@
     <div class="space-y-6">
         @include('admin.finance._nav', [
             'title' => 'Finance Transactions',
-            'subtitle' => 'History of approved online and onsite family payments.',
+            'subtitle' => 'Search and filter approved, pending, historical, rejected, and voided payment records.',
         ])
 
         <!-- Filters Form -->
         <div class="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-xs">
-            <form method="GET" action="{{ route('admin.finance.transactions.index') }}" class="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(280px,1fr)_160px_180px_170px_170px_auto]">
+            <form method="GET" action="{{ route('admin.finance.transactions.index') }}" class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                 <div class="relative">
                     <input
                         name="q"
@@ -30,6 +30,12 @@
                     <option value="">All Payments</option>
                     <option value="ONLINE" @selected(request('source') === 'ONLINE')>Online Payments</option>
                     <option value="ONSITE" @selected(request('source') === 'ONSITE')>Onsite Payments</option>
+                    <option value="HISTORICAL" @selected(request('source') === 'HISTORICAL')>Historical Payments</option>
+                </select>
+
+                <select name="status" class="h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-medium text-slate-700 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100">
+                    <option value="">All Statuses</option>
+                    @foreach(['APPROVED' => 'Approved', 'PENDING' => 'Pending', 'NEEDS_REVIEW' => 'Needs Review', 'VOIDED' => 'Voided', 'REVERSED' => 'Reversed', 'REJECTED' => 'Rejected'] as $status => $statusLabel)<option value="{{ $status }}" @selected(request('status') === $status)>{{ $statusLabel }}</option>@endforeach
                 </select>
 
                 <select name="method" class="h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-medium text-slate-700 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100">
@@ -45,12 +51,14 @@
                 <input name="to" type="date" value="{{ request('to') }}" aria-label="To date"
                        class="h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-medium text-slate-700 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100">
 
+                <input name="academic_year" value="{{ request('academic_year') }}" placeholder="Academic year (e.g. 2026-2027)" aria-label="Academic year" class="h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-medium text-slate-700 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100">
+
                 <div class="flex items-center gap-2">
                     <button type="submit" class="h-11 w-full xl:w-28 inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-700 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-800 focus:ring-4 focus:ring-emerald-100">
                         <i data-lucide="filter" class="h-4 w-4"></i>
                         Filter
                     </button>
-                    @if(request()->hasAny(['q', 'source', 'method', 'from', 'to']))
+                    @if(request()->hasAny(['q', 'source', 'status', 'method', 'academic_year', 'from', 'to']))
                         <a href="{{ route('admin.finance.transactions.index') }}" class="inline-flex items-center gap-1 text-xs font-bold text-rose-600 hover:text-rose-700 px-2 py-2">
                             <i data-lucide="x" class="h-3.5 w-3.5"></i>
                         </a>
@@ -69,6 +77,7 @@
                             <th class="px-6 py-4">Family Account</th>
                             <th class="px-6 py-4">Payment Channel</th>
                             <th class="px-6 py-4 text-right">Amount</th>
+                            <th class="px-6 py-4">Status / Encoded By</th>
                             <th class="px-6 py-4 text-center">Action</th>
                         </tr>
                     </thead>
@@ -98,7 +107,8 @@
                                         <span @class([
                                             'inline-flex items-center rounded-md px-2 py-0.5 text-xs font-bold',
                                             'bg-sky-50 text-sky-800 border border-sky-200' => $transaction->source === 'ONLINE',
-                                            'bg-amber-50 text-amber-800 border border-amber-200' => $transaction->source === 'ONSITE'
+                                            'bg-amber-50 text-amber-800 border border-amber-200' => $transaction->source === 'ONSITE',
+                                            'bg-violet-50 text-violet-800 border border-violet-200' => in_array($transaction->source, ['HISTORICAL', 'MANUAL'])
                                         ])>{{ $transaction->payment_source_label }}</span>
                                         <span class="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-700">{{ $transaction->payment_method_label }}</span>
                                     </div>
@@ -109,6 +119,7 @@
                                         <p class="text-xs font-bold text-emerald-700 mt-0.5">₱{{ number_format((float) $transaction->advance_credit, 2) }} advance credit</p>
                                     @endif
                                 </td>
+                                <td data-label="Status / Encoded By" class="px-6 py-4"><x-finance.status-badge :status="$transaction->status" /><p class="mt-1.5 text-xs text-slate-500">{{ $transaction->processor?->name ?: 'System' }}</p></td>
                                 <td data-label="Action" class="px-6 py-4 text-center">
                                     <a href="{{ route('admin.finance.transactions.show', $transaction) }}" class="inline-flex items-center gap-1.5 rounded-xl bg-emerald-700 px-3.5 py-2 text-xs font-bold text-white shadow-xs hover:bg-emerald-800 transition">
                                         <i data-lucide="eye" class="h-3.5 w-3.5"></i>
@@ -118,13 +129,13 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="py-16 text-center">
+                                <td data-label="" colspan="6" class="py-16 text-center">
                                     <div class="flex flex-col items-center justify-center space-y-4">
                                         <div class="rounded-full bg-slate-50 p-4 text-slate-400 ring-8 ring-slate-50/50">
                                             <i data-lucide="inbox" class="h-10 w-10"></i>
                                         </div>
                                         <div class="space-y-1">
-                                            <h3 class="text-base font-bold text-slate-800">No approved transactions found</h3>
+                                            <h3 class="text-base font-bold text-slate-800">No transactions found</h3>
                                             <p class="text-sm text-slate-500 max-w-sm mx-auto">No transaction records matched your search criteria or date filters.</p>
                                         </div>
                                     </div>

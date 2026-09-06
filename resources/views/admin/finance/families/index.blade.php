@@ -1,271 +1,102 @@
-<x-admin-layout
-    title="Family Accounts / SOA"
-    :breadcrumbs="[
-        ['label' => 'Finance', 'href' => route('admin.finance.dashboard')],
-        ['label' => 'Family Accounts', 'href' => null],
-    ]"
->
+<x-admin-layout title="Student Accounts & SOA" :breadcrumbs="[['label' => 'Finance', 'href' => route('admin.finance.dashboard')], ['label' => 'Student Accounts & SOA', 'href' => null]]">
     <div class="space-y-6">
-        <!-- Banner Header -->
-        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-800 via-emerald-900 to-teal-950 p-6 sm:p-8 text-white shadow-md">
-            <div class="absolute right-0 top-0 -mr-6 -mt-6 h-48 w-48 rounded-full bg-emerald-500/15 blur-3xl"></div>
-            <div class="absolute left-1/3 bottom-0 -mb-10 h-60 w-60 rounded-full bg-teal-500/15 blur-3xl"></div>
-            <div class="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold bg-white/10 text-emerald-100 rounded-full border border-white/10 backdrop-blur-xs mb-3">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                        Finance Workspace
-                    </span>
-                    <h1 class="text-2xl md:text-3xl font-black tracking-tight text-white">Family Accounts / SOA</h1>
-                    <p class="mt-2 text-sm md:text-base text-emerald-100 max-w-2xl font-light">
-                        Monitor consolidated family ledgers, student fee allocations, official statements of account, and payment records.
-                    </p>
-                </div>
-                <div class="flex items-center gap-2.5 shrink-0 flex-wrap">
-                    <a href="{{ route('admin.finance.onsite.create') }}" class="inline-flex items-center gap-2 rounded-xl bg-white text-emerald-950 px-4 py-2.5 text-xs font-black shadow-sm hover:bg-emerald-50 transition">
-                        <i data-lucide="plus-circle" class="w-4 h-4 text-emerald-700"></i>
-                        <span>Record Onsite Payment</span>
-                    </a>
-                </div>
-            </div>
-        </div>
+        @include('admin.finance._nav', [
+            'title' => 'Student Accounts & SOA',
+            'subtitle' => 'All approved official students appear here, including students with no payment record. Open a student directly to view or manage the official SOA.',
+            'showSearch' => false,
+        ])
 
-        <!-- View Tabs & Search Filter Form -->
-        <div class="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-xs space-y-4">
-            {{-- RECORD TYPE TABS --}}
-            <div class="flex items-center gap-2 border-b border-slate-100 pb-3 flex-wrap">
-                <a
-                    href="{{ route('admin.finance.families.index', ['tab' => 'official']) }}"
-                    class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-black transition {{ ($activeTab ?? 'official') === 'official' ? 'bg-emerald-700 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900' }}"
-                >
-                    <i data-lucide="users" class="w-4 h-4"></i>
-                    <span>Official Database Records ({{ $officialCount ?? 916 }} Families · 1,155+ Students)</span>
-                </a>
-                @if ($demoCount ?? 0 > 0)
-                    <a
-                        href="{{ route('admin.finance.families.index', ['tab' => 'demo']) }}"
-                        class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-black transition {{ ($activeTab ?? 'official') === 'demo' ? 'bg-amber-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900' }}"
-                    >
-                        <i data-lucide="flask-conical" class="w-4 h-4"></i>
-                        <span>Demo Testing Accounts ({{ $demoCount }} Families)</span>
-                    </a>
-                @endif
+        <section class="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
+            <div class="mb-4 flex flex-wrap gap-2 border-b border-slate-100 pb-4">
+                <a href="{{ route('admin.finance.families.index', ['tab' => 'official']) }}" class="rounded-lg px-3 py-2 text-xs font-bold {{ ($activeTab ?? 'official') === 'official' ? 'bg-emerald-700 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">Official Students ({{ number_format($officialCount ?? 0) }})</a>
+                @if(($demoCount ?? 0) > 0)<a href="{{ route('admin.finance.families.index', ['tab' => 'demo']) }}" class="rounded-lg px-3 py-2 text-xs font-bold {{ ($activeTab ?? 'official') === 'demo' ? 'bg-amber-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">Demo Families ({{ number_format($demoCount) }})</a>@endif
             </div>
-
-            <form method="GET" action="{{ route('admin.finance.families.index') }}" class="flex flex-col md:flex-row items-center gap-3 w-full" id="filterForm">
+            <form method="GET" action="{{ route('admin.finance.families.index') }}" class="flex flex-col gap-2 sm:flex-row">
                 <input type="hidden" name="tab" value="{{ $activeTab ?? 'official' }}">
-
-                <!-- Search Input -->
-                <div class="relative w-full md:flex-1">
-                    <input
-                        type="text"
-                        name="q"
-                        value="{{ request('q') }}"
-                        placeholder="Search by student name, student #, LRN, parent name, or email..."
-                        class="h-11 w-full rounded-xl border border-slate-200 bg-white pl-11 pr-4 text-sm font-medium text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
-                    />
-                    <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
-                        <i data-lucide="search" class="h-4 w-4"></i>
-                    </div>
-                </div>
-
-                <!-- Action Buttons -->
-                <button type="submit" class="h-11 w-full md:w-28 inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-700 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-800 focus:ring-4 focus:ring-emerald-100">
-                    <i data-lucide="filter" class="h-4 w-4"></i>
-                    Search
-                </button>
-
-                @if(request()->filled('q'))
-                    <a href="{{ route('admin.finance.families.index', ['tab' => $activeTab ?? 'official']) }}" class="inline-flex items-center gap-1.5 text-xs font-bold text-rose-600 hover:text-rose-700 transition px-2 py-2">
-                        <i data-lucide="x" class="h-3.5 w-3.5"></i> Reset
-                    </a>
-                @endif
+                <label for="student-account-search" class="sr-only">Search student accounts</label>
+                <div class="relative min-w-0 flex-1"><i data-lucide="search" class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"></i><input id="student-account-search" name="q" value="{{ request('q') }}" placeholder="Search official student, parent, student ID, grade, OR, or reference..." class="h-11 w-full rounded-xl border border-slate-300 bg-white pl-10 pr-4 text-sm text-slate-900 focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"></div>
+                <button class="h-11 rounded-xl bg-emerald-700 px-5 text-sm font-bold text-white hover:bg-emerald-800">Find Student</button>
+                @if(request()->filled('q'))<a href="{{ route('admin.finance.families.index', ['tab' => $activeTab ?? 'official']) }}" class="inline-flex h-11 items-center justify-center px-2 text-sm font-bold text-slate-600 hover:text-slate-950">Clear</a>@endif
             </form>
-        </div>
+        </section>
 
-        <!-- Error Alert -->
-        @if (isset($errors) && $errors->any())
-            <div class="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-rose-800 shadow-sm flex items-start gap-3">
-                <i data-lucide="alert-circle" class="h-5 w-5 shrink-0 text-rose-600 mt-0.5"></i>
-                <div>
-                    <h4 class="font-bold text-sm">Action Failed</h4>
-                    <ul class="mt-1 list-disc pl-4 text-xs text-rose-700 space-y-0.5">
-                        @foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach
-                    </ul>
-                </div>
+        @if(($activeTab ?? 'official') === 'official')
+            <div class="flex flex-col gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-950 sm:flex-row sm:items-center sm:justify-between">
+                <p><strong>{{ number_format($officialCount ?? 0) }} approved official students</strong> are listed whether or not a payment has been recorded.</p>
+                <span class="text-xs font-semibold text-emerald-800">Primary action: Open SOA</span>
             </div>
         @endif
 
-        <!-- Families Table List -->
-        <div class="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-xs">
+        <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs">
             <div class="overflow-x-auto">
-                <table class="w-full border-collapse text-left text-sm text-slate-500">
-                    <thead class="bg-slate-50 text-xs font-extrabold uppercase tracking-wider text-slate-700 border-b border-slate-200">
-                        <tr>
-                            <th class="px-5 py-4">Family ID</th>
-                            <th class="px-5 py-4">Family Name / Representative</th>
-                            <th class="px-5 py-4 text-center">Child / Children</th>
-                            <th class="px-5 py-4">Account Status</th>
-                            <th class="px-5 py-4 text-right">Consolidated Remaining</th>
-                            <th class="px-5 py-4 text-center">Actions</th>
-                        </tr>
-                    </thead>
+                <table class="finance-mobile-table min-w-full text-left text-sm">
+                    <thead class="border-b border-slate-200 bg-slate-50 text-xs font-bold uppercase tracking-wider text-slate-600"><tr><th class="px-5 py-3">Student</th><th class="px-5 py-3">Student ID</th><th class="px-5 py-3">Grade / Section</th><th class="px-5 py-3">Parent / Guardian</th><th class="px-5 py-3 text-right">Outstanding Balance</th><th class="px-5 py-3">SOA Status</th><th class="px-5 py-3">Payment Record</th><th class="px-5 py-3 text-right">Action</th></tr></thead>
                     <tbody class="divide-y divide-slate-100">
-                        @forelse($families as $family)
+                        @forelse($families as $record)
                             @php
-                                $applicants = is_iterable($family->enrollmentApplicants ?? null) ? collect($family->enrollmentApplicants) : collect();
-                                $directStudents = is_iterable($family->students ?? null) ? collect($family->students) : collect();
-                                $accounts = $applicants->map(fn($applicant) => is_object($applicant) ? ($applicant->student?->account ?? ($applicant->account ?? null)) : null)->filter();
-                                if ($accounts->isEmpty() && $directStudents->isNotEmpty()) {
-                                    $accounts = $directStudents->map(fn($st) => $st->account)->filter();
-                                }
-                                $hasAccounts = $accounts->isNotEmpty();
-                                $openCount = $accounts->filter(fn($a) => (float)($a->remaining_balance ?? 0) > 0.01)->count();
-                                $totalRemaining = (float) $accounts->sum(fn($a) => (float)($a->remaining_balance ?? 0));
-                                $familyId = $family->id ?? ($family->user_id ?? 999001);
-
-                                // Extract and build Family Surname(s)
-                                $childSurnames = collect();
-                                foreach ($applicants as $app) {
-                                    if (!empty($app->last_name)) {
-                                        $childSurnames->push(trim(strtoupper($app->last_name)));
-                                    } elseif (!empty($app->full_name)) {
-                                        $parts = explode(' ', trim($app->full_name));
-                                        $childSurnames->push(trim(strtoupper(end($parts))));
-                                    }
-                                }
-                                if ($childSurnames->isEmpty()) {
-                                    foreach ($directStudents as $st) {
-                                        if (!empty($st->last_name)) {
-                                            $childSurnames->push(trim(strtoupper($st->last_name)));
-                                        } elseif (!empty($st->full_name)) {
-                                            $parts = explode(' ', trim($st->full_name));
-                                            $childSurnames->push(trim(strtoupper(end($parts))));
-                                        }
-                                    }
-                                }
-                                $uniqueSurnames = $childSurnames->filter()->unique()->values();
-                                if ($uniqueSurnames->isNotEmpty()) {
-                                    $familyDisplayName = $uniqueSurnames->join(' / ') . ' Family';
-                                    $avatarInitials = mb_substr($uniqueSurnames->first(), 0, 2);
+                                $studentRows = collect();
+                                if (($activeTab ?? 'official') === 'official') {
+                                    $family = $record->user;
+                                    $student = $record->student;
+                                    $studentId = $record->amis_student_id ?: $student?->student_number ?: 'Not assigned';
+                                    $studentRows->push([
+                                        'name' => $record->full_name ?: 'Student',
+                                        'id' => $studentId,
+                                        'grade' => $record->grade_level ?: $student?->grade_level ?: 'Not assigned',
+                                        'section' => $student?->section,
+                                        'account' => $student?->account,
+                                        'family_id' => $family?->id ?: $record->user_id,
+                                        'parent_name' => $family?->name ?: trim(($record->father_first_name ?? '').' '.($record->father_last_name ?? '')) ?: 'Not recorded',
+                                        'parent_email' => $family?->email ?: $record->parent_email,
+                                        'soa_url' => $student ? route('admin.finance.students.official-soa', ['studentIdentifier' => $student->student_number ?: $student->id]) : null,
+                                        'is_demo' => false,
+                                    ]);
                                 } else {
-                                    $cleanName = trim(preg_replace('/[0-9_.-]+/', ' ', $family->name ?: 'Family'));
-                                    $familyDisplayName = (mb_strlen($cleanName) > 2 ? strtoupper($cleanName) : strtoupper($family->name)) . ' Family';
-                                    $avatarInitials = mb_substr(preg_replace('/[^A-Za-z]/', '', $family->name) ?: 'FA', 0, 2);
+                                    $family = $record;
+                                    $applicants = is_iterable($family->enrollmentApplicants ?? null) ? collect($family->enrollmentApplicants) : collect();
+                                    foreach ($applicants as $applicant) {
+                                        $student = $applicant->student ?? null;
+                                        $studentId = $applicant->amis_student_id ?: $student?->student_number ?: (string) $applicant->id;
+                                        $studentRows->push([
+                                            'name' => $applicant->full_name ?: 'Student',
+                                            'id' => $studentId,
+                                            'grade' => $applicant->grade_level ?: $student?->grade_level ?: 'Not assigned',
+                                            'section' => $student?->section,
+                                            'account' => $student?->account ?? ($applicant->account ?? null),
+                                            'family_id' => $family->id,
+                                            'parent_name' => $family->name,
+                                            'parent_email' => $family->email,
+                                            'soa_url' => route('admin.finance.families.show', ['family' => $family->id, 'student' => $studentId]),
+                                            'is_demo' => true,
+                                        ]);
+                                    }
                                 }
-
-                                $totalChildrenCount = $applicants->isNotEmpty() ? $applicants->count() : $directStudents->count();
-                                if ($totalChildrenCount === 0 && isset($family->children_count)) {
-                                    $totalChildrenCount = (int) $family->children_count;
-                                }
-                                $totalChildrenCount = max(1, $totalChildrenCount);
                             @endphp
-                            <tr class="hover:bg-slate-50/60 transition group">
-                                <!-- 1. Family ID -->
-                                <td class="px-5 py-4 whitespace-nowrap">
-                                    <span class="inline-flex items-center gap-1 font-mono text-xs font-black text-slate-700 bg-slate-100 border border-slate-200/80 px-2.5 py-1 rounded-lg">
-                                        #{{ $familyId }}
-                                    </span>
-                                </td>
-
-                                <!-- 2. Family Name & Representative -->
-                                <td class="px-5 py-4">
-                                    <div class="flex items-center gap-3">
-                                        <div class="h-10 w-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-200/80 font-black text-xs shrink-0 shadow-2xs">
-                                            {{ strtoupper($avatarInitials ?: 'FA') }}
-                                        </div>
-                                        <div class="min-w-0">
-                                            <div class="flex items-center gap-2">
-                                                <a href="{{ route('admin.finance.families.show', $familyId) }}" class="font-black text-slate-900 uppercase tracking-tight group-hover:text-emerald-700 hover:underline transition text-sm">
-                                                    {{ $familyDisplayName }}
-                                                </a>
-                                                @if ($family->is_demo ?? false)
-                                                    <span class="inline-flex items-center rounded-md bg-amber-100 border border-amber-200 px-1.5 py-0.5 text-[10px] font-black uppercase text-amber-800">
-                                                        DEMO
-                                                    </span>
-                                                @endif
-                                            </div>
-                                            <div class="text-xs text-slate-400 mt-0.5 flex items-center gap-1.5 truncate">
-                                                <span class="font-bold text-slate-600 truncate max-w-[140px]">{{ $family->name }}</span>
-                                                <span>·</span>
-                                                <span class="text-slate-400 truncate">{{ $family->email }}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-
-                                <!-- 3. Child / Children (Total Count only) -->
-                                <td class="px-5 py-4 text-center whitespace-nowrap">
-                                    <span class="inline-flex items-center gap-1.5 rounded-xl bg-indigo-50 border border-indigo-200/80 px-3 py-1.5 text-xs font-bold text-indigo-900 shadow-2xs">
-                                        <i data-lucide="users" class="h-3.5 w-3.5 text-indigo-600"></i>
-                                        <span>{{ $totalChildrenCount }} {{ \Illuminate\Support\Str::plural('Child', $totalChildrenCount) }}</span>
-                                    </span>
-                                </td>
-
-                                <!-- 4. Account Status -->
-                                <td class="px-5 py-4 whitespace-nowrap">
-                                    @if(! $hasAccounts)
-                                        <span class="inline-flex items-center gap-1.5 rounded-full bg-slate-100 border border-slate-200 px-2.5 py-1 text-xs font-bold text-slate-600">
-                                            <span class="h-1.5 w-1.5 rounded-full bg-slate-400"></span>
-                                            Draft Application
-                                        </span>
-                                    @elseif($openCount > 0)
-                                        <span class="inline-flex items-center gap-1.5 rounded-full bg-amber-50 border border-amber-200 px-2.5 py-1 text-xs font-bold text-amber-800">
-                                            <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
-                                            {{ $openCount }} Open Account{{ $openCount > 1 ? 's' : '' }}
-                                        </span>
-                                    @else
-                                        <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-1 text-xs font-bold text-emerald-800">
-                                            <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
-                                            Fully Settled
-                                        </span>
-                                    @endif
-                                </td>
-
-                                <!-- 5. Consolidated Remaining -->
-                                <td class="px-5 py-4 text-right whitespace-nowrap">
-                                    @if(! $hasAccounts)
-                                        <span class="text-xs font-bold text-slate-400 italic">No Assessment</span>
-                                    @else
-                                        <span class="text-base font-black tracking-tight {{ $totalRemaining > 0.01 ? 'text-slate-900' : 'text-emerald-700' }}">
-                                            ₱{{ number_format($totalRemaining, 2) }}
-                                        </span>
-                                    @endif
-                                </td>
-
-                                <!-- 6. Actions -->
-                                <td class="px-5 py-4 text-center whitespace-nowrap">
-                                    <a href="{{ route('admin.finance.families.show', $familyId) }}" class="inline-flex items-center gap-1.5 rounded-xl bg-emerald-700 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-emerald-800 transition">
-                                        <i data-lucide="file-text" class="h-3.5 w-3.5"></i>
-                                        <span>View SOA</span>
-                                    </a>
-                                </td>
-                            </tr>
+                            @foreach($studentRows as $studentRow)
+                                @php
+                                    $balance = (float)($studentRow['account']?->remaining_balance ?? 0);
+                                    $paid = (float)($studentRow['account']?->amount_paid ?? 0);
+                                    $status = ! $studentRow['account'] ? 'SOA Not Set Up' : ($balance <= 0.01 ? 'Fully Settled' : ($paid > 0 ? 'Partially Paid' : 'Balance Due'));
+                                    $hasPayment = $paid > 0.005;
+                                @endphp
+                                <tr class="hover:bg-slate-50/70">
+                                    <td data-label="Student" class="px-5 py-4">@if($studentRow['soa_url'])<a href="{{ $studentRow['soa_url'] }}" class="font-bold text-slate-950 hover:text-emerald-700 hover:underline">{{ mb_strtoupper($studentRow['name']) }}</a>@else<span class="font-bold text-slate-950">{{ mb_strtoupper($studentRow['name']) }}</span>@endif @if($studentRow['is_demo'])<span class="ml-2 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-800">Demo</span>@endif</td>
+                                    <td data-label="Student ID" class="px-5 py-4 font-mono text-xs font-semibold text-slate-700">{{ $studentRow['id'] }}</td>
+                                    <td data-label="Grade / Section" class="px-5 py-4 text-slate-700">{{ $studentRow['grade'] }}{{ $studentRow['section'] ? ' / '.$studentRow['section'] : '' }}</td>
+                                    <td data-label="Parent / Guardian" class="px-5 py-4"><p class="font-semibold text-slate-800">{{ $studentRow['parent_name'] }}</p><p class="mt-0.5 text-xs text-slate-500">{{ $studentRow['parent_email'] }}</p></td>
+                                    <td data-label="Outstanding Balance" class="px-5 py-4 text-right text-base font-black {{ $balance > 0.01 ? 'text-slate-950' : 'text-emerald-700' }}">{{ $studentRow['account'] ? '₱'.number_format($balance, 2) : '—' }}</td>
+                                    <td data-label="SOA Status" class="px-5 py-4"><span class="inline-flex rounded-full border px-2.5 py-1 text-xs font-bold {{ $status === 'Fully Settled' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : ($status === 'SOA Not Set Up' ? 'border-slate-200 bg-slate-50 text-slate-600' : 'border-amber-200 bg-amber-50 text-amber-800') }}">{{ $status }}</span></td>
+                                    <td data-label="Payment Record" class="px-5 py-4"><span class="inline-flex rounded-full border px-2.5 py-1 text-xs font-bold {{ $hasPayment ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-slate-200 bg-white text-slate-600' }}">{{ $hasPayment ? 'Payment Recorded' : 'No Payment Recorded' }}</span></td>
+                                    <td data-label="Action" class="px-5 py-4 text-right">@if($studentRow['soa_url'])<a href="{{ $studentRow['soa_url'] }}" class="inline-flex min-h-9 items-center rounded-lg bg-emerald-700 px-3 text-xs font-bold text-white hover:bg-emerald-800">Open SOA</a>@else<span class="inline-flex min-h-9 items-center rounded-lg bg-slate-100 px-3 text-xs font-bold text-slate-500">Student Record Pending</span>@endif</td>
+                                </tr>
+                            @endforeach
                         @empty
-                            <tr>
-                                <td colspan="5" class="py-16 text-center">
-                                    <div class="flex flex-col items-center justify-center space-y-4">
-                                        <div class="rounded-full bg-slate-50 p-4 text-slate-400 ring-8 ring-slate-50/50">
-                                            <i data-lucide="users-2" class="h-10 w-10"></i>
-                                        </div>
-                                        <div class="space-y-1">
-                                            <h3 class="text-base font-bold text-slate-800">No family accounts found</h3>
-                                            <p class="text-sm text-slate-500 max-w-sm mx-auto">We couldn't find any family records matching your search query.</p>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
+                            <tr><td data-label="" colspan="8" class="px-5 py-14 text-center"><i data-lucide="search-x" class="mx-auto h-8 w-8 text-slate-400"></i><p class="mt-2 font-bold text-slate-800">No official students found.</p><p class="mt-1 text-sm text-slate-500">Check the spelling or try a parent email, student ID, grade, OR number, or payment reference.</p></td></tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
-        </div>
-
-        <!-- Pagination -->
-        @if($families->hasPages())
-            <div class="mt-6">
-                {{ $families->links() }}
-            </div>
-        @endif
+            @if($families->hasPages())<div class="border-t border-slate-200 px-5 py-4">{{ $families->links() }}</div>@endif
+        </section>
     </div>
 </x-admin-layout>

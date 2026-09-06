@@ -718,16 +718,16 @@
         }
     </style>
 </head>
-<body x-data="soaStudio({{ Js::from($soaData) }})">
+<body x-data="soaStudio({{ Js::from($soaData) }})" x-init="if (window.location.hash === '#soa-adjustments') $nextTick(() => openFeeModal())">
 
     {{-- TOP ACTION BAR --}}
     <div class="no-print-bar">
         <a href="{{ isset($soaData['family_id']) ? route('admin.finance.families.show', $soaData['family_id']) : 'javascript:history.back()' }}" class="btn-back">
             <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-            Back to Family Account
+            Back to Student Finance Profile
         </a>
         <div style="display: flex; gap: 10px; align-items: center;">
-            <button type="button" @click="openFeeModal()" class="btn-edit" title="Edit assessment and fees">
+            <button id="soa-adjustments" type="button" @click="openFeeModal()" class="btn-edit" title="Edit assessment and fees">
                 <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                 Edit Fees &amp; Discounts
             </button>
@@ -801,7 +801,7 @@
                 @if(isset($soaData['family_id']))
                     <div style="margin-top: 14px; border-top: 1px solid #f1f5f9; padding-top: 12px;">
                         <a href="{{ route('admin.finance.families.show', $soaData['family_id']) }}" style="display: flex; align-items: center; justify-content: center; gap: 6px; background: #f8fafc; color: #334155; text-decoration: none; padding: 9px 12px; border-radius: 10px; font-weight: 700; font-size: 11.5px; border: 1px solid #e2e8f0; transition: all 0.15s;">
-                            <span>📊</span> Full Family Financial Ledger
+                            <span>📊</span> Student Finance Profile
                         </a>
                     </div>
                 @endif
@@ -869,6 +869,10 @@
                             <tr>
                                 <td class="info-lbl">Email:</td>
                                 <td class="info-val" style="font-size:10px;">{{ $soaData['email'] }}</td>
+                            </tr>
+                            <tr>
+                                <td class="info-lbl">AMIS ID:</td>
+                                <td class="info-val">{{ $soaData['student_number'] ?? 'Not assigned' }}</td>
                             </tr>
                             <tr>
                                 <td class="info-lbl">LRN:</td>
