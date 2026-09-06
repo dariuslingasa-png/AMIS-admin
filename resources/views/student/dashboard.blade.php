@@ -45,6 +45,15 @@
         $learningMode = str_ireplace('Face-to-Face', 'F2F', $learningMode);
     }
 
+    $rawStudentType = strtolower(trim((string) ($student?->applicant?->student_type ?? '')));
+    if (str_contains($rawStudentType, 'new') || str_contains($rawStudentType, 'transferee')) {
+        $studentTypeDisplay = 'NEW STUDENT';
+        $isOldStudent = false;
+    } else {
+        $studentTypeDisplay = 'OLD STUDENT';
+        $isOldStudent = true;
+    }
+
     $formatTeacherName = function ($name) {
         $name = $name ?: 'To Be Assigned';
         if ($name === 'To Be Assigned' || $name === '—') {
@@ -502,64 +511,32 @@
     @endif
 
     {{-- ── 1. SOA-STYLE HERO HEADER ──────────────────────────────── --}}
-    <section class="soa-hero" aria-labelledby="dashboard-welcome-title">
+    <section class="soa-hero" style="grid-template-columns: 1fr; min-height: auto; padding: clamp(26px, 3.5vw, 38px);" aria-labelledby="dashboard-welcome-title">
         <span class="soa-hero__orb soa-hero__orb--one" aria-hidden="true"></span>
         <span class="soa-hero__orb soa-hero__orb--two" aria-hidden="true"></span>
 
         <div class="soa-hero__content">
-            <div class="soa-hero__eyebrow">
-                <span><i data-lucide="sparkles"></i></span>
-                Assalamu Alaikum · AMIS Student Portal
+            <div class="soa-hero__eyebrow" style="flex-wrap: wrap; gap: 8px;">
+                <div style="display: inline-flex; align-items: center; gap: 8px;">
+                    <span><i data-lucide="sparkles"></i></span>
+                    Assalamu Alaikum · AMIS Student Portal
+                </div>
+                <span class="soa-account-state {{ $isOldStudent ? 'is-settled' : '' }}" style="font-size: 10px; font-weight: 850; letter-spacing: 0.06em; padding: 4px 10px; border-radius: 999px;">
+                    <i></i>{{ $studentTypeDisplay }}
+                </span>
             </div>
+
             <h2 id="dashboard-welcome-title">
                 Welcome back,<br>
                 <em>{{ $firstName }}!</em>
             </h2>
-            <p>Your unified academic workspace. Follow your live daily classes, view official faculty instructions, monitor your report card, and track school finances.</p>
+            <p style="max-width: 680px; margin-top: 14px;">Your unified academic workspace. Follow your live daily classes, view official faculty instructions, monitor your report card, and track school finances.</p>
 
-            <div class="soa-hero__meta">
+            <div class="soa-hero__meta" style="margin-top: 20px;">
                 <span><i data-lucide="graduation-cap"></i> {{ $student?->grade_level ?: 'Grade 1' }} • {{ $section?->name ?? 'G1-AL-MUNAWWARA' }}</span>
+                <span><i data-lucide="user-check"></i> {{ $studentTypeDisplay }}</span>
                 <span><i data-lucide="id-card"></i> AMIS ID: <b>{{ $student?->student_number ?? '260000' }}</b></span>
                 <span><i data-lucide="calendar-days"></i> School Year {{ $student?->school_year ?? '2026–2027' }}</span>
-            </div>
-
-            <div class="soa-hero__actions">
-                <a href="{{ route('student.schedule') }}" class="soa-button soa-button--light">
-                    <i data-lucide="calendar-days"></i>
-                    Class Schedule
-                </a>
-                <a href="{{ route('student.grades') }}" class="soa-button soa-button--ghost">
-                    <i data-lucide="award"></i>
-                    Report Card
-                </a>
-                <button type="button" @click="showIdModal = true" class="soa-button soa-button--ghost">
-                    <i data-lucide="badge-check"></i>
-                    Digital ID Card
-                </button>
-            </div>
-        </div>
-
-        {{-- Hero Right Academic Standing Badge --}}
-        <div class="soa-balance-card">
-            <div class="soa-balance-card__top">
-                <span>Academic Standing</span>
-                <span class="soa-account-state is-settled">
-                    <i></i>{{ ucfirst($student?->applicant?->student_type ?? 'Enrolled') }}
-                </span>
-            </div>
-            <strong>
-                @if(!is_null($latestApprovedAverage))
-                    <small>GWA</small> {{ $latestApprovedAverage }}%
-                @else
-                    <small>STATUS</small> Active
-                @endif
-            </strong>
-            <div class="soa-progress" role="progressbar" aria-label="Academic standing progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ !is_null($latestApprovedAverage) ? min(100, $latestApprovedAverage) : 100 }}">
-                <span style="width: {{ !is_null($latestApprovedAverage) ? min(100, $latestApprovedAverage) : 100 }}%"></span>
-            </div>
-            <div class="soa-balance-card__footer">
-                <span><b>{{ $academicSubjects->count() }}</b> Enrolled Subjects</span>
-                <span>{{ $section?->name ?? 'Class Section' }}</span>
             </div>
         </div>
     </section>
