@@ -4,7 +4,6 @@ use App\Http\Controllers\StudentAuthController;
 use App\Http\Controllers\StudentDashboardController;
 use App\Http\Controllers\StudentPaymentController;
 use App\Http\Controllers\StudentScheduleController;
-use App\Http\Controllers\StudentTeacherController;
 use App\Http\Controllers\StudentEbookController;
 use App\Http\Controllers\SupportTicketController;
 use App\Http\Controllers\ChatbotController;
@@ -50,7 +49,7 @@ Route::middleware(['auth', 'student'])->group(function () {
     Route::get('/schedule',       [StudentScheduleController::class, 'schedule'])->name('student.schedule');
     Route::get('/class-schedule', [StudentScheduleController::class, 'schedule'])->name('student.class-schedule');
     Route::get('/subjects',       [StudentDashboardController::class, 'subjects'])->name('student.subjects');
-    Route::get('/teachers',      [StudentTeacherController::class, 'teachers'])->name('student.teachers');
+    Route::redirect('/teachers',  '/dashboard');
     Route::get('/grades',        [StudentDashboardController::class, 'grades'])->name('student.grades');
     Route::get('/profile',       [StudentDashboardController::class, 'profile'])->name('student.profile');
     Route::get('/settings',      [StudentDashboardController::class, 'settings'])->name('student.settings');
