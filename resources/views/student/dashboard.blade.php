@@ -553,43 +553,7 @@
         </div>
     </section>
 
-    {{-- ── 2. SOA METRICS ROW ────────────────────────────────────── --}}
-    <section class="soa-metrics" aria-label="Dashboard metrics summary">
-        <a href="{{ route('student.subjects') }}" class="soa-metric" style="text-decoration: none;">
-            <span class="soa-metric__icon is-emerald"><i data-lucide="book-open"></i></span>
-            <div>
-                <small>My Subjects</small>
-                <strong>{{ $academicSubjects->count() }} <i>Subjects</i></strong>
-                <span>Official DepEd curriculum</span>
-            </div>
-        </a>
-        <a href="{{ route('student.subjects') }}" class="soa-metric" style="text-decoration: none;">
-            <span class="soa-metric__icon is-blue"><i data-lucide="users"></i></span>
-            <div>
-                <small>My Teachers</small>
-                <strong>{{ $uniqueTeachers->count() }} <i>Assigned</i></strong>
-                <span>Official faculty roster</span>
-            </div>
-        </a>
-        <a href="#today-classes" class="soa-metric" style="text-decoration: none;">
-            <span class="soa-metric__icon is-violet"><i data-lucide="calendar-clock"></i></span>
-            <div>
-                <small>Today's Schedule</small>
-                <strong>{{ $schedules->filter(fn($item) => strcasecmp((string) $item->day, $todayName) === 0)->count() }} <i>Classes</i></strong>
-                <span>{{ $todayLabel }}</span>
-            </div>
-        </a>
-        <a href="{{ route('student.billing') }}" class="soa-metric" style="text-decoration: none;">
-            <span class="soa-metric__icon is-amber"><i data-lucide="wallet"></i></span>
-            <div>
-                <small>Account Balance</small>
-                <strong>PHP {{ number_format($soaRemaining, 2) }}</strong>
-                <span>{{ $soaAccountStatus }}</span>
-            </div>
-        </a>
-    </section>
-
-    {{-- ── 3. SOA TWO-COLUMN CONTENT GRID ────────────────────────── --}}
+    {{-- ── 2. SOA TWO-COLUMN CONTENT GRID ────────────────────────── --}}
     <div class="soa-content-grid" id="today-classes">
 
         {{-- ── MAIN / LEFT COLUMN ────────────────────────────────── --}}
@@ -848,67 +812,7 @@
         {{-- ── SIDE / RIGHT COLUMN ───────────────────────────────── --}}
         <aside class="soa-side-column">
 
-
-
-            {{-- 2. Statement of Account Financial Widget --}}
-            <section class="soa-upload-card" style="padding: 22px;">
-                <span class="soa-upload-card__icon" style="width: 44px; height: 44px; margin-bottom: 14px;">
-                    <i data-lucide="wallet-cards" style="width: 20px; height: 20px;"></i>
-                </span>
-                <span class="soa-section-kicker">Financial Record</span>
-                <h3 style="font-size: 18px;">Statement of Account</h3>
-                <p style="margin: 6px 0 16px; font-size: 11.5px; line-height: 1.6;">
-                    Follow tuition charges, verified payments, and installment due dates issued by the Finance Office.
-                </p>
-
-                <div style="background: rgba(255,255,255,0.75); border: 1px solid #d8e7df; border-radius: 14px; padding: 14px; margin-bottom: 16px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                        <span style="font-size: 9.5px; font-weight: 800; color: #64748b; text-transform: uppercase;">Remaining Balance</span>
-                        <span class="soa-tag-pill {{ $soaRemaining <= 0 ? 'soa-tag-pill--live' : 'soa-tag-pill--upcoming' }}" style="font-size: 8.5px;">
-                            {{ $soaAccountStatus }}
-                        </span>
-                    </div>
-                    <strong style="display: block; font-size: 22px; font-weight: 900; color: var(--soa-ink); line-height: 1.1;">
-                        <small style="font-size: 11px; font-weight: 800; color: var(--soa-green);">PHP</small>
-                        {{ number_format($soaRemaining, 2) }}
-                    </strong>
-
-                    <div class="soa-progress" style="margin-top: 10px; height: 6px;" role="progressbar" aria-label="Tuition paid progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ round($soaProgress) }}">
-                        <span style="width: {{ $soaProgress }}%"></span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 10px; font-weight: 700; color: #64748b;">
-                        <span><b>{{ number_format($soaProgress, 0) }}%</b> Paid</span>
-                        <span>PHP {{ number_format($soaPaid, 2) }} of {{ number_format($soaTotal, 2) }}</span>
-                    </div>
-                </div>
-
-                <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; font-size: 11px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #e2e8f0; padding-bottom: 6px;">
-                        <span style="color: #64748b;">Next Due Date</span>
-                        <strong style="color: #0f172a; font-weight: 800;">
-                            {{ $soaNextBilling ? $soaNextBilling->due_date->format('M d, Y') : ($soaRemaining <= 0 ? 'Fully Settled' : 'Not Scheduled') }}
-                        </strong>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="color: #64748b;">Installments</span>
-                        <strong style="color: #0f172a; font-weight: 800;">
-                            {{ $soaPaidInstallments }} paid of {{ $billings->count() }}
-                        </strong>
-                    </div>
-                </div>
-
-                <a href="{{ route('student.billing') }}" class="soa-button soa-button--primary soa-button--full" style="min-height: 38px; font-size: 11.5px;">
-                    <i data-lucide="receipt"></i>
-                    View Statement of Account
-                </a>
-
-                <div class="soa-secure-note" style="margin-top: 14px; padding-top: 12px;">
-                    <i data-lucide="shield-check"></i>
-                    <span><strong>Official Finance Record</strong>Submit receipts online for Finance verification.</span>
-                </div>
-            </section>
-
-            {{-- 3. Microsoft 365 Account Card --}}
+            {{-- Microsoft 365 Account Card --}}
             <section class="soa-card" style="padding: 22px;">
                 <header class="soa-card__header soa-card__header--compact" style="margin-bottom: 14px;">
                     <div>
