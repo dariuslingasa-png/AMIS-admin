@@ -518,11 +518,11 @@
         <div class="soa-hero__content">
             <div class="soa-hero__eyebrow">
                 <span><i data-lucide="sparkles"></i></span>
-                Assalamu Alaikum · AMIS Student Portal
+                AMIS Student Portal
             </div>
 
             <h2 id="dashboard-welcome-title">
-                Welcome back,<br>
+                Assalamualaikum,<br>
                 <em>{{ $firstName }}!</em>
             </h2>
             <p style="max-width: 620px; margin-top: 14px;">Your unified academic workspace. Follow your live daily classes, view official faculty instructions, monitor your report card, and track school finances.</p>
