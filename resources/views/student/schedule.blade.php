@@ -36,187 +36,36 @@
      })"
      x-init="init()">
 
-    {{-- ── 1. Page Header & Action Bar (MATCHES GRADES PAGE) ───────── --}}
-    <div class="no-print" style="display: flex; flex-direction: column; gap: 1.25rem;">
-        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
-            <div>
-                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
-                    <span style="font-size: 0.78rem; font-weight: 700; color: #059669; text-transform: uppercase; letter-spacing: 0.08em; display: inline-flex; align-items: center; gap: 0.35rem;">
-                        <span style="width: 6px; height: 6px; border-radius: 50%; background: #10b981;"></span>
-                        Academic Schedule & Timetable
-                    </span>
-                </div>
-                <h1 style="font-family: 'Plus Jakarta Sans', sans-serif !important; font-size: 1.75rem; font-weight: 900; color: #0f172a; margin: 0; line-height: 1.2; letter-spacing: -0.025em;">
-                    Class Schedule
-                </h1>
-                <p style="font-size: 0.85rem; color: #64748b; margin: 0.25rem 0 0 0; font-weight: 500;">
-                    Official weekly timetable, scheduled periods, and faculty assignments for SY {{ $studentInfo['school_year'] }}.
-                </p>
+    {{-- ── 1. Page Header ────────────────────────────────────────────── --}}
+    <div class="no-print" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 0.5rem;">
+        <div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                <span style="font-size: 0.78rem; font-weight: 700; color: #059669; text-transform: uppercase; letter-spacing: 0.08em; display: inline-flex; align-items: center; gap: 0.35rem;">
+                    <span style="width: 6px; height: 6px; border-radius: 50%; background: #10b981;"></span>
+                    Academic Schedule & Timetable
+                </span>
             </div>
-
-            {{-- Action Buttons --}}
-            <div style="display: flex; align-items: center; gap: 0.65rem; flex-wrap: wrap;">
-                <button type="button" onclick="window.print()" style="
-                    display: inline-flex;
-                    align-items: center;
-                    gap: 0.45rem;
-                    padding: 0.6rem 1.15rem;
-                    border-radius: 12px;
-                    background: #ffffff;
-                    color: #0f172a;
-                    font-size: 0.825rem;
-                    font-weight: 700;
-                    border: 1.5px solid #e2e8f0;
-                    cursor: pointer;
-                    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
-                    transition: all 0.15s ease;
-                " onmouseover="this.style.background='#f8fafc'; this.style.borderColor='#cbd5e1';" onmouseout="this.style.background='#ffffff'; this.style.borderColor='#e2e8f0';">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
-                    <span>Print Schedule</span>
-                </button>
-
-                <a href="{{ route('student.grades') }}" style="
-                    display: inline-flex;
-                    align-items: center;
-                    gap: 0.45rem;
-                    padding: 0.6rem 1.15rem;
-                    border-radius: 12px;
-                    background: linear-gradient(135deg, #059669 0%, #047857 100%);
-                    color: #ffffff;
-                    font-size: 0.825rem;
-                    font-weight: 700;
-                    text-decoration: none;
-                    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.2);
-                    transition: all 0.15s ease;
-                " onmouseover="this.style.boxShadow='0 6px 18px rgba(5, 150, 105, 0.32)'; this.style.transform='translateY(-1px)'" onmouseout="this.style.boxShadow='0 4px 12px rgba(5, 150, 105, 0.2)'; this.style.transform='none'">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-                    <span>Report Card & Grades</span>
-                </a>
-            </div>
-        </div>
-
-        {{-- ── 2. Academic Summary Metrics Grid (MATCHES GRADES PAGE) ─── --}}
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem;">
-            
-            {{-- Card 1: Section Gradient Card --}}
-            <div class="fade-up" style="background: linear-gradient(135deg, #064e3b 0%, #047857 70%, #0d9488 100%); border-radius: 20px; padding: 1.35rem; color: #ffffff; position: relative; overflow: hidden; box-shadow: 0 10px 24px rgba(5, 150, 105, 0.15);">
-                <div style="position: absolute; right: -15px; bottom: -15px; width: 90px; height: 90px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,0.12), transparent 70%); pointer-events: none;"></div>
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.6rem;">
-                    <span style="font-size: 0.72rem; font-weight: 800; color: #a7f3d0; text-transform: uppercase; letter-spacing: 0.08em;">Current Class Section</span>
-                    <span style="font-size: 0.68rem; font-weight: 800; background: rgba(255,255,255,0.22); color: #ffffff; padding: 0.15rem 0.55rem; border-radius: 999px;">Active Schedule</span>
-                </div>
-                <div style="margin-bottom: 0.35rem;">
-                    <span id="metric-grade" style="font-size: 1.75rem; font-weight: 950; line-height: 1.1; letter-spacing: -0.02em; display: block;" x-text="currentGrade">{{ $currentGrade }}</span>
-                </div>
-                <div style="display: flex; align-items: center; gap: 0.35rem; font-size: 0.8rem; font-weight: 700; color: #a7f3d0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                    <span id="metric-section" x-text="currentSectionName">{{ $currentSectionName }}</span>
-                </div>
-            </div>
-
-            {{-- Card 2: Learning Modality & Shift --}}
-            <div class="fade-up" style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 20px; padding: 1.35rem; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-                <div>
-                    <span style="font-size: 0.72rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; display: block; margin-bottom: 0.35rem;">Learning Modality</span>
-                    <div id="metric-modality" style="font-size: 1.15rem; font-weight: 900; color: #0f172a; margin-bottom: 0.2rem;">{{ $studentInfo['modality'] }}</div>
-                    <span style="font-size: 0.78rem; font-weight: 600; color: #059669; display: inline-flex; align-items: center; gap: 0.25rem;">
-                        <span style="width: 5px; height: 5px; border-radius: 50%; background: #10b981;"></span>
-                        Official AMIS Timetable
-                    </span>
-                </div>
-                <div style="margin-top: 0.75rem; padding-top: 0.65rem; border-top: 1px dashed #f1f5f9; display: flex; justify-content: space-between; font-size: 0.75rem;">
-                    <span style="color: #64748b; font-weight: 600;">Shift / Timing:</span>
-                    <strong id="metric-shift" style="color: #0f172a; font-weight: 800;">{{ $studentInfo['shift'] ?: 'Regular Day Shift' }}</strong>
-                </div>
-            </div>
-
-            {{-- Card 3: Scheduled Time Blocks --}}
-            <div class="fade-up" style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 20px; padding: 1.35rem; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-                <div>
-                    <span style="font-size: 0.72rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; display: block; margin-bottom: 0.35rem;">Weekly Schedule</span>
-                    <div style="font-size: 1.55rem; font-weight: 950; color: #0f172a; margin-bottom: 0.2rem;">
-                        {{ count($matrix) }} <small style="font-size: 0.85rem; font-weight: 700; color: #64748b;">Time Blocks</small>
-                    </div>
-                    <span style="font-size: 0.78rem; font-weight: 600; color: #64748b;">
-                        DepEd K-12 MATATAG Curriculum
-                    </span>
-                </div>
-                <div style="margin-top: 0.75rem; padding-top: 0.65rem; border-top: 1px dashed #f1f5f9; display: flex; justify-content: space-between; font-size: 0.75rem;">
-                    <span style="color: #64748b; font-weight: 600;">Timetable Format:</span>
-                    <strong style="color: #059669; font-weight: 800;">Sunday – Thursday</strong>
-                </div>
-            </div>
-
-            {{-- Card 4: School Year Info --}}
-            <div class="fade-up" style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 20px; padding: 1.35rem; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-                <div>
-                    <span style="font-size: 0.72rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; display: block; margin-bottom: 0.35rem;">School Year & Term</span>
-                    <div style="font-size: 1.25rem; font-weight: 900; color: #0f172a; margin-bottom: 0.2rem;">
-                        SY {{ $studentInfo['school_year'] }}
-                    </div>
-                    <span style="font-size: 0.78rem; font-weight: 600; color: #d97706; background: #fef3c7; padding: 0.15rem 0.55rem; border-radius: 6px; display: inline-block;">
-                        1st Term Ongoing
-                    </span>
-                </div>
-                <div style="margin-top: 0.75rem; padding-top: 0.65rem; border-top: 1px dashed #f1f5f9; display: flex; justify-content: space-between; font-size: 0.75rem;">
-                    <span style="color: #64748b; font-weight: 600;">Student LRN:</span>
-                    <strong style="color: #0f172a; font-family: monospace;">{{ $student->student_number ?? '260000' }}</strong>
-                </div>
-            </div>
-
+            <h1 style="font-family: 'Plus Jakarta Sans', sans-serif !important; font-size: 1.75rem; font-weight: 900; color: #0f172a; margin: 0; line-height: 1.2; letter-spacing: -0.025em;">
+                Class Schedule
+            </h1>
+            <p style="font-size: 0.85rem; color: #64748b; margin: 0.25rem 0 0 0; font-weight: 500;">
+                Official weekly timetable for <strong id="banner-grade-sec" style="color: #0f172a;" x-text="currentGrade + ' — ' + currentSectionName">{{ $currentGrade }} — {{ $currentSectionName }}</strong> · School Year {{ $studentInfo['school_year'] }}
+            </p>
         </div>
     </div>
 
-    {{-- ── 3. Main Schedule Panel (EXACT MATCH TO GRADES PANEL) ────── --}}
+    {{-- ── 2. Main Schedule Panel ────────────────────────────────────── --}}
     <div class="fade-up report-card-print-box" style="
         background: #ffffff;
         border: 1px solid #e2e8f0;
         border-radius: 24px;
-        padding: 2.25rem;
+        padding: 1.75rem 2rem;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02), 0 8px 24px -4px rgba(15, 23, 42, 0.03);
         display: flex;
         flex-direction: column;
-        gap: 1.75rem;
+        gap: 1.5rem;
         width: 100%;
     ">
-
-        {{-- Printable Official Header --}}
-        <div style="display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; padding-bottom: 1.5rem; border-bottom: 2px solid #0f172a;">
-            <div style="display: flex; align-items: center; gap: 1.15rem;">
-                <img src="{{ asset('images/AMIS_Logo.png') }}" alt="AMIS Logo" style="width: 62px; height: 62px; object-fit: contain;">
-                <div>
-                    <div class="arabic-school-title" style="font-family: 'Scheherazade New', 'Amiri', 'Traditional Arabic', serif !important; font-size: 1.55rem; font-weight: 700; color: #047857; line-height: 1.15; margin-bottom: 0.15rem; direction: rtl; text-align: left;" dir="rtl" lang="ar">
-                        المدرسة المنورة الإسلامية
-                    </div>
-                    <h2 style="font-family: 'Plus Jakarta Sans', sans-serif !important; font-size: 1.25rem; font-weight: 900; color: #0f172a; margin: 0; line-height: 1.2; letter-spacing: -0.01em;">
-                        AL MUNAWWARA ISLAMIC SCHOOL
-                    </h2>
-                    <p style="font-size: 0.78rem; font-weight: 600; color: #64748b; margin: 0.15rem 0 0 0;">
-                        Official Class Schedule & Weekly Timetable · School Year {{ $studentInfo['school_year'] }}
-                    </p>
-                </div>
-            </div>
-        </div>
-
-        {{-- Student Information Banner --}}
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.25rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 1.25rem;">
-            <div>
-                <span style="font-size: 0.72rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; display: block;">Student Name</span>
-                <span style="font-size: 0.95rem; font-weight: 900; color: #0f172a;">{{ $studentInfo['name'] }}</span>
-            </div>
-            <div>
-                <span style="font-size: 0.72rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; display: block;">Student ID & LRN</span>
-                <span style="font-size: 0.95rem; font-weight: 800; color: #0f172a; font-family: monospace;">{{ $student->student_number ?? '260000' }}</span>
-            </div>
-            <div>
-                <span style="font-size: 0.72rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; display: block;">Grade & Section</span>
-                <span id="banner-grade-sec" style="font-size: 0.95rem; font-weight: 800; color: #0f172a;" x-text="currentGrade + ' — ' + currentSectionName">{{ $currentGrade }} — {{ $currentSectionName }}</span>
-            </div>
-            <div>
-                <span style="font-size: 0.72rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; display: block;">School Year</span>
-                <span id="banner-school-year" style="font-size: 0.95rem; font-weight: 800; color: #059669;">SY {{ $studentInfo['school_year'] }}</span>
-            </div>
-        </div>
 
         {{-- Controls Bar (Tabs + Tester Switcher) --}}
         <div class="no-print" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid #e2e8f0; padding-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">

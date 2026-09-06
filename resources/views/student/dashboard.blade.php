@@ -699,8 +699,99 @@
         </div>
         @endif
 
+        {{-- ── ACADEMIC SUMMARY CARDS ────────────────────────────────── --}}
+        <div class="fade-up" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; width: 100%;">
+            {{-- Card 1: My Subjects --}}
+            <a href="{{ route('student.subjects') }}" style="text-decoration: none; display: flex; flex-direction: column; justify-content: space-between; background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 18px; padding: 1.25rem; transition: all 0.2s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.02);" onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='#10b981'; this.style.boxShadow='0 8px 16px rgba(16,185,129,0.08)'" onmouseout="this.style.transform='none'; this.style.borderColor='#e2e8f0'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.02)'">
+                <div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+                        <span style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: #059669;">My Subjects</span>
+                        <div style="width: 36px; height: 36px; border-radius: 10px; background: #ecfdf5; display: flex; align-items: center; justify-content: center; color: #059669;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>
+                        </div>
+                    </div>
+                    <div style="font-size: 1.85rem; font-weight: 900; color: #0f172a; line-height: 1;">{{ $academicSubjects->count() }}</div>
+                    <div style="font-size: 0.78rem; font-weight: 600; color: #64748b; margin-top: 0.35rem;">Enrolled Core & Specialized</div>
+                </div>
+                <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; font-size: 0.75rem; font-weight: 800; color: #059669;">
+                    <span>View all subjects</span>
+                    <span>→</span>
+                </div>
+            </a>
+
+            {{-- Card 2: My Teachers --}}
+            <a href="{{ route('student.subjects') }}" style="text-decoration: none; display: flex; flex-direction: column; justify-content: space-between; background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 18px; padding: 1.25rem; transition: all 0.2s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.02);" onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='#6366f1'; this.style.boxShadow='0 8px 16px rgba(99,102,241,0.08)'" onmouseout="this.style.transform='none'; this.style.borderColor='#e2e8f0'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.02)'">
+                <div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+                        <span style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: #6366f1;">My Teachers</span>
+                        <div style="width: 36px; height: 36px; border-radius: 10px; background: #eef2ff; display: flex; align-items: center; justify-content: center; color: #6366f1;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        </div>
+                    </div>
+                    <div style="font-size: 1.85rem; font-weight: 900; color: #0f172a; line-height: 1;">{{ $uniqueTeachers->count() }}</div>
+                    <div style="font-size: 0.78rem; font-weight: 600; color: #64748b; margin-top: 0.35rem;">Official Assigned Faculty</div>
+                </div>
+                <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; font-size: 0.75rem; font-weight: 800; color: #6366f1;">
+                    <span>View faculty roster</span>
+                    <span>→</span>
+                </div>
+            </a>
+
+            {{-- Card 3: Academic Grades --}}
+            <a href="{{ route('student.grades') }}" style="text-decoration: none; display: flex; flex-direction: column; justify-content: space-between; background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 18px; padding: 1.25rem; transition: all 0.2s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.02);" onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='#f59e0b'; this.style.boxShadow='0 8px 16px rgba(245,158,11,0.08)'" onmouseout="this.style.transform='none'; this.style.borderColor='#e2e8f0'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.02)'">
+                <div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+                        <span style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: #d97706;">Academic Grades</span>
+                        <div style="width: 36px; height: 36px; border-radius: 10px; background: #fef3c7; display: flex; align-items: center; justify-content: center; color: #d97706;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+                        </div>
+                    </div>
+                    <div style="font-size: 1.85rem; font-weight: 900; color: #0f172a; line-height: 1;">
+                        @if(!is_null($latestApprovedAverage))
+                            {{ $latestApprovedAverage }}%
+                        @else
+                            <span style="font-size: 1.25rem; color: #64748b;">Ongoing</span>
+                        @endif
+                    </div>
+                    <div style="font-size: 0.78rem; font-weight: 600; color: #64748b; margin-top: 0.35rem;">
+                        @if(!is_null($latestApprovedAverage))
+                            General Weighted Average
+                        @else
+                            Official DepEd Evaluation
+                        @endif
+                    </div>
+                </div>
+                <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; font-size: 0.75rem; font-weight: 800; color: #d97706;">
+                    <span>View report card</span>
+                    <span>→</span>
+                </div>
+            </a>
+
+            {{-- Card 4: Class Schedule --}}
+            <a href="#today-classes" style="text-decoration: none; display: flex; flex-direction: column; justify-content: space-between; background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 18px; padding: 1.25rem; transition: all 0.2s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.02);" onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='#0284c7'; this.style.boxShadow='0 8px 16px rgba(2,132,199,0.08)'" onmouseout="this.style.transform='none'; this.style.borderColor='#e2e8f0'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.02)'">
+                <div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+                        <span style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: #0284c7;">Class Schedule</span>
+                        <div style="width: 36px; height: 36px; border-radius: 10px; background: #e0f2fe; display: flex; align-items: center; justify-content: center; color: #0284c7;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                        </div>
+                    </div>
+                    <div style="font-size: 1.85rem; font-weight: 900; color: #0f172a; line-height: 1;">
+                        {{ $schedules->filter(fn($item) => strcasecmp((string) $item->day, $todayName) === 0)->count() }}
+                    </div>
+                    <div style="font-size: 0.78rem; font-weight: 600; color: #64748b; margin-top: 0.35rem;">
+                        Classes Today (Sun–Thu)
+                    </div>
+                </div>
+                <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; font-size: 0.75rem; font-weight: 800; color: #0284c7;">
+                    <span>View today's timetable</span>
+                    <span>→</span>
+                </div>
+            </a>
+        </div>
+
         {{-- ── 2-Column Responsive Dashboard Grid ─────────────────────── --}}
-        <div class="s-two-col-grid" style="width: 100%;">
+        <div class="s-two-col-grid" style="width: 100%;" id="today-classes">
 
             {{-- LEFT MAIN COLUMN: Today's Classes & Recent Announcements --}}
             <div style="display: flex; flex-direction: column; gap: 1.5rem; min-width: 0; width: 100%;">

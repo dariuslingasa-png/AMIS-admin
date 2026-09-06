@@ -10,6 +10,9 @@ class SectionSubject extends Model
         'section_id',
         'subject_name',
         'teacher_name',
+        'teacher_key',
+        'teacher_photo',
+        'teacher_email',
         'schedule',
         'ms_channel_id',
     ];
@@ -32,5 +35,10 @@ class SectionSubject extends Model
     public function announcements()
     {
         return $this->hasMany(SubjectAnnouncement::class);
+    }
+
+    public function grades()
+    {
+        return $this->hasMany(Grade::class);
     }
 }

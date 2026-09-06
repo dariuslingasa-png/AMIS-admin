@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Grade;
 use App\Models\StudentSection;
 use App\Services\StudentAnnouncementService;
 use App\Services\StudentPaymentService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -23,6 +25,10 @@ class StudentDashboardController extends Controller
         $subjects = collect();
         $schedules = collect();
         $section = null;
+        $academicSubjects = collect();
+        $uniqueTeachers = collect();
+        $approvedGrades = collect();
+        $latestApprovedAverage = null;
 
         if ($student) {
             $studentSection = StudentSection::where('student_id', $student->id)
@@ -83,6 +89,23 @@ class StudentDashboardController extends Controller
                     return $subject;
                 });
 
+                $academicSubjects = $subjects->filter(function ($s) {
+                    $name = strtolower($s->subject_name ?? '');
+                    return !str_contains($name, 'assembly') && !str_contains($name, 'recess') && !str_contains($name, 'break') && !str_contains($name, 'salah') && !str_contains($name, 'lunch');
+                })->values();
+
+                $uniqueTeachers = $academicSubjects->pluck('teacher_name')
+                    ->filter(fn($t) => !empty($t) && !str_contains(strtolower($t), 'to be assigned') && !str_contains(strtolower($t), 'amis academic team'))
+                    ->unique()
+                    ->values();
+
+                $approvedGrades = Grade::where('student_id', $student->id)
+                    ->whereIn('status', ['approved', 'published'])
+                    ->get();
+                $latestApprovedAverage = $approvedGrades->whereNotNull('quarter_grade')->isNotEmpty()
+                    ? round($approvedGrades->avg('quarter_grade'), 1)
+                    : null;
+
                 $schedules = DB::table('class_schedules')
                     ->where('section_id', $section->id)
                     ->orderBy('start_time')
@@ -112,7 +135,10 @@ class StudentDashboardController extends Controller
 
         $announcements = $this->announcementService->getAnnouncements($student, $subjects);
 
-        return view('student.dashboard', compact('user', 'student', 'subjects', 'schedules', 'section', 'announcements', 'payments', 'siblings'));
+        return view('student.dashboard', compact(
+            'user', 'student', 'subjects', 'academicSubjects', 'uniqueTeachers', 'approvedGrades',
+            'latestApprovedAverage', 'schedules', 'section', 'announcements', 'payments', 'siblings'
+        ));
     }
 
     public function announcements()
@@ -167,7 +193,7 @@ class StudentDashboardController extends Controller
         return view('student.digital-id', compact('user', 'student', 'idUrl'));
     }
 
-    public function grades()
+    public function grades(Request $request)
     {
         $user    = Auth::user();
         $student = $user->student?->load('applicant');
@@ -176,6 +202,10 @@ class StudentDashboardController extends Controller
         }
         $subjects = collect();
         $section = null;
+        $grades = collect();
+        $schoolYear = $request->query('school_year', '2026-2027');
+        $selectedPeriod = $request->query('period', 'All');
+
         if ($student) {
             $studentSection = StudentSection::where('student_id', $student->id)
                 ->with(['section.subjects'])
@@ -190,22 +220,12 @@ class StudentDashboardController extends Controller
                     if (str_contains($name, 'recess') || str_contains($name, 'lunch') || str_contains($name, 'salah') || str_contains($name, 'break')) return false;
                     if (str_contains($teacher, 'amis academic team') && (str_contains($name, 'assembly') || str_contains($name, 'general'))) return false;
                     return true;
-                });
+                })->values();
 
-                if ($subjects->isEmpty()) {
-                    $schedSubjects = DB::table('class_schedules')
-                        ->where('section_id', $section->id)
-                        ->where('is_special', false)
-                        ->whereNotNull('subject_name')
-                        ->where('subject_name', 'NOT LIKE', '%Assembly%')
-                        ->where('subject_name', 'NOT LIKE', '%Recess%')
-                        ->where('subject_name', 'NOT LIKE', '%Break%')
-                        ->where('subject_name', 'NOT LIKE', '%Salah%')
-                        ->select('subject_name', 'teacher_display as teacher_name')
-                        ->distinct()
-                        ->get();
-                    $subjects = $schedSubjects;
-                }
+                $grades = Grade::where('student_id', $student->id)
+                    ->where('school_year', $schoolYear)
+                    ->whereIn('status', ['approved', 'published'])
+                    ->get();
             }
         }
 
@@ -215,15 +235,17 @@ class StudentDashboardController extends Controller
             $student?->applicant?->last_name,
         ]))) ?: ($user->name ?? 'Student');
 
-        return view('student.grades', compact('user', 'student', 'section', 'subjects', 'fullName'));
+        return view('student.grades', compact('user', 'student', 'section', 'subjects', 'grades', 'fullName', 'schoolYear', 'selectedPeriod'));
     }
 
-    public function subjects()
+    public function subjects(Request $request)
     {
         $user    = Auth::user();
         $student = $user->student?->load('applicant');
         $subjects = collect();
         $section = null;
+        $grades = collect();
+
         if ($student) {
             $studentSection = StudentSection::where('student_id', $student->id)
                 ->with(['section.subjects.meetings', 'section.subjects.materials'])
@@ -231,10 +253,19 @@ class StudentDashboardController extends Controller
 
             if ($studentSection?->section) {
                 $section = $studentSection->section;
-                $subjects = $studentSection->section->subjects;
+                $subjects = $studentSection->section->subjects->filter(function ($subj) {
+                    $name = strtolower($subj->subject_name ?? '');
+                    if (str_contains($name, 'assembly') || str_contains($name, 'recess') || str_contains($name, 'lunch') || str_contains($name, 'salah') || str_contains($name, 'break')) return false;
+                    return true;
+                })->values();
+
+                $grades = Grade::where('student_id', $student->id)
+                    ->whereIn('status', ['approved', 'published'])
+                    ->get()
+                    ->groupBy('section_subject_id');
             }
         }
-        return view('student.subjects', compact('user', 'student', 'section', 'subjects'));
+        return view('student.subjects', compact('user', 'student', 'section', 'subjects', 'grades'));
     }
 
     public function profile()

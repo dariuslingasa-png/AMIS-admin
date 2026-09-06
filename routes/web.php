@@ -41,6 +41,7 @@ Route::middleware(['auth', 'student'])->group(function () {
     Route::get('/digital-id', [StudentDashboardController::class, 'digitalId'])->name('student.digital-id');
     Route::post('/dashboard/sync-teams', [StudentDashboardController::class, 'syncTeams'])->name('student.sync-teams');
     Route::get('/soa',       [StudentPaymentController::class, 'billing'])->name('student.billing');
+    Route::get('/payments/history', [StudentPaymentController::class, 'history'])->name('student.payments.history');
     Route::post('/soa/pay',  [StudentPaymentController::class, 'submitPayment'])->name('student.billing.pay');
     Route::post('/soa/ocr-scan', [StudentPaymentController::class, 'ocrScan'])->name('student.billing.ocr');
     

@@ -66,4 +66,14 @@ class Student extends Model
     {
         return $this->hasMany(StudentMsTeam::class);
     }
+
+    public function grades(): HasMany
+    {
+        return $this->hasMany(Grade::class);
+    }
+
+    public function approvedGrades(): HasMany
+    {
+        return $this->hasMany(Grade::class)->whereIn('status', ['approved', 'published']);
+    }
 }
