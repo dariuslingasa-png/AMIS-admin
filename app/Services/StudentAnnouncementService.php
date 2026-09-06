@@ -43,7 +43,6 @@ class StudentAnnouncementService
     {
         $userId = Auth::id();
         $schoolYear = $student?->school_year ?? '2026-2027';
-        $gradeName = $student?->grade_level ?: 'All Students';
 
         $announcementsData = [
             'welcome-portal' => [
@@ -54,10 +53,7 @@ class StudentAnnouncementService
                 'date' => now()->format('M d, Y'),
                 'icon' => 'sparkles',
                 'tone' => 'emerald',
-                'is_pinned' => true,
-                'summary' => 'Welcome to the official AMIS Student & Parent Portal for School Year ' . $schoolYear . '! Access your subjects, class timetable, statement of account, and profile anytime.',
-                'details' => 'The AMIS Student Portal is designed to provide quick and easy access to your daily academic activities. You can monitor your enrolled subjects, check weekly class schedules with assigned teachers, track tuition fee balances, and view official school updates. Please keep your profile information up-to-date.',
-                'audience' => $gradeName,
+                'summary' => 'Welcome to the official AMIS Student & Parent Portal for School Year ' . $schoolYear . '! Access your enrolled subjects, weekly class timetable, statement of account, and student profile all in one place. Please review your information regularly.',
             ],
             'class-schedule-sy2627' => [
                 'id' => 'class-schedule-sy2627',
@@ -67,10 +63,7 @@ class StudentAnnouncementService
                 'date' => now()->subDays(2)->format('M d, Y'),
                 'icon' => 'calendar-range',
                 'tone' => 'sky',
-                'is_pinned' => false,
-                'summary' => 'The official class timetable for School Year ' . $schoolYear . ' is now finalized and published on your Class Schedule page.',
-                'details' => 'Please review your section schedule for complete timeslot details including subject durations, teacher assignments, prayer times, and transition breaks. Students are expected to be ready 10 minutes before each class starts.',
-                'audience' => $gradeName,
+                'summary' => 'The official class timetable for School Year ' . $schoolYear . ' is now finalized and published on your Class Schedule page. Please review your section schedule for subject durations, teacher assignments, and prayer times.',
             ],
             'billing-soa-guidelines' => [
                 'id' => 'billing-soa-guidelines',
@@ -80,10 +73,7 @@ class StudentAnnouncementService
                 'date' => now()->subDays(5)->format('M d, Y'),
                 'icon' => 'credit-card',
                 'tone' => 'amber',
-                'is_pinned' => false,
-                'summary' => 'Review your current tuition assessment, payment deadlines, and receipt verification status under My Billing (SOA).',
-                'details' => 'When submitting payment receipts via bank transfer or deposit, please make sure the bank transaction reference number, payment date, and exact amount are clearly readable. The Finance Office verifies submitted receipts within 24 to 48 business hours.',
-                'audience' => 'All Students & Parents',
+                'summary' => 'Review your current tuition assessment, payment deadlines, and receipt verification status under My Billing (SOA). When uploading payment receipts, ensure the reference number, date, and amount are clearly legible.',
             ],
             'general-assembly-advisory' => [
                 'id' => 'general-assembly-advisory',
@@ -93,10 +83,7 @@ class StudentAnnouncementService
                 'date' => now()->subDays(8)->format('M d, Y'),
                 'icon' => 'bell',
                 'tone' => 'indigo',
-                'is_pinned' => false,
-                'summary' => 'Daily General Assembly begins promptly every morning. Students are required to observe proper uniform and etiquette.',
-                'details' => 'As part of our Islamic values and academic discipline, all students must attend the morning General Assembly on time. Please ensure proper school uniform and Islamic attire are worn daily. For questions, feel free to coordinate with your respective class adviser.',
-                'audience' => 'All Levels',
+                'summary' => 'Daily General Assembly begins promptly every morning. As part of our Islamic values and academic discipline, all students must attend on time in proper school uniform and Islamic attire.',
             ],
         ];
 

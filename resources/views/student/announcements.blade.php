@@ -13,216 +13,208 @@
         'emerald' => [
             'accent' => '#059669',
             'bg' => '#ecfdf5',
-            'border' => '#a7f3d0',
-            'text' => '#065f46',
-            'icon_bg' => '#d1fae5',
+            'text' => '#047857',
         ],
         'sky' => [
             'accent' => '#0284c7',
             'bg' => '#f0f9ff',
-            'border' => '#bae6fd',
             'text' => '#0369a1',
-            'icon_bg' => '#e0f2fe',
         ],
         'amber' => [
             'accent' => '#d97706',
             'bg' => '#fffbeb',
-            'border' => '#fde68a',
-            'text' => '#92400e',
-            'icon_bg' => '#fef3c7',
+            'text' => '#b45309',
         ],
         'indigo' => [
             'accent' => '#4f46e5',
             'bg' => '#eef2ff',
-            'border' => '#c7d2fe',
-            'text' => '#3730a3',
-            'icon_bg' => '#e0e7ff',
+            'text' => '#4338ca',
         ],
     ];
 @endphp
 
-<div class="space-y-6" x-data="{ activeCategory: 'all', searchQuery: '' }">
+<style>
+    /* Filter Segmented Control Buttons */
+    .ann-filter-group {
+        display: inline-flex;
+        background: #f1f5f9;
+        padding: 4px;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        gap: 4px;
+        flex-wrap: wrap;
+    }
+    .ann-tab-btn {
+        border: none !important;
+        background: transparent !important;
+        padding: 0.5rem 1rem !important;
+        border-radius: 8px !important;
+        font-size: 13.5px !important;
+        font-weight: 700 !important;
+        color: #64748b !important;
+        cursor: pointer !important;
+        transition: all 0.15s ease !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 0.35rem !important;
+        white-space: nowrap !important;
+    }
+    .ann-tab-btn:hover {
+        color: #0f172a !important;
+    }
+    .ann-tab-btn.active {
+        background: #ffffff !important;
+        color: #047857 !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+        font-weight: 800 !important;
+    }
 
-    <!-- 1. Emerald Hero Banner (Senior & Student Friendly) -->
-    <div style="background: linear-gradient(135deg, #064e3b 0%, #047857 55%, #0d9488 100%); color: #ffffff; padding: 1.35rem 1.75rem; border-radius: 20px; box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.08); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
-        <div style="display: flex; align-items: center; gap: 1rem;">
-            <div style="width: 48px; height: 48px; border-radius: 14px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px); border: 1.5px solid rgba(255,255,255,0.3); flex-shrink: 0;">
-                <i data-lucide="megaphone" style="width: 26px; height: 26px; color: #ffffff;"></i>
+    /* Clean Card Hover */
+    .announcement-card {
+        transition: all 0.2s ease !important;
+    }
+    .announcement-card:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 8px 20px -2px rgba(15, 23, 42, 0.06) !important;
+        border-color: #cbd5e1 !important;
+    }
+</style>
+
+<div class="space-y-5" x-data="{ activeCategory: 'all', searchQuery: '' }">
+
+    <!-- 1. Hero Banner (Clean, Minimal) -->
+    <div style="background: linear-gradient(135deg, #064e3b 0%, #047857 55%, #0d9488 100%); color: #ffffff; padding: 1.25rem 1.75rem; border-radius: 18px; box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.06); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+        <div style="display: flex; align-items: center; gap: 0.85rem;">
+            <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(6px); border: 1.5px solid rgba(255,255,255,0.3); flex-shrink: 0;">
+                <i data-lucide="megaphone" style="width: 22px; height: 22px; color: #ffffff;"></i>
             </div>
             <div>
-                <h2 style="margin: 0; font-size: 1.3rem; font-weight: 900; letter-spacing: 0.01em; text-transform: uppercase; color: #ffffff; line-height: 1.2;">
-                    Official Notice & Circulars Board
+                <h2 style="margin: 0; font-size: 1.25rem; font-weight: 900; letter-spacing: 0.01em; text-transform: uppercase; color: #ffffff; line-height: 1.2;">
+                    Official Notice Board
                 </h2>
-                <p style="margin: 4px 0 0 0; font-size: 14.5px; color: #e6fffa; font-weight: 600;">
-                    Official school announcements, academic schedules, and reminders for School Year {{ $student?->school_year ?? '2026-2027' }}.
+                <p style="margin: 3px 0 0 0; font-size: 14px; color: #e6fffa; font-weight: 600;">
+                    Official school circulars and announcements for School Year {{ $student?->school_year ?? '2026-2027' }}.
                 </p>
             </div>
         </div>
 
-        <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
-            <span style="font-size: 14px; font-weight: 800; background: rgba(255,255,255,0.2); backdrop-filter: blur(8px); border: 1.5px solid rgba(255,255,255,0.35); color: #ffffff; padding: 0.45rem 1rem; border-radius: 999px; letter-spacing: 0.02em;">
-                {{ count($announcements) }} {{ count($announcements) === 1 ? 'Notice' : 'Notices' }}
+        <div style="display: flex; align-items: center; gap: 0.65rem; flex-wrap: wrap;">
+            <span style="font-size: 13.5px; font-weight: 800; background: rgba(255,255,255,0.2); border: 1.5px solid rgba(255,255,255,0.3); color: #ffffff; padding: 0.35rem 0.85rem; border-radius: 999px;">
+                {{ count($announcements) }} Notices
             </span>
-            <span style="font-size: 14px; font-weight: 800; background: rgba(255,255,255,0.15); border: 1.5px solid rgba(255,255,255,0.25); color: #ffffff; padding: 0.45rem 1rem; border-radius: 999px;">
+            <span style="font-size: 13.5px; font-weight: 800; background: rgba(255,255,255,0.15); border: 1.5px solid rgba(255,255,255,0.25); color: #ffffff; padding: 0.35rem 0.85rem; border-radius: 999px;">
                 {{ $student?->grade_level ?? 'All Students' }}
             </span>
         </div>
     </div>
 
-    <!-- 2. Controls Bar (Category Filter Pills + Real-Time Search) -->
-    <div style="background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 18px; padding: 1rem 1.25rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; box-shadow: 0 2px 10px rgba(0,0,0,0.02);">
+    <!-- 2. Controls Bar (Segmented Filter Buttons + Search) -->
+    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 0.85rem 1.25rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
         
-        <!-- Category Filter Pills -->
-        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+        <!-- Filter Buttons Group -->
+        <div class="ann-filter-group">
             @foreach($categories as $catKey => $catLabel)
                 <button type="button"
                         @click="activeCategory = '{{ $catKey }}'"
-                        :style="activeCategory === '{{ $catKey }}' 
-                            ? 'background: #047857; color: #ffffff; border-color: #047857; box-shadow: 0 2px 6px rgba(4,120,87,0.25);' 
-                            : 'background: #f1f5f9; color: #334155; border-color: #cbd5e1;'"
-                        style="border: 1.5px solid; border-radius: 10px; padding: 0.5rem 1rem; font-size: 14px; font-weight: 800; cursor: pointer; transition: all 0.15s ease; display: inline-flex; align-items: center; gap: 0.35rem;">
+                        class="ann-tab-btn"
+                        :class="activeCategory === '{{ $catKey }}' ? 'active' : ''">
                     <span>{{ $catLabel }}</span>
-                    @if($catKey === 'all')
-                        <span style="font-size: 12px; opacity: 0.85; background: rgba(0,0,0,0.08); padding: 0.1rem 0.45rem; border-radius: 999px;">
-                            {{ count($announcements) }}
-                        </span>
-                    @endif
                 </button>
             @endforeach
         </div>
 
-        <!-- Search Bar -->
-        <div style="position: relative; min-width: 250px; flex-grow: 1; max-width: 360px;">
-            <i data-lucide="search" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 17px; height: 17px; color: #64748b; pointer-events: none;"></i>
+        <!-- Search Input -->
+        <div style="position: relative; min-width: 220px; flex-grow: 1; max-width: 320px;">
+            <i data-lucide="search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; color: #94a3b8; pointer-events: none;"></i>
             <input type="text" 
                    x-model="searchQuery" 
-                   placeholder="Search notices by keyword..." 
-                   style="width: 100%; height: 42px; padding: 0.5rem 1rem 0.5rem 2.5rem; border: 1.5px solid #cbd5e1; border-radius: 12px; font-size: 14px; font-weight: 600; color: #0f172a; outline: none; background: #fafbfc; transition: border-color 0.15s ease;"
+                   placeholder="Search notices..." 
+                   style="width: 100%; height: 38px; padding: 0.4rem 0.85rem 0.4rem 2.25rem; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 13.5px; font-weight: 600; color: #0f172a; outline: none; background: #f8fafc; transition: all 0.15s ease;"
                    @focus="$el.style.borderColor = '#059669'; $el.style.background = '#ffffff';"
-                   @blur="$el.style.borderColor = '#cbd5e1'; $el.style.background = '#fafbfc';">
+                   @blur="$el.style.borderColor = '#cbd5e1'; $el.style.background = '#f8fafc';">
             <button type="button" 
                     x-show="searchQuery.length > 0" 
                     @click="searchQuery = ''" 
                     style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); border: none; background: transparent; cursor: pointer; color: #94a3b8;">
-                <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+                <i data-lucide="x" style="width: 14px; height: 14px;"></i>
             </button>
         </div>
     </div>
 
-    <!-- 3. Announcements Feed Cards -->
+    <!-- 3. Clean Notice Cards (No Chip Clutter, No Left Color Stripe) -->
     @if(count($announcements) > 0)
         <div class="space-y-4">
             @foreach ($announcements as $announcement)
                 @php
                     $category = $announcement['category'] ?? 'portal';
                     $tone = $toneMap[$announcement['tone']] ?? $toneMap['emerald'];
-                    $isPinned = !empty($announcement['is_pinned']);
-                    $searchData = strtolower(addslashes($announcement['title'] . ' ' . $announcement['summary'] . ' ' . ($announcement['details'] ?? '')));
+                    $searchData = strtolower(addslashes($announcement['title'] . ' ' . $announcement['summary']));
                 @endphp
 
                 <div x-show="(activeCategory === 'all' || activeCategory === '{{ $category }}') && (!searchQuery || '{{ $searchData }}'.includes(searchQuery.toLowerCase().trim()))"
-                     x-transition:enter="transition ease-out duration-200"
-                     x-transition:enter-start="opacity-0 transform -translate-y-1"
-                     x-transition:enter-end="opacity-100 transform translate-y-0"
                      class="announcement-card"
-                     style="background: #ffffff; border: 1.5px solid #cbd5e1; border-left: 6px solid {{ $tone['accent'] }}; border-radius: 18px; padding: 1.5rem; box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.04); display: flex; flex-direction: column; gap: 1rem; transition: all 0.2s ease;">
+                     style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 1.35rem 1.5rem; box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03); display: flex; flex-direction: column; gap: 0.85rem;">
                     
-                    <!-- Top Meta Line -->
-                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
-                        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-                            <span style="font-size: 12.5px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.04em; color: {{ $tone['text'] }}; background: {{ $tone['bg'] }}; border: 1.5px solid {{ $tone['border'] }}; padding: 0.25rem 0.75rem; border-radius: 8px;">
-                                {{ $announcement['type'] }}
-                            </span>
+                    <!-- Clean Top Line: Category Name on left, Date on right (NO heavy chips) -->
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;">
+                        <span style="font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; color: {{ $tone['text'] }};">
+                            {{ $announcement['type'] }}
+                        </span>
 
-                            @if($isPinned)
-                                <span style="font-size: 12px; font-weight: 900; color: #92400e; background: #fef3c7; border: 1.5px solid #fde68a; padding: 0.22rem 0.65rem; border-radius: 999px; display: inline-flex; align-items: center; gap: 0.35rem;">
-                                    <i data-lucide="pin" style="width: 13px; height: 13px;"></i>
-                                    PINNED NOTICE
-                                </span>
-                            @endif
-
-                            @if(!empty($announcement['audience']))
-                                <span style="font-size: 12.5px; font-weight: 750; color: #334155; background: #f1f5f9; border: 1px solid #cbd5e1; padding: 0.22rem 0.65rem; border-radius: 999px; display: inline-flex; align-items: center; gap: 0.35rem;">
-                                    <i data-lucide="users" style="width: 13px; height: 13px; color: #059669;"></i>
-                                    <span>Target: <strong style="color: #0f172a;">{{ $announcement['audience'] }}</strong></span>
-                                </span>
-                            @endif
-                        </div>
-
-                        <div style="display: flex; align-items: center; gap: 0.4rem; font-size: 13.5px; font-weight: 750; color: #64748b;">
-                            <i data-lucide="calendar" style="width: 15px; height: 15px; color: #059669;"></i>
+                        <span style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 13px; font-weight: 600; color: #64748b;">
+                            <i data-lucide="calendar" style="width: 14px; height: 14px; color: #94a3b8;"></i>
                             <span>{{ $announcement['date'] }}</span>
-                        </div>
+                        </span>
                     </div>
 
-                    <!-- Main Announcement Content -->
-                    <div style="display: flex; align-items: flex-start; gap: 1.15rem;">
-                        <div style="width: 48px; height: 48px; border-radius: 12px; background: {{ $tone['icon_bg'] }}; border: 1.5px solid {{ $tone['border'] }}; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: {{ $tone['accent'] }};">
-                            <i data-lucide="{{ $announcement['icon'] ?? 'megaphone' }}" style="width: 24px; height: 24px;"></i>
+                    <!-- Clean Content Body -->
+                    <div style="display: flex; align-items: flex-start; gap: 1rem;">
+                        <div style="width: 44px; height: 44px; border-radius: 10px; background: {{ $tone['bg'] }}; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: {{ $tone['accent'] }};">
+                            <i data-lucide="{{ $announcement['icon'] ?? 'megaphone' }}" style="width: 22px; height: 22px;"></i>
                         </div>
                         <div style="flex: 1; min-width: 0;">
-                            <h3 style="margin: 0; font-size: 18px; font-weight: 900; color: #0f172a; line-height: 1.35; letter-spacing: -0.01em;">
+                            <h3 style="margin: 0; font-size: 17.5px; font-weight: 850; color: #0f172a; line-height: 1.35; letter-spacing: -0.01em;">
                                 {{ $announcement['title'] }}
                             </h3>
-                            <p style="margin: 0.5rem 0 0 0; font-size: 15.5px; font-weight: 600; color: #334155; line-height: 1.6;">
+                            <p style="margin: 0.45rem 0 0 0; font-size: 15px; font-weight: 500; color: #334155; line-height: 1.6;">
                                 {{ $announcement['summary'] }}
                             </p>
                         </div>
                     </div>
-
-                    <!-- Full Details Panel -->
-                    @if(!empty($announcement['details']) && $announcement['details'] !== $announcement['summary'])
-                        <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 1.1rem 1.35rem; margin-top: 0.25rem;">
-                            <div style="font-size: 12.5px; font-weight: 850; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em; display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.4rem;">
-                                <i data-lucide="info" style="width: 15px; height: 15px; color: #059669;"></i>
-                                <span>Notice Details & Guidelines</span>
-                            </div>
-                            <div style="font-size: 15px; font-weight: 500; color: #1e293b; line-height: 1.65;">
-                                {{ $announcement['details'] }}
-                            </div>
-                        </div>
-                    @endif
                 </div>
             @endforeach
         </div>
 
-        <!-- Empty Search Result Fallback -->
+        <!-- Empty Search Fallback -->
         <div x-cloak
              x-show="searchQuery.length > 0 && Array.from(document.querySelectorAll('.announcement-card')).every(el => el.style.display === 'none')"
-             style="background: #ffffff; border: 2px dashed #cbd5e1; border-radius: 20px; padding: 3.5rem 2rem; text-align: center;">
-            <div style="width: 56px; height: 56px; border-radius: 50%; background: #ecfdf5; border: 1.5px solid #a7f3d0; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1rem;">
-                <i data-lucide="search-x" style="width: 28px; height: 28px; color: #059669;"></i>
+             style="background: #ffffff; border: 1.5px dashed #cbd5e1; border-radius: 16px; padding: 3rem 2rem; text-align: center;">
+            <div style="width: 48px; height: 48px; border-radius: 50%; background: #ecfdf5; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 0.75rem;">
+                <i data-lucide="search-x" style="width: 24px; height: 24px; color: #059669;"></i>
             </div>
-            <h3 style="font-size: 18px; font-weight: 850; color: #0f172a; margin: 0 0 0.5rem;">No Matching Announcements</h3>
-            <p style="font-size: 14.5px; font-weight: 600; color: #64748b; margin: 0 auto; max-width: 450px;">
-                No notices matched your search for "<span x-text="searchQuery" style="color: #0f172a; font-weight: 800;"></span>". Try using another keyword or selecting "All Notices".
+            <h3 style="font-size: 17px; font-weight: 800; color: #0f172a; margin: 0 0 0.35rem;">No Matching Announcements</h3>
+            <p style="font-size: 14px; color: #64748b; margin: 0 auto; max-width: 420px;">
+                No notices matched your search for "<span x-text="searchQuery" style="color: #0f172a; font-weight: 700;"></span>".
             </p>
             <button type="button" @click="searchQuery = ''; activeCategory = 'all'" 
-                    style="margin-top: 1rem; background: #047857; color: #ffffff; border: none; padding: 0.5rem 1.25rem; border-radius: 10px; font-size: 14px; font-weight: 800; cursor: pointer;">
-                Reset Filter
+                    style="margin-top: 0.85rem; background: #047857; color: #ffffff; border: none; padding: 0.45rem 1.15rem; border-radius: 8px; font-size: 13.5px; font-weight: 750; cursor: pointer;">
+                Clear Search
             </button>
         </div>
     @else
         <!-- Full Empty State -->
-        <div style="background: #ffffff; border: 2px dashed #cbd5e1; border-radius: 20px; padding: 4rem 2rem; text-align: center;">
-            <div style="width: 60px; height: 60px; border-radius: 50%; background: #ecfdf5; border: 1.5px solid #a7f3d0; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1.25rem;">
-                <i data-lucide="bell-off" style="width: 30px; height: 30px; color: #059669;"></i>
+        <div style="background: #ffffff; border: 1.5px dashed #cbd5e1; border-radius: 16px; padding: 3.5rem 2rem; text-align: center;">
+            <div style="width: 50px; height: 50px; border-radius: 50%; background: #ecfdf5; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1rem;">
+                <i data-lucide="bell-off" style="width: 26px; height: 26px; color: #059669;"></i>
             </div>
-            <h3 style="font-size: 20px; font-weight: 900; color: #0f172a; margin: 0 0 0.5rem;">No Announcements at This Time</h3>
-            <p style="font-size: 15px; font-weight: 600; color: #64748b; margin: 0 auto; max-width: 450px;">
-                Check back later for new school notices, circulars, and academic updates.
+            <h3 style="font-size: 18px; font-weight: 850; color: #0f172a; margin: 0 0 0.35rem;">No Announcements at This Time</h3>
+            <p style="font-size: 14.5px; color: #64748b; margin: 0 auto; max-width: 420px;">
+                Check back later for new school notices and updates.
             </p>
         </div>
     @endif
 </div>
 
-<style>
-    .announcement-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 24px -2px rgba(15, 23, 42, 0.08) !important;
-        border-color: #94a3b8 !important;
-    }
-</style>
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         if (window.lucide) window.lucide.createIcons();
