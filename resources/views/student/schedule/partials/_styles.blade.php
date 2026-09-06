@@ -28,41 +28,12 @@
         overflow-x: auto;
     }
     
-    /* Calendar Class Card (High Legibility & Smooth Elevation) */
-    .sched-grid-card {
-        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    /* Table Cell Fit and Subtle Hover */
+    .sched-table-cell {
+        transition: filter 0.15s ease !important;
     }
-    .sched-grid-card:hover {
-        transform: translateY(-2px) !important;
-        box-shadow: 0 8px 20px -2px rgba(15, 23, 42, 0.1) !important;
-    }
-    
-    .sched-special-strip {
-        transition: all 0.2s ease !important;
-    }
-    .sched-special-strip:hover {
-        transform: translateY(-1px) !important;
-        box-shadow: 0 6px 16px -2px rgba(15, 23, 42, 0.08) !important;
-    }
-    
-    .calendar-class-card {
-        flex: 1;
-        display: flex;
-        flex-direction: row;
-        gap: 0.75rem;
-        align-items: center;
-        background: white;
-        border: 1.5px solid #cbd5e1;
-        border-radius: 16px;
-        padding: 0.85rem;
-        min-height: 85px;
-        position: relative;
-        transition: all 0.2s ease;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.03);
-    }
-    .calendar-class-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.06);
+    .sched-table-cell:hover {
+        filter: brightness(0.95) !important;
     }
 
     /* Mobile Timeline View */

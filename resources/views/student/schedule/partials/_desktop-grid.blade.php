@@ -1,4 +1,4 @@
-<!-- DESKTOP TIMETABLE VIEW (Accessible, Senior & High School Friendly AMIS Layout) -->
+<!-- DESKTOP TIMETABLE VIEW (Full Cell Fit, Senior & High School Friendly) -->
 <div :class="isFullscreen ? 'calendar-wrapper is-fullscreen' : 'calendar-wrapper'" style="background: transparent; border: none; padding: 0; box-shadow: none;">
     
     <!-- Modern Card Container -->
@@ -37,30 +37,39 @@
             </div>
         </div>
 
-        <!-- Accessible Timetable Grid Table -->
+        <!-- Official Timetable Grid (Fit on Cells with Fixed Column Proportions) -->
         <div style="overflow-x: auto; background: #ffffff;">
-            <table style="width: 100%; border-collapse: collapse; min-width: 960px; text-align: left;">
+            <table style="width: 100%; table-layout: fixed; border-collapse: collapse; min-width: 920px; text-align: left;">
+                <colgroup>
+                    <col style="width: 135px;">
+                    <col style="width: 85px;">
+                    <col style="width: 20%;">
+                    <col style="width: 20%;">
+                    <col style="width: 20%;">
+                    <col style="width: 20%;">
+                    <col style="width: 20%;">
+                </colgroup>
                 <thead>
                     @php
                         $todayDayName = $todayName ?? now()->format('l');
                         $daysList = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
                     @endphp
-                    <tr style="background: #f1f5f9; border-bottom: 2.5px solid #cbd5e1;">
-                        <th style="padding: 1rem 0.75rem; border-right: 1.5px solid #cbd5e1; width: 145px; text-align: center; color: #0f172a; font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em;">
+                    <tr style="background: #f1f5f9; border-bottom: 2px solid #cbd5e1;">
+                        <th style="padding: 0.9rem 0.5rem; border: 1px solid #cbd5e1; text-align: center; color: #0f172a; font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.04em;">
                             Time
                         </th>
-                        <th style="padding: 1rem 0.5rem; border-right: 1.5px solid #cbd5e1; width: 90px; text-align: center; color: #0f172a; font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em;">
+                        <th style="padding: 0.9rem 0.5rem; border: 1px solid #cbd5e1; text-align: center; color: #0f172a; font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.04em;">
                             Duration
                         </th>
                         @foreach($daysList as $dayHeader)
                             @php
                                 $isTodayCol = (strcasecmp($dayHeader, $todayDayName) === 0);
                             @endphp
-                            <th style="padding: 1rem 0.65rem; border-right: 1.5px solid #cbd5e1; text-align: center; {{ $isTodayCol ? 'background: #dcfce7; color: #166534; border-bottom: 3px solid #16a34a;' : 'color: #0f172a;' }}">
+                            <th style="padding: 0.9rem 0.5rem; border: 1px solid #cbd5e1; text-align: center; {{ $isTodayCol ? 'background: #dcfce7; color: #166534;' : 'background: #f1f5f9; color: #0f172a;' }}">
                                 <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;">
                                     <span style="font-weight: 900; font-size: 15px; text-transform: uppercase; letter-spacing: 0.04em;">{{ $dayHeader }}</span>
                                     @if($isTodayCol)
-                                        <span style="font-size: 11.5px; font-weight: 900; color: #ffffff; background: #15803d; padding: 0.15rem 0.6rem; border-radius: 999px; letter-spacing: 0.05em; box-shadow: 0 1px 3px rgba(21,128,61,0.3);">
+                                        <span style="font-size: 11px; font-weight: 900; color: #ffffff; background: #15803d; padding: 0.15rem 0.55rem; border-radius: 999px; letter-spacing: 0.05em;">
                                             TODAY
                                         </span>
                                     @endif
@@ -99,37 +108,35 @@
                             }
                         @endphp
 
-                        <tr style="border-bottom: 1.5px solid #e2e8f0; transition: background 0.15s ease;">
-                            <!-- Time Column (Big, Bold, Legible for Elderly/Parents) -->
-                            <td style="padding: 0.85rem 0.5rem; text-align: center; vertical-align: middle; border-right: 1.5px solid #e2e8f0; background: #fafbfc; white-space: nowrap;">
+                        <tr>
+                            <!-- Time Column -->
+                            <td style="padding: 0.75rem 0.5rem; text-align: center; vertical-align: middle; background: #ffffff; border: 1px solid #cbd5e1; white-space: nowrap;">
                                 @if($start === $end)
-                                    <span style="font-weight: 900; font-size: 15.5px; color: #0f172a;">
+                                    <div style="font-weight: 900; font-size: 15px; color: #0f172a;">
                                         {{ date('g:i A', strtotime($start)) }}
-                                    </span>
+                                    </div>
                                 @else
-                                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;">
-                                        <span style="font-weight: 900; font-size: 15px; color: #0f172a; line-height: 1.2;">
-                                            {{ date('g:i A', strtotime($start)) }}
-                                        </span>
-                                        <span style="font-size: 12px; font-weight: 750; color: #64748b; text-transform: uppercase;">
-                                            to
-                                        </span>
-                                        <span style="font-weight: 850; font-size: 14.5px; color: #0f172a; line-height: 1.2;">
-                                            {{ date('g:i A', strtotime($end)) }}
-                                        </span>
+                                    <div style="font-weight: 900; font-size: 14.5px; color: #0f172a; line-height: 1.2;">
+                                        {{ date('g:i A', strtotime($start)) }}
+                                    </div>
+                                    <div style="font-size: 11.5px; font-weight: 750; color: #64748b; text-transform: uppercase; margin: 1px 0;">
+                                        to
+                                    </div>
+                                    <div style="font-weight: 850; font-size: 14px; color: #0f172a; line-height: 1.2;">
+                                        {{ date('g:i A', strtotime($end)) }}
                                     </div>
                                 @endif
                             </td>
 
                             <!-- Duration Column -->
-                            <td style="padding: 0.85rem 0.4rem; text-align: center; vertical-align: middle; border-right: 1.5px solid #e2e8f0; background: #ffffff; white-space: nowrap;">
-                                <span style="display: inline-block; font-size: 13.5px; font-weight: 800; color: #334155; background: #f1f5f9; padding: 0.3rem 0.65rem; border-radius: 8px; border: 1px solid #cbd5e1;">
+                            <td style="padding: 0.75rem 0.4rem; text-align: center; vertical-align: middle; background: #f8fafc; border: 1px solid #cbd5e1; white-space: nowrap;">
+                                <span style="display: inline-block; font-size: 13px; font-weight: 800; color: #334155; background: #e2e8f0; padding: 0.25rem 0.55rem; border-radius: 6px; border: 1px solid #cbd5e1;">
                                     {{ $durationText }}
                                 </span>
                             </td>
 
                             @if($isAllSameSpecial)
-                                <!-- Merged Special Activity Row (Recess, Assembly, Salah, Departure, Transition) -->
+                                <!-- Merged Special Activity Row (Fills All 5 Columns Edge-to-Edge) -->
                                 @php
                                     $specStyle = $getSubjectStyle($specialTitle);
                                     $specLower = strtolower($specialTitle);
@@ -146,29 +153,16 @@
                                         $specIcon = 'arrow-right-circle';
                                     }
                                 @endphp
-                                <td colspan="5" style="padding: 0.65rem 0.85rem; vertical-align: middle; background: #ffffff;">
-                                    <div class="sched-special-strip" style="
-                                        background: {{ $specStyle['bg'] }};
-                                        border: 1.5px solid {{ $specStyle['border'] }};
-                                        border-left: 5px solid {{ $specStyle['accent'] }};
-                                        border-radius: 12px;
-                                        padding: 0.85rem 1.25rem;
-                                        display: flex;
-                                        align-items: center;
-                                        justify-content: center;
-                                        gap: 0.75rem;
-                                        box-shadow: 0 1px 3px rgba(0,0,0,0.03);
-                                    ">
-                                        <div style="width: 28px; height: 28px; border-radius: 50%; background: {{ $specStyle['accent'] }}; display: flex; align-items: center; justify-content: center; color: #ffffff; flex-shrink: 0;">
-                                            <i data-lucide="{{ $specIcon }}" style="width: 16px; height: 16px;"></i>
-                                        </div>
-                                        <span style="font-weight: 900; font-size: 15px; text-transform: uppercase; letter-spacing: 0.04em; color: #0f172a;">
+                                <td colspan="5" style="padding: 0.85rem 1rem; text-align: center; vertical-align: middle; background: {{ $specStyle['bg'] }}; border: 1px solid #cbd5e1; border-left: 5px solid {{ $specStyle['accent'] }};">
+                                    <div style="display: flex; align-items: center; justify-content: center; gap: 0.65rem;">
+                                        <i data-lucide="{{ $specIcon }}" style="width: 18px; height: 18px; color: {{ $specStyle['accent'] }}; flex-shrink: 0;"></i>
+                                        <span style="font-size: 14.5px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.04em; color: {{ $specStyle['text'] }};">
                                             {{ strtoupper($specialTitle) }}
                                         </span>
                                     </div>
                                 </td>
                             @else
-                                <!-- Day Columns (Sunday to Thursday) -->
+                                <!-- Day Columns (Fit 100% of Cell Width & Height) -->
                                 @php
                                     $groups = [];
                                     $i = 0;
@@ -209,38 +203,24 @@
                                             $tName = $teacherName($entry);
                                         @endphp
                                         <td colspan="{{ $span }}" 
-                                            style="padding: 0.55rem 0.65rem; vertical-align: middle; border-right: 1.5px solid #e2e8f0; background: #ffffff;">
-                                            <div class="sched-grid-card" style="
-                                                background: {{ $style['bg'] }};
-                                                border: 1.5px solid {{ $style['border'] }};
-                                                border-left: 5px solid {{ $style['accent'] }};
-                                                border-radius: 12px;
-                                                padding: 0.85rem 0.9rem;
-                                                min-height: 72px;
-                                                display: flex;
-                                                flex-direction: column;
-                                                justify-content: center;
-                                                align-items: center;
-                                                text-align: center;
-                                                box-shadow: 0 1px 3px rgba(0,0,0,0.03);
-                                            ">
-                                                <!-- Subject Name (Big, High-Contrast Dark Text) -->
-                                                <div style="font-weight: 900; font-size: 15.5px; color: #0f172a; line-height: 1.3; letter-spacing: -0.01em;">
-                                                    {{ $entry->subject_name }}
-                                                </div>
-
-                                                <!-- Teacher Name (High-Contrast Clean Pill) -->
-                                                @if($tName && $tName !== '—')
-                                                    <div style="display: inline-flex; align-items: center; gap: 0.35rem; margin-top: 0.45rem; font-size: 13px; font-weight: 800; text-transform: uppercase; color: #334155; background: #ffffff; padding: 0.22rem 0.7rem; border-radius: 999px; border: 1.5px solid rgba(0,0,0,0.08); box-shadow: 0 1px 2px rgba(0,0,0,0.03); letter-spacing: 0.02em;">
-                                                        <i data-lucide="user" style="width: 13px; height: 13px; color: {{ $style['accent'] }}; flex-shrink: 0;"></i>
-                                                        <span>{{ strtoupper($tName) }}</span>
-                                                    </div>
-                                                @endif
+                                            class="sched-table-cell"
+                                            style="padding: 0.75rem 0.5rem; text-align: center; vertical-align: middle; background: {{ $style['bg'] }}; border: 1px solid #cbd5e1; border-left: 4px solid {{ $style['accent'] }};">
+                                            <!-- Subject Name -->
+                                            <div style="font-weight: 900; font-size: 15px; color: #0f172a; line-height: 1.25;">
+                                                {{ $entry->subject_name }}
                                             </div>
+
+                                            <!-- Teacher Name -->
+                                            @if($tName && $tName !== '—')
+                                                <div style="display: inline-flex; align-items: center; gap: 0.3rem; margin-top: 5px; font-size: 12.5px; font-weight: 800; text-transform: uppercase; color: {{ $style['teacher'] }}; background: rgba(255, 255, 255, 0.85); padding: 0.18rem 0.6rem; border-radius: 999px; border: 1px solid rgba(0,0,0,0.06); letter-spacing: 0.02em;">
+                                                    <i data-lucide="user" style="width: 12px; height: 12px; opacity: 0.75;"></i>
+                                                    <span>{{ strtoupper($tName) }}</span>
+                                                </div>
+                                            @endif
                                         </td>
                                     @else
-                                        <td colspan="{{ $span }}" style="padding: 0.55rem; text-align: center; vertical-align: middle; border-right: 1.5px solid #e2e8f0; background: #f8fafc;">
-                                            <div style="font-size: 1rem; color: #94a3b8; font-weight: 700;">—</div>
+                                        <td colspan="{{ $span }}" style="padding: 0.75rem; text-align: center; vertical-align: middle; background: #ffffff; border: 1px solid #cbd5e1; color: #cbd5e1; font-size: 15px; font-weight: 700;">
+                                            —
                                         </td>
                                     @endif
                                 @endforeach
@@ -252,7 +232,7 @@
         </div>
 
         <!-- Accessible Subject Categories (Legend) & School Footer Note -->
-        <div style="padding: 1.25rem 1.75rem; background: #f8fafc; border-top: 1.5px solid #e2e8f0; display: flex; flex-direction: column; gap: 1rem;">
+        <div style="padding: 1.25rem 1.75rem; background: #f8fafc; border-top: 1.5px solid #cbd5e1; display: flex; flex-direction: column; gap: 1rem;">
             <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.85rem;">
                 <div style="display: flex; align-items: center; gap: 0.5rem; color: #0f172a; font-size: 15px; font-weight: 900;">
                     <i data-lucide="palette" style="width: 18px; height: 18px; color: #059669;"></i>
@@ -289,7 +269,7 @@
                     </span>
                 </div>
             </div>
-            <div style="display: flex; align-items: center; justify-content: space-between; font-size: 13px; color: #64748b; font-weight: 700; border-top: 1.5px solid #e2e8f0; padding-top: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; font-size: 13px; color: #64748b; font-weight: 700; border-top: 1.5px solid #cbd5e1; padding-top: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
                 <span style="display: inline-flex; align-items: center; gap: 0.4rem;">
                     <i data-lucide="shield-check" style="width: 16px; height: 16px; color: #059669;"></i>
                     Al Munawwara Islamic School Official Academic Timetable
